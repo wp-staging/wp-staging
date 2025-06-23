@@ -45,7 +45,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
     /**
      * Private Exponent
      *
-     * @var \phpseclib3\Math\BigInteger
+     * @var BigInteger
      */
     protected $privateExponent;
     /**
@@ -53,7 +53,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
      *
      * See {@link http://tools.ietf.org/html/rfc3447#section-5.1.2 RFC3447#section-5.1.2}.
      *
-     * @return bool|\phpseclib3\Math\BigInteger
+     * @return bool|BigInteger
      */
     private function rsadp(\WPStaging\Vendor\phpseclib3\Math\BigInteger $c)
     {
@@ -67,7 +67,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
      *
      * See {@link http://tools.ietf.org/html/rfc3447#section-5.2.1 RFC3447#section-5.2.1}.
      *
-     * @return bool|\phpseclib3\Math\BigInteger
+     * @return bool|BigInteger
      */
     private function rsasp1(\WPStaging\Vendor\phpseclib3\Math\BigInteger $m)
     {
@@ -79,8 +79,8 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
     /**
      * Exponentiate
      *
-     * @param \phpseclib3\Math\BigInteger $x
-     * @return \phpseclib3\Math\BigInteger
+     * @param BigInteger $x
+     * @return BigInteger
      */
     protected function exponentiate(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
     {
@@ -140,10 +140,10 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
      * Protects against timing attacks by employing RSA Blinding.
      * Returns $x->modPow($this->exponents[$i], $this->primes[$i])
      *
-     * @param \phpseclib3\Math\BigInteger $x
-     * @param \phpseclib3\Math\BigInteger $r
+     * @param BigInteger $x
+     * @param BigInteger $r
      * @param int $i
-     * @return \phpseclib3\Math\BigInteger
+     * @return BigInteger
      */
     private function blind(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x, \WPStaging\Vendor\phpseclib3\Math\BigInteger $r, $i)
     {

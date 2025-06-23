@@ -17,6 +17,7 @@ namespace WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Keys;
 use WPStaging\Vendor\phpseclib3\Common\Functions\Strings;
 use WPStaging\Vendor\phpseclib3\Crypt\AES;
 use WPStaging\Vendor\phpseclib3\Crypt\Random;
+use WPStaging\Vendor\phpseclib3\Exception\BadDecryptionException;
 /**
  * OpenSSH Formatted RSA Key Handler
  *
@@ -89,7 +90,7 @@ abstract class OpenSSH
                     $crypto->setPassword($password, 'bcrypt', $salt, $rounds, 32);
                     break;
                 default:
-                    throw new \RuntimeException('The only supported cipherse are: none, aes256-ctr (' . $ciphername . ' is being used)');
+                    throw new \RuntimeException('The only supported ciphers are: none, aes256-ctr (' . $ciphername . ' is being used)');
             }
             list($publicKey, $paddedKey) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('ss', $key);
             list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('s', $publicKey);
@@ -99,7 +100,10 @@ abstract class OpenSSH
             list($checkint1, $checkint2) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('NN', $paddedKey);
             // any leftover bytes in $paddedKey are for padding? but they should be sequential bytes. eg. 1, 2, 3, etc.
             if ($checkint1 != $checkint2) {
-                throw new \RuntimeException('The two checkints do not match');
+                if (isset($crypto)) {
+                    throw new \WPStaging\Vendor\phpseclib3\Exception\BadDecryptionException('Unable to decrypt key - please verify the password you are using');
+                }
+                throw new \RuntimeException("The two checkints do not match ({$checkint1} vs. {$checkint2})");
             }
             self::checkType($type);
             return \compact('type', 'publicKey', 'paddedKey');

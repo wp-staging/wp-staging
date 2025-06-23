@@ -24,7 +24,7 @@ require WPSTG_VIEWS_DIR . 'job/locked.php';
 $assets = WPStaging::make(Assets::class);
 ?>
 <div id="wpstg-step-1">
-    <?php if (defined('WPSTG_NEW_STAGING')) : ?>
+    <?php if (defined('WPSTG_NEW_STAGING') && WPSTG_NEW_STAGING) : ?>
         <button id="wpstg-new-staging" class="wpstg-blue-primary wpstg-button wpstg-mr-10px" <?php echo $error ? 'disabled' : '' ?>>
             <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
         </button>

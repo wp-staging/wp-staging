@@ -2,6 +2,7 @@
 namespace WPStaging\Backup\Service\Database\Exporter;
 use Exception;
 use WPStaging\Backup\BackupHeader;
+use WPStaging\Framework\Database\Exporter\AbstractExporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\TableService;
 class DDLExporter extends AbstractExporter

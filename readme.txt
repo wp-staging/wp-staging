@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.8
-Stable tag: 4.1.4
+Stable tag: 4.2.0
 Requires PHP: 7.0
 
 Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
@@ -286,6 +286,43 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.2.0 =
+* New: Add pCloud backup storage cloud provider. (Pro) #2876
+* New: Add filter `wpstg.cloning.preserve_upload_path` to preserve the upload_path option during staging site creation. #3751
+* Enh: Exclude ".gz" and ".tmp" from the backup process by default #1500
+* Enh: Improve logs while compressing file in backups. #3432
+* Enh: Label backup as "Compressed" when it is a compressed backup. #4324
+* Enh: Change EDD license endpoint to a custom endpoint with fallback to legacy endpoint for improved reliability and performance. (Pro) #4336
+* Enh: Improve the error message when the database table can't be repaired during backup and if it is required. #4355
+* Fix: Sanitize sftp options value to fix Uncaught TypeError #4209
+* Fix: S3 backup (remote storages) authentication process is failing. (Pro) #4299
+* Fix: Don't copy backup schedules and temporary logins while creating a new staging site. Beautify clone edit modal tooltip text. #4285
+* Fix: Unable to detect job type during WP Staging `status` ajax request. #4337
+* Fix: Missing pro features for the `Developer Plan – 30 Active Sites` plan. (Pro) #4331
+* Fix: Handle exclusion rules `Other WP Root Folders` backup to prevent the inclusion of unintended files/folders. (Pro) #4348
+* Fix: Empty dirs are not copied during clone, update and push which create issues with third party plugins. #3329
+* Fix: Improve error message when restore couldn't be possible using free version because server changed. #4334
+* Fix: Ensure pro features remain accessible even if the license is expired. (Pro) #4176
+* Fix: On Multisite, Restore fails during database rename task when restoring full network backup if WP Staging plugin(s) are network active. (Pro) #4272
+* Fix: The restore tool slows to load 'View backup' screen for large backup files. (Pro) #4292
+* Fix: Remove wp-login.php from staging site login links incl. Temporary Login links to prevent cloudflare restrictions. #4192
+* Fix: Backup upload failing for Dropbox backup remote storage. (Pro) #4375
+* UX: Enhance the visual appearance of the backup storage icons. #4367
+* UX: Missing space in Show Logs link. #4366
+* UX: Adjust backup background logger design so that it takes less height on the screen. #4317
+* UX: Remove duplicate buttons from tables selection while doing staging process. #4304
+* UX: Enhance the activation process for backup cloud storage providers. (Pro) #4190
+* UX: Beautify loading placeholder. #4322
+* UX: Improve FTP backup storage UX #4234
+* UX: Increase line-height of delete backup confirmation modal to make it more appealing. #4313
+* Dev: Replace yarn with pnpm for building assets. Update php and js dependencies. #4352
+* Dev: Improve database cloning speed for the upcoming staging site refactor. #4258
+* Dev: Fix failing e2e tests. #4370
+* Dev: Refactor hardcoded `wpstg_queue` string with constant. #2946
+* Dev: Add an Github Action to create dist package against current state of the plugin, so they can be downloaded and installed. #4350
+* Dev: Fix e2e failing on github for PCloud tests. #4363
+* Dev: Fork lucatume/DI52 dependency to support PHP 7.0 and remove warnings in PHP 8.4. #4359
 
 = 4.1.4 =
 * New: Tested Backup and Staging for up to WordPress v. 6.8.1.

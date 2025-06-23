@@ -180,6 +180,11 @@ class PathIdentifier
      */
     public function transformIdentifiableToRelativePath(string $string): string
     {
+        $string = trim($string);
+        if (empty($string)) {
+            return $string;
+        }
+
         $key  = substr($string, 0, 8);
         $path = $this->getRelativePath($key);
         if ($path !== $key && is_string($path)) {

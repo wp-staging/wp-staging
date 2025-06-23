@@ -12,6 +12,9 @@ use WPStaging\Staging\Service\TableScanner;
  * @var DirectoryScanner     $directoryScanner
  * @var TableScanner         $tableScanner
  */
+
+include WPSTG_VIEWS_DIR . 'job/modal/success.php';
+include WPSTG_VIEWS_DIR . 'job/modal/process.php';
 ?>
 <label id="wpstg-clone-label" for="wpstg-new-clone-id">
     <input type="text" id="wpstg-new-clone-id" class="wpstg-textbox"
@@ -101,16 +104,14 @@ use WPStaging\Staging\Service\TableScanner;
 </button>
 
 <?php
-$label  = esc_html__("Start Cloning", "wp-staging");
-$action = 'wpstg_cloning';
-$btnId  = 'wpstg-start-cloning';
+$label    = esc_html__("Start Cloning", "wp-staging");
+$btnClass = 'wpstg--create--staging-site';
 if ($stagingSetup->isUpdateJob()) {
-    $label  = esc_html__("Update Staging Site", "wp-staging");
-    $action = 'wpstg_update';
-    $btnId  = 'wpstg-start-updating';
+    $label    = esc_html__("Update Staging Site", "wp-staging");
+    $btnClass = 'wpstg--update--staging-site';
 }
 ?>
 
-<button type="button" id="<?php echo esc_attr($btnId); ?>" class="wpstg-next-step-link wpstg-button--primary wpstg-button--blue" data-action="<?php echo esc_attr($action); ?>" data-url="<?php echo esc_attr($stagingSiteDto->getUrl()); ?>"><?php echo esc_html($label); ?></button>
+<button type="button" class="wpstg-button--primary wpstg-button--blue <?php echo esc_attr($btnClass); ?>" data-url="<?php echo esc_attr($stagingSiteDto->getUrl()); ?>"><?php echo esc_html($label); ?></button>
 
 <a href="#" id="wpstg-check-space"><?php esc_html_e('Check required disk space', 'wp-staging'); ?></a>

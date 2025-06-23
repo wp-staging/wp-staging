@@ -111,10 +111,9 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
         $components = [];
         if (isset($key['privateKey'])) {
             $components['curve'] = $key['privateKeyAlgorithm']['algorithm'] == 'id-Ed25519' ? new \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519() : new \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed448();
-            // 0x04 == octet string
-            // 0x20 == length (32 bytes)
-            if (\substr($key['privateKey'], 0, 2) != "\4 ") {
-                throw new \RuntimeException('The first two bytes of the private key field should be 0x0420');
+            $expected = \chr(\WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_OCTET_STRING) . \WPStaging\Vendor\phpseclib3\File\ASN1::encodeLength($components['curve']::SIZE);
+            if (\substr($key['privateKey'], 0, 2) != $expected) {
+                throw new \RuntimeException('The first two bytes of the ' . $key['privateKeyAlgorithm']['algorithm'] . ' private key field should be 0x' . \bin2hex($expected));
             }
             $arr = $components['curve']->extractSecret(\substr($key['privateKey'], 2));
             $components['dA'] = $arr['dA'];
@@ -134,7 +133,7 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     /**
      * Convert an EC public key to the appropriate format
      *
-     * @param \phpseclib3\Crypt\EC\BaseCurves\Base $curve
+     * @param BaseCurve $curve
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @param array $options optional
      * @return string
@@ -146,17 +145,17 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
             throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException('Montgomery Curves are not supported');
         }
         if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            return self::wrapPublicKey($curve->encodePoint($publicKey), null, $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 ? 'id-Ed25519' : 'id-Ed448');
+            return self::wrapPublicKey($curve->encodePoint($publicKey), null, $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 ? 'id-Ed25519' : 'id-Ed448', $options);
         }
         $params = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(self::encodeParameters($curve, \false, $options));
         $key = "\4" . $publicKey[0]->toBytes() . $publicKey[1]->toBytes();
-        return self::wrapPublicKey($key, $params, 'id-ecPublicKey');
+        return self::wrapPublicKey($key, $params, 'id-ecPublicKey', $options);
     }
     /**
      * Convert a private key to the appropriate format.
      *
-     * @param \phpseclib3\Math\BigInteger $privateKey
-     * @param \phpseclib3\Crypt\EC\BaseCurves\Base $curve
+     * @param BigInteger $privateKey
+     * @param BaseCurve $curve
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @param string $secret optional
      * @param string $password optional
@@ -170,7 +169,7 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
             throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException('Montgomery Curves are not supported');
         }
         if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            return self::wrapPrivateKey("\4 " . $secret, [], null, $password, $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 ? 'id-Ed25519' : 'id-Ed448');
+            return self::wrapPrivateKey(\chr(\WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_OCTET_STRING) . \WPStaging\Vendor\phpseclib3\File\ASN1::encodeLength($curve::SIZE) . $secret, [], null, $password, $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 ? 'id-Ed25519' : 'id-Ed448');
         }
         $publicKey = "\4" . $publicKey[0]->toBytes() . $publicKey[1]->toBytes();
         $params = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(self::encodeParameters($curve, \false, $options));

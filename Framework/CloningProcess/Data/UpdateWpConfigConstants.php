@@ -8,10 +8,19 @@ use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use RuntimeException;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\SiteInfo;
 
 class UpdateWpConfigConstants extends FileCloningService
 {
+    /**
+     * By default, we disable the debug constants in the staging site.
+     * This is to prevent the staging site from displaying debug information to the public.
+     * To preserve the debug constants value on staging site whether true or false, use this filter.
+     * @var string
+     */
+    const FILTER_PRESERVE_DEBUG_CONSTANTS = 'wpstg.cloning.preserve_debug_constants';
+
     /** @var string */
     protected $abspathRegex = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
 
@@ -74,9 +83,12 @@ class UpdateWpConfigConstants extends FileCloningService
         }
 
         // turn off debug constants on staging site
-        $replaceOrAdd['WP_DEBUG']         = 'false';
-        $replaceOrAdd['WP_DEBUG_LOG']     = 'false';
-        $replaceOrAdd['WP_DEBUG_DISPLAY'] = 'false';
+        if (!Hooks::applyFilters(self::FILTER_PRESERVE_DEBUG_CONSTANTS, false)) {
+            $replaceOrAdd['WP_DEBUG']         = 'false';
+            $replaceOrAdd['WP_DEBUG_LOG']     = 'false';
+            $replaceOrAdd['WP_DEBUG_DISPLAY'] = 'false';
+        }
+
         /** @var Jetpack $jetpackHelper */
         $jetpackHelper = WPStaging::make(Jetpack::class);
         if ($jetpackHelper->isJetpackActive()) {

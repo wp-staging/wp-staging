@@ -353,9 +353,12 @@ abstract class AbstractJob implements ShutdownableInterface
         // From now on, classes that require a JobDataDto will receive this instance.
         WPStaging::getInstance()->getContainer()->singleton(JobDataDto::class, $this->jobDataDto);
 
-        // TODO RPoC Hack
-        $this->jobDataDto->setStatusCheck(!empty($_GET['action']) && $_GET['action'] === 'wpstg--backups--status');
+        $action = empty($_GET['action']) ? '' : sanitize_text_field($_GET['action']);
+        if (empty($action)) {
+            $action = empty($_POST['action']) ? '' : sanitize_text_field($_POST['action']);
+        }
 
+        $this->jobDataDto->setStatusCheck(in_array($action, ['wpstg--backups--status', 'wpstg--job--status'], true));
         if ($this->jobDataDto->isStatusCheck()) {
             return;
         }

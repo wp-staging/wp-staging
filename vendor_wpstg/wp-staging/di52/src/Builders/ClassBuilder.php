@@ -71,7 +71,7 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
      *
      * @throws NotFoundException If the class does not exist.
      */
-    public function __construct($id, \WPStaging\Vendor\lucatume\DI52\Builders\Resolver $resolver, $className, array $afterBuildMethods = null, ...$buildArgs)
+    public function __construct($id, \WPStaging\Vendor\lucatume\DI52\Builders\Resolver $resolver, $className, $afterBuildMethods = null, ...$buildArgs)
     {
         if (!\class_exists($className)) {
             throw new \WPStaging\Vendor\lucatume\DI52\NotFoundException("nothing is bound to the '{$className}' id and it's not an existing or instantiable class.");
@@ -207,7 +207,7 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
     /**
      * {@inheritdoc}
      */
-    public function reinit(array $afterBuildMethods = null, ...$buildArgs)
+    public function reinit($afterBuildMethods = null, ...$buildArgs)
     {
         $this->afterBuildMethods = $afterBuildMethods;
         $this->buildArgs = $buildArgs;

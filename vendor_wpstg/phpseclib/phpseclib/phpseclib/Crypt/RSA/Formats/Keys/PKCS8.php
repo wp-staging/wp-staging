@@ -78,9 +78,9 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     /**
      * Convert a private key to the appropriate format.
      *
-     * @param \phpseclib3\Math\BigInteger $n
-     * @param \phpseclib3\Math\BigInteger $e
-     * @param \phpseclib3\Math\BigInteger $d
+     * @param BigInteger $n
+     * @param BigInteger $e
+     * @param BigInteger $d
      * @param array $primes
      * @param array $exponents
      * @param array $coefficients
@@ -97,8 +97,8 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     /**
      * Convert a public key to the appropriate format
      *
-     * @param \phpseclib3\Math\BigInteger $n
-     * @param \phpseclib3\Math\BigInteger $e
+     * @param BigInteger $n
+     * @param BigInteger $e
      * @param array $options optional
      * @return string
      */
@@ -106,6 +106,6 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     {
         $key = \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PKCS1::savePublicKey($n, $e);
         $key = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($key);
-        return self::wrapPublicKey($key, null);
+        return self::wrapPublicKey($key, null, null, $options);
     }
 }

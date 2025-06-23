@@ -40,12 +40,6 @@ trait WithAdvanceStagingOptions
     /** @var string */
     private $customPath = '';
 
-    /** @var string */
-    private $stagingSiteUrl = '';
-
-    /** @var string */
-    private $stagingSitePath = '';
-
     /** @var bool */
     private $emailsAllowed = true;
 

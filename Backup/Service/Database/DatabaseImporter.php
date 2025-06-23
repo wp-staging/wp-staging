@@ -56,6 +56,12 @@ class DatabaseImporter
         $this->binaryFlagLength   = strlen(self::BINARY_FLAG);
     }
 
+    public function setDatabase(DatabaseInterface $database)
+    {
+        $this->database = $database;
+        $this->client   = $database->getClient();
+    }
+
     public function setFile($filePath)
     {
         $this->file       = new FileObject($filePath);

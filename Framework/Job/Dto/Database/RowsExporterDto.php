@@ -1,17 +1,14 @@
 <?php
 
-namespace WPStaging\Staging\Dto\Service;
+namespace WPStaging\Framework\Job\Dto\Database;
 
-class RowsCopierDto
+class RowsExporterDto
 {
     /** @var int */
     protected $tableIndex = 0;
 
     /** @var string */
-    protected $srcTable = '';
-
-    /** @var string */
-    protected $destTable = '';
+    protected $tableName = '';
 
     /** @var string|null */
     protected $numericPrimaryKey = null;
@@ -20,12 +17,16 @@ class RowsCopierDto
     protected $totalRows = 0;
 
     /** @var int */
-    protected $rowsCopied = 0;
+    protected $totalRowsExported = 0;
 
     /** @var int */
     protected $rowsOffset = 0;
 
-    /** @var int */
+    /**
+     * @var int
+     * We are starting with -PHP_INT_MAX to ensure that the first inserted value is always greater than this.
+     * Because some tables can contain negative values, we cannot start with 0.
+     */
     protected $lastInsertedNumericPrimaryKeyValue = -PHP_INT_MAX;
 
     /** @var bool */
@@ -33,24 +34,20 @@ class RowsCopierDto
 
     public function reset()
     {
-        $this->tableIndex = 0;
-        $this->srcTable   = '';
-        $this->destTable  = '';
-        $this->totalRows  = 0;
-        $this->rowsCopied = 0;
-        $this->rowsOffset = 0;
-        $this->locked     = false;
-
-        $this->numericPrimaryKey = null;
+        $this->tableIndex                         = 0;
+        $this->tableName                          = '';
+        $this->totalRows                          = 0;
+        $this->rowsOffset                         = 0;
+        $this->locked                             = false;
+        $this->numericPrimaryKey                  = null;
         $this->lastInsertedNumericPrimaryKeyValue = -PHP_INT_MAX;
     }
 
-    public function init(int $tableIndex, string $srcTable, string $destTable, int $totalRows)
+    public function init(int $tableIndex, string $tableName, int $totalRows)
     {
         $this->reset();
         $this->tableIndex = $tableIndex;
-        $this->srcTable   = $srcTable;
-        $this->destTable  = $destTable;
+        $this->tableName  = $tableName;
         $this->totalRows  = $totalRows;
     }
 
@@ -68,32 +65,18 @@ class RowsCopierDto
         $this->tableIndex = $tableIndex;
     }
 
-    public function getSrcTable(): string
+    public function getTableName(): string
     {
-        return $this->srcTable;
+        return $this->tableName;
     }
 
     /**
-     * @param string $srcTable
+     * @param string $tableName
      * @return void
      */
-    public function setSrcTable(string $srcTable)
+    public function setTableName(string $tableName)
     {
-        $this->srcTable = $srcTable;
-    }
-
-    public function getDestTable(): string
-    {
-        return $this->destTable;
-    }
-
-    /**
-     * @param string $destTable
-     * @return void
-     */
-    public function setDestTable(string $destTable)
-    {
-        $this->destTable = $destTable;
+        $this->tableName = $tableName;
     }
 
     /**
@@ -127,18 +110,18 @@ class RowsCopierDto
         $this->totalRows = $totalRows;
     }
 
-    public function getRowsCopied(): int
+    public function getTotalRowsExported(): int
     {
-        return $this->rowsCopied;
+        return $this->totalRowsExported;
     }
 
     /**
-     * @param int $rowsCopied
+     * @param int $rowsExported
      * @return void
      */
-    public function setRowsCopied(int $rowsCopied)
+    public function setTotalRowsExported(int $rowsExported)
     {
-        $this->rowsCopied = $rowsCopied;
+        $this->totalRowsExported = $rowsExported;
     }
 
     public function getRowsOffset(): int
@@ -188,6 +171,6 @@ class RowsCopierDto
      */
     public function isFinished(): bool
     {
-        return $this->rowsCopied >= $this->totalRows;
+        return $this->rowsOffset >= $this->totalRows;
     }
 }

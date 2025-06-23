@@ -33,7 +33,7 @@ class Binary extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
     /**
      * Binary Field Integer factory
      *
-     * @var \phpseclib3\Math\BinaryField
+     * @var BinaryField
      */
     protected $factory;
     /**
@@ -264,7 +264,7 @@ class Binary extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
     /**
      * Returns the modulo
      *
-     * @return \phpseclib3\Math\BigInteger
+     * @return BigInteger
      */
     public function getModulo()
     {

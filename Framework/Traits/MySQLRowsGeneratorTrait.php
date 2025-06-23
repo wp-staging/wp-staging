@@ -113,7 +113,15 @@ trait MySQLRowsGeneratorTrait
                 }
 
                 if ($result === false) {
-                    throw new \RuntimeException('DB error:' . $db->error() . ' Query: ' . $query . ' requestId: ' . $requestId . ' table: ' . $table . ' Offset: ' . $offset . ' Batch Size: ' . $batchSize);
+                    $errorMessage = $db->error();
+                    if (stripos($errorMessage, 'corrupt') !== false || stripos($errorMessage, 'repair') !== false) {
+                        throw new \RuntimeException(sprintf(
+                            'Storage engine for the table "%s" does not support SQL command REPAIR TABLE. Please read this https://wp-staging.com/phpmyadmin-repair-and-optimize-database-tables-tutorial/ to learn how to repair the table manually first.',
+                            esc_html($table)
+                        ));
+                    }
+
+                    throw new \RuntimeException('DB error: ' . $errorMessage . ' Query: ' . $query . ' requestId: ' . $requestId . ' table: ' . $table . ' Offset: ' . $offset . ' Batch Size: ' . $batchSize);
                 }
 
                 $rows = [];

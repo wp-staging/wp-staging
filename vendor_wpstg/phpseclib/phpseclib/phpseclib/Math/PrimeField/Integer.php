@@ -55,8 +55,9 @@ class Integer extends \WPStaging\Vendor\phpseclib3\Math\Common\FiniteField\Integ
      * Default constructor
      *
      * @param int $instanceID
+     * @param BigInteger $num
      */
-    public function __construct($instanceID, \WPStaging\Vendor\phpseclib3\Math\BigInteger $num = null)
+    public function __construct($instanceID, $num = null)
     {
         $this->instanceID = $instanceID;
         if (!isset($num)) {
@@ -232,7 +233,7 @@ class Integer extends \WPStaging\Vendor\phpseclib3\Math\Common\FiniteField\Integ
         list($temp) = $q->add($one)->divide($two);
         $r = $this->value->powMod($temp, static::$modulo[$this->instanceID]);
         while (!$t->equals($one)) {
-            for ($i == clone $one; $i->compare($m) < 0; $i = $i->add($one)) {
+            for ($i = clone $one; $i->compare($m) < 0; $i = $i->add($one)) {
                 if ($t->powMod($two->pow($i), static::$modulo[$this->instanceID])->equals($one)) {
                     break;
                 }
@@ -276,8 +277,11 @@ class Integer extends \WPStaging\Vendor\phpseclib3\Math\Common\FiniteField\Integ
      */
     public function toBytes()
     {
-        $length = static::$modulo[$this->instanceID]->getLengthInBytes();
-        return \str_pad($this->value->toBytes(), $length, "\0", \STR_PAD_LEFT);
+        if (isset(static::$modulo[$this->instanceID])) {
+            $length = static::$modulo[$this->instanceID]->getLengthInBytes();
+            return \str_pad($this->value->toBytes(), $length, "\0", \STR_PAD_LEFT);
+        }
+        return $this->value->toBytes();
     }
     /**
      * Converts an Integer to a hex string (eg. base-16).

@@ -118,7 +118,7 @@ class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Ba
     /**
      * Returns the a coefficient
      *
-     * @return \phpseclib3\Math\PrimeField\Integer
+     * @return PrimeInteger
      */
     public function getA()
     {
@@ -127,7 +127,7 @@ class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Ba
     /**
      * Returns the a coefficient
      *
-     * @return \phpseclib3\Math\PrimeField\Integer
+     * @return PrimeInteger
      */
     public function getD()
     {
@@ -153,7 +153,7 @@ class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Ba
     /**
      * Returns the affine point
      *
-     * @return \phpseclib3\Math\PrimeField\Integer[]
+     * @return PrimeField\Integer[]
      */
     public function convertToAffine(array $p)
     {
@@ -167,7 +167,7 @@ class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Ba
     /**
      * Returns the modulo
      *
-     * @return \phpseclib3\Math\BigInteger
+     * @return BigInteger
      */
     public function getModulo()
     {

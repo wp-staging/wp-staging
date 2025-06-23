@@ -281,7 +281,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      */
     public function bitwise_or(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x)
     {
-        return $this->bitwiseXorHelper($x);
+        return $this->bitwiseOrHelper($x);
     }
     /**
      * Logical Exclusive Or

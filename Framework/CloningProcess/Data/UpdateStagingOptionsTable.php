@@ -12,10 +12,15 @@ use WPStaging\Staging\Sites;
 use WPStaging\Framework\ThirdParty\FreemiusScript;
 use WPStaging\Pro\Staging\NetworkClone;
 use WPStaging\Backup\BackupRetentionHandler;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Backup\BackupScheduler;
 
 class UpdateStagingOptionsTable extends DBCloningService
 {
     const FILTER_CLONING_UPDATE_ACTIVE_PLUGINS = 'wpstg.cloning.update_active_plugins';
+
+    /** @var string */
+    const FILTER_CLONING_PRESERVE_UPLOAD_PATH = 'wpstg.cloning.preserve_upload_path';
 
     /**
      * @inheritDoc
@@ -117,9 +122,14 @@ class UpdateStagingOptionsTable extends DBCloningService
         $this->updateOrInsertOptions($updateOrInsert);
 
         $update = [
-            'upload_path' => '',
             'wpstg_connection' => json_encode(['prodHostname' => get_site_url()]),
         ];
+
+        // Reset the upload_path in database unless preserved by filter!
+        if (Hooks::applyFilters(self::FILTER_CLONING_PRESERVE_UPLOAD_PATH, false) === false) {
+            $update['upload_path'] = '';
+        }
+
         if ($this->dto->getMainJob() !== MainJob::UPDATE) {
             $update[Sites::STAGING_SITES_OPTION] = serialize([]);
         }
@@ -148,6 +158,10 @@ class UpdateStagingOptionsTable extends DBCloningService
             $toDelete[] = 'wpstg_googledrive';
             $toDelete[] = 'wpstg_dropbox';
             $toDelete[] = 'wpstg_one-drive';
+            $toDelete[] = 'wpstg_pcloud';
+            $toDelete[] = BackupScheduler::OPTION_BACKUP_SCHEDULES;
+            // @see \WPStaging\Pro\Auth\TemporaryLogins::OPTION_CURRENT_SITE_LOGIN_LINKS
+            $toDelete[] = 'wpstg_current_site_login_links';
             // Should we delete other cloud storage options too?
             $toDelete[] = FinishBackupTask::OPTION_LAST_BACKUP;
         }

@@ -64,7 +64,9 @@ use WPStaging\Vendor\phpseclib3\Crypt\TripleDES;
 use WPStaging\Vendor\phpseclib3\Crypt\Twofish;
 use WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException;
 use WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException;
+use WPStaging\Vendor\phpseclib3\Exception\InvalidPacketLengthException;
 use WPStaging\Vendor\phpseclib3\Exception\NoSupportedAlgorithmsException;
+use WPStaging\Vendor\phpseclib3\Exception\TimeoutException;
 use WPStaging\Vendor\phpseclib3\Exception\UnableToConnectException;
 use WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException;
 use WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException;
@@ -100,7 +102,7 @@ class SSH2
     const MASK_LOGIN_REQ = 0x4;
     const MASK_LOGIN = 0x8;
     const MASK_SHELL = 0x10;
-    const MASK_WINDOW_ADJUST = 0x20;
+    const MASK_DISCONNECT = 0x20;
     /*
      * Channel constants
      *
@@ -146,6 +148,10 @@ class SSH2
      * Outputs the message numbers real-time
      */
     const LOG_SIMPLE_REALTIME = 5;
+    /*
+     * Dumps the message numbers real-time
+     */
+    const LOG_REALTIME_SIMPLE = 5;
     /**
      * Make sure that the log never gets larger than this
      *
@@ -570,7 +576,7 @@ class SSH2
      */
     protected $server_channels = [];
     /**
-     * Channel Buffers
+     * Channel Read Buffers
      *
      * If a client requests a packet from one channel but receives two packets from another those packets should
      * be placed in a buffer
@@ -580,6 +586,16 @@ class SSH2
      * @var array
      */
     private $channel_buffers = [];
+    /**
+     * Channel Write Buffers
+     *
+     * If a client sends a packet and receives a timeout error mid-transmission, buffer the data written so it
+     * can be de-duplicated upon resuming write
+     *
+     * @see self::send_channel_packet()
+     * @var array
+     */
+    private $channel_buffers_write = [];
     /**
      * Channel Status
      *
@@ -747,11 +763,11 @@ class SSH2
      */
     private $quiet_mode = \false;
     /**
-     * Time of first network activity
+     * Time of last read/write network activity
      *
      * @var float
      */
-    private $last_packet;
+    private $last_packet = null;
     /**
      * Exit status returned from ssh if any
      *
@@ -802,7 +818,7 @@ class SSH2
      * @see self::isTimeout()
      * @var bool
      */
-    private $is_timeout = \false;
+    protected $is_timeout = \false;
     /**
      * Log Boundary
      *
@@ -902,13 +918,13 @@ class SSH2
      *
      * @var bool
      */
-    private $retry_connect = \false;
+    private $login_credentials_finalized = \false;
     /**
      * Binary Packet Buffer
      *
-     * @var string|false
+     * @var object|null
      */
-    private $binary_packet_buffer = \false;
+    private $binary_packet_buffer = null;
     /**
      * Preferred Signature Format
      *
@@ -990,9 +1006,57 @@ class SSH2
      */
     private $errorOnMultipleChannels;
     /**
+     * Bytes Transferred Since Last Key Exchange
+     *
+     * Includes outbound and inbound totals
+     *
+     * @var int
+     */
+    private $bytesTransferredSinceLastKEX = 0;
+    /**
+     * After how many transferred byte should phpseclib initiate a key re-exchange?
+     *
+     * @var int
+     */
+    private $doKeyReexchangeAfterXBytes = 1024 * 1024 * 1024;
+    /**
+     * Has a key re-exchange been initialized?
+     *
+     * @var bool
+     * @access private
+     */
+    private $keyExchangeInProgress = \false;
+    /**
+     * KEX Buffer
+     *
+     * If we're in the middle of a key exchange we want to buffer any additional packets we get until
+     * the key exchange is over
+     *
+     * @see self::_get_binary_packet()
+     * @see self::_key_exchange()
+     * @see self::exec()
+     * @var array
+     * @access private
+     */
+    private $kex_buffer = [];
+    /**
+     * Strict KEX Flag
+     *
+     * If kex-strict-s-v00@openssh.com is present in the first KEX packet it need not
+     * be present in subsequent packet
+     *
+     * @see self::_key_exchange()
+     * @see self::exec()
+     * @var array
+     * @access private
+     */
+    private $strict_kex_flag = \false;
+    /**
      * Default Constructor.
      *
      * $host can either be a string, representing the host, or a stream resource.
+     * If $host is a stream resource then $port doesn't do anything, altho $timeout
+     * still will be used
      *
      * @param mixed $host
      * @param int $port
@@ -1002,7 +1066,38 @@ class SSH2
     public function __construct($host, $port = 22, $timeout = 10)
     {
         if (empty(self::$message_numbers)) {
-            self::$message_numbers = [1 => 'NET_SSH2_MSG_DISCONNECT', 2 => 'NET_SSH2_MSG_IGNORE', 3 => 'NET_SSH2_MSG_UNIMPLEMENTED', 4 => 'NET_SSH2_MSG_DEBUG', 5 => 'NET_SSH2_MSG_SERVICE_REQUEST', 6 => 'NET_SSH2_MSG_SERVICE_ACCEPT', 20 => 'NET_SSH2_MSG_KEXINIT', 21 => 'NET_SSH2_MSG_NEWKEYS', 30 => 'NET_SSH2_MSG_KEXDH_INIT', 31 => 'NET_SSH2_MSG_KEXDH_REPLY', 50 => 'NET_SSH2_MSG_USERAUTH_REQUEST', 51 => 'NET_SSH2_MSG_USERAUTH_FAILURE', 52 => 'NET_SSH2_MSG_USERAUTH_SUCCESS', 53 => 'NET_SSH2_MSG_USERAUTH_BANNER', 80 => 'NET_SSH2_MSG_GLOBAL_REQUEST', 81 => 'NET_SSH2_MSG_REQUEST_SUCCESS', 82 => 'NET_SSH2_MSG_REQUEST_FAILURE', 90 => 'NET_SSH2_MSG_CHANNEL_OPEN', 91 => 'NET_SSH2_MSG_CHANNEL_OPEN_CONFIRMATION', 92 => 'NET_SSH2_MSG_CHANNEL_OPEN_FAILURE', 93 => 'NET_SSH2_MSG_CHANNEL_WINDOW_ADJUST', 94 => 'NET_SSH2_MSG_CHANNEL_DATA', 95 => 'NET_SSH2_MSG_CHANNEL_EXTENDED_DATA', 96 => 'NET_SSH2_MSG_CHANNEL_EOF', 97 => 'NET_SSH2_MSG_CHANNEL_CLOSE', 98 => 'NET_SSH2_MSG_CHANNEL_REQUEST', 99 => 'NET_SSH2_MSG_CHANNEL_SUCCESS', 100 => 'NET_SSH2_MSG_CHANNEL_FAILURE'];
+            self::$message_numbers = [
+                1 => 'NET_SSH2_MSG_DISCONNECT',
+                2 => 'NET_SSH2_MSG_IGNORE',
+                3 => 'NET_SSH2_MSG_UNIMPLEMENTED',
+                4 => 'NET_SSH2_MSG_DEBUG',
+                5 => 'NET_SSH2_MSG_SERVICE_REQUEST',
+                6 => 'NET_SSH2_MSG_SERVICE_ACCEPT',
+                7 => 'NET_SSH2_MSG_EXT_INFO',
+                // RFC 8308
+                20 => 'NET_SSH2_MSG_KEXINIT',
+                21 => 'NET_SSH2_MSG_NEWKEYS',
+                30 => 'NET_SSH2_MSG_KEXDH_INIT',
+                31 => 'NET_SSH2_MSG_KEXDH_REPLY',
+                50 => 'NET_SSH2_MSG_USERAUTH_REQUEST',
+                51 => 'NET_SSH2_MSG_USERAUTH_FAILURE',
+                52 => 'NET_SSH2_MSG_USERAUTH_SUCCESS',
+                53 => 'NET_SSH2_MSG_USERAUTH_BANNER',
+                80 => 'NET_SSH2_MSG_GLOBAL_REQUEST',
+                81 => 'NET_SSH2_MSG_REQUEST_SUCCESS',
+                82 => 'NET_SSH2_MSG_REQUEST_FAILURE',
+                90 => 'NET_SSH2_MSG_CHANNEL_OPEN',
+                91 => 'NET_SSH2_MSG_CHANNEL_OPEN_CONFIRMATION',
+                92 => 'NET_SSH2_MSG_CHANNEL_OPEN_FAILURE',
+                93 => 'NET_SSH2_MSG_CHANNEL_WINDOW_ADJUST',
+                94 => 'NET_SSH2_MSG_CHANNEL_DATA',
+                95 => 'NET_SSH2_MSG_CHANNEL_EXTENDED_DATA',
+                96 => 'NET_SSH2_MSG_CHANNEL_EOF',
+                97 => 'NET_SSH2_MSG_CHANNEL_CLOSE',
+                98 => 'NET_SSH2_MSG_CHANNEL_REQUEST',
+                99 => 'NET_SSH2_MSG_CHANNEL_SUCCESS',
+                100 => 'NET_SSH2_MSG_CHANNEL_FAILURE',
+            ];
             self::$disconnect_reasons = [1 => 'NET_SSH2_DISCONNECT_HOST_NOT_ALLOWED_TO_CONNECT', 2 => 'NET_SSH2_DISCONNECT_PROTOCOL_ERROR', 3 => 'NET_SSH2_DISCONNECT_KEY_EXCHANGE_FAILED', 4 => 'NET_SSH2_DISCONNECT_RESERVED', 5 => 'NET_SSH2_DISCONNECT_MAC_ERROR', 6 => 'NET_SSH2_DISCONNECT_COMPRESSION_ERROR', 7 => 'NET_SSH2_DISCONNECT_SERVICE_NOT_AVAILABLE', 8 => 'NET_SSH2_DISCONNECT_PROTOCOL_VERSION_NOT_SUPPORTED', 9 => 'NET_SSH2_DISCONNECT_HOST_KEY_NOT_VERIFIABLE', 10 => 'NET_SSH2_DISCONNECT_CONNECTION_LOST', 11 => 'NET_SSH2_DISCONNECT_BY_APPLICATION', 12 => 'NET_SSH2_DISCONNECT_TOO_MANY_CONNECTIONS', 13 => 'NET_SSH2_DISCONNECT_AUTH_CANCELLED_BY_USER', 14 => 'NET_SSH2_DISCONNECT_NO_MORE_AUTH_METHODS_AVAILABLE', 15 => 'NET_SSH2_DISCONNECT_ILLEGAL_USER_NAME'];
             self::$channel_open_failure_reasons = [1 => 'NET_SSH2_OPEN_ADMINISTRATIVELY_PROHIBITED'];
             self::$terminal_modes = [0 => 'NET_SSH2_TTY_OP_END'];
@@ -1027,6 +1122,7 @@ class SSH2
          * @var \WeakReference<SSH2>|SSH2
          */
         self::$connections[$this->getResourceId()] = \class_exists('WeakReference') ? \WeakReference::create($this) : $this;
+        $this->timeout = $timeout;
         if (\is_resource($host)) {
             $this->fsock = $host;
             return;
@@ -1034,7 +1130,6 @@ class SSH2
         if (\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::is_stringable($host)) {
             $this->host = $host;
             $this->port = $port;
-            $this->timeout = $timeout;
         }
     }
     /**
@@ -1135,7 +1230,6 @@ class SSH2
         }
         $this->bitmap |= self::MASK_CONSTRUCTOR;
         $this->curTimeout = $this->timeout;
-        $this->last_packet = \microtime(\true);
         if (!\is_resource($this->fsock)) {
             $start = \microtime(\true);
             // with stream_select a timeout of 0 means that no timeout takes place;
@@ -1153,10 +1247,18 @@ class SSH2
                     throw new \RuntimeException('Connection timed out whilst attempting to open socket connection');
                 }
             }
+            if (\defined('NET_SSH2_LOGGING')) {
+                $this->append_log('(fsockopen took ' . \round($elapsed, 4) . 's)', '');
+            }
         }
         $this->identifier = $this->generate_identifier();
         if ($this->send_id_string_first) {
+            $start = \microtime(\true);
             \fputs($this->fsock, $this->identifier . "\r\n");
+            $elapsed = \round(\microtime(\true) - $start, 4);
+            if (\defined('NET_SSH2_LOGGING')) {
+                $this->append_log("-> (network: {$elapsed})", $this->identifier . "\r\n");
+            }
         }
         /* According to the SSH2 specs,
         
@@ -1166,6 +1268,7 @@ class SSH2
                    in ISO-10646 UTF-8 [RFC3629] (language is not specified).  Clients
                    MUST be able to process such lines." */
         $data = '';
+        $totalElapsed = 0;
         while (!\feof($this->fsock) && !\preg_match('#(.*)^(SSH-(\\d\\.\\d+).*)#ms', $data, $matches)) {
             $line = '';
             while (\true) {
@@ -1182,38 +1285,31 @@ class SSH2
                         throw new \RuntimeException('Connection timed out whilst receiving server identification string');
                     }
                     $elapsed = \microtime(\true) - $start;
+                    $totalElapsed += $elapsed;
                     $this->curTimeout -= $elapsed;
                 }
                 $temp = \stream_get_line($this->fsock, 255, "\n");
                 if ($temp === \false) {
-                    throw new \RuntimeException('Error reading from socket');
+                    throw new \RuntimeException('Error reading SSH identification string; are you sure you\'re connecting to an SSH server?');
                 }
+                $line .= $temp;
                 if (\strlen($temp) == 255) {
                     continue;
                 }
-                $line .= "{$temp}\n";
-                // quoting RFC4253, "Implementers who wish to maintain
-                // compatibility with older, undocumented versions of this protocol may
-                // want to process the identification string without expecting the
-                // presence of the carriage return character for reasons described in
-                // Section 5 of this document."
-                //if (substr($line, -2) == "\r\n") {
-                //    break;
-                //}
+                $line .= "\n";
                 break;
             }
             $data .= $line;
         }
+        if (\defined('NET_SSH2_LOGGING')) {
+            $this->append_log('<- (network: ' . \round($totalElapsed, 4) . ')', $line);
+        }
         if (\feof($this->fsock)) {
             $this->bitmap = 0;
-            throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server');
+            throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server; are you sure you\'re connected to an SSH server?');
         }
         $extra = $matches[1];
-        if (\defined('NET_SSH2_LOGGING')) {
-            $this->append_log('<-', $matches[0]);
-            $this->append_log('->', $this->identifier . "\r\n");
-        }
-        $this->server_identifier = \trim($temp, "\r\n");
+        $this->server_identifier = \trim($data, "\r\n");
         if (\strlen($extra)) {
             $this->errors[] = $data;
         }
@@ -1233,14 +1329,16 @@ class SSH2
         $match = $match && \version_compare('6.9', $matches[1], '>=');
         $this->errorOnMultipleChannels = $match;
         if (!$this->send_id_string_first) {
+            $start = \microtime(\true);
             \fputs($this->fsock, $this->identifier . "\r\n");
-        }
-        if (!$this->send_kex_first) {
-            $response = $this->get_binary_packet();
-            if (\is_bool($response) || !\strlen($response) || \ord($response[0]) != NET_SSH2_MSG_KEXINIT) {
-                $this->bitmap = 0;
-                throw new \UnexpectedValueException('Expected SSH_MSG_KEXINIT');
+            $elapsed = \round(\microtime(\true) - $start, 4);
+            if (\defined('NET_SSH2_LOGGING')) {
+                $this->append_log("-> (network: {$elapsed})", $this->identifier . "\r\n");
             }
+        }
+        $this->last_packet = \microtime(\true);
+        if (!$this->send_kex_first) {
+            $response = $this->get_binary_packet_or_close(NET_SSH2_MSG_KEXINIT);
             $this->key_exchange($response);
         }
         if ($this->send_kex_first) {
@@ -1285,12 +1383,16 @@ class SSH2
      * @param string|bool $kexinit_payload_server optional
      * @throws \UnexpectedValueException on receipt of unexpected packets
      * @throws \RuntimeException on other errors
-     * @throws \phpseclib3\Exception\NoSupportedAlgorithmsException when none of the algorithms phpseclib has loaded are compatible
+     * @throws NoSupportedAlgorithmsException when none of the algorithms phpseclib has loaded are compatible
      */
     private function key_exchange($kexinit_payload_server = \false)
     {
+        $this->bytesTransferredSinceLastKEX = 0;
         $preferred = $this->preferred;
-        $send_kex = \true;
+        // for the initial key exchange $send_kex is true (no key re-exchange has been started)
+        // for phpseclib initiated key exchanges $send_kex is false
+        $send_kex = !$this->keyExchangeInProgress;
+        $this->keyExchangeInProgress = \true;
         $kex_algorithms = isset($preferred['kex']) ? $preferred['kex'] : \WPStaging\Vendor\phpseclib3\Net\SSH2::getSupportedKEXAlgorithms();
         $server_host_key_algorithms = isset($preferred['hostkey']) ? $preferred['hostkey'] : \WPStaging\Vendor\phpseclib3\Net\SSH2::getSupportedHostKeyAlgorithms();
         $s2c_encryption_algorithms = isset($preferred['server_to_client']['crypt']) ? $preferred['server_to_client']['crypt'] : \WPStaging\Vendor\phpseclib3\Net\SSH2::getSupportedEncryptionAlgorithms();
@@ -1299,6 +1401,7 @@ class SSH2
         $c2s_mac_algorithms = isset($preferred['client_to_server']['mac']) ? $preferred['client_to_server']['mac'] : \WPStaging\Vendor\phpseclib3\Net\SSH2::getSupportedMACAlgorithms();
         $s2c_compression_algorithms = isset($preferred['server_to_client']['comp']) ? $preferred['server_to_client']['comp'] : \WPStaging\Vendor\phpseclib3\Net\SSH2::getSupportedCompressionAlgorithms();
         $c2s_compression_algorithms = isset($preferred['client_to_server']['comp']) ? $preferred['client_to_server']['comp'] : \WPStaging\Vendor\phpseclib3\Net\SSH2::getSupportedCompressionAlgorithms();
+        $kex_algorithms = \array_merge($kex_algorithms, ['ext-info-c', 'kex-strict-c-v00@openssh.com']);
         // some SSH servers have buggy implementations of some of the above algorithms
         switch (\true) {
             case $this->server_identifier == 'SSH-2.0-SSHD':
@@ -1308,6 +1411,14 @@ class SSH2
                 }
                 if (!isset($preferred['client_to_server']['mac'])) {
                     $c2s_mac_algorithms = \array_values(\array_diff($c2s_mac_algorithms, ['hmac-sha1-96', 'hmac-md5-96']));
+                }
+                break;
+            case \substr($this->server_identifier, 0, 24) == 'SSH-2.0-TurboFTP_SERVER_':
+                if (!isset($preferred['server_to_client']['crypt'])) {
+                    $s2c_encryption_algorithms = \array_values(\array_diff($s2c_encryption_algorithms, ['aes128-gcm@openssh.com', 'aes256-gcm@openssh.com']));
+                }
+                if (!isset($preferred['client_to_server']['crypt'])) {
+                    $c2s_encryption_algorithms = \array_values(\array_diff($c2s_encryption_algorithms, ['aes128-gcm@openssh.com', 'aes256-gcm@openssh.com']));
                 }
         }
         $client_cookie = \WPStaging\Vendor\phpseclib3\Crypt\Random::string(16);
@@ -1330,12 +1441,17 @@ class SSH2
             // first_kex_packet_follows
             0
         );
-        if ($kexinit_payload_server === \false) {
+        if ($kexinit_payload_server === \false && $send_kex) {
             $this->send_binary_packet($kexinit_payload_client);
-            $kexinit_payload_server = $this->get_binary_packet();
-            if (\is_bool($kexinit_payload_server) || !\strlen($kexinit_payload_server) || \ord($kexinit_payload_server[0]) != NET_SSH2_MSG_KEXINIT) {
-                $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
-                throw new \UnexpectedValueException('Expected SSH_MSG_KEXINIT');
+            while (\true) {
+                $kexinit_payload_server = $this->get_binary_packet();
+                switch (\ord($kexinit_payload_server[0])) {
+                    case NET_SSH2_MSG_KEXINIT:
+                        break 2;
+                    case NET_SSH2_MSG_DISCONNECT:
+                        return $this->handleDisconnect($kexinit_payload_server);
+                }
+                $this->kex_buffer[] = $kexinit_payload_server;
             }
             $send_kex = \false;
         }
@@ -1344,6 +1460,16 @@ class SSH2
         // skip past the message number (it should be SSH_MSG_KEXINIT)
         $server_cookie = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($response, 16);
         list($this->kex_algorithms, $this->server_host_key_algorithms, $this->encryption_algorithms_client_to_server, $this->encryption_algorithms_server_to_client, $this->mac_algorithms_client_to_server, $this->mac_algorithms_server_to_client, $this->compression_algorithms_client_to_server, $this->compression_algorithms_server_to_client, $this->languages_client_to_server, $this->languages_server_to_client, $first_kex_packet_follows) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('L10C', $response);
+        if (\in_array('kex-strict-s-v00@openssh.com', $this->kex_algorithms)) {
+            if ($this->session_id === \false) {
+                // [kex-strict-s-v00@openssh.com is] only valid in the initial SSH2_MSG_KEXINIT and MUST be ignored
+                // if [it is] present in subsequent SSH2_MSG_KEXINIT packets
+                $this->strict_kex_flag = \true;
+                if (\count($this->kex_buffer)) {
+                    throw new \UnexpectedValueException('Possible Terrapin Attack detected');
+                }
+            }
+        }
         $this->supported_private_key_algorithms = $this->server_host_key_algorithms;
         if ($send_kex) {
             $this->send_binary_packet($kexinit_payload_client);
@@ -1352,14 +1478,12 @@ class SSH2
         // we don't initialize any crypto-objects, yet - we do that, later. for now, we need the lengths to make the
         // diffie-hellman key exchange as fast as possible
         $decrypt = self::array_intersect_first($s2c_encryption_algorithms, $this->encryption_algorithms_server_to_client);
-        $decryptKeyLength = $this->encryption_algorithm_to_key_size($decrypt);
-        if ($decryptKeyLength === null) {
+        if (!$decrypt || ($decryptKeyLength = $this->encryption_algorithm_to_key_size($decrypt)) === null) {
             $this->disconnect_helper(NET_SSH2_DISCONNECT_KEY_EXCHANGE_FAILED);
             throw new \WPStaging\Vendor\phpseclib3\Exception\NoSupportedAlgorithmsException('No compatible server to client encryption algorithms found');
         }
         $encrypt = self::array_intersect_first($c2s_encryption_algorithms, $this->encryption_algorithms_client_to_server);
-        $encryptKeyLength = $this->encryption_algorithm_to_key_size($encrypt);
-        if ($encryptKeyLength === null) {
+        if (!$encrypt || ($encryptKeyLength = $this->encryption_algorithm_to_key_size($encrypt)) === null) {
             $this->disconnect_helper(NET_SSH2_DISCONNECT_KEY_EXCHANGE_FAILED);
             throw new \WPStaging\Vendor\phpseclib3\Exception\NoSupportedAlgorithmsException('No compatible client to server encryption algorithms found');
         }
@@ -1432,12 +1556,8 @@ class SSH2
                 $packet = \pack('Ca*', NET_SSH2_MSG_KEXDH_GEX_REQUEST, $dh_group_sizes_packed);
                 $this->send_binary_packet($packet);
                 $this->updateLogHistory('UNKNOWN (34)', 'NET_SSH2_MSG_KEXDH_GEX_REQUEST');
-                $response = $this->get_binary_packet();
+                $response = $this->get_binary_packet_or_close(NET_SSH2_MSG_KEXDH_GEX_GROUP);
                 list($type, $primeBytes, $gBytes) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('Css', $response);
-                if ($type != NET_SSH2_MSG_KEXDH_GEX_GROUP) {
-                    $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
-                    throw new \UnexpectedValueException('Expected SSH_MSG_KEX_DH_GEX_GROUP');
-                }
                 $this->updateLogHistory('NET_SSH2_MSG_KEXDH_REPLY', 'NET_SSH2_MSG_KEXDH_GEX_GROUP');
                 $prime = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($primeBytes, -256);
                 $g = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($gBytes, -256);
@@ -1465,12 +1585,8 @@ class SSH2
             case 'NET_SSH2_MSG_KEXDH_GEX_INIT':
                 $this->updateLogHistory('UNKNOWN (32)', 'NET_SSH2_MSG_KEXDH_GEX_INIT');
         }
-        $response = $this->get_binary_packet();
+        $response = $this->get_binary_packet_or_close(\constant($serverKexReplyMessage));
         list($type, $server_public_host_key, $theirPublicBytes, $this->signature) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('Csss', $response);
-        if ($type != \constant($serverKexReplyMessage)) {
-            $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
-            throw new \UnexpectedValueException("Expected {$serverKexReplyMessage}");
-        }
         switch ($serverKexReplyMessage) {
             case 'NET_SSH2_MSG_KEX_ECDH_REPLY':
                 $this->updateLogHistory('NET_SSH2_MSG_KEXDH_REPLY', 'NET_SSH2_MSG_KEX_ECDH_REPLY');
@@ -1518,15 +1634,10 @@ class SSH2
         }
         $packet = \pack('C', NET_SSH2_MSG_NEWKEYS);
         $this->send_binary_packet($packet);
-        $response = $this->get_binary_packet();
-        if ($response === \false) {
-            $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
-            throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server');
-        }
-        list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
-        if ($type != NET_SSH2_MSG_NEWKEYS) {
-            $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
-            throw new \UnexpectedValueException('Expected SSH_MSG_NEWKEYS');
+        $this->get_binary_packet_or_close(NET_SSH2_MSG_NEWKEYS);
+        $this->keyExchangeInProgress = \false;
+        if ($this->strict_kex_flag) {
+            $this->get_seq_no = $this->send_seq_no = 0;
         }
         $keyBytes = \pack('Na*', \strlen($keyBytes), $keyBytes);
         $this->encrypt = self::encryption_algorithm_to_crypt_instance($encrypt);
@@ -1788,7 +1899,7 @@ class SSH2
                 return [new \WPStaging\Vendor\phpseclib3\Crypt\Hash('md5-96'), 16];
         }
     }
-    /*
+    /**
      * Tests whether or not proposed algorithm has a potential for issues
      *
      * @link https://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/ssh2-aesctr-openssh.html
@@ -1818,7 +1929,9 @@ class SSH2
      */
     public function login($username, ...$args)
     {
-        $this->auth[] = \func_get_args();
+        if (!$this->login_credentials_finalized) {
+            $this->auth[] = \func_get_args();
+        }
         // try logging with 'none' as an authentication method first since that's what
         // PuTTY does
         if (\substr($this->server_identifier, 0, 15) != 'SSH-2.0-CoreFTP' && $this->auth_methods_to_continue === null) {
@@ -1912,6 +2025,7 @@ class SSH2
             }
             foreach ($newargs as $arg) {
                 if ($this->login_helper($username, $arg)) {
+                    $this->login_credentials_finalized = \true;
                     return \true;
                 }
             }
@@ -1939,18 +2053,21 @@ class SSH2
             $packet = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('Cs', NET_SSH2_MSG_SERVICE_REQUEST, 'ssh-userauth');
             $this->send_binary_packet($packet);
             try {
-                $response = $this->get_binary_packet();
-            } catch (\Exception $e) {
-                if ($this->retry_connect) {
-                    $this->retry_connect = \false;
-                    $this->connect();
-                    return $this->login_helper($username, $password);
+                $response = $this->get_binary_packet_or_close(NET_SSH2_MSG_SERVICE_ACCEPT);
+            } catch (\WPStaging\Vendor\phpseclib3\Exception\InvalidPacketLengthException $e) {
+                // the first opportunity to encounter the "bad key size" error
+                if (!$this->bad_key_size_fix && $this->decryptName != null && self::bad_algorithm_candidate($this->decryptName)) {
+                    // bad_key_size_fix is only ever re-assigned to true here
+                    // retry the connection with that new setting but we'll
+                    // only try it once.
+                    $this->bad_key_size_fix = \true;
+                    return $this->reconnect();
                 }
-                $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
-                throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server');
+                throw $e;
             }
-            list($type, $service) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('Cs', $response);
-            if ($type != NET_SSH2_MSG_SERVICE_ACCEPT || $service != 'ssh-userauth') {
+            list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
+            list($service) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('s', $response);
+            if ($service != 'ssh-userauth') {
                 $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
                 throw new \UnexpectedValueException('Expected SSH_MSG_SERVICE_ACCEPT');
             }
@@ -1975,7 +2092,7 @@ class SSH2
         if (!isset($password)) {
             $packet = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('Cs3', NET_SSH2_MSG_USERAUTH_REQUEST, $username, 'ssh-connection', 'none');
             $this->send_binary_packet($packet);
-            $response = $this->get_binary_packet();
+            $response = $this->get_binary_packet_or_close();
             list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
             switch ($type) {
                 case NET_SSH2_MSG_USERAUTH_SUCCESS:
@@ -1997,10 +2114,7 @@ class SSH2
             $logged = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('Cs3bs', NET_SSH2_MSG_USERAUTH_REQUEST, $username, 'ssh-connection', 'password', \false, 'password');
         }
         $this->send_binary_packet($packet, $logged);
-        $response = $this->get_binary_packet();
-        if ($response === \false) {
-            return \false;
-        }
+        $response = $this->get_binary_packet_or_close();
         list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
         switch ($type) {
             case NET_SSH2_MSG_USERAUTH_PASSWD_CHANGEREQ:
@@ -2064,7 +2178,7 @@ class SSH2
         if (\strlen($this->last_interactive_response)) {
             $response = $this->last_interactive_response;
         } else {
-            $orig = $response = $this->get_binary_packet();
+            $orig = $response = $this->get_binary_packet_or_close();
         }
         list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
         switch ($type) {
@@ -2133,17 +2247,19 @@ class SSH2
      * Login with an ssh-agent provided key
      *
      * @param string $username
-     * @param \phpseclib3\System\SSH\Agent $agent
+     * @param Agent $agent
      * @return bool
      */
     private function ssh_agent_login($username, \WPStaging\Vendor\phpseclib3\System\SSH\Agent $agent)
     {
         $this->agent = $agent;
         $keys = $agent->requestIdentities();
+        $orig_algorithms = $this->supported_private_key_algorithms;
         foreach ($keys as $key) {
             if ($this->privatekey_login($username, $key)) {
                 return \true;
             }
+            $this->supported_private_key_algorithms = $orig_algorithms;
         }
         return \false;
     }
@@ -2154,7 +2270,7 @@ class SSH2
      *           by sending dummy SSH_MSG_IGNORE messages.}
      *
      * @param string $username
-     * @param \phpseclib3\Crypt\Common\PrivateKey $privatekey
+     * @param PrivateKey $privatekey
      * @return bool
      * @throws \RuntimeException on connection error
      */
@@ -2165,7 +2281,7 @@ class SSH2
             $privatekey = $privatekey->withPadding(\WPStaging\Vendor\phpseclib3\Crypt\RSA::SIGNATURE_PKCS1);
             $algos = ['rsa-sha2-256', 'rsa-sha2-512', 'ssh-rsa'];
             if (isset($this->preferred['hostkey'])) {
-                $algos = \array_intersect($this->preferred['hostkey'], $algos);
+                $algos = \array_intersect($algos, $this->preferred['hostkey']);
             }
             $algo = self::array_intersect_first($algos, $this->supported_private_key_algorithms);
             switch ($algo) {
@@ -2223,7 +2339,7 @@ class SSH2
         $part2 = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('ss', $signatureType, $publickeyStr);
         $packet = $part1 . \chr(0) . $part2;
         $this->send_binary_packet($packet);
-        $response = $this->get_binary_packet();
+        $response = $this->get_binary_packet_or_close(NET_SSH2_MSG_USERAUTH_SUCCESS, NET_SSH2_MSG_USERAUTH_FAILURE, NET_SSH2_MSG_USERAUTH_PK_OK);
         list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
         switch ($type) {
             case NET_SSH2_MSG_USERAUTH_FAILURE:
@@ -2243,9 +2359,6 @@ class SSH2
             case NET_SSH2_MSG_USERAUTH_SUCCESS:
                 $this->bitmap |= self::MASK_LOGIN;
                 return \true;
-            default:
-                $this->disconnect_helper(NET_SSH2_DISCONNECT_BY_APPLICATION);
-                throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Unexpected response to publickey authentication pt 1');
         }
         $packet = $part1 . \chr(1) . $part2;
         $privatekey = $privatekey->withHash($hash);
@@ -2255,7 +2368,7 @@ class SSH2
         }
         $packet .= \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('s', $signature);
         $this->send_binary_packet($packet);
-        $response = $this->get_binary_packet();
+        $response = $this->get_binary_packet_or_close(NET_SSH2_MSG_USERAUTH_SUCCESS, NET_SSH2_MSG_USERAUTH_FAILURE);
         list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
         switch ($type) {
             case NET_SSH2_MSG_USERAUTH_FAILURE:
@@ -2267,8 +2380,6 @@ class SSH2
                 $this->bitmap |= self::MASK_LOGIN;
                 return \true;
         }
-        $this->disconnect_helper(NET_SSH2_DISCONNECT_BY_APPLICATION);
-        throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Unexpected response to publickey authentication pt 2');
     }
     /**
      * Return the currently configured timeout
@@ -2283,7 +2394,7 @@ class SSH2
      * Set Timeout
      *
      * $ssh->exec('ping 127.0.0.1'); on a Linux host will never return and will run indefinitely.  setTimeout() makes it so it'll timeout.
-     * Setting $timeout to false or 0 will mean there is no timeout.
+     * Setting $timeout to false or 0 will revert to the default socket timeout.
      *
      * @param mixed $timeout
      */
@@ -2317,11 +2428,12 @@ class SSH2
      * In all likelihood, this is not a feature you want to be taking advantage of.
      *
      * @param string $command
+     * @param callable $callback
      * @return string|bool
      * @psalm-return ($callback is callable ? bool : string|bool)
      * @throws \RuntimeException on connection error
      */
-    public function exec($command, callable $callback = null)
+    public function exec($command, $callback = null)
     {
         $this->curTimeout = $this->timeout;
         $this->is_timeout = \false;
@@ -2332,7 +2444,7 @@ class SSH2
         //if ($this->isPTYOpen()) {
         //    throw new \RuntimeException('If you want to run multiple exec()\'s you will need to disable (and re-enable if appropriate) a PTY for each one.');
         //}
-        $this->openChannel(self::CHANNEL_EXEC);
+        $this->open_channel(self::CHANNEL_EXEC);
         if ($this->request_pty === \true) {
             $terminal_modes = \pack('C', NET_SSH2_TTY_OP_END);
             $packet = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('CNsCsN4s', NET_SSH2_MSG_CHANNEL_REQUEST, $this->server_channels[self::CHANNEL_EXEC], 'pty-req', 1, $this->term, $this->windowColumns, $this->windowRows, 0, 0, $terminal_modes);
@@ -2398,7 +2510,7 @@ class SSH2
      * @param bool $skip_extended
      * @return bool
      */
-    protected function openChannel($channel, $skip_extended = \false)
+    protected function open_channel($channel, $skip_extended = \false)
     {
         if (isset($this->channel_status[$channel]) && $this->channel_status[$channel] != NET_SSH2_MSG_CHANNEL_CLOSE) {
             throw new \RuntimeException('Please close the channel (' . $channel . ') before trying to open it again');
@@ -2439,7 +2551,7 @@ class SSH2
         if (!$this->isAuthenticated()) {
             throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('Operation disallowed prior to login()');
         }
-        $this->openChannel(self::CHANNEL_SHELL);
+        $this->open_channel(self::CHANNEL_SHELL);
         $terminal_modes = \pack('C', NET_SSH2_TTY_OP_END);
         $packet = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2(
             'CNsbsN4s',
@@ -2610,6 +2722,7 @@ class SSH2
      * @return void
      * @throws \RuntimeException on connection error
      * @throws InsufficientSetupException on unexpected channel status, possibly due to closure
+     * @throws TimeoutException if the write could not be completed within the requested self::setTimeout()
      */
     public function write($cmd, $channel = null)
     {
@@ -2626,6 +2739,8 @@ class SSH2
                 throw new \RuntimeException('Unable to initiate an interactive shell session');
             }
         }
+        $this->curTimeout = $this->timeout;
+        $this->is_timeout = \false;
         $this->send_channel_packet($channel, $cmd);
     }
     /**
@@ -2643,7 +2758,7 @@ class SSH2
      */
     public function startSubsystem($subsystem)
     {
-        $this->openChannel(self::CHANNEL_SUBSYSTEM);
+        $this->open_channel(self::CHANNEL_SUBSYSTEM);
         $packet = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('CNsCs', NET_SSH2_MSG_CHANNEL_REQUEST, $this->server_channels[self::CHANNEL_SUBSYSTEM], 'subsystem', 1, $subsystem);
         $this->send_binary_packet($packet);
         $this->channel_status[self::CHANNEL_SUBSYSTEM] = NET_SSH2_MSG_CHANNEL_REQUEST;
@@ -2726,11 +2841,37 @@ class SSH2
     /**
      * Is the connection still active?
      *
+     * $level has 3x possible values:
+     * 0 (default): phpseclib takes a passive approach to see if the connection is still active by calling feof()
+     *    on the socket
+     * 1: phpseclib takes an active approach to see if the connection is still active by sending an SSH_MSG_IGNORE
+     *    packet that doesn't require a response
+     * 2: phpseclib takes an active approach to see if the connection is still active by sending an SSH_MSG_CHANNEL_OPEN
+     *    packet and imediately trying to close that channel. some routers, in particular, however, will only let you
+     *    open one channel, so this approach could yield false positives
+     *
+     * @param int $level
      * @return bool
      */
-    public function isConnected()
+    public function isConnected($level = 0)
     {
-        return $this->bitmap & self::MASK_CONNECTED && \is_resource($this->fsock) && !\feof($this->fsock);
+        if (!\is_int($level) || $level < 0 || $level > 2) {
+            throw new \InvalidArgumentException('$level must be 0, 1 or 2');
+        }
+        if ($level == 0) {
+            return $this->bitmap & self::MASK_CONNECTED && \is_resource($this->fsock) && !\feof($this->fsock);
+        }
+        try {
+            if ($level == 1) {
+                $this->send_binary_packet(\pack('CN', NET_SSH2_MSG_IGNORE, 0));
+            } else {
+                $this->open_channel(self::CHANNEL_KEEP_ALIVE);
+                $this->close_channel(self::CHANNEL_KEEP_ALIVE);
+            }
+            return \true;
+        } catch (\Exception $e) {
+            return \false;
+        }
     }
     /**
      * Have you successfully been logged in?
@@ -2796,7 +2937,7 @@ class SSH2
             return \false;
         }
         try {
-            $this->openChannel(self::CHANNEL_KEEP_ALIVE);
+            $this->open_channel(self::CHANNEL_KEEP_ALIVE);
         } catch (\RuntimeException $e) {
             return $this->reconnect();
         }
@@ -2810,8 +2951,7 @@ class SSH2
      */
     private function reconnect()
     {
-        $this->reset_connection(NET_SSH2_DISCONNECT_CONNECTION_LOST);
-        $this->retry_connect = \true;
+        $this->disconnect_helper(NET_SSH2_DISCONNECT_BY_APPLICATION);
         $this->connect();
         foreach ($this->auth as $auth) {
             $result = $this->login(...$auth);
@@ -2820,19 +2960,68 @@ class SSH2
     }
     /**
      * Resets a connection for re-use
-     *
-     * @param int $reason
      */
-    protected function reset_connection($reason)
+    protected function reset_connection()
     {
-        $this->disconnect_helper($reason);
+        if (\is_resource($this->fsock) && \get_resource_type($this->fsock) === 'stream') {
+            \fclose($this->fsock);
+        }
+        $this->fsock = null;
+        $this->bitmap = 0;
+        $this->binary_packet_buffer = null;
         $this->decrypt = $this->encrypt = \false;
         $this->decrypt_block_size = $this->encrypt_block_size = 8;
         $this->hmac_check = $this->hmac_create = \false;
         $this->hmac_size = \false;
         $this->session_id = \false;
-        $this->retry_connect = \true;
+        $this->last_packet = null;
         $this->get_seq_no = $this->send_seq_no = 0;
+        $this->channel_status = [];
+        $this->channel_id_last_interactive = 0;
+        $this->channel_buffers = [];
+        $this->channel_buffers_write = [];
+    }
+    /**
+     * @return int[] second and microsecond stream timeout options based on user-requested timeout and keep-alive, or the default socket timeout by default, which mirrors PHP socket streams.
+     */
+    private function get_stream_timeout()
+    {
+        $sec = \ini_get('default_socket_timeout');
+        $usec = 0;
+        if ($this->curTimeout > 0) {
+            $sec = (int) \floor($this->curTimeout);
+            $usec = (int) (1000000 * ($this->curTimeout - $sec));
+        }
+        if ($this->keepAlive > 0) {
+            $elapsed = \microtime(\true) - $this->last_packet;
+            $timeout = \max($this->keepAlive - $elapsed, 0);
+            if (!$this->curTimeout || $timeout < $this->curTimeout) {
+                $sec = (int) \floor($timeout);
+                $usec = (int) (1000000 * ($timeout - $sec));
+            }
+        }
+        return [$sec, $usec];
+    }
+    /**
+     * Retrieves the next packet with added timeout and type handling
+     *
+     * @param string $message_types Message types to enforce in response, closing if not met
+     * @return string
+     * @throws ConnectionClosedException If an error has occurred preventing read of the next packet
+     */
+    private function get_binary_packet_or_close(...$message_types)
+    {
+        try {
+            $packet = $this->get_binary_packet();
+            if (\count($message_types) > 0 && !\in_array(\ord($packet[0]), $message_types)) {
+                $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
+                throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Bad message type. Expected: #' . \implode(', #', $message_types) . '. Got: #' . \ord($packet[0]));
+            }
+            return $packet;
+        } catch (\WPStaging\Vendor\phpseclib3\Exception\TimeoutException $e) {
+            $this->disconnect_helper(NET_SSH2_DISCONNECT_BY_APPLICATION);
+            throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed due to timeout');
+        }
     }
     /**
      * Gets Binary Packets
@@ -2840,171 +3029,144 @@ class SSH2
      * See '6. Binary Packet Protocol' of rfc4253 for more info.
      *
      * @see self::_send_binary_packet()
-     * @param bool $skip_channel_filter
-     * @return bool|string
+     * @return string
+     * @throws TimeoutException If user requested timeout was reached while waiting for next packet
+     * @throws ConnectionClosedException If an error has occurred preventing read of the next packet
      */
-    private function get_binary_packet($skip_channel_filter = \false)
+    private function get_binary_packet()
     {
-        if ($skip_channel_filter) {
-            if (!\is_resource($this->fsock)) {
-                throw new \InvalidArgumentException('fsock is not a resource.');
+        if (!\is_resource($this->fsock)) {
+            throw new \InvalidArgumentException('fsock is not a resource.');
+        }
+        if (!$this->keyExchangeInProgress && \count($this->kex_buffer)) {
+            return $this->filter(\array_shift($this->kex_buffer));
+        }
+        if ($this->binary_packet_buffer == null) {
+            // buffer the packet to permit continued reads across timeouts
+            $this->binary_packet_buffer = (object) [
+                'read_time' => 0,
+                // the time to read the packet from the socket
+                'raw' => '',
+                // the raw payload read from the socket
+                'plain' => '',
+                // the packet in plain text, excluding packet_length header
+                'packet_length' => null,
+                // the packet_length value pulled from the payload
+                'size' => $this->decrypt_block_size,
+            ];
+        }
+        $packet = $this->binary_packet_buffer;
+        while (\strlen($packet->raw) < $packet->size) {
+            if (\feof($this->fsock)) {
+                $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
+                throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server');
             }
-            $read = [$this->fsock];
-            $write = $except = null;
-            if (!$this->curTimeout) {
-                if ($this->keepAlive <= 0) {
-                    static::stream_select($read, $write, $except, null);
-                } else {
-                    if (!static::stream_select($read, $write, $except, $this->keepAlive)) {
-                        $this->send_binary_packet(\pack('CN', NET_SSH2_MSG_IGNORE, 0));
-                        return $this->get_binary_packet(\true);
-                    }
-                }
-            } else {
-                if ($this->curTimeout < 0) {
-                    $this->is_timeout = \true;
-                    return \true;
-                }
-                $start = \microtime(\true);
-                if ($this->keepAlive > 0 && $this->keepAlive < $this->curTimeout) {
-                    if (!static::stream_select($read, $write, $except, $this->keepAlive)) {
-                        $this->send_binary_packet(\pack('CN', NET_SSH2_MSG_IGNORE, 0));
-                        $elapsed = \microtime(\true) - $start;
-                        $this->curTimeout -= $elapsed;
-                        return $this->get_binary_packet(\true);
-                    }
-                    $elapsed = \microtime(\true) - $start;
-                    $this->curTimeout -= $elapsed;
-                }
-                $sec = (int) \floor($this->curTimeout);
-                $usec = (int) (1000000 * ($this->curTimeout - $sec));
-                // this can return a "stream_select(): unable to select [4]: Interrupted system call" error
-                if (!static::stream_select($read, $write, $except, $sec, $usec)) {
-                    $this->is_timeout = \true;
-                    return \true;
-                }
-                $elapsed = \microtime(\true) - $start;
+            if ($this->curTimeout < 0) {
+                $this->is_timeout = \true;
+                throw new \WPStaging\Vendor\phpseclib3\Exception\TimeoutException('Timed out waiting for server');
+            }
+            $this->send_keep_alive();
+            list($sec, $usec) = $this->get_stream_timeout();
+            \stream_set_timeout($this->fsock, $sec, $usec);
+            $start = \microtime(\true);
+            $raw = \stream_get_contents($this->fsock, $packet->size - \strlen($packet->raw));
+            $elapsed = \microtime(\true) - $start;
+            $packet->read_time += $elapsed;
+            if ($this->curTimeout > 0) {
                 $this->curTimeout -= $elapsed;
             }
-        }
-        if (!\is_resource($this->fsock) || \feof($this->fsock)) {
-            $this->bitmap = 0;
-            $str = 'Connection closed (by server) prematurely';
-            if (isset($elapsed)) {
-                $str .= ' ' . $elapsed . 's';
+            if ($raw === \false) {
+                $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
+                throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server');
+            } elseif (!\strlen($raw)) {
+                continue;
             }
-            throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException($str);
+            $packet->raw .= $raw;
+            if (!$packet->packet_length) {
+                $this->get_binary_packet_size($packet);
+            }
         }
-        $start = \microtime(\true);
-        $raw = \stream_get_contents($this->fsock, $this->decrypt_block_size);
-        if (!\strlen($raw)) {
-            $this->bitmap = 0;
-            throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('No data received from server');
+        if (\strlen($packet->raw) != $packet->size) {
+            throw new \RuntimeException('Size of packet was not expected length');
         }
+        // destroy buffer as packet represents the entire payload and should be processed in full
+        $this->binary_packet_buffer = null;
+        // copy the raw payload, so as not to destroy original
+        $raw = $packet->raw;
+        if ($this->hmac_check instanceof \WPStaging\Vendor\phpseclib3\Crypt\Hash) {
+            $hmac = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::pop($raw, $this->hmac_size);
+        }
+        $packet_length_header_size = 4;
         if ($this->decrypt) {
             switch ($this->decryptName) {
                 case 'aes128-gcm@openssh.com':
                 case 'aes256-gcm@openssh.com':
                     $this->decrypt->setNonce($this->decryptFixedPart . $this->decryptInvocationCounter);
                     \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::increment_str($this->decryptInvocationCounter);
-                    $this->decrypt->setAAD($temp = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, 4));
-                    \extract(\unpack('Npacket_length', $temp));
-                    /**
-                     * @var integer $packet_length
-                     */
-                    $raw .= $this->read_remaining_bytes($packet_length - $this->decrypt_block_size + 4);
-                    $stop = \microtime(\true);
-                    $tag = \stream_get_contents($this->fsock, $this->decrypt_block_size);
-                    $this->decrypt->setTag($tag);
-                    $raw = $this->decrypt->decrypt($raw);
-                    $raw = $temp . $raw;
-                    $remaining_length = 0;
+                    $this->decrypt->setAAD(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, $packet_length_header_size));
+                    $this->decrypt->setTag(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::pop($raw, $this->decrypt_block_size));
+                    $packet->plain = $this->decrypt->decrypt($raw);
                     break;
                 case 'chacha20-poly1305@openssh.com':
                     // This should be impossible, but we are checking anyway to narrow the type for Psalm.
                     if (!$this->decrypt instanceof \WPStaging\Vendor\phpseclib3\Crypt\ChaCha20) {
                         throw new \LogicException('$this->decrypt is not a ' . \WPStaging\Vendor\phpseclib3\Crypt\ChaCha20::class);
                     }
-                    $nonce = \pack('N2', 0, $this->get_seq_no);
-                    $this->lengthDecrypt->setNonce($nonce);
-                    $temp = $this->lengthDecrypt->decrypt($aad = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, 4));
-                    \extract(\unpack('Npacket_length', $temp));
-                    /**
-                     * @var integer $packet_length
-                     */
-                    $raw .= $this->read_remaining_bytes($packet_length - $this->decrypt_block_size + 4);
-                    $stop = \microtime(\true);
-                    $tag = \stream_get_contents($this->fsock, 16);
-                    $this->decrypt->setNonce($nonce);
+                    $this->decrypt->setNonce(\pack('N2', 0, $this->get_seq_no));
                     $this->decrypt->setCounter(0);
                     // this is the same approach that's implemented in Salsa20::createPoly1305Key()
                     // but we don't want to use the same AEAD construction that RFC8439 describes
                     // for ChaCha20-Poly1305 so we won't rely on it (see Salsa20::poly1305())
                     $this->decrypt->setPoly1305Key($this->decrypt->encrypt(\str_repeat("\0", 32)));
-                    $this->decrypt->setAAD($aad);
+                    $this->decrypt->setAAD(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, $packet_length_header_size));
                     $this->decrypt->setCounter(1);
-                    $this->decrypt->setTag($tag);
-                    $raw = $this->decrypt->decrypt($raw);
-                    $raw = $temp . $raw;
-                    $remaining_length = 0;
+                    $this->decrypt->setTag(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::pop($raw, 16));
+                    $packet->plain = $this->decrypt->decrypt($raw);
                     break;
                 default:
                     if (!$this->hmac_check instanceof \WPStaging\Vendor\phpseclib3\Crypt\Hash || !$this->hmac_check_etm) {
-                        $raw = $this->decrypt->decrypt($raw);
-                        break;
+                        // first block was already decrypted for contained packet_length header
+                        \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, $this->decrypt_block_size);
+                        if (\strlen($raw) > 0) {
+                            $packet->plain .= $this->decrypt->decrypt($raw);
+                        }
+                    } else {
+                        \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, $packet_length_header_size);
+                        $packet->plain = $this->decrypt->decrypt($raw);
                     }
-                    \extract(\unpack('Npacket_length', $temp = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, 4)));
-                    /**
-                     * @var integer $packet_length
-                     */
-                    $raw .= $this->read_remaining_bytes($packet_length - $this->decrypt_block_size + 4);
-                    $stop = \microtime(\true);
-                    $encrypted = $temp . $raw;
-                    $raw = $temp . $this->decrypt->decrypt($raw);
-                    $remaining_length = 0;
+                    break;
             }
+        } else {
+            \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, $packet_length_header_size);
+            $packet->plain = $raw;
         }
-        if (\strlen($raw) < 5) {
-            $this->bitmap = 0;
-            throw new \RuntimeException('Plaintext is too short');
-        }
-        \extract(\unpack('Npacket_length/Cpadding_length', \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, 5)));
-        /**
-         * @var integer $packet_length
-         * @var integer $padding_length
-         */
-        if (!isset($remaining_length)) {
-            $remaining_length = $packet_length + 4 - $this->decrypt_block_size;
-        }
-        $buffer = $this->read_remaining_bytes($remaining_length);
-        if (!isset($stop)) {
-            $stop = \microtime(\true);
-        }
-        if (\strlen($buffer)) {
-            $raw .= $this->decrypt ? $this->decrypt->decrypt($buffer) : $buffer;
-        }
-        $payload = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, $packet_length - $padding_length - 1);
-        $padding = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($raw, $padding_length);
-        // should leave $raw empty
         if ($this->hmac_check instanceof \WPStaging\Vendor\phpseclib3\Crypt\Hash) {
-            $hmac = \stream_get_contents($this->fsock, $this->hmac_size);
-            if ($hmac === \false || \strlen($hmac) != $this->hmac_size) {
-                $this->disconnect_helper(NET_SSH2_DISCONNECT_MAC_ERROR);
-                throw new \RuntimeException('Error reading socket');
-            }
-            $reconstructed = !$this->hmac_check_etm ? \pack('NCa*', $packet_length, $padding_length, $payload . $padding) : $encrypted;
+            $reconstructed = !$this->hmac_check_etm ? \pack('Na*', $packet->packet_length, $packet->plain) : \substr($packet->raw, 0, -$this->hmac_size);
             if (($this->hmac_check->getHash() & "ÿÿÿÿ") == 'umac') {
                 $this->hmac_check->setNonce("\0\0\0\0" . \pack('N', $this->get_seq_no));
                 if ($hmac != $this->hmac_check->hash($reconstructed)) {
                     $this->disconnect_helper(NET_SSH2_DISCONNECT_MAC_ERROR);
-                    throw new \RuntimeException('Invalid UMAC');
+                    throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Invalid UMAC');
                 }
             } else {
                 if ($hmac != $this->hmac_check->hash(\pack('Na*', $this->get_seq_no, $reconstructed))) {
                     $this->disconnect_helper(NET_SSH2_DISCONNECT_MAC_ERROR);
-                    throw new \RuntimeException('Invalid HMAC');
+                    throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Invalid HMAC');
                 }
             }
+        }
+        $padding_length = 0;
+        $payload = $packet->plain;
+        \extract(\unpack('Cpadding_length', \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 1)));
+        if ($padding_length > 0) {
+            \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::pop($payload, $padding_length);
+        }
+        if (!$this->keyExchangeInProgress) {
+            $this->bytesTransferredSinceLastKEX += $packet->packet_length + $padding_length + 5;
+        }
+        if (empty($payload)) {
+            $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
+            throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Plaintext is too short');
         }
         switch ($this->decompress) {
             case self::NET_SSH2_COMPRESSION_ZLIB_AT_OPENSSH:
@@ -3019,17 +3181,17 @@ class SSH2
                     $cm = $cmf & 0xf;
                     if ($cm != 8) {
                         // deflate
-                        \user_error("Only CM = 8 ('deflate') is supported ({$cm})");
+                        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException("Only CM = 8 ('deflate') is supported ({$cm})");
                     }
                     $cinfo = ($cmf & 0xf0) >> 4;
                     if ($cinfo > 7) {
-                        \user_error("CINFO above 7 is not allowed ({$cinfo})");
+                        throw new \RuntimeException("CINFO above 7 is not allowed ({$cinfo})");
                     }
                     $windowSize = 1 << $cinfo + 8;
                     $flg = \ord($payload[1]);
                     //$fcheck = $flg && 0x0F;
                     if (($cmf << 8 | $flg) % 31) {
-                        \user_error('fcheck failed');
+                        throw new \RuntimeException('fcheck failed');
                     }
                     $fdict = \boolval($flg & 0x20);
                     $flevel = ($flg & 0xc0) >> 6;
@@ -3044,61 +3206,94 @@ class SSH2
         if (\defined('NET_SSH2_LOGGING')) {
             $current = \microtime(\true);
             $message_number = isset(self::$message_numbers[\ord($payload[0])]) ? self::$message_numbers[\ord($payload[0])] : 'UNKNOWN (' . \ord($payload[0]) . ')';
-            $message_number = '<- ' . $message_number . ' (since last: ' . \round($current - $this->last_packet, 4) . ', network: ' . \round($stop - $start, 4) . 's)';
+            $message_number = '<- ' . $message_number . ' (since last: ' . \round($current - $this->last_packet, 4) . ', network: ' . \round($packet->read_time, 4) . 's)';
             $this->append_log($message_number, $payload);
-            $this->last_packet = $current;
         }
-        return $this->filter($payload, $skip_channel_filter);
+        $this->last_packet = \microtime(\true);
+        if ($this->bytesTransferredSinceLastKEX > $this->doKeyReexchangeAfterXBytes) {
+            $this->key_exchange();
+        }
+        // don't filter if we're in the middle of a key exchange (since _filter might send out packets)
+        return $this->keyExchangeInProgress ? $payload : $this->filter($payload);
     }
     /**
-     * Read Remaining Bytes
-     *
-     * @see self::get_binary_packet()
-     * @param int $remaining_length
-     * @return string
+     * @param object $packet The packet object being constructed, passed by reference
+     *        The size, packet_length, and plain properties of this object may be modified in processing
+     * @throws InvalidPacketLengthException if the packet length header is invalid
      */
-    private function read_remaining_bytes($remaining_length)
+    private function get_binary_packet_size(&$packet)
     {
-        if (!$remaining_length) {
-            return '';
+        $packet_length_header_size = 4;
+        if (\strlen($packet->raw) < $packet_length_header_size) {
+            return;
         }
-        $adjustLength = \false;
+        $packet_length = 0;
+        $added_validation_length = 0;
+        // indicates when the packet length header is included when validating packet length against block size
         if ($this->decrypt) {
-            switch (\true) {
-                case $this->decryptName == 'aes128-gcm@openssh.com':
-                case $this->decryptName == 'aes256-gcm@openssh.com':
-                case $this->decryptName == 'chacha20-poly1305@openssh.com':
-                case $this->hmac_check instanceof \WPStaging\Vendor\phpseclib3\Crypt\Hash && $this->hmac_check_etm:
-                    $remaining_length += $this->decrypt_block_size - 4;
-                    $adjustLength = \true;
+            switch ($this->decryptName) {
+                case 'aes128-gcm@openssh.com':
+                case 'aes256-gcm@openssh.com':
+                    \extract(\unpack('Npacket_length', \substr($packet->raw, 0, $packet_length_header_size)));
+                    $packet->size = $packet_length_header_size + $packet_length + $this->decrypt_block_size;
+                    // expect tag
+                    break;
+                case 'chacha20-poly1305@openssh.com':
+                    $this->lengthDecrypt->setNonce(\pack('N2', 0, $this->get_seq_no));
+                    $packet_length_header = $this->lengthDecrypt->decrypt(\substr($packet->raw, 0, $packet_length_header_size));
+                    \extract(\unpack('Npacket_length', $packet_length_header));
+                    $packet->size = $packet_length_header_size + $packet_length + 16;
+                    // expect tag
+                    break;
+                default:
+                    if (!$this->hmac_check instanceof \WPStaging\Vendor\phpseclib3\Crypt\Hash || !$this->hmac_check_etm) {
+                        if (\strlen($packet->raw) < $this->decrypt_block_size) {
+                            return;
+                        }
+                        $packet->plain = $this->decrypt->decrypt(\substr($packet->raw, 0, $this->decrypt_block_size));
+                        \extract(\unpack('Npacket_length', \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($packet->plain, $packet_length_header_size)));
+                        $packet->size = $packet_length_header_size + $packet_length;
+                        $added_validation_length = $packet_length_header_size;
+                    } else {
+                        \extract(\unpack('Npacket_length', \substr($packet->raw, 0, $packet_length_header_size)));
+                        $packet->size = $packet_length_header_size + $packet_length;
+                    }
+                    break;
             }
+        } else {
+            \extract(\unpack('Npacket_length', \substr($packet->raw, 0, $packet_length_header_size)));
+            $packet->size = $packet_length_header_size + $packet_length;
+            $added_validation_length = $packet_length_header_size;
         }
         // quoting <http://tools.ietf.org/html/rfc4253#section-6.1>,
         // "implementations SHOULD check that the packet length is reasonable"
         // PuTTY uses 0x9000 as the actual max packet size and so to shall we
-        // don't do this when GCM mode is used since GCM mode doesn't encrypt the length
-        if ($remaining_length < -$this->decrypt_block_size || $remaining_length > 0x9000 || $remaining_length % $this->decrypt_block_size != 0) {
-            if (!$this->bad_key_size_fix && self::bad_algorithm_candidate($this->decrypt ? $this->decryptName : '') && !($this->bitmap & \WPStaging\Vendor\phpseclib3\Net\SSH2::MASK_LOGIN)) {
-                $this->bad_key_size_fix = \true;
-                $this->reset_connection(NET_SSH2_DISCONNECT_KEY_EXCHANGE_FAILED);
-                return \false;
-            }
-            throw new \RuntimeException('Invalid size');
+        if ($packet_length <= 0 || $packet_length > 0x9000 || ($packet_length + $added_validation_length) % $this->decrypt_block_size != 0) {
+            $this->disconnect_helper(NET_SSH2_DISCONNECT_PROTOCOL_ERROR);
+            throw new \WPStaging\Vendor\phpseclib3\Exception\InvalidPacketLengthException('Invalid packet length');
         }
-        if ($adjustLength) {
-            $remaining_length -= $this->decrypt_block_size - 4;
+        if ($this->hmac_check instanceof \WPStaging\Vendor\phpseclib3\Crypt\Hash) {
+            $packet->size += $this->hmac_size;
         }
-        $buffer = '';
-        while ($remaining_length > 0) {
-            $temp = \stream_get_contents($this->fsock, $remaining_length);
-            if ($temp === \false || \feof($this->fsock)) {
-                $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
-                throw new \RuntimeException('Error reading from socket');
-            }
-            $buffer .= $temp;
-            $remaining_length -= \strlen($temp);
-        }
-        return $buffer;
+        $packet->packet_length = $packet_length;
+    }
+    /**
+     * Handle Disconnect
+     *
+     * Because some binary packets need to be ignored...
+     *
+     * @see self::filter()
+     * @see self::key_exchange()
+     * @return boolean
+     * @access private
+     */
+    private function handleDisconnect($payload)
+    {
+        \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 1);
+        list($reason_code, $message) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('Ns', $payload);
+        $this->errors[] = 'SSH_MSG_DISCONNECT: ' . self::$disconnect_reasons[$reason_code] . "\r\n{$message}";
+        $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
+        throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server');
     }
     /**
      * Filter Binary Packets
@@ -3107,50 +3302,55 @@ class SSH2
      *
      * @see self::_get_binary_packet()
      * @param string $payload
-     * @param bool $skip_channel_filter
-     * @return string|bool
+     * @return string
      */
-    private function filter($payload, $skip_channel_filter)
+    private function filter($payload)
     {
         switch (\ord($payload[0])) {
             case NET_SSH2_MSG_DISCONNECT:
-                \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 1);
-                list($reason_code, $message) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('Ns', $payload);
-                $this->errors[] = 'SSH_MSG_DISCONNECT: ' . static::$disconnect_reasons[$reason_code] . "\r\n{$message}";
-                $this->bitmap = 0;
-                return \false;
+                return $this->handleDisconnect($payload);
             case NET_SSH2_MSG_IGNORE:
-                $payload = $this->get_binary_packet($skip_channel_filter);
+                $payload = $this->get_binary_packet();
                 break;
             case NET_SSH2_MSG_DEBUG:
                 \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 2);
                 // second byte is "always_display"
                 list($message) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('s', $payload);
                 $this->errors[] = "SSH_MSG_DEBUG: {$message}";
-                $payload = $this->get_binary_packet($skip_channel_filter);
+                $payload = $this->get_binary_packet();
                 break;
             case NET_SSH2_MSG_UNIMPLEMENTED:
-                return \false;
+                break;
+            // return payload
             case NET_SSH2_MSG_KEXINIT:
+                // this is here for server initiated key re-exchanges after the initial key exchange
                 if ($this->session_id !== \false) {
                     if (!$this->key_exchange($payload)) {
-                        $this->bitmap = 0;
-                        return \false;
+                        $this->disconnect_helper(NET_SSH2_DISCONNECT_KEY_EXCHANGE_FAILED);
+                        throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Key exchange failed');
                     }
-                    $payload = $this->get_binary_packet($skip_channel_filter);
+                    $payload = $this->get_binary_packet();
                 }
+                break;
+            case NET_SSH2_MSG_EXT_INFO:
+                \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 1);
+                list($nr_extensions) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('N', $payload);
+                for ($i = 0; $i < $nr_extensions; $i++) {
+                    list($extension_name, $extension_value) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('ss', $payload);
+                    if ($extension_name == 'server-sig-algs') {
+                        $this->supported_private_key_algorithms = \explode(',', $extension_value);
+                    }
+                }
+                $payload = $this->get_binary_packet();
         }
         // see http://tools.ietf.org/html/rfc4252#section-5.4; only called when the encryption has been activated and when we haven't already logged in
-        if ($this->bitmap & self::MASK_CONNECTED && !$this->isAuthenticated() && !\is_bool($payload) && \ord($payload[0]) == NET_SSH2_MSG_USERAUTH_BANNER) {
+        if ($this->bitmap & self::MASK_CONNECTED && !$this->isAuthenticated() && \ord($payload[0]) == NET_SSH2_MSG_USERAUTH_BANNER) {
             \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 1);
             list($this->banner_message) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('s', $payload);
             $payload = $this->get_binary_packet();
         }
         // only called when we've already logged in
         if ($this->bitmap & self::MASK_CONNECTED && $this->isAuthenticated()) {
-            if (\is_bool($payload)) {
-                return $payload;
-            }
             switch (\ord($payload[0])) {
                 case NET_SSH2_MSG_CHANNEL_REQUEST:
                     if (\strlen($payload) == 31) {
@@ -3160,18 +3360,8 @@ class SSH2
                                 // want reply
                                 $this->send_binary_packet(\pack('CN', NET_SSH2_MSG_CHANNEL_SUCCESS, $this->server_channels[$channel]));
                             }
-                            $payload = $this->get_binary_packet($skip_channel_filter);
+                            $payload = $this->get_binary_packet();
                         }
-                    }
-                    break;
-                case NET_SSH2_MSG_CHANNEL_DATA:
-                case NET_SSH2_MSG_CHANNEL_EXTENDED_DATA:
-                case NET_SSH2_MSG_CHANNEL_CLOSE:
-                case NET_SSH2_MSG_CHANNEL_EOF:
-                    if (!$skip_channel_filter && !empty($this->server_channels)) {
-                        $this->binary_packet_buffer = $payload;
-                        $this->get_channel_packet(\true);
-                        $payload = $this->get_binary_packet();
                     }
                     break;
                 case NET_SSH2_MSG_GLOBAL_REQUEST:
@@ -3179,12 +3369,8 @@ class SSH2
                     \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 1);
                     list($request_name) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('s', $payload);
                     $this->errors[] = "SSH_MSG_GLOBAL_REQUEST: {$request_name}";
-                    try {
-                        $this->send_binary_packet(\pack('C', NET_SSH2_MSG_REQUEST_FAILURE));
-                    } catch (\RuntimeException $e) {
-                        return $this->disconnect_helper(NET_SSH2_DISCONNECT_BY_APPLICATION);
-                    }
-                    $payload = $this->get_binary_packet($skip_channel_filter);
+                    $this->send_binary_packet(\pack('C', NET_SSH2_MSG_REQUEST_FAILURE));
+                    $payload = $this->get_binary_packet();
                     break;
                 case NET_SSH2_MSG_CHANNEL_OPEN:
                     // see http://tools.ietf.org/html/rfc4254#section-5.1
@@ -3216,19 +3402,10 @@ class SSH2
                                 // description
                                 ''
                             );
-                            try {
-                                $this->send_binary_packet($packet);
-                            } catch (\RuntimeException $e) {
-                                return $this->disconnect_helper(NET_SSH2_DISCONNECT_BY_APPLICATION);
-                            }
+                            $this->send_binary_packet($packet);
                     }
-                    $payload = $this->get_binary_packet($skip_channel_filter);
+                    $payload = $this->get_binary_packet();
                     break;
-                case NET_SSH2_MSG_CHANNEL_WINDOW_ADJUST:
-                    \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($payload, 1);
-                    list($channel, $window_size) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('NN', $payload);
-                    $this->window_size_client_to_server[$channel] += $window_size;
-                    $payload = $this->bitmap & self::MASK_WINDOW_ADJUST ? \true : $this->get_binary_packet($skip_channel_filter);
             }
         }
         return $payload;
@@ -3301,6 +3478,7 @@ class SSH2
      *
      * - the server closes the channel
      * - if the connection times out
+     * - if a window adjust packet is received on the given negated client channel
      * - if the channel status is CHANNEL_OPEN and the response was CHANNEL_OPEN_CONFIRMATION
      * - if the channel status is CHANNEL_REQUEST and the response was CHANNEL_SUCCESS
      * - if the channel status is CHANNEL_CLOSE and the response was CHANNEL_CLOSE
@@ -3309,7 +3487,10 @@ class SSH2
      *
      * - if the channel status is CHANNEL_REQUEST and the response was CHANNEL_FAILURE
      *
-     * @param int $client_channel
+     * @param int $client_channel Specifies the channel to return data for, and data received
+     *        on other channels is buffered. The respective negative value of a channel is
+     *        also supported for the case that the caller is awaiting adjustment of the data
+     *        window, and where data received on that respective channel is also buffered.
      * @param bool $skip_extended
      * @return mixed
      * @throws \RuntimeException on connection error
@@ -3333,26 +3514,15 @@ class SSH2
             }
         }
         while (\true) {
-            if ($this->binary_packet_buffer !== \false) {
-                $response = $this->binary_packet_buffer;
-                $this->binary_packet_buffer = \false;
-            } else {
-                $response = $this->get_binary_packet(\true);
-                if ($response === \true && $this->is_timeout) {
-                    if ($client_channel == self::CHANNEL_EXEC && !$this->request_pty) {
-                        $this->close_channel($client_channel);
-                    }
-                    return \true;
-                }
-                if ($response === \false) {
-                    $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
-                    throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed by server');
-                }
-            }
-            if ($client_channel == -1 && $response === \true) {
+            try {
+                $response = $this->get_binary_packet();
+            } catch (\WPStaging\Vendor\phpseclib3\Exception\TimeoutException $e) {
                 return \true;
             }
-            list($type, $channel) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('CN', $response);
+            list($type) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('C', $response);
+            if (\strlen($response) >= 4) {
+                list($channel) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('N', $response);
+            }
             // will not be setup yet on incoming channel open request
             if (isset($channel) && isset($this->channel_status[$channel]) && isset($this->window_size_server_to_client[$channel])) {
                 $this->window_size_server_to_client[$channel] -= \strlen($response);
@@ -3365,6 +3535,13 @@ class SSH2
                     $this->window_size_server_to_client[$channel] += $this->window_resize;
                 }
                 switch ($type) {
+                    case NET_SSH2_MSG_CHANNEL_WINDOW_ADJUST:
+                        list($window_size) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('N', $response);
+                        $this->window_size_client_to_server[$channel] += $window_size;
+                        if ($channel == -$client_channel) {
+                            return \true;
+                        }
+                        continue 2;
                     case NET_SSH2_MSG_CHANNEL_EXTENDED_DATA:
                         /*
                         if ($client_channel == self::CHANNEL_EXEC) {
@@ -3512,7 +3689,7 @@ class SSH2
     protected function send_binary_packet($data, $logged = null)
     {
         if (!\is_resource($this->fsock) || \feof($this->fsock)) {
-            $this->bitmap = 0;
+            $this->disconnect_helper(NET_SSH2_DISCONNECT_CONNECTION_LOST);
             throw new \WPStaging\Vendor\phpseclib3\Exception\ConnectionClosedException('Connection closed prematurely');
         }
         if (!isset($logged)) {
@@ -3604,6 +3781,9 @@ class SSH2
         }
         $this->send_seq_no++;
         $packet .= $this->encrypt && $this->encrypt->usesNonce() ? $this->encrypt->getTag() : $hmac;
+        if (!$this->keyExchangeInProgress) {
+            $this->bytesTransferredSinceLastKEX += \strlen($packet);
+        }
         $start = \microtime(\true);
         $sent = @\fputs($this->fsock, $packet);
         $stop = \microtime(\true);
@@ -3612,12 +3792,27 @@ class SSH2
             $message_number = isset(self::$message_numbers[\ord($logged[0])]) ? self::$message_numbers[\ord($logged[0])] : 'UNKNOWN (' . \ord($logged[0]) . ')';
             $message_number = '-> ' . $message_number . ' (since last: ' . \round($current - $this->last_packet, 4) . ', network: ' . \round($stop - $start, 4) . 's)';
             $this->append_log($message_number, $logged);
-            $this->last_packet = $current;
         }
+        $this->last_packet = \microtime(\true);
         if (\strlen($packet) != $sent) {
-            $this->bitmap = 0;
+            $this->disconnect_helper(NET_SSH2_DISCONNECT_BY_APPLICATION);
             $message = $sent === \false ? 'Unable to write ' . \strlen($packet) . ' bytes' : "Only {$sent} of " . \strlen($packet) . " bytes were sent";
             throw new \RuntimeException($message);
+        }
+        if ($this->bytesTransferredSinceLastKEX > $this->doKeyReexchangeAfterXBytes) {
+            $this->key_exchange();
+        }
+    }
+    /**
+     * Sends a keep-alive message, if keep-alive is enabled and interval is met
+     */
+    private function send_keep_alive()
+    {
+        if ($this->bitmap & self::MASK_CONNECTED) {
+            $elapsed = \microtime(\true) - $this->last_packet;
+            if ($this->keepAlive > 0 && $elapsed >= $this->keepAlive) {
+                $this->send_binary_packet(\pack('CN', NET_SSH2_MSG_IGNORE, 0));
+            }
         }
     }
     /**
@@ -3715,6 +3910,10 @@ class SSH2
                     $realtime_log_wrap = \true;
                 }
                 \fputs($realtime_log_file, $entry);
+                break;
+            case self::LOG_REALTIME_SIMPLE:
+                echo $message_number;
+                echo \PHP_SAPI == 'cli' ? "\r\n" : '<br>';
         }
     }
     /**
@@ -3728,12 +3927,21 @@ class SSH2
      */
     protected function send_channel_packet($client_channel, $data)
     {
+        if (isset($this->channel_buffers_write[$client_channel]) && \strpos($data, $this->channel_buffers_write[$client_channel]) === 0) {
+            // if buffer holds identical initial data content, resume send from the unmatched data portion
+            $data = \substr($data, \strlen($this->channel_buffers_write[$client_channel]));
+        } else {
+            $this->channel_buffers_write[$client_channel] = '';
+        }
         while (\strlen($data)) {
             if (!$this->window_size_client_to_server[$client_channel]) {
-                $this->bitmap ^= self::MASK_WINDOW_ADJUST;
                 // using an invalid channel will let the buffers be built up for the valid channels
-                $this->get_channel_packet(-1);
-                $this->bitmap ^= self::MASK_WINDOW_ADJUST;
+                $this->get_channel_packet(-$client_channel);
+                if ($this->isTimeout()) {
+                    throw new \WPStaging\Vendor\phpseclib3\Exception\TimeoutException('Timed out waiting for server');
+                } elseif (!$this->window_size_client_to_server[$client_channel]) {
+                    throw new \RuntimeException('Data window was not adjusted');
+                }
             }
             /* The maximum amount of data allowed is determined by the maximum
                packet size for the channel, and the current window size, whichever
@@ -3744,7 +3952,9 @@ class SSH2
             $packet = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('CNs', NET_SSH2_MSG_CHANNEL_DATA, $this->server_channels[$client_channel], $temp);
             $this->window_size_client_to_server[$client_channel] -= \strlen($temp);
             $this->send_binary_packet($packet);
+            $this->channel_buffers_write[$client_channel] .= $temp;
         }
+        unset($this->channel_buffers_write[$client_channel]);
     }
     /**
      * Closes and flushes a channel
@@ -3800,17 +4010,19 @@ class SSH2
      */
     protected function disconnect_helper($reason)
     {
-        if ($this->bitmap & self::MASK_CONNECTED) {
+        if ($this->bitmap & self::MASK_DISCONNECT) {
+            // Disregard subsequent disconnect requests
+            return \false;
+        }
+        $this->bitmap |= self::MASK_DISCONNECT;
+        if ($this->isConnected()) {
             $data = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('CNss', NET_SSH2_MSG_DISCONNECT, $reason, '', '');
             try {
                 $this->send_binary_packet($data);
             } catch (\Exception $e) {
             }
         }
-        $this->bitmap = 0;
-        if (\is_resource($this->fsock) && \get_resource_type($this->fsock) === 'stream') {
-            \fclose($this->fsock);
-        }
+        $this->reset_connection();
         return \false;
     }
     /**
@@ -3868,9 +4080,12 @@ class SSH2
     {
         $output = '';
         for ($i = 0; $i < \count($message_log); $i++) {
-            $output .= $message_number_log[$i] . "\r\n";
+            $output .= $message_number_log[$i];
             $current_log = $message_log[$i];
             $j = 0;
+            if (\strlen($current_log)) {
+                $output .= "\r\n";
+            }
             do {
                 if (\strlen($current_log)) {
                     $output .= \str_pad(\dechex($j), 7, '0', \STR_PAD_LEFT) . '0  ';
@@ -3922,7 +4137,9 @@ class SSH2
         return \false;
     }
     /**
-     * Returns all errors
+     * Returns all errors / debug messages on the SSH layer
+     *
+     * If you are looking for messages from the SFTP layer, please see SFTP::getSFTPErrors()
      *
      * @return string[]
      */
@@ -3931,7 +4148,9 @@ class SSH2
         return $this->errors;
     }
     /**
-     * Returns the last error
+     * Returns the last error received on the SSH layer
+     *
+     * If you are looking for messages from the SFTP layer, please see SFTP::getLastSFTPError()
      *
      * @return string
      */
@@ -4095,10 +4314,27 @@ class SSH2
                     $obj->setKeyLength(\preg_replace('#[^\\d]#', '', $algo));
                 }
                 switch ($algo) {
+                    // Eval engines do not exist for ChaCha20 or RC4 because they would not benefit from one.
+                    // to benefit from an Eval engine they'd need to loop a variable amount of times, they'd
+                    // need to do table lookups (eg. sbox subsitutions). ChaCha20 doesn't do either because
+                    // it's a so-called ARX cipher, meaning that the only operations it does are add (A), rotate (R)
+                    // and XOR (X). RC4 does do table lookups but being a stream cipher it works differently than
+                    // block ciphers. with RC4 you XOR the plaintext against a keystream and the keystream changes
+                    // as you encrypt stuff. the only table lookups are made against this keystream and thus table
+                    // lookups are kinda unavoidable. with AES and DES, however, the table lookups that are done
+                    // are done against substitution boxes (sboxes), which are invariant.
+                    // OpenSSL can't be used as an engine, either, because OpenSSL doesn't support continuous buffers
+                    // as SSH2 uses and altho you can emulate a continuous buffer with block ciphers you can't do so
+                    // with stream ciphers. As for ChaCha20...  for the ChaCha20 part OpenSSL could prob be used but
+                    // the big slow down isn't with ChaCha20 - it's with Poly1305. SSH constructs the key for that
+                    // differently than how OpenSSL does it (OpenSSL does it as the RFC describes, SSH doesn't).
+                    // libsodium can't be used because it doesn't support RC4 and it doesn't construct the Poly1305
+                    // keys in the same way that SSH does
+                    // mcrypt could prob be used for RC4 but mcrypt hasn't been included in PHP core for yearss
                     case 'chacha20-poly1305@openssh.com':
                     case 'arcfour128':
                     case 'arcfour256':
-                        if ($engine != 'Eval') {
+                        if ($engine != 'PHP') {
                             continue 2;
                         }
                         break;
@@ -4127,17 +4363,12 @@ class SSH2
         return [
             'hmac-sha2-256-etm@openssh.com',
             'hmac-sha2-512-etm@openssh.com',
-            'umac-64-etm@openssh.com',
-            'umac-128-etm@openssh.com',
             'hmac-sha1-etm@openssh.com',
             // from <http://www.ietf.org/rfc/rfc6668.txt>:
             'hmac-sha2-256',
             // RECOMMENDED     HMAC-SHA256 (digest length = key length = 32)
             'hmac-sha2-512',
             // OPTIONAL        HMAC-SHA512 (digest length = key length = 64)
-            // from <https://tools.ietf.org/html/draft-miller-secsh-umac-01>:
-            'umac-64@openssh.com',
-            'umac-128@openssh.com',
             'hmac-sha1-96',
             // RECOMMENDED     first 96 bits of HMAC-SHA1 (digest length = 12, key length = 20)
             'hmac-sha1',
@@ -4145,6 +4376,12 @@ class SSH2
             'hmac-md5-96',
             // OPTIONAL        first 96 bits of HMAC-MD5 (digest length = 12, key length = 16)
             'hmac-md5',
+            // OPTIONAL        HMAC-MD5 (digest length = key length = 16)
+            'umac-64-etm@openssh.com',
+            'umac-128-etm@openssh.com',
+            // from <https://tools.ietf.org/html/draft-miller-secsh-umac-01>:
+            'umac-64@openssh.com',
+            'umac-128@openssh.com',
         ];
     }
     /**
@@ -4200,6 +4437,27 @@ class SSH2
      */
     public function setPreferredAlgorithms(array $methods)
     {
+        $keys = ['client_to_server', 'server_to_client'];
+        if (isset($methods['kex']) && \is_string($methods['kex'])) {
+            $methods['kex'] = \explode(',', $methods['kex']);
+        }
+        if (isset($methods['hostkey']) && \is_string($methods['hostkey'])) {
+            $methods['hostkey'] = \explode(',', $methods['hostkey']);
+        }
+        foreach ($keys as $key) {
+            if (isset($methods[$key])) {
+                $a =& $methods[$key];
+                if (isset($a['crypt']) && \is_string($a['crypt'])) {
+                    $a['crypt'] = \explode(',', $a['crypt']);
+                }
+                if (isset($a['comp']) && \is_string($a['comp'])) {
+                    $a['comp'] = \explode(',', $a['comp']);
+                }
+                if (isset($a['mac']) && \is_string($a['mac'])) {
+                    $a['mac'] = \explode(',', $a['mac']);
+                }
+            }
+        }
         $preferred = $methods;
         if (isset($preferred['kex'])) {
             $preferred['kex'] = \array_intersect($preferred['kex'], static::getSupportedKEXAlgorithms());
@@ -4207,7 +4465,6 @@ class SSH2
         if (isset($preferred['hostkey'])) {
             $preferred['hostkey'] = \array_intersect($preferred['hostkey'], static::getSupportedHostKeyAlgorithms());
         }
-        $keys = ['client_to_server', 'server_to_client'];
         foreach ($keys as $key) {
             if (isset($preferred[$key])) {
                 $a =& $preferred[$key];
@@ -4262,7 +4519,7 @@ class SSH2
      *
      * @return string|false
      * @throws \RuntimeException on badly formatted keys
-     * @throws \phpseclib3\Exception\NoSupportedAlgorithmsException when the key isn't in a supported format
+     * @throws NoSupportedAlgorithmsException when the key isn't in a supported format
      */
     public function getServerPublicHostKey()
     {
@@ -4478,5 +4735,14 @@ class SSH2
     public function disableSmartMFA()
     {
         $this->smartMFA = \false;
+    }
+    /**
+     * How many bytes until the next key re-exchange?
+     *
+     * @param int $bytes
+     */
+    public function bytesUntilKeyReexchange($bytes)
+    {
+        $this->doKeyReexchangeAfterXBytes = $bytes;
     }
 }

@@ -19,19 +19,22 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 class BackupContent
 {
     /** @var string */
-    private $backupFile;
+    private $backupFile = '';
 
     /** @var int */
-    private $totalFiles;
+    private $totalFiles = 0;
 
     /** @var int */
-    private $filesFound;
+    private $filesFound = 0;
 
     /** @var int */
-    private $perPage;
+    private $perPage = 20;
 
     /** @var int */
-    private $headerOffset = 0;
+    private $indexOffsetStart = 0;
+
+    /** @var int */
+    private $indexOffsetEnd = 0;
 
     /** @var int */
     private $indexPage = 0;
@@ -41,6 +44,9 @@ class BackupContent
 
     /** @var int */
     private $currentIndex = 0;
+
+    /** @var int */
+    private $indexOffset = 0;
 
     /** @var IndexLineInterface */
     private $indexLineDto;
@@ -70,10 +76,11 @@ class BackupContent
             $backupMetadata = $backupMetadata->hydrateByFilePath($backupFile);
         }
 
-        $this->backupFile   = $backupFile;
-        $this->indexLineDto = $indexLineDto;
-        $this->totalFiles   = $backupMetadata->getTotalFiles();
-        $this->headerOffset = $backupMetadata->getHeaderStart();
+        $this->backupFile       = $backupFile;
+        $this->indexLineDto     = $indexLineDto;
+        $this->totalFiles       = $backupMetadata->getTotalFiles();
+        $this->indexOffsetStart = $backupMetadata->getHeaderStart();
+        $this->indexOffsetEnd   = $backupMetadata->getHeaderEnd();
     }
 
     /**
@@ -116,6 +123,15 @@ class BackupContent
     }
 
     /**
+     * @param int $indexOffset
+     * @return void
+     */
+    public function setIndexOffset(int $indexOffset)
+    {
+        $this->indexOffset = $indexOffset;
+    }
+
+    /**
      * @param int $page
      * @return \Generator<BackupItemDto>
      */
@@ -125,21 +141,28 @@ class BackupContent
             $page = 1;
         }
 
+        $indexOffset     = $this->getIndexOffset();
         $this->indexPage = $page;
 
-        $offset    = ($page - 1) * $this->perPage;
-        $wpstgFile = new FileObject($this->backupFile, 'rb');
+        $hasFilter  = !empty($this->filters['sortby']) || !empty($this->filters['filename']);
+        $maxLine    = ($page - 1) * $this->perPage;
+        $objectFile = new FileObject($this->backupFile, 'rb');
 
-        // We will read the file from the beginning
-        $wpstgFile->fseek($this->headerOffset);
+        $indexOffsetStart = $this->indexOffsetStart;
 
-        $count            = 0;
-        $this->filesFound = 0;
-        while ($wpstgFile->valid()) {
-            $this->currentOffset = $wpstgFile->ftell();
-            $this->currentIndex  = $wpstgFile->key();
+        if (!empty($indexOffset) && !$hasFilter) {
+            $indexOffsetStart = $indexOffset;
+        }
 
-            $rawIndexFile = $wpstgFile->readAndMoveNext();
+        $objectFile->fseek($indexOffsetStart);
+
+        $countLine        = 0;
+        $this->filesFound = $hasFilter ? 0 : $this->totalFiles;
+        while ($objectFile->valid()) {
+            $this->currentOffset = $objectFile->ftell();
+            $this->currentIndex  = $objectFile->key();
+
+            $rawIndexFile = $objectFile->readAndMoveNext();
             if (!$this->indexLineDto->isIndexLine($rawIndexFile)) {
                 break;
             }
@@ -149,31 +172,90 @@ class BackupContent
             $backupFile->setPath($this->pathIdentifier->transformIdentifiableToRelativePath($backupFile->getIdentifiablePath()));
             $backupFile->setOffset($this->currentOffset);
             $backupFile->setIndex($this->currentIndex);
+
             if ($this->isFiltered($backupFile)) {
                 continue;
             }
 
-            $this->filesFound++;
-            if ($this->filesFound < $offset || $count === $this->perPage) {
-                continue;
+            if ($hasFilter) {
+                $this->filesFound++;
+            }
+
+            if ($this->filesFound < $maxLine || $countLine === $this->perPage) {
+                if ($hasFilter) {
+                    continue;
+                } else {
+                    break;
+                }
             }
 
             yield $backupFile;
-            $count++;
+            $countLine++;
         }
+
+        $objectFile = null;
     }
 
+    /**
+     * @return array
+     */
     public function getPagingData(): array
     {
         return [
-            'totalIndex'  => $this->filesFound,
-            'totalPage'   => ceil($this->filesFound / $this->perPage),
-            'indexPage'   => $this->indexPage,
-            'indexFilter' => $this->filters['filename'],
-            'indexSortby' => $this->filters['sortby'],
+            'totalIndex'      => $this->filesFound,
+            'totalPage'       => ceil($this->filesFound / $this->perPage),
+            'indexPage'       => $this->indexPage,
+            'indexFilter'     => $this->filters['filename'],
+            'indexSortby'     => $this->filters['sortby'],
+            'indexOffset'     => $this->getIndexOffset(),
+            'indexNextOffset' => $this->getNextOffset($this->getCurrentOffset()),
         ];
     }
 
+    /**
+     * @return int
+     */
+    public function getIndexOffset(): int
+    {
+        return $this->indexOffset;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurrentOffset(): int
+    {
+        return $this->currentOffset;
+    }
+
+    /**
+     * @param int $currentOffset
+     * @return int
+     */
+    public function getNextOffset(int $currentOffset): int
+    {
+        $objectFile = new FileObject($this->backupFile, 'rb');
+        $objectFile->fseek($currentOffset);
+        $objectFile->readAndMoveNext();
+        $nextOffset = $objectFile->ftell();
+        $objectFile = null;
+
+        switch (true) {
+            case ($nextOffset > $this->indexOffsetEnd):
+                $nextOffset = $this->indexOffsetEnd;
+                break;
+            case (empty($nextOffset) || $nextOffset < 0):
+                $nextOffset = $this->indexOffsetStart;
+                break;
+        }
+
+        return $nextOffset;
+    }
+
+    /**
+     * @param BackupItemDto $backupFile
+     * @return bool
+     */
     private function isFiltered(BackupItemDto $backupFile): bool
     {
         if ($this->filterByName($backupFile)) {
@@ -183,6 +265,10 @@ class BackupContent
         return $this->filterBySortBy($backupFile);
     }
 
+    /**
+     * @param BackupItemDto $backupFile
+     * @return bool
+     */
     private function filterByName(BackupItemDto $backupFile): bool
     {
         if (empty($this->filters['filename'])) {
@@ -192,6 +278,10 @@ class BackupContent
         return strpos($backupFile->getPath(), $this->filters['filename']) === false;
     }
 
+    /**
+     * @param BackupItemDto $backupFile
+     * @return bool
+     */
     private function filterBySortBy(BackupItemDto $backupFile): bool
     {
         if (empty($this->filters['sortby'])) {

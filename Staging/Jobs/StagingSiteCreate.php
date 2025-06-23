@@ -5,7 +5,8 @@ namespace WPStaging\Staging\Jobs;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
 use WPStaging\Staging\Tasks\StagingSite\CreateDatabaseTablesTask;
-use WPStaging\Staging\Tasks\StagingSite\DatabaseRowsCopyTask;
+use WPStaging\Staging\Tasks\StagingSite\ImportDatabaseRowsTask;
+use WPStaging\Staging\Tasks\StagingSite\PrepareDatabaseRowsTask;
 use WPStaging\Staging\Tasks\StagingSiteCreate\CreateRequirementsCheckTask;
 use WPStaging\Staging\Tasks\StagingSiteCreate\FinishStagingSiteCreateTask;
 
@@ -43,7 +44,8 @@ class StagingSiteCreate extends AbstractJob
     {
         $this->tasks[] = CreateRequirementsCheckTask::class;
         $this->tasks[] = CreateDatabaseTablesTask::class;
-        $this->tasks[] = DatabaseRowsCopyTask::class;
+        $this->tasks[] = PrepareDatabaseRowsTask::class;
+        $this->tasks[] = ImportDatabaseRowsTask::class;
         $this->tasks[] = FinishStagingSiteCreateTask::class;
     }
 }

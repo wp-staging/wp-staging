@@ -313,6 +313,7 @@ class SystemInfo
         $output .= $this->formatStorageSettings('wpstg_googledrive', 'Google Drive Settings');
         $output .= $this->formatStorageSettings('wpstg_dropbox', 'Dropbox Settings');
         $output .= $this->formatStorageSettings('wpstg_one-drive', 'Microsoft OneDrive Settings');
+        $output .= $this->formatStorageSettings('wpstg_pcloud', 'pCloud Settings');
         $output .= $this->formatStorageSettings('wpstg_amazons3', 'Amazon S3 Settings');
         $output .= $this->formatStorageSettings('wpstg_digitalocean-spaces', 'DigitalOcean Spaces Settings');
         $output .= $this->formatStorageSettings('wpstg_wasabi-s3', 'Wasabi Settings');

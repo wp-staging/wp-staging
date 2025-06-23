@@ -286,6 +286,11 @@ class Archiver
         $newBytesWritten                 = $writtenBytesTotal + $fileHeaderSizeInBytes - $writtenBytesBefore;
         $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderSizeInBytes();
 
+        if (!$this->isBackupFormatV1() && empty($this->fileHeader->getFilePath())) {
+            $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->filesystem->maybeNormalizePath($indexPath));
+            $this->fileHeader->readFile($fullFilePath, $identifiablePath);
+        }
+
         $retries = 0;
 
         if (!$this->isBackupFormatV1() && empty($this->fileHeader->getFilePath())) {
@@ -719,7 +724,7 @@ class Archiver
         /** @var JobBackupDataDto $jobDataDto */
         $jobDataDto = $this->jobDataDto;
 
-        $collectPartsize = $jobDataDto->getCategorySizes();
+        $collectPartSize = $jobDataDto->getCategorySizes();
 
         $partName = '';
         switch ($identifiablePath) {
@@ -728,11 +733,11 @@ class Archiver
 
                 if ($this->pathIdentifier->hasDropinsFile($identifiablePath)) {
                     $dropinsPartName = PartIdentifier::DROPIN_PART_SIZE_IDENTIFIER;
-                    if (!isset($collectPartsize[$dropinsPartName])) {
-                        $collectPartsize[$dropinsPartName] = 0;
+                    if (!isset($collectPartSize[$dropinsPartName])) {
+                        $collectPartSize[$dropinsPartName] = 0;
                     }
 
-                    $collectPartsize[$dropinsPartName] += $newBytesWritten;
+                    $collectPartSize[$dropinsPartName] += $newBytesWritten;
                 }
 
                 break;
@@ -765,12 +770,12 @@ class Archiver
         }
 
         // If identifier not in array yet
-        if (!isset($collectPartsize[$partName])) {
-            $collectPartsize[$partName] = 0;
+        if (!isset($collectPartSize[$partName])) {
+            $collectPartSize[$partName] = 0;
         }
 
-        $collectPartsize[$partName] += $newBytesWritten;
-        $jobDataDto->setCategorySizes($collectPartsize);
+        $collectPartSize[$partName] += $newBytesWritten;
+        $jobDataDto->setCategorySizes($collectPartSize);
     }
 
     /**

@@ -8,7 +8,6 @@
  */
 
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Framework\Utils\Times;
@@ -18,9 +17,6 @@ $timeFormatOption = get_option('time_format');
 
 /** @var Times */
 $time = WPStaging::make(Times::class);
-
-/** @var Providers */
-$storages = WPStaging::make(Providers::class);
 
 $recurInterval   = (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) ? 'PT1M' : 'PT15M';
 $recurInterval   = apply_filters('wpstg.schedulesBackup.interval', $recurInterval);
@@ -37,6 +33,7 @@ $haveProCrons = WPStaging::make(ProCronsCleaner::class)->haveProCrons();
 $cronMessage = $haveProCrons ? __('There are backup plans created with WP Staging Pro. Delete them first to create a backup plan with the free version of WP Staging. ', 'wp-staging') :
     __('A backup is created every day at 12:00 noon!', 'wp-staging');
 
+$storagesPrefix = 'storage-';
 ?>
 <div id="wpstg--modal--backup--new" data-confirmButtonText="<?php esc_attr_e('Start Backup', 'wp-staging'); ?>" style="display: none">
     <h3 class="wpstg--swal2-title wpstg-w-100" for="wpstg-backup-name-input"><?php esc_html_e('Create Site Backup', 'wp-staging'); ?></h3>
@@ -168,23 +165,33 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
             </div>
             <!--calculate backup size-->
             <!-- Advanced Options -->
-            <div class="wpstg-backup-options-section">
-                <h4 class="swal2-title wpstg-w-100">
-                    <?php esc_html_e('Advanced Options', 'wp-staging'); ?>
-                </h4>
-
+            <div id="wpstg-backup-advance-section-header" data-id="#wpstg-backup-advance-section">
+                <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="Advanced Options"/>
+                <strong><?php esc_html_e("Advanced Options", 'wp-staging'); ?></strong>
+            </div>
+            <div class="wpstg-backup-options-section hidden wpstg-sub-options-details" id="wpstg-backup-advance-section">
                 <div class="wpstg-container">
-                    <label class="wpstg-storage-option">
+                    <label class="wpstg-backup-option wpstg-with-tooltip">
+                        <div class="wpstg--add-exclusions-expand-folder">
+                            <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--add-exclusions-expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info"/>
+                        </div>
                         <?php
                         $attributes = [
                             'classes'  => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
                             'onChange' => 'WPStaging.handleDisplayDependencies(this)',
                         ];
-                        Checkbox::render('wpstgSmartExclusion', 'smartExclusion', '', false, $attributes);
+                        Checkbox::render('wpstgSmartExclusion', 'smartExclusion', '', true, $attributes);
                         ?>
-                        <span class="<?php echo esc_attr($disabledClass); ?>">
+                        <span class="<?php echo esc_attr($disabledClass); ?>" id="wpstg-add-exclusions-span" data-id="#wpstg-advanced-exclude-options">
                             <?php esc_html_e('Add Exclusions', 'wp-staging'); ?>
                         </span>
+                        <div class="wpstg--tooltip">
+                            <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info"/>
+                            <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                                <?php esc_html_e('To keep backups fast and efficient, we automatically exclude files over 200MB and system files like .log, .wpstg, .gz, and .tmp', 'wp-staging'); ?>
+                                <br/><?php printf(esc_html__('Want to change this? %s', 'wp-staging'), '<a href="https://wp-staging.com/docs/actions-and-filters/#Exclude_a_file_extension_from_backup" target="_blank" rel="noopener noreferrer">' . esc_html__('Learn how to customize exclusions.', 'wp-staging') . '</a>'); ?>
+                            </span>
+                        </div>
                         <?php if (!$isProVersion) : ?>
                             <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
                         <?php endif; ?>
@@ -223,12 +230,11 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                 <?php endif; ?>
             </div>
             <!-- End Advanced Options -->
-
-            <div class="wpstg-backup-options-section">
-                <h4 class="swal2-title wpstg-w-100">
-                    <?php esc_html_e('Backup Times', 'wp-staging'); ?>
-                </h4>
-
+            <div id="wpstg-backup-times-header" data-id="#wpstg-backup-times-section">
+                <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="Backup Times"/>
+                <strong><?php esc_html_e("Backup Times", 'wp-staging'); ?></strong>
+            </div>
+            <div class="wpstg-backup-options-section hidden wpstg-sub-options-details" id="wpstg-backup-times-section">
                 <div class="wpstg-backup-scheduling-options wpstg-container <?php echo esc_attr($classPropertyHasScheduleAndIsFree); ?>">
 
                     <label>
@@ -254,39 +260,13 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                     <?php require_once WPSTG_VIEWS_DIR . 'backup/modal/backup-scheduling-options.php'; ?>
                 </div>
             </div>
-
-            <div class="wpstg-backup-options-section">
-                <h4 class="swal2-title wpstg-w-100">
-                    <?php esc_html_e('Storages', 'wp-staging'); ?>
-                </h4>
-
-                <div class="wpstg-backup-scheduling-options wpstg-container">
-
-                    <label class="wpstg-storage-option wpstg-advanced-storage-options">
-                        <?php Checkbox::render("storage-localStorage", 'storages', 'localStorage', true); ?>
-                        <span class="wpstg-storage-name"><?php esc_html_e('Local Storage', 'wp-staging'); ?></span>
-                    </label>
-
-                    <?php foreach ($storages->getStorages($enabled = true) as $storage) : ?>
-                        <label class="wpstg-storage-option wpstg-advanced-storage-options">
-                            <?php
-                            $isActivated   = $storages->isActivated($storage['authClass']);
-                            $isProStorage  = empty($storage['authClass']);
-                            $isDisabled    = !$isActivated || (!$isProVersion && $isProStorage);
-                            $disabledClass = $isDisabled ? 'wpstg-storage-settings-disabled' : '';
-                            Checkbox::render('storage-' . $storage['id'], 'storages', $storage['id'], false, ['isDisabled' => $isDisabled]);
-                            ?>
-                            <span class="wpstg-storage-name <?php echo esc_attr($disabledClass); ?>"><?php echo esc_html($storage['name']); ?></span>
-                            <?php if (!$isProVersion && $isProStorage) { ?>
-                                <span class="wpstg-pro-feature"><a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']); ?>" target="_blank" class="wpstg-pro-feature-link"><?php esc_html_e('Upgrade', 'wp-staging'); ?></a></span>
-                            <?php } else { ?>
-                                <span class="wpstg-storage-settings"><a class="" href="<?php echo esc_url($storage['settingsPath']); ?>" target="_blank"><?php echo $isActivated ? esc_html__('Settings', 'wp-staging') : esc_html__('Activate', 'wp-staging'); ?></a></span>
-                            <?php } ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
+            <div id="wpstg-backup-storages-header" data-id="#wpstg-storages-section">
+                <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="Storage Providers"/>
+                <strong><?php esc_html_e("Storage Providers", 'wp-staging'); ?></strong>
             </div>
-
+            <div id="wpstg-storages-section" class="hidden">
+                <?php require WPSTG_VIEWS_DIR . 'backup/modal/backup-storages.php'; ?>
+            </div>
         </div>
 
         <!-- ADVANCED OPTIONS DROPDOWN -->

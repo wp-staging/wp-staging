@@ -4,6 +4,7 @@ namespace WPStaging\Backup\Service;
 
 use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Framework\Traits\DebugLogTrait;
+use WPStaging\Framework\Traits\WindowsOsTrait;
 
 /**
  * Class AbstractBackupsFinder
@@ -17,6 +18,7 @@ abstract class AbstractBackupsFinder
 {
     use WithBackupIdentifier;
     use DebugLogTrait;
+    use WindowsOsTrait;
 
     /** @var int */
     const MAX_BACKUP_FILE_TO_SCAN = 1000;
@@ -74,6 +76,11 @@ abstract class AbstractBackupsFinder
                 }
 
                 if ($this->isBackupPart($file->getFilename()) && $this->isListedMultipartBackup($file->getFilename())) {
+                    continue;
+                }
+
+                // Windows has cache issue, to keep linux operations fast we only check file exist on Windows
+                if ($this->isWindowsOs() && !file_exists($file->getPathname())) {
                     continue;
                 }
 

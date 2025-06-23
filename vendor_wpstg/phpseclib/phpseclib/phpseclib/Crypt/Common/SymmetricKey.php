@@ -599,6 +599,8 @@ abstract class SymmetricKey
             switch (\true) {
                 // PHP_OS & "\xDF\xDF\xDF" == strtoupper(substr(PHP_OS, 0, 3)), but a lot faster
                 case (\PHP_OS & "ßßß") === 'WIN':
+                case !\function_exists('php_uname'):
+                case !\is_string(\php_uname('m')):
                 case (\php_uname('m') & "ßßß") != 'ARM':
                 case \defined('PHP_INT_SIZE') && \PHP_INT_SIZE == 8:
                     self::$use_reg_intval = \true;
@@ -964,7 +966,7 @@ abstract class SymmetricKey
      *
      * @see self::setPassword()
      * @param int $n
-     * @param \phpseclib3\Crypt\Hash $hashObj
+     * @param Hash $hashObj
      * @param string $i
      * @param string $d
      * @param int $count

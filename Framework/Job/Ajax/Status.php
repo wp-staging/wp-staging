@@ -5,7 +5,6 @@ namespace WPStaging\Framework\Job\Ajax;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Job\AbstractJob;
-use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Jobs\StagingJobsProvider;
 
 class Status extends AbstractTemplateComponent
@@ -27,9 +26,9 @@ class Status extends AbstractTemplateComponent
      */
     private function getJobInstance(): AbstractJob
     {
-        $jobType = $this->getJobType();
-        if ($jobType === JobTransientCache::JOB_TYPE_STAGING) {
-            return WPStaging::make(StagingJobsProvider::class)->getJob($this->getJobName());
+        $jobType = trim($this->getJobType());
+        if (strpos($jobType, 'Staging_') === 0) {
+            return WPStaging::make(StagingJobsProvider::class)->getJob($jobType);
         }
 
         throw new \Exception('Not a valid job type!');
@@ -42,14 +41,5 @@ class Status extends AbstractTemplateComponent
         }
 
         return sanitize_text_field($_POST['type']);
-    }
-
-    private function getJobName(): string
-    {
-        if (empty($_POST['name'])) {
-            throw new \Exception('Job Name Missing!');
-        }
-
-        return sanitize_text_field($_POST['name']);
     }
 }

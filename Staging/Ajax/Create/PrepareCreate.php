@@ -8,6 +8,7 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteCreate;
@@ -205,6 +206,8 @@ class PrepareCreate extends PrepareJob
 
         $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
 
+        $this->jobCreate->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Cloning in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_CREATE, $this->queueId);
+
         $this->jobCreate->setJobDataDto($this->jobDataDto);
 
         return $sanitizedData;
@@ -335,20 +338,10 @@ class PrepareCreate extends PrepareJob
     protected function getDestinationUrl(array $data): string
     {
         if (!empty($data['customUrl'])) {
-            return $this->getHostnameWithoutScheme($data['customUrl']);
+            return $data['customUrl'];
         }
 
-        return trailingslashit($this->getHostnameWithoutScheme(home_url())) . $data['name'];
-    }
-
-    /**
-     * Return Hostname without scheme
-     * @param string $string
-     * @return string
-     */
-    protected function getHostnameWithoutScheme(string $string): string
-    {
-        return preg_replace('#^https?://#', '', rtrim($string, '/'));
+        return trailingslashit(home_url()) . $data['name'];
     }
 
     protected function prepareStagingSiteDto(array $data): StagingSiteDto

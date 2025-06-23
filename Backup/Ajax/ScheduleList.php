@@ -76,7 +76,7 @@ class ScheduleList
                     <div class="wpstg-clone-labels">
                         <span class="wpstg-clone-label"><?php echo esc_html($this->getBackupType($schedule['backupType'])) ?></span>
                     </div>
-                    <?php endif;?>
+                    <?php endif; ?>
                     <div class="wpstg-clone-actions">
                         <div class="wpstg-dropdown wpstg-action-dropdown">
                             <a href="#" class="wpstg-dropdown-toggler">
@@ -158,10 +158,10 @@ class ScheduleList
                                                         ); ?>
                                                     </span>
                                                 </span>
-                                            <?php endif;?>
+                                            <?php endif; ?>
                                         </span>
                                     </li>
-                                    <?php endif;?>
+                                    <?php endif; ?>
                                 </ul>
                             <?php endforeach; ?>
                         </li>

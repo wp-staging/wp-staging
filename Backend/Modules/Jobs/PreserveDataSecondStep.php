@@ -162,6 +162,12 @@ class PreserveDataSecondStep extends JobExecutable
             $this->deleteStagingSiteOption('wpstg_one-drive');
         }
 
+        if ($this->propertyExists('pCloud')) {
+            $this->preserveStagingOption('wpstg_pcloud', $this->preservedData->pCloud, 'pCloud settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_pcloud');
+        }
+
         return true;
     }
 

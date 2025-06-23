@@ -4,50 +4,49 @@ namespace WPStaging\Staging\Tasks\StagingSite;
 
 use Exception;
 use Throwable;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\Task\RowsExporterTaskDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Staging\Dto\Task\DatabaseRowsCopyTaskDto;
 use WPStaging\Staging\Interfaces\StagingDatabaseDtoInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
-use WPStaging\Staging\Service\Database\RowsCopier;
-use WPStaging\Staging\Traits\WithStagingDatabase;
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use WPStaging\Staging\Service\Database\RowsExporter;
 use WPStaging\Staging\Tasks\StagingTask;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-class DatabaseRowsCopyTask extends StagingTask
+class PrepareDatabaseRowsTask extends StagingTask
 {
-    use WithStagingDatabase;
-
-    /** @var RowsCopier */
-    protected $rowsCopier;
-
-    /** @var array */
-    protected $tables = [];
+    /** @var RowsExporter */
+    protected $rowsExporter;
 
     /** @var JobDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface $jobDataDto */
     protected $jobDataDto; // @phpstan-ignore-line
 
-    /** @var DatabaseRowsCopyTaskDto */
+    /** @var RowsExporterTaskDto */
     protected $currentTaskDto;
 
-    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, RowsCopier $rowsCopier)
+    /** @var Directory */
+    protected $directory;
+
+    public function __construct(Directory $directory, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, RowsExporter $rowsExporter)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->rowsCopier = $rowsCopier;
+        $this->rowsExporter = $rowsExporter;
+        $this->directory    = $directory;
     }
 
     public static function getTaskName()
     {
-        return 'staging_copying_rows';
+        return 'staging_prepare_database_rows';
     }
 
     public static function getTaskTitle()
     {
-        return 'Copying Database Records';
+        return 'Prepare Database Records';
     }
 
     /**
@@ -59,13 +58,8 @@ class DatabaseRowsCopyTask extends StagingTask
         $this->setup();
 
         do {
-            $tableIndex = $this->stepsDto->getCurrent();
-            $tablesInfo = $this->tables[$tableIndex];
-            $srcTable   = $tablesInfo['source'];
-            $destTable  = $tablesInfo['destination'];
-
-            $rowsCount = $this->rowsCopier->setTablesInfo($tableIndex, $srcTable, $destTable);
-            if ($rowsCount === 0) {
+            $this->rowsExporter->setTableIndex($this->stepsDto->getCurrent());
+            if (!$this->rowsExporter->initiate()) {
                 $this->stepsDto->incrementCurrentStep();
                 $this->currentTaskDto->reset();
                 $this->persistStepsDto();
@@ -74,33 +68,36 @@ class DatabaseRowsCopyTask extends StagingTask
             }
 
             try {
-                $this->rowsCopier->execute();
+                $this->rowsExporter->export();
             } catch (Throwable $exception) {
-                $this->rowsCopier->unlockTable();
+                $this->rowsExporter->unlockTables();
             }
 
-            $this->currentTaskDto->fromRowCopierDto($this->rowsCopier->getRowsCopierDto());
+            $exporterDto = $this->rowsExporter->getRowsExporterDto();
+            $this->currentTaskDto->fromRowExporterDto($exporterDto);
             $this->setCurrentTaskDto($this->currentTaskDto);
 
+            $srcTable = $this->rowsExporter->getTableBeingExported();
             $this->logger->info(sprintf(
-                'Database rows copying: Table %s. Rows: %s/%s',
+                'Preparing table %s: %s of %s records',
                 $srcTable,
-                number_format_i18n($this->currentTaskDto->rowsCopied),
+                number_format_i18n($this->currentTaskDto->rowsOffset),
                 number_format_i18n($this->currentTaskDto->totalRows)
             ));
 
             $this->logger->debug(sprintf(
-                'Database rows copying: Table %s. Query time: %s Batch Size: %s last query json: %s',
+                'Preparing table %s: Query time: %s Batch Size: %s last query json: %s',
                 $srcTable,
                 $this->jobDataDto->getDbRequestTime(),
                 $this->jobDataDto->getBatchSize(),
                 $this->jobDataDto->getLastQueryInfoJSON()
             ));
 
-            if ($this->rowsCopier->isTableCopyingFinished()) {
+            if ($exporterDto->isFinished()) {
                 $this->stepsDto->incrementCurrentStep();
                 $this->currentTaskDto->reset();
                 $this->jobDataDto->setTableAverageRowLength(0);
+                $this->setCurrentTaskDto($this->currentTaskDto);
                 $this->persistStepsDto();
             }
         } while (!$this->stepsDto->isFinished() && !$this->isThreshold());
@@ -111,7 +108,7 @@ class DatabaseRowsCopyTask extends StagingTask
     /** @return string */
     protected function getCurrentTaskType(): string
     {
-        return DatabaseRowsCopyTaskDto::class;
+        return RowsExporterTaskDto::class;
     }
 
     /**
@@ -119,11 +116,16 @@ class DatabaseRowsCopyTask extends StagingTask
      */
     protected function setup()
     {
-        $this->initStagingDatabase($this->jobDataDto->getStagingSite());
-        $this->tables = $this->jobDataDto->getStagingTables();
-        $this->rowsCopier->setup($this->logger, $this->jobDataDto, $this->currentTaskDto->toRowCopierDto(), $this->stagingDb);
+        $tables = $this->jobDataDto->getStagingTables();
+        $this->rowsExporter->setStagingPrefix($this->jobDataDto->getDatabasePrefix());
+        $this->rowsExporter->inject($this->logger, $this->jobDataDto, $this->currentTaskDto->toRowsExporterDto());
+        $this->rowsExporter->setFileName($this->directory->getCacheDirectory() . $this->jobDataDto->getId() . '.wpstgdbtmp.sql');
+        $this->rowsExporter->setTables($tables);
+        $this->rowsExporter->setTablesToExclude($this->jobDataDto->getExcludedTables());
+        $this->rowsExporter->prefixSpecialFields();
         if (!$this->stepsDto->getTotal()) {
-            $this->stepsDto->setTotal(count($this->tables));
+            $this->stepsDto->setCurrent(0);
+            $this->stepsDto->setTotal(count($tables));
         }
     }
 }

@@ -50,7 +50,7 @@ trait HttpRequestTrait
         if (is_wp_error($response) || (!in_array($responseCode, [200, 201, 202, 204, 206, 302, 308]))) {
             $errorMessage = is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_body($response);
 
-            throw new StorageException("Error in remote request! Url: $url; Error Message: $errorMessage; Error Code: $responseCode;", $responseCode);
+            throw new StorageException("Error in remote request! Url: $url; Error Message: $errorMessage; Error Code: $responseCode;", (int)$responseCode);
         }
 
         return $response;

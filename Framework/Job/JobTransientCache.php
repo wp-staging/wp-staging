@@ -67,7 +67,7 @@ class JobTransientCache
     /**
      * @var string
      */
-    const JOB_TYPE_STAGING = 'Staging';
+    const JOB_TYPE_STAGING_CREATE = 'Staging_Create';
 
     /**
      * @var string
@@ -77,7 +77,7 @@ class JobTransientCache
     const CANCELABLE_JOBS = [
         self::JOB_TYPE_BACKUP,
         self::JOB_TYPE_RESTORE,
-        self::JOB_TYPE_STAGING,
+        self::JOB_TYPE_STAGING_CREATE,
     ];
 
     /**

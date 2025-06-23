@@ -79,10 +79,10 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     /**
      * Convert a private key to the appropriate format.
      *
-     * @param \phpseclib3\Math\BigInteger $prime
-     * @param \phpseclib3\Math\BigInteger $base
-     * @param \phpseclib3\Math\BigInteger $privateKey
-     * @param \phpseclib3\Math\BigInteger $publicKey
+     * @param BigInteger $prime
+     * @param BigInteger $base
+     * @param BigInteger $privateKey
+     * @param BigInteger $publicKey
      * @param string $password optional
      * @param array $options optional
      * @return string
@@ -98,9 +98,9 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     /**
      * Convert a public key to the appropriate format
      *
-     * @param \phpseclib3\Math\BigInteger $prime
-     * @param \phpseclib3\Math\BigInteger $base
-     * @param \phpseclib3\Math\BigInteger $publicKey
+     * @param BigInteger $prime
+     * @param BigInteger $base
+     * @param BigInteger $publicKey
      * @param array $options optional
      * @return string
      */
@@ -110,6 +110,6 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
         $params = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($params, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\DHParameter::MAP);
         $params = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element($params);
         $key = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($publicKey, ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER]);
-        return self::wrapPublicKey($key, $params);
+        return self::wrapPublicKey($key, $params, null, $options);
     }
 }

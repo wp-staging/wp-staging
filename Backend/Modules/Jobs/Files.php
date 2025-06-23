@@ -428,7 +428,7 @@ class Files extends JobExecutable
         }
 
         // Invalid file, skipping it as if succeeded
-        if (!is_file($file)) {
+        if (!is_file($file) && !is_dir($file)) {
             $this->log("File doesn't exist {$file}", Logger::TYPE_WARNING);
             return true;
         }
@@ -466,14 +466,19 @@ class Files extends JobExecutable
 
         // Attempt to copy
         try {
-            $this->filesystem->copyFile($file, $destination);
+            if (is_dir($file)) {
+                $this->filesystem->copy($file, $destination);
+                // Set dir permissions
+                @chmod($destination, $this->permissions->getDirectoryOctal());
+            } else {
+                $this->filesystem->copyFile($file, $destination);
+                // Set file permissions
+                @chmod($destination, $this->permissions->getFilesOctal());
+            }
         } catch (RuntimeException $ex) {
             $this->log('Files: ' . $ex->getMessage(), Logger::TYPE_ERROR);
             return false;
         }
-
-        // Set file permissions
-        @chmod($destination, $this->permissions->getFilesOctal());
 
         $this->setDirPermissions($destination);
 

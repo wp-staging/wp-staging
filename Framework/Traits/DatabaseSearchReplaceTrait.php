@@ -59,9 +59,9 @@ trait DatabaseSearchReplaceTrait
         ];
     }
 
-    private function getSourceHostname()
+    protected function getSourceHostname()
     {
-        $urlsHelper = WPStaging::getInstance()->getContainer()->get(Urls::class);
+        $urlsHelper = WPStaging::make(Urls::class);
 
         if ($this->isSubDir()) {
             return trailingslashit($urlsHelper->getHomeUrlWithoutScheme()) . $this->getSubDir();

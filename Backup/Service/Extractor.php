@@ -303,7 +303,10 @@ class Extractor extends AbstractExtractor
             $chunk = null;
             try {
                 $chunk = $this->zlibCompressor->getService()->readChunk($this->wpstgFile, $this->extractingFile, function ($currentChunkNumber) use (&$lastDebugMessage) {
-                    $lastDebugMessage = sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->extractorDto->getTotalChunks());
+                    // Log every 200 chunks to provide progress updates without overwhelming the logs.
+                    if ($currentChunkNumber % 200 === 0 || $currentChunkNumber === $this->extractorDto->getTotalChunks()) {
+                        $lastDebugMessage = sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->extractorDto->getTotalChunks());
+                    }
                 });
             } catch (EmptyChunkException $ex) {
                 // If empty chunk, it is an empty file, so we can skip it

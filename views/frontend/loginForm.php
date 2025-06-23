@@ -47,7 +47,7 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
                 );
                 ?>
             </p>
-        <?php endif;?>
+        <?php endif; ?>
         <?php if ($isLoginCredentialsVerified) : ?>
             <p class="error-msg">
                 <?php
@@ -57,7 +57,7 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
                     );
                 ?>
             </p>
-        <?php endif;?>
+        <?php endif; ?>
         <div class="password-lost">
             <a href="<?php echo esc_url($args['lost_password_url']); ?>"><?php esc_html_e('Lost your password?', 'wp-staging') ?></a>
         </div>

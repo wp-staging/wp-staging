@@ -46,7 +46,7 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
     /**
      * DH prime
      *
-     * @var \phpseclib3\Math\BigInteger
+     * @var BigInteger
      */
     protected $prime;
     /**
@@ -54,13 +54,13 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      *
      * Prime divisor of p-1
      *
-     * @var \phpseclib3\Math\BigInteger
+     * @var BigInteger
      */
     protected $base;
     /**
      * Public Key
      *
-     * @var \phpseclib3\Math\BigInteger
+     * @var BigInteger
      */
     protected $publicKey;
     /**
@@ -148,7 +148,7 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      *
      * @param Parameters $params
      * @param int $length optional
-     * @return DH\PrivateKey
+     * @return PrivateKey
      */
     public static function createKey(\WPStaging\Vendor\phpseclib3\Crypt\DH\Parameters $params, $length = 0)
     {

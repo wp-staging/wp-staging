@@ -18,6 +18,7 @@ use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Database\TablesRenamer;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\SiteInfo;
@@ -135,13 +136,13 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setThresholdCallable([$this, 'isMaxExecutionThreshold']);
         // Tables to not restore in the site
         $this->tablesRenamer->setExcludedTables([
-            'wpstg_queue'
+            Queue::QUEUE_TABLE_NAME
         ]);
 
         $tablesToPreserve = [];
         if ($this->jobDataDto->getIsSyncRequest()) {
             $tablesToPreserve = [
-                'wpstg_queue',
+                Queue::QUEUE_TABLE_NAME,
             ];
         }
 

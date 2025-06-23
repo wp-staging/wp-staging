@@ -33,6 +33,12 @@ class JobDataDto extends AbstractDto
     /** @var string */
     protected $lastQueryInfoJSON;
 
+    /**
+     * Current execution time in sec for database import
+     * @var int
+     */
+    private $currentExecutionTimeDatabaseImport = 10;
+
     /** @var bool */
     protected $isSlowMySqlServer = false;
 
@@ -247,6 +253,36 @@ class JobDataDto extends AbstractDto
         }
 
         $this->lastQueryInfoJSON = $lastQueryInfoJSON;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurrentExecutionTimeDatabaseImport(): int
+    {
+        $time = $this->currentExecutionTimeDatabaseImport;
+        if ($time < 10) {
+            return 10;
+        }
+
+        return $time;
+    }
+
+    /**
+     * @return void
+     */
+    public function incrementCurrentExecutionTimeDatabaseImport()
+    {
+        $this->currentExecutionTimeDatabaseImport += 5;
+    }
+
+    /**
+     * @param int $currentExecutionTimeDatabaseImport
+     * @return void
+     */
+    public function setCurrentExecutionTimeDatabaseImport($currentExecutionTimeDatabaseImport = 0)
+    {
+        $this->currentExecutionTimeDatabaseImport = $currentExecutionTimeDatabaseImport;
     }
 
     /**
