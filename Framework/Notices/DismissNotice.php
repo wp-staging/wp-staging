@@ -63,7 +63,7 @@ class DismissNotice
             return;
         }
 
-        if ($noticeToDismiss === ObjectCacheNotice::NOTICE_DISMISS_ACTION && $this->objectCacheNotice->disable() !== false) {
+        if ($noticeToDismiss === ObjectCacheNotice::ACTION_NOTICE_DISMISS && $this->objectCacheNotice->disable() !== false) {
             wp_send_json(true);
             return;
         }

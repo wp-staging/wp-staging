@@ -4,19 +4,35 @@ namespace WPStaging\Staging\Jobs;
 
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
-use WPStaging\Staging\Tasks\StagingSite\CreateDatabaseTablesTask;
-use WPStaging\Staging\Tasks\StagingSite\ImportDatabaseRowsTask;
-use WPStaging\Staging\Tasks\StagingSite\PrepareDatabaseRowsTask;
+use WPStaging\Staging\Tasks\StagingSite\Database\CreateDatabaseTablesTask;
+use WPStaging\Staging\Tasks\StagingSite\Database\ImportDatabaseRowsTask;
+use WPStaging\Staging\Tasks\StagingSite\Database\PrepareDatabaseRowsTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyMuPluginsTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyPluginsTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyThemesTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyUploadsTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyWpAdminTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyWpContentTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyWpIncludesTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyWpRootDirectoriesTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyWpRootFilesTask;
+use WPStaging\Staging\Tasks\StagingSite\Filesystem\FilesystemScannerTask;
 use WPStaging\Staging\Tasks\StagingSiteCreate\CreateRequirementsCheckTask;
 use WPStaging\Staging\Tasks\StagingSiteCreate\FinishStagingSiteCreateTask;
+use WPStaging\Staging\Traits\WithDataAdjustmentTasks;
 
 class StagingSiteCreate extends AbstractJob
 {
+    use WithDataAdjustmentTasks;
+
+    /** @var string */
+    const ACTION_CLONING_COMPLETE = 'wpstg_cloning_complete';
+
     /** @var StagingSiteCreateDataDto $jobDataDto */
     protected $jobDataDto;
 
     /** @var array The array of tasks to execute for this job. Populated at init(). */
-    private $tasks = [];
+    protected $tasks = [];
 
     public static function getJobName()
     {
@@ -42,10 +58,47 @@ class StagingSiteCreate extends AbstractJob
 
     protected function init()
     {
+        $this->addRequirementsCheckTask();
+        $this->addDatabaseTasks();
+        $this->addFilesystemTasks();
+        $this->addAdvanceTasks();
+        $this->addDataAdjustmentTasks();
+        $this->addFinishStagingSiteCreateTask();
+    }
+
+    protected function addRequirementsCheckTask()
+    {
         $this->tasks[] = CreateRequirementsCheckTask::class;
+    }
+
+    protected function addDatabaseTasks()
+    {
         $this->tasks[] = CreateDatabaseTablesTask::class;
         $this->tasks[] = PrepareDatabaseRowsTask::class;
         $this->tasks[] = ImportDatabaseRowsTask::class;
+    }
+
+    protected function addFilesystemTasks()
+    {
+        $this->tasks[] = FilesystemScannerTask::class;
+        $this->tasks[] = CopyWpRootFilesTask::class;
+        $this->tasks[] = CopyWpAdminTask::class;
+        $this->tasks[] = CopyWpIncludesTask::class;
+        $this->tasks[] = CopyPluginsTask::class;
+        $this->tasks[] = CopyMuPluginsTask::class;
+        $this->tasks[] = CopyThemesTask::class;
+        $this->tasks[] = CopyUploadsTask::class;
+        $this->tasks[] = CopyWpContentTask::class;
+        $this->tasks[] = CopyWpRootDirectoriesTask::class;
+    }
+
+    protected function addFinishStagingSiteCreateTask()
+    {
         $this->tasks[] = FinishStagingSiteCreateTask::class;
+    }
+
+    protected function addAdvanceTasks()
+    {
+        // no-op, used in PRO
     }
 }

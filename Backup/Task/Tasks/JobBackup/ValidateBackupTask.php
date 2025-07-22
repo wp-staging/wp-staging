@@ -78,7 +78,7 @@ class ValidateBackupTask extends BackupTask
             $this->backupExtractor->execute();
             $this->currentTaskDto->fromExtractorDto($this->backupExtractor->getExtractorDto());
         } catch (DiskNotWritableException $e) {
-            $this->logger->warning($e->getMessage());
+            $this->logger->warning($e->getMessage() . '.');
             // No-op, just stop execution
             throw $e;
         } catch (FinishedQueueException $e) {

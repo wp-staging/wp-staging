@@ -6,6 +6,7 @@ use DateTime;
 use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Sanitize;
@@ -200,7 +201,7 @@ class BackupScheduler
             'backupExcludedDirectories'      => $jobBackupDataDto->getBackupExcludedDirectories(),
         ];
 
-        if (wp_next_scheduled('wpstg_create_cron_backup', [$backupSchedule])) {
+        if (wp_next_scheduled(Cron::ACTION_CREATE_CRON_BACKUP, [$backupSchedule])) {
             debug_log('[Schedule Backup Cron] Early bailed when registering the cron to create a backup on a schedule, because it already exists');
 
             return;
@@ -344,7 +345,7 @@ class BackupScheduler
             }
 
             /** @see BackupServiceProvider::enqueueAjaxListeners */
-            $result = wp_schedule_event($timeToSchedule->format('U'), $schedule['schedule'], 'wpstg_create_cron_backup', [$schedule]);
+            $result = wp_schedule_event($timeToSchedule->format('U'), $schedule['schedule'], Cron::ACTION_CREATE_CRON_BACKUP, [$schedule]);
 
             // Could not register Cron event.
             // Log errors but keep trying for the other cron events or all of them will be lost
@@ -392,7 +393,7 @@ class BackupScheduler
         foreach ($cron as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
-                    if ($callback === 'wpstg_create_cron_backup') {
+                    if ($callback === Cron::ACTION_CREATE_CRON_BACKUP) {
                         unset($cron[$timestamp][$callback]);
                     }
                 }
@@ -580,7 +581,7 @@ class BackupScheduler
         foreach ($cron as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
-                    if ($callback === 'wpstg_create_cron_backup') {
+                    if ($callback === Cron::ACTION_CREATE_CRON_BACKUP) {
                         return [$timestamp, $cron[$timestamp][$callback]];
                     }
                 }

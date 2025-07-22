@@ -44,9 +44,9 @@
                 <?php
                 printf(
                     esc_html__('Upload backups to cloud providers like %1$s, %2$s, %3$s, and more.', 'wp-staging'),
-                    '<a href="https://wp-staging.com/docs/create-google-api-credentials-to-authenticate-to-google-drive/" target="_blank" rel="noopener">' . esc_html__('Google Drive', 'wp-staging') . '</a>',
-                    '<a href="https://wp-staging.com/docs/how-to-backup-website-to-amazon-s3-bucket/" target="_blank" rel="noopener">' . esc_html__('Amazon S3', 'wp-staging') . '</a>',
-                    '<a href="https://wp-staging.com/docs/how-to-backup-a-wordpress-site-transfer-backup-file-to-another-server-with-ftp-sftp/" target="_blank" rel="noopener">' . esc_html__('SFTP', 'wp-staging') . '</a>'
+                    '<a href="https://wp-staging.com/docs/create-google-api-credentials-to-authenticate-to-google-drive/" target="_blank" rel="noopener">Google Drive</a>',
+                    '<a href="https://wp-staging.com/docs/how-to-backup-website-to-amazon-s3-bucket/" target="_blank" rel="noopener">Amazon S3</a>',
+                    '<a href="https://wp-staging.com/docs/how-to-backup-a-wordpress-site-transfer-backup-file-to-another-server-with-ftp-sftp/" target="_blank" rel="noopener">SFTP</a>'
                 );
                 ?>
             </li>

@@ -7,6 +7,7 @@ use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 use WPStaging\Framework\Analytics\AnalyticsSender;
 use WPStaging\Framework\DI\FeatureServiceProvider;
+use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Sanitize;
@@ -29,8 +30,8 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
 
     protected function addHooks()
     {
-        add_action('wpstg.admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentNotice'));
-        add_action('wpstg.admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentFailureNotice'));
+        add_action(Notices::ACTION_ADMIN_NOTICES, $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentNotice'));
+        add_action(Notices::ACTION_ADMIN_NOTICES, $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentFailureNotice'));
         add_action('admin_init', $this->container->callback(AnalyticsConsent::class, 'listenForConsent'));
 
         $this->sanitize = WPStaging::make(Sanitize::class);

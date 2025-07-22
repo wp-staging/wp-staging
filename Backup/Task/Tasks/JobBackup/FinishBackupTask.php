@@ -59,6 +59,8 @@ class FinishBackupTask extends BackupTask
     {
         $backupFilePath = $this->jobDataDto->getBackupFilePath();
 
+        $this->logCompressionEntry();
+
         $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
 
         $this->logger->info("################## FINISH ##################");
@@ -84,7 +86,6 @@ class FinishBackupTask extends BackupTask
 
         // Delete the transient cache for the backup file index to make sure it is checked again now
         $this->transientCache->delete(TransientCache::KEY_INVALID_BACKUP_FILE_INDEX);
-        $this->getJobTransientCache()->completeJob();
 
         $this->performFinishBackupAction();
 
@@ -96,7 +97,7 @@ class FinishBackupTask extends BackupTask
      */
     protected function performFinishBackupAction()
     {
-        // This is used in PRO version
+        $this->getJobTransientCache()->completeJob();
     }
 
     /**
@@ -128,6 +129,14 @@ class FinishBackupTask extends BackupTask
         });
 
         return $this->generateResponse();
+    }
+
+    /**
+     * @return void
+     */
+    protected function logCompressionEntry()
+    {
+        // Used in PRO version
     }
 
     /**
@@ -194,7 +203,7 @@ class FinishBackupTask extends BackupTask
         if ($jobId instanceof \WP_Error) {
             throw new RuntimeException('Failed to trigger Backup creation in background: ' . $jobId->get_error_message());
         } else {
-            $this->logger->info('Backup creation triggered in background with job ID: ' . $jobId);
+            $this->logger->info('Backup creation triggered in background with job ID: ' . $jobId . '.');
         }
     }
 

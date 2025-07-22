@@ -56,10 +56,26 @@ trait StagingOperationDtoTrait
     private $excludeGlobRules = [];
 
     /** @var string */
-    private $stagingSiteUrl = '';
+    private $stagingSitePath = '';
 
     /** @var string */
-    private $stagingSitePath = '';
+    private $stagingSiteUrl = '';
+
+    /**
+     * Relative path to the uploads directory on the staging site.
+     * @var string
+     */
+    private $stagingSiteUploads = '';
+
+    /**
+     * @var bool
+     */
+    private $isWpConfigExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isKeepPermalinks = false;
 
     /**
      * @param string $jobType
@@ -273,5 +289,58 @@ trait StagingOperationDtoTrait
     public function getStagingSiteUrl(): string
     {
         return $this->stagingSiteUrl;
+    }
+
+    /**
+     * Set the relative path to the uploads directory on the staging site.
+     * @param string $path
+     * @return void
+     */
+    public function setStagingSiteUploads(string $path)
+    {
+        $this->stagingSiteUploads = $path;
+    }
+
+    /**
+     * Get the relative path to the uploads directory on the staging site.
+     * @return string
+     */
+    public function getStagingSiteUploads(): string
+    {
+        return $this->stagingSiteUploads;
+    }
+
+    /**
+     * @param bool $excluded
+     * @return void
+     */
+    public function setIsWpConfigExcluded(bool $excluded)
+    {
+        $this->isWpConfigExcluded = $excluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsWpConfigExcluded(): bool
+    {
+        return $this->isWpConfigExcluded;
+    }
+
+    /**
+     * @param bool $isKeepPermalinks
+     * @return void
+     */
+    public function setIsKeepPermalinks(bool $isKeepPermalinks)
+    {
+        $this->isKeepPermalinks = $isKeepPermalinks;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsKeepPermalinks(): bool
+    {
+        return $this->isKeepPermalinks;
     }
 }

@@ -4,11 +4,11 @@
 
 namespace WPStaging\Backup\Task;
 
-use WPStaging\Framework\Job\Dto\StepsDto;
-use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\FileBackupService;
 use WPStaging\Backup\Service\FileBackupServiceProvider;
 use WPStaging\Backup\Task\BackupTask;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;

@@ -21,7 +21,7 @@ $linkToArticle = "https://wp-staging.com/docs/object-caching-and-how-to-activate
     <p>
     <?php Notices::renderNoticeDismissAction(
         $this->viewsNoticesPath,
-        ObjectCacheNotice::NOTICE_DISMISS_ACTION,
+        ObjectCacheNotice::ACTION_NOTICE_DISMISS,
         '.wpstg_dismiss_skipped_object_cache_notice',
         '.wpstg-skipped-object-cache-notice'
     ) ?>

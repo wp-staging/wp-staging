@@ -5,12 +5,18 @@ namespace WPStaging\Framework\Job\Ajax;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\JobCancelDataDto;
 use WPStaging\Framework\Job\Jobs\JobCancel;
 use WPStaging\Framework\Job\JobTransientCache;
 
 class PrepareCancel extends PrepareJob
 {
+    /**
+     * @var string
+     */
+    const ACTION_JOB_CANCEL = 'wpstg.job_cancel';
+
     /** @var JobCancelDataDto */
     private $jobDataDto;
 
@@ -126,17 +132,17 @@ class PrepareCancel extends PrepareJob
     }
 
     /**
-     * @throws \Exception
+     * @param JobTransientCache|null $jobTransientCache
      * @return array
+     * @throws \Exception
      */
-    private function getJobData(): array
+    private function getJobData($jobTransientCache = null): array
     {
-        /**
-         * lazy loaded if we only need it for background jobs
-         * @var JobTransientCache
-         */
-        $jobTransientCache = WPStaging::make(JobTransientCache::class);
-        $jobData           = $jobTransientCache->getJob();
+        if ($jobTransientCache === null) {
+            $jobTransientCache = WPStaging::make(JobTransientCache::class);
+        }
+
+        $jobData = $jobTransientCache->getJob();
         if (empty($jobData['status']) || $jobData['status'] !== JobTransientCache::STATUS_RUNNING) {
             throw new \Exception('Job is not running!');
         }
@@ -149,18 +155,34 @@ class PrepareCancel extends PrepareJob
         switch ($type) {
             case JobTransientCache::JOB_TYPE_BACKUP:
                 return esc_html__('Canceling Backup', 'wp-staging');
+            case JobTransientCache::JOB_TYPE_PULL_PREPARE:
+                return esc_html__('Canceling Pull', 'wp-staging');
+            case JobTransientCache::JOB_TYPE_PULL_RESTORE:
+                return esc_html__('Canceling Pull', 'wp-staging');
             default:
                 return esc_html__('Canceling', 'wp-staging');
         }
     }
 
+    /**
+     * @return void
+     */
     private function cancelCurrentRunningJob()
     {
-        $jobData = $this->getJobData();
+        /**
+         * lazy loaded if we only need it for background jobs
+         * @var JobTransientCache
+         */
+        $jobTransientCache = WPStaging::make(JobTransientCache::class);
+        $jobData           = $this->getJobData($jobTransientCache);
         // Check if the job is running
         if ($jobData['status'] !== JobTransientCache::STATUS_RUNNING) {
             return;
         }
+
+        Hooks::callInternalHook(self::ACTION_JOB_CANCEL, [
+            'jobTransientCache' => $jobTransientCache,
+        ]);
 
         $queueId = $jobData['queueId'];
         if (empty($queueId)) {

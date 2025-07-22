@@ -240,6 +240,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setCreatedOnPro(WPStaging::isPro());
         $backupMetadata->setHostingType($this->siteInfo->getHostingType());
         $backupMetadata->setIsContaining2GBFile($this->jobDataDto->getIsContaining2GBFile());
+        $backupMetadata->setIsZlibCompressed($this->jobDataDto->getIsCompressed());
 
         $this->addSystemInfoToBackupMetadata($backupMetadata);
 

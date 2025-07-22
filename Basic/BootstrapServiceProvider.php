@@ -26,7 +26,7 @@ class BootstrapServiceProvider extends ServiceProvider
     protected function addHooks()
     {
         add_action("wp_ajax_wpstg_clean_pro_crons", $this->container->callback(ProCronsCleaner::class, 'ajaxCleanProCrons')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action(Notices::BASIC_NOTICES_ACTION, $this->container->callback(BasicNotices::class, 'renderNotices')); // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
+        add_action(Notices::ACTION_BASIC_NOTICES, $this->container->callback(BasicNotices::class, 'renderNotices')); // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
     }
 
     protected function registerClasses()

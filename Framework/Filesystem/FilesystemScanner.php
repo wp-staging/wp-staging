@@ -205,7 +205,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
         if (isset($this->ignoreFileExtensionFilesBiggerThan[$fileExtension])) {
             if ($fileSize > $this->ignoreFileExtensionFilesBiggerThan[$fileExtension]) {
                 // Early bail: File bigger than expected for given extension
-                $this->logger->info(sprintf(
+                $this->logger->warning(sprintf(
                     '%s: Skipped file "%s" (%s). It exceeds the maximum allowed file size for files with the extension "%s" (%s).',
                     esc_html($this->logTitle),
                     esc_html($relativePath),
@@ -218,8 +218,8 @@ class FilesystemScanner extends AbstractFilesystemScanner
             }
         } elseif ($fileSize > $this->ignoreFileBiggerThan) {
             // Early bail: File is larger than max allowed size.
-            $this->logger->info(sprintf(
-                '%s: Skipped file "%s" (%s). It exceeds the maximum file size for backup (%s).',
+            $this->logger->warning(sprintf(
+                '%s: Skipped file "%s" (%s). It exceeds the maximum file size (%s).',
                 esc_html($this->logTitle),
                 esc_html($relativePath),
                 size_format($fileSize),
@@ -288,7 +288,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
         if (in_array($normalizedPath, $this->scannerDto->getExcludedDirectories())) {
             $relativePathForLogging = str_replace($this->filesystem->normalizePath(WP_CONTENT_DIR, true), '', $normalizedPath);
 
-            $this->logger->info(sprintf(
+            $this->logger->warning(sprintf(
                 '%s: Skipped directory "%s". Excluded by rule',
                 esc_html($this->logTitle),
                 esc_html($relativePathForLogging)
@@ -395,7 +395,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
             return false;
         }
 
-        $this->logger->info(sprintf(
+        $this->logger->warning(sprintf(
             '%s: Skipped directory "%s". Excluded by smart exclusion rule: Excluding cache folder.',
             esc_html($this->logTitle),
             esc_html($dir->getRealPath())

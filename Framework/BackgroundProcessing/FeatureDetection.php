@@ -10,6 +10,7 @@ namespace WPStaging\Framework\BackgroundProcessing;
 
 use WP_Error;
 use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\Notices\Notices;
 
 use function WPStaging\functions\debug_log;
 
@@ -20,8 +21,16 @@ use function WPStaging\functions\debug_log;
  */
 class FeatureDetection
 {
-    const AJAX_TEST_ACTION       = 'wpstg_ajax_test_action';
-    const AJAX_OPTION_NAME       = 'wpstg_q_feature_detection_ajax_available';
+    /** @var string */
+    const ACTION_AJAX_TEST = 'wpstg_ajax_test_action';
+
+    /** @var string */
+    const ACTION_AJAX_SUPPORT_FEATURE_DETECTION = 'wpstg_q_ajax_support_feature_detection';
+
+    /** @var string */
+    const AJAX_OPTION_NAME = 'wpstg_q_feature_detection_ajax_available';
+
+    /** @var string */
     const AJAX_REQUEST_QUERY_VAR = 'wpstg_q_ajax_check';
 
     /**
@@ -72,7 +81,7 @@ class FeatureDetection
         }
 
         if (!$this->isAjaxAvailableCache && $showAdminNotice) {
-            add_action('wpstg.admin_notices', [$this, 'ajaxSupportMissingAdminNotice']);
+            add_action(Notices::ACTION_ADMIN_NOTICES, [$this, 'ajaxSupportMissingAdminNotice']);
         }
 
         //debug_log('isAjaxAvailable end. Result: ' . $this->isAjaxAvailableCache);
@@ -105,8 +114,8 @@ class FeatureDetection
         delete_option(self::AJAX_OPTION_NAME);
 
         $ajaxUrl = add_query_arg([
-            'action'      => self::AJAX_TEST_ACTION,
-            '_ajax_nonce' => wp_create_nonce(self::AJAX_TEST_ACTION)
+            'action'      => self::ACTION_AJAX_TEST,
+            '_ajax_nonce' => wp_create_nonce(self::ACTION_AJAX_TEST)
         ], admin_url('admin-ajax.php'));
 
         $hash = md5(uniqid(__CLASS__, true));
@@ -115,7 +124,7 @@ class FeatureDetection
 
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
             'headers'   => [
-                'X-WPSTG-Request' => self::AJAX_TEST_ACTION
+                'X-WPSTG-Request' => self::ACTION_AJAX_TEST
             ],
             'blocking'  => false,
             'timeout'   => 0.01,
@@ -183,7 +192,7 @@ class FeatureDetection
     public function updateAjaxTestOption()
     {
         debug_log('Running updateAjaxTestOption', 'info', false);
-        check_ajax_referer(self::AJAX_TEST_ACTION);
+        check_ajax_referer(self::ACTION_AJAX_TEST);
 
         if (!update_option(self::AJAX_OPTION_NAME, 'y', false)) {
             debug_log('updateAjaxTestOption update_option returned false', 'info', false);

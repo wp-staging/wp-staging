@@ -997,8 +997,9 @@ class Queue
         $jobIdsInterval = $this->escapeInterval($jobIds);
         $now            = current_time('mysql');
         $cancelQuery    = "UPDATE {$tableName} 
-            SET status='{$newStatus}', claimed_at=NULL, updated_at='{$now}'
-            WHERE jobId in ({$jobIdsInterval})";
+            SET status='{$newStatus}', updated_at='{$now}'
+            WHERE jobId in ({$jobIdsInterval})
+            AND status NOT IN ('" . self::STATUS_COMPLETED . "', '" . self::STATUS_CANCELED . "', '" . self::STATUS_FAILED . "')";
         $cancelResult = $this->database->query($cancelQuery);
 
         if ($cancelResult === false) {

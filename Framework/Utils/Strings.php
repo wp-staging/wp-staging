@@ -183,12 +183,17 @@ class Strings
         }
 
         list($username, $domain) = explode('@', $email);
-        $firstChar = substr($username, 0, 1);
-        $lastChar = substr($username, -1);
-        $maskedUsername = $firstChar . str_repeat('*', strlen($username) - 2) . $lastChar;
-        list($domainName, $tld) = explode('.', $domain);
-        $maskedDomainName = substr($domainName, 0, 1) . str_repeat('*', strlen($domainName) - 1);
-        return $maskedUsername . '@' . $maskedDomainName . '.' . $tld;
-    }
+        $usernameLength = strlen($username);
+        $firstChar      = substr($username, 0, 1);
+        $lastChar       = substr($username, -1);
+        if ($usernameLength <= 2) {
+            $maskedUsername = $firstChar . str_repeat('*', max(0, $usernameLength - 1));
+        } else {
+            $maskedUsername = $firstChar . str_repeat('*', $usernameLength - 2) . $lastChar;
+        }
 
+        list($domainName, $topLevelDomain) = explode('.', $domain);
+        $maskedDomainName = substr($domainName, 0, 1) . str_repeat('*', max(0, strlen($domainName) - 1));
+        return $maskedUsername . '@' . $maskedDomainName . '.' . $topLevelDomain;
+    }
 }

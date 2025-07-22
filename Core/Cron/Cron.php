@@ -42,6 +42,15 @@ class Cron
     /** @var string */
     const BASIC_DAILY     = 'wpstg_basic_daily';
 
+    /** @var string */
+    const ACTION_DAILY_EVENT = 'wpstg_daily_event';
+
+    /** @var string */
+    const ACTION_WEEKLY_EVENT = 'wpstg_weekly_event';
+
+    /** @var string */
+    const ACTION_CREATE_CRON_BACKUP = 'wpstg_create_cron_backup';
+
     public function __construct()
     {
         add_filter('cron_schedules', [$this, 'addIntervals']);
@@ -170,12 +179,12 @@ class Cron
      */
     public function scheduleEvent()
     {
-        if (!wp_next_scheduled('wpstg_weekly_event')) {
-            wp_schedule_event(time(), 'weekly', 'wpstg_weekly_event');
+        if (!wp_next_scheduled(self::ACTION_WEEKLY_EVENT)) {
+            wp_schedule_event(time(), 'weekly', self::ACTION_WEEKLY_EVENT);
         }
 
-        if (!wp_next_scheduled('wpstg_daily_event')) {
-            wp_schedule_event(time(), 'daily', 'wpstg_daily_event');
+        if (!wp_next_scheduled(self::ACTION_DAILY_EVENT)) {
+            wp_schedule_event(time(), 'daily', self::ACTION_DAILY_EVENT);
         }
 
         return true;

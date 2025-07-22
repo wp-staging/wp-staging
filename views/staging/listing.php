@@ -29,14 +29,9 @@ $assets = WPStaging::make(Assets::class);
             <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
         </button>
     <?php else : ?>
-        <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-mr-10px" data-action="wpstg_scanning" <?php echo $error ? 'disabled' : '' ?>>
-            <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
+        <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning" <?php echo $error ? 'disabled' : ''; ?>>
+            <?php echo esc_html__("Create Staging Site", "wp-staging"); ?>
         </button>
-    <?php endif; ?>
-    <?php if (defined('WPSTG_REMOTE_SYNC_ENABLED') && WPSTG_REMOTE_SYNC_ENABLED) : ?>
-    <button id="wpstg-remote-sync" class="wpstg-blue-primary wpstg-button" <?php echo !$isPro ? 'disabled' : '' ?>>
-        <?php echo esc_html__("Sync With Remote Site (NEW)", "wp-staging") ?>
-    </button>
     <?php endif; ?>
 </div>
 
@@ -52,20 +47,20 @@ $assets = WPStaging::make(Assets::class);
     <!-- Existing Clones -->
     <div id="wpstg-existing-clones">
         <h3>
-            <?php esc_html_e("Your Staging Sites:", "wp-staging") ?>
+            <?php esc_html_e("Your Staging Sites:", "wp-staging"); ?>
         </h3>
         <?php foreach ($stagingSites as $stagingSite) :
             $stagingSiteItem = $stagingSite->toListableItem();
             include WPSTG_VIEWS_DIR . 'staging/staging-site-list-item.php';
         endforeach ?>
         <div class="wpstg-fs-14" id="info-block-how-to-push">
-            <?php esc_html_e("How to:", "wp-staging") ?> <a href="https://wp-staging.com/docs/copy-staging-site-to-live-site/" target="_blank"><?php esc_html_e("Push staging site to production", "wp-staging") ?></a>
+            <?php esc_html_e("How to:", "wp-staging"); ?> <a href="https://wp-staging.com/docs/copy-staging-site-to-live-site/" target="_blank"><?php esc_html_e("Push staging site to production", "wp-staging"); ?></a>
         </div>
     </div>
     <!-- /Existing Clones -->
 <?php endif ?>
 
-<div id="wpstg-no-staging-site-results" class="wpstg-clone" <?php echo ($stagingSites !== [] || $error) ? 'style="display: none;"' : '' ?> >
+<div id="wpstg-no-staging-site-results" class="wpstg-clone" <?php echo ($stagingSites !== [] || $error) ? 'style="display: none;"' : ''; ?> >
     <img class="wpstg--dashicons" src="<?php echo esc_url($iconPath); ?>" alt="cloud">
     <div class="no-staging-site-found-text">
         <?php esc_html_e('No Staging Site found. Create your first Staging Site above!', 'wp-staging'); ?>
@@ -74,19 +69,19 @@ $assets = WPStaging::make(Assets::class);
 
 <?php if ($error) : ?>
     <div class="wpstg-clone wpstg-clone-error wpstg--error">
-        <h4><?php echo esc_html__("Staging Sites Error: ", "wp-staging") ?></h4>
+        <h4><?php echo esc_html__("Staging Sites Error: ", "wp-staging"); ?></h4>
         <p><?php esc_html_e('Staging sites data is corrupted. See the option below to fix it. Contact WP Staging support for more info!', 'wp-staging'); ?></p>
         <button id="wpstg-fix-staging-sites-option" class="wpstg-button wpstg-mr-10px">
-            <?php echo esc_html__("Report and fix this issue", "wp-staging") ?>
+            <?php echo esc_html__("Report and fix this issue", "wp-staging"); ?>
         </button>
         <button id="wpstg-report-corrupted-staging-sites" class="wpstg-button">
-            <?php echo esc_html__("Report this issue only", "wp-staging") ?>
+            <?php echo esc_html__("Report this issue only", "wp-staging"); ?>
         </button>
         <p>
         <?php echo sprintf(
             esc_html__("Note: This fix will create a backup of the corrupted staging site options and clean the listed staging sites. You will still be able to access your existing staging sites and can %s.", "wp-staging"),
             "<a href='https://wp-staging.com/docs/reconnect-staging-site-to-production-website/' target='_blank'>" . esc_html__('reconnect them to the production website', 'wp-staging') . "</a>"
-        ) ?>
+        ); ?>
         </p>
     </div>
 <?php endif; ?>

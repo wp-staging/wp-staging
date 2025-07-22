@@ -538,11 +538,16 @@ class JobDataDto extends AbstractDto
     /** @throws FinishedQueueException */
     public function moveToNextTask()
     {
+        $this->checkNextTask();
+        $this->currentTaskIndex++;
+    }
+
+    /** @throws FinishedQueueException */
+    public function checkNextTask()
+    {
         if (count($this->taskQueue) === $this->currentTaskIndex + 1) {
             throw new FinishedQueueException();
         }
-
-        $this->currentTaskIndex++;
     }
 
     /** @return int */
@@ -578,9 +583,21 @@ class JobDataDto extends AbstractDto
         return $this->totalChunks;
     }
 
+    /**
+     * @param int $totalChunks
+     * @return void
+     */
     public function setTotalChunks(int $totalChunks)
     {
         $this->totalChunks = $totalChunks;
+    }
+
+    /**
+     * @return void
+     */
+    public function incrementTotalChunks()
+    {
+        $this->totalChunks++;
     }
 
     /**

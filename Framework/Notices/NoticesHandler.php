@@ -43,7 +43,7 @@ class NoticesHandler
      */
     public function addWpstgAdminNotices()
     {
-        Hooks::doAction('wpstg.admin_notices');
+        Hooks::doAction(Notices::ACTION_ADMIN_NOTICES);
     }
 
     /**
@@ -51,7 +51,7 @@ class NoticesHandler
      */
     public function addWpstgNetworkAdminNotices()
     {
-        Hooks::doAction('wpstg.network_admin_notices');
+        Hooks::doAction(Notices::ACTION_NETWORK_ADMIN_NOTICES);
     }
 
     /**
@@ -59,7 +59,7 @@ class NoticesHandler
      */
     public function addWpstgAllAdminNotices()
     {
-        Hooks::doAction('wpstg.all_admin_notices');
+        Hooks::doAction(Notices::ACTION_ALL_ADMIN_NOTICES);
     }
 
     /**

@@ -128,8 +128,13 @@ class BackgroundLogger
             $events = $this->sseEventCache->getEvents($offset);
 
             foreach ($events as $event) {
-                if ($event['type'] === 'task') {
+                if ($event['type'] === SseEventCache::EVENT_TYPE_TASK) {
                     $this->pushTaskProgress($jobId, $event['data']);
+                    continue;
+                }
+
+                if ($event['type'] === SseEventCache::EVENT_TYPE_COMPLETE) {
+                    $this->output($jobId, $event['data']['status'], json_encode($event['data']['data']));
                     continue;
                 }
 
@@ -178,8 +183,8 @@ class BackgroundLogger
         $data = [];
 
         if ($status === JobTransientCache::STATUS_CANCELLED) {
-            $this->output($jobData['jobId'], 'task', json_encode([
-                'percentage' => 80,
+            $this->output($jobData['jobId'], SseEventCache::EVENT_TYPE_TASK, json_encode([
+                'percentage' => 60, // We don't show logs for cancelling jobs, this is just a placeholder
                 'title'      => esc_html__('Processing...', 'wp-staging'),
             ]));
             $data['title'] = $jobData['title'];
@@ -202,7 +207,7 @@ class BackgroundLogger
         $this->lastPercentage = $taskData['percentage'];
         $this->lastTaskTitle  = $taskData['title'];
 
-        $this->output($jobId, 'task', json_encode($taskData));
+        $this->output($jobId, SseEventCache::EVENT_TYPE_TASK, json_encode($taskData));
     }
 
     /**

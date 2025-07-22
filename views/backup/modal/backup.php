@@ -171,16 +171,17 @@ $storagesPrefix = 'storage-';
             </div>
             <div class="wpstg-backup-options-section hidden wpstg-sub-options-details" id="wpstg-backup-advance-section">
                 <div class="wpstg-container">
-                    <label class="wpstg-backup-option wpstg-with-tooltip">
+                    <label class="wpstg-backup-option wpstg-with-tooltip" id="wpstg-add-exclusions-label">
                         <div class="wpstg--add-exclusions-expand-folder">
                             <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--add-exclusions-expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info"/>
                         </div>
                         <?php
                         $attributes = [
-                            'classes'  => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
-                            'onChange' => 'WPStaging.handleDisplayDependencies(this)',
+                            'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
+                            'onChange'   => 'WPStaging.handleDisplayDependencies(this)',
+                            'isDisabled' => !$isProVersion,
                         ];
-                        Checkbox::render('wpstgSmartExclusion', 'smartExclusion', '', true, $attributes);
+                        Checkbox::render('wpstgSmartExclusion', 'smartExclusion', '', false, $attributes);
                         ?>
                         <span class="<?php echo esc_attr($disabledClass); ?>" id="wpstg-add-exclusions-span" data-id="#wpstg-advanced-exclude-options">
                             <?php esc_html_e('Add Exclusions', 'wp-staging'); ?>
@@ -188,7 +189,7 @@ $storagesPrefix = 'storage-';
                         <div class="wpstg--tooltip">
                             <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info"/>
                             <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                                <?php esc_html_e('To keep backups fast and efficient, we automatically exclude files over 200MB and system files like .log, .wpstg, .gz, and .tmp', 'wp-staging'); ?>
+                                <?php esc_html_e('To keep backups fast and efficient, we automatically exclude files over 200MB and system files like .wpstg, .gz, and .tmp', 'wp-staging'); ?>
                                 <br/><?php printf(esc_html__('Want to change this? %s', 'wp-staging'), '<a href="https://wp-staging.com/docs/actions-and-filters/#Exclude_a_file_extension_from_backup" target="_blank" rel="noopener noreferrer">' . esc_html__('Learn how to customize exclusions.', 'wp-staging') . '</a>'); ?>
                             </span>
                         </div>
@@ -213,21 +214,6 @@ $storagesPrefix = 'storage-';
                         </div>
                     </label>
                 </div>
-
-                <?php if (defined('WPSTG_DEBUG') && constant('WPSTG_DEBUG')) : ?>
-                <div class="wpstg-container wpstg-mt-5px">
-                    <label class="wpstg-backup-option wpstg-with-tooltip">
-                        <?php Checkbox::render('wpstg-validate-backup-files', 'validateBackupFiles'); ?>
-                        <span><?php esc_html_e('Validate Backup', 'wp-staging'); ?></span>
-                        <div class="wpstg--tooltip">
-                            <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info"/>
-                            <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                                <?php esc_html_e('Validate each file in the backup to make sure backup is correctly created.', 'wp-staging'); ?>
-                            </span>
-                        </div>
-                    </label>
-                </div>
-                <?php endif; ?>
             </div>
             <!-- End Advanced Options -->
             <div id="wpstg-backup-times-header" data-id="#wpstg-backup-times-section">

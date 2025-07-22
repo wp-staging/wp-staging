@@ -41,4 +41,16 @@ interface StagingOperationDtoInterface
     public function setStagingSiteUrl(string $url);
 
     public function getStagingSiteUrl(): string;
+
+    public function setStagingSiteUploads(string $path);
+
+    public function getStagingSiteUploads(): string;
+
+    public function setIsWpConfigExcluded(bool $excluded);
+
+    public function getIsWpConfigExcluded(): bool;
+
+    public function setIsKeepPermalinks(bool $isKeepPermalinks);
+
+    public function getIsKeepPermalinks(): bool;
 }

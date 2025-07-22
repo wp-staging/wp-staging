@@ -43,7 +43,7 @@ class Providers
             [
                 'id'           => 'googleDrive',
                 'cli'          => 'google-drive',
-                'name'         => esc_html__('Google Drive', 'wp-staging'),
+                'name'         => 'Google Drive',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(GoogleDriveAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('googleDrive'),
@@ -51,7 +51,7 @@ class Providers
             [
                 'id'           => 'amazonS3',
                 'cli'          => 'amazon-s3',
-                'name'         => esc_html__('Amazon S3', 'wp-staging'),
+                'name'         => 'Amazon S3',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(AmazonS3Auth::class),
                 'settingsPath' => $this->getStorageAdminPage('amazonS3'),
@@ -59,7 +59,7 @@ class Providers
             [
                 'id'           => 'dropbox',
                 'cli'          => 'dropbox',
-                'name'         => esc_html__('Dropbox', 'wp-staging'),
+                'name'         => 'Dropbox',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(DropboxAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('dropbox'),
@@ -67,7 +67,7 @@ class Providers
             [
                 'id'           => 'one-drive',
                 'cli'          => 'one-drive',
-                'name'         => esc_html__('Microsoft OneDrive', 'wp-staging'),
+                'name'         => 'Microsoft OneDrive',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(OneDriveAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('one-drive'),
@@ -75,7 +75,7 @@ class Providers
             [
                 'id'           => 'pcloud',
                 'cli'          => 'pcloud',
-                'name'         => esc_html__('pCloud', 'wp-staging'),
+                'name'         => 'pCloud',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(PCloudAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('pcloud'),
@@ -83,7 +83,7 @@ class Providers
             [
                 'id'           => 'sftp',
                 'cli'          => 'sftp',
-                'name'         => esc_html__('FTP / SFTP', 'wp-staging'),
+                'name'         => 'FTP / SFTP',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(SftpAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('sftp'),
@@ -91,7 +91,7 @@ class Providers
             [
                 'id'           => 'digitalocean-spaces',
                 'cli'          => 'digitalocean-spaces',
-                'name'         => esc_html__('DigitalOcean Spaces', 'wp-staging'),
+                'name'         => 'DigitalOcean Spaces',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(DOSAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('digitalocean-spaces'),
@@ -99,7 +99,7 @@ class Providers
             [
                 'id'           => 'wasabi-s3',
                 'cli'          => 'wasabi-s3',
-                'name'         => esc_html__('Wasabi S3', 'wp-staging'),
+                'name'         => 'Wasabi S3',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(WasabiAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('wasabi-s3'),
@@ -107,7 +107,7 @@ class Providers
             [
                 'id'           => 'generic-s3',
                 'cli'          => 'generic-s3',
-                'name'         => esc_html__('Generic S3', 'wp-staging'),
+                'name'         => 'Generic S3',
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(GenericS3Auth::class),
                 'settingsPath' => $this->getStorageAdminPage('generic-s3'),

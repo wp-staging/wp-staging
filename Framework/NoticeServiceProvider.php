@@ -14,6 +14,6 @@ class NoticeServiceProvider extends ServiceProvider
 
     protected function addHooks()
     {
-        add_action('wpstg.admin_notices', $this->container->callback(Notices::class, 'renderNotices'));
+        add_action(Notices::ACTION_ADMIN_NOTICES, $this->container->callback(Notices::class, 'renderNotices'));
     }
 }

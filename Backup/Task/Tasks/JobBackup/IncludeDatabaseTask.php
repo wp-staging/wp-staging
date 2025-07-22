@@ -48,22 +48,24 @@ class IncludeDatabaseTask extends BackupTask
         $archiverDto = $this->archiver->getDto();
         $archiverDto->setWrittenBytesTotal($this->stepsDto->getCurrent());
         $archiverDto->setFileHeaderSizeInBytes($this->jobDataDto->getCurrentWrittenFileHeaderBytes());
+        $archiverDto->setStartOffset($this->jobDataDto->getCurrentFileStartOffset());
 
         if ($this->archiver->getDto()->getWrittenBytesTotal() !== 0) {
             $this->archiver->getDto()->setIndexPositionCreated(true);
         }
 
+        $included = false;
         try {
             $this->archiver->setFileAppendTimeLimit($this->jobDataDto->getFileAppendTimeLimit());
-            $this->archiver->appendFileToBackup($this->jobDataDto->getDatabaseFile());
+            $included = $this->archiver->appendFileToBackup($this->jobDataDto->getDatabaseFile());
         } catch (ThresholdException $e) {
             $this->logger->warning(sprintf(
-                'PHP time limit reached while adding database to the backup. Will try again with increasing the time limit. New time limit %s',
+                'PHP time limit reached while adding database to the backup. Will try again with increasing the time limit. New time limit %s.',
                 $this->jobDataDto->getFileAppendTimeLimit()
             ));
         } catch (Exception $e) {
             $this->logger->critical(sprintf(
-                'Failed to include database in the backup: %s (%s)',
+                'Failed to include database in the backup: %s (%s).',
                 $this->archiver->getDto()->getFilePath(),
                 $e->getMessage()
             ));
@@ -72,7 +74,8 @@ class IncludeDatabaseTask extends BackupTask
         $archiverDto = $this->archiver->getDto();
         $this->stepsDto->setCurrent($archiverDto->getWrittenBytesTotal());
         $this->jobDataDto->setCurrentWrittenFileHeaderBytes(0);
-        if ($this->archiver->getDto()->isFinished()) {
+        $this->jobDataDto->setCurrentFileStartOffset($archiverDto->getStartOffset());
+        if ($included) {
             clearstatcache();
             $this->jobDataDto->setDatabaseFileSize(filesize($this->jobDataDto->getDatabaseFile()));
             $this->jobDataDto->setMaxDbPartIndex(1);
@@ -84,7 +87,7 @@ class IncludeDatabaseTask extends BackupTask
             $this->jobDataDto->setCurrentWrittenFileHeaderBytes($archiverDto->getFileHeaderSizeInBytes());
         }
 
-        $this->logger->info(sprintf('Included %s/%s of Database Backup.', size_format($this->stepsDto->getCurrent()), size_format($this->stepsDto->getTotal())));
+        $this->logger->info(sprintf('Included %s/%s of Database Backup.', size_format($this->stepsDto->getCurrent(), 2), size_format($this->stepsDto->getTotal(), 2)));
         return $this->generateResponse(false);
     }
 
@@ -92,7 +95,7 @@ class IncludeDatabaseTask extends BackupTask
     {
         $filePath = $this->jobDataDto->getDatabaseFile();
         if (!$filePath || !file_exists($filePath)) {
-            $this->logger->warning(sprintf('Database Backup file not found: %s', $filePath));
+            $this->logger->warning(sprintf('Database Backup file not found: %s.', $filePath));
             $this->stepsDto->finish();
         }
 

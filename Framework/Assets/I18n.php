@@ -269,7 +269,7 @@ class I18n
             'cannot_generate_otp_error' => wp_kses(__('We couldn\'t create the verification code. This might be caused by a firewall blocking the request. The verification code is necessary for security before you can upload a backup to this site. To proceed, you can temporarily <a href="%s" target="_blank">disable the verification code generation</a> or contact WP Staging support for assistance.', 'wp-staging'), ["a" => ["href" => [], "target" => []]]),
             'memory_exhaust_error' => wp_kses(__('Read <a target="_blank" href="%s">this article</a> for solving this issue. Please contact WP Staging support if you need further assistance.', 'wp-staging'), ["a" => ["href" => [], "target" => []]]),
             'contact_us_for_help'  => esc_html__('[button]CONTACT US[/button] for help in solving this issue.', 'wp-staging'),
-            'connection_string_copied_to_clipboard' => esc_html__('Connection string copied to clipboard', 'wp-staging'),
+            'connection_key_copied_to_clipboard' => esc_html__('Connection Key copied to clipboard', 'wp-staging'),
             'remote_storage' => [
                 'host_required' => esc_html__('Host field is required.', 'wp-staging'),
                 'port_required' => esc_html__('Port field is required.', 'wp-staging'),

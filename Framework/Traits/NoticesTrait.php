@@ -68,7 +68,7 @@ trait NoticesTrait
             return;
         }
 
-        Hooks::doAction(Notices::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION);
+        Hooks::doAction(Notices::ACTION_INJECT_ANALYTICS_CONSENT_ASSETS);
 
         require_once WPSTG_VIEWS_DIR . "notices/analytics-modal.php";
     }

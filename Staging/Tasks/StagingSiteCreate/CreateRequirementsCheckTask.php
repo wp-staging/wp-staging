@@ -4,6 +4,7 @@ namespace WPStaging\Staging\Tasks\StagingSiteCreate;
 
 use RuntimeException;
 use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
@@ -14,6 +15,8 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
+use WPStaging\Staging\Dto\StagingSiteDto;
+use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -40,6 +43,9 @@ class CreateRequirementsCheckTask extends StagingTask
     /** @var StagingSiteCreateDataDto $jobDataDto */
     protected $jobDataDto;
 
+    /** @var Sites */
+    protected $sites;
+
     public function __construct(
         Directory $directory,
         Database $database,
@@ -50,7 +56,8 @@ class CreateRequirementsCheckTask extends StagingTask
         SeekableQueueInterface $taskQueue,
         DiskWriteCheck $diskWriteCheck,
         AnalyticsStagingCreate $analyticsStagingCreate,
-        SystemInfo $systemInfo
+        SystemInfo $systemInfo,
+        Sites $sites
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->directory              = $directory;
@@ -59,6 +66,7 @@ class CreateRequirementsCheckTask extends StagingTask
         $this->analyticsStagingCreate = $analyticsStagingCreate;
         $this->systemInfo             = $systemInfo;
         $this->database               = $database;
+        $this->sites                  = $sites;
     }
 
     public static function getTaskName()
@@ -94,9 +102,34 @@ class CreateRequirementsCheckTask extends StagingTask
             return $this->generateResponse(false);
         }
 
+        $this->saveStagingSite();
         $this->logger->info('Staging Site creation requirements passed...');
 
         return $this->generateResponse();
+    }
+
+    protected function saveStagingSite()
+    {
+        $stagingSites = $this->sites->tryGettingStagingSites();
+        $stagingSite = $this->buildStagingSite();
+        $stagingSites[$this->jobDataDto->getCloneId()] = $stagingSite->toArray();
+        $this->sites->updateStagingSites($stagingSites);
+    }
+
+    protected function buildStagingSite(): StagingSiteDto
+    {
+        $stagingSite = new StagingSiteDto();
+        $stagingSite->setCloneId($this->jobDataDto->getCloneId());
+        $stagingSite->setPrefix($this->jobDataDto->getDatabasePrefix());
+        $stagingSite->setStatus(StagingSiteDto::STATUS_UNFINISHED_BROKEN);
+        $stagingSite->setDirectoryName($this->jobDataDto->getName());
+        $stagingSite->setPath($this->jobDataDto->getStagingSitePath());
+        $stagingSite->setUrl($this->jobDataDto->getStagingSiteUrl());
+        $stagingSite->setDatetime(time());
+        $stagingSite->setVersion(WPStaging::getVersion());
+        $stagingSite->setOwnerId(get_current_user_id());
+
+        return $stagingSite;
     }
 
     protected function cannotCreateStagingSiteOnMultisite()

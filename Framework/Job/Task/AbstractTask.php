@@ -6,12 +6,14 @@ use Exception;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Exceptions\WPStagingException;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\AbstractTaskDto;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
@@ -20,6 +22,12 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 abstract class AbstractTask
 {
     use ResourceTrait;
+
+    /**
+     * Action called when a task response is generated.
+     * @var string
+     */
+    const ACTION_TASK_RESPONSE = 'wpstg_task_response';
 
     /** @var Logger */
     protected $logger;
@@ -98,11 +106,19 @@ abstract class AbstractTask
         $this->cache->setLifetime(HOUR_IN_SECONDS);
         $this->cache->setFilename('task_steps_' . static::getTaskName());
 
-        $this->stepsDto->hydrate($this->cache->get([
+        $stepsData = $this->cache->get([
             'current' => 0,
             'total'   => 0,
-        ]));
+        ]);
 
+        if (empty($stepsData)) {
+            $stepsData = [
+                'current' => 0,
+                'total'   => 0,
+            ];
+        }
+
+        $this->stepsDto->hydrate($stepsData);
         $this->job = $job;
     }
 
@@ -162,6 +178,11 @@ abstract class AbstractTask
         } else {
             $this->persistStepsDto();
         }
+
+        Hooks::callInternalHook(self::ACTION_TASK_RESPONSE, [
+            'jobDataDto'        => $this->jobDataDto,
+            'jobTransientCache' => $this->job->getTransientCache()
+        ]);
 
         $response = apply_filters('wpstg.task.response', $response);
 
@@ -275,7 +296,7 @@ abstract class AbstractTask
     protected function updateTaskProgress(TaskResponseDto $response)
     {
         if ($this->logger instanceof Logger) {
-            $this->logger->pushSseEvent('task', [
+            $this->logger->pushSseEvent(SseEventCache::EVENT_TYPE_TASK, [
                 'title'      => $response->getStatusTitle(),
                 'percentage' => $response->getPercentage()
             ]);

@@ -5,7 +5,7 @@ namespace WPStaging\Backup\Service;
 use WPStaging\Backup\Service\Compression\CompressionInterface;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class ZlibCompressor
 {
@@ -18,13 +18,9 @@ class ZlibCompressor
     /** @var CompressionInterface */
     protected $service;
 
-    /** @var SiteInfo */
-    private $siteInfo;
-
     public function __construct(CompressionInterface $service)
     {
         $this->service  = $service;
-        $this->siteInfo = WPStaging::make(SiteInfo::class);
     }
 
     /**
@@ -62,6 +58,11 @@ class ZlibCompressor
      */
     public function isCompressionEnabled(): bool
     {
+        // We don't support (database) compression when multipart backup is enabled.
+        if (Hooks::applyFilters(JobDataDto::FILTER_IS_MULTIPART_BACKUP, false)) {
+            return false;
+        }
+
         static $isEnabled = null;
 
         if (is_null($isEnabled)) {

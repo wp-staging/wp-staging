@@ -125,7 +125,7 @@ class DatabaseBackupTask extends BackupTask
 
             if ($rowsExporter->isTableExcluded()) {
                 $this->logger->info(sprintf(
-                    'Backup database: Skipped Table %s by exclusion rule',
+                    'Backup database: Skipped Table %s by exclusion rule.',
                     $rowsExporter->getTableBeingBackup()
                 ));
 
@@ -193,14 +193,14 @@ class DatabaseBackupTask extends BackupTask
             }
 
             $this->logger->info(sprintf(
-                'Backup database: Table %s. Rows: %s/%s',
+                'Backup database: Table %s. Rows: %s/%s.',
                 $rowsExporter->getTableBeingBackup(),
                 number_format_i18n($rowsExporter->getTotalRowsExported()),
                 number_format_i18n($this->jobDataDto->getTotalRowsOfTableBeingBackup())
             ));
 
             $this->logger->debug(sprintf(
-                'Backup database: Table %s. Query time: %s Batch Size: %s last query json: %s',
+                'Backup database: Table %s. Query time: %s s. Batch Size: %s. Last query json: %s',
                 $rowsExporter->getTableBeingBackup(),
                 $this->jobDataDto->getDbRequestTime(),
                 $this->jobDataDto->getBatchSize(),

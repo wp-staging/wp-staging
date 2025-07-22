@@ -7,6 +7,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\DI\ServiceProvider;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Language\Language as FrameworkLanguage;
+use WPStaging\Frontend\FrontendServiceProvider;
 
 /**
  * Class BasicServiceProvider
@@ -24,6 +25,7 @@ class BasicServiceProvider extends ServiceProvider
     public function registerServiceProvider()
     {
         $this->container->register(BootstrapServiceProvider::class);
+        $this->container->register(FrontendServiceProvider::class);
     }
 
     /**

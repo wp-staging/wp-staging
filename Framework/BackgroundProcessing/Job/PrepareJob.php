@@ -16,6 +16,7 @@ use WPStaging\Framework\BackgroundProcessing\Action;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\BackgroundProcessing\QueueActionAware;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\Ajax\PrepareJob as AjaxPrepareJob;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -36,6 +37,9 @@ abstract class PrepareJob
 {
     use ResourceTrait;
     use QueueActionAware;
+
+    /** @var string */
+    const ACTION_JOB_FAILURE = 'wpstg_background_job_failure';
 
     /** @var AbstractJob */
     protected $job;
@@ -181,7 +185,8 @@ abstract class PrepareJob
                 debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
                 $this->processLock->unlockProcess();
-                $this->job->getTransientCache()->failJob();
+
+                $this->handleError($e->getMessage(), $args);
 
                 return new WP_Error(400, $e->getMessage());
             }
@@ -189,31 +194,8 @@ abstract class PrepareJob
             $errorMessage = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
                 $this->processLock->unlockProcess();
-                $body = '';
-                $job  = $this->getIsBackupJob() ? 'backup' : 'job';
-                if (array_key_exists('scheduleId', $args)) {
-                    $body .= 'Error in scheduled ' . $job . PHP_EOL . PHP_EOL;
-                } else {
-                    $body .= 'Error in background ' . $job . PHP_EOL . PHP_EOL;
-                }
 
-                $jobDataDto = $this->job->getJobDataDto();
-                $date = new \DateTime();
-                $date->setTimestamp($jobDataDto->getStartTime());
-                $jobDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
-
-                $body .= 'Started at: ' .  $date->format('H:i:s') . PHP_EOL ;
-                $body .= 'Duration: ' . $jobDuration . PHP_EOL;
-                $body .= 'Job ID: ' . $args['jobId'] . PHP_EOL . PHP_EOL;
-                $body .= 'Error Message: ' . $errorMessage;
-
-                if ($this->getIsBackupJob()) {
-                    /** @var BackupScheduler */
-                    $backupScheduler = WPStaging::make(BackupScheduler::class);
-                    $backupScheduler->sendErrorReport($body);
-                }
-
-                $this->job->getTransientCache()->failJob();
+                $this->handleError($errorMessage, $args);
 
                 return new WP_Error(400, $errorMessage);
             }
@@ -320,6 +302,48 @@ abstract class PrepareJob
         } catch (Exception $e) {
             // We could be doing this in the context of Exception handling, let's not throw one more.
         }
+    }
+
+    /**
+     * @param string $errorMessage
+     * @param array $args
+     * @return void
+     */
+    protected function handleError(string $errorMessage, array $args = [])
+    {
+        $body = '';
+        $job  = $this->getIsBackupJob() ? 'backup' : 'job';
+        if (array_key_exists('scheduleId', $args)) {
+            $body .= 'Error in scheduled ' . $job . PHP_EOL . PHP_EOL;
+        } else {
+            $body .= 'Error in background ' . $job . PHP_EOL . PHP_EOL;
+        }
+
+        $jobDataDto = $this->job->getJobDataDto();
+        $date = new \DateTime();
+        $date->setTimestamp($jobDataDto->getStartTime());
+        $jobDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
+
+        $body .= 'Started at: ' .  $date->format('H:i:s') . PHP_EOL ;
+        $body .= 'Duration: ' . $jobDuration . PHP_EOL;
+        $body .= 'Job ID: ' . $args['jobId'] . PHP_EOL . PHP_EOL;
+        $body .= 'Error Message: ' . $errorMessage;
+
+        /**
+         * @todo: Decouple email reporting from BackupScheduler as we now use it for all jobs
+         * @var BackupScheduler $backupScheduler
+         */
+        $backupScheduler = WPStaging::make(BackupScheduler::class);
+        $title = $this->getIsBackupJob() ? '' : esc_html__('WP Staging - Error Report', 'wp-staging');
+        $backupScheduler->sendErrorReport($body, $title);
+
+        $jobTransientCache = $this->job->getTransientCache();
+        $jobTransientCache->failJob();
+
+        Hooks::callInternalHook(self::ACTION_JOB_FAILURE, [
+            'jobTransientCache' => $jobTransientCache,
+            'errorMessage'      => $errorMessage,
+        ]);
     }
 
     /**

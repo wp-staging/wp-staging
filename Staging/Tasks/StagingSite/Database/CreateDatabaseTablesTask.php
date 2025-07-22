@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Staging\Tasks\StagingSite;
+namespace WPStaging\Staging\Tasks\StagingSite\Database;
 
 use Exception;
 use WPStaging\Framework\Database\SelectedTables;

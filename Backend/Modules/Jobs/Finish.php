@@ -9,6 +9,7 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Urls;
+use WPStaging\Staging\Jobs\StagingSiteCreate;
 
 /**
  * Class Finish
@@ -73,7 +74,7 @@ class Finish extends Job
                 break;
         }
 
-        do_action('wpstg_cloning_complete', $this->options);
+        do_action(StagingSiteCreate::ACTION_CLONING_COMPLETE, $this->options);
 
         $this->logger->info("################## FINISH ##################");
         $this->logCloneCompleted();

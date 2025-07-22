@@ -10,6 +10,8 @@
  * @var WPStaging\Framework\Assets\Assets $assets
  */
 
+use WPStaging\Framework\TemplateEngine\TemplateEngine;
+
 ?>
 
 <div id="<?php echo esc_attr($stagingSiteItem->directoryName); ?>" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" class="wpstg-clone">
@@ -55,7 +57,7 @@
                         <?php esc_html_e("Delete", "wp-staging"); ?>
                     </a>
                     <?php
-                    do_action('wpstg.views.single_overview.after_existing_clones_actions', $stagingSiteItem->cloneId, $stagingSite->toArray(), $license);
+                    do_action(TemplateEngine::ACTION_AFTER_EXISTING_CLONES, $stagingSiteItem->cloneId, $stagingSite->toArray(), $license);
 
                     if (!$isPro) :?>
                     <a href="https://wp-staging.com/pro-features/#edit-data" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Edit Data", "wp-staging") ?>">

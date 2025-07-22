@@ -49,7 +49,7 @@ class FileBeingExtracted
         $this->identifiablePath = $identifiablePath;
         $this->extractFolder    = rtrim($extractFolder, '/') . '/';
         $this->start            = $backupFileIndex->getContentStartOffset();
-        $this->totalBytes       = $backupFileIndex->getCompressedSize();
+        $this->totalBytes       = $backupFileIndex->getUnCompressedSize();
         $this->pathIdentifier   = $pathIdentifier;
         $this->isCompressed     = (int)$backupFileIndex->getIsCompressed();
         $this->relativePath     = $this->pathIdentifier->getPathWithoutIdentifier($this->identifiablePath);

@@ -16,7 +16,7 @@ $isAdvanceCheckboxDisabled = ($disabledProAttribute === ' disabled');
 ?>
 <div id="wpstg-advanced-exclude-options">
     <label>
-        <?php Checkbox::render('wpstgExcludeLogs', 'advancedExclusions[]', '', true, ['isDisabled' => $isAdvanceCheckboxDisabled, 'classes' => 'wpstg-advanced-exclusion-child']); ?>
+        <?php Checkbox::render('wpstgExcludeLogs', 'advancedExclusions[]', '', false, ['isDisabled' => $isAdvanceCheckboxDisabled, 'classes' => 'wpstg-advanced-exclusion-child']); ?>
         <span class="<?php echo esc_attr($disabledClass) ?>">
         <?php esc_html_e('Exclude log files', 'wp-staging'); ?>
         </span>

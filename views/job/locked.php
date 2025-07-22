@@ -6,15 +6,16 @@ use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\ProcessLock;
 
 $processLock = WPStaging::make(ProcessLock::class);
+$jobData     = WPStaging::make(JobTransientCache::class)->getJob();
 $isLocked    = false;
 try {
     $processLock->checkProcessLocked();
+    $isLocked = isset($jobData['status']) && $jobData['status'] === JobTransientCache::STATUS_RUNNING;
 } catch (ProcessLockedException $e) {
     $isLocked = true;
 }
 
 if ($isLocked) {
-    $jobData         = WPStaging::make(JobTransientCache::class)->getJob();
     $isDataAvailable = !empty($jobData);
     $isForeground    = empty($jobData['queueId']);
     $isCancelable    = $isDataAvailable && in_array($jobData['type'], JobTransientCache::CANCELABLE_JOBS) && !$isForeground && $jobData['status'] === JobTransientCache::STATUS_RUNNING;
@@ -24,7 +25,7 @@ if ($isLocked) {
             <div class="wpstg--locked-process--loader"></div>
             <div class="wpstg--locked-process--content">
                 <div class="wpstg--locked-process--content--job">
-                    <span class="wpstg--locked-process--job-title"><?php echo isset($jobData['title']) ? esc_html($jobData['title']) : esc_html__('A WP Staging Job is in Progress', 'wp-staging') ?></span>
+                    <span class="wpstg--locked-process--job-title"><?php echo isset($jobData['title']) ? esc_html($jobData['title']) : esc_html__('A WP Staging Job is in Progress', 'wp-staging'); ?></span>
                     <span class="wpstg--locked-process--timer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 7l-1.343 1.343m0 0A8 8 0 1 0 6.343 19.657A8 8 0 0 0 17.657 8.343M12 10v4M9 3h6"/></svg>
                         <?php if ($isDataAvailable) : ?>
@@ -55,7 +56,7 @@ if ($isLocked) {
     </div>
     <?php if ($isDataAvailable) : ?>
     <script>
-        WPStaging.initBackgroundLogger(<?php echo esc_js($jobData['start']); ?>, '<?php echo esc_js($jobData['jobId']) ?>');
+        WPStaging.initBackgroundLogger(<?php echo esc_js($jobData['start']); ?>, '<?php echo esc_js($jobData['type']); ?>', '<?php echo esc_js($jobData['jobId']); ?>');
     </script>
     <?php endif; ?>
     <?php

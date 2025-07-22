@@ -7,8 +7,6 @@ use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\IsExcludingTrait;
 use WPStaging\Backup\Dto\Traits\RemoteUploadTrait;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Service\ZlibCompressor;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
@@ -34,7 +32,7 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $filesInParts = [];
 
     /** @var int The number of files the FilesystemScanner discovered */
-    private $discoveredFiles;
+    private $discoveredFiles = 0;
 
     /** @var array The number of files the FilesystemScanner discovered in themes,plugins,muplugins,uploads,others */
     private $discoveredFilesArray = [];
@@ -56,6 +54,11 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
      * @var int If header of a file was written but it couldn't be processed in single requests,
      */
     private $currentWrittenFileHeaderBytes = 0;
+
+    /**
+     * @var int start offset of the current file being processed,
+     */
+    private $currentFileStartOffset = 0;
 
     /** @var int */
     private $totalRowsBackup;
@@ -157,6 +160,24 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 
     /** @var int */
     private $fileAppendTimeLimit = 10;
+
+    /** @var bool */
+    private $isCompressed = false;
+
+    /**
+     * @var int
+     */
+    private $backupSizeUncompressed = 0;
+
+    /**
+     * @var int
+     */
+    private $backupSizeCompressed = 0;
+
+    /**
+     * @var int
+     */
+    private $totalFilesCompressed = 0;
 
     /**
      * @return string|null
@@ -867,14 +888,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /**
      * @return bool
      */
-    public function getIsCompressedBackup(): bool
-    {
-        return WPStaging::make(ZlibCompressor::class)->isCompressionEnabled();
-    }
-
-    /**
-     * @return bool
-     */
     public function getIsContaining2GBFile(): bool
     {
         return $this->isContaining2GBFile;
@@ -934,6 +947,20 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         $this->currentWrittenFileHeaderBytes = (int)$currentWrittenFileHeaderBytes;
     }
 
+    public function getCurrentFileStartOffset(): int
+    {
+        return $this->currentFileStartOffset;
+    }
+
+    /**
+     * @param int $currentFileStartOffset
+     * @return void
+     */
+    public function setCurrentFileStartOffset(int $currentFileStartOffset)
+    {
+        $this->currentFileStartOffset = (int)$currentFileStartOffset;
+    }
+
     /**
      * @param int $timeLimit
      * @return void
@@ -965,5 +992,99 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function resetFileAppendTimeLimit()
     {
         $this->fileAppendTimeLimit = 10;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsCompressed(): bool
+    {
+        return $this->isCompressed;
+    }
+
+    /**
+     * @param bool $isCompressed
+     * @return void
+     */
+    public function setIsCompressed(bool $isCompressed)
+    {
+        $this->isCompressed = $isCompressed;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBackupSizeUncompressed(): int
+    {
+        return $this->backupSizeUncompressed;
+    }
+
+    /**
+     * @param int $backupSizeUncompressed
+     * @return void
+     */
+    public function setBackupSizeUncompressed(int $backupSizeUncompressed)
+    {
+        $this->backupSizeUncompressed = $backupSizeUncompressed;
+    }
+
+    /**
+     * @param int $backupSizeUncompressed
+     * @return void
+     */
+    public function addBackupSizeUncompressed(int $backupSizeUncompressed)
+    {
+        $this->backupSizeUncompressed += $backupSizeUncompressed;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBackupSizeCompressed(): int
+    {
+        return $this->backupSizeCompressed;
+    }
+
+    /**
+     * @param int $backupSizeCompressed
+     * @return void
+     */
+    public function setBackupSizeCompressed(int $backupSizeCompressed)
+    {
+        $this->backupSizeCompressed = $backupSizeCompressed;
+    }
+
+    /**
+     * @param int $backupSizeCompressed
+     * @return void
+     */
+    public function addBackupSizeCompressed(int $backupSizeCompressed)
+    {
+        $this->backupSizeCompressed += $backupSizeCompressed;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalFilesCompressed(): int
+    {
+        return $this->totalFilesCompressed;
+    }
+
+    /**
+     * @param int $totalFilesCompressed
+     * @return void
+     */
+    public function setTotalFilesCompressed(int $totalFilesCompressed)
+    {
+        $this->totalFilesCompressed = $totalFilesCompressed;
+    }
+
+    /**
+     * @return void
+     */
+    public function incrementTotalFilesCompressed()
+    {
+        $this->totalFilesCompressed++;
     }
 }

@@ -44,6 +44,15 @@ class PartIdentifier
     const WP_ROOT_PART_IDENTIFIER = 'wproot';
 
     /** @var string */
+    const WP_ROOT_FILES_PART_IDENTIFIER = 'wproot_files';
+
+    /** @var string */
+    const WP_ADMIN_PART_IDENTIFIER = 'wpadmin';
+
+    /** @var string */
+    const WP_INCLUDES_PART_IDENTIFIER = 'wpincludes';
+
+    /** @var string */
     const DATABASE_PART_SIZE_IDENTIFIER = 'sqlSize';
 
     /** @var string */
