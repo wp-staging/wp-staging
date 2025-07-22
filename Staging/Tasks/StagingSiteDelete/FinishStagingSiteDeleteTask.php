@@ -57,6 +57,8 @@ class FinishStagingSiteDeleteTask extends StagingTask
         $stagingSites = $this->sites->tryGettingStagingSites();
         unset($stagingSites[$this->jobDataDto->getCloneId()]);
         $this->sites->updateStagingSites($stagingSites);
+        $this->getJobTransientCache()->completeJob();
+
         $this->logger->info(sprintf(
             'Staging Site "%s" deleted.',
             $stagingSite->getSiteName()

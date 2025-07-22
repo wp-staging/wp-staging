@@ -24,6 +24,20 @@ class AccessToken
     const OPTION_NAME = 'wpstg_access_token';
 
     /**
+     * @var bool
+     */
+    private $isCheckCapabilities = true;
+
+    /**
+     * @param bool $isCheckCapabilities
+     * @return void
+     */
+    public function setIsCheckCapabilities(bool $isCheckCapabilities = true)
+    {
+        $this->isCheckCapabilities = $isCheckCapabilities;
+    }
+
+    /**
      * @return bool Whether the current $_REQUEST has a valid token.
      */
     public function requestHasValidToken()
@@ -39,7 +53,7 @@ class AccessToken
     public function generateNewToken()
     {
         // Early bail: Not enough privilege to generate a token. Todo: Remove "new" once we have DI
-        if (! current_user_can((new Capabilities())->manageWPSTG())) {
+        if ($this->isCheckCapabilities && !$this->currentUserCanManageWPSTG()) {
             return false;
         }
 
@@ -68,7 +82,7 @@ class AccessToken
     public function setToken($newToken)
     {
         // Early bail: Not enough privilege to generate a token.
-        if (! current_user_can((new Capabilities())->manageWPSTG())) {
+        if ($this->isCheckCapabilities && !$this->currentUserCanManageWPSTG()) {
             return false;
         }
 
@@ -91,7 +105,7 @@ class AccessToken
     public function getToken()
     {
         // Early bail: Not enough privilege to get a token. Todo: Remove "new" once we have DI
-        if (! current_user_can((new Capabilities())->manageWPSTG())) {
+        if ($this->isCheckCapabilities && !$this->currentUserCanManageWPSTG()) {
             return false;
         }
 
@@ -122,5 +136,13 @@ class AccessToken
         }
 
         return $tokenToValidate === $savedToken;
+    }
+
+    /**
+     * @return bool
+     */
+    private function currentUserCanManageWPSTG()
+    {
+        return current_user_can((new Capabilities())->manageWPSTG());
     }
 }

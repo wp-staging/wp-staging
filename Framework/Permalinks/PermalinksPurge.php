@@ -27,7 +27,10 @@ class PermalinksPurge
             flush_rewrite_rules(false);
         }
 
-        if (get_transient(LiteSpeedCache::TRANSIENT_PURGE_LITESPEED_CACHE)) {
+        /*
+         * @see Issue: https://github.com/wp-staging/wp-staging-pro/issues/4392
+         */
+        if (class_exists('\WPStaging\Framework\ThirdParty\LiteSpeedCache') && get_transient(LiteSpeedCache::TRANSIENT_PURGE_LITESPEED_CACHE)) {
             WPStaging::make(LiteSpeedCache::class)->maybePurgeLiteSpeedCache();
         }
     }

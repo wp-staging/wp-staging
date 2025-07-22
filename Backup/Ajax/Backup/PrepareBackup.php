@@ -69,7 +69,10 @@ class PrepareBackup extends PrepareJob
         try {
             $this->processLock->checkProcessLocked();
         } catch (ProcessLockedException $e) {
-            wp_send_json_error($e->getMessage(), $e->getCode());
+            wp_send_json_error([
+                'message' => $e->getMessage(),
+                'title'   => esc_html__('Backup in Progress', 'wp-staging'),
+            ], $e->getCode());
         }
 
         $response = $this->prepare($data);

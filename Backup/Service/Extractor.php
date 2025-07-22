@@ -308,6 +308,10 @@ class Extractor extends AbstractExtractor
                         $lastDebugMessage = sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->extractorDto->getTotalChunks());
                     }
                 });
+            } catch (DiskNotWritableException $ex) {
+                $this->diskWriteCheck->testDiskIsWriteable();
+                // If empty chunk, it is an empty file, so we can skip it
+                throw new Exception("Unable to extract file to $destinationFilePath. Please check if there is enough disk space available.");
             } catch (EmptyChunkException $ex) {
                 // If empty chunk, it is an empty file, so we can skip it
                 continue;
@@ -327,7 +331,7 @@ class Extractor extends AbstractExtractor
 
             $readBytesAfter = $this->wpstgFile->ftell() - $readBytesBefore;
 
-            $this->extractingFile->addWrittenBytes($readBytesAfter);
+            $this->extractingFile->addWrittenBytes($writtenBytes);
         }
 
         if (!empty($lastDebugMessage)) {

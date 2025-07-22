@@ -26,7 +26,8 @@ class QueueProcessor
     use ResourceTrait;
     use WithQueueAwareness;
 
-    const QUEUE_PROCESS_ACTION = 'wpstg_queue_process';
+    /** @var string */
+    const ACTION_QUEUE_PROCESS = 'wpstg_queue_process';
 
     /** @var string */
     const FILTER_REQUEST_FORCE_GET_METHOD = 'wpstg.queue.request.force_get_method';

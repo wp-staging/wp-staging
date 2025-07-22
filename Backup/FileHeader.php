@@ -546,4 +546,20 @@ class FileHeader implements IndexLineInterface
             throw new FileValidationException(sprintf('CRC32 Checksum validation failed for file %s. Expected: %s. Actual: %s', $pathForErrorLogging, $this->getCrc32Checksum(), $crc32Checksum));
         }
     }
+
+    public function toArray(): array
+    {
+        return [
+            'startOffset'      => $this->getStartOffset(),
+            'modifiedTime'     => $this->getModifiedTime(),
+            'crc32'            => $this->getCrc32(),
+            'crc32Checksum'    => $this->getCrc32Checksum(),
+            'compressedSize'   => $this->getCompressedSize(),
+            'uncompressedSize' => $this->getUncompressedSize(),
+            'filePath'         => $this->getFilePath(),
+            'fileName'         => $this->getFileName(),
+            'extraField'       => $this->getExtraField(),
+            'isCompressed'     => $this->getIsCompressed(),
+        ];
+    }
 }

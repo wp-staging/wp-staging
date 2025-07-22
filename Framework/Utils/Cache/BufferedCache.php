@@ -111,6 +111,33 @@ class BufferedCache extends AbstractCache
     }
 
     /**
+     * @param string $content
+     * @return int
+     * @throws DiskNotWritableException
+     */
+    public function appendUnsafe(string $content): int
+    {
+        /** @noinspection UnnecessaryCastingInspection */
+        $file = new FileObject($this->filePath, FileObject::MODE_APPEND_AND_READ);
+
+        $writtenData = $file->fwrite($content);
+
+        if ($writtenData === false) {
+            debug_log("Could not write to file {$this->filePath} Data: {$content}");
+            throw DiskNotWritableException::fileNotWritable($this->filePath);
+        }
+
+        if (!file_exists($this->filePath)) {
+            debug_log("Could not write to file {$this->filePath} Data: {$content}. File not created!");
+            throw DiskNotWritableException::fileNotWritable($this->filePath);
+        }
+
+        $file = null;
+
+        return $writtenData;
+    }
+
+    /**
      * Like array_reverse(), but for files.
      *
      * @throws ThresholdException|DiskNotWritableException When threshold limit hits.

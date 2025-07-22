@@ -15,6 +15,7 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Service\Archiver;
+use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -41,6 +42,9 @@ class BackupRequirementsCheckTask extends BackupTask
     /** @var Providers */
     protected $providers;
 
+    /** @var ZlibCompressor */
+    protected $zlibCompressor;
+
     public function __construct(
         Directory $directory,
         LoggerInterface $logger,
@@ -52,7 +56,8 @@ class BackupRequirementsCheckTask extends BackupTask
         BackupScheduler $backupScheduler,
         Archiver $archiver,
         SystemInfo $systemInfo,
-        Providers $providers
+        Providers $providers,
+        ZlibCompressor $zlibCompressor
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->directory             = $directory;
@@ -62,6 +67,7 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->archiver              = $archiver;
         $this->systemInfo            = $systemInfo;
         $this->providers             = $providers;
+        $this->zlibCompressor        = $zlibCompressor;
     }
 
     public static function getTaskName()
@@ -227,12 +233,13 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->logger->info('Backup Settings');
         $this->logInformation($this->getBackupContents());
         $this->logInformation($this->getSmartExclusion());
-        $this->logger->add('- Backup Run in Background : ' . ($this->jobDataDto->getIsCreateBackupInBackground() ?  'True' : 'False'), Logger::TYPE_INFO_SUB);
-        $this->logger->add('- Backup Validate : ' . ($this->jobDataDto->getIsValidateBackupFiles() ? 'True' : 'False'), Logger::TYPE_INFO_SUB);
+        $this->logger->add('- Is Compression Enabled : ' . ($this->zlibCompressor->isCompressionEnabled() ?  'True' : 'False'), Logger::TYPE_INFO_SUB);
+        $this->logger->add('- Run in Background : ' . ($this->jobDataDto->getIsCreateBackupInBackground() ?  'True' : 'False'), Logger::TYPE_INFO_SUB);
+        $this->logger->add('- Validation : True', Logger::TYPE_INFO_SUB);
         $this->logInformation($this->getBackupScheduleOptions());
-        $this->logger->add('- Is Multipart Backup: ' . ($this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No'), Logger::TYPE_INFO_SUB);
+        $this->logger->add('- Is Multipart Backup : ' . ($this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No'), Logger::TYPE_INFO_SUB);
         $this->logger->add('- Storages : ' . implode(', ', $this->jobDataDto->getStorages()), Logger::TYPE_INFO_SUB);
-        $this->logger->add(sprintf('- Backup Format: %s', $this->jobDataDto->getIsBackupFormatV1() ? 'v1' : 'v2'), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Backup Format : %s', $this->jobDataDto->getIsBackupFormatV1() ? 'v1' : 'v2'), Logger::TYPE_INFO_SUB);
         $this->writeCloudServiceSettingsToLogs();
     }
 

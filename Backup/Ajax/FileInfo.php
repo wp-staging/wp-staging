@@ -70,6 +70,7 @@ class FileInfo extends AbstractTemplateComponent
             'themes'    => $this->isBackupPartReplaced(RestoreThemesTask::FILTER_KEEP_EXISTING_THEMES, $info),
             'muPlugins' => $this->isBackupPartReplaced(RestoreMuPluginsTask::FILTER_KEEP_EXISTING_MUPLUGINS, $info),
             'wpContent' => $this->isBackupPartReplaced(RestoreOtherFilesInWpContentTask::FILTER_KEEP_EXISTING_OTHER_FILES, $info),
+            'wpRoot'    => false, // Other files in WP root folder are not cleaned up before restoring, no need to use filter then.
             // Each subsite has separate uploads folder, so only filter check is needed!
             'uploads'   => !Hooks::applyFilters(CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA, false),
         ];

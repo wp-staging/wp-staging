@@ -58,6 +58,7 @@ class FinishStagingSiteCreateTask extends StagingTask
      */
     public function execute()
     {
+        $this->getJobTransientCache()->completeJob();
         $stagingSites = $this->sites->tryGettingStagingSites();
         $stagingSite  = $this->buildStagingSite();
         $stagingSites[$this->jobDataDto->getCloneId()] = $stagingSite->toArray();

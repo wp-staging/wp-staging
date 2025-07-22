@@ -9,7 +9,6 @@ use RuntimeException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
@@ -24,7 +23,6 @@ use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Job\Task\AbstractTask;
-use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Traits\BenchmarkTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Queue\FinishedQueueException;
@@ -120,10 +118,6 @@ abstract class AbstractJob implements ShutdownableInterface
 
         if ($this->jobDataDto->isFinished() && !$this->jobDataDto->isCleaned()) {
             $this->cleanup();
-            $args = [];
-            $args['jobId'] = $this->jobDataDto->getId();
-            $queue = WPStaging::make(Queue::class);
-            $queue->enqueueAction(SseEventCache::ACTION_SSE_CACHE_CLEANUP, $args, 'sse_cleanup_' . time());
             $this->jobDataDto->setCleaned();
             return;
         }

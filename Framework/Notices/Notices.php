@@ -38,13 +38,22 @@ class Notices
     use NoticesTrait;
 
     /** @var string */
-    const PRO_NOTICES_ACTION = 'wpstg.notices.show_pro_notices';
+    const ACTION_PRO_NOTICES = 'wpstg.notices.show_pro_notices';
 
     /** @var string */
-    const BASIC_NOTICES_ACTION = 'wpstg.notices.show_basic_notices';
+    const ACTION_BASIC_NOTICES = 'wpstg.notices.show_basic_notices';
 
     /** @var string */
-    const INJECT_ANALYTICS_CONSENT_ASSETS_ACTION = 'wpstg.assets.inject_analytics_consent_assets';
+    const ACTION_INJECT_ANALYTICS_CONSENT_ASSETS = 'wpstg.assets.inject_analytics_consent_assets';
+
+    /** @var string */
+    const ACTION_ADMIN_NOTICES = 'wpstg.admin_notices';
+
+    /** @var string */
+    const ACTION_NETWORK_ADMIN_NOTICES = 'wpstg.network_admin_notices';
+
+    /** @var string */
+    const ACTION_ALL_ADMIN_NOTICES = 'wpstg.all_admin_notices';
 
     /** @var Assets */
     private $assets;
@@ -189,7 +198,7 @@ class Notices
     private function renderNoticesBasicVersion()
     {
         if (!$this->isPro()) {
-            do_action(self::BASIC_NOTICES_ACTION);
+            do_action(self::ACTION_BASIC_NOTICES);
         }
     }
 
@@ -200,7 +209,7 @@ class Notices
     {
         if ($this->isPro()) {
             // This hook is for internal use only. Used in PRO version to display PRO version related notices.
-            do_action(self::PRO_NOTICES_ACTION);
+            do_action(self::ACTION_PRO_NOTICES);
         }
     }
 

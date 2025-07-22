@@ -67,4 +67,12 @@ interface AdvanceStagingOptionsInterface
     public function setEmailsReminderAllowed(bool $emailsReminderAllowed);
 
     public function getEmailsReminderAllowed(): bool;
+
+    public function getTmpExcludedFullPaths(): array;
+
+    public function setTmpExcludedFullPaths(array $tmpExcludedFullPaths);
+
+    public function getTmpExcludedGoDaddyFiles(): array;
+
+    public function setTmpExcludedGoDaddyFiles(array $tmpExcludedGoDaddyFiles);
 }

@@ -13,12 +13,14 @@ use WPStaging\Framework\Utils\Cache\Cache;
 class SseEventCache
 {
     /**
-     * We don't want to delete the cache immediately when the job is finished.
-     * Otherwise, the SSE stream will be closed immediately and the client will not receive the last events.
-     * We setup a cron job to delete the cache after few seconds.
      * @var string
      */
-    const ACTION_SSE_CACHE_CLEANUP = 'wpstg_delete_sse_cache';
+    const EVENT_TYPE_TASK = 'task';
+
+    /**
+     * @var string
+     */
+    const EVENT_TYPE_COMPLETE = 'complete';
 
     /**
      * @var int
@@ -49,17 +51,6 @@ class SseEventCache
         }
 
         return true;
-    }
-
-    /**
-     * @return void
-     */
-    public function delete(string $jobId)
-    {
-        $this->cache->setFilename($jobId . '.sse');
-        $this->cache->delete();
-        $this->events = [];
-        $this->count  = 0;
     }
 
     public function push(array $log)

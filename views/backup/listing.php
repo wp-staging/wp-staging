@@ -54,15 +54,20 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
 </div>
 
 <div id="wpstg-step-1">
-    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledPropertyCreateBackup) ?>>
-        <?php esc_html_e('Create Backup', 'wp-staging') ?>
+    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledPropertyCreateBackup); ?>>
+        <?php esc_html_e('Create Backup', 'wp-staging'); ?>
     </button>
     <button type="button" id="wpstg-upload-backup" class="wpstg-button wpstg-border-thin-button">
-        <?php esc_html_e('Upload Backup', 'wp-staging') ?>
+        <?php esc_html_e('Upload Backup', 'wp-staging'); ?>
     </button>
     <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button">
-        <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
+        <?php esc_html_e('Edit Backup Plans', 'wp-staging'); ?>
     </button>
+    <?php if (defined('WPSTG_REMOTE_SYNC_ENABLED') && WPSTG_REMOTE_SYNC_ENABLED) : ?>
+    <button id="wpstg-remote-sync" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-15px" disabled>
+        <?php echo esc_html__("Remote Site Migration", "wp-staging"); ?>
+    </button>
+    <?php endif; ?>
 </div>
 
 <div id="wpstg-backup-runs-info">
@@ -74,25 +79,24 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
         <div class="wpstg-backup-list">
             <span id="local-backup-title"><?php echo esc_html__('Local Backups:', 'wp-staging'); ?></span>
             <ul id="wpstg-backup-list-ul">
-                <li><?php esc_html_e('Searching for existing backups...', 'wp-staging') ?></li>
+                <li><?php esc_html_e('Searching for existing backups...', 'wp-staging'); ?></li>
             </ul>
         </div>
     </div>
 </div>
 
-<?php include(WPSTG_VIEWS_DIR . 'job/modal/process.php'); ?>
-<?php include(WPSTG_VIEWS_DIR . 'job/modal/success.php'); ?>
-<?php include(WPSTG_VIEWS_DIR . 'otp/overlay.php'); ?>
-<?php include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-success.php'); ?>
-
-<?php include(__DIR__ . '/modal/backup.php'); ?>
-<?php include(__DIR__ . '/modal/download-modal.php'); ?>
-<?php include(__DIR__ . '/modal/upload.php'); ?>
-<?php include(__DIR__ . '/modal/manage-schedules.php'); ?>
-<?php include(__DIR__ . '/modal/remote-upload.php'); ?>
-<?php include(__DIR__ . '/modal/edit-schedule-modal.php'); ?>
-<?php include(__DIR__ . '/modal/restore.php'); ?>
-
-<?php include(__DIR__ . '/restore-wait.php'); ?>
-
+<?php
+include(WPSTG_VIEWS_DIR . 'job/modal/process.php');
+include(WPSTG_VIEWS_DIR . 'job/modal/success.php');
+include(WPSTG_VIEWS_DIR . 'otp/overlay.php');
+include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-success.php');
+include(__DIR__ . '/modal/backup.php');
+include(__DIR__ . '/modal/download-modal.php');
+include(__DIR__ . '/modal/upload.php');
+include(__DIR__ . '/modal/manage-schedules.php');
+include(__DIR__ . '/modal/remote-upload.php');
+include(__DIR__ . '/modal/edit-schedule-modal.php');
+include(__DIR__ . '/modal/restore.php');
+include(__DIR__ . '/restore-wait.php');
+?>
 <div id="wpstg-delete-confirmation"></div>

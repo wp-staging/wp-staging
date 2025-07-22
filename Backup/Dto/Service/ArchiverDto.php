@@ -19,6 +19,9 @@ class ArchiverDto
     private $writtenBytesTotal = 0;
 
     /** @var int */
+    private $startOffset = 0;
+
+    /** @var int */
     private $fileSize;
 
     /** @var array */
@@ -64,6 +67,7 @@ class ArchiverDto
         $this->setWrittenBytesTotal(0);
         $this->setIndexPositionCreated(false);
         $this->setFileHeaderSizeInBytes(0);
+        $this->setStartOffset(0);
     }
 
     /**
@@ -184,6 +188,23 @@ class ArchiverDto
         }
 
         $this->indexPositionCreated[$category][$categoryIndex] = (bool)$indexPositionCreated;
+    }
+
+    /**
+     * @param int $startOffset
+     * @return void
+     */
+    public function setStartOffset(int $startOffset)
+    {
+        $this->startOffset = $startOffset;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStartOffset(): int
+    {
+        return $this->startOffset;
     }
 
     /**

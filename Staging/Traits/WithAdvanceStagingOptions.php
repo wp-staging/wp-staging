@@ -52,6 +52,12 @@ trait WithAdvanceStagingOptions
     /** @var bool */
     private $emailsReminderAllowed = false;
 
+    /** @var string[] */
+    private $tmpExcludedFullPaths = [];
+
+    /** @var string[] */
+    private $tmpExcludedGoDaddyFiles = [];
+
     /**
      * @param bool $useNewAdminAccount
      * @return void
@@ -322,5 +328,39 @@ trait WithAdvanceStagingOptions
     public function getEmailsReminderAllowed(): bool
     {
         return $this->emailsReminderAllowed;
+    }
+
+    /**
+     * @param string[] $tmpExcludedFullPaths
+     * @return void
+     */
+    public function setTmpExcludedFullPaths(array $tmpExcludedFullPaths)
+    {
+        $this->tmpExcludedFullPaths = $tmpExcludedFullPaths;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getTmpExcludedFullPaths(): array
+    {
+        return $this->tmpExcludedFullPaths;
+    }
+
+    /**
+     * @param string[] $tmpExcludedGoDaddyFiles
+     * @return void
+     */
+    public function setTmpExcludedGoDaddyFiles(array $tmpExcludedGoDaddyFiles)
+    {
+        $this->tmpExcludedGoDaddyFiles = $tmpExcludedGoDaddyFiles;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getTmpExcludedGoDaddyFiles(): array
+    {
+        return $this->tmpExcludedGoDaddyFiles;
     }
 }

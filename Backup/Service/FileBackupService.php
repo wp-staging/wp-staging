@@ -103,7 +103,7 @@ class FileBackupService implements ServiceInterface
                 break;
             } catch (FinishedQueueException $exception) {
                 $this->stepsDto->finish();
-                $this->logger->info(sprintf('Added %d/%d %s files to backup (%s)', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->fileIdentifier, $this->getBackupSpeed()));
+                $this->logger->info(sprintf('Added %d/%d %s files to backup (%s)', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->getTranslatedFileIdentifier(), $this->getBackupSpeed()));
                 $this->updateMultipartInfo();
 
                 return;
@@ -115,13 +115,7 @@ class FileBackupService implements ServiceInterface
             }
         }
 
-        if ($this->bigFileBeingProcessed instanceof ArchiverDto) {
-            $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($this->bigFileBeingProcessed->getFilePath()));
-            $percentProcessed       = ceil(($this->bigFileBeingProcessed->getWrittenBytesTotal() / $this->bigFileBeingProcessed->getFileSize()) * 100);
-            $this->logger->info(sprintf('Adding big %s file: %s - %s/%s (%s%%) (%s)', $this->fileIdentifier, $relativePathForLogging, size_format($this->bigFileBeingProcessed->getWrittenBytesTotal(), 2), size_format($this->bigFileBeingProcessed->getFileSize(), 2), $percentProcessed, $this->getBackupSpeed()));
-        } else {
-            $this->logger->info(sprintf('Added %d/%d %s files to backup (%s)', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->fileIdentifier, $this->getBackupSpeed()));
-        }
+        $this->logExecution();
 
         $this->updateMultipartInfo();
     }
@@ -136,6 +130,7 @@ class FileBackupService implements ServiceInterface
         $archiverDto = $this->archiver->getDto();
         $archiverDto->setWrittenBytesTotal($this->jobDataDto->getFileBeingBackupWrittenBytes());
         $archiverDto->setFileHeaderSizeInBytes($this->jobDataDto->getCurrentWrittenFileHeaderBytes());
+        $archiverDto->setStartOffset($this->jobDataDto->getCurrentFileStartOffset());
 
         if ($archiverDto->getWrittenBytesTotal() !== 0) {
             $archiverDto->setIndexPositionCreated(true);
@@ -194,6 +189,7 @@ class FileBackupService implements ServiceInterface
         // Processing a file that could not be finished in this request
         $archiverDto = $this->archiver->getDto();
         $this->jobDataDto->setFileBeingBackupWrittenBytes($archiverDto->getWrittenBytesTotal());
+        $this->jobDataDto->setCurrentFileStartOffset($archiverDto->getStartOffset());
         $this->taskQueue->retry(false);
 
         if ($archiverDto->getFileHeaderSizeInBytes() > 0) {
@@ -230,6 +226,36 @@ class FileBackupService implements ServiceInterface
     }
 
     /**
+     * This method logs how many files processed in the current request.
+     * @return void
+     */
+    protected function logExecution()
+    {
+        if ($this->bigFileBeingProcessed instanceof ArchiverDto) {
+            $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($this->bigFileBeingProcessed->getFilePath()));
+            $percentProcessed       = ceil(($this->bigFileBeingProcessed->getWrittenBytesTotal() / $this->bigFileBeingProcessed->getFileSize()) * 100);
+            $this->logger->info(sprintf(
+                'Adding big %s file: %s - %s/%s (%s%%) (%s)',
+                $this->getTranslatedFileIdentifier(),
+                $relativePathForLogging,
+                size_format($this->bigFileBeingProcessed->getWrittenBytesTotal(), 2),
+                size_format($this->bigFileBeingProcessed->getFileSize(), 2),
+                $percentProcessed,
+                $this->getBackupSpeed()
+            ));
+            return;
+        }
+
+        $this->logger->info(sprintf(
+            'Added %d/%d %s files to backup (%s)',
+            $this->stepsDto->getCurrent(),
+            $this->stepsDto->getTotal(),
+            $this->getTranslatedFileIdentifier(),
+            $this->getBackupSpeed()
+        ));
+    }
+
+    /**
      * @return void
      */
     protected function updateMultipartInfo()
@@ -243,5 +269,23 @@ class FileBackupService implements ServiceInterface
     protected function maybeIncrementPartNo(string $path)
     {
         // Used in Pro
+    }
+
+    protected function getTranslatedFileIdentifier(): string
+    {
+        switch ($this->fileIdentifier) {
+            case 'muplugins':
+                return __('mu-plugin', 'wp-staging');
+            case 'plugins':
+                return __('plugin', 'wp-staging');
+            case 'themes':
+                return __('theme', 'wp-staging');
+            case 'otherfiles':
+                return __('other', 'wp-staging');
+            case 'rootfiles':
+                return __('root', 'wp-staging');
+            default:
+                return $this->fileIdentifier; // fallback
+        }
     }
 }

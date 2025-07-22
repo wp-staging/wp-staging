@@ -21,6 +21,7 @@ use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Database\TablesRenamer;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -285,6 +286,7 @@ class RenameDatabaseTask extends RestoreTask
 
         $this->keepOptions();
         $this->setupRemoveOptions();
+        $this->preserveTransientOptions();
 
         $totalTablesToRename = $this->tablesRenamer->getTotalTables();
 
@@ -316,7 +318,7 @@ class RenameDatabaseTask extends RestoreTask
         $wpdb->query("UPDATE {$tmpPrefix}options SET option_value = '{$accessToken}' WHERE option_name = '{$accessTokenOption}'");
         $wpdb->suppress_errors($suppressErrors);
 
-        $this->logger->info(sprintf('Found %d tables to restore', $this->jobDataDto->getTotalTablesToRename()));
+        $this->logger->info(sprintf('Found %d tables to restore.', $this->jobDataDto->getTotalTablesToRename()));
     }
 
     /**
@@ -338,7 +340,7 @@ class RenameDatabaseTask extends RestoreTask
             }
 
             $this->currentTaskDto->nonConflictingTablesRenamed = $this->tablesRenamer->getNonConflictingTablesRenamed();
-            $this->logger->info(sprintf('Restored %d/%d tables', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
+            $this->logger->info(sprintf('Restored %d/%d tables.', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
             $this->setCurrentTaskDto($this->currentTaskDto);
             return false;
         }
@@ -346,7 +348,7 @@ class RenameDatabaseTask extends RestoreTask
         // This condition is only fulfilled if all existing non-conflicting tables have been renamed in this current request and no other non-conflicting tables needs to be renamed.
         if ($this->tablesRenamer->getIsNonConflictingTablesRenamingTaskExecuted()) {
             $this->currentTaskDto->nonConflictingTablesRenamed = $this->tablesRenamer->getNonConflictingTablesRenamed();
-            $this->logger->info(sprintf('Restored %d/%d tables', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
+            $this->logger->info(sprintf('Restored %d/%d tables.', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
             $this->setCurrentTaskDto($this->currentTaskDto);
             return false;
         }
@@ -355,7 +357,7 @@ class RenameDatabaseTask extends RestoreTask
 
         $this->currentTaskDto->conflictingTablesRenamed = $this->tablesRenamer->getConflictingTablesRenamed();
         $tablesRenamed = $this->currentTaskDto->nonConflictingTablesRenamed + $this->currentTaskDto->conflictingTablesRenamed;
-        $this->logger->info(sprintf('Restored %d/%d tables', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
+        $this->logger->info(sprintf('Restored %d/%d tables.', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
         $this->setCurrentTaskDto($this->currentTaskDto);
 
         if ($result === false) {
@@ -491,6 +493,8 @@ class RenameDatabaseTask extends RestoreTask
      */
     protected function setupTask()
     {
+        // We don't need to check for capabilities if this is a sync request for access token
+        $this->accessToken->setIsCheckCapabilities(!$this->jobDataDto->getIsSyncRequest());
         if ($this->stepsDto->getTotal() > 0) {
             return;
         }
@@ -508,5 +512,20 @@ class RenameDatabaseTask extends RestoreTask
         }
 
         return $this->jobDataDto->getBackupMetadata()->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE;
+    }
+
+    /**
+     * @return void
+     */
+    protected function preserveTransientOptions()
+    {
+        $transientToPreserve = [
+            JobTransientCache::TRANSIENT_CURRENT_JOB,
+        ];
+
+        foreach ($transientToPreserve as $transient) {
+            $this->tablesRenamer->preserveTmpOption('_transient_' . $transient);
+            $this->tablesRenamer->preserveTmpOption('_transient_timeout_' . $transient);
+        }
     }
 }

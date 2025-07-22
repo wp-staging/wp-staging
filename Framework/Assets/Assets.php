@@ -147,7 +147,7 @@ class Assets
     {
         $this->loadGlobalAssets($hook);
 
-        add_action(Notices::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION, [$this, 'enqueueAnalyticsConsentAssets'], 10, 0);
+        add_action(Notices::ACTION_INJECT_ANALYTICS_CONSENT_ASSETS, [$this, 'enqueueAnalyticsConsentAssets'], 10, 0);
 
         // Load this css file on frontend and backend on all pages if current site is a staging site
         if ((new SiteInfo())->isStagingSite()) {
@@ -258,7 +258,7 @@ class Assets
         );
 
         // Internal hook to enqueue backup scripts, used by the backup addon
-        Hooks::doAction(BackupServiceProvider::BACKUP_SCRIPTS_ENQUEUE_ACTION);
+        Hooks::doAction(BackupServiceProvider::ACTION_BACKUP_ENQUEUE_SCRIPTS);
 
         // Load admin js pro files
         if (WPStaging::isPro()) {

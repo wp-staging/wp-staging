@@ -28,7 +28,6 @@ use WPStaging\Staging\FirstRun;
 use WPStaging\Framework\Url;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Frontend\Frontend;
-use WPStaging\Frontend\FrontendServiceProvider;
 use WPStaging\Pro\ProServiceProvider;
 use WPStaging\Staging\StagingServiceProvider;
 
@@ -43,6 +42,9 @@ final class WPStaging
      * @var string
      */
     const HOOK_BOOTSTRAP_SERVICES = 'wpstg.bootstrap.services';
+
+    /** @var string */
+    const ACTION_PUSHING_COMPLETE = 'wpstg_pushing_complete';
 
     /**
      * Singleton instance
@@ -101,6 +103,7 @@ final class WPStaging
             throw new RuntimeException('Basic and Pro Providers both not found! At least one of them should be present.');
         }
 
+        $this->registerInitHook();
         $this->setupDebugLog();
 
         $this->container->register(CoreServiceProvider::class);
@@ -139,8 +142,6 @@ final class WPStaging
         // Internal Use Only: Register Basic or Pro specific services.
         Hooks::callInternalHook(self::HOOK_BOOTSTRAP_SERVICES);
 
-        $this->container->register(FrontendServiceProvider::class);
-
         $this->handleCacheIssues();
         $this->preventDirectoryListing();
     }
@@ -148,6 +149,58 @@ final class WPStaging
     public function registerErrorHandler()
     {
         $this->errorHandler->registerShutdownHandler();
+    }
+
+    /**
+     * @return void
+     */
+    public function registerInitHook()
+    {
+        /**
+         * This hook is used to delete old SSE files
+         * This will run on all requests, to keep memory usage low, we don't use/load our whole plugin for this.
+         * So not use any of our classes, const to avoid loading the whole plugin.
+         */
+        add_action('init', function () {
+            // Run this only after 24 hours passed
+            $run = get_transient('wpstg.run_daily');
+            if ($run) {
+                return;
+            }
+
+            set_transient('wpstg.run_daily', true, HOUR_IN_SECONDS);
+
+            $sseDirectory = WP_CONTENT_DIR . '/wp-staging/sse';
+            $maxAge       = HOUR_IN_SECONDS;
+            $now          = time();
+
+            if (!is_dir($sseDirectory)) {
+                return;
+            }
+
+            $files = scandir($sseDirectory);
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+
+                if (strpos($file, '.sse.cache.php') === false) {
+                    continue;
+                }
+
+                $filePath = trailingslashit($sseDirectory) . $file;
+                if (!is_file($filePath)) {
+                    continue;
+                }
+
+                $fileAge = $now - filemtime($filePath);
+                if ($fileAge < $maxAge) {
+                    continue;
+                }
+
+                @unlink($filePath);
+            }
+        }, 1);
     }
 
     protected function setupDebugLog()
@@ -501,7 +554,7 @@ final class WPStaging
     private function handleCacheIssues()
     {
         $permalinksPurge = new PermalinksPurge();
-        add_action('wpstg_pushing_complete', [$permalinksPurge, 'executeAfterPushing']);
+        add_action(self::ACTION_PUSHING_COMPLETE, [$permalinksPurge, 'executeAfterPushing']); // phpcs:ignore WPStaging.Security.FirstArgNotAString
         add_action('wp_loaded', [$permalinksPurge, 'purgePermalinks'], $permalinksPurge::PLUGINS_LOADED_PRIORITY);
     }
 

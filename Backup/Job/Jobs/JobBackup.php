@@ -100,7 +100,6 @@ class JobBackup extends AbstractJob
 
         $this->addDatabaseTasks();
 
-        $this->addCompressionTask();
         $this->addFinalizeTask();
         if ($this->jobDataDto->getRepeatBackupOnSchedule()) {
             $this->addSchedulerTask();

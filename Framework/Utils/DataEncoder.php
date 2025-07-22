@@ -102,7 +102,7 @@ class DataEncoder
         $hex = bin2hex($pack);
 
         // This will pad the hex string with zeros if the number of bytes is less than 8 but greater than 4 for 32bit system
-        return $hex . str_repeat("00", $bytes - PHP_INT_SIZE);
+        return $hex . str_repeat("00", max(0, $bytes - PHP_INT_SIZE));
     }
 
     /**
@@ -194,7 +194,7 @@ class DataEncoder
 
         // For 32bit system when unpacking more than 4 bytes, let first check if those are only zeros, if not throw exception
         $extraData = substr($binary, PHP_INT_SIZE);
-        $extraZero = str_repeat("\x00", $bytes - PHP_INT_SIZE);
+        $extraZero = str_repeat("\x00", max(0, $bytes - PHP_INT_SIZE));
         if ($extraData !== $extraZero) {
             throw new \InvalidArgumentException('Unpack: Value is too large for the given number of bytes');
         }

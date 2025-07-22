@@ -4,6 +4,7 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Core\Cron\Cron;
 
 use function WPStaging\functions\debug_log;
 
@@ -107,7 +108,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
         foreach ($cronJobs as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
-                    if ($callback === 'wpstg_create_cron_backup') {
+                    if ($callback === Cron::ACTION_CREATE_CRON_BACKUP) {
                         if (!isset($wpstgCronJobs[$timestamp])) {
                             $wpstgCronJobs[$timestamp] = [];
                         }
@@ -139,7 +140,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
         foreach ($cronJobs as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
-                    if ($callback === 'wpstg_create_cron_backup') {
+                    if ($callback === Cron::ACTION_CREATE_CRON_BACKUP) {
                         unset($events[$callback]);
                     }
                 }

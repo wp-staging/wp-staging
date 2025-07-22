@@ -6,6 +6,8 @@
  */
 namespace WPStaging\Backend;
 
+use WPStaging\Core\Cron\Cron;
+
 /**
  * Uninstall WP-Staging
  *
@@ -141,7 +143,7 @@ class uninstall
             delete_option('wpstg_warnings_notice');
 
             // Delete events
-            wp_clear_scheduled_hook('wpstg_weekly_event');
+            wp_clear_scheduled_hook(Cron::ACTION_WEEKLY_EVENT);
 
             // Transients
             delete_transient("wpstg_issue_report_submitted");

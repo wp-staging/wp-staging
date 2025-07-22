@@ -151,10 +151,9 @@ $wpstgRestorePageUrl = add_query_arg([
                         <div class="wpstg-dropdown-item-icon">
                             <?php $this->getAssets()->renderSvg('copy-link'); ?>
                         </div>
-                        <?php esc_html_e('Copy Download Link', 'wp-staging'); ?>
+                        <?php esc_html_e('Copy Link to Backup', 'wp-staging'); ?>
                     </a>
-                    <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($logUrl ?: ''); ?>" class="wpstg-clone-action"
-                                                                  title="<?php esc_attr_e('Download Log File', 'wp-staging'); ?>">
+                    <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($logUrl ?: ''); ?>" class="wpstg-clone-action" title="<?php esc_attr_e('Download Log File', 'wp-staging'); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $this->getAssets()->renderSvg('file'); ?>
                         </div>

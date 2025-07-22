@@ -15,6 +15,7 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\FormatTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
 
@@ -24,6 +25,8 @@ use WPStaging\Vendor\Psr\Log\LogLevel;
  */
 class Logger implements LoggerInterface, ShutdownableInterface
 {
+    use FormatTrait;
+
     const TYPE_ERROR    = "ERROR";
 
     const TYPE_CRITICAL = "CRITICAL";
@@ -39,7 +42,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
     const TYPE_INFO_SUB = "INFO_SUB";
 
     /**
-     * @var string 
+     * @var string
      */
     const LOG_DATETIME_FORMAT = "Y/m/d H:i:s";
 
@@ -149,8 +152,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $this->add(sprintf('- MySQL: %s', $systemInfo->getMySqlVersionCompact()), self::TYPE_INFO_SUB);
         $this->add(sprintf('- WP Version: %s', get_bloginfo("version")), self::TYPE_INFO_SUB);
         $this->add(sprintf('- Host: %s', esc_html($host)), self::TYPE_INFO_SUB);
-        $this->add(sprintf('- PHP Memory Limit: %s', wp_convert_hr_to_bytes(ini_get("memory_limit"))), self::TYPE_INFO_SUB);
-        $this->add(sprintf('- WP Memory Limit: %s', (defined('WP_MEMORY_LIMIT') ? wp_convert_hr_to_bytes(WP_MEMORY_LIMIT) : '')), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- PHP Memory Limit: %s', $this->formatSize(wp_convert_hr_to_bytes(ini_get("memory_limit")), 2, true)), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- WP Memory Limit: %s', (defined('WP_MEMORY_LIMIT') ? $this->formatSize(wp_convert_hr_to_bytes(WP_MEMORY_LIMIT), 2, true) : '')), self::TYPE_INFO_SUB);
         $this->add(sprintf('- PHP Max Execution Time: %s', ini_get("max_execution_time")), self::TYPE_INFO_SUB);
     }
 
@@ -175,7 +178,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $log = [
             "type"      => $type,
             "date"      => current_time(self::LOG_DATETIME_FORMAT),
-            "message"   => wp_kses($message, [])
+            "message"   => html_entity_decode(wp_kses($message, []))
         ];
 
         $this->messages[] = $log;

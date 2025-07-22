@@ -201,6 +201,7 @@ class PrepareCreate extends PrepareJob
         $this->jobDataDto->setInit(true);
         $this->jobDataDto->setFinished(false);
         $this->jobDataDto->setStartTime(time());
+        $this->jobDataDto->setStagingSiteUploads($this->directory->getRelativeUploadsDirectory());
 
         $this->setDatabasePrefix();
 

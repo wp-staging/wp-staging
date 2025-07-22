@@ -4,8 +4,9 @@ namespace WPStaging\Framework\Network;
 
 use Exception;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Security\Auth;
-use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Utils\Sanitize;
 
 class RemoteDownloader
@@ -160,13 +161,41 @@ class RemoteDownloader
     /**
      * @return bool
      */
-    public function getProcessStatus(): bool
+    public function getIsCompleted(): bool
     {
         return $this->isProcessCompleted;
     }
 
     /**
-     * Make a WordPress remote POST request.
+     * @deprecated Use getIsCompleted() instead
+     * @return bool
+     */
+    public function getProcessStatus(): bool
+    {
+        return $this->getIsCompleted();
+    }
+
+    public function getIsSuccess(): bool
+    {
+        return $this->isSuccess;
+    }
+
+    public function getResponse(): string
+    {
+        return $this->response;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFileSize(): int
+    {
+        return $this->fileSize;
+    }
+
+    /**
+     * Make a WordPress remote request.
+     * If no method is specified, it defaults to 'POST'.
      *
      * @param array $arguments
      * @return array|\WP_Error
@@ -174,8 +203,12 @@ class RemoteDownloader
     protected function makeWpRemotePost(array $arguments)
     {
         $arguments['user-agent'] = 'Mozilla/5.0 (compatible; wp-staging/' . WPStaging::getVersion() . '; +https://wp-staging.com)';
-        $response                = wp_remote_post($this->remoteFileUrl, $arguments);
-        $this->response          = wp_remote_retrieve_response_message($response);
+        if (!isset($arguments['method'])) {
+            $arguments['method'] = 'POST';
+        }
+
+        $response       = wp_remote_request($this->remoteFileUrl, $arguments);
+        $this->response = wp_remote_retrieve_response_message($response);
         return $response;
     }
 
@@ -190,7 +223,7 @@ class RemoteDownloader
 
         $arguments = [
             'method'    => 'GET',
-            'timeout'   => self::TIMEOUT,
+            'timeout'   => Hooks::applyFilters('wpstg.downloader_timeout', self::TIMEOUT),
             'sslverify' => false,
             'headers'   => [
                 'Range' => "bytes={$this->startByte}-{$this->endByte}",
@@ -220,7 +253,7 @@ class RemoteDownloader
     private function writeLocalFile(string $fileContent): bool
     {
         try {
-            $localFile = fopen($this->localFilePath . '.uploading', 'ab');
+            $localFile = fopen($this->localFilePath . '.uploading', FileObject::MODE_APPEND_AND_READ);
             if ($localFile === false) {
                 $this->response = 'Failed to open local file for writing.';
                 return false;
@@ -313,15 +346,13 @@ class RemoteDownloader
                 return;
             }
 
-            $this->response           = __('File upload incomplete', 'wp-staging');
+            $this->response           = sprintf(esc_html__('File upload incomplete. Expected Size: %s, Actual Size: %s', 'wp-staging'), $this->fileSize, filesize($this->localFilePath));
             $this->isSuccess          = false;
             $this->isProcessCompleted = true;
-            $this->remoteFileExists();
             return;
         }
 
-
-        $this->response           = __('File uploaded successfully', 'wp-staging');
+        $this->response           = esc_html__('File uploaded successfully', 'wp-staging');
         $this->isProcessCompleted = true;
     }
 
@@ -354,7 +385,7 @@ class RemoteDownloader
             return true;
         }
 
-        $this->response           = __('File not available on remote server', 'wp-staging');
+        $this->response           = esc_html__('File not available on remote server', 'wp-staging');
         $this->isSuccess          = false;
         $this->isProcessCompleted = true;
         return false;

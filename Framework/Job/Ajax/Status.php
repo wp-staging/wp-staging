@@ -9,10 +9,13 @@ use WPStaging\Staging\Jobs\StagingJobsProvider;
 
 class Status extends AbstractTemplateComponent
 {
+    /**
+     * @return void
+     */
     public function ajaxProcess()
     {
         if (!$this->canRenderAjax()) {
-            return;
+            wp_send_json_error(null, 401);
         }
 
         $job = $this->getJobInstance();

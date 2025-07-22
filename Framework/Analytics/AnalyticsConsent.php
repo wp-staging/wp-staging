@@ -104,7 +104,7 @@ class AnalyticsConsent
             update_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, '0', false);
             delete_option(self::OPTION_NAME_ANALYTICS_REMIND_ME);
 
-            add_action('wpstg.admin_notices', [$this, 'showNoticeConsentRefused']);
+            add_action(Notices::ACTION_ADMIN_NOTICES, [$this, 'showNoticeConsentRefused']);
 
             return;
         }

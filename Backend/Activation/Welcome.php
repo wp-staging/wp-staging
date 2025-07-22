@@ -9,6 +9,7 @@ if (!defined("WPINC")) {
 
 use WPStaging\Framework\Traits\NoticesTrait;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Notices\Notices;
 
 class Welcome
 {
@@ -19,7 +20,7 @@ class Welcome
         add_action('admin_init', [$this, 'welcome']);
 
         if (wpstgGetProVersionNumberIfInstalled() && $this->isWPStagingAdminPage()) {
-            add_action('wpstg.admin_notices', [$this, 'wpstgproActivationNotice']);
+            add_action(Notices::ACTION_ADMIN_NOTICES, [$this, 'wpstgproActivationNotice']);
         }
     }
 

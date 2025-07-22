@@ -369,4 +369,13 @@ class SiteInfo
 
         return Hooks::applyFilters(self::FILTER_IS_WPSTG_TESTS, $isLocal);
     }
+
+    /**
+     * Wrapper around is_multisite()
+     * @return bool
+     */
+    public function isMultisite(): bool
+    {
+        return is_multisite();
+    }
 }

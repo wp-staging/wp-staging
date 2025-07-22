@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Staging\Tasks\StagingSite;
+namespace WPStaging\Staging\Tasks\StagingSite\Database;
 
 use Exception;
 use Throwable;
@@ -79,14 +79,14 @@ class PrepareDatabaseRowsTask extends StagingTask
 
             $srcTable = $this->rowsExporter->getTableBeingExported();
             $this->logger->info(sprintf(
-                'Preparing table %s: %s of %s records',
+                'Preparing table %s: %s of %s records.',
                 $srcTable,
                 number_format_i18n($this->currentTaskDto->rowsOffset),
                 number_format_i18n($this->currentTaskDto->totalRows)
             ));
 
             $this->logger->debug(sprintf(
-                'Preparing table %s: Query time: %s Batch Size: %s last query json: %s',
+                'Preparing table %s: Query time: %s s. Batch Size: %s. Last query json: %s.',
                 $srcTable,
                 $this->jobDataDto->getDbRequestTime(),
                 $this->jobDataDto->getBatchSize(),

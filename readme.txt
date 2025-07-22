@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.8
-Stable tag: 4.2.0
+Stable tag: 4.2.1
 Requires PHP: 7.0
 
 Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
@@ -286,6 +286,31 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.2.1 =
+* New: Compatible up to WordPress 6.8.2.
+* Enh: Reduce the disk space requirement for backups during creation and improve the speed of backup creation when compression is enabled. #4342
+* Enh: Show Bytes in more human friendly megabytes format in Log Window. #4385
+* Enh: Improve update message text for staged rollouts. #4394
+* Enh: Disable click option of Add Exclusion checkbox in Create Backup modal for free version. #4396
+* Enh: Use constant for non-test action hooks in whole code base. #4354
+* Fix: Misleading menu name for copying backup URL. #4397
+* Fix: Incorrect HTML encoding in log output. #4388
+* Fix: UX, missing margin in free version for pro feature demonstration text. #4389
+* Fix: Improve log wording of backup processing. Wrong usage of plural and singular. #4373
+* Fix: Modal "Another backup is running" looks broken and has sprintf error. #4384
+* Fix: Prevent possible rare race condition when purging the cache. #4392
+* Fix: Keep Advanced Options collapsed on Create Backup popup. #4449
+* Fix: Removing translations from brand names and general global known terms. #4395
+* Fix: Avoid scanner issues in the backup restore standalone tool. #4361
+* Fix: Prevent error in email masking for short usernames that have only two characters. #4382
+* Fix: Opening Settings -> Temporary Logins is slow in free version and takes seconds to load. #4387
+* UX: Add space character in Action menu items between menu text and (Unregistered) #4441
+* UX: Margin right issue on main html container on mobile devices. #4426
+* Dev: Move Remote Sync feature towards final steps. #4318
+* Dev: Prepare file copying logic to use backup logic for staging site feature refactor. #4224
+* Dev: Prepare data login to use backup logic for staging site feature refactor. #4239
+* Dev: Fix e2e tests failing because of outdated db version in database snapshot used for resetting database between tests. #4427
 
 = 4.2.0 =
 * New: Add pCloud backup storage cloud provider. (Pro) #2876

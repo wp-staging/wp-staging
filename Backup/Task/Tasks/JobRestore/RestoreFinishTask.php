@@ -6,6 +6,7 @@ use RuntimeException;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Restore\Response\RestoreFinishResponseDto;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Notices\ObjectCacheNotice;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
@@ -113,6 +114,13 @@ class RestoreFinishTask extends RestoreTask
      */
     protected function performRestoreFinishAction()
     {
-        // no-op, Used in pro
+        $this->getJobTransientCache()->completeJob();
+        $this->logger->pushSseEvent(SseEventCache::EVENT_TYPE_COMPLETE, [
+            'status' => 'success',
+            'data' => [
+                'message' => __('Restore completed successfully.', 'wp-staging'),
+                'type' => 'restore',
+            ],
+        ]);
     }
 }

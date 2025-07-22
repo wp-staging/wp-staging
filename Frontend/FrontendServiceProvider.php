@@ -12,7 +12,11 @@ class FrontendServiceProvider extends ServiceProvider
         $this->registerLoginAfterRestore();
     }
 
-    private function registerLoginAfterRestore()
+    /**
+     * Return either login_header or login_footer depending on whats available
+     * @return string
+     */
+    protected function getMessageAction(): string
     {
         // Available in WordPress 4.6+
         $action = 'login_header';
@@ -27,6 +31,14 @@ class FrontendServiceProvider extends ServiceProvider
             }
         }
 
-        add_action($action, [$this->container->make(LoginAfterRestore::class), 'showMessage'], 10, 0); // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
+        return $action;
+    }
+
+    /**
+     * @return void
+     */
+    private function registerLoginAfterRestore()
+    {
+        add_action($this->getMessageAction(), [$this->container->make(LoginAfterRestore::class), 'showMessage'], 10, 0); // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
     }
 }

@@ -62,7 +62,7 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     const BACKUP_TYPE_MAIN_SITE = 'main-network-site';
 
     /** @var string */
-    private $id;
+    private $id = '';
 
     /** @var int */
     private $headerStart;
@@ -98,7 +98,7 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     private $backupType = '';
 
     /** @var string */
-    private $name;
+    private $name = '';
 
     /** @var string */
     private $note;
@@ -119,22 +119,22 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     private $databaseFileSize;
 
     /** @var string The PHP version from which this backup was generated. */
-    private $phpVersion;
+    private $phpVersion = '';
 
     /** @var string The WP version from which this backup was generated. */
-    private $wpVersion;
+    private $wpVersion = '';
 
     /** @var string The WP DB version from which this backup was generated. */
-    private $wpDbVersion;
+    private $wpDbVersion = '';
 
     /** @var string The original database collation. */
-    private $dbCollate;
+    private $dbCollate = '';
 
     /** @var string The original database charset. */
-    private $dbCharset;
+    private $dbCharset = '';
 
     /** @var string The MySQL/MariaDB version from which this backup was generated. */
-    private $sqlServerVersion;
+    private $sqlServerVersion = '';
 
     /** @var int|string The backup file size in bytes. Default is empty string. */
     private $backupSize = '';

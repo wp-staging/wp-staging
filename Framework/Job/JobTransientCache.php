@@ -21,7 +21,7 @@ class JobTransientCache
      * can get the latest status of the job.
      * @var int
      */
-    const JOB_TRANSIENT_EXPIRY_ON_COMPLETE = 15; // 15 seconds
+    const JOB_TRANSIENT_EXPIRY_ON_COMPLETE = 15;
 
     /**
      * This is the transient key that will be used to store the current job data.
@@ -67,6 +67,11 @@ class JobTransientCache
     /**
      * @var string
      */
+    const JOB_TYPE_PLUGINS_UPDATER = 'Plugins_Updater';
+
+    /**
+     * @var string
+     */
     const JOB_TYPE_STAGING_CREATE = 'Staging_Create';
 
     /**
@@ -74,9 +79,24 @@ class JobTransientCache
      */
     const JOB_TYPE_STAGING_DELETE = 'Staging_Delete';
 
+    /**
+     * @var string
+     */
+    const JOB_TYPE_PULL_PREPARE = 'Pull_Prepare';
+
+    /**
+     * @var string
+     */
+    const JOB_TYPE_PULL_RESTORE = 'Pull_Restore';
+
+    /**
+     * @var string[]
+     */
     const CANCELABLE_JOBS = [
         self::JOB_TYPE_BACKUP,
         self::JOB_TYPE_RESTORE,
+        self::JOB_TYPE_PULL_PREPARE,
+        self::JOB_TYPE_PULL_RESTORE,
         self::JOB_TYPE_STAGING_CREATE,
     ];
 
@@ -99,6 +119,18 @@ class JobTransientCache
         ];
 
         delete_transient(self::TRANSIENT_CURRENT_JOB);
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
+    }
+
+    /**
+     * @param string $title
+     * @return void
+     */
+    public function updateTitle(string $title)
+    {
+        $jobData = $this->getJob();
+        $jobData['title'] = $title;
+
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
     }
 
@@ -159,6 +191,11 @@ class JobTransientCache
         return $jobData['status'];
     }
 
+    /**
+     * @param string $status
+     * @param string $title
+     * @return void
+     */
     private function stopJob(string $status, string $title = '')
     {
         $jobData = $this->getJob();

@@ -61,7 +61,7 @@ $backupParts = [
     [
         'backupContains'       => $info->getIsExportingOtherWpRootFiles(),
         'excluded'             => $excluded['wpRoot'],
-        'messageWhenRestoring' => __('Other files in WP root folder will be added.', 'wp-staging'),
+        'messageWhenRestoring' => $replaced['wpRoot'] ? __('Other files in WP root folder will be replaced.', 'wp-staging') : __('Other files in WP root folder will be added.', 'wp-staging'),
         'messageWhenExcluded'  => __('Other files in WP root folder restore excluded by filter.', 'wp-staging')
     ]
 ];

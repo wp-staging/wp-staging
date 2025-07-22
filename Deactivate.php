@@ -2,6 +2,11 @@
 
 namespace WPStaging;
 
+use WPStaging\Core\Cron\Cron;
+use WPStaging\Framework\BackgroundProcessing\BackgroundProcessingServiceProvider;
+use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
+use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
+
 /**
  * Actions to perform when we deactivate WP Staging Plugin
  */
@@ -88,13 +93,11 @@ class Deactivate
     private function deleteOtherCron()
     {
         $hooks = [
-            'wpstg_q_ajax_support_feature_detection',
-            // @see BackgroundProcessingServiceProvider::ACTION_QUEUE_MAINTAIN
-            'wpstg_queue_maintain',
-            // @see QueueProcessor::QUEUE_PROCESS_ACTION
-            'wpstg_queue_process',
-            'wpstg_weekly_event',
-            'wpstg_daily_event'
+            FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION,
+            BackgroundProcessingServiceProvider::ACTION_QUEUE_MAINTAIN,
+            QueueProcessor::ACTION_QUEUE_PROCESS,
+            Cron::ACTION_WEEKLY_EVENT,
+            Cron::ACTION_DAILY_EVENT
         ];
 
         foreach ($hooks as $hook) {

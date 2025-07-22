@@ -8,6 +8,6 @@ class ProcessLockedException extends WPStagingException
 {
     public static function processAlreadyLocked()
     {
-        return new self('Another backup/restore is already running. Please wait a moment and try again. If you continue to see this error, please contact the %s. <a href="https://wp-staging.com/support/" target="_blank"> WP STAGING support </a>', 423);
+        return new self(sprintf(esc_html__('A backup or restore process is already running.%sPlease wait for it to complete before starting a new one.%sIf this message keeps appearing, %s.', 'wp-staging'), '<br>', '<br><br>', '<a href="https://wp-staging.com/support/" target="_blank">contact support</a>'), 423);
     }
 }

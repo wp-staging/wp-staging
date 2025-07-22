@@ -13,11 +13,15 @@ class ObjectCacheNotice extends BooleanNotice
 {
     /**
      * The action name to dismiss this notice
+     *
+     * @var string
      */
-    const NOTICE_DISMISS_ACTION = 'object-cache-skipped';
+    const ACTION_NOTICE_DISMISS = 'object-cache-skipped';
 
     /**
      * The option name to store the visibility of skipped object cache notice
+     *
+     * @var string
      */
     const OPTION_NAME = 'wpstg_skipped_object_cache_notice';
 

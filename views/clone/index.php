@@ -11,6 +11,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
 $notice       = WPStaging::make(Notices::class);
@@ -81,7 +82,7 @@ const OTHER_LOADING_BAR_COUNT   = 10;
             } elseif (!$this->siteInfo->isCloneable()) {
                 require $this->viewsPath . 'staging/staging-site/index.php';
             } elseif (defined('WPSTGPRO_VERSION') && is_multisite()) {
-                do_action('wpstg.views.ajax_clone.multi_site_clone_option');
+                do_action(TemplateEngine::ACTION_MULTI_SITE_CLONE_OPTION);
             } else {
                 require $this->viewsPath . 'staging/index.php';
             }

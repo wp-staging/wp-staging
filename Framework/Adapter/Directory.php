@@ -314,6 +314,15 @@ class Directory implements DirectoryInterface
         return $this->uploadDir;
     }
 
+    public function getRelativeUploadsDirectory(bool $refresh = false): string
+    {
+        if (!$this->uploadDir || $refresh) {
+            $this->uploadDir = $this->getUploadsDirectory($refresh);
+        }
+
+        return str_replace($this->getAbsPath(), '', $this->uploadDir);
+    }
+
     /**
      * If multisite, return the main site uploads directory
      * If single site, return the uploads directory
