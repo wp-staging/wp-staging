@@ -38,30 +38,32 @@ class DataEncoder
     public function intArrayToHex(string $format, array $intArray): string
     {
         if (empty($format)) {
-            throw new \InvalidArgumentException('Format cannot be empty');
+            throw new \InvalidArgumentException('DataEncoder error: Format cannot be empty.');
         }
 
         if (empty($intArray)) {
-            throw new \InvalidArgumentException('Int array cannot be empty');
+            throw new \InvalidArgumentException('DataEncoder error: Int array cannot be empty.');
         }
 
         $formats = str_split($format);
         if (count($formats) !== count($intArray)) {
-            throw new \InvalidArgumentException('The number of characters in formats and integers in array must be equal');
+            throw new \InvalidArgumentException(
+                'DataEncoder error: The number of characters in formats and integers in array must be equal'
+            );
         }
 
         if (preg_match('/[^1-8]/', $format)) {
-            throw new \InvalidArgumentException('Invalid format');
+            throw new \InvalidArgumentException('DataEncoder error: Invalid format.');
         }
 
         $index  = 0;
         $result = '';
         foreach ($formats as $format) {
-            // let try catch to re throw for index position
+            // Use try-catch to re-throw for index position
             try {
                 $bytes = intval($format);
                 if (!is_int($bytes)) {
-                    throw new \InvalidArgumentException('Invalid format');
+                    throw new \InvalidArgumentException('DataEncoder error: Invalid format.');
                 }
 
                 $result .= $this->intToHex($intArray[$index], $bytes);
@@ -77,20 +79,36 @@ class DataEncoder
         return $result;
     }
 
-    public function intToHex(int $value, int $bytes = 8): string
+    /**
+     * Convert an integer to hexadecimal representation
+     *
+     * @param int|float|null $value The value to convert (must be an integer)
+     * @param int $bytes Number of bytes for the representation
+     * @return string Hexadecimal representation
+     * @throws \InvalidArgumentException If value is null, not an integer, or invalid
+     */
+    public function intToHex($value, int $bytes = 8): string
     {
+        if ($value === null) {
+            throw new \InvalidArgumentException('DataEncoder error: Value cannot be null');
+        }
+
+        if (!is_int($value)) {
+            throw new \InvalidArgumentException('DataEncoder error: Value must be an integer, ' . gettype($value) . ' given');
+        }
+
         if ($value < 0 && PHP_INT_SIZE === 8) {
-            throw new \InvalidArgumentException('Invalid value');
+            throw new \InvalidArgumentException('DataEncoder error: Value must be non-negative, ' . $value . ' given');
         }
 
         if ($bytes < 1 || $bytes > 8) {
-            throw new \InvalidArgumentException('Invalid number of bytes');
+            throw new \InvalidArgumentException('DataEncoder error: Invalid number of bytes');
         }
 
         // convert bytes to int
         $maxInt = (2 ** ($bytes * 8)) - 1;
         if ($value > $maxInt) {
-            throw new \InvalidArgumentException('Pack: Value is too large for the given number of bytes');
+            throw new \InvalidArgumentException('DataEncoder error: Pack: Value is too large for the given number of bytes');
         }
 
         $pack = pack($this->packMode, $value);
@@ -101,7 +119,8 @@ class DataEncoder
 
         $hex = bin2hex($pack);
 
-        // This will pad the hex string with zeros if the number of bytes is less than 8 but greater than 4 for 32bit system
+        // This will pad the hex string with zeros if the number of bytes is less than 8
+        // but greater than 4 for 32bit system
         return $hex . str_repeat("00", max(0, $bytes - PHP_INT_SIZE));
     }
 
@@ -115,24 +134,24 @@ class DataEncoder
     public function hexToIntArray(string $format, string $hex): array
     {
         if (empty($format)) {
-            throw new \InvalidArgumentException('Format cannot be empty');
+            throw new \InvalidArgumentException('DataEncoder error: Format cannot be empty');
         }
 
         if (preg_match('/[^1-8]/', $format)) {
-            throw new \InvalidArgumentException('Invalid format: ' . $format);
+            throw new \InvalidArgumentException('DataEncoder error: Invalid format: ' . $format);
         }
 
         if (empty($hex)) {
-            throw new \InvalidArgumentException('Hex string cannot be empty');
+            throw new \InvalidArgumentException('DataEncoder error: Hex string cannot be empty');
         }
 
         if (strlen($hex) % 2 !== 0) {
-            throw new \InvalidArgumentException('Invalid hex string: ' . $hex);
+            throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
 
         // check for invalid characters in hex
         if (preg_match('/[^0-9a-fA-F]/', $hex)) {
-            throw new \InvalidArgumentException('Invalid hex string: ' . $hex);
+            throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
 
         $formats  = str_split($format);
@@ -143,7 +162,7 @@ class DataEncoder
             $length = $bytes * 2;
 
             if ($index + $length > strlen($hex)) {
-                throw new \InvalidArgumentException('Hex string is short according to format');
+                throw new \InvalidArgumentException('DataEncoder error: Hex string is short according to format.');
             }
 
             $subHex = substr($hex, $index, $length);
@@ -153,7 +172,7 @@ class DataEncoder
         }
 
         if ($index !== strlen($hex)) {
-            throw new \InvalidArgumentException('Hex string is long according to format');
+            throw new \InvalidArgumentException('DataEncoder error: Hex string is long according to format.');
         }
 
         return $intArray;
@@ -162,24 +181,24 @@ class DataEncoder
     public function hexToInt(string $hex, int $bytes = 8): int
     {
         if ($bytes < 1 || $bytes > 8) {
-            throw new \InvalidArgumentException('Invalid number of bytes');
+            throw new \InvalidArgumentException('DataEncoder error: Invalid number of bytes.');
         }
 
         if (empty($hex)) {
-            throw new \InvalidArgumentException('Hex string cannot be empty');
+            throw new \InvalidArgumentException('DataEncoder error: Hex string cannot be empty.');
         }
 
         if (strlen($hex) / 2 > $bytes) {
-            throw new \InvalidArgumentException('Hex string is longer than the given number of bytes');
+            throw new \InvalidArgumentException('DataEncoder error: Hex string is longer than the given number of bytes.');
         }
 
         if (strlen($hex) % 2 !== 0) {
-            throw new \InvalidArgumentException('Invalid hex string: ' . $hex);
+            throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
 
         // check for invalid characters in hex
         if (preg_match('/[^0-9a-fA-F]/', $hex)) {
-            throw new \InvalidArgumentException('Invalid hex string: ' . $hex);
+            throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
 
         $binary = hex2bin($hex);
@@ -192,11 +211,14 @@ class DataEncoder
             return unpack($this->packMode, $binary)[1];
         }
 
-        // For 32bit system when unpacking more than 4 bytes, let first check if those are only zeros, if not throw exception
+        // For 32bit system when unpacking more than 4 bytes, let first check if those are
+        // only zeros, if not throw exception
         $extraData = substr($binary, PHP_INT_SIZE);
         $extraZero = str_repeat("\x00", max(0, $bytes - PHP_INT_SIZE));
         if ($extraData !== $extraZero) {
-            throw new \InvalidArgumentException('Unpack: Value is too large for the given number of bytes');
+            throw new \InvalidArgumentException(
+                'DataEncoder error: Unpack: Value is too large for the given number of bytes.'
+            );
         }
 
         $dataToUnpack = substr($binary, 0, PHP_INT_SIZE);

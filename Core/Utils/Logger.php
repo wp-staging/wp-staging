@@ -35,6 +35,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     const TYPE_WARNING  = "WARNING";
 
+    const TYPE_NOTICE   = "NOTICE";
+
     const TYPE_INFO     = "INFO";
 
     const TYPE_DEBUG    = "DEBUG";

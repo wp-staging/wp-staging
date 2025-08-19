@@ -15,32 +15,55 @@ $selectorUniqueId = $logType ?? uniqid();
             <option value="all"><?php esc_html_e('All', 'wp-staging') ?></option>
             <option value="info"><?php esc_html_e('Info', 'wp-staging') ?></option>
             <option value="debug"><?php esc_html_e('Debug', 'wp-staging') ?></option>
+            <option value="notice"><?php esc_html_e('Notice', 'wp-staging') ?></option>
             <option value="warning"><?php esc_html_e('Warning', 'wp-staging') ?></option>
             <option value="error"><?php esc_html_e('Error', 'wp-staging') ?></option>
             <option value="critical"><?php esc_html_e('Critical', 'wp-staging') ?></option>
         </select>
     </div>
     <div class="wpstg--logs--counter">
-        <button class="wpstg--logs--button-critical hidden">
-            <?php esc_html_e('Critical:', 'wp-staging') ?>
-            <span class="wpstg--logs--counter-critical">0</span>
-        </button>
-        <button class="wpstg--logs--button-error hidden">
-            <?php esc_html_e('Error:', 'wp-staging') ?>
-            <span class="wpstg--logs--counter-error">0</span>
-        </button>
-        <button class="wpstg--logs--button-warning hidden">
-            <?php esc_html_e('Warning:', 'wp-staging') ?>
-            <span class="wpstg--logs--counter-warning">0</span>
-        </button>
-        <button class="wpstg--logs--button-debug hidden">
-            <?php esc_html_e('Debug:', 'wp-staging') ?>
-            <span class="wpstg--logs--counter-debug">0</span>
-        </button>
-        <button class="wpstg--logs--button-info hidden">
-            <?php esc_html_e('Info:', 'wp-staging') ?>
-            <span class="wpstg--logs--counter-info">0</span>
-        </button>
+        <label class="wpstg--logs--checkbox-critical wpstg-log-checkbox-hidden">
+            <span class="wpstg--logs--checkbox-button">
+                <input type="checkbox" class="wpstg--logs--checkbox" data-type="critical" checked>
+                <?php esc_html_e('Critical:', 'wp-staging') ?>
+                <span class="wpstg--logs--counter-critical">0</span>
+            </span>
+        </label>
+        <label class="wpstg--logs--checkbox-error wpstg-log-checkbox-hidden">
+            <span class="wpstg--logs--checkbox-button">
+                <input type="checkbox" class="wpstg--logs--checkbox" data-type="error" checked>
+                <?php esc_html_e('Error:', 'wp-staging') ?>
+                <span class="wpstg--logs--counter-error">0</span>
+            </span>
+        </label>
+        <label class="wpstg--logs--checkbox-warning wpstg-log-checkbox-hidden">
+            <span class="wpstg--logs--checkbox-button">
+                <input type="checkbox" class="wpstg--logs--checkbox" data-type="warning" checked>
+                <?php esc_html_e('Warning:', 'wp-staging') ?>
+                <span class="wpstg--logs--counter-warning">0</span>
+            </span>
+        </label>
+        <label class="wpstg--logs--checkbox-notice wpstg-log-checkbox-hidden">
+            <span class="wpstg--logs--checkbox-button">
+                <input type="checkbox" class="wpstg--logs--checkbox" data-type="notice" checked>
+                <?php esc_html_e('Notice:', 'wp-staging') ?>
+                <span class="wpstg--logs--counter-notice">0</span>
+            </span>
+        </label>
+        <label class="wpstg--logs--checkbox-debug wpstg-log-checkbox-hidden">
+            <span class="wpstg--logs--checkbox-button">
+                <input type="checkbox" class="wpstg--logs--checkbox" data-type="debug" checked>
+                <?php esc_html_e('Debug:', 'wp-staging') ?>
+                <span class="wpstg--logs--counter-debug">0</span>
+            </span>
+        </label>
+        <label class="wpstg--logs--checkbox-info wpstg-log-checkbox-hidden">
+            <span class="wpstg--logs--checkbox-button">
+                <input type="checkbox" class="wpstg--logs--checkbox" data-type="info" checked>
+                <?php esc_html_e('Info:', 'wp-staging') ?>
+                <span class="wpstg--logs--counter-info">0</span>
+            </span>
+        </label>
     </div>
 </div>
 <div class="wpstg--logs--body">

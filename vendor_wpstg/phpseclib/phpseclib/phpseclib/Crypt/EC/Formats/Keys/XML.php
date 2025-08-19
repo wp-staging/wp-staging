@@ -62,6 +62,9 @@ abstract class XML
             throw new \WPStaging\Vendor\phpseclib3\Exception\BadConfigurationException('The dom extension is not setup correctly on this system');
         }
         $use_errors = \libxml_use_internal_errors(\true);
+        if (\substr($key, 0, 5) != '<?xml') {
+            $key = '<xml>' . $key . '</xml>';
+        }
         $temp = self::isolateNamespace($key, 'http://www.w3.org/2009/xmldsig11#');
         if ($temp) {
             $key = $temp;
@@ -71,9 +74,6 @@ abstract class XML
             $key = $temp;
         }
         $dom = new \DOMDocument();
-        if (\substr($key, 0, 5) != '<?xml') {
-            $key = '<xml>' . $key . '</xml>';
-        }
         if (!$dom->loadXML($key)) {
             \libxml_use_internal_errors($use_errors);
             throw new \UnexpectedValueException('Key does not appear to contain XML');

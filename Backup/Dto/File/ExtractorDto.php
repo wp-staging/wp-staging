@@ -23,6 +23,9 @@ class ExtractorDto
     protected $extractorFileWrittenBytes;
 
     /** @var int */
+    protected $extractorFileReadBytes;
+
+    /** @var int */
     protected $headerBytesRemoved;
 
     public function __construct()
@@ -33,6 +36,7 @@ class ExtractorDto
         $this->totalFilesSkipped         = 0;
         $this->totalChunks               = 0;
         $this->extractorFileWrittenBytes = 0;
+        $this->extractorFileReadBytes    = 0;
         $this->headerBytesRemoved        = 0;
     }
 
@@ -118,6 +122,20 @@ class ExtractorDto
     public function setExtractorFileWrittenBytes(int $extractorFileWrittenBytes)
     {
         $this->extractorFileWrittenBytes = $extractorFileWrittenBytes;
+    }
+
+    public function getExtractorFileReadBytes(): int
+    {
+        return $this->extractorFileReadBytes;
+    }
+
+    /**
+     * @param int $extractorFileReadBytes
+     * @return void
+     */
+    public function setExtractorFileReadBytes(int $extractorFileReadBytes)
+    {
+        $this->extractorFileReadBytes = $extractorFileReadBytes;
     }
 
     public function getHeaderBytesRemoved(): int

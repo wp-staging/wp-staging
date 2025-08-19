@@ -17,7 +17,11 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
  */
 class FileBeingExtracted
 {
-    /** @var string */
+    /**
+     * A string that uniquely identifies the file being extracted, e.g. wpstg_c_debug.log, wpstg_p_yoast.json, etc.
+     * @var string
+     */
+
     private $identifiablePath;
 
     /** @var string */
@@ -31,6 +35,9 @@ class FileBeingExtracted
 
     /** @var int */
     private $writtenBytes = 0;
+
+    /** @var int */
+    private $readBytes = 0;
 
     /** @var string */
     protected $extractFolder;
@@ -55,18 +62,29 @@ class FileBeingExtracted
         $this->relativePath     = $this->pathIdentifier->getPathWithoutIdentifier($this->identifiablePath);
     }
 
+    /**
+     * Absolute destination path of the current file to extract.
+     * @todo rename this method to getExtractFilePath() or similar.
+     * @return string
+     */
     public function getBackupPath()
     {
         return $this->extractFolder . $this->relativePath;
     }
 
+    /**
+     * Find the maximum remaining number of bytes that will be read from the file.
+     * This is limited to 512 KB to avoid reading too much data at once to prevent memory issues.
+     *
+     * @return int
+     */
     public function findReadTo()
     {
-        $maxLengthToWrite = 512 * KB_IN_BYTES;
+        $maxLengthToRead = 512 * KB_IN_BYTES;
 
-        $remainingBytesToWrite = $this->totalBytes - $this->writtenBytes;
+        $remainingBytesToRead = $this->totalBytes - $this->readBytes;
 
-        return max(0, min($remainingBytesToWrite, $maxLengthToWrite));
+        return max(0, min($remainingBytesToRead, $maxLengthToRead));
     }
 
     /**
@@ -122,6 +140,29 @@ class FileBeingExtracted
         $this->writtenBytes += $writtenBytes;
     }
 
+    public function getReadBytes(): int
+    {
+        return $this->readBytes;
+    }
+
+    /**
+     * @param int $readBytes
+     * @return void
+     */
+    public function setReadBytes(int $readBytes)
+    {
+        $this->readBytes = $readBytes;
+    }
+
+    /**
+     * @param int $readBytes
+     * @return void
+     */
+    public function addReadBytes(int $readBytes)
+    {
+        $this->readBytes += $readBytes;
+    }
+
     public function isFinished()
     {
         if (!$this->areHeaderBytesRemoved()) {
@@ -141,7 +182,7 @@ class FileBeingExtracted
 
     public function getCurrentOffset(): int
     {
-        return $this->start + $this->writtenBytes;
+        return $this->start + $this->readBytes;
     }
 
     /**

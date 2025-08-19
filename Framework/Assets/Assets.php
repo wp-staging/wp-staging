@@ -37,7 +37,7 @@ class Assets
 
     private $accessToken;
 
-    private $settings;
+    protected $settings;
 
     private $analyticsConsent;
 
@@ -300,6 +300,7 @@ class Assets
             'backupDBExtension'      => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
             'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
             'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
+            'analyticsConsentLater'  => esc_url($this->analyticsConsent->getRemindMeLaterConsentLink()),
             'isPro'                  => WPStaging::isPro(),
             'maxFailedRetries'       => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
             'i18n'                   => $this->i18n->getTranslations(),
@@ -537,6 +538,49 @@ class Assets
         $svgCode = file_get_contents($fullPath);
         $svgCode = preg_replace('/<svg(.*?)>/', '<svg$1 class="' . $class . '">', $svgCode);
         echo Escape::escapeHtml($svgCode);
+    }
+
+    /**
+     * @param string $title
+     * @param string $desc
+     * @param string $buttonText
+     * @param string $buttonUrl
+     */
+    public function renderAlertMessage(string $title, string $desc = '', string $buttonText = '', string $buttonUrl = null)
+    {
+        if (empty($title)) {
+            return;
+        }
+
+        ?>
+        <div class="wpstg-banner">
+            <div class="wpstg-banner-content">
+                <div class="wpstg-banner-icon">
+                    <?php $this->renderSvg('alert'); ?>
+                </div>
+                <div class="wpstg-banner-text">
+                    <h3 class="wpstg-banner-title">
+                        <?php echo esc_html($title); ?>
+                    </h3>
+
+                    <?php if (!empty($desc)) : ?>
+                        <p class="wpstg-banner-description">
+                            <?php echo wp_kses_post($desc); ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <?php if (!empty($buttonText)) : ?>
+                        <?php
+                        $url = !empty($buttonUrl) ? esc_url($buttonUrl) : '#';
+                        ?>
+                        <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button">
+                            <?php echo esc_html($buttonText); ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <?php
     }
 
     private function getRestUrl(): string

@@ -260,7 +260,10 @@ class GMP extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      */
     public function extendedGCD(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\GMP $n)
     {
-        \extract(\gmp_gcdext($this->value, $n->value));
+        $extended = \gmp_gcdext($this->value, $n->value);
+        $g = $extended['g'];
+        $s = $extended['s'];
+        $t = $extended['t'];
         return ['gcd' => $this->normalize(new self($g)), 'x' => $this->normalize(new self($s)), 'y' => $this->normalize(new self($t))];
     }
     /**

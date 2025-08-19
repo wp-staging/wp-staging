@@ -44,8 +44,9 @@ class Listing extends BaseListing
     {
         $data = parent::getCommonRenderData();
         return array_merge($data, [
-            'isProVersion' => false,
-            'isValidLicense' => false,
+            'isProVersion'      => false,
+            'isValidLicense'    => false,
+            'isPersonalLicense' => false,
         ]);
     }
 }

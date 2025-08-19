@@ -47,14 +47,14 @@ class Twofish extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
     /**
      * The mcrypt specific name of the cipher
      *
-     * @see \phpseclib3\Crypt\Common\SymmetricKey::cipher_name_mcrypt
+     * @see Common\SymmetricKey::cipher_name_mcrypt
      * @var string
      */
     protected $cipher_name_mcrypt = 'twofish';
     /**
      * Optimizing value while CFB-encrypting
      *
-     * @see \phpseclib3\Crypt\Common\SymmetricKey::cfb_init_len
+     * @see Common\SymmetricKey::cfb_init_len
      * @var int
      */
     protected $cfb_init_len = 800;
@@ -208,7 +208,7 @@ class Twofish extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
     /**
      * Setup the key (expansion)
      *
-     * @see \phpseclib3\Crypt\Common\SymmetricKey::_setupKey()
+     * @see Common\SymmetricKey::_setupKey()
      */
     protected function setupKey()
     {
@@ -402,7 +402,7 @@ class Twofish extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
     /**
      * Setup the performance-optimized function for de/encrypt()
      *
-     * @see \phpseclib3\Crypt\Common\SymmetricKey::_setupInlineCrypt()
+     * @see Common\SymmetricKey::_setupInlineCrypt()
      */
     protected function setupInlineCrypt()
     {

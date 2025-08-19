@@ -3,7 +3,6 @@
 namespace WPStaging\Backup;
 
 use WPStaging\Backup\Ajax\Backup;
-use WPStaging\Backup\Ajax\Cancel;
 use WPStaging\Backup\Ajax\Delete;
 use WPStaging\Backup\Ajax\Edit;
 use WPStaging\Backup\Ajax\FileInfo;
@@ -11,7 +10,6 @@ use WPStaging\Backup\Ajax\Parts;
 use WPStaging\Backup\Ajax\BackupSizeCalculator;
 use WPStaging\Backup\Ajax\Restore;
 use WPStaging\Backup\Ajax\ScheduleList;
-use WPStaging\Backup\Ajax\Status;
 use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup;
 use WPStaging\Backup\Ajax\BackupDownloader;
@@ -90,7 +88,6 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backups--delete', $this->container->callback(Delete::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--edit', $this->container->callback(Edit::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--parts', $this->container->callback(Parts::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg--backups--status', $this->container->callback(Status::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--restore--file-info', $this->container->callback(FileInfo::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--prepare-upload', $this->container->callback(Upload::class, 'ajaxPrepareUpload')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--restore--file-upload', $this->container->callback(Upload::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -104,7 +101,6 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         // Nopriv
         add_action('wp_ajax_nopriv_wpstg--backups--restore', $this->container->callback(Restore::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_nopriv_wpstg--backups--status', $this->container->callback(Status::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         add_action(Cron::ACTION_CREATE_CRON_BACKUP, $this->container->callback(BackupScheduler::class, 'createCronBackup'), 10, 1);
         add_action('wp_ajax_wpstg--backups-dismiss-schedule', $this->container->callback(BackupScheduler::class, 'dismissSchedule'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked

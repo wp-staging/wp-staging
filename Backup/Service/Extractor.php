@@ -7,23 +7,23 @@ use OutOfRangeException;
 use RuntimeException;
 use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\BackupHeader;
-use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Backup\BackupValidator;
+use WPStaging\Backup\Exceptions\EmptyChunkException;
+use WPStaging\Backup\FileHeader;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\FileValidationException;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
+use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Traits\RestoreFileExclusionTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
-use WPStaging\Backup\BackupValidator;
-use WPStaging\Backup\Exceptions\EmptyChunkException;
-use WPStaging\Framework\Job\Exception\FileValidationException;
-use WPStaging\Backup\FileHeader;
-use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Framework\Filesystem\Permissions;
 
 class Extractor extends AbstractExtractor
 {
@@ -331,6 +331,7 @@ class Extractor extends AbstractExtractor
 
             $readBytesAfter = $this->wpstgFile->ftell() - $readBytesBefore;
 
+            $this->extractingFile->addReadBytes($readBytesAfter);
             $this->extractingFile->addWrittenBytes($writtenBytes);
         }
 

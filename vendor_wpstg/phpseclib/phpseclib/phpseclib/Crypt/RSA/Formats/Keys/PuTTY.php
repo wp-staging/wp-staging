@@ -51,7 +51,10 @@ abstract class PuTTY extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
         if (!isset($components['private'])) {
             return $components;
         }
-        \extract($components);
+        $type = $components['type'];
+        $comment = $components['comment'];
+        $public = $components['public'];
+        $private = $components['private'];
         unset($components['public'], $components['private']);
         $isPublicKey = \false;
         $result = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('ii', $public);

@@ -5,6 +5,7 @@ namespace WPStaging\Staging;
 use WPStaging\Frontend\LoginNotice;
 use WPStaging\Framework\Notices\DisabledItemsNotice;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\ThirdParty\WordFence;
 use WPStaging\Framework\ThirdParty\ThirdPartyCacheHandler;
@@ -55,6 +56,9 @@ class FirstRun
     {
         // Show one time login notice on staging site.
         (new LoginNotice())->setTransient();
+
+        // lets delete the transient related to rest url
+        delete_transient(Assets::TRANSIENT_REST_URL);
 
         // Enable the notice which show what WP Staging Disabled on staging site admin.
         WPStaging::make(DisabledItemsNotice::class)->enable();

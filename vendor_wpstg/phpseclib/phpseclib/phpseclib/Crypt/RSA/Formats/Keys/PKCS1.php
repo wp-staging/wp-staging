@@ -79,6 +79,19 @@ abstract class PKCS1 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
         if (!isset($components['isPublicKey'])) {
             $components['isPublicKey'] = \true;
         }
+        $components = $components + $key;
+        foreach ($components as &$val) {
+            if ($val instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger) {
+                $val = self::makePositive($val);
+            }
+            if (\is_array($val)) {
+                foreach ($val as &$subval) {
+                    if ($subval instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger) {
+                        $subval = self::makePositive($subval);
+                    }
+                }
+            }
+        }
         return $components + $key;
     }
     /**
@@ -116,5 +129,15 @@ abstract class PKCS1 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
         $key = ['modulus' => $n, 'publicExponent' => $e];
         $key = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($key, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\RSAPublicKey::MAP);
         return self::wrapPublicKey($key, 'RSA');
+    }
+    /**
+     * Negative numbers make no sense in RSA so convert them to positive
+     *
+     * @param BigInteger $x
+     * @return string
+     */
+    private static function makePositive(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
+    {
+        return $x->isNegative() ? new \WPStaging\Vendor\phpseclib3\Math\BigInteger($x->toBytes(\true), 256) : $x;
     }
 }

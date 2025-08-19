@@ -217,7 +217,7 @@ class Montgomery extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
      *
      *   x=X/Z
      *
-     * @return \phpseclib3\Math\PrimeField\Integer[]
+     * @return PrimeInteger[]
      */
     public function convertToInternal(array $p)
     {
@@ -233,7 +233,7 @@ class Montgomery extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
     /**
      * Returns the affine point
      *
-     * @return \phpseclib3\Math\PrimeField\Integer[]
+     * @return PrimeInteger[]
      */
     public function convertToAffine(array $p)
     {

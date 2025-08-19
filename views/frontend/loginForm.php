@@ -21,6 +21,17 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
                 <p><?php echo esc_html($notice); ?></p>
             </div>
         <?php } ?>
+        <?php if (get_transient('wpstg_auto_login_failed')) : ?>
+            <p class="error-msg">
+                <?php
+                // @see \WPStaging\Pro\Staging\AutoLogin\LoginAuthenticator::TRANSIENT_AUTO_LOGIN_FAILED
+                delete_transient('wpstg_auto_login_failed');
+                // @see \WPStaging\Pro\Staging\AutoLogin\LoginAuthenticator::TRANSIENT_AUTO_LOGIN_FAILED_REASON
+                $failedReason = get_transient('wpstg_auto_login_failed_reason');
+                echo esc_html($failedReason);
+                ?>
+            </p>
+        <?php endif; ?>
         <div class="form-group login-username">
             <label for="<?php echo esc_attr($args['id_username']); ?>"><?php echo esc_html($args['label_username']); ?></label>
             <input type="text" name="wpstg-username" id="<?php echo esc_attr($args['id_username']); ?>" class="input form-control" value="<?php echo esc_attr($args['value_username']); ?>" size="20" />

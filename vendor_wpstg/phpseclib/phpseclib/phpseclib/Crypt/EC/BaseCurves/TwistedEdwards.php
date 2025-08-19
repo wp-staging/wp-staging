@@ -153,7 +153,7 @@ class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Ba
     /**
      * Returns the affine point
      *
-     * @return PrimeField\Integer[]
+     * @return PrimeInteger[]
      */
     public function convertToAffine(array $p)
     {

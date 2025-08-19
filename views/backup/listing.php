@@ -16,6 +16,9 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
  * @var string                      $urlAssets
  * @var Directory                   $directory
  * @var bool                        $hasSchedule
+ * @var bool                        $isProVersion
+ * @var bool                        $isValidLicense
+ * @var bool                        $isPersonalLicense
  */
 
 WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();

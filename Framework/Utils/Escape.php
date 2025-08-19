@@ -109,6 +109,12 @@ class Escape
             ],
             'defs' => [
                 'clipPath' => []
+            ],
+            'ellipse' => [
+                'cx'     => [],
+                'cy'     => [],
+                'rx'     => [],
+                'ry'     => [],
             ]
         ];
     }

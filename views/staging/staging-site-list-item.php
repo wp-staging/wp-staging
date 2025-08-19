@@ -16,12 +16,12 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 <div id="<?php echo esc_attr($stagingSiteItem->directoryName); ?>" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" class="wpstg-clone">
     <div class="wpstg-clone-header">
-        <a href="<?php echo esc_url($stagingSiteItem->url) ?>" class="wpstg-clone-title" target="_blank">
+        <a href="javascript:void(0);" class="wpstg-clone-title wpstg-open-staging-site" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>">
             <?php echo esc_html($stagingSiteItem->siteName); ?>
         </a>
         <?php if (is_multisite()) : ?>
         <div class="wpstg-clone-labels">
-            <span class="wpstg-clone-label"><?php echo $stagingSiteItem->isNetworkClone ? esc_html__('Network Site', 'wp-staging') : esc_html__('Single Site', 'wp-staging') ?></span>
+            <span class="wpstg-clone-label"><?php echo $stagingSiteItem->isNetworkClone ? esc_html__('Network Site', 'wp-staging') : esc_html__('Single Site', 'wp-staging'); ?></span>
         </div>
         <?php endif; ?>
         <div class="wpstg-clone-actions">
@@ -32,25 +32,25 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
                 </a>
                 <div class="wpstg-dropdown-menu">
                     <?php do_action('wpstg.views.single_overview.before_existing_clones_actions', $stagingSiteItem->cloneId, $stagingSite->toArray(), $license); ?>
-                    <a href="<?php echo esc_url($stagingSiteItem->url) ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo esc_html__("Open the staging site in a new tab", "wp-staging") ?>">
+                    <a href="javascript:void(0)" class="wpstg-open-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>" title="<?php echo esc_html__("Open the staging site in a new tab", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('open-site'); ?>
                         </div>
                         <?php esc_html_e("Open", "wp-staging"); ?>
                     </a>
-                    <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId) ?>" data-url="<?php echo esc_url($stagingSiteItem->url) ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
+                    <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('update-site'); ?>
                         </div>
                         <?php esc_html_e("Update", "wp-staging"); ?>
                     </a>
-                    <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId) ?>" data-network="<?php echo is_multisite() && !empty($stagingSiteitem->isNetworkClone)  ? 'yes' : 'no' ?>" title="<?php echo esc_attr__("Replace the selected staging site with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">
+                    <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-network="<?php echo is_multisite() && !empty($stagingSiteItem->isNetworkClone)  ? 'yes' : 'no'; ?>" title="<?php echo esc_attr__("Replace the selected staging site with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('reset'); ?>
                         </div>
                         <?php esc_html_e("Reset", "wp-staging"); ?>
                     </a>
-                    <a href="#" class="wpstg--delete--staging-site wpstg-clone-action" data-cloneId="<?php echo esc_attr($stagingSiteItem->cloneId) ?>" title="<?php echo esc_html__("Delete the selected staging site. Select specific folders and database tables in the next step.", "wp-staging") ?>" data-name="<?php echo esc_attr($stagingSiteItem->cloneName) ?>">
+                    <a href="#" class="wpstg--delete--staging-site wpstg-clone-action" data-cloneId="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" title="<?php echo esc_html__("Delete the selected staging site. Select specific folders and database tables in the next step.", "wp-staging"); ?>" data-name="<?php echo esc_attr($stagingSiteItem->cloneName); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('trash'); ?>
                         </div>
@@ -60,28 +60,28 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
                     do_action(TemplateEngine::ACTION_AFTER_EXISTING_CLONES, $stagingSiteItem->cloneId, $stagingSite->toArray(), $license);
 
                     if (!$isPro) :?>
-                    <a href="https://wp-staging.com/pro-features/#edit-data" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Edit Data", "wp-staging") ?>">
+                    <a href="https://wp-staging.com/pro-features/#edit-data" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Edit Data", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('edit'); ?>
                         </div>
                         <?php esc_html_e("Edit Data", "wp-staging"); ?>
                         <span>(Pro)</span>
                     </a>
-                    <a href="https://wp-staging.com/pro-features/#push-changes" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Push Changes", "wp-staging") ?>">
+                    <a href="https://wp-staging.com/pro-features/#push-changes" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Push Changes", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('push'); ?>
                         </div>
                         <?php esc_html_e("Push Changes", "wp-staging"); ?>
                         <span>(Pro)</span>
                     </a>
-                    <a href="https://wp-staging.com/pro-features/#share-login-link" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Share Login Link", "wp-staging") ?>">
+                    <a href="https://wp-staging.com/pro-features/#share-login-link" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Share Login Link", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('user-plus'); ?>
                         </div>
                         <?php esc_html_e("Share Login Link", "wp-staging"); ?>
                         <span>(Pro)</span>
                     </a>
-                    <a href="https://wp-staging.com/pro-features/#sync-user-account" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Sync User Account", "wp-staging") ?>">
+                    <a href="https://wp-staging.com/pro-features/#sync-user-account" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Sync User Account", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('sync-user'); ?>
                         </div>
@@ -110,7 +110,7 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
                     "It will not proceed if your browser is not open.\n\n" .
                     "If you have an unstable internet connection and cloning breaks due to that, clone again only the folders wp-admin, wp-includes, and all database tables.\n\n" .
                     "That will not take much time. Then, you can proceed with the wp-content folder that usually needs the most disk space. " .
-                    "If it interrupts again, at least it will not break the existing staging site again, and you can repeat and resume the last operation.", 'wp-staging') ?>">
+                    "If it interrupts again, at least it will not break the existing staging site again, and you can repeat and resume the last operation.", 'wp-staging'); ?>">
                     <?php echo esc_html($stagingSiteItem->status); ?>
                 </span>
             <?php else : ?>
