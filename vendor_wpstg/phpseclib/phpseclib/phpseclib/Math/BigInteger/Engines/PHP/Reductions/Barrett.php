@@ -87,7 +87,9 @@ abstract class Barrett extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engi
                 'm1' => $m1,
             ];
         } else {
-            \extract($cache[self::DATA][$key]);
+            $cacheValues = $cache[self::DATA][$key];
+            $u = $cacheValues['u'];
+            $m1 = $cacheValues['m1'];
         }
         $cutoff = $m_length + ($m_length >> 1);
         $lsd = \array_slice($n, 0, $cutoff);

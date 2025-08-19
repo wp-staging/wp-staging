@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup;
 
+use WPStaging\Backup\Traits\EncodingErrorHandler;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\DataEncoder;
 use WPStaging\Framework\Utils\Version;
@@ -14,6 +15,8 @@ use WPStaging\Framework\Utils\Version;
  */
 class BackupHeader
 {
+    use EncodingErrorHandler;
+
     /** @var string */
     const WPSTG_SQL_BACKUP_DUMP_HEADER = "-- WP Staging SQL Backup Dump\n";
 
@@ -125,6 +128,57 @@ class BackupHeader
         $this->encoder       = $encoder;
         $this->versionUtil   = $versionUtil;
         $this->backupVersion = $this->versionUtil->convertStringFormatToIntFormat(self::BACKUP_VERSION);
+    }
+
+    /**
+     * Log encoding errors for backup header
+     *
+     * @param string $errorMessage The error message from DataEncoder
+     * @return void
+     */
+    private function logBackupHeaderEncodingError(string $errorMessage)
+    {
+        $context = [
+            'backupVersion'          => $this->backupVersion,
+            'filesIndexStartOffset'  => $this->filesIndexStartOffset,
+            'filesIndexEndOffset'    => $this->filesIndexEndOffset,
+            'metadataStartOffset'    => $this->metadataStartOffset,
+            'metadataEndOffset'      => $this->metadataEndOffset,
+        ];
+
+        $this->logEncodingErrorWithContext(
+            $errorMessage,
+            $context,
+            'DataEncoder error in BackupHeader::getHeader(): %s. Using fallback values to continue backup.'
+        );
+    }
+
+    /**
+     * Apply fallback values for backup header properties that might be null
+     *
+     * @return void
+     */
+    private function applyBackupHeaderFallbackValues()
+    {
+        if ($this->backupVersion === null) {
+            $this->backupVersion = $this->versionUtil->convertStringFormatToIntFormat(self::BACKUP_VERSION);
+        }
+
+        if ($this->filesIndexStartOffset === null) {
+            $this->filesIndexStartOffset = 0;
+        }
+
+        if ($this->filesIndexEndOffset === null) {
+            $this->filesIndexEndOffset = 0;
+        }
+
+        if ($this->metadataStartOffset === null) {
+            $this->metadataStartOffset = 0;
+        }
+
+        if ($this->metadataEndOffset === null) {
+            $this->metadataEndOffset = 0;
+        }
     }
 
     /**
@@ -272,10 +326,8 @@ class BackupHeader
 
     public function getHeader(): string
     {
-        return sprintf(
-            '%s%s%s%s',
-            str_pad(self::MAGIC, self::MAGIC_SIZE, "\0", STR_PAD_RIGHT), // let write magic as it is without converting to hex
-            $this->encoder->intArrayToHex(
+        try {
+            $encodedData = $this->encoder->intArrayToHex(
                 self::HEADER_IN_USE_HEX_FORMAT, // 36-bytes of hex data
                 [
                     $this->backupVersion,
@@ -284,7 +336,31 @@ class BackupHeader
                     $this->metadataStartOffset,
                     $this->metadataEndOffset
                 ]
-            ),
+            );
+        } catch (\InvalidArgumentException $e) {
+            // Log the error with context
+            $this->logBackupHeaderEncodingError($e->getMessage());
+
+            // Apply fallback values
+            $this->applyBackupHeaderFallbackValues();
+
+            // Retry with fallback values
+            $encodedData = $this->encoder->intArrayToHex(
+                self::HEADER_IN_USE_HEX_FORMAT,
+                [
+                    $this->backupVersion,
+                    $this->filesIndexStartOffset,
+                    $this->filesIndexEndOffset,
+                    $this->metadataStartOffset,
+                    $this->metadataEndOffset
+                ]
+            );
+        }
+
+        return sprintf(
+            '%s%s%s%s',
+            str_pad(self::MAGIC, self::MAGIC_SIZE, "\0", STR_PAD_RIGHT), // let write magic as it is without converting to hex
+            $encodedData,
             bin2hex(str_pad("", $this->getUnusedBytesSize(), "\0", STR_PAD_RIGHT)),
             self::COPYRIGHT_TEXT // 64-bytes of fixed hex data
         );

@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Traits;
 
 use Exception;
 use RuntimeException;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
@@ -24,6 +25,11 @@ trait FileScanToCacheTrait
      * @var Strings
      */
     protected $strUtils;
+
+    /**
+     * @var Logger
+     */
+    protected $logger;
 
     /**
      * Write contents to a file
@@ -51,8 +57,14 @@ trait FileScanToCacheTrait
      */
     public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH, bool $shouldScanEmptyDirs = true)
     {
-        $filesystem = WPStaging::make(Filesystem::class);
+        if (!is_readable($path)) {
+            $this->log(sprintf('Skipping! The path "%s" is not readable.', $path), Logger::TYPE_WARNING);
+            return 0;
+        }
+
+        $filesystem       = WPStaging::make(Filesystem::class);
         $normalizedWpRoot = $filesystem->normalizePath($wpRootPath);
+
         if (is_file($path)) {
             $file = str_replace($normalizedWpRoot, '', $filesystem->normalizePath($path, true));
             $file = $this->replaceEOLsWithPlaceholders($file) . PHP_EOL;
@@ -64,11 +76,6 @@ trait FileScanToCacheTrait
         }
 
         $filesWrittenToCache = 0;
-
-        if (!file_exists($path)) {
-            return 0;
-        }
-
         try {
             $iterator = (new FilterableDirectoryIterator())
                             ->setDirectory($filesystem->trailingSlashit($path))
@@ -148,5 +155,20 @@ trait FileScanToCacheTrait
     protected function setPathIdentifier($pathIdentifier)
     {
         $this->pathIdentifier = $pathIdentifier;
+    }
+
+    /**
+     * @param string $msg
+     * @param string $type
+     *
+     * @return void
+     */
+    public function log($msg, $type = Logger::TYPE_INFO)
+    {
+        if ($this->logger === null) {
+            $this->logger = WPStaging::make(Logger::class);
+        }
+
+        $this->logger->add($msg, $type);
     }
 }

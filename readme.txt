@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.8
-Stable tag: 4.2.1
+Stable tag: 4.3.0
 Requires PHP: 7.0
 
 Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
@@ -286,6 +286,32 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.3.0 =
+* New: Opening a staging site using `Action` dropdown > `Open`, now automatically login to staging site using one time login token. Existing (old) staging sites must be updated to use this feature. (Pro) #3636
+* New: Implement new log level "Notice" and improve log filtering with multi-select checkboxes. Users can now see important notices that are not warnings or errors, and filter multiple log types simultaneously instead of being limited to single-type filtering. #4506
+* New: Add new `Personal License` plan. (Pro) #4420
+* Enh: Add backup cancel button for server side events (SSE) based realtime background logger for backup foreground jobs as well. #4472
+* Enh: Remove Amazon SDK and create a new custom S3 Implementation that is faster and smaller than the official Amazon SDK. (Pro) #4468
+* Fix: Unable to create compressed large backup. Extraction and validation of large database fails if it couldn't be completed in a single request. #4466
+* Fix: Cleanup staging site cache file on cancel. Fix browser console errors on staging site cancel. #4456
+* Fix: Backup cancel process doesn't cleanup temp files extracted during backup restore. #4512
+* Fix: Prevent fatal TypeError crashes during backup operations when null values are encountered in file metadata. #4330
+* Fix: Delete rest url transient after staging site creation to make background logger work on staging sites. #4473
+* Fix: Invalid ID in HTML of listed remote backup elements. #4490
+* Fix: Background logger keeps on running after deleting a large staging site. #4411
+* Fix: Escape invalid HTML entities to prevent `DOMDocument` parse errors during news feed validation. #4475
+* Fix: Refresh `Last Saved` date after saving storage settings. (Pro) #4486
+* Fix: Exclude `wp-content/wp-staging` folder by default while performing staging push. (Pro) #4477
+* Fix: Typo in backup and restore task – "Tmp" should be "Temp". #4408
+* Fix: Cleanup temporary validation files after backup creation and add a routine to clean the temporary validation directory. #4407
+* Fix: Prevent staging site creation from hanging when theme folder has no access permissions. #4451
+* Fix: Change "Twitter" to "X" in notification messages and social links. #4436
+* UX: Remove admin message "diagnostic information". #4505
+* UX: Use alert SVG icon for rendering alert messages. #4402
+* UX: Make sure listed local backup and remote backup containers have the same height. #4487
+* UX: Improve multi-part backup download modal for better usability and clarity. #4410
+* Dev: Optimize and fix LLM instructions and setup steps for faster build process. #4496
 
 = 4.2.1 =
 * New: Compatible up to WordPress 6.8.2.

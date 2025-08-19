@@ -31,7 +31,7 @@ abstract class BuiltIn extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engi
     protected static function powModHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
     {
         $temp = new \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath();
-        $temp->value = \bcpowmod($x->value, $e->value, $n->value);
+        $temp->value = \bcpowmod($x->value, $e->value, $n->value, 0);
         return $x->normalize($temp);
     }
 }

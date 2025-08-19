@@ -210,18 +210,6 @@ $wpstgRestorePageUrl = add_query_arg([
 
     <div class="wpstg-staging-info">
         <ul>
-            <?php if ($isCorrupt) : ?>
-                <li class="wpstg-corrupted-backup wpstg--red">
-                    <div class="wpstg-exclamation">!</div>
-                    <strong><?php esc_html_e('This backup file is corrupt. Please create a new backup!', 'wp-staging'); ?></strong><br/>
-                </li>
-            <?php endif; ?>
-            <?php if ($isUnsupported && !$isCorrupt) : ?>
-                <li class="wpstg-unsupported-backup wpstg--red">
-                    <div class="wpstg-exclamation">!</div>
-                    <strong><?php esc_html_e('This backup was generated on a beta version of WP STAGING and cannot be restored with the current version.', 'wp-staging'); ?></strong><br/>
-                </li>
-            <?php endif; ?>
             <?php if ($createdAt) : ?>
                 <li>
                     <strong><?php $isCorrupt ? esc_html_e('Last modified:', 'wp-staging') : esc_html_e('Created on:', 'wp-staging'); ?></strong>
@@ -247,20 +235,6 @@ $wpstgRestorePageUrl = add_query_arg([
                 <strong><?php esc_html_e('Size: ', 'wp-staging'); ?></strong>
                 <?php echo $requires64Bit ? '<b class="wpstg--red"> 2GB+ </b>' : esc_html($size); ?>
             </li>
-            <?php if ($backup->isZlibCompressed) : ?>
-                <?php if (!$compressor->supportsCompression()) : ?>
-                    <li class="wpstg-corrupted-backup wpstg--red">
-                        <div class="wpstg-exclamation">!</div>
-                        <!-- todo: add link to compression support article. -->
-                        <strong><?php esc_html_e('This backup is compressed, but your server does not support compression.', 'wp-staging') ?> Click <a href="https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/" target="_blank">here</a> to learn how to fix it.</strong><br/>
-                    </li>
-                <?php elseif ($compressor->supportsCompression() && !$compressor->canUseCompression()) : ?>
-                    <li class="wpstg-corrupted-backup wpstg--red">
-                        <div class="wpstg-exclamation">!</div>
-                        <strong><?php esc_html_e('This backup is compressed, you need WP STAGING Pro to Restore it.', 'wp-staging') ?> Click <a href="https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging" target="_blank">here</a> to buy WP STAGING Pro, or generate an uncompressed backup.</strong><br/>
-                    </li>
-                <?php endif; ?>
-            <?php endif; ?>
             <?php if (!$isCorrupt) : ?>
                 <li class="single-backup-includes">
                     <strong><?php esc_html_e('Contains: ', 'wp-staging'); ?></strong>
@@ -292,19 +266,52 @@ $wpstgRestorePageUrl = add_query_arg([
                     <?php include(__DIR__ . '/partials/invalid-backup.php'); ?>
                 </div>
             <?php endif; ?>
-            <?php if ($requires64Bit) : ?>
-                <li class="wpstg-corrupted-backup wpstg--red">
-                    <div class="wpstg-corrupted-backup-icon"></div>
-                    <?php $extraMessage = $isContaining2GbFile ? esc_html__('This backup contains a file that exceeds 2GB', 'wp-staging') : esc_html__('This backup exceeds 2GB', 'wp-staging'); ?>
-                    <strong><?php echo sprintf(esc_html__('This server uses a 32-bit version of PHP, which cannot read files larger than 2GB. %s and therefore the backup file cannot be extracted. To restore this backup, use a 64-bit version of PHP. Contact WP Staging support for assistance in extracting this backup on this server.', 'wp-staging'), esc_html($extraMessage)); ?></strong><br/>
-                </li>
-            <?php endif; ?>
-            <?php if (!$isMultipartBackup && !$isValidFileIndex && !$requires64Bit) : ?>
-                <li class="wpstg-corrupted-backup wpstg--red">
-                    <div class="wpstg-corrupted-backup-icon"></div>
-                    <strong><?php echo esc_html($indexFileError); ?></strong><br/>
-                </li>
-            <?php endif; ?>
+            <?php
+            if ($requires64Bit) {
+                $title        = __('Incompatible PHP Version', 'wp-staging');
+                $extraMessage = $isContaining2GbFile ? __('This backup contains a file that exceeds 2GB', 'wp-staging') : __('This backup exceeds 2GB', 'wp-staging');
+                $description  = sprintf(
+                    __('This server uses a 32-bit version of PHP, which cannot read files larger than 2GB. %s and therefore the backup file cannot be extracted. To restore this backup, use a 64-bit version of PHP. Contact WP STAGING support for assistance in extracting this backup on this server.', 'wp-staging'),
+                    $extraMessage
+                );
+
+                $this->getAssets()->renderAlertMessage($title, $description);
+            }
+
+            if (!$isMultipartBackup && !$isValidFileIndex && !$requires64Bit) {
+                $title = __('Corrupted Backup', 'wp-staging');
+                $this->getAssets()->renderAlertMessage($title, $indexFileError);
+            }
+
+            if ($isCorrupt) {
+                $title       = __('Corrupted Backup', 'wp-staging');
+                $description = __('This backup file is corrupt. Please create a new backup!', 'wp-staging');
+                $this->getAssets()->renderAlertMessage($title, $description);
+            }
+
+            if ($isUnsupported && !$isCorrupt) {
+                $title       = __('Backup Restore Requires Upgrade', 'wp-staging');
+                $description = __('This backup was generated on a beta version of WP STAGING and cannot be restored with the current version.', 'wp-staging');
+                $this->getAssets()->renderAlertMessage($title, $description);
+            }
+
+            if ($backup->isZlibCompressed && !$compressor->supportsCompression()) {
+                $title       = __('Compression Not Supported', 'wp-staging');
+                $description = sprintf(
+                    __('This backup is compressed, but your server does not support compression. Click %s to learn how to create a compressed backup.', 'wp-staging'),
+                    '<a href="https://wp-staging.com/how-to-create-compressed-backup-in-wordpress/" target="_blank" rel="noopener">' . __('here', 'wp-staging') . '</a>'
+                );
+                $buttonText  = __('Learn how to fix it', 'wp-staging');
+                $buttonUrl   = 'https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/';
+                $this->getAssets()->renderAlertMessage($title, $description, $buttonText, $buttonUrl);
+            } elseif ($backup->isZlibCompressed && $compressor->supportsCompression() && !$compressor->canUseCompression()) {
+                $title       = __('Backup Restore Requires Upgrade', 'wp-staging');
+                $description = __('This backup is compressed, you need WP STAGING Pro to Restore it or generate an uncompressed backup.', 'wp-staging');
+                $buttonText  = __('Buy WP STAGING Pro', 'wp-staging');
+                $buttonUrl   = 'https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging';
+                $this->getAssets()->renderAlertMessage($title, $description, $buttonText, $buttonUrl);
+            }
+            ?>
         </ul>
     </div>
 </li>

@@ -168,39 +168,89 @@ final class WPStaging
                 return;
             }
 
-            set_transient('wpstg.run_daily', true, HOUR_IN_SECONDS);
+            set_transient('wpstg.run_daily', true, 24 * HOUR_IN_SECONDS);
 
-            $sseDirectory = WP_CONTENT_DIR . '/wp-staging/sse';
-            $maxAge       = HOUR_IN_SECONDS;
-            $now          = time();
+            $maxAge = HOUR_IN_SECONDS; // Lets delete files older than 1 hour
+            $now    = time();
 
-            if (!is_dir($sseDirectory)) {
-                return;
-            }
+            // Lets delete sse files older than 1 hour
+            $this->cleanupDirectory(WP_CONTENT_DIR . '/wp-staging/sse', $maxAge, $now, $scanChildren = false);
 
-            $files = scandir($sseDirectory);
-            foreach ($files as $file) {
-                if ($file === '.' || $file === '..') {
-                    continue;
-                }
-
-                if (strpos($file, '.sse.cache.php') === false) {
-                    continue;
-                }
-
-                $filePath = trailingslashit($sseDirectory) . $file;
-                if (!is_file($filePath)) {
-                    continue;
-                }
-
-                $fileAge = $now - filemtime($filePath);
-                if ($fileAge < $maxAge) {
-                    continue;
-                }
-
-                @unlink($filePath);
-            }
+            // Lets also delete validation files older than 1 hour
+            $this->cleanupDirectory(WP_CONTENT_DIR . '/wp-staging/tmp/restore/validate', $maxAge, $now);
         }, 1);
+    }
+
+    /**
+     * Recursively clean up a directory by deleting files older than a specified age and removing empty folders.
+     *
+     * This method scans the specified directory and optionally its subdirectories to delete files that exceed
+     * the maximum age. Empty directories are also removed after their contents are processed.
+     *
+     * @param string $directory The directory to clean up. Must be a valid directory path.
+     * @param int $maxAge Maximum age in seconds for files to keep. Files older than this will be deleted.
+     * @param int $now Current timestamp, used to calculate the age of files.
+     * @param bool $scanChildren If true, the method will recursively scan and clean subdirectories. If false,
+     *                           only the specified directory will be processed, and subdirectories will be ignored.
+     *                           Note: If subdirectories are ignored, they will not be deleted even if empty.
+     *
+     * @return void
+     *
+     * @throws RuntimeException If the directory cannot be read or accessed.
+     *
+     * Example usage:
+     * $this->cleanupDirectory('/path/to/directory', 3600, time(), true);
+     * - Deletes files older than 1 hour (3600 seconds) in the specified directory and its subdirectories.
+     * - Removes empty subdirectories after processing.
+     */
+    private function cleanupDirectory(string $directory, int $maxAge, int $now, bool $scanChildren = true)
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $items    = scandir($directory);
+        $hasFiles = false;
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $itemPath = trailingslashit($directory) . $item;
+
+            if (is_file($itemPath)) {
+                $hasFiles = true;
+                $fileAge  = $now - filemtime($itemPath);
+                if ($fileAge >= $maxAge) {
+                    @unlink($itemPath);
+                }
+            } elseif (is_dir($itemPath) && $scanChildren) {
+                // Recursively clean up subdirectories
+                $this->cleanupDirectory($itemPath, $maxAge, $now);
+
+                // Check if the subdirectory is now empty after cleanup
+                $subItems    = scandir($itemPath);
+                $subHasFiles = false;
+                foreach ($subItems as $subItem) {
+                    if ($subItem !== '.' && $subItem !== '..') {
+                        $subHasFiles = true;
+                        break;
+                    }
+                }
+
+                // If subdirectory is empty, delete it
+                if (!$subHasFiles) {
+                    @rmdir($itemPath);
+                } else {
+                    $hasFiles = true; // Parent directory has files
+                }
+            }
+        }
+
+        // If current directory is empty and we are not scanning children directories
+        if (!$hasFiles && $scanChildren) {
+            @rmdir($directory);
+        }
     }
 
     protected function setupDebugLog()

@@ -26,7 +26,8 @@ class NewsfeedValidator
         try {
             // To detect invalid tag
             libxml_use_internal_errors(true);
-
+            // Prevent htmlParseEntityRef errors
+            $content = $this->htmlEncodeBareAmpersands($content);
             // Validate using DOMDocument
             $dom = new \DOMDocument();
             @$dom->loadHTML($content);
@@ -46,7 +47,6 @@ class NewsfeedValidator
                 // Return true if html5 tags, false otherwise
                 if (preg_match('@Tag\s(.*?)\sinvalid@i', $errObject->message, $matches)) {
                     return $this->isHtml5Tags($matches[1]);
-
                 // Return true if tag in exclude list
                 } elseif (preg_match('@Unexpected end tag :\s([a-z]+)@i', $errObject->message, $matches)) {
                     return $this->isAllowInvalidEndTag($matches[1]);
@@ -61,6 +61,18 @@ class NewsfeedValidator
 
         // Return true if DOMDocument failed
         return true;
+    }
+
+    /**
+     * Convert ampersand into valid HTML that might cause htmlParseEntityRef errors
+     * @param string $content
+     * @return string
+     */
+    public function htmlEncodeBareAmpersands(string $content): string
+    {
+        return preg_replace_callback('/&(?!(?:#(?:[0-9]+|x[0-9a-fA-F]+)|[a-zA-Z][a-zA-Z0-9]*);)/', function ($matches) {
+            return '&amp;';
+        }, $content);
     }
 
     /**

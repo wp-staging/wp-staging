@@ -71,6 +71,11 @@ abstract class AbstractJob implements ShutdownableInterface
 
     protected $maxRetries = 10;
 
+    /**
+     * @var bool
+     */
+    protected $isCancelJob = false;
+
     public function __construct(
         Cache $jobDataCache,
         JobDataDto $jobDataDto,
@@ -174,63 +179,32 @@ abstract class AbstractJob implements ShutdownableInterface
             // Check if the last request bailed with a Disk Write failure flag.
             $this->diskFullCheck->hasDiskWriteTestFailed();
         } catch (DiskNotWritableException $e) {
-            $response = new TaskResponseDto();
-            $response->setIsRunning(false);
-            $response->setJobStatus('JOB_FAIL');
-            $response->addMessage([
-                'type' => 'critical',
-                'date' => $this->getFormattedDate(),
-                'message' => $e->getMessage(),
-            ]);
-
             $this->jobDataCache->delete();
 
-            return $response;
+            return $this->getJobFailResponse($e->getMessage());
+        }
+
+        if ($this->getIsCancelled()) {
+            $this->jobDataCache->delete();
+
+            return $this->getJobCancelResponse();
         }
 
         try {
             try {
                 $this->prepare();
             } catch (TaskHealthException $e) {
-                $response = new TaskResponseDto();
-
                 if ($e->getCode() === TaskHealthException::CODE_TASK_FAILED_TOO_MANY_TIMES) {
-                    // Signal to JavaScript that this Job failed if no further requests should be made.
-                    $response->setIsRunning(false);
-                    $response->setJobStatus('JOB_FAIL');
-                    $response->addMessage([
-                        'type' => 'critical',
-                        'date' => $this->getFormattedDate(),
-                        'message' => $e->getMessage(),
-                    ]);
-
                     $this->jobDataCache->delete();
+
+                    return $this->getJobFailResponse($e->getMessage());
                 } else {
-                    $response->setIsRunning(true);
-                    $response->setJobStatus('JOB_RETRY');
-                    $response->addMessage([
-                        'type' => 'warning',
-                        'date' => $this->getFormattedDate(),
-                        'message' => $e->getMessage(),
-                    ]);
+                    return $this->getJobRetryResponse($e->getMessage());
                 }
-
-                return $response;
             } catch (RuntimeException $ex) {
-                $response = new TaskResponseDto();
-
-                $response->setIsRunning(false);
-                $response->setJobStatus('JOB_FAIL');
-
-                $response->addMessage([
-                    'type' => 'critical',
-                    'date' => $this->getFormattedDate(),
-                    'message' => $ex->getMessage(),
-                ]);
-
                 $this->jobDataCache->delete();
 
-                return $response;
+                return $this->getJobFailResponse($ex->getMessage());
             }
 
             $this->processLock->lockProcess();
@@ -255,6 +229,12 @@ abstract class AbstractJob implements ShutdownableInterface
 
             $this->removeMemoryExhaustErrorTmpFile();
 
+            if ($this->getIsCancelled()) {
+                $this->jobDataCache->delete();
+
+                return $this->getJobCancelResponse();
+            }
+
             return $response;
         } catch (DiskNotWritableException $e) {
             /**
@@ -263,16 +243,7 @@ abstract class AbstractJob implements ShutdownableInterface
              * @see DiskWriteCheck::testDiskIsWriteable()
              * @see DiskWriteCheck::hasDiskWriteTestFailed()
              */
-            $response = new TaskResponseDto();
-            $response->setIsRunning(false);
-            $response->setJobStatus('JOB_RETRY');
-            $response->addMessage([
-                'type' => 'warning',
-                'date' => $this->getFormattedDate(),
-                'message' => $e->getMessage(),
-            ]);
-
-            return $response;
+            return $this->getJobRetryResponse($e->getMessage());
         }
     }
 
@@ -307,6 +278,20 @@ abstract class AbstractJob implements ShutdownableInterface
     public function setJobDataDto($jobDataDto)
     {
         $this->jobDataDto = $jobDataDto;
+    }
+
+    public function getIsCancelled(): bool
+    {
+        if ($this->isCancelJob) {
+            return false;
+        }
+
+        try {
+            return $this->jobTransientCache->getJobStatus() === JobTransientCache::STATUS_CANCELLED;
+        } catch (\Throwable $e) {
+            // If the job transient cache is not set, we assume the job is not cancelled.
+            return false;
+        }
     }
 
     /**
@@ -493,6 +478,48 @@ abstract class AbstractJob implements ShutdownableInterface
     protected function addTasks(array $tasks = [])
     {
         $this->jobDataDto->setTaskQueue($tasks);
+    }
+
+    protected function getJobCancelResponse(): TaskResponseDto
+    {
+        $response = new TaskResponseDto();
+        $response->setIsRunning(false);
+        $response->setJobStatus('JOB_CANCEL');
+        $response->addMessage([
+            'type' => 'critical',
+            'date' => $this->getFormattedDate(),
+            'message' => esc_html__('Job is cancelled', 'wp-staging'),
+        ]);
+
+        return $response;
+    }
+
+    protected function getJobFailResponse(string $message): TaskResponseDto
+    {
+        $response = new TaskResponseDto();
+        $response->setIsRunning(false);
+        $response->setJobStatus('JOB_FAIL');
+        $response->addMessage([
+            'type' => 'critical',
+            'date' => $this->getFormattedDate(),
+            'message' => esc_html($message, 'wp-staging'),
+        ]);
+
+        return $response;
+    }
+
+    protected function getJobRetryResponse(string $message): TaskResponseDto
+    {
+        $response = new TaskResponseDto();
+        $response->setIsRunning(true);
+        $response->setJobStatus('JOB_RETRY');
+        $response->addMessage([
+            'type' => 'warning',
+            'date' => $this->getFormattedDate(),
+            'message' => esc_html($message, 'wp-staging'),
+        ]);
+
+        return $response;
     }
 
     /**

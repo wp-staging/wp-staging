@@ -324,7 +324,9 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
                     if (!$temp) {
                         throw new \RuntimeException('Unable to decode BER');
                     }
-                    \extract(\WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($temp[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PBEParameter::MAP));
+                    $map = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($temp[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PBEParameter::MAP);
+                    $salt = $map['salt'];
+                    $iterationCount = $map['iterationCount'];
                     $iterationCount = (int) $iterationCount->toString();
                     $cipher->setPassword($password, $kdf, $hash, $salt, $iterationCount);
                     $key = $cipher->decrypt($decrypted['encryptedData']);
@@ -340,7 +342,8 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
                         throw new \RuntimeException('Unable to decode BER');
                     }
                     $temp = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($temp[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PBES2params::MAP);
-                    \extract($temp);
+                    $keyDerivationFunc = $temp['keyDerivationFunc'];
+                    $encryptionScheme = $temp['encryptionScheme'];
                     $cipher = self::getPBES2EncryptionObject($encryptionScheme['algorithm']);
                     $meta['meta']['cipher'] = $encryptionScheme['algorithm'];
                     $temp = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($decrypted['encryptionAlgorithm']['parameters']);
@@ -348,7 +351,8 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
                         throw new \RuntimeException('Unable to decode BER');
                     }
                     $temp = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($temp[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PBES2params::MAP);
-                    \extract($temp);
+                    $keyDerivationFunc = $temp['keyDerivationFunc'];
+                    $encryptionScheme = $temp['encryptionScheme'];
                     if (!$cipher instanceof \WPStaging\Vendor\phpseclib3\Crypt\RC2) {
                         $cipher->setIV($encryptionScheme['parameters']['octetString']);
                     } else {
@@ -356,7 +360,9 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
                         if (!$temp) {
                             throw new \RuntimeException('Unable to decode BER');
                         }
-                        \extract(\WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($temp[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\RC2CBCParameter::MAP));
+                        $map = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($temp[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\RC2CBCParameter::MAP);
+                        $rc2ParametersVersion = $map['rc2ParametersVersion'];
+                        $iv = $map['iv'];
                         $effectiveKeyLength = (int) $rc2ParametersVersion->toString();
                         switch ($effectiveKeyLength) {
                             case 160:
@@ -379,9 +385,13 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
                             if (!$temp) {
                                 throw new \RuntimeException('Unable to decode BER');
                             }
-                            $prf = ['algorithm' => 'id-hmacWithSHA1'];
                             $params = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($temp[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PBKDF2params::MAP);
-                            \extract($params);
+                            if (empty($params['prf'])) {
+                                $params['prf'] = ['algorithm' => 'id-hmacWithSHA1'];
+                            }
+                            $salt = $params['salt'];
+                            $iterationCount = $params['iterationCount'];
+                            $prf = $params['prf'];
                             $meta['meta']['prf'] = $prf['algorithm'];
                             $hash = \str_replace('-', '/', \substr($prf['algorithm'], 11));
                             $params = [$password, 'pbkdf2', $hash, $salt, (int) $iterationCount->toString()];

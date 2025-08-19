@@ -12,6 +12,9 @@ if (!defined("WPINC")) {
  * @var BackupMetadata $info
  * @var bool[] $excluded
  * @var bool[] $replaced
+ *
+ * This file is called from WPStaging\Backup\Ajax\FileInfo
+ * The variables $excluded and $replaced are defined in the FileInfo.php render() method
  */
 
 $backupParts = [

@@ -560,7 +560,9 @@ class X509
     {
         $extensions =& $this->subArray($root, $path, !empty($this->extensionValues));
         foreach ($this->extensionValues as $id => $data) {
-            \extract($data);
+            $critical = $data['critical'];
+            $replace = $data['replace'];
+            $value = $data['value'];
             $newext = ['extnId' => $id, 'extnValue' => $value, 'critical' => $critical];
             if ($replace) {
                 foreach ($extensions as $key => $value) {
@@ -1671,7 +1673,7 @@ class X509
                 $dn = $this->getDN(self::DN_CANON, $dn);
                 $hash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash('sha1');
                 $hash = $hash->hash($dn);
-                \extract(\unpack('Vhash', $hash));
+                $hash = \unpack('Vhash', $hash)['hash'];
                 return \strtolower(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::bin2hex(\pack('N', $hash)));
         }
         // Default is to return a string.

@@ -319,10 +319,9 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
                 if ($i != $num_primes) {
                     $primes[$i] = \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomPrime($regSize);
                 } else {
-                    \extract(\WPStaging\Vendor\phpseclib3\Math\BigInteger::minMaxBits($bits));
-                    /** @var BigInteger $min
-                     *  @var BigInteger $max
-                     */
+                    $minMax = \WPStaging\Vendor\phpseclib3\Math\BigInteger::minMaxBits($bits);
+                    $min = $minMax['min'];
+                    $max = $minMax['max'];
                     list($min) = $min->divide($n);
                     $min = $min->add(self::$one);
                     list($max) = $max->divide($n);

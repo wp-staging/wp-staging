@@ -672,6 +672,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib3\Net\SSH2
         if ($this->precheck() === \false) {
             return \false;
         }
+        $path = (string) $path;
         if (!$this->canonicalize_paths) {
             if ($this->pwd === \true) {
                 return '.';
@@ -751,6 +752,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib3\Net\SSH2
         if (!$this->precheck()) {
             return \false;
         }
+        $dir = (string) $dir;
         // assume current dir if $dir is empty
         if ($dir === '') {
             $dir = './';
@@ -2898,8 +2900,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib3\Net\SSH2
         if (\strlen($this->packet_buffer) < 4) {
             throw new \RuntimeException('Packet is too small');
         }
-        \extract(\unpack('Nlength', \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($this->packet_buffer, 4)));
-        /** @var integer $length */
+        $length = \unpack('Nlength', \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($this->packet_buffer, 4))['length'];
         $tempLength = $length;
         $tempLength -= \strlen($this->packet_buffer);
         // 256 * 1024 is what SFTP_MAX_MSG_LENGTH is set to in OpenSSH's sftp-common.h
@@ -2923,7 +2924,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib3\Net\SSH2
         $stop = \microtime(\true);
         $this->packet_type = \ord(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($this->packet_buffer));
         if ($this->use_request_id) {
-            \extract(\unpack('Npacket_id', \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($this->packet_buffer, 4)));
+            $packet_id = \unpack('Npacket_id', \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($this->packet_buffer, 4))['packet_id'];
             // remove the request id
             $length -= 5;
             // account for the request id and the packet type

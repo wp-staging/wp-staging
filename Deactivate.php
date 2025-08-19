@@ -84,6 +84,11 @@ class Deactivate
             require_once __DIR__ . '/Backup/BackupScheduler.php';
         }
 
+        // Ensure Cron class is loaded before calling removeBackupSchedulesFromCron
+        if (!class_exists('\WPStaging\Core\Cron\Cron')) {
+            require_once __DIR__ . '/Core/Cron/Cron.php';
+        }
+
         \WPStaging\Backup\BackupScheduler::removeBackupSchedulesFromCron();
     }
 

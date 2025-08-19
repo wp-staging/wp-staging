@@ -57,7 +57,7 @@ class CleanupTmpFilesTask extends AbstractTask
      */
     public static function getTaskTitle(): string
     {
-        return 'Cleaning Up Tmp Files';
+        return esc_html__('Cleaning up temporary files…', 'wp-staging');
     }
 
     /**

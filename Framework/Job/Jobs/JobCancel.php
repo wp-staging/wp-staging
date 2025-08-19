@@ -11,6 +11,11 @@ class JobCancel extends AbstractJob
     /** @var array The array of tasks to execute for this job. Populated at init(). */
     private $tasks = [];
 
+    /**
+     * @var bool
+     */
+    protected $isCancelJob = true;
+
     public static function getJobName()
     {
         return 'cancel';

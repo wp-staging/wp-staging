@@ -11,7 +11,6 @@ use WPStaging\Framework\Analytics\AnalyticsEventDto;
  */
 class Cancel extends Job
 {
-
    /**
     * Start Module
     * @return bool
@@ -27,6 +26,8 @@ class Cancel extends Job
         if (empty($cloneData)) {
             return true;
         }
+
+        $this->deleteCacheFiles();
 
         $deleteJob = WPStaging::make(Delete::class);
         $deleteJob->setIsExternalDb(!$this->isStagingDatabaseSameAsProductionDatabase());
@@ -74,19 +75,17 @@ class Cancel extends Job
               );
     }
 
-   /**
-    * Get json response
-    * return json
-    */
-    private function returnFinish($message = '')
+    /**
+     * @return void
+     */
+    private function deleteCacheFiles()
     {
+        if ($this->cloneOptionCache->isValid()) {
+            $this->cloneOptionCache->delete();
+        }
 
-        wp_die(json_encode([
-          'job'     => 'delete',
-          'status'  => true,
-          'message' => $message,
-          'error'   => false,
-          'delete'  => 'finished'
-        ]));
+        if ($this->filesIndexCache->isValid()) {
+            $this->filesIndexCache->delete();
+        }
     }
 }

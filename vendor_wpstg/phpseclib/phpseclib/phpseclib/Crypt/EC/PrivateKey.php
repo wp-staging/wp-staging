@@ -140,7 +140,9 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
                 if ($shortFormat == 'ASN1') {
                     return $signature;
                 }
-                \extract(\WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Signature\ASN1::load($signature));
+                $loaded = \WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Signature\ASN1::load($signature);
+                $r = $loaded['r'];
+                $s = $loaded['s'];
                 return $this->formatSignature($r, $s);
             }
         }

@@ -3,6 +3,7 @@
 namespace WPStaging\Backup;
 
 use WPStaging\Backup\Interfaces\IndexLineInterface;
+use WPStaging\Backup\Traits\EncodingErrorHandler;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
@@ -13,6 +14,7 @@ class FileHeader implements IndexLineInterface
 {
     use EndOfLinePlaceholderTrait;
     use FormatTrait;
+    use EncodingErrorHandler;
 
     /**
      * Packed Hex Code of `WPSTG`
@@ -43,8 +45,14 @@ class FileHeader implements IndexLineInterface
 
     /**
      * @var string
-     * The File Header format without the start signature to make it compatible with 32bit PHP
-     */
+     * The File Header format without the start signature to make it compatible with 32bit PHP.
+     * This is a format string used with the DataEncoder class to encode/decode binary data. The format represents how integer values are packed into a binary header structure for backup files. Each character pair in the
+     * string represents the bit size of each field in the header (4=32bit, 5=40bit, 2=16bit, etc.), used when encoding arrays of integers into hexadecimal format for the file header.
+     *
+     * Example:
+     * $format = '44552424';
+     * $intArray = [123456789, 123456789, 123456789, 123456789];
+     * $hex = $encoder->intArrayToHex($format, $intArray); */
     const FILE_HEADER_FORMAT = '44552424';
 
     /** @var string */
@@ -105,6 +113,136 @@ class FileHeader implements IndexLineInterface
         $this->encoder        = $encoder;
         $this->pathIdentifier = $pathIdentifier;
         $this->resetHeader();
+    }
+
+    /**
+     * Log encoding errors with context about the file being processed
+     *
+     * @param string $method The method where the error occurred
+     * @param string $errorMessage The error message from DataEncoder
+     * @return void
+     */
+    private function logEncodingError(string $method, string $errorMessage)
+    {
+        $fileName = $this->getIdentifiablePath();
+        $context = [
+            'file'             => $fileName ?: 'unknown',
+            'method'           => $method,
+            'modifiedTime'     => $this->modifiedTime,
+            'crc32'            => $this->crc32,
+            'compressedSize'   => $this->compressedSize,
+            'uncompressedSize' => $this->uncompressedSize,
+            'attributes'       => $this->attributes,
+        ];
+
+        $logMessageTemplate = 'DataEncoder error in %s for file "' . ($fileName ?: 'unknown') .
+                              '": %s. Using fallback values to continue backup.';
+
+        $this->logEncodingErrorWithContext($errorMessage, $context, $logMessageTemplate);
+    }
+
+    /**
+     * Apply fallback values for null properties to allow backup to continue
+     *
+     * @return void
+     */
+    private function applyFallbackValues()
+    {
+        // Apply fallback values for properties that might be null
+        if ($this->modifiedTime === null) {
+            $this->modifiedTime = time(); // Use current time as fallback
+        }
+
+        if ($this->crc32 === null) {
+            $this->crc32 = 0; // Use 0 as fallback for CRC32
+        }
+
+        if ($this->compressedSize === null) {
+            $this->compressedSize = 0; // Use 0 as fallback
+        }
+
+        if ($this->uncompressedSize === null) {
+            $this->uncompressedSize = 0; // Use 0 as fallback
+        }
+
+        if ($this->attributes === null) {
+            $this->attributes = 0; // Use 0 as fallback
+        }
+
+        if ($this->startOffset === null) {
+            $this->startOffset = 0; // Use 0 as fallback
+        }
+
+        // Ensure string lengths are not null
+        if ($this->filePathLength === null) {
+            $this->filePathLength = strlen($this->filePath ?: '');
+        }
+
+        if ($this->fileNameLength === null) {
+            $this->fileNameLength = strlen($this->fileName ?: '');
+        }
+
+        if ($this->extraFieldLength === null) {
+            $this->extraFieldLength = strlen($this->extraField ?: '');
+        }
+    }
+
+    /**
+     * Helper method to safely encode integer array with error handling and fallback values
+     *
+     * @param string $format The format string for encoding
+     * @param array $intArray The array of integers to encode
+     * @param string $method The calling method name for logging
+     * @return string The encoded hex string
+     */
+    private function encodeIntArrayToHex(string $format, array $intArray, string $method): string
+    {
+        try {
+            return $this->encoder->intArrayToHex($format, $intArray);
+        } catch (\InvalidArgumentException $e) {
+            // Log the error with context about which file is causing the issue
+            $this->logEncodingError($method, $e->getMessage());
+
+            // Use fallback values to allow backup to continue
+            $this->applyFallbackValues();
+
+            // Rebuild the array with current property values after fallback application
+            if ($method === 'getFileHeader' || $method === 'getUncompressedFileHeader') {
+                $fallbackArray = [
+                    $this->modifiedTime,
+                    $this->crc32,
+                    $this->compressedSize,
+                    $this->uncompressedSize,
+                    $this->attributes,
+                    $this->filePathLength,
+                    $this->fileNameLength,
+                    $this->extraFieldLength
+                ];
+            } elseif ($method === 'getIndexHeader') {
+                $fallbackArray = [
+                    $this->startOffset,
+                    $this->modifiedTime,
+                    $this->crc32,
+                    $this->compressedSize,
+                    $this->uncompressedSize,
+                    $this->attributes,
+                    $this->filePathLength,
+                    $this->fileNameLength,
+                    $this->extraFieldLength
+                ];
+            } else {
+                // Default fallback - use the original array but replace nulls
+                $fallbackArray = $intArray;
+                foreach ($fallbackArray as $index => $value) {
+                    if ($value === null) {
+                        $fallbackArray[$index] = 0;
+                    }
+                }
+            }
+
+            // Retry with fallback values
+            return $this->encoder->intArrayToHex($format, $fallbackArray);
+        }
     }
 
     /**
@@ -211,7 +349,7 @@ class FileHeader implements IndexLineInterface
 
     public function getFileHeader(): string
     {
-        $fixedHeader = $this->encoder->intArrayToHex(self::FILE_HEADER_FORMAT, [
+        $fixedHeader = $this->encodeIntArrayToHex(self::FILE_HEADER_FORMAT, [
             $this->modifiedTime,
             $this->crc32,
             $this->compressedSize,
@@ -220,7 +358,8 @@ class FileHeader implements IndexLineInterface
             $this->filePathLength,
             $this->fileNameLength,
             $this->extraFieldLength
-        ]);
+        ], 'getFileHeader');
+
         $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
         $fileHeader = $this->replaceEOLsWithPlaceholders($fileHeader);
 
@@ -237,7 +376,7 @@ class FileHeader implements IndexLineInterface
         $oldAttributes = $this->attributes;
         $this->setIsCompressed(false);
 
-        $fixedHeader = $this->encoder->intArrayToHex(self::FILE_HEADER_FORMAT, [
+        $fixedHeader = $this->encodeIntArrayToHex(self::FILE_HEADER_FORMAT, [
             $this->modifiedTime,
             $this->crc32,
             // Usually, it refers to the compressed size, but we need to set it to the uncompressed size because we initially add the file without compression and perform compression later.
@@ -248,7 +387,8 @@ class FileHeader implements IndexLineInterface
             $this->filePathLength,
             $this->fileNameLength,
             $this->extraFieldLength
-        ]);
+        ], 'getUncompressedFileHeader');
+
         $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
         $fileHeader = $this->replaceEOLsWithPlaceholders($fileHeader);
 
@@ -259,7 +399,7 @@ class FileHeader implements IndexLineInterface
 
     public function getIndexHeader(): string
     {
-        $fixedHeader = $this->encoder->intArrayToHex(self::INDEX_HEADER_FORMAT, [
+        $fixedHeader = $this->encodeIntArrayToHex(self::INDEX_HEADER_FORMAT, [
             $this->startOffset,
             $this->modifiedTime,
             $this->crc32,
@@ -269,7 +409,7 @@ class FileHeader implements IndexLineInterface
             $this->filePathLength,
             $this->fileNameLength,
             $this->extraFieldLength
-        ]);
+        ], 'getIndexHeader');
 
         $fixedHeader = $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
         $fixedHeader = $this->replaceEOLsWithPlaceholders($fixedHeader);

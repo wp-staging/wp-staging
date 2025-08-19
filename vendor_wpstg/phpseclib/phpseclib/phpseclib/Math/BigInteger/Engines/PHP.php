@@ -416,6 +416,9 @@ abstract class PHP extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\
             $quotient = new static();
             $remainder = new static();
             $quotient->value = $q;
+            if ($this->is_negative) {
+                $r = $y->value[0] - $r;
+            }
             $remainder->value = [$r];
             $quotient->is_negative = $this->is_negative != $y->is_negative;
             return [$this->normalize($quotient), $this->normalize($remainder)];

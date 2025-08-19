@@ -2,9 +2,12 @@
 
 namespace WPStaging\Framework\Job\Ajax;
 
+use WPStaging\Backup\Job\JobBackupProvider;
+use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Jobs\StagingJobsProvider;
 
 class Status extends AbstractTemplateComponent
@@ -19,6 +22,17 @@ class Status extends AbstractTemplateComponent
         }
 
         $job = $this->getJobInstance();
+        if ($job->getIsCancelled()) {
+            wp_send_json([
+                'status' => "JOB_CANCEL",
+            ]);
+
+            // die is already called by wp_send_json
+            // but we are still calling return here
+            // to ensure no further code is executed
+            return;
+        }
+
         $job->prepare();
 
         wp_send_json($job->getJobDataDto());
@@ -32,6 +46,14 @@ class Status extends AbstractTemplateComponent
         $jobType = trim($this->getJobType());
         if (strpos($jobType, 'Staging_') === 0) {
             return WPStaging::make(StagingJobsProvider::class)->getJob($jobType);
+        }
+
+        if ($jobType === JobTransientCache::JOB_TYPE_BACKUP) {
+            return WPStaging::make(JobBackupProvider::class)->getJob();
+        }
+
+        if ($jobType === JobTransientCache::JOB_TYPE_RESTORE) {
+            return WPStaging::make(JobRestoreProvider::class)->getJob();
         }
 
         throw new \Exception('Not a valid job type!');

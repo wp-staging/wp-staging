@@ -303,6 +303,7 @@ abstract class AbstractExtractor
 
         $this->extractingFile = new FileBeingExtracted($backupFileIndex->getIdentifiablePath(), $extractFolder, $this->pathIdentifier, $backupFileIndex);
         $this->extractingFile->setWrittenBytes($this->extractorDto->getExtractorFileWrittenBytes());
+        $this->extractingFile->setReadBytes($this->extractorDto->getExtractorFileReadBytes());
         $this->extractingFile->setHeaderBytesRemoved($this->extractorDto->getHeaderBytesRemoved());
 
         if ($this->isFileExtracted($backupFileIndex, $this->extractingFile->getBackupPath())) {
@@ -352,6 +353,7 @@ abstract class AbstractExtractor
 
         $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForCurrentFile);
         $this->extractorDto->setExtractorFileWrittenBytes($this->extractingFile->getWrittenBytes());
+        $this->extractorDto->setExtractorFileReadBytes($this->extractingFile->getReadBytes());
 
         return false;
     }
@@ -393,6 +395,7 @@ abstract class AbstractExtractor
         // Reset offset pointer
         $this->extractorDto->setHeaderBytesRemoved(0);
         $this->extractorDto->setExtractorFileWrittenBytes(0);
+        $this->extractorDto->setExtractorFileReadBytes(0);
         $this->deleteValidationFile($destinationFilePath);
 
         if (!$isValidated) {
