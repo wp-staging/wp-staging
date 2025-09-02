@@ -1,6 +1,6 @@
 [![Fast tests: Lint JS, PHPCS/XSS, PHPStan, PHPUnit](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml)
 [![All Pro e2e](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml)
-[![Pro Test Suite (Sequential & Restartable)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_test_suite_sequential.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_playwright.yml)
+[![Pro Test Suite (Sequential & Restartable)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_test_suite_sequential.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_test_suite_sequential.yml)
 [![Basic Playwright](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml)
 [![Pro Multisite Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml)
 [![Pro Multisite Cloning](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_cloning.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_cloning.yml)
