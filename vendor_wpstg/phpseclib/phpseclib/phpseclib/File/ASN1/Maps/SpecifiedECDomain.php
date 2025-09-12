@@ -22,5 +22,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class SpecifiedECDomain
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['version' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER, 'mapping' => [1 => 'ecdpVer1', 'ecdpVer2', 'ecdpVer3']], 'fieldID' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\FieldID::MAP, 'curve' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Curve::MAP, 'base' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\ECPoint::MAP, 'order' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER], 'cofactor' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER, 'optional' => \true], 'hash' => ['optional' => \true] + \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\HashAlgorithm::MAP]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['version' => ['type' => ASN1::TYPE_INTEGER, 'mapping' => [1 => 'ecdpVer1', 'ecdpVer2', 'ecdpVer3']], 'fieldID' => FieldID::MAP, 'curve' => Curve::MAP, 'base' => ECPoint::MAP, 'order' => ['type' => ASN1::TYPE_INTEGER], 'cofactor' => ['type' => ASN1::TYPE_INTEGER, 'optional' => \true], 'hash' => ['optional' => \true] + HashAlgorithm::MAP]];
 }

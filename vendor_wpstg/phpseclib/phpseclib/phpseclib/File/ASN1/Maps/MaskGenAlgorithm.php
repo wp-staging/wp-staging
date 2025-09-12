@@ -19,5 +19,5 @@ namespace WPStaging\Vendor\phpseclib3\File\ASN1\Maps;
  */
 abstract class MaskGenAlgorithm
 {
-    const MAP = \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AlgorithmIdentifier::MAP;
+    const MAP = AlgorithmIdentifier::MAP;
 }

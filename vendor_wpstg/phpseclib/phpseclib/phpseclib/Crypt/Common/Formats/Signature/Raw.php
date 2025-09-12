@@ -33,8 +33,8 @@ abstract class Raw
         switch (\true) {
             case !\is_array($sig):
             case !isset($sig['r']) || !isset($sig['s']):
-            case !$sig['r'] instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger:
-            case !$sig['s'] instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger:
+            case !$sig['r'] instanceof BigInteger:
+            case !$sig['s'] instanceof BigInteger:
                 return \false;
         }
         return ['r' => $sig['r'], 's' => $sig['s']];
@@ -46,7 +46,7 @@ abstract class Raw
      * @param BigInteger $s
      * @return string
      */
-    public static function save(\WPStaging\Vendor\phpseclib3\Math\BigInteger $r, \WPStaging\Vendor\phpseclib3\Math\BigInteger $s)
+    public static function save(BigInteger $r, BigInteger $s)
     {
         return \compact('r', 's');
     }

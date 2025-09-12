@@ -18,6 +18,6 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Reductions\EvalBarre
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class DefaultEngine extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Reductions\EvalBarrett
+abstract class DefaultEngine extends EvalBarrett
 {
 }

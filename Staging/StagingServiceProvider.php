@@ -7,8 +7,6 @@ use WPStaging\Framework\Adapter\DatabaseInterface;
 use WPStaging\Framework\DI\FeatureServiceProvider;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\ThirdParty\MalCare;
-use WPStaging\Staging\Ajax\Create;
-use WPStaging\Staging\Ajax\Create\PrepareCreate;
 use WPStaging\Staging\Ajax\Delete\PrepareDelete;
 use WPStaging\Staging\Ajax\Delete;
 use WPStaging\Staging\Ajax\Listing;
@@ -62,7 +60,5 @@ class StagingServiceProvider extends FeatureServiceProvider
         }
 
         add_action('wp_ajax_wpstg--staging-site--setup', $this->container->callback(Setup::class, 'ajaxSetup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg--staging-site--prepare-create', $this->container->callback(PrepareCreate::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg--staging-site--create', $this->container->callback(Create::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 }

@@ -29,7 +29,7 @@ abstract class JWK
      */
     public static function load($key, $password = '')
     {
-        if (!\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::is_stringable($key)) {
+        if (!Strings::is_stringable($key)) {
             throw new \UnexpectedValueException('Key should be a string - not a ' . \gettype($key));
         }
         $key = \preg_replace('#\\s#', '', $key);

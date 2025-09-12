@@ -21,4 +21,9 @@ class CopyWpAdminTask extends FileCopierTask
     {
         return PartIdentifier::WP_ADMIN_PART_IDENTIFIER;
     }
+
+    protected function getIsExcluded(): bool
+    {
+        return $this->jobDataDto->getIsWpAdminExcluded();
+    }
 }

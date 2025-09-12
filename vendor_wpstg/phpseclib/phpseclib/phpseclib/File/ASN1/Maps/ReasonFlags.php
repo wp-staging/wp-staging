@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class ReasonFlags
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_BIT_STRING, 'mapping' => ['unused', 'keyCompromise', 'cACompromise', 'affiliationChanged', 'superseded', 'cessationOfOperation', 'certificateHold', 'privilegeWithdrawn', 'aACompromise']];
+    const MAP = ['type' => ASN1::TYPE_BIT_STRING, 'mapping' => ['unused', 'keyCompromise', 'cACompromise', 'affiliationChanged', 'superseded', 'cessationOfOperation', 'certificateHold', 'privilegeWithdrawn', 'aACompromise']];
 }

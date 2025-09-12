@@ -26,7 +26,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements \WPStaging\Vendor\phpseclib3\Crypt\Common\PublicKey
+final class PublicKey extends RSA implements Common\PublicKey
 {
     use Common\Traits\Fingerprint;
     /**
@@ -35,7 +35,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
      * @param BigInteger $x
      * @return BigInteger
      */
-    private function exponentiate(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
+    private function exponentiate(BigInteger $x)
     {
         return $x->modPow($this->exponent, $this->modulus);
     }
@@ -95,7 +95,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
             $r2 = \hash_equals($em, $em3);
         } catch (\LengthException $e) {
             $exception = \true;
-        } catch (\WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException $e) {
+        } catch (UnsupportedAlgorithmException $e) {
             $r2 = \false;
         }
         if ($exception) {
@@ -137,14 +137,14 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
         if ($em === \false) {
             return \false;
         }
-        if (\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($em, 2) != "\0\1") {
+        if (Strings::shift($em, 2) != "\x00\x01") {
             return \false;
         }
-        $em = \ltrim($em, "ÿ");
-        if (\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($em) != "\0") {
+        $em = \ltrim($em, "\xff");
+        if (Strings::shift($em) != "\x00") {
             return \false;
         }
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($em);
+        $decoded = ASN1::decodeBER($em);
         if (!\is_array($decoded) || empty($decoded[0]) || \strlen($em) > $decoded[0]['length']) {
             return \false;
         }
@@ -164,9 +164,9 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
                 'id-sha512/224' => '2.16.840.1.101.3.4.2.5',
                 'id-sha512/256' => '2.16.840.1.101.3.4.2.6',
             ];
-            \WPStaging\Vendor\phpseclib3\File\ASN1::loadOIDs($oids);
+            ASN1::loadOIDs($oids);
         }
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\DigestInfo::MAP);
+        $decoded = ASN1::asn1map($decoded[0], DigestInfo::MAP);
         if (!isset($decoded) || $decoded === \false) {
             return \false;
         }
@@ -178,7 +178,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
         }
         $hash = $decoded['digestAlgorithm']['algorithm'];
         $hash = \substr($hash, 0, 3) == 'id-' ? \substr($hash, 3) : $hash;
-        $hash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash($hash);
+        $hash = new Hash($hash);
         $em = $hash->hash($m);
         $em2 = $decoded['digest'];
         return \hash_equals($em, $em2);
@@ -222,7 +222,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
         }
         $salt = \substr($db, $temp + 1);
         // should be $sLen long
-        $m2 = "\0\0\0\0\0\0\0\0" . $mHash . $salt;
+        $m2 = "\x00\x00\x00\x00\x00\x00\x00\x00" . $mHash . $salt;
         $h2 = $this->hash->hash($m2);
         return \hash_equals($h, $h2);
     }
@@ -293,8 +293,8 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
         $psLen = $this->k - $mLen - 3;
         $ps = '';
         while (\strlen($ps) != $psLen) {
-            $temp = \WPStaging\Vendor\phpseclib3\Crypt\Random::string($psLen - \strlen($ps));
-            $temp = \str_replace("\0", '', $temp);
+            $temp = Random::string($psLen - \strlen($ps));
+            $temp = \str_replace("\x00", '', $temp);
             $ps .= $temp;
         }
         $type = 2;
@@ -329,7 +329,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
         $lHash = $this->hash->hash($this->label);
         $ps = \str_repeat(\chr(0), $this->k - $mLen - 2 * $this->hLen - 2);
         $db = $lHash . $ps . \chr(1) . $m;
-        $seed = \WPStaging\Vendor\phpseclib3\Crypt\Random::string($this->hLen);
+        $seed = Random::string($this->hLen);
         $dbMask = $this->mgf1($seed, $this->k - $this->hLen - 1);
         $maskedDB = $db ^ $dbMask;
         $seedMask = $this->mgf1($maskedDB, $this->hLen);
@@ -413,11 +413,11 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
     public function toString($type, array $options = [])
     {
         $type = self::validatePlugin('Keys', $type, 'savePublicKey');
-        if ($type == \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PSS::class) {
+        if ($type == PSS::class) {
             if ($this->signaturePadding == self::SIGNATURE_PSS) {
                 $options += ['hash' => $this->hash->getHash(), 'MGFHash' => $this->mgfHash->getHash(), 'saltLength' => $this->getSaltLength()];
             } else {
-                throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedFormatException('The PSS format can only be used when the signature method has been explicitly set to PSS');
+                throw new UnsupportedFormatException('The PSS format can only be used when the signature method has been explicitly set to PSS');
             }
         }
         return $type::savePublicKey($this->modulus, $this->publicExponent, $options);
@@ -429,7 +429,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
      */
     public function asPrivateKey()
     {
-        $new = new \WPStaging\Vendor\phpseclib3\Crypt\RSA\PrivateKey();
+        $new = new PrivateKey();
         $new->exponent = $this->exponent;
         $new->modulus = $this->modulus;
         $new->k = $this->k;

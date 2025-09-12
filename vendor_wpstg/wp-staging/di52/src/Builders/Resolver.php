@@ -63,7 +63,7 @@ class Resolver
      *
      * @return void This method does not return any value.
      */
-    public function bind($id, \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface $implementation)
+    public function bind($id, BuilderInterface $implementation)
     {
         unset($this->singletons[$id]);
         $this->bindings[$id] = $implementation;
@@ -77,7 +77,7 @@ class Resolver
      *
      * @return void This method does not return any value.
      */
-    public function singleton($id, \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface $implementation)
+    public function singleton($id, BuilderInterface $implementation)
     {
         $this->singletons[$id] = \true;
         $this->bindings[$id] = $implementation;
@@ -138,7 +138,7 @@ class Resolver
      *
      * @return void This method does not return any value.
      */
-    public function setWhenNeedsGive($whenClass, $needsClass, \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface $builder)
+    public function setWhenNeedsGive($whenClass, $needsClass, BuilderInterface $builder)
     {
         $this->whenNeedsGive[$whenClass][$needsClass] = $builder;
     }
@@ -191,7 +191,7 @@ class Resolver
         if (!isset($this->bindings[$id])) {
             return $this->resolveUnbound($id);
         }
-        if ($this->bindings[$id] instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface) {
+        if ($this->bindings[$id] instanceof BuilderInterface) {
             $built = $this->resolveBound($id);
         } else {
             $built = $this->bindings[$id];
@@ -209,7 +209,7 @@ class Resolver
      */
     private function resolveUnbound($id)
     {
-        $built = (new \WPStaging\Vendor\lucatume\DI52\Builders\ClassBuilder($id, $this, $id))->build();
+        $built = (new ClassBuilder($id, $this, $id))->build();
         if ($this->resolveUnboundAsSingletons) {
             $this->singletons[$id] = \true;
             $this->bindings[$id] = $built;
@@ -247,13 +247,13 @@ class Resolver
      */
     private function cloneBuilder($id, $afterBuildMethods = null, ...$buildArgs)
     {
-        if (isset($this->bindings[$id]) && $this->bindings[$id] instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface) {
+        if (isset($this->bindings[$id]) && $this->bindings[$id] instanceof BuilderInterface) {
             $builder = clone $this->bindings[$id];
-            if ($builder instanceof \WPStaging\Vendor\lucatume\DI52\Builders\ReinitializableBuilderInterface) {
+            if ($builder instanceof ReinitializableBuilderInterface) {
                 $builder->reinit($afterBuildMethods, ...$buildArgs);
             }
         } else {
-            $builder = new \WPStaging\Vendor\lucatume\DI52\Builders\ClassBuilder($id, $this, $id, $afterBuildMethods, ...$buildArgs);
+            $builder = new ClassBuilder($id, $this, $id, $afterBuildMethods, ...$buildArgs);
         }
         return $builder;
     }

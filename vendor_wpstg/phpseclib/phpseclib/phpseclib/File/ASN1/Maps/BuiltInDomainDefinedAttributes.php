@@ -21,10 +21,10 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
 abstract class BuiltInDomainDefinedAttributes
 {
     const MAP = [
-        'type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE,
+        'type' => ASN1::TYPE_SEQUENCE,
         'min' => 1,
         'max' => 4,
         // ub-domain-defined-attributes
-        'children' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\BuiltInDomainDefinedAttribute::MAP,
+        'children' => BuiltInDomainDefinedAttribute::MAP,
     ];
 }

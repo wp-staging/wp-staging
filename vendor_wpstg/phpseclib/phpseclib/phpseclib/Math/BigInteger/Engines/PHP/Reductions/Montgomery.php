@@ -18,7 +18,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Montgomery as Progen
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class Montgomery extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Montgomery
+abstract class Montgomery extends Progenitor
 {
     /**
      * Prepare a number for use in Montgomery Modular Reductions

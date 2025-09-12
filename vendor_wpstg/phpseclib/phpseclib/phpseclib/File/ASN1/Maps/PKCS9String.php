@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class PKCS9String
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_CHOICE, 'children' => ['ia5String' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_IA5_STRING], 'directoryString' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\DirectoryString::MAP]];
+    const MAP = ['type' => ASN1::TYPE_CHOICE, 'children' => ['ia5String' => ['type' => ASN1::TYPE_IA5_STRING], 'directoryString' => DirectoryString::MAP]];
 }

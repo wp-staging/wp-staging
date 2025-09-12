@@ -22,15 +22,24 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
     <br>
 <?php esc_html_e("Click on a folder name to expand it.", "wp-staging") ?>
 </p>
-<div id="wpstg-directories-listing" data-existing-excludes="<?php echo ($scanner->isUpdateOrResetJob() && !empty($stagingSiteDto->getExcludedDirectories())) ? esc_attr(implode(',', $stagingSiteDto->getExcludedDirectories())) : '' ?>">
+<div id="wpstg-directories-listing" style="margin-bottom: 16px;" data-existing-excludes="<?php echo ($scanner->isUpdateOrResetJob() && !empty($stagingSiteDto->getExcludedDirectories())) ? esc_attr(implode(',', $stagingSiteDto->getExcludedDirectories())) : '' ?>">
     <div class="wpstg-mb-8px">
         <button type="button" class="wpstg-unselect-dirs button"><?php esc_html_e('Unselect All', 'wp-staging'); ?></button>
         <button type="button" class="wpstg-select-dirs-default button"> <?php esc_html_e('Select Default', 'wp-staging'); ?></button>
     </div>
     <?php echo $scanner->directoryListing($directories); // phpcs:ignore ?>
 </div>
+<hr />
 <!-- Exclusion Rules Table -->
 <div class="wpstg-excluded-filters-container" id="wpstg-exclude-filters-container">
+    <strong><?php esc_html_e("Exclude Rules:", "wp-staging") ?></strong>
+    <br>
+    <p>
+        <?php esc_html_e('Exclude files greater than ', 'wp-staging') ?>
+        <input type="number" class="wpstg-exclude-rule-input wpstg-file-size-exclude-input wpstg-textbox" id="wpstg_cloning_file_size_limit_mb" value="8" />
+        <?php esc_html_e('MB', 'wp-staging') ?>
+    </p>
+    <hr/>
     <table>
         <tbody>
             <?php
@@ -54,7 +63,6 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
                 <?php esc_html_e("Add Exclude Rule + ", "wp-staging"); ?>
             </button>
             <div class="wpstg-dropdown-menu wpstg-menu-dropup" id="wpstg-exclude-filter-dropdown-menu">
-                <button class="wpstg-dropdown-action wpstg-file-size-rule"><?php esc_html_e('File Size', 'wp-staging'); ?></button>
                 <button class="wpstg-dropdown-action wpstg-file-ext-rule"><?php esc_html_e('File Extension', 'wp-staging'); ?></button>
                 <button class="wpstg-dropdown-action wpstg-file-name-rule"><?php esc_html_e('File Name', 'wp-staging'); ?></button>
                 <button class="wpstg-dropdown-action wpstg-dir-name-rule"><?php esc_html_e('Folder Name', 'wp-staging'); ?></button>

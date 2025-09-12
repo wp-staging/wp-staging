@@ -305,9 +305,9 @@ $wpstgRestorePageUrl = add_query_arg([
                 $buttonUrl   = 'https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/';
                 $this->getAssets()->renderAlertMessage($title, $description, $buttonText, $buttonUrl);
             } elseif ($backup->isZlibCompressed && $compressor->supportsCompression() && !$compressor->canUseCompression()) {
-                $title       = __('Backup Restore Requires Upgrade', 'wp-staging');
-                $description = __('This backup is compressed, you need WP STAGING Pro to Restore it or generate an uncompressed backup.', 'wp-staging');
-                $buttonText  = __('Buy WP STAGING Pro', 'wp-staging');
+                $title       = __('Upgrade required', 'wp-staging');
+                $description = __('This backup is compressed, you need WP Staging Pro to restore it.', 'wp-staging');
+                $buttonText  = __('Get WP Staging Pro', 'wp-staging');
                 $buttonUrl   = 'https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging';
                 $this->getAssets()->renderAlertMessage($title, $description, $buttonText, $buttonUrl);
             }

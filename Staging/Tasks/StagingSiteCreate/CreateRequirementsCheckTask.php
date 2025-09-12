@@ -89,6 +89,7 @@ class CreateRequirementsCheckTask extends StagingTask
             $this->logger->info('#################### Start Staging Site Create Job ####################');
             $this->logger->writeLogHeader();
             $this->logger->writeInstalledPluginsAndThemes();
+            $this->writeStagingSettingsLogs();
             $this->cannotCreateStagingSiteOnMultisite();
             $this->cannotCreateIfCantWriteToDisk();
             $this->cannotCreateStagingDirectory();
@@ -108,28 +109,14 @@ class CreateRequirementsCheckTask extends StagingTask
         return $this->generateResponse();
     }
 
+    /**
+     * @return void
+     */
     protected function saveStagingSite()
     {
         $stagingSites = $this->sites->tryGettingStagingSites();
-        $stagingSite = $this->buildStagingSite();
-        $stagingSites[$this->jobDataDto->getCloneId()] = $stagingSite->toArray();
+        $stagingSites[$this->jobDataDto->getCloneId()] = $this->jobDataDto->getStagingSite()->toArray();
         $this->sites->updateStagingSites($stagingSites);
-    }
-
-    protected function buildStagingSite(): StagingSiteDto
-    {
-        $stagingSite = new StagingSiteDto();
-        $stagingSite->setCloneId($this->jobDataDto->getCloneId());
-        $stagingSite->setPrefix($this->jobDataDto->getDatabasePrefix());
-        $stagingSite->setStatus(StagingSiteDto::STATUS_UNFINISHED_BROKEN);
-        $stagingSite->setDirectoryName($this->jobDataDto->getName());
-        $stagingSite->setPath($this->jobDataDto->getStagingSitePath());
-        $stagingSite->setUrl($this->jobDataDto->getStagingSiteUrl());
-        $stagingSite->setDatetime(time());
-        $stagingSite->setVersion(WPStaging::getVersion());
-        $stagingSite->setOwnerId(get_current_user_id());
-
-        return $stagingSite;
     }
 
     protected function cannotCreateStagingSiteOnMultisite()
@@ -170,8 +157,7 @@ class CreateRequirementsCheckTask extends StagingTask
 
     protected function cannotCreateIfUsingExternalDatabase()
     {
-        $isUsingExternalDatabase = false;
-        if ($isUsingExternalDatabase) {
+        if ($this->jobDataDto->getIsExternalDatabase()) {
             throw new RuntimeException(esc_html__('Staging site creation with external database is not supported in the basic version.', 'wp-staging'));
         }
     }
@@ -182,5 +168,16 @@ class CreateRequirementsCheckTask extends StagingTask
         if ($isSamePrefix) {
             throw new RuntimeException(esc_html__('Staging site prefix is same as production site prefix. Use different prefix for staging site.', 'wp-staging'));
         }
+    }
+
+    protected function writeStagingSettingsLogs()
+    {
+        $this->logger->info('Staging Settings:');
+        $this->logger->info('Staging Site Path: ' . $this->jobDataDto->getStagingSitePath());
+        $this->logger->info('Staging Site URL: ' . $this->jobDataDto->getStagingSiteUrl());
+        $this->logger->info('Database Prefix: ' . $this->jobDataDto->getDatabasePrefix());
+        $this->logger->info('Clone ID: ' . $this->jobDataDto->getCloneId());
+        $this->logger->info('Clone Name: ' . $this->jobDataDto->getName());
+        $this->logger->info('Is External Database: ' . ($this->jobDataDto->getIsExternalDatabase() ? 'Yes' : 'No'));
     }
 }

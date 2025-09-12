@@ -154,7 +154,7 @@ class UpdateStagingOptionsTable extends DBCloningService
 
         // Delete options for new clone or reset job
         if ($this->dto->getMainJob() !== MainJob::UPDATE) {
-            // @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
+            // @see WPStaging\Pro\Backup\Storage\GoogleDrive\Auth::getOptionName for option name
             $toDelete[] = 'wpstg_googledrive';
             $toDelete[] = 'wpstg_dropbox';
             $toDelete[] = 'wpstg_one-drive';

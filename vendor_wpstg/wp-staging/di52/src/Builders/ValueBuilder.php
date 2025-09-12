@@ -12,7 +12,7 @@ namespace WPStaging\Vendor\lucatume\DI52\Builders;
  *
  * @package lucatume\DI52\Builders
  */
-class ValueBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface
+class ValueBuilder implements BuilderInterface
 {
     /**
      * The value the instance of the builder was built for.

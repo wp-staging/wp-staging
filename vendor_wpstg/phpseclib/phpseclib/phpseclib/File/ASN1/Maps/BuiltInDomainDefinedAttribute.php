@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class BuiltInDomainDefinedAttribute
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['type' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_PRINTABLE_STRING], 'value' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_PRINTABLE_STRING]]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['type' => ['type' => ASN1::TYPE_PRINTABLE_STRING], 'value' => ['type' => ASN1::TYPE_PRINTABLE_STRING]]];
 }

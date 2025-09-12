@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Tasks\StagingSiteCreate;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -10,6 +11,7 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Dto\Task\Response\FinishStagingSiteResponseDto;
+use WPStaging\Staging\Jobs\StagingSiteCreate;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -68,23 +70,25 @@ class FinishStagingSiteCreateTask extends StagingTask
             $stagingSite->getSiteName()
         ));
 
+        $this->triggerOnStagingSiteCreatedEvent($stagingSite);
+
         return $this->overrideGenerateResponse();
     }
 
     protected function buildStagingSite(): StagingSiteDto
     {
-        $stagingSite = new StagingSiteDto();
-        $stagingSite->setCloneId($this->jobDataDto->getCloneId());
-        $stagingSite->setPrefix($this->jobDataDto->getDatabasePrefix());
+        $stagingSite = $this->jobDataDto->getStagingSite();
         $stagingSite->setStatus(StagingSiteDto::STATUS_FINISHED);
-        $stagingSite->setDirectoryName($this->jobDataDto->getName());
-        $stagingSite->setPath($this->jobDataDto->getStagingSitePath());
-        $stagingSite->setUrl($this->jobDataDto->getStagingSiteUrl());
         $stagingSite->setDatetime(time());
         $stagingSite->setVersion(WPStaging::getVersion());
         $stagingSite->setOwnerId(get_current_user_id());
 
         return $stagingSite;
+    }
+
+    protected function triggerOnStagingSiteCreatedEvent(StagingSiteDto $stagingSite)
+    {
+        Hooks::doAction(StagingSiteCreate::ACTION_CLONING_COMPLETE, $stagingSite->toArray());
     }
 
     protected function getResponseDto()

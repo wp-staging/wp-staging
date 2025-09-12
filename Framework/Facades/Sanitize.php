@@ -10,6 +10,7 @@ use WPStaging\Framework\Utils\Sanitize as UtilsSanitize;
  * @method static int sanitizeInt(string $value)
  * @method static bool sanitizeBool(int|bool|string $value)
  * @method static string sanitizeEmail(string $value)
+ * @method static string sanitizeUrl(string $value)
  * @method static string sanitizePath(string $value)
  * @method static string htmlDecodeAndSanitize(string $value)
  * @method static array sanitizeFileUpload(array $value)

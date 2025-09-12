@@ -21,7 +21,7 @@ use WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
+class Salsa20 extends StreamCipher
 {
     /**
      * Part 1 of the state
@@ -132,15 +132,15 @@ class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
     protected function createPoly1305Key()
     {
         if ($this->nonce === \false) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('No nonce has been defined');
+            throw new InsufficientSetupException('No nonce has been defined');
         }
         if ($this->key === \false) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('No key has been defined');
+            throw new InsufficientSetupException('No key has been defined');
         }
         $c = clone $this;
         $c->setCounter(0);
         $c->usePoly1305 = \false;
-        $block = $c->encrypt(\str_repeat("\0", 256));
+        $block = $c->encrypt(\str_repeat("\x00", 256));
         $this->setPoly1305Key(\substr($block, 0, 32));
         if ($this->counter == 0) {
             $this->counter++;
@@ -172,10 +172,10 @@ class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
         $this->enbuffer = $this->debuffer = ['ciphertext' => '', 'counter' => $this->counter];
         $this->changed = $this->nonIVChanged = \false;
         if ($this->nonce === \false) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('No nonce has been defined');
+            throw new InsufficientSetupException('No nonce has been defined');
         }
         if ($this->key === \false) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('No key has been defined');
+            throw new InsufficientSetupException('No key has been defined');
         }
         if ($this->usePoly1305 && !isset($this->poly1305Key)) {
             $this->usingGeneratedPoly1305Key = \true;
@@ -188,7 +188,7 @@ class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
         } else {
             $constant = 'expand 32-byte k';
         }
-        $this->p1 = \substr($constant, 0, 4) . \substr($key, 0, 16) . \substr($constant, 4, 4) . $this->nonce . "\0\0\0\0";
+        $this->p1 = \substr($constant, 0, 4) . \substr($key, 0, 16) . \substr($constant, 4, 4) . $this->nonce . "\x00\x00\x00\x00";
         $this->p2 = \substr($constant, 8, 4) . \substr($key, 16, 16) . \substr($constant, 12, 4);
     }
     /**
@@ -229,12 +229,12 @@ class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
     {
         if (isset($this->poly1305Key)) {
             if ($this->oldtag === \false) {
-                throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('Authentication Tag has not been set');
+                throw new InsufficientSetupException('Authentication Tag has not been set');
             }
             $newtag = $this->poly1305($ciphertext);
             if ($this->oldtag != \substr($newtag, 0, \strlen($this->oldtag))) {
                 $this->oldtag = \false;
-                throw new \WPStaging\Vendor\phpseclib3\Exception\BadDecryptionException('Derived authentication tag and supplied authentication tag do not match');
+                throw new BadDecryptionException('Derived authentication tag and supplied authentication tag do not match');
             }
             $this->oldtag = \false;
         }
@@ -291,7 +291,7 @@ class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
         if (!\strlen($buffer['ciphertext'])) {
             $ciphertext = '';
         } else {
-            $ciphertext = $text ^ \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($buffer['ciphertext'], \strlen($text));
+            $ciphertext = $text ^ Strings::shift($buffer['ciphertext'], \strlen($text));
             $text = \substr($text, \strlen($ciphertext));
             if (!\strlen($text)) {
                 return $ciphertext;
@@ -300,14 +300,14 @@ class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
         $overflow = \strlen($text) % 64;
         // & 0x3F
         if ($overflow) {
-            $text2 = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::pop($text, $overflow);
+            $text2 = Strings::pop($text, $overflow);
             if ($this->engine == self::ENGINE_OPENSSL) {
                 $iv = \pack('V', $buffer['counter']) . $this->p2;
                 // at this point $text should be a multiple of 64
                 $buffer['counter'] += (\strlen($text) >> 6) + 1;
                 // ie. divide by 64
-                $encrypted = \openssl_encrypt($text . \str_repeat("\0", 64), $this->cipher_name_openssl, $this->key, \OPENSSL_RAW_DATA, $iv);
-                $temp = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::pop($encrypted, 64);
+                $encrypted = \openssl_encrypt($text . \str_repeat("\x00", 64), $this->cipher_name_openssl, $this->key, \OPENSSL_RAW_DATA, $iv);
+                $temp = Strings::pop($encrypted, 64);
             } else {
                 $blocks = \str_split($text, 64);
                 if (\strlen($text)) {
@@ -451,7 +451,7 @@ class Salsa20 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
             phpseclib opts to use the IETF construction, even when the nonce is 64-bits
             instead of 96-bits
             */
-            return parent::poly1305(self::nullPad128($this->aad) . self::nullPad128($ciphertext) . \pack('V', \strlen($this->aad)) . "\0\0\0\0" . \pack('V', \strlen($ciphertext)) . "\0\0\0\0");
+            return parent::poly1305(self::nullPad128($this->aad) . self::nullPad128($ciphertext) . \pack('V', \strlen($this->aad)) . "\x00\x00\x00\x00" . \pack('V', \strlen($ciphertext)) . "\x00\x00\x00\x00");
         }
     }
 }

@@ -12,7 +12,7 @@ if (file_exists(__DIR__ . '/autoloader_dev.php')) {
     include_once __DIR__ . '/autoloader.php';
 }
 
-// Early bail: Unexpected behavior from the autoloader
+// Early bail: Unexpected behavior from the autoloader.
 if (!class_exists('\WPStaging\Core\WPStaging')) {
     return;
 }
@@ -57,7 +57,7 @@ if (!defined('WPSTG_RESOURCES_DIR')) {
     define('WPSTG_RESOURCES_DIR', WPSTG_PLUGIN_DIR . 'resources/');
 }
 
-// Define WordPress default constants if not already defined in outdated WP version for backward compatibility
+// Define WordPress default constants if not already defined in outdated WP version for backward compatibility.
 if (!defined('KB_IN_BYTES')) {
     define('KB_IN_BYTES', 1024);
 }

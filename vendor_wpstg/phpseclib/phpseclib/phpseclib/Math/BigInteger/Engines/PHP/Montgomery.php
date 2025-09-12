@@ -20,7 +20,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Reductions\PowerOfTw
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class Montgomery extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Base
+abstract class Montgomery extends Base
 {
     /**
      * Test for engine validity
@@ -41,7 +41,7 @@ abstract class Montgomery extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\E
      * @param class-string<T> $class
      * @return T
      */
-    protected static function slidingWindow(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $x, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $n, $class)
+    protected static function slidingWindow(Engine $x, Engine $e, Engine $n, $class)
     {
         // is the modulo odd?
         if ($n->value[0] & 1) {
@@ -64,7 +64,7 @@ abstract class Montgomery extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\E
         $mod2->value = [1];
         $mod2->lshift($j);
         $part1 = $mod1->value != [1] ? parent::slidingWindow($x, $e, $mod1, $class) : new $class();
-        $part2 = \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Reductions\PowerOfTwo::slidingWindow($x, $e, $mod2, $class);
+        $part2 = PowerOfTwo::slidingWindow($x, $e, $mod2, $class);
         $y1 = $mod2->modInverse($mod1);
         $y2 = $mod1->modInverse($mod2);
         $result = $part1->multiply($mod2);

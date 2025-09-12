@@ -34,7 +34,7 @@ use TypeError;
  *
  * @package ParagonIE\ConstantTime
  */
-abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\EncoderInterface
+abstract class Base32 implements EncoderInterface
 {
     /**
      * Decode a Base32-encoded string into raw binary
@@ -43,11 +43,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @param bool $strictPadding
      * @return string
      */
-    public static function decode(
-        #[\SensitiveParameter]
-        string $encodedString,
-        bool $strictPadding = \false
-    ) : string
+    public static function decode(#[\SensitiveParameter] string $encodedString, bool $strictPadding = \false) : string
     {
         return static::doDecode($encodedString, \false, $strictPadding);
     }
@@ -58,11 +54,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @param bool $strictPadding
      * @return string
      */
-    public static function decodeUpper(
-        #[\SensitiveParameter]
-        string $src,
-        bool $strictPadding = \false
-    ) : string
+    public static function decodeUpper(#[\SensitiveParameter] string $src, bool $strictPadding = \false) : string
     {
         return static::doDecode($src, \true, $strictPadding);
     }
@@ -73,10 +65,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @return string
      * @throws TypeError
      */
-    public static function encode(
-        #[\SensitiveParameter]
-        string $binString
-    ) : string
+    public static function encode(#[\SensitiveParameter] string $binString) : string
     {
         return static::doEncode($binString, \false, \true);
     }
@@ -87,10 +76,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @return string
      * @throws TypeError
      */
-    public static function encodeUnpadded(
-        #[\SensitiveParameter]
-        string $src
-    ) : string
+    public static function encodeUnpadded(#[\SensitiveParameter] string $src) : string
     {
         return static::doEncode($src, \false, \false);
     }
@@ -101,10 +87,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @return string
      * @throws TypeError
      */
-    public static function encodeUpper(
-        #[\SensitiveParameter]
-        string $src
-    ) : string
+    public static function encodeUpper(#[\SensitiveParameter] string $src) : string
     {
         return static::doEncode($src, \true, \true);
     }
@@ -115,10 +98,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @return string
      * @throws TypeError
      */
-    public static function encodeUpperUnpadded(
-        #[\SensitiveParameter]
-        string $src
-    ) : string
+    public static function encodeUpperUnpadded(#[\SensitiveParameter] string $src) : string
     {
         return static::doEncode($src, \true, \false);
     }
@@ -191,20 +171,16 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @param bool $upper
      * @return string
      */
-    public static function decodeNoPadding(
-        #[\SensitiveParameter]
-        string $encodedString,
-        bool $upper = \false
-    ) : string
+    public static function decodeNoPadding(#[\SensitiveParameter] string $encodedString, bool $upper = \false) : string
     {
-        $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($encodedString);
+        $srcLen = Binary::safeStrlen($encodedString);
         if ($srcLen === 0) {
             return '';
         }
         if (($srcLen & 7) === 0) {
             for ($j = 0; $j < 7 && $j < $srcLen; ++$j) {
                 if ($encodedString[$srcLen - $j - 1] === '=') {
-                    throw new \InvalidArgumentException("decodeNoPadding() doesn't tolerate padding");
+                    throw new InvalidArgumentException("decodeNoPadding() doesn't tolerate padding");
                 }
             }
         }
@@ -220,17 +196,12 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      *
      * @throws TypeError
      */
-    protected static function doDecode(
-        #[\SensitiveParameter]
-        string $src,
-        bool $upper = \false,
-        bool $strictPadding = \false
-    ) : string
+    protected static function doDecode(#[\SensitiveParameter] string $src, bool $upper = \false, bool $strictPadding = \false) : string
     {
         // We do this to reduce code duplication:
         $method = $upper ? 'decode5BitsUpper' : 'decode5Bits';
         // Remove padding
-        $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($src);
+        $srcLen = Binary::safeStrlen($src);
         if ($srcLen === 0) {
             return '';
         }
@@ -245,18 +216,18 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
                 }
             }
             if (($srcLen & 7) === 1) {
-                throw new \RangeException('Incorrect padding');
+                throw new RangeException('Incorrect padding');
             }
         } else {
             $src = \rtrim($src, '=');
-            $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($src);
+            $srcLen = Binary::safeStrlen($src);
         }
         $err = 0;
         $dest = '';
         // Main loop (no padding):
         for ($i = 0; $i + 8 <= $srcLen; $i += 8) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($src, $i, 8));
+            $chunk = \unpack('C*', Binary::safeSubstr($src, $i, 8));
             /** @var int $c0 */
             $c0 = static::$method($chunk[1]);
             /** @var int $c1 */
@@ -279,7 +250,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
         // The last chunk, which may have padding:
         if ($i < $srcLen) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($src, $i, $srcLen - $i));
+            $chunk = \unpack('C*', Binary::safeSubstr($src, $i, $srcLen - $i));
             /** @var int $c0 */
             $c0 = static::$method($chunk[1]);
             if ($i + 6 < $srcLen) {
@@ -364,7 +335,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
         }
         $check = $err === 0;
         if (!$check) {
-            throw new \RangeException('Base32::doDecode() only expects characters in the correct base32 alphabet');
+            throw new RangeException('Base32::doDecode() only expects characters in the correct base32 alphabet');
         }
         return $dest;
     }
@@ -377,21 +348,16 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @return string
      * @throws TypeError
      */
-    protected static function doEncode(
-        #[\SensitiveParameter]
-        string $src,
-        bool $upper = \false,
-        $pad = \true
-    ) : string
+    protected static function doEncode(#[\SensitiveParameter] string $src, bool $upper = \false, $pad = \true) : string
     {
         // We do this to reduce code duplication:
         $method = $upper ? 'encode5BitsUpper' : 'encode5Bits';
         $dest = '';
-        $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($src);
+        $srcLen = Binary::safeStrlen($src);
         // Main loop (no padding):
         for ($i = 0; $i + 5 <= $srcLen; $i += 5) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($src, $i, 5));
+            $chunk = \unpack('C*', Binary::safeSubstr($src, $i, 5));
             $b0 = $chunk[1];
             $b1 = $chunk[2];
             $b2 = $chunk[3];
@@ -402,7 +368,7 @@ abstract class Base32 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
         // The last chunk, which may have padding:
         if ($i < $srcLen) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($src, $i, $srcLen - $i));
+            $chunk = \unpack('C*', Binary::safeSubstr($src, $i, $srcLen - $i));
             $b0 = $chunk[1];
             if ($i + 3 < $srcLen) {
                 $b1 = $chunk[2];

@@ -49,7 +49,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKey
+abstract class EC extends AsymmetricKey
 {
     /**
      * Algorithm Name
@@ -137,13 +137,13 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
         $curve = \strtolower($curve);
         if (self::$engines['libsodium'] && $curve == 'ed25519' && \function_exists('sodium_crypto_sign_keypair')) {
             $kp = \sodium_crypto_sign_keypair();
-            $privatekey = \WPStaging\Vendor\phpseclib3\Crypt\EC::loadFormat('libsodium', \sodium_crypto_sign_secretkey($kp));
+            $privatekey = EC::loadFormat('libsodium', \sodium_crypto_sign_secretkey($kp));
             //$publickey = EC::loadFormat('libsodium', sodium_crypto_sign_publickey($kp));
             $privatekey->curveName = 'Ed25519';
             //$publickey->curveName = $curve;
             return $privatekey;
         }
-        $privatekey = new \WPStaging\Vendor\phpseclib3\Crypt\EC\PrivateKey();
+        $privatekey = new PrivateKey();
         $curveName = $curve;
         if (\preg_match('#(?:^curve|^ed)\\d+$#', $curveName)) {
             $curveName = \ucfirst($curveName);
@@ -152,23 +152,23 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
         }
         $curve = '\\WPStaging\\Vendor\\phpseclib3\\Crypt\\EC\\Curves\\' . $curveName;
         if (!\class_exists($curve)) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException('Named Curve of ' . $curveName . ' is not supported');
+            throw new UnsupportedCurveException('Named Curve of ' . $curveName . ' is not supported');
         }
         $reflect = new \ReflectionClass($curve);
         $curveName = $reflect->isFinal() ? $reflect->getParentClass()->getShortName() : $reflect->getShortName();
         $curve = new $curve();
-        if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            $arr = $curve->extractSecret(\WPStaging\Vendor\phpseclib3\Crypt\Random::string($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed448 ? 57 : 32));
+        if ($curve instanceof TwistedEdwardsCurve) {
+            $arr = $curve->extractSecret(Random::string($curve instanceof Ed448 ? 57 : 32));
             $privatekey->dA = $dA = $arr['dA'];
             $privatekey->secret = $arr['secret'];
         } else {
             $privatekey->dA = $dA = $curve->createRandomMultiplier();
         }
-        if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Curve25519 && self::$engines['libsodium']) {
+        if ($curve instanceof Curve25519 && self::$engines['libsodium']) {
             //$r = pack('H*', '0900000000000000000000000000000000000000000000000000000000000000');
             //$QA = sodium_crypto_scalarmult($dA->toBytes(), $r);
             $QA = \sodium_crypto_box_publickey_from_secretkey($dA->toBytes());
-            $privatekey->QA = [$curve->convertInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\strrev($QA), 256))];
+            $privatekey->QA = [$curve->convertInteger(new BigInteger(\strrev($QA), 256))];
         } else {
             $privatekey->QA = $curve->multiplyPoint($curve->getBasePoint(), $dA);
         }
@@ -178,7 +178,7 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
         //unset($publickey->x);
         $privatekey->curveName = $curveName;
         //$publickey->curveName = $curveName;
-        if ($privatekey->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
+        if ($privatekey->curve instanceof TwistedEdwardsCurve) {
             return $privatekey->withHash($curve::HASH);
         }
         return $privatekey;
@@ -194,18 +194,18 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
             self::useBestEngine();
         }
         if (!isset($components['dA']) && !isset($components['QA'])) {
-            $new = new \WPStaging\Vendor\phpseclib3\Crypt\EC\Parameters();
+            $new = new Parameters();
             $new->curve = $components['curve'];
             return $new;
         }
-        $new = isset($components['dA']) ? new \WPStaging\Vendor\phpseclib3\Crypt\EC\PrivateKey() : new \WPStaging\Vendor\phpseclib3\Crypt\EC\PublicKey();
+        $new = isset($components['dA']) ? new PrivateKey() : new PublicKey();
         $new->curve = $components['curve'];
         $new->QA = $components['QA'];
         if (isset($components['dA'])) {
             $new->dA = $components['dA'];
             $new->secret = $components['secret'];
         }
-        if ($new->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
+        if ($new->curve instanceof TwistedEdwardsCurve) {
             return $new->withHash($components['curve']::HASH);
         }
         return $new;
@@ -233,24 +233,24 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
         if ($this->curveName) {
             return $this->curveName;
         }
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
-            $this->curveName = $this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Curve25519 ? 'Curve25519' : 'Curve448';
+        if ($this->curve instanceof MontgomeryCurve) {
+            $this->curveName = $this->curve instanceof Curve25519 ? 'Curve25519' : 'Curve448';
             return $this->curveName;
         }
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            $this->curveName = $this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 ? 'Ed25519' : 'Ed448';
+        if ($this->curve instanceof TwistedEdwardsCurve) {
+            $this->curveName = $this->curve instanceof Ed25519 ? 'Ed25519' : 'Ed448';
             return $this->curveName;
         }
         $params = $this->getParameters()->toString('PKCS8', ['namedCurve' => \true]);
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($params);
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($decoded);
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\ECParameters::MAP);
+        $decoded = ASN1::extractBER($params);
+        $decoded = ASN1::decodeBER($decoded);
+        $decoded = ASN1::asn1map($decoded[0], ECParameters::MAP);
         if (isset($decoded['namedCurve'])) {
             $this->curveName = $decoded['namedCurve'];
             return $decoded['namedCurve'];
         }
         if (!$namedCurves) {
-            \WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Keys\PKCS1::useSpecifiedCurve();
+            PKCS1::useSpecifiedCurve();
         }
         return $decoded;
     }
@@ -285,8 +285,8 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
         if (!isset(self::$engines['PHP'])) {
             self::useBestEngine();
         }
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            return $this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 && self::$engines['libsodium'] && !isset($this->context) ? 'libsodium' : 'PHP';
+        if ($this->curve instanceof TwistedEdwardsCurve) {
+            return $this->curve instanceof Ed25519 && self::$engines['libsodium'] && !isset($this->context) ? 'libsodium' : 'PHP';
         }
         return self::$engines['OpenSSL'] && \in_array($this->hash->getHash(), \openssl_get_md_methods()) ? 'OpenSSL' : 'PHP';
     }
@@ -299,13 +299,13 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function getEncodedCoordinates()
     {
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
+        if ($this->curve instanceof MontgomeryCurve) {
             return \strrev($this->QA[0]->toBytes(\true));
         }
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
+        if ($this->curve instanceof TwistedEdwardsCurve) {
             return $this->curve->encodePoint($this->QA);
         }
-        return "\4" . $this->QA[0]->toBytes(\true) . $this->QA[1]->toBytes(\true);
+        return "\x04" . $this->QA[0]->toBytes(\true) . $this->QA[1]->toBytes(\true);
     }
     /**
      * Returns the parameters
@@ -318,7 +318,7 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
     {
         $type = self::validatePlugin('Keys', $type, 'saveParameters');
         $key = $type::saveParameters($this->curve);
-        return \WPStaging\Vendor\phpseclib3\Crypt\EC::load($key, 'PKCS1')->withHash($this->hash->getHash())->withSignatureFormat($this->shortFormat);
+        return EC::load($key, 'PKCS1')->withHash($this->hash->getHash())->withSignatureFormat($this->shortFormat);
     }
     /**
      * Determines the signature padding mode
@@ -329,8 +329,8 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function withSignatureFormat($format)
     {
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
+        if ($this->curve instanceof MontgomeryCurve) {
+            throw new UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
         }
         $new = clone $this;
         $new->shortFormat = $format;
@@ -356,8 +356,8 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function withContext($context = null)
     {
-        if (!$this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException('Only Ed25519 and Ed448 support contexts');
+        if (!$this->curve instanceof TwistedEdwardsCurve) {
+            throw new UnsupportedCurveException('Only Ed25519 and Ed448 support contexts');
         }
         $new = clone $this;
         if (!isset($context)) {
@@ -388,14 +388,14 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function withHash($hash)
     {
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
+        if ($this->curve instanceof MontgomeryCurve) {
+            throw new UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
         }
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 && $hash != 'sha512') {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('Ed25519 only supports sha512 as a hash');
+        if ($this->curve instanceof Ed25519 && $hash != 'sha512') {
+            throw new UnsupportedAlgorithmException('Ed25519 only supports sha512 as a hash');
         }
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed448 && $hash != 'shake256-912') {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('Ed448 only supports shake256 with a length of 114 bytes');
+        if ($this->curve instanceof Ed448 && $hash != 'shake256-912') {
+            throw new UnsupportedAlgorithmException('Ed448 only supports shake256 with a length of 114 bytes');
         }
         return parent::withHash($hash);
     }
@@ -406,7 +406,7 @@ abstract class EC extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function __toString()
     {
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
+        if ($this->curve instanceof MontgomeryCurve) {
             return '';
         }
         return parent::__toString();

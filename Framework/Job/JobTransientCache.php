@@ -90,6 +90,11 @@ class JobTransientCache
     const JOB_TYPE_PULL_RESTORE = 'Pull_Restore';
 
     /**
+     * @var string
+     */
+    const JOB_TYPE_REMOTE_UPLOAD = 'Remote_Upload';
+
+    /**
      * @var string[]
      */
     const CANCELABLE_JOBS = [
@@ -98,6 +103,7 @@ class JobTransientCache
         self::JOB_TYPE_PULL_PREPARE,
         self::JOB_TYPE_PULL_RESTORE,
         self::JOB_TYPE_STAGING_CREATE,
+        self::JOB_TYPE_REMOTE_UPLOAD,
     ];
 
     /**
@@ -116,6 +122,7 @@ class JobTransientCache
             'status'  => self::STATUS_RUNNING,
             'start'   => time(),
             'queueId' => $queueId,
+            'message' => ''
         ];
 
         delete_transient(self::TRANSIENT_CURRENT_JOB);
@@ -153,9 +160,9 @@ class JobTransientCache
     /**
      * @return void
      */
-    public function failJob()
+    public function failJob(string $title = '', string $message = '')
     {
-        $this->stopJob(self::STATUS_FAILED);
+        $this->stopJob(self::STATUS_FAILED, $title, $message);
     }
 
     /**
@@ -194,14 +201,19 @@ class JobTransientCache
     /**
      * @param string $status
      * @param string $title
+     * @param string $message
      * @return void
      */
-    private function stopJob(string $status, string $title = '')
+    private function stopJob(string $status, string $title = '', string $message = '')
     {
         $jobData = $this->getJob();
         $jobData['status'] = $status;
         if (!empty($title)) {
             $jobData['title'] = $title;
+        }
+
+        if (!empty($message)) {
+            $jobData['message'] = $message;
         }
 
         // This will make sure to update the expiry as well if the status was already the same!

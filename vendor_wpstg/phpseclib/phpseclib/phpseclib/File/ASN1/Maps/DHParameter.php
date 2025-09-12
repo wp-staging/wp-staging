@@ -22,5 +22,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class DHParameter
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['prime' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER], 'base' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER], 'privateValueLength' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER, 'optional' => \true]]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['prime' => ['type' => ASN1::TYPE_INTEGER], 'base' => ['type' => ASN1::TYPE_INTEGER], 'privateValueLength' => ['type' => ASN1::TYPE_INTEGER, 'optional' => \true]]];
 }

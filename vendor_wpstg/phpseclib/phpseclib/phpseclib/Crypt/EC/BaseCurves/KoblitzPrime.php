@@ -34,7 +34,7 @@ use WPStaging\Vendor\phpseclib3\Math\PrimeField;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class KoblitzPrime extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Prime
+class KoblitzPrime extends Prime
 {
     /**
      * Basis
@@ -65,8 +65,8 @@ class KoblitzPrime extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Prim
     {
         static $zero, $one, $two;
         if (!isset($two)) {
-            $two = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(2);
-            $one = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1);
+            $two = new BigInteger(2);
+            $one = new BigInteger(1);
         }
         if (!isset($this->beta)) {
             // get roots
@@ -77,10 +77,10 @@ class KoblitzPrime extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Prim
             //echo strtoupper($this->beta->toHex(true)) . "\n"; exit;
         }
         if (!isset($this->basis)) {
-            $factory = new \WPStaging\Vendor\phpseclib3\Math\PrimeField($this->order);
+            $factory = new PrimeField($this->order);
             $tempOne = $factory->newInteger($one);
             $tempTwo = $factory->newInteger($two);
-            $tempThree = $factory->newInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(3));
+            $tempThree = $factory->newInteger(new BigInteger(3));
             $inv = $tempOne->divide($tempTwo)->negate();
             $s = $tempThree->negate()->squareRoot()->multiply($inv);
             $lambdas = [$inv->add($s), $inv->subtract($s)];
@@ -220,10 +220,10 @@ class KoblitzPrime extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Prim
      * @param BigInteger $v
      * @return BigInteger[]
      */
-    protected static function extendedGCD(\WPStaging\Vendor\phpseclib3\Math\BigInteger $u, \WPStaging\Vendor\phpseclib3\Math\BigInteger $v)
+    protected static function extendedGCD(BigInteger $u, BigInteger $v)
     {
-        $one = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1);
-        $zero = new \WPStaging\Vendor\phpseclib3\Math\BigInteger();
+        $one = new BigInteger(1);
+        $zero = new BigInteger();
         $a = clone $one;
         $b = clone $zero;
         $c = clone $zero;

@@ -18,7 +18,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath\Base;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class Barrett extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath\Base
+abstract class Barrett extends Base
 {
     /**
      * Cache constants

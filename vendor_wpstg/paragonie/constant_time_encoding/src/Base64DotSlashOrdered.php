@@ -31,7 +31,7 @@ namespace WPStaging\Vendor\ParagonIE\ConstantTime;
  *
  * @package ParagonIE\ConstantTime
  */
-abstract class Base64DotSlashOrdered extends \WPStaging\Vendor\ParagonIE\ConstantTime\Base64
+abstract class Base64DotSlashOrdered extends Base64
 {
     /**
      * Uses bitwise operators instead of table-lookups to turn 6-bit integers

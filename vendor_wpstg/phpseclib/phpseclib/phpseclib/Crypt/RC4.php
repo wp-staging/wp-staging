@@ -47,7 +47,7 @@ use WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class RC4 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\StreamCipher
+class RC4 extends StreamCipher
 {
     /**
      * @see \phpseclib3\Crypt\RC4::_crypt()

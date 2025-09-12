@@ -141,7 +141,7 @@ abstract class Engine implements \JsonSerializable
                 $is_negative = \false;
                 if ($base < 0 && \hexdec($x[0]) >= 8) {
                     $this->is_negative = $is_negative = \true;
-                    $x = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::bin2hex(~\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::hex2bin($x));
+                    $x = Strings::bin2hex(~Strings::hex2bin($x));
                 }
                 $this->value = $x;
                 $this->initialize($base);
@@ -168,7 +168,7 @@ abstract class Engine implements \JsonSerializable
                     $x = \substr($x, 1);
                 }
                 $x = \preg_replace('#^([01]*).*#s', '$1', $x);
-                $temp = new static(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::bits2bin($x), 128 * $base);
+                $temp = new static(Strings::bits2bin($x), 128 * $base);
                 // ie. either -16 or +16
                 $this->value = $temp->value;
                 if ($temp->is_negative) {
@@ -192,7 +192,7 @@ abstract class Engine implements \JsonSerializable
             throw new \InvalidArgumentException("{$engine} is not a valid engine");
         }
         if (!$fqengine::isValidEngine()) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\BadConfigurationException("{$engine} is not setup correctly on this system");
+            throw new BadConfigurationException("{$engine} is not setup correctly on this system");
         }
         static::$modexpEngine[static::class] = $fqengine;
     }
@@ -228,7 +228,7 @@ abstract class Engine implements \JsonSerializable
      */
     public function toHex($twos_compliment = \false)
     {
-        return \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::bin2hex($this->toBytes($twos_compliment));
+        return Strings::bin2hex($this->toBytes($twos_compliment));
     }
     /**
      * Converts a BigInteger to a bit string (eg. base-2).
@@ -242,7 +242,7 @@ abstract class Engine implements \JsonSerializable
     public function toBits($twos_compliment = \false)
     {
         $hex = $this->toBytes($twos_compliment);
-        $bits = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::bin2bits($hex);
+        $bits = Strings::bin2bits($hex);
         $result = $this->precision > 0 ? \substr($bits, -$this->precision) : \ltrim($bits, '0');
         if ($twos_compliment && $this->compare(new static()) > 0 && $this->precision <= 0) {
             return '0' . $result;
@@ -259,7 +259,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $n
      * @return static|false
      */
-    protected function modInverseHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $n)
+    protected function modInverseHelper(Engine $n)
     {
         // $x mod -$n == $x mod $n.
         $n = $n->abs();
@@ -543,7 +543,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $n
      * @return static|false
      */
-    protected function powModOuter(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $n)
+    protected function powModOuter(Engine $e, Engine $n)
     {
         $n = $this->bitmask !== \false && $this->bitmask->compare($n) < 0 ? $this->bitmask : $n->abs();
         if ($e->compare(new static()) < 0) {
@@ -575,7 +575,7 @@ abstract class Engine implements \JsonSerializable
      * @param class-string<T> $class
      * @return T
      */
-    protected static function slidingWindow(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $x, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $n, $class)
+    protected static function slidingWindow(Engine $x, Engine $e, Engine $n, $class)
     {
         static $window_ranges = [7, 25, 81, 241, 673, 1793];
         // from BigInteger.java's oddModPow function
@@ -662,7 +662,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $max
      * @return static|false
      */
-    protected static function randomRangePrimeOuter(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $min, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $max)
+    protected static function randomRangePrimeOuter(Engine $min, Engine $max)
     {
         $compare = $max->compare($min);
         if (!$compare) {
@@ -693,7 +693,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $max
      * @return Engine
      */
-    protected static function randomRangeHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $min, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $max)
+    protected static function randomRangeHelper(Engine $min, Engine $max)
     {
         $compare = $max->compare($min);
         if (!$compare) {
@@ -724,15 +724,15 @@ abstract class Engine implements \JsonSerializable
         
             http://crypto.stackexchange.com/questions/5708/creating-a-small-number-from-a-cryptographically-secure-random-string
         */
-        $random_max = new static(\chr(1) . \str_repeat("\0", $size), 256);
-        $random = new static(\WPStaging\Vendor\phpseclib3\Crypt\Random::string($size), 256);
+        $random_max = new static(\chr(1) . \str_repeat("\x00", $size), 256);
+        $random = new static(Random::string($size), 256);
         list($max_multiple) = $random_max->divide($max);
         $max_multiple = $max_multiple->multiply($max);
         while ($random->compare($max_multiple) >= 0) {
             $random = $random->subtract($max_multiple);
             $random_max = $random_max->subtract($max_multiple);
             $random = $random->bitwise_leftShift(8);
-            $random = $random->add(new static(\WPStaging\Vendor\phpseclib3\Crypt\Random::string(1), 256));
+            $random = $random->add(new static(Random::string(1), 256));
             $random_max = $random_max->bitwise_leftShift(8);
             list($max_multiple) = $random_max->divide($max);
             $max_multiple = $max_multiple->multiply($max);
@@ -748,7 +748,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $max
      * @return static|false
      */
-    protected static function randomRangePrimeInner(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $x, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $min, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $max)
+    protected static function randomRangePrimeInner(Engine $x, Engine $min, Engine $max)
     {
         if (!isset(static::$two[static::class])) {
             static::$two[static::class] = new static('2');
@@ -1060,7 +1060,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $n
      * @return array{gcd: Engine, x: Engine, y: Engine}
      */
-    protected function extendedGCDHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $n)
+    protected function extendedGCDHelper(Engine $n)
     {
         $u = clone $this;
         $v = clone $n;
@@ -1112,7 +1112,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $x
      * @return Engine
      */
-    protected function bitwiseAndHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $x)
+    protected function bitwiseAndHelper(Engine $x)
     {
         $left = $this->toBytes(\true);
         $right = $x->toBytes(\true);
@@ -1127,7 +1127,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $x
      * @return Engine
      */
-    protected function bitwiseOrHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $x)
+    protected function bitwiseOrHelper(Engine $x)
     {
         $left = $this->toBytes(\true);
         $right = $x->toBytes(\true);
@@ -1142,7 +1142,7 @@ abstract class Engine implements \JsonSerializable
      * @param Engine $x
      * @return Engine
      */
-    protected function bitwiseXorHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine $x)
+    protected function bitwiseXorHelper(Engine $x)
     {
         $left = $this->toBytes(\true);
         $right = $x->toBytes(\true);

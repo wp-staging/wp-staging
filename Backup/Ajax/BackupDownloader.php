@@ -10,8 +10,10 @@ use WPStaging\Framework\Network\RemoteDownloader;
 use WPStaging\Framework\Security\Otp\Otp;
 use WPStaging\Framework\Security\Otp\OtpDisabledException;
 use WPStaging\Framework\Security\Otp\OtpException;
+use WPStaging\Framework\Utils\Sanitize;
+use WPStaging\Framework\Security\Auth;
 use function WPStaging\functions\debug_log;
-class BackupDownloader extends RemoteDownloader
+class BackupDownloader
 {
     const FILTER_REMOTE_DOWNLOAD_CHUNK_SIZE = 'wpstg.framework.network.ajax_backup_downloader_chunk_size';
     const BACKUP_HEADER_V1_PATTERN = '01101000 01110100 01110100 01110000 01110011 00111010';
@@ -20,16 +22,19 @@ class BackupDownloader extends RemoteDownloader
     const OPTION_UPLOAD_PREPARED = 'wpstg.backups.upload_from_url_prepared';
     private $backupsFinder;
     private $filesystem;
-    private $backupHeader;
     private $otpService;
+    private $remoteDownloader;
+    private $auth;
+    private $sanitize;
 
-    public function __construct(BackupsFinder $backupsFinder, Filesystem $filesystem, BackupHeader $backupHeader, Otp $otpService)
+    public function __construct(BackupsFinder $backupsFinder, Filesystem $filesystem, Otp $otpService, RemoteDownloader $remoteDownloader, Auth $auth, Sanitize $sanitize)
     {
-        parent::__construct();
-        $this->backupsFinder = $backupsFinder;
-        $this->filesystem    = $filesystem;
-        $this->backupHeader  = $backupHeader;
-        $this->otpService    = $otpService;
+        $this->backupsFinder    = $backupsFinder;
+        $this->filesystem       = $filesystem;
+        $this->otpService       = $otpService;
+        $this->remoteDownloader = $remoteDownloader;
+        $this->auth             = $auth;
+        $this->sanitize         = $sanitize;
     }
 
     public function ajaxPrepareUpload()
@@ -68,42 +73,40 @@ class BackupDownloader extends RemoteDownloader
         if (!$this->auth->isAuthenticatedRequest()) {
             return;
         }
-        $remoteFileUrl = sanitize_text_field($_POST['backupUrl'] ?? '');
+        $remoteFileUrl = $this->sanitize->sanitizeString($_POST['backupUrl'] ?? '');
         if (empty($remoteFileUrl)) {
             $this->setFailResponse(__('Backup file URL is empty', 'wp-staging'));
-            $this->handleResponse();
+            $this->remoteDownloader->writeResponse();
             return;
         }
         $remoteFileUrl = strtok($remoteFileUrl, '?#');
         if (!$this->filesystem->isWpstgBackupFile($remoteFileUrl)) {
             $this->setFailResponse(sprintf(__('Invalid backup file extension: %s', 'wp-staging'), basename($remoteFileUrl)));
-            $this->handleResponse();
+            $this->remoteDownloader->writeResponse();
             return;
         }
-        $startByte = (int)sanitize_text_field($_POST['startByte'] ?? 0);
-        $fileSize  = (int)sanitize_text_field($_POST['fileSize'] ?? 0);
+        $startByte = $this->sanitize->sanitizeInt($_POST['startByte'] ?? 0);
+        $fileSize  = $this->sanitize->sanitizeInt($_POST['fileSize'] ?? 0);
         $this->setDownloadParameters($remoteFileUrl, $startByte, $fileSize);
         try {
             $this->validateIsUploadPrepared();
         } catch (\Exception $e) {
             $this->setFailResponse(__('Invalid Request! Backup upload was not prepared...', 'wp-staging'));
-            $this->handleResponse();
+            $this->remoteDownloader->writeResponse();
             return;
         }
-        $this->initDownload();
+        $this->downloadBackup();
     }
 
     protected function prepareUploadFromUrl(string $remoteFileUrl): bool
     {
-        $startByte = 0;
-        $fileSize  = 0;
-        $this->setDownloadParameters($remoteFileUrl, $startByte, $fileSize);
-        $uploadPath = $this->localFilePath . '.uploading';
+        $this->setDownloadParameters($remoteFileUrl, 0, 0);
+        $uploadPath = $this->remoteDownloader->getUploadPath();
         if (file_exists($uploadPath)) {
             return false;
         }
         delete_option(static::OPTION_UPLOAD_PREPARED);
-        update_option(static::OPTION_UPLOAD_PREPARED, $this->fileSize);
+        update_option(static::OPTION_UPLOAD_PREPARED, $this->remoteDownloader->getRemoteFileSize());
         $uploadParent = dirname($uploadPath);
         if (!is_dir($uploadParent)) {
             $this->filesystem->mkdir($uploadParent);
@@ -111,30 +114,18 @@ class BackupDownloader extends RemoteDownloader
         return @touch($uploadPath);
     }
 
-    private function validateIsUploadPrepared()
-    {
-        $uploadPath = $this->localFilePath . '.uploading';
-        if (!file_exists($uploadPath)) {
-            throw new \Exception('Upload file does not exist');
-        }
-        $remoteFileSize = (int)get_option(static::OPTION_UPLOAD_PREPARED, 0);
-        if ($remoteFileSize !== $this->fileSize) {
-            throw new \Exception('Remote file size does not match the prepared file size');
-        }
-    }
-
     protected function setDownloadParameters(string $remoteFileUrl, int $startByte, int $fileSize)
     {
-        $this->setRemoteFileUrl($remoteFileUrl);
+        $this->remoteDownloader->setRemoteUrl($remoteFileUrl);
         $fileName = basename($remoteFileUrl);
-        $this->setFileName($fileName);
-        $this->setStartByte($startByte);
+        $this->remoteDownloader->setFileName($fileName);
+        $this->remoteDownloader->setStartByte($startByte);
         if ($fileSize === 0) {
-            $fileSize = $this->getRemoteFileSize();
+            $fileSize = $this->remoteDownloader->fetchRemoteFileSize();
         }
-        $this->setFileSize($fileSize);
-        $localFilePath = $this->backupsFinder->getBackupsDirectory() . '/' . $this->getFileName();
-        $this->setLocalFilePath($localFilePath);
+        $this->remoteDownloader->setRemoteFileSize($fileSize);
+        $localFilePath = $this->backupsFinder->getBackupsDirectory() . '/' . $this->remoteDownloader->getFileName();
+        $this->remoteDownloader->setLocalPath($localFilePath);
         $this->setDownloadChunkSize($fileSize);
     }
 
@@ -155,13 +146,14 @@ class BackupDownloader extends RemoteDownloader
                 return;
             }
         } catch (\Throwable $e) {
-            }
+            debug_log('Error applying filter ' . self::FILTER_REMOTE_DOWNLOAD_CHUNK_SIZE . ': ' . $e->getMessage());
+        }
         $memoryLimit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
         $availableMemory = absint(($memoryLimit * 20 ) / 100);
         if ($newChunkSizeInBytes > $availableMemory) {
             $newChunkSizeInBytes = $availableMemory;
         }
-        $this->setChunkSize($newChunkSizeInBytes);
+        $this->remoteDownloader->setChunkSize($newChunkSizeInBytes);
     }
 
     private function hasValidBackupContentFromRemoteServer(): bool
@@ -173,19 +165,19 @@ class BackupDownloader extends RemoteDownloader
         return true;
     }
 
-    private function isDownloadHasStarted(): bool
+    private function isDownloadStarted(): bool
     {
         return empty($_POST['startByte']) || empty($_POST['fileSize']) ? false : true;
     }
 
     private function isQuickValidateRemoteBackupHeader(): bool
     {
-        if ($this->isDownloadHasStarted()) {
+        if ($this->isDownloadStarted()) {
             return true;
         }
         $startByte               = 0;
         $endByte                 = self::BACKUP_HEADER_SIZE_FOR_QUICK_VERIFY;
-        $remoteFileHeaderContent = $this->getRemoteFileContent($startByte, $endByte);
+        $remoteFileHeaderContent = $this->remoteDownloader->fetchRemoteFileContent($startByte, $endByte);
         $remoteFileHeaderContent = trim($remoteFileHeaderContent);
         if (empty($remoteFileHeaderContent)) {
             return false;
@@ -203,30 +195,41 @@ class BackupDownloader extends RemoteDownloader
         return false;
     }
 
-    private function initDownload()
+    private function downloadBackup()
     {
-        if (!$this->isDownloadHasStarted() && !$this->remoteFileExists()) {
-            $this->handleResponse();
+        if (!$this->isDownloadStarted() && !$this->remoteDownloader->remoteFileExists()) {
+            $this->remoteDownloader->writeResponse();
             return;
         }
         if (!$this->hasValidBackupContentFromRemoteServer()) {
-            $this->handleResponse();
+            $this->remoteDownloader->writeResponse();
             return;
         }
-        $this->downloadFileChunk();
-        if (!$this->getProcessStatus()) {
-            $this->updateStartByte();
+        $this->remoteDownloader->downloadChunk();
+        $this->remoteDownloader->closeFileHandle();
+        if (!$this->remoteDownloader->getIsSuccess()) {
+            $this->remoteDownloader->advanceStartByte();
         }
-        if ($this->getProcessStatus()) {
+        if ($this->remoteDownloader->getIsCompleted()) {
             delete_option(static::OPTION_UPLOAD_PREPARED);
         }
-        $this->handleResponse();
+        $this->remoteDownloader->writeResponse();
+    }
+
+    private function validateIsUploadPrepared()
+    {
+        $uploadPath = $this->remoteDownloader->getUploadPath();
+        if (!file_exists($uploadPath)) {
+            throw new \Exception('Upload file does not exist');
+        }
+        $remoteFileSize = (int)get_option(static::OPTION_UPLOAD_PREPARED, 0);
+        if ($remoteFileSize !== $this->remoteDownloader->getRemoteFileSize()) {
+            throw new \Exception('Remote file size does not match the prepared file size');
+        }
     }
 
     private function setFailResponse(string $message)
     {
-        $this->setResponse($message);
-        $this->setIsSuccess(false);
-        $this->setIsProcessCompleted(true);
+        $this->remoteDownloader->setResponse($message, false, true);
     }
 }

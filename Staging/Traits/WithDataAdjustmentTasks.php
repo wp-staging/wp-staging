@@ -17,12 +17,18 @@ trait WithDataAdjustmentTasks
     public function addDataAdjustmentTasks()
     {
         $this->tasks[] = VerifyWpConfigTask::class;
-        $this->tasks[] = UpdateSiteUrlAndHomeTask::class;
-        $this->tasks[] = UpdateOptionsInOptionsTableTask::class;
-        $this->tasks[] = UpdatePrefixInUserMetaTableTask::class;
+        if (!$this->jobDataDto->getAllTablesExcluded()) {
+            $this->tasks[] = UpdateSiteUrlAndHomeTask::class;
+            $this->tasks[] = UpdateOptionsInOptionsTableTask::class;
+            $this->tasks[] = UpdatePrefixInUserMetaTableTask::class;
+        }
+
         $this->tasks[] = UpdateWpConfigTask::class;
         $this->tasks[] = VerifyIndexTask::class;
-        $this->tasks[] = UpdatePrefixInOptionsTableTask::class;
+        if (!$this->jobDataDto->getAllTablesExcluded()) {
+            $this->tasks[] = UpdatePrefixInOptionsTableTask::class;
+        }
+
         $this->tasks[] = UpdateWpConfigConstantsTask::class;
         $this->tasks[] = AdjustThirdPartyFilesTask::class;
     }

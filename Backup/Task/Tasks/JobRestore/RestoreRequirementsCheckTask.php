@@ -167,7 +167,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         try {
             $file = new FileObject($fileBeingRestored, 'r');
         } catch (\Exception $e) {
-            $this->logger->warning(__('Could not open the backup file for requirement checking.', 'wp-staging'));
+            $this->logger->error(__('Could not open the backup file for requirement checking.', 'wp-staging'));
             return;
         }
 

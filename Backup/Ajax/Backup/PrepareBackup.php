@@ -125,6 +125,10 @@ class PrepareBackup extends PrepareJob
             return new \WP_Error(400, $e->getMessage());
         }
 
+        if (!$this->jobDataDto->getIsSyncRequest()) {
+            $this->deleteSseCacheFiles();
+        }
+
         return $sanitizedData;
     }
 

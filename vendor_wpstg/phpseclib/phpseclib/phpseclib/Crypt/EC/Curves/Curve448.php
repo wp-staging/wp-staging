@@ -14,16 +14,16 @@ namespace WPStaging\Vendor\phpseclib3\Crypt\EC\Curves;
 
 use WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery;
 use WPStaging\Vendor\phpseclib3\Math\BigInteger;
-class Curve448 extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery
+class Curve448 extends Montgomery
 {
     public function __construct()
     {
         // 2^448 - 2^224 - 1
-        $this->setModulo(new \WPStaging\Vendor\phpseclib3\Math\BigInteger('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE' . 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', 16));
-        $this->a24 = $this->factory->newInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger('39081'));
-        $this->p = [$this->factory->newInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(5))];
+        $this->setModulo(new BigInteger('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE' . 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', 16));
+        $this->a24 = $this->factory->newInteger(new BigInteger('39081'));
+        $this->p = [$this->factory->newInteger(new BigInteger(5))];
         // 2^446 - 0x8335dc163bb124b65129c96fde933d8d723a70aadc873d6d54a7bb0d
-        $this->setOrder(new \WPStaging\Vendor\phpseclib3\Math\BigInteger('3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' . '7CCA23E9C44EDB49AED63690216CC2728DC58F552378C292AB5844F3', 16));
+        $this->setOrder(new BigInteger('3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' . '7CCA23E9C44EDB49AED63690216CC2728DC58F552378C292AB5844F3', 16));
         /*
         $this->setCoefficients(
             new BigInteger('156326'), // a
@@ -44,15 +44,15 @@ class Curve448 extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgome
      *
      * @return array
      */
-    public function multiplyPoint(array $p, \WPStaging\Vendor\phpseclib3\Math\BigInteger $d)
+    public function multiplyPoint(array $p, BigInteger $d)
     {
         //$r = strrev(sodium_crypto_scalarmult($d->toBytes(), strrev($p[0]->toBytes())));
         //return [$this->factory->newInteger(new BigInteger($r, 256))];
         $d = $d->toBytes();
-        $d[0] = $d[0] & "ü";
+        $d[0] = $d[0] & "\xfc";
         $d = \strrev($d);
-        $d |= "€";
-        $d = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($d, 256);
+        $d |= "\x80";
+        $d = new BigInteger($d, 256);
         return parent::multiplyPoint($p, $d);
     }
     /**
@@ -62,12 +62,12 @@ class Curve448 extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgome
      */
     public function createRandomMultiplier()
     {
-        return \WPStaging\Vendor\phpseclib3\Math\BigInteger::random(446);
+        return BigInteger::random(446);
     }
     /**
      * Performs range check
      */
-    public function rangeCheck(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
+    public function rangeCheck(BigInteger $x)
     {
         if ($x->getLength() > 448 || $x->isNegative()) {
             throw new \RangeException('x must be a positive integer less than 446 bytes in length');

@@ -19,7 +19,7 @@ use WPStaging\Vendor\phpseclib3\Exception\BadConfigurationException;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
+class BCMath extends Engine
 {
     /**
      * Can Bitwise operations be done fast?
@@ -61,7 +61,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
             static::$isValidEngine[static::class] = self::isValidEngine();
         }
         if (!static::$isValidEngine[static::class]) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\BadConfigurationException('BCMath is not setup correctly on this system');
+            throw new BadConfigurationException('BCMath is not setup correctly on this system');
         }
         $this->value = '0';
         parent::__construct($x, $base);
@@ -91,7 +91,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
                 break;
             case 16:
                 $x = \strlen($this->value) & 1 ? '0' . $this->value : $this->value;
-                $temp = new self(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::hex2bin($x), 256);
+                $temp = new self(Strings::hex2bin($x), 256);
                 $this->value = $this->is_negative ? '-' . $temp->value : $temp->value;
                 $this->is_negative = \false;
                 break;
@@ -142,7 +142,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $y
      * @return BCMath
      */
-    public function add(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $y)
+    public function add(BCMath $y)
     {
         $temp = new self();
         $temp->value = \bcadd($this->value, $y->value, 0);
@@ -154,7 +154,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $y
      * @return BCMath
      */
-    public function subtract(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $y)
+    public function subtract(BCMath $y)
     {
         $temp = new self();
         $temp->value = \bcsub($this->value, $y->value, 0);
@@ -166,7 +166,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $x
      * @return BCMath
      */
-    public function multiply(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x)
+    public function multiply(BCMath $x)
     {
         $temp = new self();
         $temp->value = \bcmul($this->value, $x->value, 0);
@@ -183,7 +183,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $y
      * @return array{static, static}
      */
-    public function divide(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $y)
+    public function divide(BCMath $y)
     {
         $quotient = new self();
         $remainder = new self();
@@ -202,7 +202,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $n
      * @return false|BCMath
      */
-    public function modInverse(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    public function modInverse(BCMath $n)
     {
         return $this->modInverseHelper($n);
     }
@@ -217,7 +217,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $n
      * @return array{gcd: static, x: static, y: static}
      */
-    public function extendedGCD(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    public function extendedGCD(BCMath $n)
     {
         // it might be faster to use the binary xGCD algorithim here, as well, but (1) that algorithim works
         // best when the base is a power of 2 and (2) i don't think it'd make much difference, anyway.  as is,
@@ -250,7 +250,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $n
      * @return BCMath
      */
-    public function gcd(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    public function gcd(BCMath $n)
     {
         $gcd = $this->extendedGCD($n)['gcd'];
         return $gcd;
@@ -272,7 +272,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $x
      * @return BCMath
      */
-    public function bitwise_and(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x)
+    public function bitwise_and(BCMath $x)
     {
         return $this->bitwiseAndHelper($x);
     }
@@ -282,7 +282,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $x
      * @return BCMath
      */
-    public function bitwise_or(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x)
+    public function bitwise_or(BCMath $x)
     {
         return $this->bitwiseOrHelper($x);
     }
@@ -292,7 +292,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $x
      * @return BCMath
      */
-    public function bitwise_xor(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x)
+    public function bitwise_xor(BCMath $x)
     {
         return $this->bitwiseXorHelper($x);
     }
@@ -342,7 +342,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @return int in case < 0 if $this is less than $y; > 0 if $this is greater than $y, and 0 if they are equal.
      * @see self::equals()
      */
-    public function compare(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $y)
+    public function compare(BCMath $y)
     {
         return \bccomp($this->value, $y->value, 0);
     }
@@ -354,7 +354,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $x
      * @return bool
      */
-    public function equals(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x)
+    public function equals(BCMath $x)
     {
         return $this->value == $x->value;
     }
@@ -365,7 +365,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $n
      * @return BCMath
      */
-    public function modPow(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    public function modPow(BCMath $e, BCMath $n)
     {
         return $this->powModOuter($e, $n);
     }
@@ -378,7 +378,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $n
      * @return BCMath
      */
-    public function powMod(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    public function powMod(BCMath $e, BCMath $n)
     {
         return $this->powModOuter($e, $n);
     }
@@ -389,13 +389,13 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $n
      * @return BCMath
      */
-    protected function powModInner(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    protected function powModInner(BCMath $e, BCMath $n)
     {
         try {
             $class = static::$modexpEngine[static::class];
             return $class::powModHelper($this, $e, $n, static::class);
         } catch (\Exception $err) {
-            return \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath\DefaultEngine::powModHelper($this, $e, $n, static::class);
+            return BCMath\DefaultEngine::powModHelper($this, $e, $n, static::class);
         }
     }
     /**
@@ -406,7 +406,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $result
      * @return BCMath
      */
-    protected function normalize(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $result)
+    protected function normalize(BCMath $result)
     {
         $result->precision = $this->precision;
         $result->bitmask = $this->bitmask;
@@ -424,7 +424,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $max
      * @return false|BCMath
      */
-    public static function randomRangePrime(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $min, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $max)
+    public static function randomRangePrime(BCMath $min, BCMath $max)
     {
         return self::randomRangePrimeOuter($min, $max);
     }
@@ -441,7 +441,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $max
      * @return BCMath
      */
-    public static function randomRange(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $min, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $max)
+    public static function randomRange(BCMath $min, BCMath $max)
     {
         return self::randomRangeHelper($min, $max);
     }
@@ -492,7 +492,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @return int
      * @see self::isPrime()
      */
-    public static function scan1divide(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $r)
+    public static function scan1divide(BCMath $r)
     {
         $r_value =& $r->value;
         $s = 0;
@@ -509,7 +509,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $n
      * @return BCMath
      */
-    public function pow(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    public function pow(BCMath $n)
     {
         $temp = new self();
         $temp->value = \bcpow($this->value, $n->value, 0);
@@ -521,7 +521,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath ...$nums
      * @return BCMath
      */
-    public static function min(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath ...$nums)
+    public static function min(BCMath ...$nums)
     {
         return self::minHelper($nums);
     }
@@ -531,7 +531,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath ...$nums
      * @return BCMath
      */
-    public static function max(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath ...$nums)
+    public static function max(BCMath ...$nums)
     {
         return self::maxHelper($nums);
     }
@@ -542,7 +542,7 @@ class BCMath extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\Engine
      * @param BCMath $max
      * @return bool
      */
-    public function between(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $min, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $max)
+    public function between(BCMath $min, BCMath $max)
     {
         return $this->compare($min) >= 0 && $this->compare($max) <= 0;
     }

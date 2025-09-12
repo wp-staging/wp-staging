@@ -18,6 +18,6 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath\Reductions\Barret
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class DefaultEngine extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath\Reductions\Barrett
+abstract class DefaultEngine extends Barrett
 {
 }

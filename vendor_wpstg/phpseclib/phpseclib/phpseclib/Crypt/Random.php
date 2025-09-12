@@ -124,22 +124,22 @@ abstract class Random
             // http://en.wikipedia.org/wiki/Cryptographically_secure_pseudorandom_number_generator#Designs_based_on_cryptographic_primitives
             switch (\true) {
                 case \class_exists('WPStaging\\Vendor\\phpseclib3\\Crypt\\AES'):
-                    $crypto = new \WPStaging\Vendor\phpseclib3\Crypt\AES('ctr');
+                    $crypto = new AES('ctr');
                     break;
                 case \class_exists('WPStaging\\Vendor\\phpseclib3\\Crypt\\Twofish'):
-                    $crypto = new \WPStaging\Vendor\phpseclib3\Crypt\Twofish('ctr');
+                    $crypto = new Twofish('ctr');
                     break;
                 case \class_exists('WPStaging\\Vendor\\phpseclib3\\Crypt\\Blowfish'):
-                    $crypto = new \WPStaging\Vendor\phpseclib3\Crypt\Blowfish('ctr');
+                    $crypto = new Blowfish('ctr');
                     break;
                 case \class_exists('WPStaging\\Vendor\\phpseclib3\\Crypt\\TripleDES'):
-                    $crypto = new \WPStaging\Vendor\phpseclib3\Crypt\TripleDES('ctr');
+                    $crypto = new TripleDES('ctr');
                     break;
                 case \class_exists('WPStaging\\Vendor\\phpseclib3\\Crypt\\DES'):
-                    $crypto = new \WPStaging\Vendor\phpseclib3\Crypt\DES('ctr');
+                    $crypto = new DES('ctr');
                     break;
                 case \class_exists('WPStaging\\Vendor\\phpseclib3\\Crypt\\RC4'):
-                    $crypto = new \WPStaging\Vendor\phpseclib3\Crypt\RC4();
+                    $crypto = new RC4();
                     break;
                 default:
                     throw new \RuntimeException(__CLASS__ . ' requires at least one symmetric cipher be loaded');

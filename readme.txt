@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.8
-Stable tag: 4.3.0
+Stable tag: 4.3.1
 Requires PHP: 7.0
 
 Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
@@ -286,6 +286,26 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.3.1 =
+* Enh: Add filter `wpstg.backup.restore.exclude.tables` to support excluding of specific tables during the backup restore process. #4430
+* Enh: Add custom region field for Wasabi S3 backup storage settings to support additional regions not listed in predefined options. (Pro) #4470
+* Enh: Improve upgrade notification. #4529
+* Enh: Add cancel option for refactored staging site creation. Make UI options work in the refactored staging site logic. #4464
+* Fix: Misleading warning message displayed when symlinking files on staging site. #4555
+* Fix: Optimize and improve loading placeholder performance and smoothness to eliminate UI flakiness. #4526
+* Fix: Magic login links to staging site not always work. Refactor auto-login code for re-usability and ensure auto login metadata is cleared after authentication. (Pro) #4424
+* Fix: Resolved false positive database permission warnings and empty table lists when deleting staging sites with external databases and custom table prefixes. (Pro) #4576
+* Fix: Fatal error for `invalid job type` when uploading local backup to cloud. (Pro) #4518
+* Fix: Memory exhaust error on backup restore when using the restore tool. Fix class not found in the restore tool and remove unused constants. (Pro) #4552
+* Fix: Temporarily disable the modal "Nothing to worry but there is a glitch…". #4516
+* Dev: Improve speed of playwright background test and add AI agent documentation #4565
+* Dev: Exclude CLAUDE.md from dist packages. #4534
+* Dev: Bring back `WP Staging Restorer` build script. #4570
+* Dev: Extend the remote backup downloader so it can be used for remote sync feature. Also use only login related cookies when running background queue jobs. #4393
+* Dev: Remove php cli github action workflow. #4536
+* Dev: Move backup storage providers one folder up and remove folder storages. #4484
+* Dev: Optimize github actions by removing PHP CLI setup action and using Docker containers for all PHP commands, saving ~32 seconds per workflow run #4532
 
 = 4.3.0 =
 * New: Opening a staging site using `Action` dropdown > `Open`, now automatically login to staging site using one time login token. Existing (old) staging sites must be updated to use this feature. (Pro) #3636

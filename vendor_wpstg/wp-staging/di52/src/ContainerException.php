@@ -16,7 +16,7 @@ use Throwable;
  *
  * @package lucatume\DI52
  */
-class ContainerException extends \Exception implements \WPStaging\Vendor\Psr\Container\ContainerExceptionInterface
+class ContainerException extends Exception implements ContainerExceptionInterface
 {
     /**
      * Extracts a property from an object.
@@ -28,7 +28,7 @@ class ContainerException extends \Exception implements \WPStaging\Vendor\Psr\Con
      */
     private static function getPropertyValue($object, $property)
     {
-        $reflectionClass = new \ReflectionClass($object);
+        $reflectionClass = new ReflectionClass($object);
         do {
             if ($reflectionClass->hasProperty($property)) {
                 $traceProperty = $reflectionClass->getProperty($property);
@@ -36,7 +36,7 @@ class ContainerException extends \Exception implements \WPStaging\Vendor\Psr\Con
                 return $traceProperty->getValue($object);
             }
             $reflectionClass = $reflectionClass->getParentClass();
-        } while ($reflectionClass instanceof \ReflectionClass);
+        } while ($reflectionClass instanceof ReflectionClass);
         return null;
     }
     /**
@@ -50,7 +50,7 @@ class ContainerException extends \Exception implements \WPStaging\Vendor\Psr\Con
      */
     private static function setPropertyValue($object, $property, $value)
     {
-        $reflectionClass = new \ReflectionClass($object);
+        $reflectionClass = new ReflectionClass($object);
         do {
             if ($reflectionClass->hasProperty($property)) {
                 $traceProperty = $reflectionClass->getProperty($property);
@@ -59,7 +59,7 @@ class ContainerException extends \Exception implements \WPStaging\Vendor\Psr\Con
                 return \true;
             }
             $reflectionClass = $reflectionClass->getParentClass();
-        } while ($reflectionClass instanceof \ReflectionClass);
+        } while ($reflectionClass instanceof ReflectionClass);
         return \false;
     }
     /**
@@ -74,7 +74,7 @@ class ContainerException extends \Exception implements \WPStaging\Vendor\Psr\Con
     private static function makeBuildLineErrorMessage($id, $thrown, array $buildLine)
     {
         $idString = \is_string($id) ? $id : \gettype($id);
-        if ($thrown instanceof \WPStaging\Vendor\lucatume\DI52\NestedParseError) {
+        if ($thrown instanceof NestedParseError) {
             $last = $thrown->getType() . ' $' . $thrown->getName();
         } else {
             $last = \array_pop($buildLine) ?: $idString;
@@ -95,10 +95,10 @@ class ContainerException extends \Exception implements \WPStaging\Vendor\Psr\Con
      */
     public static function fromThrowable($id, $thrown, $maskThrowables, array $buildLine)
     {
-        $message = $maskThrowables & \WPStaging\Vendor\lucatume\DI52\Container::EXCEPTION_MASK_MESSAGE ? self::makeBuildLineErrorMessage($id, $thrown, $buildLine) : $thrown->getMessage();
+        $message = $maskThrowables & Container::EXCEPTION_MASK_MESSAGE ? self::makeBuildLineErrorMessage($id, $thrown, $buildLine) : $thrown->getMessage();
         $exceptionClass = $thrown instanceof self ? \get_class($thrown) : self::class;
         $built = new $exceptionClass($message, $thrown->getCode(), $thrown);
-        if ($maskThrowables & \WPStaging\Vendor\lucatume\DI52\Container::EXCEPTION_MASK_FILE_LINE && ($thrownFile = self::getPropertyValue($thrown, 'file')) && ($thrownLine = self::getPropertyValue($thrown, 'line'))) {
+        if ($maskThrowables & Container::EXCEPTION_MASK_FILE_LINE && ($thrownFile = self::getPropertyValue($thrown, 'file')) && ($thrownLine = self::getPropertyValue($thrown, 'line'))) {
             self::setPropertyValue($built, 'file', $thrownFile);
             self::setPropertyValue($built, 'line', $thrownLine);
         }

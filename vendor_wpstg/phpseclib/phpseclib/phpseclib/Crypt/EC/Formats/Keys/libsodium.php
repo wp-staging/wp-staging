@@ -59,7 +59,7 @@ abstract class libsodium
             default:
                 throw new \RuntimeException('libsodium keys need to either be 32 bytes long, 64 bytes long or 96 bytes long');
         }
-        $curve = new \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519();
+        $curve = new Ed25519();
         $components = ['curve' => $curve];
         if (isset($private)) {
             $arr = $curve->extractSecret($private);
@@ -76,7 +76,7 @@ abstract class libsodium
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 $curve, array $publicKey)
+    public static function savePublicKey(Ed25519 $curve, array $publicKey)
     {
         return $curve->encodePoint($publicKey);
     }
@@ -90,7 +90,7 @@ abstract class libsodium
      * @param string $password optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $privateKey, \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 $curve, array $publicKey, $secret = null, $password = '')
+    public static function savePrivateKey(BigInteger $privateKey, Ed25519 $curve, array $publicKey, $secret = null, $password = '')
     {
         if (!isset($secret)) {
             throw new \RuntimeException('Private Key does not have a secret set');
@@ -99,7 +99,7 @@ abstract class libsodium
             throw new \RuntimeException('Private Key secret is not of the correct length');
         }
         if (!empty($password) && \is_string($password)) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedFormatException('libsodium private keys do not support encryption');
+            throw new UnsupportedFormatException('libsodium private keys do not support encryption');
         }
         return $secret . $curve->encodePoint($publicKey);
     }

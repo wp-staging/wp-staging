@@ -13,7 +13,7 @@ use WPStaging\Vendor\lucatume\DI52\Container;
  *
  * @package lucatume\DI52\Builders
  */
-class CallableBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface, \WPStaging\Vendor\lucatume\DI52\Builders\ReinitializableBuilderInterface
+class CallableBuilder implements BuilderInterface, ReinitializableBuilderInterface
 {
     /**
      * An instance of the DI Container.
@@ -47,7 +47,7 @@ class CallableBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\Builde
      * @param array<string>|null $afterBuildMethods A set of methods to call on the built instance.
      * @param mixed              ...$buildArgs      A set of optional arguments for the callable method.
      */
-    public function __construct(\WPStaging\Vendor\lucatume\DI52\Container $container, callable $callable, $afterBuildMethods = null, ...$buildArgs)
+    public function __construct(Container $container, callable $callable, $afterBuildMethods = null, ...$buildArgs)
     {
         $this->container = $container;
         $this->callable = $callable;

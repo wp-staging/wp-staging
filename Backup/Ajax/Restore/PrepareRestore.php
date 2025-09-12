@@ -98,6 +98,8 @@ class PrepareRestore extends PrepareJob
             return new \WP_Error(400, $e->getMessage());
         }
 
+        $this->deleteSseCacheFiles();
+
         return $sanitizedData;
     }
 

@@ -41,6 +41,11 @@ abstract class FileCopierTask extends StagingTask
 
     public function execute(): TaskResponseDto
     {
+        // Early bail if the task is excluded
+        if ($this->getIsExcluded()) {
+            return $this->generateResponse(true);
+        }
+
         $this->prepareFileBackupTask();
         // If no file let's skip this task
         if ($this->stepsDto->getTotal() === 0) {
@@ -61,6 +66,12 @@ abstract class FileCopierTask extends StagingTask
 
     /** @return bool */
     protected function getIsWpContent(): bool
+    {
+        return false;
+    }
+
+    /** @return bool */
+    protected function getIsExcluded(): bool
     {
         return false;
     }

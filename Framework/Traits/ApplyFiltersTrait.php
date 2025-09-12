@@ -11,7 +11,7 @@ namespace WPStaging\Framework\Traits;
 trait ApplyFiltersTrait
 {
     /**
-     * @param string $hookName
+     * @param string $filter
      * @param mixed $value
      * @param mixed ...$args
      * @return mixed

@@ -78,9 +78,13 @@ class CreateDatabaseTablesTask extends StagingTask
     {
         $this->initStagingDatabase($this->jobDataDto->getStagingSite());
         $this->tables = $this->jobDataDto->getSelectedTables();
+        $this->tableCreateService->setIsResetExistingTables($this->jobDataDto->getIsUpdateOrResetJob());
         $this->tableCreateService->setup($this->logger, $this->stagingDb);
         if (!$this->stepsDto->getTotal()) {
             $selectedTables = new SelectedTables();
+            $selectedTables->setIncludedTables($this->jobDataDto->getIncludedTables());
+            $selectedTables->setExcludedTables($this->jobDataDto->getExcludedTables());
+            $selectedTables->setSelectedTablesWithoutPrefix($this->jobDataDto->getNonSiteTables());
             $selectedTables->setAllTablesExcluded($this->jobDataDto->getAllTablesExcluded());
             $this->tables = $selectedTables->getSelectedTables();
             $this->stepsDto->setTotal(count($this->tables));

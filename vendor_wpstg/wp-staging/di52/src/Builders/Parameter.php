@@ -69,7 +69,7 @@ class Parameter
      *
      * @throws ReflectionException
      */
-    public function __construct($index, \ReflectionParameter $reflectionParameter)
+    public function __construct($index, ReflectionParameter $reflectionParameter)
     {
         $string = $reflectionParameter->__toString();
         $s = \trim(\str_replace('Parameter #' . $index, '', $string), '[ ]');
@@ -153,7 +153,7 @@ class Parameter
             $format = 'Parameter $%s is not optional and its type (%s) cannot be resolved to a concrete class.';
             $message = \sprintf($format, $this->name, $this->getClass());
         }
-        throw new \WPStaging\Vendor\lucatume\DI52\ContainerException($message);
+        throw new ContainerException($message);
     }
     /**
      * Check if the parameter type is a class.
@@ -170,11 +170,11 @@ class Parameter
             return \false;
         }
         try {
-            if (\function_exists('WPStaging\\Vendor\\enum_exists') && enum_exists((string) $this->type)) {
+            if (\function_exists('enum_exists') && \enum_exists((string) $this->type)) {
                 return \false;
             }
-        } catch (\ParseError $e) {
-            throw new \WPStaging\Vendor\lucatume\DI52\NestedParseError($e->getMessage(), $e->getCode(), $e, (string) $this->type, $this->name);
+        } catch (ParseError $e) {
+            throw new NestedParseError($e->getMessage(), $e->getCode(), $e, (string) $this->type, $this->name);
         }
         return \true;
     }

@@ -28,7 +28,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Keys\JWK
+abstract class JWK extends Progenitor
 {
     use Common;
     /**
@@ -50,7 +50,7 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
                     case 'secp256k1':
                         break;
                     default:
-                        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException('Only P-256, P-384, P-521 and secp256k1 curves are accepted (' . $key->crv . ' provided)');
+                        throw new UnsupportedCurveException('Only P-256, P-384, P-521 and secp256k1 curves are accepted (' . $key->crv . ' provided)');
                 }
                 break;
             case 'OKP':
@@ -59,7 +59,7 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
                     case 'Ed448':
                         break;
                     default:
-                        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException('Only Ed25519 and Ed448 curves are accepted (' . $key->crv . ' provided)');
+                        throw new UnsupportedCurveException('Only Ed25519 and Ed448 curves are accepted (' . $key->crv . ' provided)');
                 }
                 break;
             default:
@@ -67,22 +67,22 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
         }
         $curve = '\\WPStaging\\Vendor\\phpseclib3\\Crypt\\EC\\Curves\\' . \str_replace('P-', 'nistp', $key->crv);
         $curve = new $curve();
-        if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            $QA = self::extractPoint(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_decode($key->x), $curve);
+        if ($curve instanceof TwistedEdwardsCurve) {
+            $QA = self::extractPoint(Strings::base64url_decode($key->x), $curve);
             if (!isset($key->d)) {
                 return \compact('curve', 'QA');
             }
-            $arr = $curve->extractSecret(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_decode($key->d));
+            $arr = $curve->extractSecret(Strings::base64url_decode($key->d));
             return \compact('curve', 'QA') + $arr;
         }
-        $QA = [$curve->convertInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_decode($key->x), 256)), $curve->convertInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_decode($key->y), 256))];
+        $QA = [$curve->convertInteger(new BigInteger(Strings::base64url_decode($key->x), 256)), $curve->convertInteger(new BigInteger(Strings::base64url_decode($key->y), 256))];
         if (!$curve->verifyPoint($QA)) {
             throw new \RuntimeException('Unable to verify that point exists on curve');
         }
         if (!isset($key->d)) {
             return \compact('curve', 'QA');
         }
-        $dA = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_decode($key->d), 256);
+        $dA = new BigInteger(Strings::base64url_decode($key->d), 256);
         $curve->rangeCheck($dA);
         return \compact('curve', 'dA', 'QA');
     }
@@ -91,21 +91,21 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      *
      * @return string
      */
-    private static function getAlias(\WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base $curve)
+    private static function getAlias(BaseCurve $curve)
     {
         switch (\true) {
-            case $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\secp256r1:
+            case $curve instanceof secp256r1:
                 return 'P-256';
-            case $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\secp384r1:
+            case $curve instanceof secp384r1:
                 return 'P-384';
-            case $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\secp521r1:
+            case $curve instanceof secp521r1:
                 return 'P-521';
-            case $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\secp256k1:
+            case $curve instanceof secp256k1:
                 return 'secp256k1';
         }
         $reflect = new \ReflectionClass($curve);
         $curveName = $reflect->isFinal() ? $reflect->getParentClass()->getShortName() : $reflect->getShortName();
-        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException("{$curveName} is not a supported curve");
+        throw new UnsupportedCurveException("{$curveName} is not a supported curve");
     }
     /**
      * Return the array superstructure for an EC public key
@@ -114,12 +114,12 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @return array
      */
-    private static function savePublicKeyHelper(\WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base $curve, array $publicKey)
+    private static function savePublicKeyHelper(BaseCurve $curve, array $publicKey)
     {
-        if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            return ['kty' => 'OKP', 'crv' => $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 ? 'Ed25519' : 'Ed448', 'x' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($curve->encodePoint($publicKey))];
+        if ($curve instanceof TwistedEdwardsCurve) {
+            return ['kty' => 'OKP', 'crv' => $curve instanceof Ed25519 ? 'Ed25519' : 'Ed448', 'x' => Strings::base64url_encode($curve->encodePoint($publicKey))];
         }
-        return ['kty' => 'EC', 'crv' => self::getAlias($curve), 'x' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($publicKey[0]->toBytes()), 'y' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($publicKey[1]->toBytes())];
+        return ['kty' => 'EC', 'crv' => self::getAlias($curve), 'x' => Strings::base64url_encode($publicKey[0]->toBytes()), 'y' => Strings::base64url_encode($publicKey[1]->toBytes())];
     }
     /**
      * Convert an EC public key to the appropriate format
@@ -129,7 +129,7 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      * @param array $options optional
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base $curve, array $publicKey, array $options = [])
+    public static function savePublicKey(BaseCurve $curve, array $publicKey, array $options = [])
     {
         $key = self::savePublicKeyHelper($curve, $publicKey);
         return self::wrapKey($key, $options);
@@ -145,11 +145,11 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      * @param array $options optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $privateKey, \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base $curve, array $publicKey, $secret = null, $password = '', array $options = [])
+    public static function savePrivateKey(BigInteger $privateKey, BaseCurve $curve, array $publicKey, $secret = null, $password = '', array $options = [])
     {
         $key = self::savePublicKeyHelper($curve, $publicKey);
-        $key['d'] = $curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards ? $secret : $privateKey->toBytes();
-        $key['d'] = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($key['d']);
+        $key['d'] = $curve instanceof TwistedEdwardsCurve ? $secret : $privateKey->toBytes();
+        $key['d'] = Strings::base64url_encode($key['d']);
         return self::wrapKey($key, $options);
     }
 }

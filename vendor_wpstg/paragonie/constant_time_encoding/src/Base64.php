@@ -34,7 +34,7 @@ use TypeError;
  *
  * @package ParagonIE\ConstantTime
  */
-abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\EncoderInterface
+abstract class Base64 implements EncoderInterface
 {
     /**
      * Encode into Base64
@@ -46,10 +46,7 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      *
      * @throws TypeError
      */
-    public static function encode(
-        #[\SensitiveParameter]
-        string $binString
-    ) : string
+    public static function encode(#[\SensitiveParameter] string $binString) : string
     {
         return static::doEncode($binString, \true);
     }
@@ -63,10 +60,7 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      *
      * @throws TypeError
      */
-    public static function encodeUnpadded(
-        #[\SensitiveParameter]
-        string $src
-    ) : string
+    public static function encodeUnpadded(#[\SensitiveParameter] string $src) : string
     {
         return static::doEncode($src, \false);
     }
@@ -77,18 +71,14 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      *
      * @throws TypeError
      */
-    protected static function doEncode(
-        #[\SensitiveParameter]
-        string $src,
-        bool $pad = \true
-    ) : string
+    protected static function doEncode(#[\SensitiveParameter] string $src, bool $pad = \true) : string
     {
         $dest = '';
-        $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($src);
+        $srcLen = Binary::safeStrlen($src);
         // Main loop (no padding):
         for ($i = 0; $i + 3 <= $srcLen; $i += 3) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($src, $i, 3));
+            $chunk = \unpack('C*', Binary::safeSubstr($src, $i, 3));
             $b0 = $chunk[1];
             $b1 = $chunk[2];
             $b2 = $chunk[3];
@@ -97,7 +87,7 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
         // The last chunk, which may have padding:
         if ($i < $srcLen) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($src, $i, $srcLen - $i));
+            $chunk = \unpack('C*', Binary::safeSubstr($src, $i, $srcLen - $i));
             $b0 = $chunk[1];
             if ($i + 1 < $srcLen) {
                 $b1 = $chunk[2];
@@ -126,14 +116,10 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @throws RangeException
      * @throws TypeError
      */
-    public static function decode(
-        #[\SensitiveParameter]
-        string $encodedString,
-        bool $strictPadding = \false
-    ) : string
+    public static function decode(#[\SensitiveParameter] string $encodedString, bool $strictPadding = \false) : string
     {
         // Remove padding
-        $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($encodedString);
+        $srcLen = Binary::safeStrlen($encodedString);
         if ($srcLen === 0) {
             return '';
         }
@@ -147,21 +133,21 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
                 }
             }
             if (($srcLen & 3) === 1) {
-                throw new \RangeException('Incorrect padding');
+                throw new RangeException('Incorrect padding');
             }
             if ($encodedString[$srcLen - 1] === '=') {
-                throw new \RangeException('Incorrect padding');
+                throw new RangeException('Incorrect padding');
             }
         } else {
             $encodedString = \rtrim($encodedString, '=');
-            $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($encodedString);
+            $srcLen = Binary::safeStrlen($encodedString);
         }
         $err = 0;
         $dest = '';
         // Main loop (no padding):
         for ($i = 0; $i + 4 <= $srcLen; $i += 4) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($encodedString, $i, 4));
+            $chunk = \unpack('C*', Binary::safeSubstr($encodedString, $i, 4));
             $c0 = static::decode6Bits($chunk[1]);
             $c1 = static::decode6Bits($chunk[2]);
             $c2 = static::decode6Bits($chunk[3]);
@@ -172,7 +158,7 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
         // The last chunk, which may have padding:
         if ($i < $srcLen) {
             /** @var array<int, int> $chunk */
-            $chunk = \unpack('C*', \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeSubstr($encodedString, $i, $srcLen - $i));
+            $chunk = \unpack('C*', Binary::safeSubstr($encodedString, $i, $srcLen - $i));
             $c0 = static::decode6Bits($chunk[1]);
             if ($i + 2 < $srcLen) {
                 $c1 = static::decode6Bits($chunk[2]);
@@ -195,7 +181,7 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
         }
         $check = $err === 0;
         if (!$check) {
-            throw new \RangeException('Base64::decode() only expects characters in the correct base64 alphabet');
+            throw new RangeException('Base64::decode() only expects characters in the correct base64 alphabet');
         }
         return $dest;
     }
@@ -203,19 +189,16 @@ abstract class Base64 implements \WPStaging\Vendor\ParagonIE\ConstantTime\Encode
      * @param string $encodedString
      * @return string
      */
-    public static function decodeNoPadding(
-        #[\SensitiveParameter]
-        string $encodedString
-    ) : string
+    public static function decodeNoPadding(#[\SensitiveParameter] string $encodedString) : string
     {
-        $srcLen = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($encodedString);
+        $srcLen = Binary::safeStrlen($encodedString);
         if ($srcLen === 0) {
             return '';
         }
         if (($srcLen & 3) === 0) {
             // If $strLen is not zero, and it is divisible by 4, then it's at least 4.
             if ($encodedString[$srcLen - 1] === '=' || $encodedString[$srcLen - 2] === '=') {
-                throw new \InvalidArgumentException("decodeNoPadding() doesn't tolerate padding");
+                throw new InvalidArgumentException("decodeNoPadding() doesn't tolerate padding");
             }
         }
         return static::decode($encodedString, \true);

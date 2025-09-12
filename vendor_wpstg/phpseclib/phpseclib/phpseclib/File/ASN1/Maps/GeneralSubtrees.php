@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class GeneralSubtrees
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'min' => 1, 'max' => -1, 'children' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\GeneralSubtree::MAP];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'min' => 1, 'max' => -1, 'children' => GeneralSubtree::MAP];
 }

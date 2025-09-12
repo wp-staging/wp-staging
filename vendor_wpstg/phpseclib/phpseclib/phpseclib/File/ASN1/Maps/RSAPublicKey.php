@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class RSAPublicKey
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['modulus' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER], 'publicExponent' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER]]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['modulus' => ['type' => ASN1::TYPE_INTEGER], 'publicExponent' => ['type' => ASN1::TYPE_INTEGER]]];
 }

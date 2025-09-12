@@ -16,7 +16,7 @@ use WPStaging\Vendor\phpseclib3\Crypt\DH;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-final class Parameters extends \WPStaging\Vendor\phpseclib3\Crypt\DH
+final class Parameters extends DH
 {
     /**
      * Returns the parameters

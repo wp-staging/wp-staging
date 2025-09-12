@@ -51,7 +51,7 @@ namespace WPStaging\Vendor\phpseclib3\Crypt;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class AES extends \WPStaging\Vendor\phpseclib3\Crypt\Rijndael
+class AES extends Rijndael
 {
     /**
      * Dummy function

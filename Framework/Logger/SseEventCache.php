@@ -20,7 +20,17 @@ class SseEventCache
     /**
      * @var string
      */
+    const EVENT_TYPE_MEMORY_EXHAUST = 'memory_exhaust';
+
+    /**
+     * @var string
+     */
     const EVENT_TYPE_COMPLETE = 'complete';
+
+    /**
+     * @var string
+     */
+    protected $cacheDirectory = '';
 
     /**
      * @var int
@@ -39,8 +49,26 @@ class SseEventCache
 
     public function __construct(Cache $cache, Directory $directory)
     {
-        $this->cache = $cache;
-        $this->cache->setPath($directory->getSseCacheDirectory());
+        $this->cacheDirectory = $directory->getSseCacheDirectory();
+        $this->cache          = $cache;
+        $this->cache->setPath($this->cacheDirectory);
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteSseCacheFiles()
+    {
+        if (!file_exists($this->cacheDirectory)) {
+            return;
+        }
+
+        $iterator = new \DirectoryIterator($this->cacheDirectory);
+        foreach ($iterator as $fileInfo) {
+            if ($fileInfo->isFile() && strpos($fileInfo->getFilename(), 'sse.cache.php') !== false) {
+                unlink($fileInfo->getPathname());
+            }
+        }
     }
 
     public function setJobId(string $jobId, bool $checkIfExist = false)

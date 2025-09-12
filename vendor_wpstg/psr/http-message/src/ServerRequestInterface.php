@@ -40,7 +40,7 @@ namespace WPStaging\Vendor\Psr\Http\Message;
  * be implemented such that they retain the internal state of the current
  * message and return an instance that contains the changed state.
  */
-interface ServerRequestInterface extends \WPStaging\Vendor\Psr\Http\Message\RequestInterface
+interface ServerRequestInterface extends RequestInterface
 {
     /**
      * Retrieve server parameters.

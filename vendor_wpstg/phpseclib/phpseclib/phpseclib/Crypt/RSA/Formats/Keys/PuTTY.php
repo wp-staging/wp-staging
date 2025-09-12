@@ -20,7 +20,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class PuTTY extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Keys\PuTTY
+abstract class PuTTY extends Progenitor
 {
     /**
      * Public Handler
@@ -45,7 +45,7 @@ abstract class PuTTY extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     {
         static $one;
         if (!isset($one)) {
-            $one = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1);
+            $one = new BigInteger(1);
         }
         $components = parent::load($key, $password);
         if (!isset($components['private'])) {
@@ -57,12 +57,12 @@ abstract class PuTTY extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
         $private = $components['private'];
         unset($components['public'], $components['private']);
         $isPublicKey = \false;
-        $result = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('ii', $public);
+        $result = Strings::unpackSSH2('ii', $public);
         if ($result === \false) {
             throw new \UnexpectedValueException('Key appears to be malformed');
         }
         list($publicExponent, $modulus) = $result;
-        $result = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('iiii', $private);
+        $result = Strings::unpackSSH2('iiii', $private);
         if ($result === \false) {
             throw new \UnexpectedValueException('Key appears to be malformed');
         }
@@ -87,13 +87,13 @@ abstract class PuTTY extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
      * @param array $options optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
+    public static function savePrivateKey(BigInteger $n, BigInteger $e, BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
     {
         if (\count($primes) != 2) {
             throw new \InvalidArgumentException('PuTTY does not support multi-prime RSA keys');
         }
-        $public = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('ii', $e, $n);
-        $private = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('iiii', $d, $primes[1], $primes[2], $coefficients[2]);
+        $public = Strings::packSSH2('ii', $e, $n);
+        $private = Strings::packSSH2('iiii', $d, $primes[1], $primes[2], $coefficients[2]);
         return self::wrapPrivateKey($public, $private, 'ssh-rsa', $password, $options);
     }
     /**
@@ -103,8 +103,8 @@ abstract class PuTTY extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
      * @param BigInteger $e
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e)
+    public static function savePublicKey(BigInteger $n, BigInteger $e)
     {
-        return self::wrapPublicKey(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('ii', $e, $n), 'ssh-rsa');
+        return self::wrapPublicKey(Strings::packSSH2('ii', $e, $n), 'ssh-rsa');
     }
 }

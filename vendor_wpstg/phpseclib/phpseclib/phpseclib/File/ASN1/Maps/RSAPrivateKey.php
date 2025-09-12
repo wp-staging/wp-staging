@@ -21,24 +21,24 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
 abstract class RSAPrivateKey
 {
     // version must be multi if otherPrimeInfos present
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => [
-        'version' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER, 'mapping' => ['two-prime', 'multi']],
-        'modulus' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => [
+        'version' => ['type' => ASN1::TYPE_INTEGER, 'mapping' => ['two-prime', 'multi']],
+        'modulus' => ['type' => ASN1::TYPE_INTEGER],
         // n
-        'publicExponent' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'publicExponent' => ['type' => ASN1::TYPE_INTEGER],
         // e
-        'privateExponent' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'privateExponent' => ['type' => ASN1::TYPE_INTEGER],
         // d
-        'prime1' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'prime1' => ['type' => ASN1::TYPE_INTEGER],
         // p
-        'prime2' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'prime2' => ['type' => ASN1::TYPE_INTEGER],
         // q
-        'exponent1' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'exponent1' => ['type' => ASN1::TYPE_INTEGER],
         // d mod (p-1)
-        'exponent2' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'exponent2' => ['type' => ASN1::TYPE_INTEGER],
         // d mod (q-1)
-        'coefficient' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'coefficient' => ['type' => ASN1::TYPE_INTEGER],
         // (inverse of q) mod p
-        'otherPrimeInfos' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\OtherPrimeInfos::MAP + ['optional' => \true],
+        'otherPrimeInfos' => OtherPrimeInfos::MAP + ['optional' => \true],
     ]];
 }

@@ -32,7 +32,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class PSS extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Keys\PKCS8
+abstract class PSS extends Progenitor
 {
     /**
      * OID Name
@@ -64,7 +64,7 @@ abstract class PSS extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
     private static function initialize_static_variables()
     {
         if (!self::$oidsLoaded) {
-            \WPStaging\Vendor\phpseclib3\File\ASN1::loadOIDs(['md2' => '1.2.840.113549.2.2', 'md4' => '1.2.840.113549.2.4', 'md5' => '1.2.840.113549.2.5', 'id-sha1' => '1.3.14.3.2.26', 'id-sha256' => '2.16.840.1.101.3.4.2.1', 'id-sha384' => '2.16.840.1.101.3.4.2.2', 'id-sha512' => '2.16.840.1.101.3.4.2.3', 'id-sha224' => '2.16.840.1.101.3.4.2.4', 'id-sha512/224' => '2.16.840.1.101.3.4.2.5', 'id-sha512/256' => '2.16.840.1.101.3.4.2.6', 'id-mgf1' => '1.2.840.113549.1.1.8']);
+            ASN1::loadOIDs(['md2' => '1.2.840.113549.2.2', 'md4' => '1.2.840.113549.2.4', 'md5' => '1.2.840.113549.2.5', 'id-sha1' => '1.3.14.3.2.26', 'id-sha256' => '2.16.840.1.101.3.4.2.1', 'id-sha384' => '2.16.840.1.101.3.4.2.2', 'id-sha512' => '2.16.840.1.101.3.4.2.3', 'id-sha224' => '2.16.840.1.101.3.4.2.4', 'id-sha512/224' => '2.16.840.1.101.3.4.2.5', 'id-sha512/256' => '2.16.840.1.101.3.4.2.6', 'id-mgf1' => '1.2.840.113549.1.1.8']);
             self::$oidsLoaded = \true;
         }
     }
@@ -78,28 +78,28 @@ abstract class PSS extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
     public static function load($key, $password = '')
     {
         self::initialize_static_variables();
-        if (!\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::is_stringable($key)) {
+        if (!Strings::is_stringable($key)) {
             throw new \UnexpectedValueException('Key should be a string - not a ' . \gettype($key));
         }
         $components = ['isPublicKey' => \strpos($key, 'PUBLIC') !== \false];
         $key = parent::load($key, $password);
         $type = isset($key['privateKey']) ? 'private' : 'public';
-        $result = $components + \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PKCS1::load($key[$type . 'Key']);
+        $result = $components + PKCS1::load($key[$type . 'Key']);
         if (isset($key[$type . 'KeyAlgorithm']['parameters'])) {
-            $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($key[$type . 'KeyAlgorithm']['parameters']);
+            $decoded = ASN1::decodeBER($key[$type . 'KeyAlgorithm']['parameters']);
             if ($decoded === \false) {
                 throw new \UnexpectedValueException('Unable to decode parameters');
             }
-            $params = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\RSASSA_PSS_params::MAP);
+            $params = ASN1::asn1map($decoded[0], Maps\RSASSA_PSS_params::MAP);
         } else {
             $params = [];
         }
         if (isset($params['maskGenAlgorithm']['parameters'])) {
-            $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($params['maskGenAlgorithm']['parameters']);
+            $decoded = ASN1::decodeBER($params['maskGenAlgorithm']['parameters']);
             if ($decoded === \false) {
                 throw new \UnexpectedValueException('Unable to decode parameters');
             }
-            $params['maskGenAlgorithm']['parameters'] = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\HashAlgorithm::MAP);
+            $params['maskGenAlgorithm']['parameters'] = ASN1::asn1map($decoded[0], Maps\HashAlgorithm::MAP);
         } else {
             $params['maskGenAlgorithm'] = ['algorithm' => 'id-mgf1', 'parameters' => ['algorithm' => 'id-sha1']];
         }
@@ -129,11 +129,11 @@ abstract class PSS extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      * @param array $options optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
+    public static function savePrivateKey(BigInteger $n, BigInteger $e, BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
     {
         self::initialize_static_variables();
-        $key = \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PKCS1::savePrivateKey($n, $e, $d, $primes, $exponents, $coefficients);
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($key);
+        $key = PKCS1::savePrivateKey($n, $e, $d, $primes, $exponents, $coefficients);
+        $key = ASN1::extractBER($key);
         $params = self::savePSSParams($options);
         return self::wrapPrivateKey($key, [], $params, $password, null, '', $options);
     }
@@ -145,11 +145,11 @@ abstract class PSS extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      * @param array $options optional
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e, array $options = [])
+    public static function savePublicKey(BigInteger $n, BigInteger $e, array $options = [])
     {
         self::initialize_static_variables();
-        $key = \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PKCS1::savePublicKey($n, $e);
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($key);
+        $key = PKCS1::savePublicKey($n, $e);
+        $key = ASN1::extractBER($key);
         $params = self::savePSSParams($options);
         return self::wrapPublicKey($key, $params);
     }
@@ -176,18 +176,18 @@ abstract class PSS extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
         
          source: https://tools.ietf.org/html/rfc4055#page-9
         */
-        $params = ['trailerField' => new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1)];
+        $params = ['trailerField' => new BigInteger(1)];
         if (isset($options['hash'])) {
             $params['hashAlgorithm']['algorithm'] = 'id-' . $options['hash'];
         }
         if (isset($options['MGFHash'])) {
             $temp = ['algorithm' => 'id-' . $options['MGFHash']];
-            $temp = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($temp, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\HashAlgorithm::MAP);
-            $params['maskGenAlgorithm'] = ['algorithm' => 'id-mgf1', 'parameters' => new \WPStaging\Vendor\phpseclib3\File\ASN1\Element($temp)];
+            $temp = ASN1::encodeDER($temp, Maps\HashAlgorithm::MAP);
+            $params['maskGenAlgorithm'] = ['algorithm' => 'id-mgf1', 'parameters' => new ASN1\Element($temp)];
         }
         if (isset($options['saltLength'])) {
-            $params['saltLength'] = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($options['saltLength']);
+            $params['saltLength'] = new BigInteger($options['saltLength']);
         }
-        return new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(\WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($params, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\RSASSA_PSS_params::MAP));
+        return new ASN1\Element(ASN1::encodeDER($params, Maps\RSASSA_PSS_params::MAP));
     }
 }

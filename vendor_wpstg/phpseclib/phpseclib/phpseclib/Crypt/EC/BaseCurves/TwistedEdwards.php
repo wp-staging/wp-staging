@@ -33,7 +33,7 @@ use WPStaging\Vendor\phpseclib3\Math\PrimeField\Integer as PrimeInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
+class TwistedEdwards extends Base
 {
     /**
      * The modulo
@@ -80,18 +80,18 @@ class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Ba
     /**
      * Sets the modulo
      */
-    public function setModulo(\WPStaging\Vendor\phpseclib3\Math\BigInteger $modulo)
+    public function setModulo(BigInteger $modulo)
     {
         $this->modulo = $modulo;
-        $this->factory = new \WPStaging\Vendor\phpseclib3\Math\PrimeField($modulo);
-        $this->zero = $this->factory->newInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(0));
-        $this->one = $this->factory->newInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1));
-        $this->two = $this->factory->newInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(2));
+        $this->factory = new PrimeField($modulo);
+        $this->zero = $this->factory->newInteger(new BigInteger(0));
+        $this->one = $this->factory->newInteger(new BigInteger(1));
+        $this->two = $this->factory->newInteger(new BigInteger(2));
     }
     /**
      * Set coefficients a and b
      */
-    public function setCoefficients(\WPStaging\Vendor\phpseclib3\Math\BigInteger $a, \WPStaging\Vendor\phpseclib3\Math\BigInteger $d)
+    public function setCoefficients(BigInteger $a, BigInteger $d)
     {
         if (!isset($this->factory)) {
             throw new \RuntimeException('setModulo needs to be called before this method');
@@ -105,15 +105,15 @@ class TwistedEdwards extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Ba
     public function setBasePoint($x, $y)
     {
         switch (\true) {
-            case !$x instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger && !$x instanceof \WPStaging\Vendor\phpseclib3\Math\PrimeField\Integer:
+            case !$x instanceof BigInteger && !$x instanceof PrimeInteger:
                 throw new \UnexpectedValueException('WPStaging\\Vendor\\Argument 1 passed to Prime::setBasePoint() must be an instance of either BigInteger or PrimeField\\Integer');
-            case !$y instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger && !$y instanceof \WPStaging\Vendor\phpseclib3\Math\PrimeField\Integer:
+            case !$y instanceof BigInteger && !$y instanceof PrimeInteger:
                 throw new \UnexpectedValueException('WPStaging\\Vendor\\Argument 2 passed to Prime::setBasePoint() must be an instance of either BigInteger or PrimeField\\Integer');
         }
         if (!isset($this->factory)) {
             throw new \RuntimeException('setModulo needs to be called before this method');
         }
-        $this->p = [$x instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger ? $this->factory->newInteger($x) : $x, $y instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger ? $this->factory->newInteger($y) : $y];
+        $this->p = [$x instanceof BigInteger ? $this->factory->newInteger($x) : $x, $y instanceof BigInteger ? $this->factory->newInteger($y) : $y];
     }
     /**
      * Returns the a coefficient

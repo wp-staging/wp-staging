@@ -283,10 +283,13 @@ class I18n
                 'access_key_required' => esc_html__('Access key field is required.', 'wp-staging'),
                 'secret_key_required' => esc_html__('Secret key field is required.', 'wp-staging'),
                 'bucket_location_required' => esc_html__('Bucket field is required.', 'wp-staging'),
+                'custom_region_required' => esc_html__('Custom region is required.', 'wp-staging'),
                 'save_settings_abort_error' => esc_html__('Could not save settings. Ensure credentials are correct! Please try again!', 'wp-staging'),
                 'test_connection_abort_error' => esc_html__('No response from server! Ensure credentials are correct. Please try again.', 'wp-staging'),
                 'delete_storage_provider_settings_confirm' => esc_html__('Are you sure you want to delete %s settings?', 'wp-staging'),
-            ]
+            ],
+            'background_logger_wait'     => esc_html__('Initializing. Please wait, process is starting...', 'wp-staging'),
+            'cannot_generate_login_link' => esc_html__('Fail to create a temporary login link. Please make sure your staging site is properly configured and try again. If the issue persists, contact WP STAGING support for assistance.', 'wp-staging'),
         ];
     }
 }

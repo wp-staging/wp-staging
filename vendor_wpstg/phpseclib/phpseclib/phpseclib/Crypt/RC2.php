@@ -38,7 +38,7 @@ use WPStaging\Vendor\phpseclib3\Exception\BadModeException;
  * Pure-PHP implementation of RC2.
  *
  */
-class RC2 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
+class RC2 extends BlockCipher
 {
     /**
      * Block Length of the cipher
@@ -141,7 +141,7 @@ class RC2 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
     {
         parent::__construct($mode);
         if ($this->mode == self::MODE_STREAM) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\BadModeException('Block ciphers cannot be ran in stream mode');
+            throw new BadModeException('Block ciphers cannot be ran in stream mode');
         }
     }
     /**

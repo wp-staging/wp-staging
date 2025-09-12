@@ -23,5 +23,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class PublicKeyInfo
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['publicKeyAlgorithm' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AlgorithmIdentifier::MAP, 'publicKey' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_BIT_STRING]]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['publicKeyAlgorithm' => AlgorithmIdentifier::MAP, 'publicKey' => ['type' => ASN1::TYPE_BIT_STRING]]];
 }

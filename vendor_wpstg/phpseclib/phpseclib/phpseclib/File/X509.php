@@ -258,7 +258,7 @@ class X509
         // http://tools.ietf.org/html/rfc5280#appendix-A.1
         if (!self::$oidsLoaded) {
             // OIDs from RFC5280 and those RFCs mentioned in RFC5280#section-4.1.1.2
-            \WPStaging\Vendor\phpseclib3\File\ASN1::loadOIDs([
+            ASN1::loadOIDs([
                 //'id-pkix' => '1.3.6.1.5.5.7',
                 //'id-pe' => '1.3.6.1.5.5.7.1',
                 //'id-qt' => '1.3.6.1.5.5.7.2',
@@ -414,7 +414,7 @@ class X509
             return $cert;
         }
         if ($mode != self::FORMAT_DER) {
-            $newcert = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($cert);
+            $newcert = ASN1::extractBER($cert);
             if ($mode == self::FORMAT_PEM && $cert == $newcert) {
                 return \false;
             }
@@ -424,9 +424,9 @@ class X509
             $this->currentCert = \false;
             return \false;
         }
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($cert);
+        $decoded = ASN1::decodeBER($cert);
         if ($decoded) {
-            $x509 = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Certificate::MAP);
+            $x509 = ASN1::asn1map($decoded[0], Maps\Certificate::MAP);
         }
         if (!isset($x509) || $x509 === \false) {
             $this->currentCert = \false;
@@ -439,7 +439,7 @@ class X509
         $this->mapInDNs($x509, 'tbsCertificate/issuer/rdnSequence');
         $this->mapInDNs($x509, 'tbsCertificate/subject/rdnSequence');
         $key = $x509['tbsCertificate']['subjectPublicKeyInfo'];
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($key, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SubjectPublicKeyInfo::MAP);
+        $key = ASN1::encodeDER($key, Maps\SubjectPublicKeyInfo::MAP);
         $x509['tbsCertificate']['subjectPublicKeyInfo']['subjectPublicKey'] = "-----BEGIN PUBLIC KEY-----\r\n" . \chunk_split(\base64_encode($key), 64) . "-----END PUBLIC KEY-----";
         $this->currentCert = $x509;
         $this->dn = $x509['tbsCertificate']['subject'];
@@ -465,10 +465,10 @@ class X509
             case \is_object($cert['tbsCertificate']['subjectPublicKeyInfo']['subjectPublicKey']):
                 break;
             default:
-                $cert['tbsCertificate']['subjectPublicKeyInfo'] = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(\base64_decode(\preg_replace('#-.+-|[\\r\\n]#', '', $cert['tbsCertificate']['subjectPublicKeyInfo']['subjectPublicKey'])));
+                $cert['tbsCertificate']['subjectPublicKeyInfo'] = new Element(\base64_decode(\preg_replace('#-.+-|[\\r\\n]#', '', $cert['tbsCertificate']['subjectPublicKeyInfo']['subjectPublicKey'])));
         }
         $filters = [];
-        $type_utf8_string = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
+        $type_utf8_string = ['type' => ASN1::TYPE_UTF8_STRING];
         $filters['tbsCertificate']['signature']['parameters'] = $type_utf8_string;
         $filters['tbsCertificate']['signature']['issuer']['rdnSequence']['value'] = $type_utf8_string;
         $filters['tbsCertificate']['issuer']['rdnSequence']['value'] = $type_utf8_string;
@@ -486,18 +486,18 @@ class X509
              \phpseclib3\File\ASN1::TYPE_PRINTABLE_STRING will cause OpenSSL's X.509 parser to spit out random
              characters.
            */
-        $filters['policyQualifiers']['qualifier'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_IA5_STRING];
-        \WPStaging\Vendor\phpseclib3\File\ASN1::setFilters($filters);
+        $filters['policyQualifiers']['qualifier'] = ['type' => ASN1::TYPE_IA5_STRING];
+        ASN1::setFilters($filters);
         $this->mapOutExtensions($cert, 'tbsCertificate/extensions');
         $this->mapOutDNs($cert, 'tbsCertificate/issuer/rdnSequence');
         $this->mapOutDNs($cert, 'tbsCertificate/subject/rdnSequence');
-        $cert = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($cert, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Certificate::MAP);
+        $cert = ASN1::encodeDER($cert, Maps\Certificate::MAP);
         switch ($format) {
             case self::FORMAT_DER:
                 return $cert;
             // case self::FORMAT_PEM:
             default:
-                return "-----BEGIN CERTIFICATE-----\r\n" . \chunk_split(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64_encode($cert), 64) . '-----END CERTIFICATE-----';
+                return "-----BEGIN CERTIFICATE-----\r\n" . \chunk_split(Strings::base64_encode($cert), 64) . '-----END CERTIFICATE-----';
         }
     }
     /**
@@ -519,11 +519,11 @@ class X509
                 $map = $this->getMapping($id);
                 if (!\is_bool($map)) {
                     $decoder = $id == 'id-ce-nameConstraints' ? [static::class, 'decodeNameConstraintIP'] : [static::class, 'decodeIP'];
-                    $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($value);
+                    $decoded = ASN1::decodeBER($value);
                     if (!$decoded) {
                         continue;
                     }
-                    $mapped = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], $map, ['iPAddress' => $decoder]);
+                    $mapped = ASN1::asn1map($decoded[0], $map, ['iPAddress' => $decoder]);
                     $value = $mapped === \false ? $decoded[0] : $mapped;
                     if ($id == 'id-ce-certificatePolicies') {
                         for ($j = 0; $j < \count($value); $j++) {
@@ -535,11 +535,11 @@ class X509
                                 $map = $this->getMapping($subid);
                                 $subvalue =& $value[$j]['policyQualifiers'][$k]['qualifier'];
                                 if ($map !== \false) {
-                                    $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($subvalue);
+                                    $decoded = ASN1::decodeBER($subvalue);
                                     if (!$decoded) {
                                         continue;
                                     }
-                                    $mapped = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], $map);
+                                    $mapped = ASN1::asn1map($decoded[0], $map);
                                     $subvalue = $mapped === \false ? $decoded[0] : $mapped;
                                 }
                             }
@@ -577,7 +577,7 @@ class X509
         if (\is_array($extensions)) {
             $size = \count($extensions);
             for ($i = 0; $i < $size; $i++) {
-                if ($extensions[$i] instanceof \WPStaging\Vendor\phpseclib3\File\ASN1\Element) {
+                if ($extensions[$i] instanceof Element) {
                     continue;
                 }
                 $id = $extensions[$i]['extnId'];
@@ -595,7 +595,7 @@ class X509
                                 if ($map !== \false) {
                                     // by default \phpseclib3\File\ASN1 will try to render qualifier as a \phpseclib3\File\ASN1::TYPE_IA5_STRING since it's
                                     // actual type is \phpseclib3\File\ASN1::TYPE_ANY
-                                    $subvalue = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(\WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($subvalue, $map));
+                                    $subvalue = new Element(ASN1::encodeDER($subvalue, $map));
                                 }
                             }
                         }
@@ -604,8 +604,8 @@ class X509
                         // use 00 as the serial number instead of an empty string
                         if (isset($value['authorityCertSerialNumber'])) {
                             if ($value['authorityCertSerialNumber']->toBytes() == '') {
-                                $temp = \chr(\WPStaging\Vendor\phpseclib3\File\ASN1::CLASS_CONTEXT_SPECIFIC << 6 | 2) . "\1\0";
-                                $value['authorityCertSerialNumber'] = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element($temp);
+                                $temp = \chr(ASN1::CLASS_CONTEXT_SPECIFIC << 6 | 2) . "\x01\x00";
+                                $value['authorityCertSerialNumber'] = new Element($temp);
                             }
                         }
                 }
@@ -618,7 +618,7 @@ class X509
                         unset($extensions[$i]);
                     }
                 } else {
-                    $value = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($value, $map, ['iPAddress' => [static::class, 'encodeIP']]);
+                    $value = ASN1::encodeDER($value, $map, ['iPAddress' => [static::class, 'encodeIP']]);
                 }
             }
         }
@@ -642,13 +642,13 @@ class X509
                 if (\is_array($attributes[$i]['value'])) {
                     $values =& $attributes[$i]['value'];
                     for ($j = 0; $j < \count($values); $j++) {
-                        $value = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($values[$j], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AttributeValue::MAP);
-                        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($value);
+                        $value = ASN1::encodeDER($values[$j], Maps\AttributeValue::MAP);
+                        $decoded = ASN1::decodeBER($value);
                         if (!\is_bool($map)) {
                             if (!$decoded) {
                                 continue;
                             }
-                            $mapped = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], $map);
+                            $mapped = ASN1::asn1map($decoded[0], $map);
                             if ($mapped !== \false) {
                                 $values[$j] = $mapped;
                             }
@@ -692,12 +692,12 @@ class X509
                                 break;
                         }
                         if (!\is_bool($map)) {
-                            $temp = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($values[$j], $map);
-                            $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($temp);
+                            $temp = ASN1::encodeDER($values[$j], $map);
+                            $decoded = ASN1::decodeBER($temp);
                             if (!$decoded) {
                                 continue;
                             }
-                            $values[$j] = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AttributeValue::MAP);
+                            $values[$j] = ASN1::asn1map($decoded[0], Maps\AttributeValue::MAP);
                         }
                     }
                 }
@@ -719,14 +719,14 @@ class X509
                 for ($j = 0; $j < \count($dns[$i]); $j++) {
                     $type = $dns[$i][$j]['type'];
                     $value =& $dns[$i][$j]['value'];
-                    if (\is_object($value) && $value instanceof \WPStaging\Vendor\phpseclib3\File\ASN1\Element) {
+                    if (\is_object($value) && $value instanceof Element) {
                         $map = $this->getMapping($type);
                         if (!\is_bool($map)) {
-                            $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($value);
+                            $decoded = ASN1::decodeBER($value);
                             if (!$decoded) {
                                 continue;
                             }
-                            $value = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], $map);
+                            $value = ASN1::asn1map($decoded[0], $map);
                         }
                     }
                 }
@@ -749,12 +749,12 @@ class X509
                 for ($j = 0; $j < \count($dns[$i]); $j++) {
                     $type = $dns[$i][$j]['type'];
                     $value =& $dns[$i][$j]['value'];
-                    if (\is_object($value) && $value instanceof \WPStaging\Vendor\phpseclib3\File\ASN1\Element) {
+                    if (\is_object($value) && $value instanceof Element) {
                         continue;
                     }
                     $map = $this->getMapping($type);
                     if (!\is_bool($map)) {
-                        $value = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(\WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($value, $map));
+                        $value = new Element(ASN1::encodeDER($value, $map));
                     }
                 }
             }
@@ -777,45 +777,45 @@ class X509
         }
         switch ($extnId) {
             case 'id-ce-keyUsage':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\KeyUsage::MAP;
+                return Maps\KeyUsage::MAP;
             case 'id-ce-basicConstraints':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\BasicConstraints::MAP;
+                return Maps\BasicConstraints::MAP;
             case 'id-ce-subjectKeyIdentifier':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\KeyIdentifier::MAP;
+                return Maps\KeyIdentifier::MAP;
             case 'id-ce-cRLDistributionPoints':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CRLDistributionPoints::MAP;
+                return Maps\CRLDistributionPoints::MAP;
             case 'id-ce-authorityKeyIdentifier':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AuthorityKeyIdentifier::MAP;
+                return Maps\AuthorityKeyIdentifier::MAP;
             case 'id-ce-certificatePolicies':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CertificatePolicies::MAP;
+                return Maps\CertificatePolicies::MAP;
             case 'id-ce-extKeyUsage':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\ExtKeyUsageSyntax::MAP;
+                return Maps\ExtKeyUsageSyntax::MAP;
             case 'id-pe-authorityInfoAccess':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AuthorityInfoAccessSyntax::MAP;
+                return Maps\AuthorityInfoAccessSyntax::MAP;
             case 'id-ce-subjectAltName':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SubjectAltName::MAP;
+                return Maps\SubjectAltName::MAP;
             case 'id-ce-subjectDirectoryAttributes':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SubjectDirectoryAttributes::MAP;
+                return Maps\SubjectDirectoryAttributes::MAP;
             case 'id-ce-privateKeyUsagePeriod':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PrivateKeyUsagePeriod::MAP;
+                return Maps\PrivateKeyUsagePeriod::MAP;
             case 'id-ce-issuerAltName':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\IssuerAltName::MAP;
+                return Maps\IssuerAltName::MAP;
             case 'id-ce-policyMappings':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PolicyMappings::MAP;
+                return Maps\PolicyMappings::MAP;
             case 'id-ce-nameConstraints':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\NameConstraints::MAP;
+                return Maps\NameConstraints::MAP;
             case 'netscape-cert-type':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\netscape_cert_type::MAP;
+                return Maps\netscape_cert_type::MAP;
             case 'netscape-comment':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\netscape_comment::MAP;
+                return Maps\netscape_comment::MAP;
             case 'netscape-ca-policy-url':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\netscape_ca_policy_url::MAP;
+                return Maps\netscape_ca_policy_url::MAP;
             // since id-qt-cps isn't a constructed type it will have already been decoded as a string by the time it gets
             // back around to asn1map() and we don't want it decoded again.
             //case 'id-qt-cps':
             //    return Maps\CPSuri::MAP;
             case 'id-qt-unotice':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\UserNotice::MAP;
+                return Maps\UserNotice::MAP;
             // the following OIDs are unsupported but we don't want them to give notices when calling saveX509().
             case 'id-pe-logotype':
             // http://www.ietf.org/rfc/rfc3709.txt
@@ -838,30 +838,30 @@ class X509
                 return \true;
             // CSR attributes
             case 'pkcs-9-at-unstructuredName':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PKCS9String::MAP;
+                return Maps\PKCS9String::MAP;
             case 'pkcs-9-at-challengePassword':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\DirectoryString::MAP;
+                return Maps\DirectoryString::MAP;
             case 'pkcs-9-at-extensionRequest':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Extensions::MAP;
+                return Maps\Extensions::MAP;
             // CRL extensions.
             case 'id-ce-cRLNumber':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CRLNumber::MAP;
+                return Maps\CRLNumber::MAP;
             case 'id-ce-deltaCRLIndicator':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CRLNumber::MAP;
+                return Maps\CRLNumber::MAP;
             case 'id-ce-issuingDistributionPoint':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\IssuingDistributionPoint::MAP;
+                return Maps\IssuingDistributionPoint::MAP;
             case 'id-ce-freshestCRL':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CRLDistributionPoints::MAP;
+                return Maps\CRLDistributionPoints::MAP;
             case 'id-ce-cRLReasons':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CRLReason::MAP;
+                return Maps\CRLReason::MAP;
             case 'id-ce-invalidityDate':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\InvalidityDate::MAP;
+                return Maps\InvalidityDate::MAP;
             case 'id-ce-certificateIssuer':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CertificateIssuer::MAP;
+                return Maps\CertificateIssuer::MAP;
             case 'id-ce-holdInstructionCode':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\HoldInstructionCode::MAP;
+                return Maps\HoldInstructionCode::MAP;
             case 'id-at-postalAddress':
-                return \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PostalAddress::MAP;
+                return Maps\PostalAddress::MAP;
         }
         return \false;
     }
@@ -1244,10 +1244,10 @@ class X509
     {
         switch ($publicKeyAlgorithm) {
             case 'id-RSASSA-PSS':
-                $key = \WPStaging\Vendor\phpseclib3\Crypt\RSA::loadFormat('PSS', $publicKey);
+                $key = RSA::loadFormat('PSS', $publicKey);
                 break;
             case 'rsaEncryption':
-                $key = \WPStaging\Vendor\phpseclib3\Crypt\RSA::loadFormat('PKCS8', $publicKey);
+                $key = RSA::loadFormat('PKCS8', $publicKey);
                 switch ($signatureAlgorithm) {
                     case 'id-RSASSA-PSS':
                         break;
@@ -1258,18 +1258,18 @@ class X509
                     case 'sha256WithRSAEncryption':
                     case 'sha384WithRSAEncryption':
                     case 'sha512WithRSAEncryption':
-                        $key = $key->withHash(\preg_replace('#WithRSAEncryption$#', '', $signatureAlgorithm))->withPadding(\WPStaging\Vendor\phpseclib3\Crypt\RSA::SIGNATURE_PKCS1);
+                        $key = $key->withHash(\preg_replace('#WithRSAEncryption$#', '', $signatureAlgorithm))->withPadding(RSA::SIGNATURE_PKCS1);
                         break;
                     default:
-                        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('Signature algorithm unsupported');
+                        throw new UnsupportedAlgorithmException('Signature algorithm unsupported');
                 }
                 break;
             case 'id-Ed25519':
             case 'id-Ed448':
-                $key = \WPStaging\Vendor\phpseclib3\Crypt\EC::loadFormat('PKCS8', $publicKey);
+                $key = EC::loadFormat('PKCS8', $publicKey);
                 break;
             case 'id-ecPublicKey':
-                $key = \WPStaging\Vendor\phpseclib3\Crypt\EC::loadFormat('PKCS8', $publicKey);
+                $key = EC::loadFormat('PKCS8', $publicKey);
                 switch ($signatureAlgorithm) {
                     case 'ecdsa-with-SHA1':
                     case 'ecdsa-with-SHA224':
@@ -1279,11 +1279,11 @@ class X509
                         $key = $key->withHash(\preg_replace('#^ecdsa-with-#', '', \strtolower($signatureAlgorithm)));
                         break;
                     default:
-                        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('Signature algorithm unsupported');
+                        throw new UnsupportedAlgorithmException('Signature algorithm unsupported');
                 }
                 break;
             case 'id-dsa':
-                $key = \WPStaging\Vendor\phpseclib3\Crypt\DSA::loadFormat('PKCS8', $publicKey);
+                $key = DSA::loadFormat('PKCS8', $publicKey);
                 switch ($signatureAlgorithm) {
                     case 'id-dsa-with-sha1':
                     case 'id-dsa-with-sha224':
@@ -1291,11 +1291,11 @@ class X509
                         $key = $key->withHash(\preg_replace('#^id-dsa-with-#', '', \strtolower($signatureAlgorithm)));
                         break;
                     default:
-                        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('Signature algorithm unsupported');
+                        throw new UnsupportedAlgorithmException('Signature algorithm unsupported');
                 }
                 break;
             default:
-                throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('Public key algorithm unsupported');
+                throw new UnsupportedAlgorithmException('Public key algorithm unsupported');
         }
         return $key->verify($signatureSubject, $signature);
     }
@@ -1541,8 +1541,8 @@ class X509
             return \false;
         }
         $filters = [];
-        $filters['value'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
-        \WPStaging\Vendor\phpseclib3\File\ASN1::setFilters($filters);
+        $filters['value'] = ['type' => ASN1::TYPE_UTF8_STRING];
+        ASN1::setFilters($filters);
         $this->mapOutDNs($dn, 'rdnSequence');
         $dn = $dn['rdnSequence'];
         $result = [];
@@ -1552,9 +1552,9 @@ class X509
                 if (!$withType) {
                     if (\is_array($v)) {
                         foreach ($v as $type => $s) {
-                            $type = \array_search($type, \WPStaging\Vendor\phpseclib3\File\ASN1::ANY_MAP);
-                            if ($type !== \false && \array_key_exists($type, \WPStaging\Vendor\phpseclib3\File\ASN1::STRING_TYPE_SIZE)) {
-                                $s = \WPStaging\Vendor\phpseclib3\File\ASN1::convert($s, $type);
+                            $type = \array_search($type, ASN1::ANY_MAP);
+                            if ($type !== \false && \array_key_exists($type, ASN1::STRING_TYPE_SIZE)) {
+                                $s = ASN1::convert($s, $type);
                                 if ($s !== \false) {
                                     $v = $s;
                                     break;
@@ -1565,14 +1565,14 @@ class X509
                             $v = \array_pop($v);
                             // Always strip data type.
                         }
-                    } elseif (\is_object($v) && $v instanceof \WPStaging\Vendor\phpseclib3\File\ASN1\Element) {
+                    } elseif (\is_object($v) && $v instanceof Element) {
                         $map = $this->getMapping($propName);
                         if (!\is_bool($map)) {
-                            $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($v);
+                            $decoded = ASN1::decodeBER($v);
                             if (!$decoded) {
                                 return \false;
                             }
-                            $v = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], $map);
+                            $v = ASN1::asn1map($decoded[0], $map);
                         }
                     }
                 }
@@ -1636,17 +1636,17 @@ class X509
                 return $dn;
             case self::DN_ASN1:
                 $filters = [];
-                $filters['rdnSequence']['value'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
-                \WPStaging\Vendor\phpseclib3\File\ASN1::setFilters($filters);
+                $filters['rdnSequence']['value'] = ['type' => ASN1::TYPE_UTF8_STRING];
+                ASN1::setFilters($filters);
                 $this->mapOutDNs($dn, 'rdnSequence');
-                return \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($dn, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Name::MAP);
+                return ASN1::encodeDER($dn, Maps\Name::MAP);
             case self::DN_CANON:
                 //  No SEQUENCE around RDNs and all string values normalized as
                 // trimmed lowercase UTF-8 with all spacing as one blank.
                 // constructed RDNs will not be canonicalized
                 $filters = [];
-                $filters['value'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
-                \WPStaging\Vendor\phpseclib3\File\ASN1::setFilters($filters);
+                $filters['value'] = ['type' => ASN1::TYPE_UTF8_STRING];
+                ASN1::setFilters($filters);
                 $result = '';
                 $this->mapOutDNs($dn, 'rdnSequence');
                 foreach ($dn['rdnSequence'] as $rdn) {
@@ -1654,9 +1654,9 @@ class X509
                         $attr =& $rdn[$i];
                         if (\is_array($attr['value'])) {
                             foreach ($attr['value'] as $type => $v) {
-                                $type = \array_search($type, \WPStaging\Vendor\phpseclib3\File\ASN1::ANY_MAP, \true);
-                                if ($type !== \false && \array_key_exists($type, \WPStaging\Vendor\phpseclib3\File\ASN1::STRING_TYPE_SIZE)) {
-                                    $v = \WPStaging\Vendor\phpseclib3\File\ASN1::convert($v, $type);
+                                $type = \array_search($type, ASN1::ANY_MAP, \true);
+                                if ($type !== \false && \array_key_exists($type, ASN1::STRING_TYPE_SIZE)) {
+                                    $v = ASN1::convert($v, $type);
                                     if ($v !== \false) {
                                         $v = \preg_replace('/\\s+/', ' ', $v);
                                         $attr['value'] = \strtolower(\trim($v));
@@ -1666,23 +1666,23 @@ class X509
                             }
                         }
                     }
-                    $result .= \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($rdn, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\RelativeDistinguishedName::MAP);
+                    $result .= ASN1::encodeDER($rdn, Maps\RelativeDistinguishedName::MAP);
                 }
                 return $result;
             case self::DN_HASH:
                 $dn = $this->getDN(self::DN_CANON, $dn);
-                $hash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash('sha1');
+                $hash = new Hash('sha1');
                 $hash = $hash->hash($dn);
                 $hash = \unpack('Vhash', $hash)['hash'];
-                return \strtolower(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::bin2hex(\pack('N', $hash)));
+                return \strtolower(Strings::bin2hex(\pack('N', $hash)));
         }
         // Default is to return a string.
         $start = \true;
         $output = '';
         $result = [];
         $filters = [];
-        $filters['rdnSequence']['value'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
-        \WPStaging\Vendor\phpseclib3\File\ASN1::setFilters($filters);
+        $filters['rdnSequence']['value'] = ['type' => ASN1::TYPE_UTF8_STRING];
+        ASN1::setFilters($filters);
         $this->mapOutDNs($dn, 'rdnSequence');
         foreach ($dn['rdnSequence'] as $field) {
             $prop = $field[0]['type'];
@@ -1727,9 +1727,9 @@ class X509
             }
             if (\is_array($value)) {
                 foreach ($value as $type => $v) {
-                    $type = \array_search($type, \WPStaging\Vendor\phpseclib3\File\ASN1::ANY_MAP, \true);
-                    if ($type !== \false && \array_key_exists($type, \WPStaging\Vendor\phpseclib3\File\ASN1::STRING_TYPE_SIZE)) {
-                        $v = \WPStaging\Vendor\phpseclib3\File\ASN1::convert($v, $type);
+                    $type = \array_search($type, ASN1::ANY_MAP, \true);
+                    if ($type !== \false && \array_key_exists($type, ASN1::STRING_TYPE_SIZE)) {
+                        $v = ASN1::convert($v, $type);
                         if ($v !== \false) {
                             $value = $v;
                             break;
@@ -1740,7 +1740,7 @@ class X509
                     $value = \array_pop($value);
                     // Always strip data type.
                 }
-            } elseif (\is_object($value) && $value instanceof \WPStaging\Vendor\phpseclib3\File\ASN1\Element) {
+            } elseif (\is_object($value) && $value instanceof Element) {
                 $callback = function ($x) {
                     return '\\x' . \bin2hex($x[0]);
                 };
@@ -1865,7 +1865,7 @@ class X509
             }
         }
         foreach ($chain as $key => $value) {
-            $chain[$key] = new \WPStaging\Vendor\phpseclib3\File\X509();
+            $chain[$key] = new X509();
             $chain[$key]->loadX509($value);
         }
         return $chain;
@@ -1887,7 +1887,7 @@ class X509
      * @param PublicKey $key
      * @return void
      */
-    public function setPublicKey(\WPStaging\Vendor\phpseclib3\Crypt\Common\PublicKey $key)
+    public function setPublicKey(PublicKey $key)
     {
         $this->publicKey = $key;
     }
@@ -1898,7 +1898,7 @@ class X509
      *
      * @param PrivateKey $key
      */
-    public function setPrivateKey(\WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey $key)
+    public function setPrivateKey(PrivateKey $key)
     {
         $this->privateKey = $key;
     }
@@ -1940,15 +1940,15 @@ class X509
         $key = $keyinfo['subjectPublicKey'];
         switch ($keyinfo['algorithm']['algorithm']) {
             case 'id-RSASSA-PSS':
-                return \WPStaging\Vendor\phpseclib3\Crypt\RSA::loadFormat('PSS', $key);
+                return RSA::loadFormat('PSS', $key);
             case 'rsaEncryption':
-                return \WPStaging\Vendor\phpseclib3\Crypt\RSA::loadFormat('PKCS8', $key)->withPadding(\WPStaging\Vendor\phpseclib3\Crypt\RSA::SIGNATURE_PKCS1);
+                return RSA::loadFormat('PKCS8', $key)->withPadding(RSA::SIGNATURE_PKCS1);
             case 'id-ecPublicKey':
             case 'id-Ed25519':
             case 'id-Ed448':
-                return \WPStaging\Vendor\phpseclib3\Crypt\EC::loadFormat('PKCS8', $key);
+                return EC::loadFormat('PKCS8', $key);
             case 'id-dsa':
-                return \WPStaging\Vendor\phpseclib3\Crypt\DSA::loadFormat('PKCS8', $key);
+                return DSA::loadFormat('PKCS8', $key);
         }
         return \false;
     }
@@ -1974,7 +1974,7 @@ class X509
         }
         // see http://tools.ietf.org/html/rfc2986
         if ($mode != self::FORMAT_DER) {
-            $newcsr = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($csr);
+            $newcsr = ASN1::extractBER($csr);
             if ($mode == self::FORMAT_PEM && $csr == $newcsr) {
                 return \false;
             }
@@ -1985,12 +1985,12 @@ class X509
             $this->currentCert = \false;
             return \false;
         }
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($csr);
+        $decoded = ASN1::decodeBER($csr);
         if (!$decoded) {
             $this->currentCert = \false;
             return \false;
         }
-        $csr = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CertificationRequest::MAP);
+        $csr = ASN1::asn1map($decoded[0], Maps\CertificationRequest::MAP);
         if (!isset($csr) || $csr === \false) {
             $this->currentCert = \false;
             return \false;
@@ -2000,7 +2000,7 @@ class X509
         $this->dn = $csr['certificationRequestInfo']['subject'];
         $this->signatureSubject = \substr($orig, $decoded[0]['content'][0]['start'], $decoded[0]['content'][0]['length']);
         $key = $csr['certificationRequestInfo']['subjectPKInfo'];
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($key, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SubjectPublicKeyInfo::MAP);
+        $key = ASN1::encodeDER($key, Maps\SubjectPublicKeyInfo::MAP);
         $csr['certificationRequestInfo']['subjectPKInfo']['subjectPublicKey'] = "-----BEGIN PUBLIC KEY-----\r\n" . \chunk_split(\base64_encode($key), 64) . "-----END PUBLIC KEY-----";
         $this->currentKeyIdentifier = null;
         $this->currentCert = $csr;
@@ -2025,20 +2025,20 @@ class X509
             case \is_object($csr['certificationRequestInfo']['subjectPKInfo']['subjectPublicKey']):
                 break;
             default:
-                $csr['certificationRequestInfo']['subjectPKInfo'] = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(\base64_decode(\preg_replace('#-.+-|[\\r\\n]#', '', $csr['certificationRequestInfo']['subjectPKInfo']['subjectPublicKey'])));
+                $csr['certificationRequestInfo']['subjectPKInfo'] = new Element(\base64_decode(\preg_replace('#-.+-|[\\r\\n]#', '', $csr['certificationRequestInfo']['subjectPKInfo']['subjectPublicKey'])));
         }
         $filters = [];
-        $filters['certificationRequestInfo']['subject']['rdnSequence']['value'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
-        \WPStaging\Vendor\phpseclib3\File\ASN1::setFilters($filters);
+        $filters['certificationRequestInfo']['subject']['rdnSequence']['value'] = ['type' => ASN1::TYPE_UTF8_STRING];
+        ASN1::setFilters($filters);
         $this->mapOutDNs($csr, 'certificationRequestInfo/subject/rdnSequence');
         $this->mapOutAttributes($csr, 'certificationRequestInfo/attributes');
-        $csr = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($csr, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CertificationRequest::MAP);
+        $csr = ASN1::encodeDER($csr, Maps\CertificationRequest::MAP);
         switch ($format) {
             case self::FORMAT_DER:
                 return $csr;
             // case self::FORMAT_PEM:
             default:
-                return "-----BEGIN CERTIFICATE REQUEST-----\r\n" . \chunk_split(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64_encode($csr), 64) . '-----END CERTIFICATE REQUEST-----';
+                return "-----BEGIN CERTIFICATE REQUEST-----\r\n" . \chunk_split(Strings::base64_encode($csr), 64) . '-----END CERTIFICATE REQUEST-----';
         }
     }
     /**
@@ -2063,7 +2063,7 @@ class X509
         // see http://www.w3.org/html/wg/drafts/html/master/forms.html#signedpublickeyandchallenge
         // OpenSSL produces SPKAC's that are preceded by the string SPKAC=
         $temp = \preg_replace('#(?:SPKAC=)|[ \\r\\n\\\\]#', '', $spkac);
-        $temp = \preg_match('#^[a-zA-Z\\d/+]*={0,2}$#', $temp) ? \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64_decode($temp) : \false;
+        $temp = \preg_match('#^[a-zA-Z\\d/+]*={0,2}$#', $temp) ? Strings::base64_decode($temp) : \false;
         if ($temp != \false) {
             $spkac = $temp;
         }
@@ -2072,19 +2072,19 @@ class X509
             $this->currentCert = \false;
             return \false;
         }
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($spkac);
+        $decoded = ASN1::decodeBER($spkac);
         if (!$decoded) {
             $this->currentCert = \false;
             return \false;
         }
-        $spkac = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SignedPublicKeyAndChallenge::MAP);
+        $spkac = ASN1::asn1map($decoded[0], Maps\SignedPublicKeyAndChallenge::MAP);
         if (!isset($spkac) || !\is_array($spkac)) {
             $this->currentCert = \false;
             return \false;
         }
         $this->signatureSubject = \substr($orig, $decoded[0]['content'][0]['start'], $decoded[0]['content'][0]['length']);
         $key = $spkac['publicKeyAndChallenge']['spki'];
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($key, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SubjectPublicKeyInfo::MAP);
+        $key = ASN1::encodeDER($key, Maps\SubjectPublicKeyInfo::MAP);
         $spkac['publicKeyAndChallenge']['spki']['subjectPublicKey'] = "-----BEGIN PUBLIC KEY-----\r\n" . \chunk_split(\base64_encode($key), 64) . "-----END PUBLIC KEY-----";
         $this->currentKeyIdentifier = null;
         $this->currentCert = $spkac;
@@ -2110,9 +2110,9 @@ class X509
             case \is_object($spkac['publicKeyAndChallenge']['spki']['subjectPublicKey']):
                 break;
             default:
-                $spkac['publicKeyAndChallenge']['spki'] = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element(\base64_decode(\preg_replace('#-.+-|[\\r\\n]#', '', $spkac['publicKeyAndChallenge']['spki']['subjectPublicKey'])));
+                $spkac['publicKeyAndChallenge']['spki'] = new Element(\base64_decode(\preg_replace('#-.+-|[\\r\\n]#', '', $spkac['publicKeyAndChallenge']['spki']['subjectPublicKey'])));
         }
-        $spkac = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($spkac, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SignedPublicKeyAndChallenge::MAP);
+        $spkac = ASN1::encodeDER($spkac, Maps\SignedPublicKeyAndChallenge::MAP);
         switch ($format) {
             case self::FORMAT_DER:
                 return $spkac;
@@ -2120,7 +2120,7 @@ class X509
             default:
                 // OpenSSL's implementation of SPKAC requires the SPKAC be preceded by SPKAC= and since there are pretty much
                 // no other SPKAC decoders phpseclib will use that same format
-                return 'SPKAC=' . \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64_encode($spkac);
+                return 'SPKAC=' . Strings::base64_encode($spkac);
         }
     }
     /**
@@ -2138,7 +2138,7 @@ class X509
             return $crl;
         }
         if ($mode != self::FORMAT_DER) {
-            $newcrl = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($crl);
+            $newcrl = ASN1::extractBER($crl);
             if ($mode == self::FORMAT_PEM && $crl == $newcrl) {
                 return \false;
             }
@@ -2149,12 +2149,12 @@ class X509
             $this->currentCert = \false;
             return \false;
         }
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($crl);
+        $decoded = ASN1::decodeBER($crl);
         if (!$decoded) {
             $this->currentCert = \false;
             return \false;
         }
-        $crl = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CertificateList::MAP);
+        $crl = ASN1::asn1map($decoded[0], Maps\CertificateList::MAP);
         if (!isset($crl) || $crl === \false) {
             $this->currentCert = \false;
             return \false;
@@ -2192,16 +2192,16 @@ class X509
             return \false;
         }
         $filters = [];
-        $filters['tbsCertList']['issuer']['rdnSequence']['value'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
-        $filters['tbsCertList']['signature']['parameters'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
-        $filters['signatureAlgorithm']['parameters'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_UTF8_STRING];
+        $filters['tbsCertList']['issuer']['rdnSequence']['value'] = ['type' => ASN1::TYPE_UTF8_STRING];
+        $filters['tbsCertList']['signature']['parameters'] = ['type' => ASN1::TYPE_UTF8_STRING];
+        $filters['signatureAlgorithm']['parameters'] = ['type' => ASN1::TYPE_UTF8_STRING];
         if (empty($crl['tbsCertList']['signature']['parameters'])) {
-            $filters['tbsCertList']['signature']['parameters'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_NULL];
+            $filters['tbsCertList']['signature']['parameters'] = ['type' => ASN1::TYPE_NULL];
         }
         if (empty($crl['signatureAlgorithm']['parameters'])) {
-            $filters['signatureAlgorithm']['parameters'] = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_NULL];
+            $filters['signatureAlgorithm']['parameters'] = ['type' => ASN1::TYPE_NULL];
         }
-        \WPStaging\Vendor\phpseclib3\File\ASN1::setFilters($filters);
+        ASN1::setFilters($filters);
         $this->mapOutDNs($crl, 'tbsCertList/issuer/rdnSequence');
         $this->mapOutExtensions($crl, 'tbsCertList/crlExtensions');
         $rclist =& $this->subArray($crl, 'tbsCertList/revokedCertificates');
@@ -2210,13 +2210,13 @@ class X509
                 $this->mapOutExtensions($rclist, "{$i}/crlEntryExtensions");
             }
         }
-        $crl = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($crl, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CertificateList::MAP);
+        $crl = ASN1::encodeDER($crl, Maps\CertificateList::MAP);
         switch ($format) {
             case self::FORMAT_DER:
                 return $crl;
             // case self::FORMAT_PEM:
             default:
-                return "-----BEGIN X509 CRL-----\r\n" . \chunk_split(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64_encode($crl), 64) . '-----END X509 CRL-----';
+                return "-----BEGIN X509 CRL-----\r\n" . \chunk_split(Strings::base64_encode($crl), 64) . '-----END X509 CRL-----';
         }
     }
     /**
@@ -2232,7 +2232,7 @@ class X509
      */
     private function timeField($date)
     {
-        if ($date instanceof \WPStaging\Vendor\phpseclib3\File\ASN1\Element) {
+        if ($date instanceof Element) {
             return $date;
         }
         $dateObj = new \DateTimeImmutable($date, new \DateTimeZone('GMT'));
@@ -2253,7 +2253,7 @@ class X509
      *
      * @return mixed
      */
-    public function sign(\WPStaging\Vendor\phpseclib3\File\X509 $issuer, \WPStaging\Vendor\phpseclib3\File\X509 $subject)
+    public function sign(X509 $issuer, X509 $subject)
     {
         if (!\is_object($issuer->privateKey) || empty($issuer->dn)) {
             return \false;
@@ -2304,7 +2304,7 @@ class X509
                            for the integer to be positive the leading bit needs to be 0 hence the
                            application of a bitmap
                         */
-            $serialNumber = !empty($this->serialNumber) ? $this->serialNumber : new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\WPStaging\Vendor\phpseclib3\Crypt\Random::string(20) & "" . \str_repeat("ÿ", 19), 256);
+            $serialNumber = !empty($this->serialNumber) ? $this->serialNumber : new BigInteger(Random::string(20) & "" . \str_repeat("\xff", 19), 256);
             $this->currentCert = ['tbsCertificate' => [
                 'version' => 'v3',
                 'serialNumber' => $serialNumber,
@@ -2386,7 +2386,7 @@ class X509
         $tbsCertificate = $this->currentCert['tbsCertificate'];
         $this->loadX509($this->saveX509($this->currentCert));
         $result = $this->currentCert;
-        $this->currentCert['signature'] = $result['signature'] = "\0" . $issuer->privateKey->sign($this->signatureSubject);
+        $this->currentCert['signature'] = $result['signature'] = "\x00" . $issuer->privateKey->sign($this->signatureSubject);
         $result['tbsCertificate'] = $tbsCertificate;
         $this->currentCert = $currentCert;
         $this->signatureSubject = $signatureSubject;
@@ -2423,7 +2423,7 @@ class X509
         $certificationRequestInfo = $this->currentCert['certificationRequestInfo'];
         $this->loadCSR($this->saveCSR($this->currentCert));
         $result = $this->currentCert;
-        $this->currentCert['signature'] = $result['signature'] = "\0" . $this->privateKey->sign($this->signatureSubject);
+        $this->currentCert['signature'] = $result['signature'] = "\x00" . $this->privateKey->sign($this->signatureSubject);
         $result['certificationRequestInfo'] = $certificationRequestInfo;
         $this->currentCert = $currentCert;
         $this->signatureSubject = $signatureSubject;
@@ -2470,7 +2470,7 @@ class X509
         $publicKeyAndChallenge = $this->currentCert['publicKeyAndChallenge'];
         $this->loadSPKAC($this->saveSPKAC($this->currentCert));
         $result = $this->currentCert;
-        $this->currentCert['signature'] = $result['signature'] = "\0" . $this->privateKey->sign($this->signatureSubject);
+        $this->currentCert['signature'] = $result['signature'] = "\x00" . $this->privateKey->sign($this->signatureSubject);
         $result['publicKeyAndChallenge'] = $publicKeyAndChallenge;
         $this->currentCert = $currentCert;
         $this->signatureSubject = $signatureSubject;
@@ -2483,7 +2483,7 @@ class X509
      *
      * @return mixed
      */
-    public function signCRL(\WPStaging\Vendor\phpseclib3\File\X509 $issuer, \WPStaging\Vendor\phpseclib3\File\X509 $crl)
+    public function signCRL(X509 $issuer, X509 $crl)
     {
         if (!\is_object($issuer->privateKey) || empty($issuer->dn)) {
             return \false;
@@ -2524,7 +2524,7 @@ class X509
             //  CRL issuer.  This extension allows users to easily determine when a
             //  particular CRL supersedes another CRL."
             // -- https://tools.ietf.org/html/rfc5280#section-5.2.3
-            $crlNumber = $crlNumber !== \false ? $crlNumber->add(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1)) : null;
+            $crlNumber = $crlNumber !== \false ? $crlNumber->add(new BigInteger(1)) : null;
         }
         $this->removeExtension('id-ce-authorityKeyIdentifier');
         $this->removeExtension('id-ce-issuerAltName');
@@ -2581,7 +2581,7 @@ class X509
         $tbsCertList = $this->currentCert['tbsCertList'];
         $this->loadCRL($this->saveCRL($this->currentCert));
         $result = $this->currentCert;
-        $this->currentCert['signature'] = $result['signature'] = "\0" . $issuer->privateKey->sign($this->signatureSubject);
+        $this->currentCert['signature'] = $result['signature'] = "\x00" . $issuer->privateKey->sign($this->signatureSubject);
         $result['tbsCertList'] = $tbsCertList;
         $this->currentCert = $currentCert;
         $this->signatureSubject = $signatureSubject;
@@ -2594,12 +2594,12 @@ class X509
      * @throws UnsupportedAlgorithmException if the algorithm is unsupported
      * @return array
      */
-    private static function identifySignatureAlgorithm(\WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey $key)
+    private static function identifySignatureAlgorithm(PrivateKey $key)
     {
-        if ($key instanceof \WPStaging\Vendor\phpseclib3\Crypt\RSA) {
-            if ($key->getPadding() & \WPStaging\Vendor\phpseclib3\Crypt\RSA::SIGNATURE_PSS) {
-                $r = \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PSS::load($key->withPassword()->toString('PSS'));
-                return ['algorithm' => 'id-RSASSA-PSS', 'parameters' => \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PSS::savePSSParams($r)];
+        if ($key instanceof RSA) {
+            if ($key->getPadding() & RSA::SIGNATURE_PSS) {
+                $r = PSS::load($key->withPassword()->toString('PSS'));
+                return ['algorithm' => 'id-RSASSA-PSS', 'parameters' => PSS::savePSSParams($r)];
             }
             switch ($key->getHash()) {
                 case 'md2':
@@ -2611,18 +2611,18 @@ class X509
                 case 'sha512':
                     return ['algorithm' => $key->getHash() . 'WithRSAEncryption', 'parameters' => null];
             }
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('The only supported hash algorithms for RSA are: md2, md5, sha1, sha224, sha256, sha384, sha512');
+            throw new UnsupportedAlgorithmException('The only supported hash algorithms for RSA are: md2, md5, sha1, sha224, sha256, sha384, sha512');
         }
-        if ($key instanceof \WPStaging\Vendor\phpseclib3\Crypt\DSA) {
+        if ($key instanceof DSA) {
             switch ($key->getHash()) {
                 case 'sha1':
                 case 'sha224':
                 case 'sha256':
                     return ['algorithm' => 'id-dsa-with-' . $key->getHash()];
             }
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('The only supported hash algorithms for DSA are: sha1, sha224, sha256');
+            throw new UnsupportedAlgorithmException('The only supported hash algorithms for DSA are: sha1, sha224, sha256');
         }
-        if ($key instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC) {
+        if ($key instanceof EC) {
             switch ($key->getCurve()) {
                 case 'Ed25519':
                 case 'Ed448':
@@ -2636,9 +2636,9 @@ class X509
                 case 'sha512':
                     return ['algorithm' => 'ecdsa-with-' . \strtoupper($key->getHash())];
             }
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('The only supported hash algorithms for EC are: sha1, sha224, sha256, sha384, sha512');
+            throw new UnsupportedAlgorithmException('The only supported hash algorithms for EC are: sha1, sha224, sha256, sha384, sha512');
         }
-        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('The only supported public key classes are: RSA, DSA, EC');
+        throw new UnsupportedAlgorithmException('The only supported public key classes are: RSA, DSA, EC');
     }
     /**
      * Set certificate start date
@@ -2668,8 +2668,8 @@ class X509
         */
         if (\is_string($date) && \strtolower($date) === 'lifetime') {
             $temp = '99991231235959Z';
-            $temp = \chr(\WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_GENERALIZED_TIME) . \WPStaging\Vendor\phpseclib3\File\ASN1::encodeLength(\strlen($temp)) . $temp;
-            $this->endDate = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element($temp);
+            $temp = \chr(ASN1::TYPE_GENERALIZED_TIME) . ASN1::encodeLength(\strlen($temp)) . $temp;
+            $this->endDate = new Element($temp);
         } else {
             if (!\is_object($date) || !$date instanceof \DateTimeInterface) {
                 $date = new \DateTimeImmutable($date, new \DateTimeZone(@\date_default_timezone_get()));
@@ -2685,7 +2685,7 @@ class X509
      */
     public function setSerialNumber($serial, $base = -256)
     {
-        $this->serialNumber = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($serial, $base);
+        $this->serialNumber = new BigInteger($serial, $base);
     }
     /**
      * Turns the certificate into a certificate authority
@@ -3188,26 +3188,26 @@ class X509
                 return $this->computeKeyIdentifier($key['certificationRequestInfo']['subjectPKInfo']['subjectPublicKey'], $method);
             case !\is_object($key):
                 return \false;
-            case $key instanceof \WPStaging\Vendor\phpseclib3\File\ASN1\Element:
+            case $key instanceof Element:
                 // Assume the element is a bitstring-packed key.
-                $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($key->element);
+                $decoded = ASN1::decodeBER($key->element);
                 if (!$decoded) {
                     return \false;
                 }
-                $raw = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_BIT_STRING]);
+                $raw = ASN1::asn1map($decoded[0], ['type' => ASN1::TYPE_BIT_STRING]);
                 if (empty($raw)) {
                     return \false;
                 }
                 // If the key is private, compute identifier from its corresponding public key.
-                $key = \WPStaging\Vendor\phpseclib3\Crypt\PublicKeyLoader::load($raw);
-                if ($key instanceof \WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey) {
+                $key = PublicKeyLoader::load($raw);
+                if ($key instanceof PrivateKey) {
                     // If private.
                     return $this->computeKeyIdentifier($key, $method);
                 }
                 $key = $raw;
                 // Is a public key.
                 break;
-            case $key instanceof \WPStaging\Vendor\phpseclib3\File\X509:
+            case $key instanceof X509:
                 if (isset($key->publicKey)) {
                     return $this->computeKeyIdentifier($key->publicKey, $method);
                 }
@@ -3224,9 +3224,9 @@ class X509
                 break;
         }
         // If in PEM format, convert to binary.
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($key);
+        $key = ASN1::extractBER($key);
         // Now we have the key string: compute its sha-1 sum.
-        $hash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash('sha1');
+        $hash = new Hash('sha1');
         $hash = $hash->hash($key);
         if ($method == 2) {
             $hash = \substr($hash, -8);
@@ -3241,13 +3241,13 @@ class X509
      */
     private function formatSubjectPublicKey()
     {
-        $format = $this->publicKey instanceof \WPStaging\Vendor\phpseclib3\Crypt\RSA && $this->publicKey->getPadding() & \WPStaging\Vendor\phpseclib3\Crypt\RSA::SIGNATURE_PSS ? 'PSS' : 'PKCS8';
+        $format = $this->publicKey instanceof RSA && $this->publicKey->getPadding() & RSA::SIGNATURE_PSS ? 'PSS' : 'PKCS8';
         $publicKey = \base64_decode(\preg_replace('#-.+-|[\\r\\n]#', '', $this->publicKey->toString($format)));
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($publicKey);
+        $decoded = ASN1::decodeBER($publicKey);
         if (!$decoded) {
             return \false;
         }
-        $mapped = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\SubjectPublicKeyInfo::MAP);
+        $mapped = ASN1::asn1map($decoded[0], Maps\SubjectPublicKeyInfo::MAP);
         if (!\is_array($mapped)) {
             return \false;
         }
@@ -3313,7 +3313,7 @@ class X509
      */
     private function revokedCertificate(array &$rclist, $serial, $create = \false)
     {
-        $serial = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($serial);
+        $serial = new BigInteger($serial);
         foreach ($rclist as $i => $rc) {
             if (!$serial->compare($rc['userCertificate'])) {
                 return $i;

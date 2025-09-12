@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class Curve
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['a' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\FieldElement::MAP, 'b' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\FieldElement::MAP, 'seed' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_BIT_STRING, 'optional' => \true]]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['a' => FieldElement::MAP, 'b' => FieldElement::MAP, 'seed' => ['type' => ASN1::TYPE_BIT_STRING, 'optional' => \true]]];
 }

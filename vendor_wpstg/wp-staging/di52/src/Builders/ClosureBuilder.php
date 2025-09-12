@@ -14,7 +14,7 @@ use WPStaging\Vendor\lucatume\DI52\Container;
  *
  * @package lucatume\DI52\Builders
  */
-class ClosureBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface
+class ClosureBuilder implements BuilderInterface
 {
     /**
      * A reference to the resolver currently using the builder.
@@ -34,7 +34,7 @@ class ClosureBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\Builder
      * @param Container $container A reference to the current DI container instance.
      * @param Closure   $closure   A reference to the closure that should be used to build the implementation.
      */
-    public function __construct(\WPStaging\Vendor\lucatume\DI52\Container $container, \Closure $closure)
+    public function __construct(Container $container, Closure $closure)
     {
         $this->container = $container;
         $this->closure = $closure;

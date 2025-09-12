@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class PolicyQualifierInfo
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['policyQualifierId' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\PolicyQualifierId::MAP, 'qualifier' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_ANY]]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['policyQualifierId' => PolicyQualifierId::MAP, 'qualifier' => ['type' => ASN1::TYPE_ANY]]];
 }

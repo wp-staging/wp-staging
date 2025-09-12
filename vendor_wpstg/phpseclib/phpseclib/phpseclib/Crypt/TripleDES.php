@@ -38,7 +38,7 @@ namespace WPStaging\Vendor\phpseclib3\Crypt;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class TripleDES extends \WPStaging\Vendor\phpseclib3\Crypt\DES
+class TripleDES extends DES
 {
     /**
      * Encrypt / decrypt using inner chaining
@@ -130,7 +130,7 @@ class TripleDES extends \WPStaging\Vendor\phpseclib3\Crypt\DES
                 parent::__construct('cbc');
                 $this->mode_3cbc = \true;
                 // This three $des'es will do the 3CBC work (if $key > 64bits)
-                $this->des = [new \WPStaging\Vendor\phpseclib3\Crypt\DES('cbc'), new \WPStaging\Vendor\phpseclib3\Crypt\DES('cbc'), new \WPStaging\Vendor\phpseclib3\Crypt\DES('cbc')];
+                $this->des = [new DES('cbc'), new DES('cbc'), new DES('cbc')];
                 // we're going to be doing the padding, ourselves, so disable it in the \phpseclib3\Crypt\DES objects
                 $this->des[0]->disablePadding();
                 $this->des[1]->disablePadding();
@@ -143,7 +143,7 @@ class TripleDES extends \WPStaging\Vendor\phpseclib3\Crypt\DES
             default:
                 parent::__construct($mode);
                 if ($this->mode == self::MODE_STREAM) {
-                    throw new \WPStaging\Vendor\phpseclib3\Crypt\BadModeException('Block ciphers cannot be ran in stream mode');
+                    throw new BadModeException('Block ciphers cannot be ran in stream mode');
                 }
         }
     }
@@ -268,7 +268,7 @@ class TripleDES extends \WPStaging\Vendor\phpseclib3\Crypt\DES
     public function decrypt($ciphertext)
     {
         if ($this->mode_3cbc && \strlen($this->key) > 8) {
-            return $this->unpad($this->des[0]->decrypt($this->des[1]->encrypt($this->des[2]->decrypt(\str_pad($ciphertext, \strlen($ciphertext) + 7 & 0xfffffff8, "\0")))));
+            return $this->unpad($this->des[0]->decrypt($this->des[1]->encrypt($this->des[2]->decrypt(\str_pad($ciphertext, \strlen($ciphertext) + 7 & 0xfffffff8, "\x00")))));
         }
         return parent::decrypt($ciphertext);
     }

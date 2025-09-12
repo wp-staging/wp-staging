@@ -2,6 +2,8 @@
 
 namespace WPStaging\Staging\Traits;
 
+use WPStaging\Pro\Staging\Service\StagingSetup;
+
 /**
  * Trait StagingOperationDtoTrait
  * This trait is common between staging site creation, update and reset
@@ -52,8 +54,17 @@ trait StagingOperationDtoTrait
     /** @var array */
     private $excludedDirectories = [];
 
+    /** @var float */
+    private $excludeSizeGreaterThan = 8;
+
     /** @var array */
-    private $excludeGlobRules = [];
+    private $excludeFileRules = [];
+
+    /** @var array */
+    private $excludeFolderRules = [];
+
+    /** @var array */
+    private $excludeExtensionRules = [];
 
     /** @var string */
     private $stagingSitePath = '';
@@ -76,6 +87,56 @@ trait StagingOperationDtoTrait
      * @var bool
      */
     private $isKeepPermalinks = false;
+
+    /**
+     * @var bool
+     */
+    private $isRootFilesExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isWpAdminExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isWpIncludesExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isWpContentExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isPluginsExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isMuPluginsExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isThemesExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isUploadsExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isRootDirectoriesExcluded = false;
+
+    /**
+     * @var bool
+     */
+    private $isExternalDatabase = false;
 
     /**
      * @param string $jobType
@@ -241,20 +302,71 @@ trait StagingOperationDtoTrait
     }
 
     /**
-     * @param array $excludeGlobRules
+     * @param float $excludeSizeGreaterThan
      * @return void
      */
-    public function setExcludeGlobRules(array $excludeGlobRules)
+    public function setExcludeSizeGreaterThan(float $excludeSizeGreaterThan)
     {
-        $this->excludeGlobRules = $excludeGlobRules;
+        $this->excludeSizeGreaterThan = $excludeSizeGreaterThan;
+    }
+
+    /**
+     * @return float
+     */
+    public function getExcludeSizeGreaterThan(): float
+    {
+        return $this->excludeSizeGreaterThan;
+    }
+
+    /**
+     * @param array $excludeFileRules
+     * @return void
+     */
+    public function setExcludeFileRules(array $excludeFileRules)
+    {
+        $this->excludeFileRules = $excludeFileRules;
     }
 
     /**
      * @return array
      */
-    public function getExcludeGlobRules(): array
+    public function getExcludeFileRules(): array
     {
-        return $this->excludeGlobRules;
+        return $this->excludeFileRules;
+    }
+
+    /**
+     * @param array $excludeFolderRules
+     * @return void
+     */
+    public function setExcludeFolderRules(array $excludeFolderRules)
+    {
+        $this->excludeFolderRules = $excludeFolderRules;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExcludeFolderRules(): array
+    {
+        return $this->excludeFolderRules;
+    }
+
+    /**
+     * @param array $excludeExtensionRules
+     * @return void
+     */
+    public function setExcludeExtensionRules(array $excludeExtensionRules)
+    {
+        $this->excludeExtensionRules = $excludeExtensionRules;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExcludeExtensionRules(): array
+    {
+        return $this->excludeExtensionRules;
     }
 
     /**
@@ -342,5 +454,195 @@ trait StagingOperationDtoTrait
     public function getIsKeepPermalinks(): bool
     {
         return $this->isKeepPermalinks;
+    }
+
+    /**
+     * @param bool $isRootFilesExcluded
+     * @return void
+     */
+    public function setIsRootFilesExcluded(bool $isRootFilesExcluded)
+    {
+        $this->isRootFilesExcluded = $isRootFilesExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsRootFilesExcluded(): bool
+    {
+        return $this->isRootFilesExcluded;
+    }
+
+    /**
+     * @param bool $isWpAdminExcluded
+     * @return void
+     */
+    public function setIsWpAdminExcluded(bool $isWpAdminExcluded)
+    {
+        $this->isWpAdminExcluded = $isWpAdminExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsWpAdminExcluded(): bool
+    {
+        return $this->isWpAdminExcluded;
+    }
+
+    /**
+     * @param bool $isWpIncludesExcluded
+     * @return void
+     */
+    public function setIsWpIncludesExcluded(bool $isWpIncludesExcluded)
+    {
+        $this->isWpIncludesExcluded = $isWpIncludesExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsWpIncludesExcluded(): bool
+    {
+        return $this->isWpIncludesExcluded;
+    }
+
+    /**
+     * @param bool $isWpContentExcluded
+     * @return void
+     */
+    public function setIsWpContentExcluded(bool $isWpContentExcluded)
+    {
+        $this->isWpContentExcluded = $isWpContentExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsWpContentExcluded(): bool
+    {
+        return $this->isWpContentExcluded;
+    }
+
+    /**
+     * @param bool $isPluginsExcluded
+     * @return void
+     */
+    public function setIsPluginsExcluded(bool $isPluginsExcluded)
+    {
+        $this->isPluginsExcluded = $isPluginsExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsPluginsExcluded(): bool
+    {
+        return $this->isPluginsExcluded;
+    }
+
+    /**
+     * @param bool $isMuPluginsExcluded
+     * @return void
+     */
+    public function setIsMuPluginsExcluded(bool $isMuPluginsExcluded)
+    {
+        $this->isMuPluginsExcluded = $isMuPluginsExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsMuPluginsExcluded(): bool
+    {
+        return $this->isMuPluginsExcluded;
+    }
+
+    /**
+     * @param bool $isThemesExcluded
+     * @return void
+     */
+    public function setIsThemesExcluded(bool $isThemesExcluded)
+    {
+        $this->isThemesExcluded = $isThemesExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsThemesExcluded(): bool
+    {
+        return $this->isThemesExcluded;
+    }
+
+    /**
+     * @param bool $isUploadsExcluded
+     * @return void
+     */
+    public function setIsUploadsExcluded(bool $isUploadsExcluded)
+    {
+        $this->isUploadsExcluded = $isUploadsExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsUploadsExcluded(): bool
+    {
+        return $this->isUploadsExcluded;
+    }
+
+    /**
+     * @param bool $isRootDirectoriesExcluded
+     * @return void
+     */
+    public function setIsRootDirectoriesExcluded(bool $isRootDirectoriesExcluded)
+    {
+        $this->isRootDirectoriesExcluded = $isRootDirectoriesExcluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsRootDirectoriesExcluded(): bool
+    {
+        return $this->isRootDirectoriesExcluded;
+    }
+
+    /**
+     * @param bool $isExternalDatabase
+     * @return void
+     */
+    public function setIsExternalDatabase(bool $isExternalDatabase)
+    {
+        $this->isExternalDatabase = $isExternalDatabase;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsExternalDatabase(): bool
+    {
+        return $this->isExternalDatabase;
+    }
+
+    public function getIsNewStagingSite(): bool
+    {
+        return $this->jobType === StagingSetup::JOB_NEW_STAGING_SITE;
+    }
+
+    public function getIsUpdateJob(): bool
+    {
+        return $this->jobType === StagingSetup::JOB_UPDATE;
+    }
+
+    public function getIsResetJob(): bool
+    {
+        return $this->jobType === StagingSetup::JOB_RESET;
+    }
+
+    public function getIsUpdateOrResetJob(): bool
+    {
+        return $this->getIsUpdateJob() || $this->getIsResetJob();
     }
 }

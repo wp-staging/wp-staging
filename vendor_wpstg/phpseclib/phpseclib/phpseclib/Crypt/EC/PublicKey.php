@@ -26,7 +26,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements \WPStaging\Vendor\phpseclib3\Crypt\Common\PublicKey
+final class PublicKey extends EC implements Common\PublicKey
 {
     use Common\Traits\Fingerprint;
     /**
@@ -39,8 +39,8 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements \
      */
     public function verify($message, $signature)
     {
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
+        if ($this->curve instanceof MontgomeryCurve) {
+            throw new UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
         }
         $shortFormat = $this->shortFormat;
         $format = $this->sigFormat;
@@ -48,11 +48,11 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements \
             return \false;
         }
         $order = $this->curve->getOrder();
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
+        if ($this->curve instanceof TwistedEdwardsCurve) {
             if ($shortFormat == 'SSH2') {
-                list(, $signature) = \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::unpackSSH2('ss', $signature);
+                list(, $signature) = Strings::unpackSSH2('ss', $signature);
             }
-            if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 && self::$engines['libsodium'] && !isset($this->context)) {
+            if ($this->curve instanceof Ed25519 && self::$engines['libsodium'] && !isset($this->context)) {
                 return \sodium_crypto_sign_verify_detached($signature, $message, $this->toString('libsodium'));
             }
             $curve = $this->curve;
@@ -62,27 +62,27 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements \
             $R = \substr($signature, 0, $curve::SIZE);
             $S = \substr($signature, $curve::SIZE);
             try {
-                $R = \WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Keys\PKCS1::extractPoint($R, $curve);
+                $R = PKCS1::extractPoint($R, $curve);
                 $R = $this->curve->convertToInternal($R);
             } catch (\Exception $e) {
                 return \false;
             }
             $S = \strrev($S);
-            $S = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($S, 256);
+            $S = new BigInteger($S, 256);
             if ($S->compare($order) >= 0) {
                 return \false;
             }
             $A = $curve->encodePoint($this->QA);
-            if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519) {
-                $dom2 = !isset($this->context) ? '' : 'SigEd25519 no Ed25519 collisions' . "\0" . \chr(\strlen($this->context)) . $this->context;
+            if ($curve instanceof Ed25519) {
+                $dom2 = !isset($this->context) ? '' : 'SigEd25519 no Ed25519 collisions' . "\x00" . \chr(\strlen($this->context)) . $this->context;
             } else {
                 $context = isset($this->context) ? $this->context : '';
-                $dom2 = 'SigEd448' . "\0" . \chr(\strlen($context)) . $context;
+                $dom2 = 'SigEd448' . "\x00" . \chr(\strlen($context)) . $context;
             }
-            $hash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash($curve::HASH);
+            $hash = new Hash($curve::HASH);
             $k = $hash->hash($dom2 . \substr($signature, 0, $curve::SIZE) . $A . $message);
             $k = \strrev($k);
-            $k = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($k, 256);
+            $k = new BigInteger($k, 256);
             list(, $k) = $k->divide($order);
             $qa = $curve->convertToInternal($this->QA);
             $lhs = $curve->multiplyPoint($curve->getBasePoint(), $S);
@@ -98,7 +98,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements \
         $r = $params['r'];
         $s = $params['s'];
         if (self::$engines['OpenSSL'] && \in_array($this->hash->getHash(), \openssl_get_md_methods())) {
-            $sig = $format != 'ASN1' ? \WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Signature\ASN1::save($r, $s) : $signature;
+            $sig = $format != 'ASN1' ? ASN1Signature::save($r, $s) : $signature;
             $result = \openssl_verify($message, $sig, $this->toString('PKCS8', ['namedCurve' => \false]), $this->hash->getHash());
             if ($result != -1) {
                 return (bool) $result;
@@ -109,7 +109,7 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements \
             return \false;
         }
         $e = $this->hash->hash($message);
-        $e = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($e, 256);
+        $e = new BigInteger($e, 256);
         $Ln = $this->hash->getLength() - $order->getLength();
         $z = $Ln > 0 ? $e->bitwise_rightShift($Ln) : $e;
         $w = $s->modInverse($order);
