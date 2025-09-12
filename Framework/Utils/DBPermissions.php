@@ -29,7 +29,7 @@ class DBPermissions
      */
     public function ajaxCheckDBPermissions()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedRequest()) {
             return;
         }
 
@@ -65,10 +65,10 @@ class DBPermissions
     /**
      * Check if the current user has the grants given in arguments.
      *
-     * @param  array $grantsToCheck
+     * @param array $grantsToCheck
      * @return bool
      */
-    public function isAllowed($grantsToCheck)
+    public function isAllowed(array $grantsToCheck): bool
     {
         $grants = $this->wpdb->get_results("SHOW GRANTS;");
         if (empty($grants) || $this->wpdb->last_error) {
@@ -76,29 +76,29 @@ class DBPermissions
         }
 
         $hasGranted = array_filter($grants, function ($grant) use ($grantsToCheck) {
-            $grant = (new ArrayIterator($grant))->current();
-            if (stripos($grant, '`' . DB_NAME . '`') !== false || stripos($grant, '`' . $this->wpdb->esc_like(DB_NAME) . '`') !== false || stripos($grant, '*.*') !== false) {
-                foreach ($grantsToCheck as $value) {
-                    if (!preg_match("/" . $value . "[,]/", $grant) && !preg_match("/" . $value . " ON/", $grant)) {
-                        return false;
-                    }
-                }
+            $grantString = (new ArrayIterator($grant))->current();
 
+            // Check if this grant applies to our database or all databases
+            if (!$this->hasGrantForCurrentDatabase($grantString)) {
+                return false;
+            }
+
+            // Check if ALL PRIVILEGES is granted (covers everything)
+            if ($this->hasAllPrivileges($grantString)) {
                 return true;
             }
+
+            // Check specific permissions
+            return $this->hasRequiredPermissions($grantString, $grantsToCheck);
         });
 
-        if (!empty($hasGranted)) {
-            return true;
-        }
-
-        return false;
+        return !empty($hasGranted);
     }
 
     /**
      * @return string
      */
-    public function getDebugInfo()
+    public function getDebugInfo(): string
     {
         $dbUser = empty($_POST['databaseUser']) ? DB_USER : sanitize_text_field($_POST['databaseUser']);
         $dbName = empty($_POST['databaseDatabase']) ? DB_NAME : sanitize_text_field($_POST['databaseDatabase']);
@@ -117,7 +117,10 @@ class DBPermissions
 
         $grantsHtml = '';
         foreach ($grants as $grant) {
-            $grantsHtml .= PHP_EOL . (new ArrayIterator($grant))->current() . ';';
+            $grantString = (new ArrayIterator($grant))->current();
+            $grantString = preg_replace('/IDENTIFIED BY PASSWORD\s+([\'"])(?:\\\\.|(?!\1).)*\1/', "IDENTIFIED BY PASSWORD '********'", $grantString);
+            $grantString = preg_replace('/IDENTIFIED BY\s+([\'"])(?:\\\\.|(?!\1).)*\1/', "IDENTIFIED BY '********'", $grantString);
+            $grantsHtml .= PHP_EOL . $grantString . ';';
         }
 
         $data .= PHP_EOL . __('User Grants: ', 'wp-staging') . $grantsHtml;
@@ -127,7 +130,7 @@ class DBPermissions
     }
 
     /**
-     * @param  wpdb $db
+     * @param wpdb $wpdb
      * @return void
      */
     public function setDB(wpdb $wpdb)
@@ -135,11 +138,71 @@ class DBPermissions
         $this->wpdb = $wpdb;
     }
 
-   /**
-    * @return bool Whether the current request is considered to be authenticated.
-    */
-    protected function isAuthenticated()
+    /**
+     * @param string $grantString
+     * @return bool
+     */
+    private function hasGrantForCurrentDatabase(string $grantString): bool
     {
-        return $this->auth->isAuthenticatedRequest();
+        $dbName = $this->wpdb->dbname;
+        // Global privileges (applies to all databases)
+        if (stripos($grantString, '*.*') !== false) {
+            return true;
+        }
+
+        // Database-specific grants - handle various formats:
+        // `dbname`.*, "dbname".*, dbname.*, ON `dbname`.*, etc.
+        $patterns = [
+            '/\bON\s+\*\.\*/i',                                  // Global: ON *.*
+            '/\bON\s+`' . preg_quote($dbName, '/') . '`\.\*/i',  // Quoted: ON `dbname`.*
+            '/\bON\s+"' . preg_quote($dbName, '/') . '"\.\*/i',  // Double-quoted: ON "dbname".*
+            '/\bON\s+' . preg_quote($dbName, '/') . '\.\*/i',    // Unquoted: ON dbname.*
+            '/`' . preg_quote($dbName, '/') . '`\.\*/i',         // Direct reference: `dbname`.*
+            '/"' . preg_quote($dbName, '/') . '"\.\*/i',         // Direct double quoted: "dbname".*
+            '/\b' . preg_quote($dbName, '/') . '\.\*/i',         // Direct unquoted: dbname.*
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $grantString)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $grantString
+     * @return bool
+     */
+    private function hasAllPrivileges(string $grantString): bool
+    {
+        return preg_match('/\bGRANT\s+ALL(\s+PRIVILEGES)?\b/i', $grantString) === 1; // Match both "ALL" and "ALL PRIVILEGES" formats
+    }
+
+    /**
+     * @param string $grantString
+     * @param array $grantsToCheck
+     * @return bool
+     */
+    private function hasRequiredPermissions(string $grantString, array $grantsToCheck): bool
+    {
+        if (!preg_match('/GRANT\s+(.*?)\s+ON\s+/i', $grantString, $matches)) {
+            return false;
+        }
+
+        $permissionsString       = strtoupper(trim($matches[1]));
+        $permissionsString       = preg_replace('/\s*,\s*/', ',', $permissionsString);
+        $grantedPermissions      = array_filter(array_map('trim', explode(',', $permissionsString))); // Split and normalize granted permissions
+        $grantedPermissionsAssoc = array_flip($grantedPermissions); // Convert granted permissions to associative array for O(1) lookups
+
+        // Check each required permission
+        foreach ($grantsToCheck as $requiredPermission) {
+            $requiredPermission = strtoupper(trim($requiredPermission));
+            if (!in_array($requiredPermission, $grantedPermissions, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

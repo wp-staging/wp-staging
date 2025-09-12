@@ -62,7 +62,7 @@ use WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class Rijndael extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
+class Rijndael extends BlockCipher
 {
     /**
      * The mcrypt specific name of the cipher
@@ -154,7 +154,7 @@ class Rijndael extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
     {
         parent::__construct($mode);
         if ($this->mode == self::MODE_STREAM) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\BadModeException('Block ciphers cannot be ran in stream mode');
+            throw new BadModeException('Block ciphers cannot be ran in stream mode');
         }
     }
     /**
@@ -437,7 +437,7 @@ class Rijndael extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
         }
         parent::setup();
         if (\is_string($this->iv) && \strlen($this->iv) != $this->block_size) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InconsistentSetupException('The IV length (' . \strlen($this->iv) . ') does not match the block size (' . $this->block_size . ')');
+            throw new InconsistentSetupException('The IV length (' . \strlen($this->iv) . ') does not match the block size (' . $this->block_size . ')');
         }
     }
     /**
@@ -1001,7 +1001,7 @@ class Rijndael extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
         switch ($this->engine) {
             case self::ENGINE_LIBSODIUM:
                 $this->newtag = \sodium_crypto_aead_aes256gcm_encrypt($plaintext, $this->aad, $this->nonce, $this->key);
-                return \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::shift($this->newtag, \strlen($plaintext));
+                return Strings::shift($this->newtag, \strlen($plaintext));
             case self::ENGINE_OPENSSL_GCM:
                 return \openssl_encrypt($plaintext, 'aes-' . $this->getKeyLength() . '-gcm', $this->key, \OPENSSL_RAW_DATA, $this->nonce, $this->newtag, $this->aad);
         }
@@ -1021,7 +1021,7 @@ class Rijndael extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
         switch ($this->engine) {
             case self::ENGINE_LIBSODIUM:
                 if ($this->oldtag === \false) {
-                    throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('Authentication Tag has not been set');
+                    throw new InsufficientSetupException('Authentication Tag has not been set');
                 }
                 if (\strlen($this->oldtag) != 16) {
                     break;
@@ -1029,17 +1029,17 @@ class Rijndael extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
                 $plaintext = \sodium_crypto_aead_aes256gcm_decrypt($ciphertext . $this->oldtag, $this->aad, $this->nonce, $this->key);
                 if ($plaintext === \false) {
                     $this->oldtag = \false;
-                    throw new \WPStaging\Vendor\phpseclib3\Exception\BadDecryptionException('Error decrypting ciphertext with libsodium');
+                    throw new BadDecryptionException('Error decrypting ciphertext with libsodium');
                 }
                 return $plaintext;
             case self::ENGINE_OPENSSL_GCM:
                 if ($this->oldtag === \false) {
-                    throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('Authentication Tag has not been set');
+                    throw new InsufficientSetupException('Authentication Tag has not been set');
                 }
                 $plaintext = \openssl_decrypt($ciphertext, 'aes-' . $this->getKeyLength() . '-gcm', $this->key, \OPENSSL_RAW_DATA, $this->nonce, $this->oldtag, $this->aad);
                 if ($plaintext === \false) {
                     $this->oldtag = \false;
-                    throw new \WPStaging\Vendor\phpseclib3\Exception\BadDecryptionException('Error decrypting ciphertext with OpenSSL');
+                    throw new BadDecryptionException('Error decrypting ciphertext with OpenSSL');
                 }
                 return $plaintext;
         }

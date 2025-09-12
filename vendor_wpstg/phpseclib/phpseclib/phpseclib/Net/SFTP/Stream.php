@@ -152,7 +152,7 @@ class Stream
             }
         }
         if (\preg_match('/^{[a-z0-9]+}$/i', $host)) {
-            $host = \WPStaging\Vendor\phpseclib3\Net\SSH2::getConnectionByResourceId($host);
+            $host = SSH2::getConnectionByResourceId($host);
             if ($host === \false) {
                 return \false;
             }
@@ -167,7 +167,7 @@ class Stream
             if (isset($context[$scheme]['sftp'])) {
                 $sftp = $context[$scheme]['sftp'];
             }
-            if (isset($sftp) && $sftp instanceof \WPStaging\Vendor\phpseclib3\Net\SFTP) {
+            if (isset($sftp) && $sftp instanceof SFTP) {
                 $this->sftp = $sftp;
                 return $path;
             }
@@ -177,7 +177,7 @@ class Stream
             if (isset($context[$scheme]['password'])) {
                 $pass = $context[$scheme]['password'];
             }
-            if (isset($context[$scheme]['privkey']) && $context[$scheme]['privkey'] instanceof \WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey) {
+            if (isset($context[$scheme]['privkey']) && $context[$scheme]['privkey'] instanceof PrivateKey) {
                 $pass = $context[$scheme]['privkey'];
             }
             if (!isset($user) || !isset($pass)) {
@@ -187,7 +187,7 @@ class Stream
             if (isset(self::$instances[$host][$port][$user][(string) $pass])) {
                 $this->sftp = self::$instances[$host][$port][$user][(string) $pass];
             } else {
-                $this->sftp = new \WPStaging\Vendor\phpseclib3\Net\SFTP($host, $port);
+                $this->sftp = new SFTP($host, $port);
                 $this->sftp->disableStatCache();
                 if (isset($this->notification) && \is_callable($this->notification)) {
                     /* if !is_callable($this->notification) we could do this:
@@ -303,7 +303,7 @@ class Stream
             case 'r':
                 return \false;
         }
-        $result = $this->sftp->put($this->path, $data, \WPStaging\Vendor\phpseclib3\Net\SFTP::SOURCE_STRING, $this->pos);
+        $result = $this->sftp->put($this->path, $data, SFTP::SOURCE_STRING, $this->pos);
         if (isset($this->notification) && \is_callable($this->notification)) {
             if (!$result) {
                 \call_user_func($this->notification, \STREAM_NOTIFY_FAILURE, \STREAM_NOTIFY_SEVERITY_ERR, $this->sftp->getLastSFTPError(), NET_SFTP_OPEN, 0, 0);

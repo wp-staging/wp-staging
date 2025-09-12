@@ -27,4 +27,9 @@ class CopyWpContentTask extends FileCopierTask
     {
         return true;
     }
+
+    protected function getIsExcluded(): bool
+    {
+        return $this->jobDataDto->getIsWpContentExcluded();
+    }
 }

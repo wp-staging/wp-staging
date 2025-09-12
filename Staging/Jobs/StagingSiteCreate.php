@@ -73,6 +73,11 @@ class StagingSiteCreate extends AbstractJob
 
     protected function addDatabaseTasks()
     {
+        // Early return if all tables are excluded
+        if ($this->jobDataDto->getAllTablesExcluded() && empty($this->jobDataDto->getNonSiteTables())) {
+            return;
+        }
+
         $this->tasks[] = CreateDatabaseTablesTask::class;
         $this->tasks[] = PrepareDatabaseRowsTask::class;
         $this->tasks[] = ImportDatabaseRowsTask::class;

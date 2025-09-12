@@ -161,55 +161,55 @@ class PreserveDataFirstStep extends JobExecutable
 
         /**
          * Google Drive Options
-         * @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\GoogleDrive\Auth::getOptionName for option name
          */
         $googleDrive = $this->getStagingSiteOption('wpstg_googledrive');
 
         /**
          * Amazon S3 Options
-         * @see WPStaging\Pro\Backup\Storage\Storages\Amazon\S3::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\Amazon\S3::getOptionName for option name
          */
         $amazonS3 = $this->getStagingSiteOption('wpstg_amazons3');
 
         /**
          * sFTP/FTP Options
-         * @see WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\SFTP\Auth::getOptionName for option name
          */
         $sftp = $this->getStagingSiteOption('wpstg_sftp');
 
         /**
          * Digital Ocean Spaces Options
-         * @see WPStaging\Pro\Backup\Storage\Storages\DigitalOceanSpaces\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\DigitalOceanSpaces\Auth::getOptionName for option name
          */
         $digitalOceanSpaces = $this->getStagingSiteOption('wpstg_digitalocean-spaces');
 
         /**
          * Wasabi S3 Options
-         * @see WPStaging\Pro\Backup\Storage\Storages\Wasabi\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\Wasabi\Auth::getOptionName for option name
          */
         $wasabiS3 = $this->getStagingSiteOption('wpstg_wasabi');
 
         /**
          * Generic S3 / Other S3 Compat Options.
-         * @see WPStaging\Pro\Backup\Storage\Storages\GenericS3\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\GenericS3\Auth::getOptionName for option name
          */
         $genericS3 = $this->getStagingSiteOption('wpstg_generic-s3');
 
         /**
          * Dropbox Options.
-         * @see WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\Dropbox\Auth::getOptionName for option name
          */
         $dropbox = $this->getStagingSiteOption('wpstg_dropbox');
 
         /**
          * Microsoft OneDrive Options.
-         * @see WPStaging\Pro\Backup\Storage\Storages\OneDrive\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\OneDrive\Auth::getOptionName for option name
          */
         $oneDrive = $this->getStagingSiteOption('wpstg_one-drive');
 
         /**
          * pCloud Options.
-         * @see WPStaging\Pro\Backup\Storage\Storages\PCloud\Auth::getOptionName for option name
+         * @see WPStaging\Pro\Backup\Storage\PCloud\Auth::getOptionName for option name
          */
         $pCloudOption = $this->getStagingSiteOption('wpstg_pcloud');
 

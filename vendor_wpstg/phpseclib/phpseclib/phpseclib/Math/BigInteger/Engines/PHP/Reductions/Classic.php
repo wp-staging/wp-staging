@@ -18,7 +18,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Base;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class Classic extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP\Base
+abstract class Classic extends Base
 {
     /**
      * Regular Division

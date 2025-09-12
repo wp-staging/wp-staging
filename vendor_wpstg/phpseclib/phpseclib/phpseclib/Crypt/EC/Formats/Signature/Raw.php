@@ -18,6 +18,6 @@ use WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Signature\Raw as Progenitor
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class Raw extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Signature\Raw
+abstract class Raw extends Progenitor
 {
 }

@@ -137,7 +137,7 @@ abstract class Strings
             $temp = self::shift($data, $length);
             switch ($format[$i]) {
                 case 'i':
-                    $result[] = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($temp, -256);
+                    $result[] = new BigInteger($temp, -256);
                     break;
                 case 's':
                     $result[] = $temp;
@@ -175,7 +175,7 @@ abstract class Strings
                     if (!\is_bool($element)) {
                         throw new \InvalidArgumentException('A boolean parameter was expected.');
                     }
-                    $result .= $element ? "\1" : "\0";
+                    $result .= $element ? "\x01" : "\x00";
                     break;
                 case 'Q':
                     if (!\is_int($element) && !\is_float($element)) {
@@ -200,7 +200,7 @@ abstract class Strings
                     $result .= \pack('Na*', \strlen($element), $element);
                     break;
                 case 'i':
-                    if (!$element instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger && !$element instanceof \WPStaging\Vendor\phpseclib3\Math\Common\FiniteField\Integer) {
+                    if (!$element instanceof BigInteger && !$element instanceof FiniteField\Integer) {
                         throw new \InvalidArgumentException('A phpseclib3\\Math\\BigInteger or phpseclib3\\Math\\Common\\FiniteField\\Integer object was expected.');
                     }
                     $element = $element->toBytes(\true);
@@ -278,7 +278,7 @@ abstract class Strings
             $part[0] = '0';
             $str .= \pack(\PHP_INT_SIZE == 4 ? 'N' : 'J', $xor ^ eval('return 0b' . $part . ';'));
         }
-        return \ltrim($str, "\0");
+        return \ltrim($str, "\x00");
     }
     /**
      * Convert bits to binary data
@@ -298,7 +298,7 @@ abstract class Strings
         $len = \strlen($x);
         $mod = $len % \PHP_INT_SIZE;
         if ($mod) {
-            $x = \str_pad($x, $len + \PHP_INT_SIZE - $mod, "\0", \STR_PAD_LEFT);
+            $x = \str_pad($x, $len + \PHP_INT_SIZE - $mod, "\x00", \STR_PAD_LEFT);
         }
         $bits = '';
         if (\PHP_INT_SIZE == 4) {
@@ -356,11 +356,11 @@ abstract class Strings
         for ($i = 4; $i <= \strlen($var); $i += 4) {
             $temp = \substr($var, -$i, 4);
             switch ($temp) {
-                case "ÿÿÿÿ":
-                    $var = \substr_replace($var, "\0\0\0\0", -$i, 4);
+                case "\xff\xff\xff\xff":
+                    $var = \substr_replace($var, "\x00\x00\x00\x00", -$i, 4);
                     break;
-                case "ÿÿÿ":
-                    $var = \substr_replace($var, "€\0\0\0", -$i, 4);
+                case "\xff\xff\xff":
+                    $var = \substr_replace($var, "\x80\x00\x00\x00", -$i, 4);
                     return $var;
                 default:
                     $temp = \unpack('Nnum', $temp);
@@ -372,7 +372,7 @@ abstract class Strings
         if ($remainder == 0) {
             return $var;
         }
-        $temp = \unpack('Nnum', \str_pad(\substr($var, 0, $remainder), 4, "\0", \STR_PAD_LEFT));
+        $temp = \unpack('Nnum', \str_pad(\substr($var, 0, $remainder), 4, "\x00", \STR_PAD_LEFT));
         $temp = \substr(\pack('N', $temp['num'] + 1), -$remainder);
         $var = \substr_replace($var, $temp, 0, $remainder);
         return $var;
@@ -399,7 +399,7 @@ abstract class Strings
      */
     public static function base64_decode($data)
     {
-        return \function_exists('sodium_base642bin') ? \sodium_base642bin($data, \SODIUM_BASE64_VARIANT_ORIGINAL_NO_PADDING, '=') : \WPStaging\Vendor\ParagonIE\ConstantTime\Base64::decode($data);
+        return \function_exists('sodium_base642bin') ? \sodium_base642bin($data, \SODIUM_BASE64_VARIANT_ORIGINAL_NO_PADDING, '=') : Base64::decode($data);
     }
     /**
      * Constant Time Base64-decoding (URL safe)
@@ -410,7 +410,7 @@ abstract class Strings
     public static function base64url_decode($data)
     {
         // return self::base64_decode(str_replace(['-', '_'], ['+', '/'], $data));
-        return \function_exists('sodium_base642bin') ? \sodium_base642bin($data, \SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING, '=') : \WPStaging\Vendor\ParagonIE\ConstantTime\Base64UrlSafe::decode($data);
+        return \function_exists('sodium_base642bin') ? \sodium_base642bin($data, \SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING, '=') : Base64UrlSafe::decode($data);
     }
     /**
      * Constant Time Base64-encoding
@@ -420,7 +420,7 @@ abstract class Strings
      */
     public static function base64_encode($data)
     {
-        return \function_exists('sodium_bin2base64') ? \sodium_bin2base64($data, \SODIUM_BASE64_VARIANT_ORIGINAL) : \WPStaging\Vendor\ParagonIE\ConstantTime\Base64::encode($data);
+        return \function_exists('sodium_bin2base64') ? \sodium_bin2base64($data, \SODIUM_BASE64_VARIANT_ORIGINAL) : Base64::encode($data);
     }
     /**
      * Constant Time Base64-encoding (URL safe)
@@ -431,7 +431,7 @@ abstract class Strings
     public static function base64url_encode($data)
     {
         // return str_replace(['+', '/'], ['-', '_'], self::base64_encode($data));
-        return \function_exists('sodium_bin2base64') ? \sodium_bin2base64($data, \SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING) : \WPStaging\Vendor\ParagonIE\ConstantTime\Base64UrlSafe::encode($data);
+        return \function_exists('sodium_bin2base64') ? \sodium_bin2base64($data, \SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING) : Base64UrlSafe::encode($data);
     }
     /**
      * Constant Time Hex Decoder
@@ -441,7 +441,7 @@ abstract class Strings
      */
     public static function hex2bin($data)
     {
-        return \function_exists('sodium_hex2bin') ? \sodium_hex2bin($data) : \WPStaging\Vendor\ParagonIE\ConstantTime\Hex::decode($data);
+        return \function_exists('sodium_hex2bin') ? \sodium_hex2bin($data) : Hex::decode($data);
     }
     /**
      * Constant Time Hex Encoder
@@ -451,6 +451,6 @@ abstract class Strings
      */
     public static function bin2hex($data)
     {
-        return \function_exists('sodium_bin2hex') ? \sodium_bin2hex($data) : \WPStaging\Vendor\ParagonIE\ConstantTime\Hex::encode($data);
+        return \function_exists('sodium_bin2hex') ? \sodium_bin2hex($data) : Hex::encode($data);
     }
 }

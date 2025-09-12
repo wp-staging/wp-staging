@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class EncryptedPrivateKeyInfo
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['encryptionAlgorithm' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AlgorithmIdentifier::MAP, 'encryptedData' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\EncryptedData::MAP]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['encryptionAlgorithm' => AlgorithmIdentifier::MAP, 'encryptedData' => EncryptedData::MAP]];
 }

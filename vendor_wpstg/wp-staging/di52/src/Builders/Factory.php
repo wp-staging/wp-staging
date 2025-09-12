@@ -34,7 +34,7 @@ class Factory
      * @param Container $container A reference to the DI container the builder is working for.
      * @param Resolver  $resolver A reference to the resolver builders will use to resolve to implementations.
      */
-    public function __construct(\WPStaging\Vendor\lucatume\DI52\Container $container, \WPStaging\Vendor\lucatume\DI52\Builders\Resolver $resolver)
+    public function __construct(Container $container, Resolver $resolver)
     {
         $this->container = $container;
         $this->resolver = $resolver;
@@ -60,20 +60,20 @@ class Factory
         }
         if (\is_string($implementation) && \is_string($id)) {
             if (\class_exists($implementation)) {
-                return new \WPStaging\Vendor\lucatume\DI52\Builders\ClassBuilder($id, $this->resolver, $implementation, $afterBuildMethods, ...$buildArgs);
+                return new ClassBuilder($id, $this->resolver, $implementation, $afterBuildMethods, ...$buildArgs);
             }
-            return new \WPStaging\Vendor\lucatume\DI52\Builders\ValueBuilder($implementation);
+            return new ValueBuilder($implementation);
         }
-        if ($implementation instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface) {
+        if ($implementation instanceof BuilderInterface) {
             return $implementation;
         }
-        if ($implementation instanceof \Closure) {
-            return new \WPStaging\Vendor\lucatume\DI52\Builders\ClosureBuilder($this->container, $implementation);
+        if ($implementation instanceof Closure) {
+            return new ClosureBuilder($this->container, $implementation);
         }
         if (\is_callable($implementation)) {
-            return new \WPStaging\Vendor\lucatume\DI52\Builders\CallableBuilder($this->container, $implementation);
+            return new CallableBuilder($this->container, $implementation);
         }
-        return new \WPStaging\Vendor\lucatume\DI52\Builders\ValueBuilder($implementation);
+        return new ValueBuilder($implementation);
     }
     /**
      * Sets the container the builder should use.
@@ -84,7 +84,7 @@ class Factory
      *
      * @return void
      */
-    public function setContainer(\WPStaging\Vendor\lucatume\DI52\Container $container)
+    public function setContainer(Container $container)
     {
         $this->container = $container;
     }
@@ -97,7 +97,7 @@ class Factory
      *
      * @return void
      */
-    public function setResolver(\WPStaging\Vendor\lucatume\DI52\Builders\Resolver $resolver)
+    public function setResolver(Resolver $resolver)
     {
         $this->resolver = $resolver;
     }

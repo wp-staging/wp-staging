@@ -16,7 +16,7 @@ use WPStaging\Vendor\phpseclib3\Crypt\EC;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-final class Parameters extends \WPStaging\Vendor\phpseclib3\Crypt\EC
+final class Parameters extends EC
 {
     /**
      * Returns the parameters

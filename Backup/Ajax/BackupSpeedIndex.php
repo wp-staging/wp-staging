@@ -18,6 +18,9 @@ class BackupSpeedIndex
     /** @var string */
     const OPTION_SHOW_BACKUP_SPEED_MODAL = 'wpstg_backup_speed_modal_shown';
 
+    /** @var string */
+    const WPSTG_DISABLE_BACKUP_SPEED_MODAL = true;
+
     /** @var bool */
     protected $firstBackupSpeedIndex = false;
 
@@ -36,21 +39,17 @@ class BackupSpeedIndex
     /** @var string */
     protected $currentBackupSize;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     protected $currentBackupTime = 1;
+
+    /** @var Math */
+    protected $utilsMath;
 
     /** @var Sanitize */
     private $sanitize;
 
-    /**
-     * @var Auth
-     */
+    /** @var Auth */
     private $auth;
-
-    /** @var Math */
-    protected $utilsMath;
 
     /**
      * @param Auth $auth
@@ -75,6 +74,11 @@ class BackupSpeedIndex
      */
     public function ajaxMaybeShowModal()
     {
+        // Bail early if modal is disabled via constant
+        if (self::WPSTG_DISABLE_BACKUP_SPEED_MODAL) {
+            return;
+        }
+
         if (!$this->auth->isAuthenticatedRequest()) {
             return;
         }

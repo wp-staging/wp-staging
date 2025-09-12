@@ -35,7 +35,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKey
+abstract class DH extends AsymmetricKey
 {
     /**
      * Algorithm Name
@@ -79,8 +79,8 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
         if ($class->isFinal()) {
             throw new \RuntimeException('createParameters() should not be called from final classes (' . static::class . ')');
         }
-        $params = new \WPStaging\Vendor\phpseclib3\Crypt\DH\Parameters();
-        if (\count($args) == 2 && $args[0] instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger && $args[1] instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger) {
+        $params = new Parameters();
+        if (\count($args) == 2 && $args[0] instanceof BigInteger && $args[1] instanceof BigInteger) {
             //if (!$args[0]->isPrime()) {
             //    throw new \InvalidArgumentException('The first parameter should be a prime number');
             //}
@@ -88,8 +88,8 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
             $params->base = $args[1];
             return $params;
         } elseif (\count($args) == 1 && \is_numeric($args[0])) {
-            $params->prime = \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomPrime($args[0]);
-            $params->base = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(2);
+            $params->prime = BigInteger::randomPrime($args[0]);
+            $params->base = new BigInteger(2);
             return $params;
         } elseif (\count($args) != 1 || !\is_string($args[0])) {
             throw new \InvalidArgumentException('Valid parameters are either: two BigInteger\'s (prime and base), a single integer (the length of the prime; base is assumed to be 2) or a string');
@@ -129,8 +129,8 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
             default:
                 throw new \InvalidArgumentException('Invalid named prime provided');
         }
-        $params->prime = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($prime, 16);
-        $params->base = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(2);
+        $params->prime = new BigInteger($prime, 16);
+        $params->base = new BigInteger(2);
         return $params;
     }
     /**
@@ -150,23 +150,23 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      * @param int $length optional
      * @return PrivateKey
      */
-    public static function createKey(\WPStaging\Vendor\phpseclib3\Crypt\DH\Parameters $params, $length = 0)
+    public static function createKey(Parameters $params, $length = 0)
     {
         $class = new \ReflectionClass(static::class);
         if ($class->isFinal()) {
             throw new \RuntimeException('createKey() should not be called from final classes (' . static::class . ')');
         }
-        $one = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1);
+        $one = new BigInteger(1);
         if ($length) {
             $max = $one->bitwise_leftShift($length);
             $max = $max->subtract($one);
         } else {
             $max = $params->prime->subtract($one);
         }
-        $key = new \WPStaging\Vendor\phpseclib3\Crypt\DH\PrivateKey();
+        $key = new PrivateKey();
         $key->prime = $params->prime;
         $key->base = $params->base;
-        $key->privateKey = \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomRange($one, $max);
+        $key->privateKey = BigInteger::randomRange($one, $max);
         $key->publicKey = $key->base->powMod($key->privateKey, $key->prime);
         return $key;
     }
@@ -179,26 +179,26 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public static function computeSecret($private, $public)
     {
-        if ($private instanceof \WPStaging\Vendor\phpseclib3\Crypt\DH\PrivateKey) {
+        if ($private instanceof PrivateKey) {
             // DH\PrivateKey
             switch (\true) {
-                case $public instanceof \WPStaging\Vendor\phpseclib3\Crypt\DH\PublicKey:
+                case $public instanceof PublicKey:
                     if (!$private->prime->equals($public->prime) || !$private->base->equals($public->base)) {
                         throw new \InvalidArgumentException('The public and private key do not share the same prime and / or base numbers');
                     }
                     return $public->publicKey->powMod($private->privateKey, $private->prime)->toBytes(\true);
                 case \is_string($public):
-                    $public = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($public, -256);
+                    $public = new BigInteger($public, -256);
                 // fall-through
-                case $public instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger:
+                case $public instanceof BigInteger:
                     return $public->powMod($private->privateKey, $private->prime)->toBytes(\true);
                 default:
                     throw new \InvalidArgumentException('$public needs to be an instance of DH\\PublicKey, a BigInteger or a string');
             }
         }
-        if ($private instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\PrivateKey) {
+        if ($private instanceof EC\PrivateKey) {
             switch (\true) {
-                case $public instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\PublicKey:
+                case $public instanceof EC\PublicKey:
                     $public = $public->getEncodedCoordinates();
                 // fall-through
                 case \is_string($public):
@@ -233,8 +233,8 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
     public static function load($key, $password = \false)
     {
         try {
-            return \WPStaging\Vendor\phpseclib3\Crypt\EC::load($key, $password);
-        } catch (\WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException $e) {
+            return EC::load($key, $password);
+        } catch (NoKeyLoadedException $e) {
         }
         return parent::load($key, $password);
     }
@@ -246,9 +246,9 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
     protected static function onLoad(array $components)
     {
         if (!isset($components['privateKey']) && !isset($components['publicKey'])) {
-            $new = new \WPStaging\Vendor\phpseclib3\Crypt\DH\Parameters();
+            $new = new Parameters();
         } else {
-            $new = isset($components['privateKey']) ? new \WPStaging\Vendor\phpseclib3\Crypt\DH\PrivateKey() : new \WPStaging\Vendor\phpseclib3\Crypt\DH\PublicKey();
+            $new = isset($components['privateKey']) ? new PrivateKey() : new PublicKey();
         }
         $new->prime = $components['prime'];
         $new->base = $components['base'];
@@ -267,7 +267,7 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function withHash($hash)
     {
-        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException('DH does not use a hash algorithm');
+        throw new UnsupportedOperationException('DH does not use a hash algorithm');
     }
     /**
      * Returns the hash algorithm currently being used
@@ -275,7 +275,7 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function getHash()
     {
-        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException('DH does not use a hash algorithm');
+        throw new UnsupportedOperationException('DH does not use a hash algorithm');
     }
     /**
      * Returns the parameters
@@ -288,8 +288,8 @@ abstract class DH extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKe
      */
     public function getParameters()
     {
-        $type = \WPStaging\Vendor\phpseclib3\Crypt\DH::validatePlugin('Keys', 'PKCS1', 'saveParameters');
+        $type = DH::validatePlugin('Keys', 'PKCS1', 'saveParameters');
         $key = $type::saveParameters($this->prime, $this->base);
-        return \WPStaging\Vendor\phpseclib3\Crypt\DH::load($key, 'PKCS1');
+        return DH::load($key, 'PKCS1');
     }
 }

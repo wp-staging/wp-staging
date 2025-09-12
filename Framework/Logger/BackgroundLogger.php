@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Logger;
 
 use WP_REST_Request;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Rest\Rest;
 
@@ -135,6 +136,16 @@ class BackgroundLogger
 
                 if ($event['type'] === SseEventCache::EVENT_TYPE_COMPLETE) {
                     $this->output($jobId, $event['data']['status'], json_encode($event['data']['data']));
+                    continue;
+                }
+
+                if ($event['type'] === SseEventCache::EVENT_TYPE_MEMORY_EXHAUST) {
+                    $this->output($jobId, SseEventCache::EVENT_TYPE_MEMORY_EXHAUST, json_encode($event['data']));
+                    $this->output($jobId, '', json_encode([
+                        'type'    => Logger::TYPE_ERROR,
+                        'date'    => $event['data']['time'],
+                        'message' => "Memory exceed allowed size! Allowed memory: {$event['data']['allowedMemoryLimit']} bytes. Exceeded memory: {$event['data']['exhaustedMemorySize']} bytes",
+                    ]));
                     continue;
                 }
 

@@ -64,7 +64,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricKey
+abstract class RSA extends AsymmetricKey
 {
     /**
      * Algorithm Name
@@ -304,12 +304,12 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
                 // https://github.com/php/php-src/issues/11054 talks about other errors this'll pick up
                 while (\openssl_error_string() !== \false) {
                 }
-                return \WPStaging\Vendor\phpseclib3\Crypt\RSA::load($privatekeystr);
+                return RSA::load($privatekeystr);
             }
         }
         static $e;
         if (!isset($e)) {
-            $e = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(self::$defaultExponent);
+            $e = new BigInteger(self::$defaultExponent);
         }
         $n = clone self::$one;
         $exponents = $coefficients = $primes = [];
@@ -317,15 +317,15 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
         do {
             for ($i = 1; $i <= $num_primes; $i++) {
                 if ($i != $num_primes) {
-                    $primes[$i] = \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomPrime($regSize);
+                    $primes[$i] = BigInteger::randomPrime($regSize);
                 } else {
-                    $minMax = \WPStaging\Vendor\phpseclib3\Math\BigInteger::minMaxBits($bits);
+                    $minMax = BigInteger::minMaxBits($bits);
                     $min = $minMax['min'];
                     $max = $minMax['max'];
                     list($min) = $min->divide($n);
                     $min = $min->add(self::$one);
                     list($max) = $max->divide($n);
-                    $primes[$i] = \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomRangePrime($min, $max);
+                    $primes[$i] = BigInteger::randomRangePrime($min, $max);
                 }
                 // the first coefficient is calculated differently from the rest
                 // ie. instead of being $primes[1]->modInverse($primes[2]), it's $primes[2]->modInverse($primes[1])
@@ -362,7 +362,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
         //     coefficient       INTEGER,  -- (inverse of q) mod p
         //     otherPrimeInfos   OtherPrimeInfos OPTIONAL
         // }
-        $privatekey = new \WPStaging\Vendor\phpseclib3\Crypt\RSA\PrivateKey();
+        $privatekey = new PrivateKey();
         $privatekey->modulus = $n;
         $privatekey->k = $bits >> 3;
         $privatekey->publicExponent = $e;
@@ -387,7 +387,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
      */
     protected static function onLoad(array $components)
     {
-        $key = $components['isPublicKey'] ? new \WPStaging\Vendor\phpseclib3\Crypt\RSA\PublicKey() : new \WPStaging\Vendor\phpseclib3\Crypt\RSA\PrivateKey();
+        $key = $components['isPublicKey'] ? new PublicKey() : new PrivateKey();
         $key->modulus = $components['modulus'];
         $key->publicExponent = $components['publicExponent'];
         $key->k = $key->modulus->getLengthInBytes();
@@ -400,7 +400,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
             $key->exponents = $components['exponents'];
             $key->coefficients = $components['coefficients'];
         }
-        if ($components['format'] == \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PSS::class) {
+        if ($components['format'] == PSS::class) {
             // in the X509 world RSA keys are assumed to use PKCS1 padding by default. only if the key is
             // explicitly a PSS key is the use of PSS assumed. phpseclib does not work like this. phpseclib
             // uses PSS padding by default. it assumes the more secure method by default and altho it provides
@@ -440,7 +440,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
     {
         parent::__construct();
         $this->hLen = $this->hash->getLengthInBytes();
-        $this->mgfHash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash('sha256');
+        $this->mgfHash = new Hash('sha256');
         $this->mgfHLen = $this->mgfHash->getLengthInBytes();
     }
     /**
@@ -473,7 +473,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
      */
     protected function os2ip($x)
     {
-        return new \WPStaging\Vendor\phpseclib3\Math\BigInteger($x, 256);
+        return new BigInteger($x, 256);
     }
     /**
      * EMSA-PKCS1-V1_5-ENCODE
@@ -491,32 +491,32 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
         // see http://tools.ietf.org/html/rfc3447#page-43
         switch ($this->hash->getHash()) {
             case 'md2':
-                $t = "0 0\f\6\10*†H†÷\r\2\2\5\0\4\20";
+                $t = "0 0\f\x06\x08*\x86H\x86\xf7\r\x02\x02\x05\x00\x04\x10";
                 break;
             case 'md5':
-                $t = "0 0\f\6\10*†H†÷\r\2\5\5\0\4\20";
+                $t = "0 0\f\x06\x08*\x86H\x86\xf7\r\x02\x05\x05\x00\x04\x10";
                 break;
             case 'sha1':
-                $t = "0!0\t\6\5+\16\3\2\32\5\0\4\24";
+                $t = "0!0\t\x06\x05+\x0e\x03\x02\x1a\x05\x00\x04\x14";
                 break;
             case 'sha256':
-                $t = "010\r\6\t`†H\1e\3\4\2\1\5\0\4 ";
+                $t = "010\r\x06\t`\x86H\x01e\x03\x04\x02\x01\x05\x00\x04 ";
                 break;
             case 'sha384':
-                $t = "0A0\r\6\t`†H\1e\3\4\2\2\5\0\0040";
+                $t = "0A0\r\x06\t`\x86H\x01e\x03\x04\x02\x02\x05\x00\x040";
                 break;
             case 'sha512':
-                $t = "0Q0\r\6\t`†H\1e\3\4\2\3\5\0\4@";
+                $t = "0Q0\r\x06\t`\x86H\x01e\x03\x04\x02\x03\x05\x00\x04@";
                 break;
             // from https://www.emc.com/collateral/white-papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf#page=40
             case 'sha224':
-                $t = "0-0\r\6\t`†H\1e\3\4\2\4\5\0\4\34";
+                $t = "0-0\r\x06\t`\x86H\x01e\x03\x04\x02\x04\x05\x00\x04\x1c";
                 break;
             case 'sha512/224':
-                $t = "0-0\r\6\t`†H\1e\3\4\2\5\5\0\4\34";
+                $t = "0-0\r\x06\t`\x86H\x01e\x03\x04\x02\x05\x05\x00\x04\x1c";
                 break;
             case 'sha512/256':
-                $t = "010\r\6\t`†H\1e\3\4\2\6\5\0\4 ";
+                $t = "010\r\x06\t`\x86H\x01e\x03\x04\x02\x06\x05\x00\x04 ";
         }
         $t .= $h;
         $tLen = \strlen($t);
@@ -524,7 +524,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
             throw new \LengthException('Intended encoded message length too short');
         }
         $ps = \str_repeat(\chr(0xff), $emLen - $tLen - 3);
-        $em = "\0\1{$ps}\0{$t}";
+        $em = "\x00\x01{$ps}\x00{$t}";
         return $em;
     }
     /**
@@ -547,29 +547,29 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
         // see http://tools.ietf.org/html/rfc3447#page-43
         switch ($this->hash->getHash()) {
             case 'sha1':
-                $t = "0\0370\7\6\5+\16\3\2\32\4\24";
+                $t = "0\x1f0\x07\x06\x05+\x0e\x03\x02\x1a\x04\x14";
                 break;
             case 'sha256':
-                $t = "0/0\v\6\t`†H\1e\3\4\2\1\4 ";
+                $t = "0/0\v\x06\t`\x86H\x01e\x03\x04\x02\x01\x04 ";
                 break;
             case 'sha384':
-                $t = "0?0\v\6\t`†H\1e\3\4\2\2\0040";
+                $t = "0?0\v\x06\t`\x86H\x01e\x03\x04\x02\x02\x040";
                 break;
             case 'sha512':
-                $t = "0O0\v\6\t`†H\1e\3\4\2\3\4@";
+                $t = "0O0\v\x06\t`\x86H\x01e\x03\x04\x02\x03\x04@";
                 break;
             // from https://www.emc.com/collateral/white-papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf#page=40
             case 'sha224':
-                $t = "0+0\v\6\t`†H\1e\3\4\2\4\4\34";
+                $t = "0+0\v\x06\t`\x86H\x01e\x03\x04\x02\x04\x04\x1c";
                 break;
             case 'sha512/224':
-                $t = "0+0\v\6\t`†H\1e\3\4\2\5\4\34";
+                $t = "0+0\v\x06\t`\x86H\x01e\x03\x04\x02\x05\x04\x1c";
                 break;
             case 'sha512/256':
-                $t = "0/0\v\6\t`†H\1e\3\4\2\6\4 ";
+                $t = "0/0\v\x06\t`\x86H\x01e\x03\x04\x02\x06\x04 ";
                 break;
             default:
-                throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('md2 and md5 require NULLs');
+                throw new UnsupportedAlgorithmException('md2 and md5 require NULLs');
         }
         $t .= $h;
         $tLen = \strlen($t);
@@ -577,7 +577,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
             throw new \LengthException('Intended encoded message length too short');
         }
         $ps = \str_repeat(\chr(0xff), $emLen - $tLen - 3);
-        $em = "\0\1{$ps}\0{$t}";
+        $em = "\x00\x01{$ps}\x00{$t}";
         return $em;
     }
     /**
@@ -633,10 +633,10 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
             case 'sha224':
             case 'sha512/224':
             case 'sha512/256':
-                $new->hash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash($hash);
+                $new->hash = new Hash($hash);
                 break;
             default:
-                throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('The only supported hash algorithms are: md2, md5, sha1, sha256, sha384, sha512, sha224, sha512/224, sha512/256');
+                throw new UnsupportedAlgorithmException('The only supported hash algorithms are: md2, md5, sha1, sha256, sha384, sha512, sha224, sha512/224, sha512/256');
         }
         $new->hLen = $new->hash->getLengthInBytes();
         return $new;
@@ -663,10 +663,10 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
             case 'sha224':
             case 'sha512/224':
             case 'sha512/256':
-                $new->mgfHash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash($hash);
+                $new->mgfHash = new Hash($hash);
                 break;
             default:
-                throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedAlgorithmException('The only supported hash algorithms are: md2, md5, sha1, sha256, sha384, sha512, sha224, sha512/224, sha512/256');
+                throw new UnsupportedAlgorithmException('The only supported hash algorithms are: md2, md5, sha1, sha256, sha384, sha512, sha224, sha512/224, sha512/256');
         }
         $new->mgfHLen = $new->mgfHash->getLengthInBytes();
         return $new;
@@ -752,7 +752,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
             }
         }
         if ($encryptedCount > 1) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InconsistentSetupException('Multiple encryption padding modes have been selected; at most only one should be selected');
+            throw new InconsistentSetupException('Multiple encryption padding modes have been selected; at most only one should be selected');
         }
         $encryptionPadding = $selected;
         $masks = [self::SIGNATURE_PSS, self::SIGNATURE_RELAXED_PKCS1, self::SIGNATURE_PKCS1];
@@ -765,7 +765,7 @@ abstract class RSA extends \WPStaging\Vendor\phpseclib3\Crypt\Common\AsymmetricK
             }
         }
         if ($signatureCount > 1) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InconsistentSetupException('Multiple signature padding modes have been selected; at most only one should be selected');
+            throw new InconsistentSetupException('Multiple signature padding modes have been selected; at most only one should be selected');
         }
         $signaturePadding = $selected;
         $new = clone $this;

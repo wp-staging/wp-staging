@@ -2,6 +2,7 @@
 
 /**
  * @var string $pluginFilePath The absolute path to the main file of this plugin.
+ *
  */
 $pluginFilePath = $pluginFilePath ?? '';
 // TODO: refactor this and implement our own methods to get rid of hard loading wp core functions which is not recommended by WP.

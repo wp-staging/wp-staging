@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class ORAddress
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['built-in-standard-attributes' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\BuiltInStandardAttributes::MAP, 'built-in-domain-defined-attributes' => ['optional' => \true] + \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\BuiltInDomainDefinedAttributes::MAP, 'extension-attributes' => ['optional' => \true] + \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\ExtensionAttributes::MAP]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['built-in-standard-attributes' => BuiltInStandardAttributes::MAP, 'built-in-domain-defined-attributes' => ['optional' => \true] + BuiltInDomainDefinedAttributes::MAP, 'extension-attributes' => ['optional' => \true] + ExtensionAttributes::MAP]];
 }

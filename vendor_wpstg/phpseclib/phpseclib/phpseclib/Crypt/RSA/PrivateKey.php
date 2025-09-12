@@ -21,7 +21,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements \WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey
+final class PrivateKey extends RSA implements Common\PrivateKey
 {
     use Common\Traits\PasswordProtected;
     /**
@@ -55,7 +55,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
      *
      * @return bool|BigInteger
      */
-    private function rsadp(\WPStaging\Vendor\phpseclib3\Math\BigInteger $c)
+    private function rsadp(BigInteger $c)
     {
         if ($c->compare(self::$zero) < 0 || $c->compare($this->modulus) > 0) {
             throw new \OutOfRangeException('Ciphertext representative out of range');
@@ -69,7 +69,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
      *
      * @return bool|BigInteger
      */
-    private function rsasp1(\WPStaging\Vendor\phpseclib3\Math\BigInteger $m)
+    private function rsasp1(BigInteger $m)
     {
         if ($m->compare(self::$zero) < 0 || $m->compare($this->modulus) > 0) {
             throw new \OutOfRangeException('Signature representative out of range');
@@ -82,7 +82,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
      * @param BigInteger $x
      * @return BigInteger
      */
-    protected function exponentiate(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
+    protected function exponentiate(BigInteger $x)
     {
         switch (\true) {
             case empty($this->primes):
@@ -116,7 +116,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
                     $smallest = $this->primes[$i];
                 }
             }
-            $r = \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomRange(self::$one, $smallest->subtract(self::$one));
+            $r = BigInteger::randomRange(self::$one, $smallest->subtract(self::$one));
             $m_i = [1 => $this->blind($x, $r, 1), 2 => $this->blind($x, $r, 2)];
             $h = $m_i[1]->subtract($m_i[2]);
             $h = $h->multiply($this->coefficients[2]);
@@ -145,7 +145,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
      * @param int $i
      * @return BigInteger
      */
-    private function blind(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x, \WPStaging\Vendor\phpseclib3\Math\BigInteger $r, $i)
+    private function blind(BigInteger $x, BigInteger $r, $i)
     {
         $x = $x->multiply($r->modPow($this->publicExponent, $this->primes[$i]));
         $x = $x->modPow($this->exponents[$i], $this->primes[$i]);
@@ -175,8 +175,8 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
         if ($emLen < $this->hLen + $sLen + 2) {
             throw new \LengthException('RSA modulus too short');
         }
-        $salt = \WPStaging\Vendor\phpseclib3\Crypt\Random::string($sLen);
-        $m2 = "\0\0\0\0\0\0\0\0" . $mHash . $salt;
+        $salt = Random::string($sLen);
+        $m2 = "\x00\x00\x00\x00\x00\x00\x00\x00" . $mHash . $salt;
         $h = $this->hash->hash($m2);
         $ps = \str_repeat(\chr(0), $emLen - $sLen - $this->hLen - 2);
         $db = $ps . \chr(1) . $salt;
@@ -326,8 +326,8 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
         $patternMatch = 0;
         $offset = 0;
         for ($i = 0; $i < \strlen($m); $i++) {
-            $patternMatch |= $leadingZeros & $m[$i] === "\1";
-            $leadingZeros &= $m[$i] === "\0";
+            $patternMatch |= $leadingZeros & $m[$i] === "\x01";
+            $leadingZeros &= $m[$i] === "\x00";
             $offset += $patternMatch ? 0 : 1;
         }
         // we do | instead of || to avoid https://en.wikipedia.org/wiki/Short-circuit_evaluation
@@ -387,7 +387,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
             throw new \RuntimeException('Public key components not found');
         }
         $key = $type::savePublicKey($this->modulus, $this->publicExponent);
-        return \WPStaging\Vendor\phpseclib3\Crypt\RSA::loadFormat('PKCS8', $key)->withHash($this->hash->getHash())->withMGFHash($this->mgfHash->getHash())->withSaltLength($this->sLen)->withLabel($this->label)->withPadding($this->signaturePadding | $this->encryptionPadding);
+        return RSA::loadFormat('PKCS8', $key)->withHash($this->hash->getHash())->withMGFHash($this->mgfHash->getHash())->withSaltLength($this->sLen)->withLabel($this->label)->withPadding($this->signaturePadding | $this->encryptionPadding);
     }
     /**
      * Returns the private key
@@ -399,11 +399,11 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements
     public function toString($type, array $options = [])
     {
         $type = self::validatePlugin('Keys', $type, empty($this->primes) ? 'savePublicKey' : 'savePrivateKey');
-        if ($type == \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PSS::class) {
+        if ($type == PSS::class) {
             if ($this->signaturePadding == self::SIGNATURE_PSS) {
                 $options += ['hash' => $this->hash->getHash(), 'MGFHash' => $this->mgfHash->getHash(), 'saltLength' => $this->getSaltLength()];
             } else {
-                throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedFormatException('The PSS format can only be used when the signature method has been explicitly set to PSS');
+                throw new UnsupportedFormatException('The PSS format can only be used when the signature method has been explicitly set to PSS');
             }
         }
         if (empty($this->primes)) {

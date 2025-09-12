@@ -31,7 +31,7 @@ class App
     public static function container()
     {
         if (!isset(static::$container)) {
-            static::$container = new \WPStaging\Vendor\lucatume\DI52\Container();
+            static::$container = new Container();
         }
         return static::$container;
     }
@@ -46,7 +46,7 @@ class App
      *
      * @return void The method does not return any value.
      */
-    public static function setContainer(\WPStaging\Vendor\lucatume\DI52\Container $container)
+    public static function setContainer(Container $container)
     {
         static::$container = $container;
     }

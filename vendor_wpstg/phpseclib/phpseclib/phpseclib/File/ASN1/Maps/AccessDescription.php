@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class AccessDescription
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['accessMethod' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_OBJECT_IDENTIFIER], 'accessLocation' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\GeneralName::MAP]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['accessMethod' => ['type' => ASN1::TYPE_OBJECT_IDENTIFIER], 'accessLocation' => GeneralName::MAP]];
 }

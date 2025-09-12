@@ -13,6 +13,7 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScanner;
 use WPStaging\Framework\Filesystem\FilesystemScannerDto;
 use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
@@ -69,6 +70,9 @@ class FilesystemScannerTask extends StagingTask
     /** @var FilesystemScanner */
     protected $filesystemScanner;
 
+    /** @var PathChecker */
+    protected $pathChecker;
+
     /** @var array */
     protected $ignoreFileExtensions = [];
 
@@ -89,6 +93,7 @@ class FilesystemScannerTask extends StagingTask
      * @param Directory $directory
      * @param Filesystem $filesystem
      * @param FilesystemScanner $filesystemScanner
+     * @param PathChecker $pathChecker
      */
     public function __construct(
         LoggerInterface $logger,
@@ -97,13 +102,15 @@ class FilesystemScannerTask extends StagingTask
         SeekableQueueInterface $taskQueue,
         Directory $directory,
         Filesystem $filesystem,
-        FilesystemScanner $filesystemScanner
+        FilesystemScanner $filesystemScanner,
+        PathChecker $pathChecker
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
         $this->directory         = $directory;
         $this->filesystem        = $filesystem;
         $this->filesystemScanner = $filesystemScanner;
+        $this->pathChecker       = $pathChecker;
     }
 
     /**
@@ -211,19 +218,22 @@ class FilesystemScannerTask extends StagingTask
         /**
          * Allow user to exclude certain file extensions from being copied.
          */
-        $this->ignoreFileExtensions = (array)apply_filters('wpstg.cloning.files.ignore.file_extension', [
+        $this->ignoreFileExtensions = array_merge($this->jobDataDto->getExcludeExtensionRules(), [
             'log',
             'wpstg', // WP STAGING backup files
-            'git',
             'svn',
             'tmp',
             'git',
         ]);
 
+        $this->ignoreFileExtensions = (array)apply_filters('wpstg.cloning.files.ignore.file_extension', $this->ignoreFileExtensions);
+
+        $excludeSizeGreaterThanInMb = $this->jobDataDto->getExcludeSizeGreaterThan();
+
         /**
          * Allow user to exclude files larger than given size from being copied.
          */
-        $this->ignoreFileBiggerThan = (int)apply_filters('wpstg.cloning.files.ignore.file_bigger_than', 10 * MB_IN_BYTES);
+        $this->ignoreFileBiggerThan = (int)apply_filters('wpstg.cloning.files.ignore.file_bigger_than', $excludeSizeGreaterThanInMb * MB_IN_BYTES);
 
         // Allows us to use isset for performance
         $this->ignoreFileExtensions = array_flip($this->ignoreFileExtensions);
@@ -246,6 +256,10 @@ class FilesystemScannerTask extends StagingTask
         }
 
         $this->filesystemScanner->setFilters($this->ignoreFileBiggerThan, $this->ignoreFileExtensions, $this->ignoreFileExtensionFilesBiggerThan);
+        $this->filesystemScanner->setNameExcludeRules(
+            $this->jobDataDto->getExcludeFolderRules(),
+            $this->jobDataDto->getExcludeFileRules()
+        );
         $this->filesystemScanner->setLogTitle(static::getTaskTitle());
         $this->filesystemScanner->setQueueCacheName(FileCopierTask::getTaskName());
         $this->filesystemScanner->inject($this->logger, $this->taskQueue, $this->getScannerDto());
@@ -258,12 +272,13 @@ class FilesystemScannerTask extends StagingTask
     protected function scanWpRootFiles(): TaskResponseDto
     {
         $dirToScan = $this->directory->getAbsPath();
-        if ($this->isExcluded($dirToScan)) {
+        if ($this->isExcluded($this->directory->getWpAdminDirectory()) && $this->isExcluded($this->directory->getWpIncludesDirectory())) {
+            $this->logger->warning('Skipping scanning of WP root files because wp-admin and wp-includes directories are excluded.');
+            $this->jobDataDto->setIsRootFilesExcluded(true);
             return $this->generateResponse();
         }
 
         $excludeRules = [];
-
         $this->filesystemScanner->setOnlyFiles();
         $this->preScanPath($dirToScan, PartIdentifier::WP_ROOT_FILES_PART_IDENTIFIER, $excludeRules);
 
@@ -274,11 +289,12 @@ class FilesystemScannerTask extends StagingTask
     {
         $dirToScan = $this->directory->getWpAdminDirectory();
         if ($this->isExcluded($dirToScan)) {
+            $this->logger->warning('Skipping scanning of wp-admin directory because it is excluded.');
+            $this->jobDataDto->setIsWpAdminExcluded(true);
             return $this->generateResponse();
         }
 
         $excludeRules = [];
-
         $this->preScanPath($dirToScan, PartIdentifier::WP_ADMIN_PART_IDENTIFIER, $excludeRules);
 
         return $this->generateResponse();
@@ -288,11 +304,12 @@ class FilesystemScannerTask extends StagingTask
     {
         $dirToScan = $this->directory->getWpIncludesDirectory();
         if ($this->isExcluded($dirToScan)) {
+            $this->logger->warning('Skipping scanning of wp-includes directory because it is excluded.');
+            $this->jobDataDto->setIsWpIncludesExcluded(true);
             return $this->generateResponse();
         }
 
         $excludeRules = [];
-
         $this->preScanPath($dirToScan, PartIdentifier::WP_INCLUDES_PART_IDENTIFIER, $excludeRules);
 
         return $this->generateResponse();
@@ -302,6 +319,8 @@ class FilesystemScannerTask extends StagingTask
     {
         $dirToScan = $this->directory->getPluginsDirectory();
         if ($this->isExcluded($dirToScan)) {
+            $this->logger->warning('Skipping scanning of plugins directory because it is excluded.');
+            $this->jobDataDto->setIsPluginsExcluded(true);
             return $this->generateResponse();
         }
 
@@ -316,11 +335,14 @@ class FilesystemScannerTask extends StagingTask
     {
         // Early bail: mu-plugins directory doesn't exist
         if (!is_dir($this->directory->getMuPluginsDirectory())) {
+            $this->jobDataDto->setIsMuPluginsExcluded(true);
             return $this->generateResponse();
         }
 
         $dirToScan = $this->directory->getMuPluginsDirectory();
         if ($this->isExcluded($dirToScan)) {
+            $this->logger->warning('Skipping scanning of mu-plugins directory because it is excluded.');
+            $this->jobDataDto->setIsMuPluginsExcluded(true);
             return $this->generateResponse();
         }
 
@@ -338,16 +360,23 @@ class FilesystemScannerTask extends StagingTask
         $this->filesystemScanner->setupFilesystemQueue();
         $this->filesystemScanner->setRootPath($this->getRootPath());
         $this->filesystemScanner->setExcludeRules($excludeRules);
+
+        $isThemesExcluded = true;
         foreach ($this->directory->getAllThemesDirectories() as $themesDirectory) {
             if ($this->isExcluded($themesDirectory)) {
                 continue;
             }
 
+            $isThemesExcluded = false;
             $this->filesystemScanner->preScanPath($themesDirectory);
         }
 
         $this->filesystemScanner->unlockQueue();
         $this->updateJobDataDto();
+        if ($isThemesExcluded) {
+            $this->logger->warning('Skipping scanning of themes directories because all are excluded.');
+            $this->jobDataDto->setIsThemesExcluded(true);
+        }
 
         return $this->generateResponse();
     }
@@ -356,11 +385,14 @@ class FilesystemScannerTask extends StagingTask
     {
         // Early bail: Uploads directory doesn't exist
         if (!is_dir($this->getUploadsDirectory())) {
+            $this->jobDataDto->setIsUploadsExcluded(true);
             return $this->generateResponse();
         }
 
         $dirToScan = $this->getUploadsDirectory();
         if ($this->isExcluded($dirToScan)) {
+            $this->logger->warning('Skipping scanning of uploads directory because it is excluded.');
+            $this->jobDataDto->setIsUploadsExcluded(true);
             return $this->generateResponse();
         }
 
@@ -378,6 +410,8 @@ class FilesystemScannerTask extends StagingTask
     {
         $dirToScan = $this->directory->getWpContentDirectory();
         if ($this->isExcluded($dirToScan)) {
+            $this->logger->warning('Skipping scanning of wp-content directory because it is excluded.');
+            $this->jobDataDto->setIsWpContentExcluded(true);
             return $this->generateResponse();
         }
 
@@ -531,6 +565,6 @@ class FilesystemScannerTask extends StagingTask
 
     protected function isExcluded(string $directory): bool
     {
-        return false;
+        return $this->pathChecker->isPathInPathsList($directory, $this->jobDataDto->getExcludedDirectories());
     }
 }

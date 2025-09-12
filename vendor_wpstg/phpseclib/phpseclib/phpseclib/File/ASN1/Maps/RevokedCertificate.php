@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class RevokedCertificate
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['userCertificate' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\CertificateSerialNumber::MAP, 'revocationDate' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Time::MAP, 'crlEntryExtensions' => ['optional' => \true] + \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Extensions::MAP]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['userCertificate' => CertificateSerialNumber::MAP, 'revocationDate' => Time::MAP, 'crlEntryExtensions' => ['optional' => \true] + Extensions::MAP]];
 }

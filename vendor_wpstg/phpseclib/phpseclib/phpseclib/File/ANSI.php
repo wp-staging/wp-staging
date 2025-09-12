@@ -192,7 +192,7 @@ class ANSI
                 // http://en.wikipedia.org/wiki/ANSI_escape_code#Sequence_elements
                 // single character CSI's not currently supported
                 switch (\true) {
-                    case $this->ansi == "\33=":
+                    case $this->ansi == "\x1b=":
                         $this->ansi = '';
                         continue 2;
                     case \strlen($this->ansi) == 2 && $chr >= 64 && $chr <= 95 && $chr != \ord('['):
@@ -205,13 +205,13 @@ class ANSI
                 $this->tokenization[] = '';
                 // http://ascii-table.com/ansi-escape-sequences-vt-100.php
                 switch ($this->ansi) {
-                    case "\33[H":
+                    case "\x1b[H":
                         // Move cursor to upper left corner
                         $this->old_x = $this->x;
                         $this->old_y = $this->y;
                         $this->x = $this->y = 0;
                         break;
-                    case "\33[J":
+                    case "\x1b[J":
                         // Clear screen from cursor down
                         $this->history = \array_merge($this->history, \array_slice(\array_splice($this->screen, $this->y + 1), 0, $this->old_y));
                         $this->screen = \array_merge($this->screen, \array_fill($this->y, $this->max_y, ''));
@@ -222,24 +222,24 @@ class ANSI
                             \array_shift($this->history_attrs);
                         }
                     // fall-through
-                    case "\33[K":
+                    case "\x1b[K":
                         // Clear screen from cursor right
                         $this->screen[$this->y] = \substr($this->screen[$this->y], 0, $this->x);
                         \array_splice($this->attrs[$this->y], $this->x + 1, $this->max_x - $this->x, \array_fill($this->x, $this->max_x - ($this->x - 1), $this->base_attr_cell));
                         break;
-                    case "\33[2K":
+                    case "\x1b[2K":
                         // Clear entire line
                         $this->screen[$this->y] = \str_repeat(' ', $this->x);
                         $this->attrs[$this->y] = $this->attr_row;
                         break;
-                    case "\33[?1h":
+                    case "\x1b[?1h":
                     // set cursor key to application
-                    case "\33[?25h":
+                    case "\x1b[?25h":
                     // show the cursor
-                    case "\33(B":
+                    case "\x1b(B":
                         // set united states g0 character set
                         break;
-                    case "\33E":
+                    case "\x1bE":
                         // Move to next line
                         $this->newLine();
                         $this->x = 0;
@@ -383,7 +383,7 @@ class ANSI
                 case "\n":
                     $this->newLine();
                     break;
-                case "\10":
+                case "\x08":
                     // backspace
                     if ($this->x) {
                         $this->x--;
@@ -391,16 +391,16 @@ class ANSI
                         $this->screen[$this->y] = \substr_replace($this->screen[$this->y], $source[$i], $this->x, 1);
                     }
                     break;
-                case "\17":
+                case "\x0f":
                     // shift
                     break;
-                case "\33":
+                case "\x1b":
                     // start ANSI escape code
                     $this->tokenization[\count($this->tokenization) - 1] = \substr($this->tokenization[\count($this->tokenization) - 1], 0, -1);
                     //if (!strlen($this->tokenization[count($this->tokenization) - 1])) {
                     //    array_pop($this->tokenization);
                     //}
-                    $this->ansi .= "\33";
+                    $this->ansi .= "\x1b";
                     break;
                 default:
                     $this->attrs[$this->y][$this->x] = clone $this->attr_cell;

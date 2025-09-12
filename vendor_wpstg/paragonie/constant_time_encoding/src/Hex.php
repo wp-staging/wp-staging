@@ -31,7 +31,7 @@ use TypeError;
  * Class Hex
  * @package ParagonIE\ConstantTime
  */
-abstract class Hex implements \WPStaging\Vendor\ParagonIE\ConstantTime\EncoderInterface
+abstract class Hex implements EncoderInterface
 {
     /**
      * Convert a binary string into a hexadecimal string without cache-timing
@@ -41,13 +41,10 @@ abstract class Hex implements \WPStaging\Vendor\ParagonIE\ConstantTime\EncoderIn
      * @return string
      * @throws TypeError
      */
-    public static function encode(
-        #[\SensitiveParameter]
-        string $binString
-    ) : string
+    public static function encode(#[\SensitiveParameter] string $binString) : string
     {
         $hex = '';
-        $len = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($binString);
+        $len = Binary::safeStrlen($binString);
         for ($i = 0; $i < $len; ++$i) {
             /** @var array<int, int> $chunk */
             $chunk = \unpack('C', $binString[$i]);
@@ -65,13 +62,10 @@ abstract class Hex implements \WPStaging\Vendor\ParagonIE\ConstantTime\EncoderIn
      * @return string
      * @throws TypeError
      */
-    public static function encodeUpper(
-        #[\SensitiveParameter]
-        string $binString
-    ) : string
+    public static function encodeUpper(#[\SensitiveParameter] string $binString) : string
     {
         $hex = '';
-        $len = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($binString);
+        $len = Binary::safeStrlen($binString);
         for ($i = 0; $i < $len; ++$i) {
             /** @var array<int, int> $chunk */
             $chunk = \unpack('C', $binString[$i]);
@@ -90,20 +84,16 @@ abstract class Hex implements \WPStaging\Vendor\ParagonIE\ConstantTime\EncoderIn
      * @return string (raw binary)
      * @throws RangeException
      */
-    public static function decode(
-        #[\SensitiveParameter]
-        string $encodedString,
-        bool $strictPadding = \false
-    ) : string
+    public static function decode(#[\SensitiveParameter] string $encodedString, bool $strictPadding = \false) : string
     {
         $hex_pos = 0;
         $bin = '';
         $c_acc = 0;
-        $hex_len = \WPStaging\Vendor\ParagonIE\ConstantTime\Binary::safeStrlen($encodedString);
+        $hex_len = Binary::safeStrlen($encodedString);
         $state = 0;
         if (($hex_len & 1) !== 0) {
             if ($strictPadding) {
-                throw new \RangeException('Expected an even number of hexadecimal characters');
+                throw new RangeException('Expected an even number of hexadecimal characters');
             } else {
                 $encodedString = '0' . $encodedString;
                 ++$hex_len;
@@ -119,7 +109,7 @@ abstract class Hex implements \WPStaging\Vendor\ParagonIE\ConstantTime\EncoderIn
             $c_alpha = ($c & ~32) - 55;
             $c_alpha0 = ($c_alpha - 10 ^ $c_alpha - 16) >> 8;
             if (($c_num0 | $c_alpha0) === 0) {
-                throw new \RangeException('Expected hexadecimal character');
+                throw new RangeException('Expected hexadecimal character');
             }
             $c_val = $c_num0 & $c_num | $c_alpha & $c_alpha0;
             if ($state === 0) {

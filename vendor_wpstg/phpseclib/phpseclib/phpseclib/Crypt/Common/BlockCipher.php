@@ -18,6 +18,6 @@ namespace WPStaging\Vendor\phpseclib3\Crypt\Common;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class BlockCipher extends \WPStaging\Vendor\phpseclib3\Crypt\Common\SymmetricKey
+abstract class BlockCipher extends SymmetricKey
 {
 }

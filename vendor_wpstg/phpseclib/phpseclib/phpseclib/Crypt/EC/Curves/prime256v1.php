@@ -12,6 +12,6 @@
  */
 namespace WPStaging\Vendor\phpseclib3\Crypt\EC\Curves;
 
-final class prime256v1 extends \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\secp256r1
+final class prime256v1 extends secp256r1
 {
 }

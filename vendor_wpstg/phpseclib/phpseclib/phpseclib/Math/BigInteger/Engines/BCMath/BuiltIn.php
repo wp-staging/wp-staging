@@ -18,7 +18,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class BuiltIn extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath
+abstract class BuiltIn extends BCMath
 {
     /**
      * Performs modular exponentiation.
@@ -28,9 +28,9 @@ abstract class BuiltIn extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engi
      * @param BCMath $n
      * @return BCMath
      */
-    protected static function powModHelper(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $x, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $n)
+    protected static function powModHelper(BCMath $x, BCMath $e, BCMath $n)
     {
-        $temp = new \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath();
+        $temp = new BCMath();
         $temp->value = \bcpowmod($x->value, $e->value, $n->value, 0);
         return $x->normalize($temp);
     }

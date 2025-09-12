@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class HoldInstructionCode
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_OBJECT_IDENTIFIER];
+    const MAP = ['type' => ASN1::TYPE_OBJECT_IDENTIFIER];
 }

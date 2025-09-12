@@ -3,15 +3,15 @@
 namespace WPStaging\Backup\Storage;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Pro\Backup\Storage\Storages\Amazon\S3 as AmazonS3Auth;
-use WPStaging\Pro\Backup\Storage\Storages\DigitalOceanSpaces\Auth as DOSAuth;
-use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Auth as GenericS3Auth;
-use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth as GoogleDriveAuth;
-use WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth as DropboxAuth;
-use WPStaging\Pro\Backup\Storage\Storages\OneDrive\Auth as OneDriveAuth;
-use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth as SftpAuth;
-use WPStaging\Pro\Backup\Storage\Storages\Wasabi\Auth as WasabiAuth;
-use WPStaging\Pro\Backup\Storage\Storages\PCloud\Auth as PCloudAuth;
+use WPStaging\Pro\Backup\Storage\Amazon\S3 as AmazonS3Auth;
+use WPStaging\Pro\Backup\Storage\DigitalOceanSpaces\Auth as DOSAuth;
+use WPStaging\Pro\Backup\Storage\GenericS3\Auth as GenericS3Auth;
+use WPStaging\Pro\Backup\Storage\GoogleDrive\Auth as GoogleDriveAuth;
+use WPStaging\Pro\Backup\Storage\Dropbox\Auth as DropboxAuth;
+use WPStaging\Pro\Backup\Storage\OneDrive\Auth as OneDriveAuth;
+use WPStaging\Pro\Backup\Storage\SFTP\Auth as SftpAuth;
+use WPStaging\Pro\Backup\Storage\Wasabi\Auth as WasabiAuth;
+use WPStaging\Pro\Backup\Storage\PCloud\Auth as PCloudAuth;
 
 use function WPStaging\functions\debug_log;
 

@@ -164,7 +164,7 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
 
         // Delete options for new clone or reset job
         if ($jobType !== StagingSetup::JOB_UPDATE) {
-            // @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
+            // @see WPStaging\Pro\Backup\Storage\GoogleDrive\Auth::getOptionName for option name
             $toDelete[] = 'wpstg_googledrive';
             $toDelete[] = 'wpstg_dropbox';
             $toDelete[] = 'wpstg_one-drive';

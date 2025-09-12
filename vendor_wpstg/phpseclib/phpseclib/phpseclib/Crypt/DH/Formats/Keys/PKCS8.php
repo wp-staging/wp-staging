@@ -27,7 +27,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Keys\PKCS8
+abstract class PKCS8 extends Progenitor
 {
     /**
      * OID Name
@@ -58,19 +58,19 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
     {
         $key = parent::load($key, $password);
         $type = isset($key['privateKey']) ? 'privateKey' : 'publicKey';
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($key[$type . 'Algorithm']['parameters']->element);
+        $decoded = ASN1::decodeBER($key[$type . 'Algorithm']['parameters']->element);
         if (empty($decoded)) {
             throw new \RuntimeException('Unable to decode BER of parameters');
         }
-        $components = \WPStaging\Vendor\phpseclib3\File\ASN1::asn1map($decoded[0], \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\DHParameter::MAP);
+        $components = ASN1::asn1map($decoded[0], Maps\DHParameter::MAP);
         if (!\is_array($components)) {
             throw new \RuntimeException('Unable to perform ASN1 mapping on parameters');
         }
-        $decoded = \WPStaging\Vendor\phpseclib3\File\ASN1::decodeBER($key[$type]);
+        $decoded = ASN1::decodeBER($key[$type]);
         switch (\true) {
             case !isset($decoded):
             case !isset($decoded[0]['content']):
-            case !$decoded[0]['content'] instanceof \WPStaging\Vendor\phpseclib3\Math\BigInteger:
+            case !$decoded[0]['content'] instanceof BigInteger:
                 throw new \RuntimeException('Unable to decode BER of parameters');
         }
         $components[$type] = $decoded[0]['content'];
@@ -87,12 +87,12 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
      * @param array $options optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $prime, \WPStaging\Vendor\phpseclib3\Math\BigInteger $base, \WPStaging\Vendor\phpseclib3\Math\BigInteger $privateKey, \WPStaging\Vendor\phpseclib3\Math\BigInteger $publicKey, $password = '', array $options = [])
+    public static function savePrivateKey(BigInteger $prime, BigInteger $base, BigInteger $privateKey, BigInteger $publicKey, $password = '', array $options = [])
     {
         $params = ['prime' => $prime, 'base' => $base];
-        $params = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($params, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\DHParameter::MAP);
-        $params = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element($params);
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($privateKey, ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER]);
+        $params = ASN1::encodeDER($params, Maps\DHParameter::MAP);
+        $params = new ASN1\Element($params);
+        $key = ASN1::encodeDER($privateKey, ['type' => ASN1::TYPE_INTEGER]);
         return self::wrapPrivateKey($key, [], $params, $password, null, '', $options);
     }
     /**
@@ -104,12 +104,12 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
      * @param array $options optional
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $prime, \WPStaging\Vendor\phpseclib3\Math\BigInteger $base, \WPStaging\Vendor\phpseclib3\Math\BigInteger $publicKey, array $options = [])
+    public static function savePublicKey(BigInteger $prime, BigInteger $base, BigInteger $publicKey, array $options = [])
     {
         $params = ['prime' => $prime, 'base' => $base];
-        $params = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($params, \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\DHParameter::MAP);
-        $params = new \WPStaging\Vendor\phpseclib3\File\ASN1\Element($params);
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::encodeDER($publicKey, ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER]);
+        $params = ASN1::encodeDER($params, Maps\DHParameter::MAP);
+        $params = new ASN1\Element($params);
+        $key = ASN1::encodeDER($publicKey, ['type' => ASN1::TYPE_INTEGER]);
         return self::wrapPublicKey($key, $params, null, $options);
     }
 }

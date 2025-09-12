@@ -27,4 +27,9 @@ class CopyPluginsTask extends FileCopierTask
     {
         return true;
     }
+
+    protected function getIsExcluded(): bool
+    {
+        return $this->jobDataDto->getIsPluginsExcluded();
+    }
 }

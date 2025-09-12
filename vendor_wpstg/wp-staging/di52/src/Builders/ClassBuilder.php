@@ -16,7 +16,7 @@ use ReflectionMethod;
  *
  * @package lucatume\DI52\Builders
  */
-class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface, \WPStaging\Vendor\lucatume\DI52\Builders\ReinitializableBuilderInterface
+class ClassBuilder implements BuilderInterface, ReinitializableBuilderInterface
 {
     /**
      * An array cache of resolved constructor parameters, shared across all instances of the builder.
@@ -71,10 +71,10 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
      *
      * @throws NotFoundException If the class does not exist.
      */
-    public function __construct($id, \WPStaging\Vendor\lucatume\DI52\Builders\Resolver $resolver, $className, $afterBuildMethods = null, ...$buildArgs)
+    public function __construct($id, Resolver $resolver, $className, $afterBuildMethods = null, ...$buildArgs)
     {
         if (!\class_exists($className)) {
-            throw new \WPStaging\Vendor\lucatume\DI52\NotFoundException("nothing is bound to the '{$className}' id and it's not an existing or instantiable class.");
+            throw new NotFoundException("nothing is bound to the '{$className}' id and it's not an existing or instantiable class.");
         }
         $interfaces = \class_implements($className);
         if ($interfaces && isset($interfaces[$id])) {
@@ -117,7 +117,7 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
             $this->resolver->addToBuildLine((string) $parameter->getType(), $parameter->getName());
             if (isset($this->buildArgs[$i])) {
                 $arg = $this->buildArgs[$i];
-                if ($arg instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface) {
+                if ($arg instanceof BuilderInterface) {
                     $constructorArgs[] = $arg->build();
                     continue;
                 }
@@ -144,18 +144,18 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
             return self::$constructorParametersCache[$className];
         }
         try {
-            $constructorReflection = new \ReflectionMethod($className, '__construct');
-        } catch (\ReflectionException $e) {
+            $constructorReflection = new ReflectionMethod($className, '__construct');
+        } catch (ReflectionException $e) {
             static::$constructorParametersCache[$className] = [];
             // No constructor method, no args.
             return [];
         }
         if (!$constructorReflection->isPublic()) {
-            throw new \WPStaging\Vendor\lucatume\DI52\ContainerException("constructor method is not public.");
+            throw new ContainerException("constructor method is not public.");
         }
         $parameters = [];
         foreach ($constructorReflection->getParameters() as $i => $reflectionParameter) {
-            $parameters[] = new \WPStaging\Vendor\lucatume\DI52\Builders\Parameter($i, $reflectionParameter);
+            $parameters[] = new Parameter($i, $reflectionParameter);
         }
         self::$constructorParametersCache[$className] = $parameters;
         return $parameters;
@@ -185,7 +185,7 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
      *
      * @throws ContainerException If the parameter resolution fails.
      */
-    protected function resolveParameter(\WPStaging\Vendor\lucatume\DI52\Builders\Parameter $parameter)
+    protected function resolveParameter(Parameter $parameter)
     {
         $paramClass = $parameter->getClass();
         if ($paramClass) {
@@ -199,8 +199,8 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
             $parameterImplementation = $this->resolver->whenNeedsGive($this->id, "\${$name}");
         }
         try {
-            return $parameterImplementation instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface ? $parameterImplementation->build() : $this->resolver->resolve($parameterImplementation);
-        } catch (\WPStaging\Vendor\lucatume\DI52\NotFoundException $e) {
+            return $parameterImplementation instanceof BuilderInterface ? $parameterImplementation->build() : $this->resolver->resolve($parameterImplementation);
+        } catch (NotFoundException $e) {
             return $parameter->getDefaultValueOrFail();
         }
     }

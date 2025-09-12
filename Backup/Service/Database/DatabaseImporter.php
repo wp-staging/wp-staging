@@ -4,6 +4,7 @@ use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Service\Database\Importer\QueryCompatibility;
 use WPStaging\Backup\Service\Database\Importer\SubsiteManagerInterface;
+use WPStaging\Backup\Task\Tasks\JobRestore\RenameDatabaseTask;
 use WPStaging\Framework\Adapter\DatabaseInterface;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Database\SearchReplace;
@@ -32,7 +33,7 @@ class DatabaseImporter
     private $warningLogCallable;
     private $searchReplace;
     private $searchReplaceForPrefix;
-    private $tmpDatabasePrefix;
+    protected $tmpDatabasePrefix;
     private $queryInserter;
     private $smallerSearchLength;
     private $binaryFlagLength;
@@ -41,6 +42,7 @@ class DatabaseImporter
     private $tablesExcludedFromSearchReplace = [];
     private $subsiteManager;
     private $backupDbVersion;
+    private $excludedTables = null;
 
     public function __construct(
         DatabaseInterface $database,
@@ -202,6 +204,13 @@ class DatabaseImporter
         if (!$query) {
             throw new \Exception("", self::FINISHED_QUEUE_EXCEPTION_CODE);
         }
+        if ($this->isTableExcluded($query)) {
+            $tableName = $this->extractTableNameFromQuery($query);
+            if (__NAMESPACE__ !== 'WpstgRestorer') {
+                $this->logWarning(sprintf('The table "%s" is excluded from restore by filter "%s". Query skipped.', $tableName, RenameDatabaseTask::FILTER_EXCLUDE_TABLES_DURING_RESTORE));
+            }
+            return false;
+        }
         $query = $this->searchReplaceForPrefix->replace($query);
         $query = $this->maybeShorterTableNameForDropTableQuery($query);
         $query = $this->maybeShorterTableNameForCreateTableQuery($query);
@@ -309,7 +318,7 @@ class DatabaseImporter
                     throw new \RuntimeException('Could not restore the database. MySQL returned the error code 1813, which is related to a tablespace error that WP STAGING can\'t handle. Please contact your hosting company.');
                 case 1273:
                     $tableCollation = $this->queryCompatibility->replaceCollation($query, $errorMsg);
-                    $result = $this->exec($query);
+                    $result         = $this->exec($query);
                     if ($result) {
                         $this->logWarning(sprintf('"The collation of the table `%s` has been changed from `%s` to `%s`, as the collation `%s` is missing from current MySQL version. To prevent this warning in the future, please restore the backup on a database using the same MySQL version as the one used during the backup.', $tableCollation['tableName'], $tableCollation['collationBefore'], $tableCollation['collationAfter'], $tableCollation['collationBefore']));
                     }
@@ -630,6 +639,42 @@ class DatabaseImporter
             ], $data);
         }
         $callable($message);
+    }
+
+    protected function isTableExcluded(string $query): bool
+    {
+        if (__NAMESPACE__ === 'WpstgRestorer') {
+            return false;
+        }
+        $tableName = $this->extractTableNameFromQuery($query);
+        if (empty($tableName)) {
+            return false;
+        }
+        $excludedTables = $this->getExcludedTables();
+        $baseTableName  = $tableName;
+        if ($this->tmpDatabasePrefix && strpos($tableName, $this->tmpDatabasePrefix) === 0) {
+            $baseTableName = substr($tableName, strlen($this->tmpDatabasePrefix));
+        }
+        return in_array($baseTableName, $excludedTables, true);
+    }
+
+    protected function getExcludedTables(): array
+    {
+        if (__NAMESPACE__ === 'WpstgRestorer') {
+            return [];
+        }
+        if ($this->excludedTables === null) {
+            $this->excludedTables = $this->applyFilters(RenameDatabaseTask::FILTER_EXCLUDE_TABLES_DURING_RESTORE, []);
+        }
+        return $this->excludedTables;
+    }
+
+    protected function extractTableNameFromQuery(string $query): string
+    {
+        if (preg_match('#^(CREATE TABLE|INSERT INTO|DROP TABLE IF EXISTS)\s+(?:`([^`]+)`|"([^"]+)"|([a-zA-Z0-9_]+))#i', $query, $matches)) {
+            return $matches[2] ?? $matches[3] ?? $matches[4];
+        }
+        return '';
     }
 
     private function hasCapabilities(string $capabilities): bool

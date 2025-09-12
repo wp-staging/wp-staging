@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class Name
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_CHOICE, 'children' => ['rdnSequence' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\RDNSequence::MAP]];
+    const MAP = ['type' => ASN1::TYPE_CHOICE, 'children' => ['rdnSequence' => RDNSequence::MAP]];
 }

@@ -2,6 +2,10 @@
 
 namespace WPStaging\Framework;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Framework\Logger\SseEventCache;
+
 /**
  * @package WPStaging\Framework
  */
@@ -33,7 +37,8 @@ class ErrorHandler
         $wpStagingRequests = [
             'wpstg_backup', // @see WPStaging\Backup\Ajax\Backup::WPSTG_REQUEST
             'wpstg_restore', // @see WPStaging\Backup\Ajax\Restore::WPSTG_REQUEST
-            'wpstg_cloning', // @see WPStaging\Backend\Modules\Jobs\Cloning::WPSTG_REQUEST
+            'wpstg_cloning', // @see WPStaging\Backend\Modules\Jobs\Cloning::WPSTG_REQUEST,
+            'wpstg_remote_sync_pull', // @see WPStaging\Pro\RemoteSync\BackgroundProcessing\PreparePull::WPSTG_REQUEST
         ];
 
         $wpStagingRequest = WPSTG_REQUEST;
@@ -60,7 +65,7 @@ class ErrorHandler
 
         $fileHandler = fopen($errorTmpFile, 'w');
 
-        $message = json_encode([
+        $data = [
             'memoryUsage'         => memory_get_usage(true),
             'peakMemoryUsage'     => memory_get_peak_usage(true),
             'phpMemoryLimit'      => ini_get('memory_limit'),
@@ -68,11 +73,43 @@ class ErrorHandler
             'allowedMemoryLimit'  => $data[1],
             'exhaustedMemorySize' => $data[2],
             'time'                => date('Y/m/d H:i:s', time()), // @see WPStaging\Core\Utils\Logger::LOG_DATETIME_FORMAT, use hardcoded value to avoid loading class
-        ]);
+        ];
 
         if (is_resource($fileHandler)) {
-            fwrite($fileHandler, $message);
+            fwrite($fileHandler, json_encode($data));
             fclose($fileHandler);
         }
+
+        $this->logSseEvent($data);
+    }
+
+    private function logSseEvent(array $data)
+    {
+        /**
+         * @var JobTransientCache $jobTransientCache
+         */
+        $jobTransientCache = WPStaging::make(JobTransientCache::class);
+
+        $jobId = $jobTransientCache->getJobId();
+        if (empty($jobId)) {
+            return;
+        }
+
+        $message         = "Job failed, Memory exceed allowed size! Allowed memory: {$data['allowedMemoryLimit']} bytes. Exceeded memory: {$data['exhaustedMemorySize']} bytes";
+        $data['jobId']   = $jobId;
+        $data['message'] = $message;
+
+        /**
+         * @var SseEventCache $sseEventCache
+         */
+        $sseEventCache = WPStaging::make(SseEventCache::class);
+        $sseEventCache->setJobId($jobId);
+        $sseEventCache->load();
+        $sseEventCache->push([
+            'type' => SseEventCache::EVENT_TYPE_MEMORY_EXHAUST,
+            'data' => $data,
+        ]);
+
+        $jobTransientCache->failJob('', $message);
     }
 }

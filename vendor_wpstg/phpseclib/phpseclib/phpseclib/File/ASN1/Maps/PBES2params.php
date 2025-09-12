@@ -22,5 +22,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class PBES2params
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['keyDerivationFunc' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AlgorithmIdentifier::MAP, 'encryptionScheme' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AlgorithmIdentifier::MAP]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['keyDerivationFunc' => AlgorithmIdentifier::MAP, 'encryptionScheme' => AlgorithmIdentifier::MAP]];
 }

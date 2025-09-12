@@ -42,7 +42,7 @@ use WPStaging\Vendor\phpseclib3\Exception\BadModeException;
  * @author  Jim Wigginton <terrafrost@php.net>
  * @author  Hans-Juergen Petrich <petrich@tronic-media.com>
  */
-class Twofish extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
+class Twofish extends BlockCipher
 {
     /**
      * The mcrypt specific name of the cipher
@@ -147,7 +147,7 @@ class Twofish extends \WPStaging\Vendor\phpseclib3\Crypt\Common\BlockCipher
     {
         parent::__construct($mode);
         if ($this->mode == self::MODE_STREAM) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\BadModeException('Block ciphers cannot be ran in stream mode');
+            throw new BadModeException('Block ciphers cannot be ran in stream mode');
         }
     }
     /**

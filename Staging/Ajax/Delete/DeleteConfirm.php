@@ -2,7 +2,6 @@
 
 namespace WPStaging\Staging\Ajax\Delete;
 
-use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Sanitize;
@@ -19,12 +18,11 @@ class DeleteConfirm extends AbstractTemplateComponent
     /** @var Sanitize */
     private $sanitize;
 
-    public function __construct(Sites $sites, Sanitize $sanitize, TemplateEngine $templateEngine, Database $stagingDb)
+    public function __construct(Sites $sites, Sanitize $sanitize, TemplateEngine $templateEngine)
     {
         parent::__construct($templateEngine);
         $this->sites     = $sites;
         $this->sanitize  = $sanitize;
-        $this->stagingDb = $stagingDb;
     }
 
     /**

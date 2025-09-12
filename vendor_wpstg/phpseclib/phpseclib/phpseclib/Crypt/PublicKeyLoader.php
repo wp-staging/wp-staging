@@ -35,19 +35,19 @@ abstract class PublicKeyLoader
     public static function load($key, $password = \false)
     {
         try {
-            return \WPStaging\Vendor\phpseclib3\Crypt\EC::load($key, $password);
-        } catch (\WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException $e) {
+            return EC::load($key, $password);
+        } catch (NoKeyLoadedException $e) {
         }
         try {
-            return \WPStaging\Vendor\phpseclib3\Crypt\RSA::load($key, $password);
-        } catch (\WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException $e) {
+            return RSA::load($key, $password);
+        } catch (NoKeyLoadedException $e) {
         }
         try {
-            return \WPStaging\Vendor\phpseclib3\Crypt\DSA::load($key, $password);
-        } catch (\WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException $e) {
+            return DSA::load($key, $password);
+        } catch (NoKeyLoadedException $e) {
         }
         try {
-            $x509 = new \WPStaging\Vendor\phpseclib3\File\X509();
+            $x509 = new X509();
             $x509->loadX509($key);
             $key = $x509->getPublicKey();
             if ($key) {
@@ -55,7 +55,7 @@ abstract class PublicKeyLoader
             }
         } catch (\Exception $e) {
         }
-        throw new \WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException('Unable to read key');
+        throw new NoKeyLoadedException('Unable to read key');
     }
     /**
      * Loads a private key
@@ -67,8 +67,8 @@ abstract class PublicKeyLoader
     public static function loadPrivateKey($key, $password = \false)
     {
         $key = self::load($key, $password);
-        if (!$key instanceof \WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException('The key that was loaded was not a private key');
+        if (!$key instanceof PrivateKey) {
+            throw new NoKeyLoadedException('The key that was loaded was not a private key');
         }
         return $key;
     }
@@ -81,8 +81,8 @@ abstract class PublicKeyLoader
     public static function loadPublicKey($key)
     {
         $key = self::load($key);
-        if (!$key instanceof \WPStaging\Vendor\phpseclib3\Crypt\Common\PublicKey) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException('The key that was loaded was not a public key');
+        if (!$key instanceof PublicKey) {
+            throw new NoKeyLoadedException('The key that was loaded was not a public key');
         }
         return $key;
     }
@@ -95,8 +95,8 @@ abstract class PublicKeyLoader
     public static function loadParameters($key)
     {
         $key = self::load($key);
-        if (!$key instanceof \WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey && !$key instanceof \WPStaging\Vendor\phpseclib3\Crypt\Common\PublicKey) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\NoKeyLoadedException('The key that was loaded was not a parameter');
+        if (!$key instanceof PrivateKey && !$key instanceof PublicKey) {
+            throw new NoKeyLoadedException('The key that was loaded was not a parameter');
         }
         return $key;
     }

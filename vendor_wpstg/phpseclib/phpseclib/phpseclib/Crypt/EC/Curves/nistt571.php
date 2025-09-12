@@ -12,6 +12,6 @@
  */
 namespace WPStaging\Vendor\phpseclib3\Crypt\EC\Curves;
 
-final class nistt571 extends \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\sect571k1
+final class nistt571 extends sect571k1
 {
 }

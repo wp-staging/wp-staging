@@ -32,6 +32,11 @@ class RenameDatabaseTask extends RestoreTask
      */
     const HOOK_KEEP_OPTIONS = 'wpstg.backup.restore.keep_options';
 
+    /**
+     * @var string
+     */
+    const FILTER_EXCLUDE_TABLES_DURING_RESTORE = 'wpstg.backup.restore.exclude.tables';
+
     /** @var TableService */
     private $tableService;
 
@@ -136,9 +141,9 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setRenameViews(true);
         $this->tablesRenamer->setThresholdCallable([$this, 'isMaxExecutionThreshold']);
         // Tables to not restore in the site
-        $this->tablesRenamer->setExcludedTables([
-            Queue::QUEUE_TABLE_NAME
-        ]);
+        $excludedTables = [Queue::QUEUE_TABLE_NAME];
+        $excludedTables = array_merge($excludedTables, Hooks::applyFilters(self::FILTER_EXCLUDE_TABLES_DURING_RESTORE, []));
+        $this->tablesRenamer->setExcludedTables($excludedTables);
 
         $tablesToPreserve = [];
         if ($this->jobDataDto->getIsSyncRequest()) {

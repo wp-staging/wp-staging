@@ -20,7 +20,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Keys\JWK
+abstract class JWK extends Progenitor
 {
     /**
      * Break a public or private key down into its constituent components
@@ -42,7 +42,7 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
                 continue;
             }
             $count++;
-            $value = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_decode($key->{$var}), 256);
+            $value = new BigInteger(Strings::base64url_decode($key->{$var}), 256);
             switch ($var) {
                 case 'n':
                     $publicCount++;
@@ -92,12 +92,12 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      * @param array $options optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
+    public static function savePrivateKey(BigInteger $n, BigInteger $e, BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
     {
         if (\count($primes) != 2) {
             throw new \InvalidArgumentException('JWK does not support multi-prime RSA keys');
         }
-        $key = ['kty' => 'RSA', 'n' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($n->toBytes()), 'e' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($e->toBytes()), 'd' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($d->toBytes()), 'p' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($primes[1]->toBytes()), 'q' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($primes[2]->toBytes()), 'dp' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($exponents[1]->toBytes()), 'dq' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($exponents[2]->toBytes()), 'qi' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($coefficients[2]->toBytes())];
+        $key = ['kty' => 'RSA', 'n' => Strings::base64url_encode($n->toBytes()), 'e' => Strings::base64url_encode($e->toBytes()), 'd' => Strings::base64url_encode($d->toBytes()), 'p' => Strings::base64url_encode($primes[1]->toBytes()), 'q' => Strings::base64url_encode($primes[2]->toBytes()), 'dp' => Strings::base64url_encode($exponents[1]->toBytes()), 'dq' => Strings::base64url_encode($exponents[2]->toBytes()), 'qi' => Strings::base64url_encode($coefficients[2]->toBytes())];
         return self::wrapKey($key, $options);
     }
     /**
@@ -108,9 +108,9 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
      * @param array $options optional
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e, array $options = [])
+    public static function savePublicKey(BigInteger $n, BigInteger $e, array $options = [])
     {
-        $key = ['kty' => 'RSA', 'n' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($n->toBytes()), 'e' => \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::base64url_encode($e->toBytes())];
+        $key = ['kty' => 'RSA', 'n' => Strings::base64url_encode($n->toBytes()), 'e' => Strings::base64url_encode($e->toBytes())];
         return self::wrapKey($key, $options);
     }
 }

@@ -32,7 +32,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Keys\PKCS8
+abstract class PKCS8 extends Progenitor
 {
     /**
      * OID Name
@@ -69,7 +69,7 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
             $components['isPublicKey'] = \true;
             $type = 'public';
         }
-        $result = $components + \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PKCS1::load($key[$type . 'Key']);
+        $result = $components + PKCS1::load($key[$type . 'Key']);
         if (isset($key['meta'])) {
             $result['meta'] = $key['meta'];
         }
@@ -88,10 +88,10 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
      * @param array $options optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e, \WPStaging\Vendor\phpseclib3\Math\BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
+    public static function savePrivateKey(BigInteger $n, BigInteger $e, BigInteger $d, array $primes, array $exponents, array $coefficients, $password = '', array $options = [])
     {
-        $key = \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PKCS1::savePrivateKey($n, $e, $d, $primes, $exponents, $coefficients);
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($key);
+        $key = PKCS1::savePrivateKey($n, $e, $d, $primes, $exponents, $coefficients);
+        $key = ASN1::extractBER($key);
         return self::wrapPrivateKey($key, [], null, $password, null, '', $options);
     }
     /**
@@ -102,10 +102,10 @@ abstract class PKCS8 extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\K
      * @param array $options optional
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $n, \WPStaging\Vendor\phpseclib3\Math\BigInteger $e, array $options = [])
+    public static function savePublicKey(BigInteger $n, BigInteger $e, array $options = [])
     {
-        $key = \WPStaging\Vendor\phpseclib3\Crypt\RSA\Formats\Keys\PKCS1::savePublicKey($n, $e);
-        $key = \WPStaging\Vendor\phpseclib3\File\ASN1::extractBER($key);
+        $key = PKCS1::savePublicKey($n, $e);
+        $key = ASN1::extractBER($key);
         return self::wrapPublicKey($key, null, null, $options);
     }
 }

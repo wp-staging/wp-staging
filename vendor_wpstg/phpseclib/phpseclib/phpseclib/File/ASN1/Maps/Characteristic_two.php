@@ -20,10 +20,10 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class Characteristic_two
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => [
-        'm' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => [
+        'm' => ['type' => ASN1::TYPE_INTEGER],
         // field size 2**m
-        'basis' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_OBJECT_IDENTIFIER],
-        'parameters' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_ANY, 'optional' => \true],
+        'basis' => ['type' => ASN1::TYPE_OBJECT_IDENTIFIER],
+        'parameters' => ['type' => ASN1::TYPE_ANY, 'optional' => \true],
     ]];
 }

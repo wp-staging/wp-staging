@@ -12,6 +12,6 @@
  */
 namespace WPStaging\Vendor\phpseclib3\Crypt\EC\Curves;
 
-final class nistp384 extends \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\secp384r1
+final class nistp384 extends secp384r1
 {
 }

@@ -13,6 +13,6 @@ use WPStaging\Vendor\Psr\Container\NotFoundExceptionInterface;
  *
  * @package lucatume\DI52
  */
-class NotFoundException extends \WPStaging\Vendor\lucatume\DI52\ContainerException implements \WPStaging\Vendor\Psr\Container\NotFoundExceptionInterface
+class NotFoundException extends ContainerException implements NotFoundExceptionInterface
 {
 }

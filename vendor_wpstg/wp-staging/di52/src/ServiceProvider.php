@@ -27,7 +27,7 @@ abstract class ServiceProvider
      *
      * @param Container $container
      */
-    public function __construct(\WPStaging\Vendor\lucatume\DI52\Container $container)
+    public function __construct(Container $container)
     {
         $this->container = $container;
     }

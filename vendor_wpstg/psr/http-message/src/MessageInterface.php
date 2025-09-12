@@ -173,5 +173,5 @@ interface MessageInterface
      * @return static
      * @throws \InvalidArgumentException When the body is not valid.
      */
-    public function withBody(\WPStaging\Vendor\Psr\Http\Message\StreamInterface $body);
+    public function withBody(StreamInterface $body);
 }

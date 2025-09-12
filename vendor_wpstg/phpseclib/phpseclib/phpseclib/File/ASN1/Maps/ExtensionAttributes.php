@@ -21,10 +21,10 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
 abstract class ExtensionAttributes
 {
     const MAP = [
-        'type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SET,
+        'type' => ASN1::TYPE_SET,
         'min' => 1,
         'max' => 256,
         // ub-extension-attributes
-        'children' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\ExtensionAttribute::MAP,
+        'children' => ExtensionAttribute::MAP,
     ];
 }

@@ -19,5 +19,5 @@ namespace WPStaging\Vendor\phpseclib3\File\ASN1\Maps;
  */
 abstract class IssuerAltName
 {
-    const MAP = \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\GeneralNames::MAP;
+    const MAP = GeneralNames::MAP;
 }

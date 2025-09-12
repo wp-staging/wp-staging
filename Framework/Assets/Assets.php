@@ -304,11 +304,18 @@ class Assets
             'isPro'                  => WPStaging::isPro(),
             'maxFailedRetries'       => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
             'i18n'                   => $this->i18n->getTranslations(),
-            'isCloneable'            => (new SiteInfo())->isCloneable()
+            'isCloneable'            => (new SiteInfo())->isCloneable(),
+            'isTestMode'             => defined('WPSTG_TEST') && WPSTG_TEST
         ];
 
         // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well
         wp_localize_script("wpstg-common", "wpstg", $wpstgConfig);
+        // Add test mode body class if WPSTG_TEST is defined
+        if (defined('WPSTG_TEST') && WPSTG_TEST) {
+            add_filter('admin_body_class', function ($classes) {
+                return $classes . ' wpstg-test-mode';
+            });
+        }
     }
 
     public function enqueueAnalyticsConsentAssets()

@@ -219,13 +219,13 @@ class TableService
     /**
      * Get MySQL create table query
      *
-     * @param string $table_name Table name
+     * @param string $tableName Table name
      *
      * @return string
      */
-    public function getCreateTableQuery(string $table_name): string
+    public function getCreateTableQuery(string $tableName): string
     {
-        $result = $this->client->query("SHOW CREATE TABLE `{$table_name}`");
+        $result = $this->client->query("SHOW CREATE TABLE `{$tableName}`");
         if ($result === false) {
             return '';
         }

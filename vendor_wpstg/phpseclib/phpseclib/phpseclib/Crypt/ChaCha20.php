@@ -19,7 +19,7 @@ use WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-class ChaCha20 extends \WPStaging\Vendor\phpseclib3\Crypt\Salsa20
+class ChaCha20 extends Salsa20
 {
     /**
      * The OpenSSL specific name of the cipher
@@ -124,20 +124,20 @@ class ChaCha20 extends \WPStaging\Vendor\phpseclib3\Crypt\Salsa20
         $params = [$ciphertext, $this->aad, $this->nonce, $this->key];
         if (isset($this->poly1305Key)) {
             if ($this->oldtag === \false) {
-                throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('Authentication Tag has not been set');
+                throw new InsufficientSetupException('Authentication Tag has not been set');
             }
             if ($this->usingGeneratedPoly1305Key && \strlen($this->nonce) == 12) {
                 $plaintext = \sodium_crypto_aead_chacha20poly1305_ietf_decrypt(...$params);
                 $this->oldtag = \false;
                 if ($plaintext === \false) {
-                    throw new \WPStaging\Vendor\phpseclib3\Exception\BadDecryptionException('Derived authentication tag and supplied authentication tag do not match');
+                    throw new BadDecryptionException('Derived authentication tag and supplied authentication tag do not match');
                 }
                 return $plaintext;
             }
             $newtag = $this->poly1305($ciphertext);
             if ($this->oldtag != \substr($newtag, 0, \strlen($this->oldtag))) {
                 $this->oldtag = \false;
-                throw new \WPStaging\Vendor\phpseclib3\Exception\BadDecryptionException('Derived authentication tag and supplied authentication tag do not match');
+                throw new BadDecryptionException('Derived authentication tag and supplied authentication tag do not match');
             }
             $this->oldtag = \false;
         }
@@ -200,10 +200,10 @@ class ChaCha20 extends \WPStaging\Vendor\phpseclib3\Crypt\Salsa20
         $this->enbuffer = $this->debuffer = ['ciphertext' => '', 'counter' => $this->counter];
         $this->changed = $this->nonIVChanged = \false;
         if ($this->nonce === \false) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('No nonce has been defined');
+            throw new InsufficientSetupException('No nonce has been defined');
         }
         if ($this->key === \false) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\InsufficientSetupException('No key has been defined');
+            throw new InsufficientSetupException('No key has been defined');
         }
         if ($this->usePoly1305 && !isset($this->poly1305Key)) {
             $this->usingGeneratedPoly1305Key = \true;
@@ -222,7 +222,7 @@ class ChaCha20 extends \WPStaging\Vendor\phpseclib3\Crypt\Salsa20
         $this->p1 = $constant . $key;
         $this->p2 = $this->nonce;
         if (\strlen($this->nonce) == 8) {
-            $this->p2 = "\0\0\0\0" . $this->p2;
+            $this->p2 = "\x00\x00\x00\x00" . $this->p2;
         }
     }
     /**

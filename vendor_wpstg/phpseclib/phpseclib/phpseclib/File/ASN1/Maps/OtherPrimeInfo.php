@@ -21,11 +21,11 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
 abstract class OtherPrimeInfo
 {
     // version must be multi if otherPrimeInfos present
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => [
-        'prime' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => [
+        'prime' => ['type' => ASN1::TYPE_INTEGER],
         // ri
-        'exponent' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'exponent' => ['type' => ASN1::TYPE_INTEGER],
         // di
-        'coefficient' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
+        'coefficient' => ['type' => ASN1::TYPE_INTEGER],
     ]];
 }

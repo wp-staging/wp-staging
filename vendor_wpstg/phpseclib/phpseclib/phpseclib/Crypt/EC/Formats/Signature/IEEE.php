@@ -39,8 +39,8 @@ abstract class IEEE
         if ($len & 1) {
             return \false;
         }
-        $r = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\substr($sig, 0, $len >> 1), 256);
-        $s = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\substr($sig, $len >> 1), 256);
+        $r = new BigInteger(\substr($sig, 0, $len >> 1), 256);
+        $s = new BigInteger(\substr($sig, $len >> 1), 256);
         return \compact('r', 's');
     }
     /**
@@ -52,11 +52,11 @@ abstract class IEEE
      * @param int $length
      * @return string
      */
-    public static function save(\WPStaging\Vendor\phpseclib3\Math\BigInteger $r, \WPStaging\Vendor\phpseclib3\Math\BigInteger $s, $curve, $length)
+    public static function save(BigInteger $r, BigInteger $s, $curve, $length)
     {
         $r = $r->toBytes();
         $s = $s->toBytes();
         $length = (int) \ceil($length / 8);
-        return \str_pad($r, $length, "\0", \STR_PAD_LEFT) . \str_pad($s, $length, "\0", \STR_PAD_LEFT);
+        return \str_pad($r, $length, "\x00", \STR_PAD_LEFT) . \str_pad($s, $length, "\x00", \STR_PAD_LEFT);
     }
 }

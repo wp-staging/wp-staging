@@ -21,11 +21,11 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
 abstract class Extensions
 {
     const MAP = [
-        'type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE,
+        'type' => ASN1::TYPE_SEQUENCE,
         'min' => 1,
         // technically, it's MAX, but we'll assume anything < 0 is MAX
         'max' => -1,
         // if 'children' isn't an array then 'min' and 'max' must be defined
-        'children' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\Extension::MAP,
+        'children' => Extension::MAP,
     ];
 }

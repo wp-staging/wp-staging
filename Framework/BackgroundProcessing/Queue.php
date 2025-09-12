@@ -94,7 +94,9 @@ class Queue
     /**
      * The current table state, or `null` if the current table state has never been
      * assessed before.
-     *
+     * TABLE_NOT_EXIST = -1;
+     * TABLE_EXISTS    = 0;
+     * TABLE_CREATED   = 1;
      * @var string|null|int
      */
     private $tableState;

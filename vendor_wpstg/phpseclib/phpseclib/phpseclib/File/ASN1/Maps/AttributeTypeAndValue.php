@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class AttributeTypeAndValue
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AttributeType::MAP, 'value' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AttributeValue::MAP]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['type' => AttributeType::MAP, 'value' => AttributeValue::MAP]];
 }

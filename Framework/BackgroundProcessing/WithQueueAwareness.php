@@ -96,7 +96,7 @@ trait WithQueueAwareness
             'method'    => $useGetMethod ? 'GET' : 'POST',
             'blocking'  => $this->useBlockingRequest(),
             'timeout'   => $this->useBlockingRequest() ? 30 : 0.01, // 0.01 for a non-blocking request
-            'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
+            'cookies'   => $this->getLoginRelatedCookies(),
             'sslverify' => apply_filters('https_local_ssl_verify', false),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
@@ -167,7 +167,7 @@ trait WithQueueAwareness
             ],
             'blocking'  => true,
             'timeout'   => 10,
-            'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
+            'cookies'   => $this->getLoginRelatedCookies(),
             'sslverify' => apply_filters('https_local_ssl_verify', false),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
@@ -204,5 +204,39 @@ trait WithQueueAwareness
 
         // Only use blocking request if we are in a local environment
         return function_exists('wp_get_environment_type') && wp_get_environment_type() === 'local';
+    }
+
+    /**
+     * Keep only the WordPress login-related cookies to avoid oversized headers.
+     * Kept:
+     *  - wordpress_[hash]
+     *  - wordpress_sec_[hash]
+     *  - wordpress_logged_in_[hash]
+     *
+     * @return array<string,string>
+     */
+    private function getLoginRelatedCookies(): array
+    {
+        if (empty($_COOKIE) || !is_array($_COOKIE)) {
+            return [];
+        }
+
+        $allowed = [];
+        foreach ($_COOKIE as $name => $value) {
+            if (!is_string($name)) {
+                continue;
+            }
+
+            // Matches: wordpress_[32hex], wordpress_sec_[32hex], wordpress_logged_in_[32hex]
+            if (!preg_match('/^wordpress_(?:logged_in_|sec_)?[a-f0-9]{32}$/', $name)) {
+                continue;
+            }
+
+            if (is_scalar($value)) {
+                $allowed[$name] = (string)$value;
+            }
+        }
+
+        return $allowed;
     }
 }

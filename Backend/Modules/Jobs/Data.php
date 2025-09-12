@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\Data\CleanThirdPartyConfigs;
 use WPStaging\Framework\CloningProcess\Data\CopyWpConfig;
 use WPStaging\Framework\CloningProcess\Data\Job as DataJob;
+use WPStaging\Framework\CloningProcess\Data\CleanupTemporaryLogins;
 use WPStaging\Framework\CloningProcess\Data\ResetIndexPhp;
 use WPStaging\Framework\CloningProcess\Data\UpdateSiteUrlAndHome;
 use WPStaging\Framework\CloningProcess\Data\UpdateTablePrefix;
@@ -42,6 +43,7 @@ class Data extends DataJob
             UpdateWpOptionsTablePrefix::class, // This is important when custom folders are used
             UpdateWpConfigConstants::class,
             CleanThirdPartyConfigs::class, // Remove or use dummy config files for hosting like Flywheel etc
+            CleanupTemporaryLogins::class, // Cleanup temporary users and their metadata
         ];
     }
 
@@ -63,6 +65,6 @@ class Data extends DataJob
      */
     protected function calculateTotalSteps()
     {
-        $this->options->totalSteps = 8;
+        $this->options->totalSteps = 9;
     }
 }

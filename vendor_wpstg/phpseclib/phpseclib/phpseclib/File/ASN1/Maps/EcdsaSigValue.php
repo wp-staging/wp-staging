@@ -20,5 +20,5 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class EcdsaSigValue
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => ['r' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER], 's' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER]]];
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => ['r' => ['type' => ASN1::TYPE_INTEGER], 's' => ['type' => ASN1::TYPE_INTEGER]]];
 }

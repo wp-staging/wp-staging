@@ -36,6 +36,9 @@ class TableCreateService
     /** @var string */
     protected $stagingPrefix;
 
+    /** @var bool */
+    protected $isResetExistingTables = false;
+
     /**
      * @param Database $database
      */
@@ -61,6 +64,15 @@ class TableCreateService
         }
 
         return $this->stagingPrefix . substr($srcTableName, strlen($this->productionPrefix));
+    }
+
+    /**
+     * @param bool $isResetExistingTables
+     * @return void
+     */
+    public function setIsResetExistingTables(bool $isResetExistingTables)
+    {
+        $this->isResetExistingTables = $isResetExistingTables;
     }
 
     /**
@@ -96,10 +108,14 @@ class TableCreateService
      * @param string $destTableName
      * @return void
      */
-    private function dropDestinationTableIfExists(string $destTableName)
+    protected function dropDestinationTableIfExists(string $destTableName)
     {
         if (!$this->tableService->tableExists($destTableName)) {
             return;
+        }
+
+        if (!$this->isResetExistingTables) {
+            throw new RuntimeException("Create Table - Cannot clone table. Error: Destination table $destTableName already exists.");
         }
 
         $this->logger->warning(sprintf("Create Table - Table %s already exists, dropping it first", esc_html($destTableName)));

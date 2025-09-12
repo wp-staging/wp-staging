@@ -2,9 +2,11 @@
 
 namespace WPStaging\Framework\Job\Ajax;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Job\ProcessLock;
+use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Security\Auth;
 
 abstract class PrepareJob
@@ -48,6 +50,16 @@ abstract class PrepareJob
         $this->filesystem->delete($this->directory->getCacheDirectory(), $deleteSelf = false);
         $this->filesystem->setExcludePaths([]);
         $this->filesystem->mkdir($this->directory->getCacheDirectory(), true);
+    }
+
+    /**
+     * @return void
+     */
+    protected function deleteSseCacheFiles()
+    {
+        /** @var SseEventCache */
+        $sseCacheEvents = WPStaging::make(SseEventCache::class);
+        $sseCacheEvents->deleteSseCacheFiles();
     }
 
     public function setQueueId(string $queueId)

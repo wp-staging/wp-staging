@@ -27,7 +27,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements \WPStaging\Vendor\phpseclib3\Crypt\Common\PrivateKey
+final class PrivateKey extends EC implements Common\PrivateKey
 {
     use Common\Traits\PasswordProtected;
     /**
@@ -54,26 +54,26 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
      */
     public function multiply($coordinates)
     {
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
-            if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Curve25519 && self::$engines['libsodium']) {
+        if ($this->curve instanceof MontgomeryCurve) {
+            if ($this->curve instanceof Curve25519 && self::$engines['libsodium']) {
                 return \sodium_crypto_scalarmult($this->dA->toBytes(), $coordinates);
             }
-            $point = [$this->curve->convertInteger(new \WPStaging\Vendor\phpseclib3\Math\BigInteger(\strrev($coordinates), 256))];
+            $point = [$this->curve->convertInteger(new BigInteger(\strrev($coordinates), 256))];
             $point = $this->curve->multiplyPoint($point, $this->dA);
             return \strrev($point[0]->toBytes(\true));
         }
-        if (!$this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            $coordinates = "\0{$coordinates}";
+        if (!$this->curve instanceof TwistedEdwardsCurve) {
+            $coordinates = "\x00{$coordinates}";
         }
-        $point = \WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Keys\PKCS1::extractPoint($coordinates, $this->curve);
+        $point = PKCS1::extractPoint($coordinates, $this->curve);
         $point = $this->curve->multiplyPoint($point, $this->dA);
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
+        if ($this->curve instanceof TwistedEdwardsCurve) {
             return $this->curve->encodePoint($point);
         }
         if (empty($point)) {
             throw new \RuntimeException('The infinity point is invalid');
         }
-        return "\4" . $point[0]->toBytes(\true) . $point[1]->toBytes(\true);
+        return "\x04" . $point[0]->toBytes(\true) . $point[1]->toBytes(\true);
     }
     /**
      * Create a signature
@@ -84,8 +84,8 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
      */
     public function sign($message)
     {
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
+        if ($this->curve instanceof MontgomeryCurve) {
+            throw new UnsupportedOperationException('Montgomery Curves cannot be used to create signatures');
         }
         $dA = $this->dA;
         $order = $this->curve->getOrder();
@@ -94,39 +94,39 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
         if ($format === \false) {
             return \false;
         }
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
-            if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519 && self::$engines['libsodium'] && !isset($this->context)) {
+        if ($this->curve instanceof TwistedEdwardsCurve) {
+            if ($this->curve instanceof Ed25519 && self::$engines['libsodium'] && !isset($this->context)) {
                 $result = \sodium_crypto_sign_detached($message, $this->withPassword()->toString('libsodium'));
-                return $shortFormat == 'SSH2' ? \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('ss', 'ssh-' . \strtolower($this->getCurve()), $result) : $result;
+                return $shortFormat == 'SSH2' ? Strings::packSSH2('ss', 'ssh-' . \strtolower($this->getCurve()), $result) : $result;
             }
             // contexts (Ed25519ctx) are supported but prehashing (Ed25519ph) is not.
             // quoting https://tools.ietf.org/html/rfc8032#section-8.5 ,
             // "The Ed25519ph and Ed448ph variants ... SHOULD NOT be used"
             $A = $this->curve->encodePoint($this->QA);
             $curve = $this->curve;
-            $hash = new \WPStaging\Vendor\phpseclib3\Crypt\Hash($curve::HASH);
+            $hash = new Hash($curve::HASH);
             $secret = \substr($hash->hash($this->secret), $curve::SIZE);
-            if ($curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Ed25519) {
-                $dom = !isset($this->context) ? '' : 'SigEd25519 no Ed25519 collisions' . "\0" . \chr(\strlen($this->context)) . $this->context;
+            if ($curve instanceof Ed25519) {
+                $dom = !isset($this->context) ? '' : 'SigEd25519 no Ed25519 collisions' . "\x00" . \chr(\strlen($this->context)) . $this->context;
             } else {
                 $context = isset($this->context) ? $this->context : '';
-                $dom = 'SigEd448' . "\0" . \chr(\strlen($context)) . $context;
+                $dom = 'SigEd448' . "\x00" . \chr(\strlen($context)) . $context;
             }
             // SHA-512(dom2(F, C) || prefix || PH(M))
             $r = $hash->hash($dom . $secret . $message);
             $r = \strrev($r);
-            $r = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($r, 256);
+            $r = new BigInteger($r, 256);
             list(, $r) = $r->divide($order);
             $R = $curve->multiplyPoint($curve->getBasePoint(), $r);
             $R = $curve->encodePoint($R);
             $k = $hash->hash($dom . $R . $A . $message);
             $k = \strrev($k);
-            $k = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($k, 256);
+            $k = new BigInteger($k, 256);
             list(, $k) = $k->divide($order);
             $S = $k->multiply($dA)->add($r);
             list(, $S) = $S->divide($order);
-            $S = \str_pad(\strrev($S->toBytes()), $curve::SIZE, "\0");
-            return $shortFormat == 'SSH2' ? \WPStaging\Vendor\phpseclib3\Common\Functions\Strings::packSSH2('ss', 'ssh-' . \strtolower($this->getCurve()), $R . $S) : $R . $S;
+            $S = \str_pad(\strrev($S->toBytes()), $curve::SIZE, "\x00");
+            return $shortFormat == 'SSH2' ? Strings::packSSH2('ss', 'ssh-' . \strtolower($this->getCurve()), $R . $S) : $R . $S;
         }
         if (self::$engines['OpenSSL'] && \in_array($this->hash->getHash(), \openssl_get_md_methods())) {
             $signature = '';
@@ -140,18 +140,18 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
                 if ($shortFormat == 'ASN1') {
                     return $signature;
                 }
-                $loaded = \WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Signature\ASN1::load($signature);
+                $loaded = ASN1Signature::load($signature);
                 $r = $loaded['r'];
                 $s = $loaded['s'];
                 return $this->formatSignature($r, $s);
             }
         }
         $e = $this->hash->hash($message);
-        $e = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($e, 256);
+        $e = new BigInteger($e, 256);
         $Ln = $this->hash->getLength() - $order->getLength();
         $z = $Ln > 0 ? $e->bitwise_rightShift($Ln) : $e;
         while (\true) {
-            $k = \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomRange(self::$one, $order->subtract(self::$one));
+            $k = BigInteger::randomRange(self::$one, $order->subtract(self::$one));
             list($x, $y) = $this->curve->multiplyPoint($this->curve->getBasePoint(), $k);
             $x = $x->toBigInteger();
             list(, $r) = $x->divide($order);
@@ -210,17 +210,17 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
     public function getPublicKey()
     {
         $format = 'PKCS8';
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
+        if ($this->curve instanceof MontgomeryCurve) {
             $format = 'MontgomeryPublic';
         }
         $type = self::validatePlugin('Keys', $format, 'savePublicKey');
         $key = $type::savePublicKey($this->curve, $this->QA);
-        $key = \WPStaging\Vendor\phpseclib3\Crypt\EC::loadFormat($format, $key);
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery) {
+        $key = EC::loadFormat($format, $key);
+        if ($this->curve instanceof MontgomeryCurve) {
             return $key;
         }
         $key = $key->withHash($this->hash->getHash())->withSignatureFormat($this->shortFormat);
-        if ($this->curve instanceof \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards) {
+        if ($this->curve instanceof TwistedEdwardsCurve) {
             $key = $key->withContext($this->context);
         }
         return $key;
@@ -230,7 +230,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
      *
      * @return string
      */
-    private function formatSignature(\WPStaging\Vendor\phpseclib3\Math\BigInteger $r, \WPStaging\Vendor\phpseclib3\Math\BigInteger $s)
+    private function formatSignature(BigInteger $r, BigInteger $s)
     {
         $format = $this->sigFormat;
         $temp = new \ReflectionMethod($format, 'save');
@@ -246,6 +246,6 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
         }
         // @codingStandardsIgnoreEnd
         // presumably the only way you could get to this is if you were using a custom plugin
-        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException("{$format}::save() has {$paramCount} parameters - the only valid parameter counts are 2 or 3");
+        throw new UnsupportedOperationException("{$format}::save() has {$paramCount} parameters - the only valid parameter counts are 2 or 3");
     }
 }

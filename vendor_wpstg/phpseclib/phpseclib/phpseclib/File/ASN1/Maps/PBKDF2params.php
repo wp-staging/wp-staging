@@ -22,12 +22,12 @@ use WPStaging\Vendor\phpseclib3\File\ASN1;
  */
 abstract class PBKDF2params
 {
-    const MAP = ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_SEQUENCE, 'children' => [
+    const MAP = ['type' => ASN1::TYPE_SEQUENCE, 'children' => [
         // technically, this is a CHOICE in RFC2898 but the other "choice" is, currently, more of a placeholder
         // in the RFC
-        'salt' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_OCTET_STRING],
-        'iterationCount' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER],
-        'keyLength' => ['type' => \WPStaging\Vendor\phpseclib3\File\ASN1::TYPE_INTEGER, 'optional' => \true],
-        'prf' => \WPStaging\Vendor\phpseclib3\File\ASN1\Maps\AlgorithmIdentifier::MAP + ['optional' => \true],
+        'salt' => ['type' => ASN1::TYPE_OCTET_STRING],
+        'iterationCount' => ['type' => ASN1::TYPE_INTEGER],
+        'keyLength' => ['type' => ASN1::TYPE_INTEGER, 'optional' => \true],
+        'prf' => AlgorithmIdentifier::MAP + ['optional' => \true],
     ]];
 }

@@ -47,16 +47,16 @@ abstract class MontgomeryPrivate
     {
         switch (\strlen($key)) {
             case 32:
-                $curve = new \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Curve25519();
+                $curve = new Curve25519();
                 break;
             case 56:
-                $curve = new \WPStaging\Vendor\phpseclib3\Crypt\EC\Curves\Curve448();
+                $curve = new Curve448();
                 break;
             default:
                 throw new \LengthException('The only supported lengths are 32 and 56');
         }
         $components = ['curve' => $curve];
-        $components['dA'] = new \WPStaging\Vendor\phpseclib3\Math\BigInteger($key, 256);
+        $components['dA'] = new BigInteger($key, 256);
         $curve->rangeCheck($components['dA']);
         // note that EC::getEncodedCoordinates does some additional "magic" (it does strrev on the result)
         $components['QA'] = $components['curve']->multiplyPoint($components['curve']->getBasePoint(), $components['dA']);
@@ -69,7 +69,7 @@ abstract class MontgomeryPrivate
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @return string
      */
-    public static function savePublicKey(\WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery $curve, array $publicKey)
+    public static function savePublicKey(MontgomeryCurve $curve, array $publicKey)
     {
         return \strrev($publicKey[0]->toBytes());
     }
@@ -83,10 +83,10 @@ abstract class MontgomeryPrivate
      * @param string $password optional
      * @return string
      */
-    public static function savePrivateKey(\WPStaging\Vendor\phpseclib3\Math\BigInteger $privateKey, \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery $curve, array $publicKey, $secret = null, $password = '')
+    public static function savePrivateKey(BigInteger $privateKey, MontgomeryCurve $curve, array $publicKey, $secret = null, $password = '')
     {
         if (!empty($password) && \is_string($password)) {
-            throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedFormatException('MontgomeryPrivate private keys do not support encryption');
+            throw new UnsupportedFormatException('MontgomeryPrivate private keys do not support encryption');
         }
         return $privateKey->toBytes();
     }

@@ -46,7 +46,7 @@ abstract class Base
      *
      * @return object
      */
-    public function convertInteger(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
+    public function convertInteger(BigInteger $x)
     {
         return $this->factory->newInteger($x);
     }
@@ -78,7 +78,7 @@ abstract class Base
      *
      * @return array
      */
-    public function multiplyPoint(array $p, \WPStaging\Vendor\phpseclib3\Math\BigInteger $d)
+    public function multiplyPoint(array $p, BigInteger $d)
     {
         $alreadyInternal = isset($p[2]);
         $r = $alreadyInternal ? [[], $p] : [[], $this->convertToInternal($p)];
@@ -99,18 +99,18 @@ abstract class Base
     {
         static $one;
         if (!isset($one)) {
-            $one = new \WPStaging\Vendor\phpseclib3\Math\BigInteger(1);
+            $one = new BigInteger(1);
         }
-        return \WPStaging\Vendor\phpseclib3\Math\BigInteger::randomRange($one, $this->order->subtract($one));
+        return BigInteger::randomRange($one, $this->order->subtract($one));
     }
     /**
      * Performs range check
      */
-    public function rangeCheck(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
+    public function rangeCheck(BigInteger $x)
     {
         static $zero;
         if (!isset($zero)) {
-            $zero = new \WPStaging\Vendor\phpseclib3\Math\BigInteger();
+            $zero = new BigInteger();
         }
         if (!isset($this->order)) {
             throw new \RuntimeException('setOrder needs to be called before this method');
@@ -122,7 +122,7 @@ abstract class Base
     /**
      * Sets the Order
      */
-    public function setOrder(\WPStaging\Vendor\phpseclib3\Math\BigInteger $order)
+    public function setOrder(BigInteger $order)
     {
         $this->order = $order;
     }

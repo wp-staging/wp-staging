@@ -27,4 +27,9 @@ class CopyThemesTask extends FileCopierTask
     {
         return true;
     }
+
+    protected function getIsExcluded(): bool
+    {
+        return $this->jobDataDto->getIsThemesExcluded();
+    }
 }

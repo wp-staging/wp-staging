@@ -25,7 +25,7 @@ use function spl_object_hash;
  * @package lucatume\DI52
  * @implements ArrayAccess<string,object>
  */
-class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\ContainerInterface
+class Container implements ArrayAccess, ContainerInterface
 {
     const EXCEPTION_MASK_NONE = 0;
     const EXCEPTION_MASK_MESSAGE = 1;
@@ -96,8 +96,8 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      */
     public function __construct($resolveUnboundAsSingletons = \false)
     {
-        $this->resolver = new \WPStaging\Vendor\lucatume\DI52\Builders\Resolver($resolveUnboundAsSingletons);
-        $this->builders = new \WPStaging\Vendor\lucatume\DI52\Builders\Factory($this, $this->resolver);
+        $this->resolver = new Builders\Resolver($resolveUnboundAsSingletons);
+        $this->builders = new Builders\Factory($this, $this->resolver);
         $this->bindThis();
     }
     /**
@@ -110,7 +110,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      */
     public function setVar($key, $value)
     {
-        $this->resolver->bind($key, \WPStaging\Vendor\lucatume\DI52\Builders\ValueBuilder::of($value));
+        $this->resolver->bind($key, ValueBuilder::of($value));
     }
     /**
      * Sets a variable on the container using the ArrayAccess API.
@@ -125,7 +125,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      *
      * @throws ContainerException If the closure building fails.
      */
-    #[ReturnTypeWillChange]
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         $this->singleton($offset, $value);
@@ -182,7 +182,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      * @throws ContainerException Error while retrieving the entry.
      * @throws NotFoundException  No entry was found for **this** identifier.
      */
-    #[ReturnTypeWillChange]
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->get($offset);
@@ -203,10 +203,10 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
     {
         try {
             return $this->resolver->resolve($id, [$id]);
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             throw $this->castThrown($throwable, $id);
             // @codeCoverageIgnoreStart
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             // @phan-suppress-current-line PhanUnreachableCatch @phpstan-ignore-line
             throw $this->castThrown($exception, $id);
             // @codeCoverageIgnoreEnd
@@ -225,7 +225,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
         if ($this->maskThrowables === self::EXCEPTION_MASK_NONE) {
             return $thrown;
         }
-        return \WPStaging\Vendor\lucatume\DI52\ContainerException::fromThrowable($id, $thrown, $this->maskThrowables, $this->resolver->getBuildLine());
+        return ContainerException::fromThrowable($id, $thrown, $this->maskThrowables, $this->resolver->getBuildLine());
     }
     /**
      * Returns an instance of the class or object bound to an interface, class  or string slug if any, else it will try
@@ -259,7 +259,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      *
      * @return boolean true on success or false on failure.
      */
-    #[ReturnTypeWillChange]
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return $this->has($offset);
@@ -318,7 +318,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
     public function tagged($tag)
     {
         if (!$this->hasTag($tag)) {
-            throw new \WPStaging\Vendor\lucatume\DI52\NotFoundException("Nothing is tagged as '{$tag}'");
+            throw new NotFoundException("Nothing is tagged as '{$tag}'");
         }
         return \array_map(function ($id) {
             if (\is_string($id)) {
@@ -366,9 +366,9 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
             $isInstantiatable = $this->checkClassIsInstantiatable($class);
             $this->classIsInstantiatableCache[$class] = $isInstantiatable;
             return $isInstantiatable;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->classIsInstantiatableCache[$class] = \false;
-            throw new \WPStaging\Vendor\lucatume\DI52\ContainerException($e->getMessage());
+            throw new ContainerException($e->getMessage());
         }
     }
     /**
@@ -385,7 +385,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
         if (!$exists) {
             return \false;
         }
-        $classReflection = new \ReflectionClass($class);
+        $classReflection = new ReflectionClass($class);
         if ($classReflection->isAbstract()) {
             return \false;
         }
@@ -429,24 +429,24 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
             $provided = $provider->provides();
             // @phpstan-ignore-next-line
             if (!\is_array($provided) || \count($provided) === 0) {
-                throw new \WPStaging\Vendor\lucatume\DI52\ContainerException("Service provider '{$serviceProviderClass}' is marked as deferred" . " but is not providing any implementation.");
+                throw new ContainerException("Service provider '{$serviceProviderClass}' is marked as deferred" . " but is not providing any implementation.");
             }
             foreach ($provided as $id) {
                 $this->resolver->bind($id, $this->builders->getBuilder($this->getDeferredProviderMakeClosure($provider, $id)));
             }
         }
         try {
-            $bootMethod = new \ReflectionMethod($provider, 'boot');
-        } catch (\ReflectionException $e) {
-            throw new \WPStaging\Vendor\lucatume\DI52\ContainerException('Could not reflect on the provider boot method.');
+            $bootMethod = new ReflectionMethod($provider, 'boot');
+        } catch (ReflectionException $e) {
+            throw new ContainerException('Could not reflect on the provider boot method.');
         }
         $requiresBoot = $bootMethod->getDeclaringClass()->getName() === \get_class($provider);
         if ($requiresBoot) {
             $this->bootable[] = $provider;
         }
-        $this->resolver->singleton($serviceProviderClass, new \WPStaging\Vendor\lucatume\DI52\Builders\ValueBuilder($provider));
+        $this->resolver->singleton($serviceProviderClass, new ValueBuilder($provider));
         foreach ($alias as $a) {
-            $this->resolver->singleton($a, new \WPStaging\Vendor\lucatume\DI52\Builders\ValueBuilder($provider));
+            $this->resolver->singleton($a, new ValueBuilder($provider));
         }
     }
     /**
@@ -458,7 +458,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      *
      * @return Closure A Closure ready to be bound to the id as implementation.
      */
-    private function getDeferredProviderMakeClosure(\WPStaging\Vendor\lucatume\DI52\ServiceProvider $provider, $id)
+    private function getDeferredProviderMakeClosure(ServiceProvider $provider, $id)
     {
         return function () use($provider, $id) {
             static $registered;
@@ -490,7 +490,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
             $implementation = $id;
         }
         if ($implementation === $id && !$this->classIsInstantiable($implementation)) {
-            throw new \WPStaging\Vendor\lucatume\DI52\NotFoundException("Class {$implementation} does not exist.");
+            throw new NotFoundException("Class {$implementation} does not exist.");
         }
         $this->resolver->bind($id, $this->builders->getBuilder($id, $implementation, $afterBuildMethods));
     }
@@ -553,7 +553,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
     {
         $decorator = \array_pop($decorators);
         if ($decorator === null) {
-            throw new \WPStaging\Vendor\lucatume\DI52\ContainerException('The decorator chain cannot be empty.');
+            throw new ContainerException('The decorator chain cannot be empty.');
         }
         do {
             $previous = isset($builder) ? $builder : null;
@@ -594,7 +594,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      *
      * @return void The method does not return any value.
      */
-    #[ReturnTypeWillChange]
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         if (!\is_string($offset)) {
@@ -685,15 +685,15 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      */
     public function callback($id, $method)
     {
-        $callbackIdPrefix = \is_object($id) ? \spl_object_hash($id) : $id;
+        $callbackIdPrefix = \is_object($id) ? spl_object_hash($id) : $id;
         // @phpstan-ignore-next-line
         if (!\is_string($callbackIdPrefix)) {
             $typeOfId = \gettype($id);
-            throw new \WPStaging\Vendor\lucatume\DI52\ContainerException("Callbacks can only be built on ids, class names or objects; '{$typeOfId}' is neither.");
+            throw new ContainerException("Callbacks can only be built on ids, class names or objects; '{$typeOfId}' is neither.");
         }
         // @phpstan-ignore-next-line
         if (!\is_string($method)) {
-            throw new \WPStaging\Vendor\lucatume\DI52\ContainerException("Callbacks second argument must be a string method name.");
+            throw new ContainerException("Callbacks second argument must be a string method name.");
         }
         $callbackId = $callbackIdPrefix . '::' . $method;
         if (isset($this->callbacks[$callbackId])) {
@@ -722,8 +722,8 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
         $key = \is_string($object) ? $object . '::' . $method : \get_class($object) . '::' . $method;
         if (!isset($this->isStaticMethodCache[$key])) {
             try {
-                $this->isStaticMethodCache[$key] = (new \ReflectionMethod($object, $method))->isStatic();
-            } catch (\ReflectionException $e) {
+                $this->isStaticMethodCache[$key] = (new ReflectionMethod($object, $method))->isStatic();
+            } catch (ReflectionException $e) {
                 return \false;
             }
         }
@@ -762,7 +762,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      */
     public function protect($value)
     {
-        return new \WPStaging\Vendor\lucatume\DI52\Builders\ValueBuilder($value);
+        return new ValueBuilder($value);
     }
     /**
      * Returns the Service Provider instance registered.
@@ -777,11 +777,11 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
     public function getProvider($providerId)
     {
         if (!$this->resolver->isBound($providerId)) {
-            throw new \WPStaging\Vendor\lucatume\DI52\NotFoundException("Service provider '{$providerId}' is not registered in the container.");
+            throw new NotFoundException("Service provider '{$providerId}' is not registered in the container.");
         }
         $provider = $this->get($providerId);
-        if (!$provider instanceof \WPStaging\Vendor\lucatume\DI52\ServiceProvider) {
-            throw new \WPStaging\Vendor\lucatume\DI52\NotFoundException("Bound implementation for '{$providerId}' is not Service Provider.");
+        if (!$provider instanceof ServiceProvider) {
+            throw new NotFoundException("Bound implementation for '{$providerId}' is not Service Provider.");
         }
         return $provider;
     }
@@ -818,9 +818,9 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      */
     private function bindThis()
     {
-        $this->singleton(\WPStaging\Vendor\Psr\Container\ContainerInterface::class, $this);
-        $this->singleton(\WPStaging\Vendor\lucatume\DI52\Container::class, $this);
-        if (\get_class($this) !== \WPStaging\Vendor\lucatume\DI52\Container::class) {
+        $this->singleton(ContainerInterface::class, $this);
+        $this->singleton(Container::class, $this);
+        if (\get_class($this) !== Container::class) {
             $this->singleton(\get_class($this), $this);
         }
     }

@@ -19,7 +19,7 @@ use WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath\Base;
  *
  * @author  Jim Wigginton <terrafrost@php.net>
  */
-abstract class EvalBarrett extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath\Base
+abstract class EvalBarrett extends Base
 {
     /**
      * Custom Reduction Function
@@ -49,7 +49,7 @@ abstract class EvalBarrett extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\
      * @param string $class
      * @return callable|void
      */
-    protected static function generateCustomReduction(\WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\BCMath $m, $class)
+    protected static function generateCustomReduction(BCMath $m, $class)
     {
         $m_length = \strlen($m);
         if ($m_length < 5) {
