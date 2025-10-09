@@ -283,7 +283,7 @@ class RemoteDownloader
             'message'   => esc_html($this->message),
             'complete'  => $this->completed,
             'startByte' => $this->startByte,
-            'fileSize'  => $this->remoteFileSize
+            'fileSize'  => $this->remoteFileSize,
         ]);
     }
 
@@ -386,7 +386,7 @@ class RemoteDownloader
             'sslverify' => false,
             'headers'   => [
                 'Cache-Control' => 'no-cache',
-            ]
+            ],
         ];
 
         $response     = $this->makeRemoteRequest($args);
@@ -417,7 +417,7 @@ class RemoteDownloader
             'headers'   => [
                 'Cache-Control' => 'no-cache',
                 'Range'         => "bytes={$startByte}-{$endByte}",
-            ]
+            ],
         ];
 
         $response = $this->makeRemoteRequest($args);

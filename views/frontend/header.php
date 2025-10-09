@@ -132,28 +132,52 @@
             .wpstg-text-center {
                 text-align: center;
             }
+
             .wpstg-text-justify {
                 text-align: justify;
             }
+
             .wpstg-text-center img {
                 margin-top:30px;
             }
+
             .wpstg-alert {
                 padding: 16px;
                 border: 1px solid transparent;
                 margin-bottom: 8px;
             }
+
             .wpstg-alert > b {
                 margin-bottom: 8px;
             }
+
             .wpstg-alert > p {
                 margin: 0;
                 line-height: 1.3;
             }
+
             .wpstg-alert.wpstg-alert-info {
                 color: #fff;
                 background: #185abc;
                 border-color: #185abc;
+            }
+
+            .wpstg-upsell-link {
+                background: #f5f5f5;
+                padding: 15px 15px;
+                margin: 16px 0 0 0;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            .wpstg-upsell-link a {
+                color: #a700d0;
+                text-decoration: none;
+                font-weight: bold;
+            }
+
+            .wpstg-upsell-link a:hover {
+                text-decoration: underline;
             }
 
             @-webkit-keyframes slideIn {

@@ -1,11 +1,10 @@
 <?php
 
-namespace WPStaging\Framework\Component\UI;
+namespace WPStaging\Component;
 
 use WPStaging\Core\Forms\Elements\Check;
-use WPStaging\Framework\Facades\Escape;
 
-class CheckboxWrapper
+class Checkbox
 {
     /**
      * @var Check|null
@@ -59,11 +58,12 @@ class CheckboxWrapper
             ob_start();
 
             /** @noinspection PhpIncludeInspection */
-            require trailingslashit(WPSTG_PLUGIN_DIR) . 'Framework/Component/UI/checkbox.php';
+            require trailingslashit(WPSTG_VIEWS_DIR) . 'components/checkbox.php';
+
             return ob_get_clean();
         }
 
         /** @noinspection PhpIncludeInspection */
-        require trailingslashit(WPSTG_PLUGIN_DIR) . 'Framework/Component/UI/checkbox.php';
+        require trailingslashit(WPSTG_VIEWS_DIR) . 'components/checkbox.php';
     }
 }

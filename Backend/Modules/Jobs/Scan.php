@@ -410,7 +410,7 @@ class Scan extends Job
 
         $data = [
             'requiredSpace' => $this->utilsMath->formatSize($size),
-            'errorMessage'  => $errorMessage
+            'errorMessage'  => $errorMessage,
         ];
 
         echo json_encode($data);
@@ -450,7 +450,7 @@ class Scan extends Job
             if ($table->Comment !== "VIEW") {
                 $currentTables[] = [
                     "name" => $table->Name,
-                    "size" => ($table->Data_length + $table->Index_length)
+                    "size" => ($table->Data_length + $table->Index_length),
                 ];
             }
         }
@@ -515,7 +515,7 @@ class Scan extends Job
                 "path"     => $fullPath,
                 "basePath" => $this->getBasePath(),
                 "prefix"   => $this->getPathIdentifier(),
-                "isLink"   => is_link($directory->getPathname())
+                "isLink"   => is_link($directory->getPathname()),
             ];
         }
 
@@ -653,7 +653,7 @@ class Scan extends Job
             'basePath'          => $basePath,
             'forceDefault'      => $forceDefault,
             'dirPath'           => $path,
-            'isLink'            => $isLink
+            'isLink'            => $isLink,
         ]);
     }
 
@@ -764,7 +764,7 @@ class Scan extends Job
         $coreDirectories = [
             'wp-admin',
             'wp-content',
-            'wp-includes'
+            'wp-includes',
         ];
 
         if (in_array($dirname, $coreDirectories)) {
@@ -776,7 +776,7 @@ class Scan extends Job
             $this->dirAdapter->getPluginsDirectory(),
             $this->dirAdapter->getActiveThemeParentDirectory(),
             $this->dirAdapter->getUploadsDirectory(),
-            $this->dirAdapter->getMuPluginsDirectory()
+            $this->dirAdapter->getMuPluginsDirectory(),
         ];
 
         foreach ($wpDirectories as $wpDirectory) {

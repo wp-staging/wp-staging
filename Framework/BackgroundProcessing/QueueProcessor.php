@@ -202,20 +202,7 @@ class QueueProcessor
                 do_action_ref_array($actionCallback, $action->args);
             }
         } catch (\Throwable $e) {
-            /*
-             * This is a PHP 7.0+ interface. But since PHP will NOT check this for existence,
-             * the same way it will not check `instanceof`, this allows us to catch fatals
-             * and keep going if we're on PHP 7.0+.
-             */
-            $markFailed();
-
-            return false;
-        } catch (\Exception $e) {
-            /*
-             * If we're not on PHP 7.0+, then this is the next best option: there
-             * was an error we could catch, and we did. If the request dies due to
-             * a fatal, then we'll handle that in the `shutdown` hook.
-             */
+            debug_log($e->getMessage() . ' ' . $e->getTraceAsString());
             $markFailed();
 
             return false;

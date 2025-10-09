@@ -321,7 +321,10 @@ abstract class PrepareJob
 
         $jobDataDto = $this->job->getJobDataDto();
         $date = new \DateTime();
-        $date->setTimestamp($jobDataDto->getStartTime());
+        if (!empty($jobDataDto->getStartTime())) {
+            $date->setTimestamp($jobDataDto->getStartTime());
+        }
+
         $jobDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
 
         $body .= 'Started at: ' .  $date->format('H:i:s') . PHP_EOL ;

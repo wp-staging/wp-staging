@@ -63,7 +63,7 @@ class TableScanner
             'stagingSetup'   => $this->stagingSetup,
             'stagingSiteDto' => $this->stagingSetup->getStagingSiteDto(),
             'tables'         => $this->currentTables,
-            'excludedTables' => $this->excludedTables
+            'excludedTables' => $this->excludedTables,
         ]);
 
         echo $result; // phpcs:ignore

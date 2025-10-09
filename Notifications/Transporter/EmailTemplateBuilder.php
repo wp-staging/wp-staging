@@ -119,7 +119,7 @@ class EmailTemplateBuilder extends AbstractTemplateComponent
             'recipient'   => $this->recipient,
             'year'        => date('Y'),
             'siteUrl'     => get_site_url(),
-            'pluginName'  => $this->isBasic ? 'WP Staging free backup and staging plugin' : 'WP Staging plugin'
+            'pluginName'  => $this->isBasic ? 'WP Staging free backup and staging plugin' : 'WP Staging plugin',
         ];
     }
 

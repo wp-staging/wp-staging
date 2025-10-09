@@ -69,7 +69,7 @@ class DeleteConfirm extends AbstractTemplateComponent
 
         wp_send_json_success([
             'stagingSiteName' => $stagingSiteDto->getSiteName(),
-            'html'            => $result
+            'html'            => $result,
         ]);
     }
 }

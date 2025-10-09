@@ -84,7 +84,7 @@ trait DeveloperTimerTrait
             'completedIn' => number_format(microtime(true) - $this->eventsStart[$event]) . ' seconds',
             'memoryUsage' => size_format($this->getMemoryUsage()),
             'runningTime' => $this->getRunningTime(),
-            'context' => $context,
+            'context'     => $context,
         ];
     }
 

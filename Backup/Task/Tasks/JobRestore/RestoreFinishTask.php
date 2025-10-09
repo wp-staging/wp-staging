@@ -117,9 +117,9 @@ class RestoreFinishTask extends RestoreTask
         $this->getJobTransientCache()->completeJob();
         $this->logger->pushSseEvent(SseEventCache::EVENT_TYPE_COMPLETE, [
             'status' => 'success',
-            'data' => [
+            'data'   => [
                 'message' => __('Restore completed successfully.', 'wp-staging'),
-                'type' => 'restore',
+                'type'    => 'restore',
             ],
         ]);
     }

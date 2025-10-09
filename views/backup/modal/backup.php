@@ -92,7 +92,7 @@ $storagesPrefix = 'storage-';
                             false,
                             [
                                 'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
-                                'isDisabled' => !$isProVersion
+                                'isDisabled' => !$isProVersion,
                             ]
                         );
                         ?>

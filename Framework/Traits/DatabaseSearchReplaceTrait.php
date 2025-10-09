@@ -36,7 +36,7 @@ trait DatabaseSearchReplaceTrait
         'wpstg_license_status',
         'wpstg_tmp_data',
         'siteurl',
-        'home'
+        'home',
     ];
 
     public function excludedStrings()
@@ -55,7 +55,7 @@ trait DatabaseSearchReplaceTrait
         return [
             '%2F%2F' . str_replace('/', '%2F', $string), // HTML entity for WP Backery Page Builder Plugin
             '\/\/' . str_replace('/', '\/', $string), // Escaped \/ used by revslider and several visual editors
-            '//' . $string // //example.com
+            '//' . $string, // //example.com
         ];
     }
 

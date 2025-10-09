@@ -161,7 +161,7 @@ class PrepareCreate extends PrepareJob
             'excludeSizeGreaterThan' => 8,
             'excludeFileRules'       => [],
             'excludeFolderRules'     => [],
-            'excludeExtensionRules'  => []
+            'excludeExtensionRules'  => [],
         ];
     }
 

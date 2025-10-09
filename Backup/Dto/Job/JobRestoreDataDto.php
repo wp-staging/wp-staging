@@ -8,88 +8,85 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 class JobRestoreDataDto extends JobDataDto
 {
     /** @var string */
-    private $file;
-
-    /** @var string */
-    private $dataUrl = '';
+    protected $file;
 
     /** @var bool */
-    private $isDataDownloaded = false;
+    protected $isDataDownloaded = false;
 
     /** @var BackupMetadata|null */
-    private $backupMetadata;
+    protected $backupMetadata;
 
     /** @var string */
     protected $tmpDirectory;
 
     /** @var int Number of extracted files */
-    private $extractorFilesExtracted = 0;
+    protected $extractorFilesExtracted = 0;
 
     /** @var int Number of written bytes to process the current files */
-    private $extractorFileWrittenBytes = 0;
+    protected $extractorFileWrittenBytes = 0;
 
-    private $extractorMetadataIndexPosition = 0;
+    protected $extractorMetadataIndexPosition = 0;
 
     /** @var string Database table prefix to use while restoring the backup */
-    private $tmpDatabasePrefix;
+    protected $tmpDatabasePrefix;
 
     /** @var string Table being inserted during restore. */
-    private $tableToRestore;
+    protected $tableToRestore;
 
     /** @var bool Whether a transaction is started. */
-    private $transactionStarted;
+    protected $transactionStarted;
 
     /** @var array<string, string> Store short names tables to drop */
-    private $shortNamesTablesToDrop = [];
+    protected $shortNamesTablesToDrop = [];
 
     /** @var array<string, string> Store short names tables to restore */
-    private $shortNamesTablesToRestore = [];
+    protected $shortNamesTablesToRestore = [];
 
     /** @var bool */
-    private $requireShortNamesForTablesToDrop = false;
+    protected $requireShortNamesForTablesToDrop = false;
 
     /** @var bool */
-    private $requireShortNamesForTablesToRestore = false;
+    protected $requireShortNamesForTablesToRestore = false;
 
     /** @var int */
-    private $databasePartIndex = 0;
+    protected $databasePartIndex = 0;
 
     /** @var int */
-    private $filePartIndex = 0;
+    protected $filePartIndex = 0;
 
     /** @var bool */
-    private $isSameSiteBackupRestore = false;
+    protected $isSameSiteBackupRestore = false;
 
     /** @var bool */
-    private $isUrlSchemeMatched = false;
+    protected $isUrlSchemeMatched = false;
 
     /** @var bool */
-    private $isMissingDatabaseFile = false;
+    protected $isMissingDatabaseFile = false;
 
     /** @var int */
-    private $currentFileHeaderStart = 0;
+    protected $currentFileHeaderStart = 0;
 
     /** @var array */
-    private $databaseDataToPreserve = [];
+    protected $databaseDataToPreserve = [];
 
     /** @var int */
-    private $totalTablesToRename = 0;
+    protected $totalTablesToRename = 0;
 
     /** @var int */
-    private $totalTablesRenamed = 0;
+    protected $totalTablesRenamed = 0;
 
     /**
      * Store checksum of some important files in the form of key value format i.e. file path => checksum
      *
      * @var array
      */
-    private $filesChecksum = [];
+    protected $filesChecksum = [];
 
     /** @var bool */
-    private $objectCacheSkipped = false;
+    protected $objectCacheSkipped = false;
 
     /** @var bool */
-    private $isDatabaseRestoreSkipped = false;
+    protected $isDatabaseRestoreSkipped = false;
 
     /**
      * @return string The .wpstg backup file being restored.
@@ -108,23 +105,6 @@ class JobRestoreDataDto extends JobDataDto
     public function setFile(string $file)
     {
         $this->file = untrailingslashit(wp_normalize_path($file));
-    }
-
-    /**
-     * @return string
-     */
-    public function getDataUrl(): string
-    {
-        return $this->dataUrl;
-    }
-
-    /**
-     * @param string $dataUrl
-     * @return void
-     */
-    public function setDataUrl(string $dataUrl)
-    {
-        $this->dataUrl = $dataUrl;
     }
 
     /**

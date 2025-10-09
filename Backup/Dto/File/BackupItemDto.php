@@ -117,11 +117,11 @@ class BackupItemDto
     public function toArray(): array
     {
         return [
-            0 => $this->index,
-            1 => $this->path,
-            2 => $this->offset,
-            3 => $this->size,
-            4 => $this->isDatabase,
+            0            => $this->index,
+            1            => $this->path,
+            2            => $this->offset,
+            3            => $this->size,
+            4            => $this->isDatabase,
             'offset'     => $this->offset,
             'index'      => $this->index,
             'path'       => $this->path,

@@ -80,7 +80,7 @@ class Pluginmeta
         $freePluginSlugs = [
             'wp-staging/wp-staging.php',
             'wp-staging-1/wp-staging.php',
-            'wp-staging-2/wp-staging.php'
+            'wp-staging-2/wp-staging.php',
         ];
         return in_array($pluginSlug, $freePluginSlugs);
     }

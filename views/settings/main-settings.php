@@ -35,7 +35,7 @@ $siteInfo = WPStaging::make(SiteInfo::class);
                     add_query_arg(
                         [
                             "settings-updated" => false,
-                            "tab" => $id
+                            "tab"              => $id,
                         ],
                         $currentUrl
                     )

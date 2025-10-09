@@ -30,11 +30,11 @@ abstract class JobExecutable extends Job
      * @var array
      */
     protected $response = [
-        "status"        => false,
-        "percentage"    => 0,
-        "total"         => 0,
-        "step"          => 0,
-        "last_msg"      => '',
+        "status"     => false,
+        "percentage" => 0,
+        "total"      => 0,
+        "step"       => 0,
+        "last_msg"   => '',
     ];
 
     /**
@@ -83,13 +83,13 @@ abstract class JobExecutable extends Job
 
         $this->removeMemoryExhaustErrorTmpFile();
         return $this->response = [
-            "status"        => $status,
-            "percentage"    => $percentage,
-            "total"         => $this->options->totalSteps,
-            "step"          => $this->options->currentStep,
-            "job"           => $this->options->currentJob,
-            "last_msg"      => $this->logger->getLastLogMsg(),
-            "job_done"      => $status
+            "status"     => $status,
+            "percentage" => $percentage,
+            "total"      => $this->options->totalSteps,
+            "step"       => $this->options->currentStep,
+            "job"        => $this->options->currentJob,
+            "last_msg"   => $this->logger->getLastLogMsg(),
+            "job_done"   => $status,
         ];
     }
 

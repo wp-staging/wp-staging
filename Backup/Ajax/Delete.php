@@ -141,9 +141,9 @@ class Delete extends AbstractTemplateComponent
         }
 
         wp_send_json([
-            'error'   => true,
-            'message' => '',
-            'messages' => $errors
+            'error'    => true,
+            'message'  => '',
+            'messages' => $errors,
         ]);
 
         return false;

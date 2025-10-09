@@ -36,8 +36,8 @@ class RobotsTxt
     public function create($path)
     {
         return $this->filesystem->create($path, implode(PHP_EOL, [
-                    'User-agent: *',
-                    'Disallow: /',
-                ]));
+            'User-agent: *',
+            'Disallow: /',
+        ]));
     }
 }

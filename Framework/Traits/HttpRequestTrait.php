@@ -41,7 +41,7 @@ trait HttpRequestTrait
             'timeout'     => 40,
             'httpversion' => '1.0',
             'sslverify'   => false,
-            'method'      => 'GET'
+            'method'      => 'GET',
         ];
         $args         = wp_parse_args($args, $defaults);
         $response     = wp_remote_request($url, $args);
@@ -52,7 +52,10 @@ trait HttpRequestTrait
 
             $xml = @simplexml_load_string($errorMessage);
             if ($xml !== false) {
-                $errorMessage = (string)$xml->Message ?? (string)$xml->message ?? (string)$xml->Code ?? (string)$xml->code ?? $errorMessage;
+                $errorMessage = (string)$xml->Message ?? (string)$xml->message ?? $errorMessage;
+                if (!empty((string)$xml->Code) || !empty((string)$xml->code)) {
+                    $errorMessage .= " (Code: " . ((string)$xml->Code ?? (string)$xml->code) . ")";
+                }
             }
 
             throw new StorageException("Error Message: $errorMessage; Error Code: $responseCode; Url: $url", (int)$responseCode);

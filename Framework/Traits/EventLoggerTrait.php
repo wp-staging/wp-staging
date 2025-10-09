@@ -22,7 +22,7 @@ trait EventLoggerTrait
         'isExportingPlugins'             => 'P',
         'isExportingOtherWpContentFiles' => 'OW',
         'isExportingOtherWpRootFiles'    => 'OR',
-        'isExportingDatabase'            => 'D'
+        'isExportingDatabase'            => 'D',
     ];
     protected $backupStoragesIdentifiers = [
         'googleDrive'         => 'GD',

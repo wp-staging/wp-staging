@@ -15,8 +15,8 @@
  * @var string|null $isDataNavigatable
  * @var string|null $onChange
  *
- * @package WPStaging\Framework\Component\UI
- * @see \WPStaging\Framework\Component\UI\CheckboxWrapper::render()
+ * @package WPStaging\Component
+ * @see \WPStaging\Component\Checkbox::render()
  */
 
 ?>

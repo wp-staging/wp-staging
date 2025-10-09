@@ -216,7 +216,7 @@ class FileHeader implements IndexLineInterface
                     $this->attributes,
                     $this->filePathLength,
                     $this->fileNameLength,
-                    $this->extraFieldLength
+                    $this->extraFieldLength,
                 ];
             } elseif ($method === 'getIndexHeader') {
                 $fallbackArray = [
@@ -228,7 +228,7 @@ class FileHeader implements IndexLineInterface
                     $this->attributes,
                     $this->filePathLength,
                     $this->fileNameLength,
-                    $this->extraFieldLength
+                    $this->extraFieldLength,
                 ];
             } else {
                 // Default fallback - use the original array but replace nulls
@@ -357,7 +357,7 @@ class FileHeader implements IndexLineInterface
             $this->attributes,
             $this->filePathLength,
             $this->fileNameLength,
-            $this->extraFieldLength
+            $this->extraFieldLength,
         ], 'getFileHeader');
 
         $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
@@ -386,7 +386,7 @@ class FileHeader implements IndexLineInterface
             $this->attributes,
             $this->filePathLength,
             $this->fileNameLength,
-            $this->extraFieldLength
+            $this->extraFieldLength,
         ], 'getUncompressedFileHeader');
 
         $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
@@ -408,7 +408,7 @@ class FileHeader implements IndexLineInterface
             $this->attributes,
             $this->filePathLength,
             $this->fileNameLength,
-            $this->extraFieldLength
+            $this->extraFieldLength,
         ], 'getIndexHeader');
 
         $fixedHeader = $fixedHeader . $this->filePath . $this->fileName . $this->extraField;

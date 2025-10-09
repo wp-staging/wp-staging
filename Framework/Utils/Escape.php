@@ -33,7 +33,7 @@ class Escape
     public function htmlAllowedDuringEscape(array $array): array
     {
         return [
-            'a'      => [
+            'a'        => [
                 'id'     => [],
                 'href'   => [],
                 'title'  => [],
@@ -41,19 +41,19 @@ class Escape
                 'rel'    => [],
                 'class'  => [],
             ],
-            'span'   => [
-                'class'  => [],
-                'title'  => [],
+            'span'     => [
+                'class' => [],
+                'title' => [],
             ],
-            'p'      => [],
-            'br'     => [],
-            'b'      => [],
-            'code'   => [],
-            'em'     => [],
-            'strong' => [
+            'p'        => [],
+            'br'       => [],
+            'b'        => [],
+            'code'     => [],
+            'em'       => [],
+            'strong'   => [
                 'class' => [],
             ],
-            'svg' => [
+            'svg'      => [
                 'xmlns'           => [],
                 'width'           => [],
                 'height'          => [],
@@ -68,7 +68,7 @@ class Escape
                 'role'            => [],
                 'class'           => [],
             ],
-            'path' => [
+            'path'     => [
                 'd'               => [],
                 'fill'            => [],
                 'stroke'          => [],
@@ -76,7 +76,7 @@ class Escape
                 'stroke-linecap'  => [],
                 'stroke-linejoin' => [],
             ],
-            'g' => [
+            'g'        => [
                 'fill' => [],
             ],
             'polyline' => [
@@ -84,14 +84,14 @@ class Escape
                 'fill'   => [],
                 'stroke' => [],
             ],
-            'circle' => [
+            'circle'   => [
                 'cx'     => [],
                 'cy'     => [],
                 'r'      => [],
                 'fill'   => [],
                 'stroke' => [],
             ],
-            'rect' => [
+            'rect'     => [
                 'x'      => [],
                 'y'      => [],
                 'width'  => [],
@@ -99,7 +99,7 @@ class Escape
                 'fill'   => [],
                 'stroke' => [],
             ],
-            'line' => [
+            'line'     => [
                 'x1'     => [],
                 'y1'     => [],
                 'x2'     => [],
@@ -107,15 +107,15 @@ class Escape
                 'fill'   => [],
                 'stroke' => [],
             ],
-            'defs' => [
-                'clipPath' => []
+            'defs'     => [
+                'clipPath' => [],
             ],
-            'ellipse' => [
-                'cx'     => [],
-                'cy'     => [],
-                'rx'     => [],
-                'ry'     => [],
-            ]
+            'ellipse'  => [
+                'cx' => [],
+                'cy' => [],
+                'rx' => [],
+                'ry' => [],
+            ],
         ];
     }
 

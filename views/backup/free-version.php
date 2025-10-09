@@ -14,12 +14,15 @@ use WPStaging\Framework\Facades\Escape;
 
 <div id="wpstg-step-1">
     <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" disabled title="<?php esc_html_e('Premium: Create lightning-fast backups', 'wp-staging'); ?>">
+        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets ?? ''); ?>svg/update.svg" alt="create" />
         <?php esc_html_e('Create Backup', 'wp-staging') ?>
     </button>
     <button id="wpstg-upload-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4px" disabled title="<?php esc_html_e('Premium: Upload a backup to restore or move a site', 'wp-staging'); ?>">
+        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets ?? ''); ?>svg/upload-cloud.svg" alt="upload" />
         <?php esc_html_e('Upload Backup', 'wp-staging') ?>
     </button>
     <button id="wpstg-manage-backup-schedules" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4px" disabled title="<?php esc_html_e('Premium: Create scheduled backups', 'wp-staging'); ?>">
+        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets ?? ''); ?>svg/edit.svg" alt="edit" />
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
 </div>

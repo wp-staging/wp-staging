@@ -64,7 +64,7 @@ class StagingSetup extends AbstractStagingSetup
                 'autocapitalize' => false,
                 'autocomplete'   => false,
                 'disabled'       => true,
-            ]
+            ],
         ];
 
         $this->renderSettingsFields($fields);
@@ -93,7 +93,7 @@ class StagingSetup extends AbstractStagingSetup
                 'value'          => '',
                 'autocapitalize' => false,
                 'disabled'       => true,
-            ]
+            ],
         ];
 
         $this->renderSettingsFields($fields);
@@ -155,13 +155,13 @@ class StagingSetup extends AbstractStagingSetup
                 'disabled'       => true,
             ],
             [
-                'label'          => esc_html__('Enable SSL: ', 'wp-staging'),
-                'name'           => 'wpstg-db-ssl',
-                'type'           => 'checkbox',
-                'value'          => 'true',
-                'checked'        => false,
-                'disabled'       => true,
-            ]
+                'label'    => esc_html__('Enable SSL: ', 'wp-staging'),
+                'name'     => 'wpstg-db-ssl',
+                'type'     => 'checkbox',
+                'value'    => 'true',
+                'checked'  => false,
+                'disabled' => true,
+            ],
         ];
 
         $this->renderSettingsFields($fields);

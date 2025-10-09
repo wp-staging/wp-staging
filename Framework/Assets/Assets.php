@@ -286,7 +286,7 @@ class Assets
             // The interval in milliseconds between each request of backup status
             'backupStatusInterval'   => Hooks::applyFilters(self::FILTER_BACKUP_STATUS_REQUEST_INTERVAL, 8000),
             "settings"               => (object)[
-                "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR
+                "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR,
             ],
             "tblprefix"              => WPStaging::getTablePrefix(),
             "isMultisite"            => is_multisite(),
@@ -305,7 +305,7 @@ class Assets
             'maxFailedRetries'       => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
             'i18n'                   => $this->i18n->getTranslations(),
             'isCloneable'            => (new SiteInfo())->isCloneable(),
-            'isTestMode'             => defined('WPSTG_TEST') && WPSTG_TEST
+            'isTestMode'             => defined('WPSTG_TEST') && WPSTG_TEST,
         ];
 
         // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well
@@ -518,7 +518,7 @@ class Assets
         $stylesToRemove  = ['wp-reset-sweetalert2'];
         $scriptsToRemove = [
             'wp-reset-sweetalert2',
-            'wp-reset'
+            'wp-reset',
         ];
 
         foreach ($stylesToRemove as $style) {
@@ -547,48 +547,6 @@ class Assets
         echo Escape::escapeHtml($svgCode);
     }
 
-    /**
-     * @param string $title
-     * @param string $desc
-     * @param string $buttonText
-     * @param string $buttonUrl
-     */
-    public function renderAlertMessage(string $title, string $desc = '', string $buttonText = '', string $buttonUrl = null)
-    {
-        if (empty($title)) {
-            return;
-        }
-
-        ?>
-        <div class="wpstg-banner">
-            <div class="wpstg-banner-content">
-                <div class="wpstg-banner-icon">
-                    <?php $this->renderSvg('alert'); ?>
-                </div>
-                <div class="wpstg-banner-text">
-                    <h3 class="wpstg-banner-title">
-                        <?php echo esc_html($title); ?>
-                    </h3>
-
-                    <?php if (!empty($desc)) : ?>
-                        <p class="wpstg-banner-description">
-                            <?php echo wp_kses_post($desc); ?>
-                        </p>
-                    <?php endif; ?>
-
-                    <?php if (!empty($buttonText)) : ?>
-                        <?php
-                        $url = !empty($buttonUrl) ? esc_url($buttonUrl) : '#';
-                        ?>
-                        <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button">
-                            <?php echo esc_html($buttonText); ?>
-                        </a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <?php
-    }
 
     private function getRestUrl(): string
     {

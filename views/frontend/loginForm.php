@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Login form template
  *
@@ -7,6 +8,8 @@
  * @var array $args
  * @var bool $isCustomLogin2faEnabled
  */
+
+use WPStaging\Core\WPStaging;
 
 /* When 'wpstg_user_logged_in_status' is true, it means the credentials are correct, but login might be blocked by a security plugin or active OTP or 2FA authentication */
 $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
@@ -73,9 +76,23 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
             <a href="<?php echo esc_url($args['lost_password_url']); ?>"><?php esc_html_e('Lost your password?', 'wp-staging') ?></a>
         </div>
 
-        <p class="error-msg">
-            <?php echo wp_kses_post($this->error); ?>
-        </p>
+        <?php if (WPStaging::isBasic()) { ?>
+            <div class="wpstg-upsell-link">
+                <?php
+                    printf(
+                        esc_html__('Automatic login for staging sites. Try %s', 'wp-staging'),
+                        '<a href="https://wp-staging.com/#pricing" target="_blank">' . esc_html__('WP Staging Pro', 'wp-staging') . '</a>'
+                    );
+                ?>
+            </div>
+        <?php } ?>
+
+        <?php if ($this->error) : ?>
+            <p class="error-msg">
+                <?php echo wp_kses_post($this->error); ?>
+            </p>
+        <?php endif; ?>
+
         <?php
         if ($isCustomLogin2faEnabled) {
             include_once(WPSTG_VIEWS_DIR . 'frontend/wordfence-2fa.php');

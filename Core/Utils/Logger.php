@@ -131,9 +131,10 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
+     * @param string $additionalHeader
      * @return void
      */
-    public function writeLogHeader()
+    public function writeLogHeader(string $additionalHeader = '')
     {
         $systemInfo = WPStaging::make(SystemInfo::class);
 
@@ -147,7 +148,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
             $host   = 'Flywheel';
         }
 
-        $this->info('System Info');
+        $this->info('System Info' . $additionalHeader);
         $this->add(sprintf('- WP Staging Version: %s', $systemInfo->getWpStagingVersion()), self::TYPE_INFO_SUB);
         $this->add(sprintf('- PHP Version: %s', $systemInfo->getPhpVersion()), self::TYPE_INFO_SUB);
         $this->add(sprintf('- Server: %s', $systemInfo->getWebServerInfo()), self::TYPE_INFO_SUB);
@@ -178,9 +179,9 @@ class Logger implements LoggerInterface, ShutdownableInterface
     public function add($message, $type = self::TYPE_ERROR)
     {
         $log = [
-            "type"      => $type,
-            "date"      => current_time(self::LOG_DATETIME_FORMAT),
-            "message"   => html_entity_decode(wp_kses($message, []))
+            "type"    => $type,
+            "date"    => current_time(self::LOG_DATETIME_FORMAT),
+            "message" => html_entity_decode(wp_kses($message, [])),
         ];
 
         $this->messages[] = $log;
@@ -480,12 +481,23 @@ class Logger implements LoggerInterface, ShutdownableInterface
     public function logProviderSettings($providerName, $authClass)
     {
         $excludedFields = [
-             'expiresIn', 'created', 'showNotice', 'userData', 'storageInfo', 'lastUpdated'
+            'expiresIn',
+            'created',
+            'showNotice',
+            'userData',
+            'storageInfo',
+            'lastUpdated',
         ];
 
         $protectedFields = [
-            'googleClientId', 'googleClientSecret', 'accessKey',
-            'secretKey', 'password', 'passphrase', 'accessToken', 'refreshToken',
+            'googleClientId',
+            'googleClientSecret',
+            'accessKey',
+            'secretKey',
+            'password',
+            'passphrase',
+            'accessToken',
+            'refreshToken',
         ];
 
         $providerOptions = WPStaging::make($authClass)->getOptions();

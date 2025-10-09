@@ -149,18 +149,18 @@ class AnalyticsConsent
         $url = $this->getApiUrl('consent');
 
         $response = wp_remote_post($url, [
-            'method' => 'POST',
-            'headers' => ['Content-Type' => 'application/json; charset=utf-8'],
-            'body' => json_encode([
+            'method'      => 'POST',
+            'headers'     => ['Content-Type' => 'application/json; charset=utf-8'],
+            'body'        => json_encode([
                 'site_hash' => $this->getSiteHash(),
-                'site_url' => get_home_url(),
+                'site_url'  => get_home_url(),
             ]),
             'data_format' => 'body',
-            'timeout' => 10,
+            'timeout'     => 10,
             'redirection' => 5,
             'httpversion' => '1.0',
-            'blocking' => true,
-            'sslverify' => false,
+            'blocking'    => true,
+            'sslverify'   => false,
         ]);
 
         // Early bail: Something went wrong with the consent request.
@@ -214,7 +214,7 @@ class AnalyticsConsent
     public function getConsentLink(bool $agreeOrDecline): string
     {
         return add_query_arg([
-            'wpstgConsent' => $agreeOrDecline ? 'yes' : 'no',
+            'wpstgConsent'      => $agreeOrDecline ? 'yes' : 'no',
             'wpstgConsentNonce' => wp_create_nonce('wpstg_consent_nonce'),
         ], $this->getReturnUrl());
     }
@@ -222,7 +222,7 @@ class AnalyticsConsent
     public function getRemindMeLaterConsentLink(): string
     {
         return add_query_arg([
-            'wpstgConsent' => 'later',
+            'wpstgConsent'      => 'later',
             'wpstgConsentNonce' => wp_create_nonce('wpstg_consent_nonce'),
         ], $this->getReturnUrl());
     }

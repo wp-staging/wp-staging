@@ -95,6 +95,6 @@ class PartIdentifier
         'install.php',
         'maintenance.php',
         'php-error.php',
-        'fatal-error-handler.php'
+        'fatal-error-handler.php',
     ];
 }

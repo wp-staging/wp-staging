@@ -128,7 +128,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $backupPart = isset($_POST['backup_part']) ? $this->sanitize->sanitizeString($_POST['backup_part']) : '';
         if (empty($backupPart)) {
             wp_send_json_error([
-                'message' => 'Invalid or missing backup part parameter'
+                'message' => 'Invalid or missing backup part parameter',
             ]);
         }
 
@@ -188,7 +188,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
         wp_send_json_success([
             'size'     => empty($formatedSize) ? '0.0 B' : $formatedSize,
-            'size_raw' => $partSize
+            'size_raw' => $partSize,
         ]);
     }
 
@@ -204,7 +204,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
         wp_send_json_success([
             'size'     => empty($formatedSize) ? '0.0 B' : $formatedSize,
-            'size_raw' => $partSize
+            'size_raw' => $partSize,
         ]);
     }
 
@@ -219,7 +219,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
         wp_send_json_success([
             'size'     => empty($formatedSize) ? '0.0 B' : $formatedSize,
-            'size_raw' => $partSize
+            'size_raw' => $partSize,
         ]);
     }
 
@@ -247,7 +247,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $formatedSize = $this->math->formatSize($totalSize);
         wp_send_json_success([
             'size'     => empty($formatedSize) ? '0.0 B' : $formatedSize,
-            'size_raw' => $totalSize
+            'size_raw' => $totalSize,
         ]);
     }
 
@@ -259,7 +259,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
     {
         if (WPStaging::isBasic()) {
             wp_send_json_success([
-                'size' => '0.0 B'
+                'size' => '0.0 B',
             ]);
         }
 
@@ -270,7 +270,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $formatedSize = $this->math->formatSize($partSize);
         wp_send_json_success([
             'size'     => empty($formatedSize) ? '0.0 B' : $formatedSize,
-            'size_raw' => $partSize
+            'size_raw' => $partSize,
         ]);
     }
 
@@ -288,7 +288,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $formatedSize = $this->math->formatSize($partSize);
         wp_send_json_success([
             'size'     => empty($formatedSize) ? '0.0 B' : $formatedSize,
-            'size_raw' => $partSize
+            'size_raw' => $partSize,
         ]);
     }
 
@@ -698,7 +698,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
         $pluginsDir    = rtrim($this->directory->getPluginsDirectory(), "/");
         $activePlugins = array_unique($this->getActivePlugins());
-        $excludeRules  = [$pluginsDir,];
+        $excludeRules  = [$pluginsDir];
 
         foreach ($activePlugins as $plugin) {
             $pluginDir = dirname($plugin);

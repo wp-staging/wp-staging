@@ -120,12 +120,17 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
             $this->jobDataDto->setRequirementFailReason($e->getMessage());
             // todo: Set the requirement fail reason
-            $this->analyticsBackupRestore->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+            if (!$this->jobDataDto->getIsSyncRequest()) {
+                $this->analyticsBackupRestore->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+            }
 
             return $this->generateResponse(false);
         }
 
-        $this->analyticsBackupRestore->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
+        if (!$this->jobDataDto->getIsSyncRequest()) {
+            $this->analyticsBackupRestore->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
+        }
+
         $this->logger->info(__('Backup Requirements check passed...', 'wp-staging'));
 
         return $this->generateResponse();

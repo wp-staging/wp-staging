@@ -66,10 +66,10 @@ class UpdateStagingOptionsTable extends DBCloningService
     private function updateOptionsTable($isMainSite = false)
     {
         $updateOrInsert = [
-            'wpstg_is_staging_site' => 'true',
+            'wpstg_is_staging_site'       => 'true',
             'wpstg_rmpermalinks_executed' => ' ',
-            'blog_public' => 0,
-            FirstRun::FIRST_RUN_KEY => 'true',
+            'blog_public'                 => 0,
+            FirstRun::FIRST_RUN_KEY       => 'true',
         ];
 
         $cloneOptions = [

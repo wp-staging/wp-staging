@@ -25,6 +25,11 @@ class SseEventCache
     /**
      * @var string
      */
+    const EVENT_TYPE_FATAL_ERROR = 'fatal_error';
+
+    /**
+     * @var string
+     */
     const EVENT_TYPE_COMPLETE = 'complete';
 
     /**

@@ -68,7 +68,7 @@ class LoginAfterRestore
     private function getListOfAdminEmails()
     {
         $adminEmails = get_users([
-            'role' => 'administrator',
+            'role'   => 'administrator',
             'fields' => [
                 'user_email',
             ],

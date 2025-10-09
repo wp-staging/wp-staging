@@ -93,7 +93,7 @@ class DarkMode
 
         update_option(self::OPTION_DEFAULT_OS_COLOR_MODE, $defaultOsColorMode);
         wp_send_json_success([
-            'defaultColorMode' => $this->defaultColorMode
+            'defaultColorMode' => $this->defaultColorMode,
         ]);
     }
 

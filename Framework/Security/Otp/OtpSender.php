@@ -79,7 +79,7 @@ class OtpSender
         if (!$this->canSendOtp()) {
             if ($resendRequest) {
                 wp_send_json_error([
-                    'message'   => esc_html__('Please wait %s seconds before requesting a new confirmation code...', 'wp-staging'),
+                    'message'     => esc_html__('Please wait %s seconds before requesting a new confirmation code...', 'wp-staging'),
                     'reRequestAt' => get_transient(self::TRANSIENT_OTP_SENT),
                 ]);
             } else {
@@ -119,7 +119,7 @@ class OtpSender
         debug_log('Succeeded to send OTP to user email: ' . $userEmail);
         if ($resendRequest) {
             wp_send_json_success([
-                'message'   => esc_html__('OTP sent successfully! Please wait %s seconds before requesting a new verification code...', 'wp-staging'),
+                'message'     => esc_html__('OTP sent successfully! Please wait %s seconds before requesting a new verification code...', 'wp-staging'),
                 'reRequestAt' => get_transient(self::TRANSIENT_OTP_SENT),
             ], 201);
         } else {

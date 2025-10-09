@@ -199,7 +199,7 @@ class DatabaseCloningService
 
         $coreTables = [
             $basePrefix . 'users',
-            $basePrefix . 'usermeta'
+            $basePrefix . 'usermeta',
         ];
 
         if (in_array($tableName, $coreTables)) {

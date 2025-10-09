@@ -47,7 +47,7 @@ class StagingSiteDataChecker
                             __('The directory is not writable due to open_basedir restriction. Follow our documentation %s to resolve this issue or %s', 'wp-staging'),
                             '<a href="https://wp-staging.com/docs/how-to-fix-open_basedir-restriction-error/" target="_blank">' . esc_html__('how to fix open_basedir restriction error', 'wp-staging') . '</a>',
                             '<a href="https://wp-staging.com/support/" target="_blank">' . esc_html__('open a ticket.', 'wp-staging') . '</a>'
-                        )
+                        ),
                     ]);
                 } else {
                     wp_send_json_error([
@@ -55,7 +55,7 @@ class StagingSiteDataChecker
                             __('The directory is not writable due to restricted permissions. Follow our documentation %s to resolve this issue or %s', 'wp-staging'),
                             '<a href="https://wp-staging.com/docs/folder-permission-error-folder-xy-is-not-write-and-or-readable/" target="_blank">' . esc_html__('how to fix folder permission error', 'wp-staging') . '</a>',
                             '<a href="https://wp-staging.com/support/" target="_blank">' . esc_html__('open a ticket.', 'wp-staging') . '</a>'
-                        )
+                        ),
                     ]);
                 }
             }
@@ -70,14 +70,14 @@ class StagingSiteDataChecker
 
         if (!defined('WPSTGPRO_VERSION')) {
             wp_send_json_error([
-                'message' => sprintf(__('Clone destination dir is not writable. Please make <code>%s</code> writable to proceed!', 'wp-staging'), esc_html($cloneDirRootPath))
+                'message' => sprintf(__('Clone destination dir is not writable. Please make <code>%s</code> writable to proceed!', 'wp-staging'), esc_html($cloneDirRootPath)),
             ]);
         }
 
         $cloneDir = $this->dirAdapter->getStagingSiteDirectoryInsideWpcontent();
         if ($cloneDir === false) {
             wp_send_json_error([
-                'message' => sprintf(__('Clone destination dir cannot be created. Please choose another path.', 'wp-staging'))
+                'message' => sprintf(__('Clone destination dir cannot be created. Please choose another path.', 'wp-staging')),
             ]);
         }
 
@@ -86,7 +86,7 @@ class StagingSiteDataChecker
         }
 
         wp_send_json_error([
-            'message' => sprintf(__('Clone destination dir is not writable. Please make <code>%s</code> or <code>%s</code> writable to proceed!', 'wp-staging'), esc_html($cloneDirRootPath), esc_html($cloneDir))
+            'message' => sprintf(__('Clone destination dir is not writable. Please make <code>%s</code> or <code>%s</code> writable to proceed!', 'wp-staging'), esc_html($cloneDirRootPath), esc_html($cloneDir)),
         ]);
     }
 }

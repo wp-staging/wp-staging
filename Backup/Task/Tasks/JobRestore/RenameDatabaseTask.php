@@ -18,6 +18,7 @@ use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
+use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Database\TablesRenamer;
 use WPStaging\Framework\Facades\Hooks;
@@ -201,52 +202,54 @@ class RenameDatabaseTask extends RestoreTask
         // Backups do not include staging sites, so we need to keep the original ones after restoring.
         // For version 2.x to 4.0.2
         $this->optionsToKeep[] = [
-            'name' => 'wpstg_existing_clones_beta',
-            'value' => get_option('wpstg_existing_clones_beta'),
+            'name'     => 'wpstg_existing_clones_beta',
+            'value'    => get_option('wpstg_existing_clones_beta'),
             'autoload' => in_array('wpstg_existing_clones_beta', $allOptions),
         ];
 
         // For version > 4.0.3
         $this->optionsToKeep[] = [
-            'name' => Sites::STAGING_SITES_OPTION,
-            'value' => get_option(Sites::STAGING_SITES_OPTION),
+            'name'     => Sites::STAGING_SITES_OPTION,
+            'value'    => get_option(Sites::STAGING_SITES_OPTION),
             'autoload' => in_array(Sites::STAGING_SITES_OPTION, $allOptions),
         ];
 
         // Keep the original WP STAGING settings intact upon restoring.
         $this->optionsToKeep[] = [
-            'name' => 'wpstg_settings',
-            'value' => get_option('wpstg_settings'),
+            'name'     => 'wpstg_settings',
+            'value'    => get_option('wpstg_settings'),
             'autoload' => in_array('wpstg_settings', $allOptions),
         ];
 
         // If this is a staging site, keep the staging site status after restore.
         $this->optionsToKeep[] = [
-            'name' => 'wpstg_is_staging_site',
-            'value' => get_option('wpstg_is_staging_site'),
+            'name'     => 'wpstg_is_staging_site',
+            'value'    => get_option('wpstg_is_staging_site'),
             'autoload' => in_array('wpstg_is_staging_site', $allOptions),
         ];
 
         // Preserve backup schedules
         $this->optionsToKeep[] = [
-            'name' => BackupScheduler::OPTION_BACKUP_SCHEDULES,
-            'value' => get_option(BackupScheduler::OPTION_BACKUP_SCHEDULES),
+            'name'     => BackupScheduler::OPTION_BACKUP_SCHEDULES,
+            'value'    => get_option(BackupScheduler::OPTION_BACKUP_SCHEDULES),
             'autoload' => in_array(BackupScheduler::OPTION_BACKUP_SCHEDULES, $allOptions),
         ];
 
         // Preserve existing blog_public value.
         $this->optionsToKeep[] = [
-            'name' => 'blog_public',
-            'value' => get_option('blog_public'),
+            'name'     => 'blog_public',
+            'value'    => get_option('blog_public'),
             'autoload' => in_array('blog_public', $allOptions),
         ];
 
         // Last Backup option
         $this->optionsToKeep[] = [
-            'name' => FinishBackupTask::OPTION_LAST_BACKUP,
-            'value' => get_option(FinishBackupTask::OPTION_LAST_BACKUP),
+            'name'     => FinishBackupTask::OPTION_LAST_BACKUP,
+            'value'    => get_option(FinishBackupTask::OPTION_LAST_BACKUP),
             'autoload' => in_array(FinishBackupTask::OPTION_LAST_BACKUP, $allOptions),
         ];
+
+        $this->preserveAnalyticsOptions();
 
         $this->optionsToKeep = Hooks::callInternalHook(self::HOOK_KEEP_OPTIONS, [$this->optionsToKeep], $this->optionsToKeep);
 
@@ -257,8 +260,8 @@ class RenameDatabaseTask extends RestoreTask
         if (!empty($analyticsEvents)) {
             foreach ($analyticsEvents as $option) {
                 $this->optionsToKeep[] = [
-                    'name' => $option->option_name,
-                    'value' => $option->option_value,
+                    'name'     => $option->option_name,
+                    'value'    => $option->option_value,
                     'autoload' => false,
                 ];
             }
@@ -308,7 +311,7 @@ class RenameDatabaseTask extends RestoreTask
             'isNetworkActivatedPlugin' => $isNetworkActivatedPlugin,
             'optionsToKeep'            => $this->optionsToKeep,
             'optionsToRemove'          => $this->optionsToRemove,
-            'activePlugins'            => $this->tablesRenamer->getActivePluginsToPreserve()
+            'activePlugins'            => $this->tablesRenamer->getActivePluginsToPreserve(),
         ];
 
         if (is_multisite() && !$this->isSubsiteRestore()) {
@@ -531,6 +534,26 @@ class RenameDatabaseTask extends RestoreTask
         foreach ($transientToPreserve as $transient) {
             $this->tablesRenamer->preserveTmpOption('_transient_' . $transient);
             $this->tablesRenamer->preserveTmpOption('_transient_timeout_' . $transient);
+        }
+    }
+
+    private function preserveAnalyticsOptions()
+    {
+        $allOptions = $this->getAutoloadedOptions();
+
+        $analyticsOptions = [
+            AnalyticsConsent::OPTION_NAME_ANALYTICS_HAS_CONSENT,
+            AnalyticsConsent::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED,
+            AnalyticsConsent::OPTION_NAME_ANALYTICS_MODAL_DISMISSED,
+            AnalyticsConsent::OPTION_NAME_ANALYTICS_REMIND_ME,
+        ];
+
+        foreach ($analyticsOptions as $optionName) {
+            $this->optionsToKeep[] = [
+                'name'     => $optionName,
+                'value'    => get_option($optionName),
+                'autoload' => in_array($optionName, $allOptions),
+            ];
         }
     }
 }

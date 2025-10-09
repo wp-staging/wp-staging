@@ -77,11 +77,11 @@ class CancelUpdate extends Job
     {
 
         wp_die(json_encode([
-            'job' => 'delete',
-            'status' => true,
+            'job'     => 'delete',
+            'status'  => true,
             'message' => $message,
-            'error' => false,
-            'delete' => 'finished'
+            'error'   => false,
+            'delete'  => 'finished',
         ]));
     }
 

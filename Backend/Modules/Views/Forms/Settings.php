@@ -56,10 +56,10 @@ class Settings
         $element = new Numerical(
             "wpstg_settings[queryLimit]",
             [
-            "class" => "medium-text",
-            "step" => 1,
-            "max" => 999999,
-            "min" => 0
+                "class" => "medium-text",
+                "step"  => 1,
+                "max"   => 999999,
+                "min"   => 0,
             ]
         );
 
@@ -72,10 +72,10 @@ class Settings
         $element = new Numerical(
             "wpstg_settings[querySRLimit]",
             [
-            "class" => "medium-text",
-            "step" => 1,
-            "max" => 999999,
-            "min" => 0
+                "class" => "medium-text",
+                "step"  => 1,
+                "max"   => 999999,
+                "min"   => 0,
             ]
         );
 
@@ -91,10 +91,10 @@ class Settings
             "wpstg_settings[fileLimit]",
             $options,
             [
-            "class" => "medium-text",
-            "step" => 1,
-            "max" => 999999,
-            "min" => 0
+                "class" => "medium-text",
+                "step"  => 1,
+                "max"   => 999999,
+                "min"   => 0,
             ]
         );
 
@@ -111,10 +111,10 @@ class Settings
         $element = new Numerical(
             "wpstg_settings[maxFileSize]",
             [
-            "class" => "medium-text",
-            "step" => 1,
-            "max" => 999999,
-            "min" => 0
+                "class" => "medium-text",
+                "step"  => 1,
+                "max"   => 999999,
+                "min"   => 0,
             ]
         );
 
@@ -128,10 +128,10 @@ class Settings
         $element = new Numerical(
             "wpstg_settings[batchSize]",
             [
-            "class" => "medium-text",
-            "step" => 1,
-            "max" => 999999,
-            "min" => 0
+                "class" => "medium-text",
+                "step"  => 1,
+                "max"   => 999999,
+                "min"   => 0,
             ]
         );
 
@@ -145,9 +145,9 @@ class Settings
         $element = new Select(
             "wpstg_settings[cpuLoad]",
             [
-            "high" => __("High (fast)", "wp-staging"),
-            "medium" => __("Medium (average)", "wp-staging"),
-            "low" => __("Low (slow)", "wp-staging")
+                "high"   => __("High (fast)", "wp-staging"),
+                "medium" => __("Medium (average)", "wp-staging"),
+                "low"    => __("Low (slow)", "wp-staging"),
             ]
         );
 
@@ -163,10 +163,10 @@ class Settings
         $element = new Numerical(
             "wpstg_settings[delayRequests]",
             [
-            "class" => "medium-text",
-            "step" => 1,
-            "max" => 5,
-            "min" => 0
+                "class" => "medium-text",
+                "step"  => 1,
+                "max"   => 5,
+                "min"   => 0,
             ]
         );
 

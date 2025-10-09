@@ -66,7 +66,7 @@ class Setup extends AbstractTemplateComponent
                 'stagingSetup'     => $this->stagingSetup,
                 'stagingSiteDto'   => $this->stagingSetup->getStagingSiteDto(),
                 'directoryScanner' => $this->directoryScanner,
-                'tableScanner'     => $this->tableScanner
+                'tableScanner'     => $this->tableScanner,
             ]
         );
 

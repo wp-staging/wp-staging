@@ -292,9 +292,9 @@ class Otp
 
         $otps = get_option(static::OPTION_NAME, []);
         $otps[$userID][$sessionId] = [
-            'otp' => $this->dataEncryption->encrypt($otp),
+            'otp'        => $this->dataEncryption->encrypt($otp),
             'created_at' => time(),
-            'expiry_at' => time() + static::OTP_EXPIRATION,
+            'expiry_at'  => time() + static::OTP_EXPIRATION,
         ];
 
         update_option(static::OPTION_NAME, $otps);

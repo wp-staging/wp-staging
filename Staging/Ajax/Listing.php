@@ -68,7 +68,7 @@ class Listing extends AbstractTemplateComponent
                 'stagingSites' => $stagingSites,
                 'license'      => get_option('wpstg_license_status'),
                 'iconPath'     => $this->assets->getAssetsUrl('svg/cloud.svg'),
-                'error'       => $error,
+                'error'        => $error,
                 // TODO: check if required?
                 'db'           => WPStaging::make('wpdb'),
             ]

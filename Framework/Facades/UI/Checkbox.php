@@ -2,7 +2,7 @@
 
 namespace WPStaging\Framework\Facades\UI;
 
-use WPStaging\Framework\Component\UI\CheckboxWrapper;
+use WPStaging\Component\Checkbox as CheckboxComponent;
 use WPStaging\Framework\Facades\Facade;
 
 /**
@@ -15,6 +15,6 @@ class Checkbox extends Facade
      */
     protected static function getFacadeAccessor(): string
     {
-        return CheckboxWrapper::class;
+        return CheckboxComponent::class;
     }
 }

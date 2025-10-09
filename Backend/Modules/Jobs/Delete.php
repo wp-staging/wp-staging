@@ -215,7 +215,7 @@ class Delete extends Job
             foreach ($tables as $table) {
                 $this->tables[] = [
                     "name" => $table->Name,
-                    "size" => $this->utilsMath->formatSize($table->Data_length + $table->Index_length)
+                    "size" => $this->utilsMath->formatSize($table->Data_length + $table->Index_length),
                 ];
             }
         }
@@ -326,7 +326,7 @@ class Delete extends Job
         $this->job = (object)[
             "current"               => "tables",
             "nextDirectoryToDelete" => $this->clone->path,
-            "name"                  => $this->clone->name
+            "name"                  => $this->clone->name,
         ];
 
         $this->cache->save($this->job);

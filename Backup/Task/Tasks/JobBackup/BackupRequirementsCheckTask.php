@@ -87,8 +87,13 @@ class BackupRequirementsCheckTask extends BackupTask
         }
 
         try {
-            $this->logger->info('#################### Start Backup Job ####################');
-            $this->logger->writeLogHeader();
+            if ($this->jobDataDto->getIsSyncRequest()) {
+                $this->logger->info('Started preparing data for sync');
+            } else {
+                $this->logger->info('#################### Start Backup Job ####################');
+            }
+
+            $this->logger->writeLogHeader($this->jobDataDto->getIsSyncRequest() ? ' - Source Site: ' . home_url() : '');
             $this->logger->writeInstalledPluginsAndThemes();
             $this->cannotBackupMultisite();
             $this->shouldWarnIfRunning32Bits();
@@ -266,7 +271,7 @@ class BackupRequirementsCheckTask extends BackupTask
     {
         $smartExclusion = [
             'Add Exclusions' => $this->jobDataDto->getIsSmartExclusion() ? 'True' : 'False',
-            ];
+        ];
 
         if ($this->jobDataDto->getIsSmartExclusion()) {
             $smartExclusion = [
