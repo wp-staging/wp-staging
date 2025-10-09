@@ -113,12 +113,12 @@ class Parts extends AbstractTemplateComponent
 
         return [
             'partType'     => $partType,
-            'partIndex'     => $partIndex,
+            'partIndex'    => $partIndex,
             'description'  => $this->getPartDescription($partType),
             'icon'         => $this->getIcon($partType),
             'name'         => $partName,
             'fileSize'     => size_format(filesize($fullPath), 2),
-            'downloadLink' => $this->urls->getBackupUrl() . $fileName
+            'downloadLink' => $this->urls->getBackupUrl() . $fileName,
         ];
     }
 

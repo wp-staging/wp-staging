@@ -37,7 +37,7 @@ class ReadBackupMetadata
     {
         if (empty($data) && array_key_exists('wpstg', $_POST)) {
             $data = Sanitize::sanitizeArray($_POST['wpstg'], [
-                'file' => 'path'
+                'file' => 'path',
             ]);
         }
 

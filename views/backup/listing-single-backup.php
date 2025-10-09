@@ -4,6 +4,7 @@ use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\UI\Alert;
 use WPStaging\Framework\Utils\Urls;
 
 /**
@@ -275,24 +276,24 @@ $wpstgRestorePageUrl = add_query_arg([
                     $extraMessage
                 );
 
-                $this->getAssets()->renderAlertMessage($title, $description);
+                Alert::render($title, $description);
             }
 
             if (!$isMultipartBackup && !$isValidFileIndex && !$requires64Bit) {
                 $title = __('Corrupted Backup', 'wp-staging');
-                $this->getAssets()->renderAlertMessage($title, $indexFileError);
+                Alert::render($title, $indexFileError);
             }
 
             if ($isCorrupt) {
                 $title       = __('Corrupted Backup', 'wp-staging');
                 $description = __('This backup file is corrupt. Please create a new backup!', 'wp-staging');
-                $this->getAssets()->renderAlertMessage($title, $description);
+                Alert::render($title, $description);
             }
 
             if ($isUnsupported && !$isCorrupt) {
                 $title       = __('Backup Restore Requires Upgrade', 'wp-staging');
                 $description = __('This backup was generated on a beta version of WP STAGING and cannot be restored with the current version.', 'wp-staging');
-                $this->getAssets()->renderAlertMessage($title, $description);
+                Alert::render($title, $description);
             }
 
             if ($backup->isZlibCompressed && !$compressor->supportsCompression()) {
@@ -303,13 +304,13 @@ $wpstgRestorePageUrl = add_query_arg([
                 );
                 $buttonText  = __('Learn how to fix it', 'wp-staging');
                 $buttonUrl   = 'https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/';
-                $this->getAssets()->renderAlertMessage($title, $description, $buttonText, $buttonUrl);
+                Alert::render($title, $description, $buttonText, $buttonUrl);
             } elseif ($backup->isZlibCompressed && $compressor->supportsCompression() && !$compressor->canUseCompression()) {
                 $title       = __('Upgrade required', 'wp-staging');
                 $description = __('This backup is compressed, you need WP Staging Pro to restore it.', 'wp-staging');
                 $buttonText  = __('Get WP Staging Pro', 'wp-staging');
                 $buttonUrl   = 'https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging';
-                $this->getAssets()->renderAlertMessage($title, $description, $buttonText, $buttonUrl);
+                Alert::render($title, $description, $buttonText, $buttonUrl);
             }
             ?>
         </ul>

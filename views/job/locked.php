@@ -57,7 +57,7 @@ if ($isLocked) {
     </div>
     <?php if ($isDataAvailable) : ?>
     <script>
-        WPStaging.initBackgroundLogger(<?php echo esc_js($jobData['start']); ?>, '<?php echo esc_js($jobData['type']); ?>', '<?php echo esc_js($jobData['jobId']); ?>');
+        WPStaging.initBackgroundLogger(<?php echo esc_js($jobData['startedAt']); ?>, '<?php echo esc_js($jobData['type']); ?>', '<?php echo esc_js($jobData['jobId']); ?>');
     </script>
     <?php endif; ?>
     <?php

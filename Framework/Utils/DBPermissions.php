@@ -152,14 +152,23 @@ class DBPermissions
 
         // Database-specific grants - handle various formats:
         // `dbname`.*, "dbname".*, dbname.*, ON `dbname`.*, etc.
+        // Also handle escaped database names like `web30\_db4`.*
+        $escapedDbName = str_replace('_', '\\_', $dbName);
+
         $patterns = [
-            '/\bON\s+\*\.\*/i',                                  // Global: ON *.*
-            '/\bON\s+`' . preg_quote($dbName, '/') . '`\.\*/i',  // Quoted: ON `dbname`.*
-            '/\bON\s+"' . preg_quote($dbName, '/') . '"\.\*/i',  // Double-quoted: ON "dbname".*
-            '/\bON\s+' . preg_quote($dbName, '/') . '\.\*/i',    // Unquoted: ON dbname.*
-            '/`' . preg_quote($dbName, '/') . '`\.\*/i',         // Direct reference: `dbname`.*
-            '/"' . preg_quote($dbName, '/') . '"\.\*/i',         // Direct double quoted: "dbname".*
-            '/\b' . preg_quote($dbName, '/') . '\.\*/i',         // Direct unquoted: dbname.*
+            '/\bON\s+\*\.\*/i', // Global: ON *.*
+            '/\bON\s+`' . preg_quote($dbName, '/') . '`\.\*/i', // Quoted: ON `dbname`.*
+            '/\bON\s+`' . preg_quote($escapedDbName, '/') . '`\.\*/i', // Quoted with escaped underscores: ON `db\_name`.*
+            '/\bON\s+"' . preg_quote($dbName, '/') . '"\.\*/i', // Double-quoted: ON "dbname".*
+            '/\bON\s+"' . preg_quote($escapedDbName, '/') . '"\.\*/i', // Double-quoted with escaped underscores: ON "db\_name".*
+            '/\bON\s+' . preg_quote($dbName, '/') . '\.\*/i', // Unquoted: ON dbname.*
+            '/\bON\s+' . preg_quote($escapedDbName, '/') . '\.\*/i', // Unquoted with escaped underscores: ON db\_name.*
+            '/`' . preg_quote($dbName, '/') . '`\.\*/i', // Direct reference: `dbname`.*
+            '/`' . preg_quote($escapedDbName, '/') . '`\.\*/i', // Direct reference with escaped underscores: `db\_name`.*
+            '/"' . preg_quote($dbName, '/') . '"\.\*/i', // Direct double quoted: "dbname".*
+            '/"' . preg_quote($escapedDbName, '/') . '"\.\*/i', // Direct double quoted with escaped underscores: "db\_name".*
+            '/\b' . preg_quote($dbName, '/') . '\.\*/i', // Direct unquoted: dbname.*
+            '/\b' . preg_quote($escapedDbName, '/') . '\.\*/i', // Direct unquoted with escaped underscores: db\_name.*
         ];
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $grantString)) {

@@ -195,7 +195,7 @@ class RestorePluginsTask extends FileRestoreTask
                     [
                         WPSTG_PLUGIN_SLUG, // Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
                     ],
-                ],  // old args that used to be passed to apply_filters().
+                ], // old args that used to be passed to apply_filters().
                 '5.9.1', // version from which it is deprecated.
                 self::FILTER_EXCLUDE_FILES_DURING_RESTORE, // new filter to use
                 sprintf('This filter will be removed in the upcoming version, use %s filter instead.', self::FILTER_EXCLUDE_FILES_DURING_RESTORE)

@@ -428,7 +428,7 @@ class SystemInfo
                 "sslverify"  => false,
                 "timeout"    => 60,
                 "user-agent" => "WPSTG/" . WPStaging::getVersion(),
-                "body"       => ["cmd" => "_notify-validate"]
+                "body"       => ["cmd" => "_notify-validate"],
             ]
         );
 
@@ -711,7 +711,7 @@ class SystemInfo
             'CURL_VERSION_IPV6',
             'CURL_VERSION_KERBEROS4',
             'CURL_VERSION_SSL',
-            'CURL_VERSION_LIBZ'
+            'CURL_VERSION_LIBZ',
         ];
 
         $output = $this->header("PHP Extensions");

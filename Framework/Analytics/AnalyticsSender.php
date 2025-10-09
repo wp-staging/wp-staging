@@ -38,7 +38,7 @@ class AnalyticsSender
         }
 
         // Interval to wait before sending events.
-        $interval = 15 * MINUTE_IN_SECONDS;
+        $interval = ($this->isDev() ? 1 : 15) * MINUTE_IN_SECONDS;
 
         // Early bail: Sent not so long ago.
         if (isset($settings['lastAnalyticsSend']) && time() - $settings['lastAnalyticsSend'] - $interval < 0) {
@@ -115,29 +115,27 @@ class AnalyticsSender
         }
 
         $body = wp_json_encode([
-            'events' => $events,
+            'events'    => $events,
             'site_hash' => $this->getSiteHash(),
         ]);
 
         $url = $this->getApiUrl('events');
 
         // Early bail: Do not dispatch events when in dev mode, unless allowed.
-        if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) {
-            if (!defined('WPSTG_DEV_SEND_ANALYTICS') || defined('WPSTG_DEV_SEND_ANALYTICS') && !WPSTG_DEV_SEND_ANALYTICS) {
-                return;
-            }
+        if ($this->isDev() && !$this->canDevSendAnalytics()) {
+            return;
         }
 
         $response = wp_remote_post($url, [
-            'method' => 'POST',
-            'headers' => ['Content-Type' => 'application/json; charset=utf-8'],
-            'body' => $body,
+            'method'      => 'POST',
+            'headers'     => ['Content-Type' => 'application/json; charset=utf-8'],
+            'body'        => $body,
             'data_format' => 'body',
-            'timeout' => 10,
+            'timeout'     => 10,
             'redirection' => 5,
             'httpversion' => '1.0',
-            'blocking' => true,
-            'sslverify' => false,
+            'blocking'    => true,
+            'sslverify'   => false,
         ]);
 
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
@@ -169,10 +167,27 @@ class AnalyticsSender
     protected function setStaleEvents(&$events)
     {
         foreach ($events as &$event) {
+            // For newer event dtos i.e. remote sync
+            if (!$event->ready_to_send && isset($event->start_at) && $event->start_at < time() - 1 * DAY_IN_SECONDS) {
+                $event->ready_to_send = true;
+                $event->stale_at = time();
+                continue;
+            }
+
             if (!$event->ready_to_send && $event->start_time < time() - 1 * DAY_IN_SECONDS) {
                 $event->ready_to_send = true;
                 $event->is_stale = true;
             }
         }
+    }
+
+    protected function isDev(): bool
+    {
+        return defined('WPSTG_IS_DEV') && WPSTG_IS_DEV;
+    }
+
+    protected function canDevSendAnalytics(): bool
+    {
+        return defined('WPSTG_DEV_SEND_ANALYTICS') && WPSTG_DEV_SEND_ANALYTICS;
     }
 }

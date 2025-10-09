@@ -486,8 +486,8 @@ abstract class AbstractJob implements ShutdownableInterface
         $response->setIsRunning(false);
         $response->setJobStatus('JOB_CANCEL');
         $response->addMessage([
-            'type' => 'critical',
-            'date' => $this->getFormattedDate(),
+            'type'    => 'critical',
+            'date'    => $this->getFormattedDate(),
             'message' => esc_html__('Job is cancelled', 'wp-staging'),
         ]);
 
@@ -500,8 +500,8 @@ abstract class AbstractJob implements ShutdownableInterface
         $response->setIsRunning(false);
         $response->setJobStatus('JOB_FAIL');
         $response->addMessage([
-            'type' => 'critical',
-            'date' => $this->getFormattedDate(),
+            'type'    => 'critical',
+            'date'    => $this->getFormattedDate(),
             'message' => esc_html($message, 'wp-staging'),
         ]);
 
@@ -514,8 +514,8 @@ abstract class AbstractJob implements ShutdownableInterface
         $response->setIsRunning(true);
         $response->setJobStatus('JOB_RETRY');
         $response->addMessage([
-            'type' => 'warning',
-            'date' => $this->getFormattedDate(),
+            'type'    => 'warning',
+            'date'    => $this->getFormattedDate(),
             'message' => esc_html($message, 'wp-staging'),
         ]);
 

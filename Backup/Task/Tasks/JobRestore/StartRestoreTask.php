@@ -4,7 +4,7 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use RuntimeException;
 use WPStaging\Backend\Modules\SystemInfo;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Facades\Hooks;
@@ -20,14 +20,14 @@ class StartRestoreTask extends RestoreTask
      * @var array<string,string>
      */
     const BOOLEAN_FILTERS = [
-        CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA => 'Keep Existing Media',
-        RestorePluginsTask::FILTER_KEEP_EXISTING_PLUGINS => 'Keep Existing Plugins',
-        RestorePluginsTask::FILTER_REPLACE_EXISTING_PLUGINS => 'Replace Existing Plugins',
-        RestoreThemesTask::FILTER_KEEP_EXISTING_THEMES => 'Keep Existing Themes',
-        RestoreThemesTask::FILTER_REPLACE_EXISTING_THEMES => 'Replace Existing Themes',
-        RestoreMuPluginsTask::FILTER_KEEP_EXISTING_MUPLUGINS => 'Keep Existing Mu-Plugins',
-        RestoreMuPluginsTask::FILTER_REPLACE_EXISTING_MUPLUGINS => 'Replace Existing Mu-Plugins',
-        RestoreLanguageFilesTask::FILTER_REPLACE_EXISTING_LANGUAGES => 'Replace Existing Languages',
+        CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA                 => 'Keep Existing Media',
+        RestorePluginsTask::FILTER_KEEP_EXISTING_PLUGINS                   => 'Keep Existing Plugins',
+        RestorePluginsTask::FILTER_REPLACE_EXISTING_PLUGINS                => 'Replace Existing Plugins',
+        RestoreThemesTask::FILTER_KEEP_EXISTING_THEMES                     => 'Keep Existing Themes',
+        RestoreThemesTask::FILTER_REPLACE_EXISTING_THEMES                  => 'Replace Existing Themes',
+        RestoreMuPluginsTask::FILTER_KEEP_EXISTING_MUPLUGINS               => 'Keep Existing Mu-Plugins',
+        RestoreMuPluginsTask::FILTER_REPLACE_EXISTING_MUPLUGINS            => 'Replace Existing Mu-Plugins',
+        RestoreLanguageFilesTask::FILTER_REPLACE_EXISTING_LANGUAGES        => 'Replace Existing Languages',
         RestoreOtherFilesInWpContentTask::FILTER_KEEP_EXISTING_OTHER_FILES => 'Keep Existing Other Files',
     ];
 
@@ -36,7 +36,7 @@ class StartRestoreTask extends RestoreTask
      * @var array<string,string>
      */
     const STRING_FILTERS = [
-        PrepareRestore::CUSTOM_TMP_PREFIX_FILTER => 'Temporary Database Prefix',
+        DatabaseImporter::CUSTOM_TMP_PREFIX_FILTER => 'Temporary Database Prefix',
     ];
 
     /**
@@ -68,8 +68,13 @@ class StartRestoreTask extends RestoreTask
         }
 
         try {
-            $this->logger->info('#################### Start Restore Job ####################');
-            $this->logger->writeLogHeader();
+            if ($this->jobDataDto->getIsSyncRequest()) {
+                $this->logger->info('Restoring from Pull Request');
+            } else {
+                $this->logger->info('#################### Start Restore Job ####################');
+            }
+
+            $this->logger->writeLogHeader($this->jobDataDto->getIsSyncRequest() ? ' - Destination Site: ' . home_url() : '');
             $this->logger->writeInstalledPluginsAndThemes();
             $this->logger->add(sprintf('Backup Format: %s', $this->jobDataDto->getBackupMetadata()->getIsBackupFormatV1() ? 'v1' : 'v2'), Logger::TYPE_INFO);
             $this->logger->info('Is Same Site Restore: ' . ($this->jobDataDto->getIsSameSiteBackupRestore() ? 'Yes' : 'No'));

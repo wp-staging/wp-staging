@@ -64,8 +64,8 @@ class MemoryExhaust extends AbstractTemplateComponent
         $exhaustLockFile = WPSTG_UPLOADS_DIR . $wpstgRequest . ErrorHandler::ERROR_FILE_EXTENSION;
         if (!file_exists($exhaustLockFile)) {
             wp_send_json([
-                'status'  => true,
-                'error'   => false
+                'status' => true,
+                'error'  => false,
             ]);
         };
 
@@ -74,9 +74,9 @@ class MemoryExhaust extends AbstractTemplateComponent
         $data = json_decode($json, true);
 
         $result = wp_send_json([
-            'status' => true,
-            'error' => true,
-            'data' => $data,
+            'status'  => true,
+            'error'   => true,
+            'data'    => $data,
             'message' => sprintf(
                 esc_html__('Memory exhaust issue is detected during the process. Error occurred when allocating more %s on top of current usage of %s. Peak memory usage: %s, Allowed memory limit: %s, PHP memory limit: %s, WP memory limit: %s', 'wp-staging'),
                 size_format($data['exhaustedMemorySize']),
@@ -85,7 +85,7 @@ class MemoryExhaust extends AbstractTemplateComponent
                 size_format($data['allowedMemoryLimit']),
                 $data['phpMemoryLimit'],
                 $data['wpMemoryLimit']
-            )
+            ),
         ]);
 
         wp_send_json($result);

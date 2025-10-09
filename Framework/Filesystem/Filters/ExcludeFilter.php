@@ -81,8 +81,8 @@ class ExcludeFilter
         $bytes = (int)$size;
         return $this->templateEngine->render("exclude-filters/file-size-exclude-filter.php", [
             "comparison" => trim($comparison),
-            "bytes" => trim($bytes),
-            "size" => trim($size)
+            "bytes"      => trim($bytes),
+            "size"       => trim($size),
         ]);
     }
 

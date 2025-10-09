@@ -151,7 +151,7 @@ class DirectoryScanner
             'stagingSetup'   => $this->stagingSetup,
             'stagingSiteDto' => $this->stagingSetup->getStagingSiteDto(),
             'directories'    => $directories,
-            'excludeFilters' => new ExcludeFilter()
+            'excludeFilters' => new ExcludeFilter(),
         ]);
 
         echo $result; // phpcs:ignore
@@ -367,7 +367,7 @@ class DirectoryScanner
             'basePath'          => $directory->getBasePath(),
             'forceDefault'      => $preserveSelection,
             'dirPath'           => $path,
-            'isLink'            => $isLink
+            'isLink'            => $isLink,
         ]);
     }
 
@@ -383,7 +383,7 @@ class DirectoryScanner
         $coreDirectories = [
             'wp-admin',
             'wp-content',
-            'wp-includes'
+            'wp-includes',
         ];
 
         if (in_array($dirname, $coreDirectories)) {
@@ -395,7 +395,7 @@ class DirectoryScanner
             $this->directory->getPluginsDirectory(),
             $this->directory->getActiveThemeParentDirectory(),
             $this->directory->getUploadsDirectory(),
-            $this->directory->getMuPluginsDirectory()
+            $this->directory->getMuPluginsDirectory(),
         ];
 
         foreach ($wpDirectories as $wpDirectory) {

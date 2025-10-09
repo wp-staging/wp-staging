@@ -20,6 +20,7 @@ class DatabaseImporter
     const THRESHOLD_EXCEPTION_CODE = 2001;
     const FINISHED_QUEUE_EXCEPTION_CODE = 2002;
     const RETRY_EXCEPTION_CODE = 2003;
+    const CUSTOM_TMP_PREFIX_FILTER = 'wpstg.restore.tmp_database_prefix';
     const FILE_FORMAT = 'sql';
     const TMP_DATABASE_PREFIX = 'wpstgtmp_';
     const TMP_DATABASE_PREFIX_TO_DROP = 'wpstgbak_';
@@ -635,7 +636,7 @@ class DatabaseImporter
                 return;
             }
             $message = array_merge([
-                'method'  => '', 'message' => $message
+                'method'  => '', 'message' => $message,
             ], $data);
         }
         $callable($message);

@@ -59,7 +59,7 @@ class Finish extends Job
             "prefix"        => $this->options->prefix,
             "last_msg"      => $this->logger->getLastLogMsg(),
             "job"           => $this->options->currentJob,
-            "percentage"    => 100
+            "percentage"    => 100,
         ];
 
         switch ($this->options->mainJob) {

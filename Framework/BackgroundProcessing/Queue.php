@@ -1188,7 +1188,7 @@ class Queue
             self::STATUS_READY,
             self::STATUS_COMPLETED,
             self::STATUS_FAILED,
-            self::STATUS_CANCELED
+            self::STATUS_CANCELED,
         ]);
         $cleanupQuery = "DELETE FROM {$tableName} 
             WHERE updated_at < '{$cleanupBreakpoint}'
@@ -1362,7 +1362,7 @@ class Queue
                 'class' => get_class($this),
                 'query' => $query,
                 'error' => $this->database->error(),
-                'jobId' => $jobId
+                'jobId' => $jobId,
             ]));
 
             // There has been an error fetching the results, bail.

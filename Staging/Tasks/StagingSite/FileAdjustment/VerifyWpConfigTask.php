@@ -137,7 +137,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             'DB_NAME',
             'DB_USER',
             'DB_PASSWORD',
-            'DB_HOST'
+            'DB_HOST',
         ];
         foreach ($constants as $constant) {
             preg_match($this->getDefineRegex($constant), $content, $matches);

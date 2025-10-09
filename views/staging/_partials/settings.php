@@ -15,7 +15,7 @@ use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\UI\Checkbox;
 
 $attributes = [
-    'isDisabled' => $disabled
+    'isDisabled' => $disabled,
 ];
 
 if (!empty($classes)) {

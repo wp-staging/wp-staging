@@ -9,39 +9,39 @@
 
 $reasons = [
     1 => [
-        'id'    => 'wpstg_disable_reason_temporary',
-        'value' => 'temporary',
-        'label' => esc_html__('Only temporary', 'wp-staging'),
-        'input' => false,
-        'placeholder' => ''
+        'id'          => 'wpstg_disable_reason_temporary',
+        'value'       => 'temporary',
+        'label'       => esc_html__('Only temporary', 'wp-staging'),
+        'input'       => false,
+        'placeholder' => '',
     ],
     2 => [
-        'id'    => 'wpstg_disable_reason_missing',
-        'value' => 'missing_feature',
-        'label' => esc_html__('Missing a feature', 'wp-staging'),
-        'input' => 'input',
-        'placeholder' => esc_html__('Please describe the feature', 'wp-staging')
+        'id'          => 'wpstg_disable_reason_missing',
+        'value'       => 'missing_feature',
+        'label'       => esc_html__('Missing a feature', 'wp-staging'),
+        'input'       => 'input',
+        'placeholder' => esc_html__('Please describe the feature', 'wp-staging'),
     ],
     3 => [
-        'id'    => 'wpstg_disable_reason_technical',
-        'value' => 'technical_issue',
-        'label' => esc_html__('Technical Issue', 'wp-staging'),
-        'input' => 'textarea',
-        'placeholder' => esc_html__('Can we help? Please describe your problem', 'wp-staging')
+        'id'          => 'wpstg_disable_reason_technical',
+        'value'       => 'technical_issue',
+        'label'       => esc_html__('Technical Issue', 'wp-staging'),
+        'input'       => 'textarea',
+        'placeholder' => esc_html__('Can we help? Please describe your problem', 'wp-staging'),
     ],
     4 => [
-        'id'    => 'wpstg_disable_reason_plugin',
-        'value' => 'other_plugin',
-        'label' => esc_html__('Switched to another plugin/staging solution', 'wp-staging'),
-        'input' => 'input',
-        'placeholder' => esc_html__('Name of the plugin', 'wp-staging')
+        'id'          => 'wpstg_disable_reason_plugin',
+        'value'       => 'other_plugin',
+        'label'       => esc_html__('Switched to another plugin/staging solution', 'wp-staging'),
+        'input'       => 'input',
+        'placeholder' => esc_html__('Name of the plugin', 'wp-staging'),
     ],
     5 => [
-        'id'    => 'wpstg_disable_reason_other',
-        'value' => 'other_reason',
-        'label' => esc_html__('Other reason', 'wp-staging'),
-        'input' => 'textarea',
-        'placeholder' => esc_html__('Please specify, if possible', 'wp-staging')
+        'id'          => 'wpstg_disable_reason_other',
+        'value'       => 'other_reason',
+        'label'       => esc_html__('Other reason', 'wp-staging'),
+        'input'       => 'textarea',
+        'placeholder' => esc_html__('Please specify, if possible', 'wp-staging'),
     ],
 ];
 

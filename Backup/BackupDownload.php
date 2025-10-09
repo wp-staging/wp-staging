@@ -17,7 +17,7 @@ class BackupDownload
             return;
         }
 
-        $extension = ".wpstg";  // Extension of the file created when download starts.
+        $extension = ".wpstg"; // Extension of the file created when download starts.
         if ($dh = opendir($dir)) {
             while (($file = readdir($dh)) !== false) {
                 if (strpos($file, $extension) !== false) {

@@ -246,7 +246,7 @@ trait StagingOperationDtoTrait
     {
         $this->stagingTables[] = [
             'source'      => $srcTable,
-            'destination' => $destTable
+            'destination' => $destTable,
         ];
     }
 

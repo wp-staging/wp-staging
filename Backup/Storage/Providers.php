@@ -30,7 +30,7 @@ class Providers
         'one-drive'           => 'one-drive',
         'sftp'                => 'sftp',
         'digitalocean-spaces' => 'digitalocean-spaces',
-        'wasabi'              => 'wasabi-s3',
+        'wasabi-s3'           => 'wasabi-s3',
         'generic-s3'          => 'generic-s3',
         'pcloud'              => 'pcloud',
     ];
@@ -195,7 +195,7 @@ class Providers
     public function getStorageByIdentifier(string $identifier)
     {
         if (!isset(self::STORAGE_IDS_BY_IDENTIFIERS[$identifier])) {
-            debug_log('Failed to find storage id by identifier.');
+            debug_log("Failed to find storage id by identifier: {$identifier}");
             return false;
         }
 

@@ -61,7 +61,7 @@ class JobRestore extends AbstractJob
      */
     public function onWpShutdown()
     {
-        if ($this->jobDataDto->isFinished()) {
+        if ($this->jobDataDto->isFinished() && !$this->jobDataDto->getIsSyncRequest()) {
             WPStaging::make(AnalyticsBackupRestore::class)->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
         }
 
@@ -96,8 +96,6 @@ class JobRestore extends AbstractJob
         $this->tasks = [];
 
         $this->setupBackupMetadata();
-
-        $this->setupDownloadTasks();
 
         $this->tasks[] = StartRestoreTask::class;
         $this->tasks[] = CleanupTmpFilesTask::class;
@@ -148,14 +146,6 @@ class JobRestore extends AbstractJob
         $this->tasks[] = CleanupTmpFilesTask::class;
 
         $this->addFinishTask();
-    }
-
-    /**
-     * @return void
-     */
-    protected function setupDownloadTasks()
-    {
-        // Used in pro
     }
 
     /**

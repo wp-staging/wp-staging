@@ -139,7 +139,7 @@ class Edit extends AbstractTemplateComponent
             $backupParts[] = [
                 'metadata' => $partMetadata,
                 'file'     => $partFile,
-                'size'     => $partSize
+                'size'     => $partSize,
             ];
         }
 

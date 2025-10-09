@@ -173,13 +173,13 @@ class FinalizeBackupTask extends BackupTask
             $this->stepsDto->setTotal(1);
             $this->jobDataDto->setMultipartFilesInfo([
                 [
-                    'category'    => '',
-                    'index'       => null,
-                    'filePath'    => null,
-                    'destination' => null,
-                    'status'      => 'Pending',
-                    'sizeBeforeAddingIndex' => 0
-                ]
+                    'category'              => '',
+                    'index'                 => null,
+                    'filePath'              => null,
+                    'destination'           => null,
+                    'status'                => 'Pending',
+                    'sizeBeforeAddingIndex' => 0,
+                ],
             ]);
 
             return;

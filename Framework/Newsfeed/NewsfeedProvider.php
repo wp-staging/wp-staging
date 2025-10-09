@@ -71,7 +71,7 @@ class NewsfeedProvider
                 'show'   => true,
                 'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-de.txt',
                 'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-en.txt',
-            ]
+            ],
         ];
     }
 }

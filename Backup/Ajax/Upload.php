@@ -63,7 +63,7 @@ class Upload extends AbstractTemplateComponent
     {
         if (!$this->canRenderAjax()) {
             wp_send_json_error([
-                'message' => esc_html__('Invalid Request!', 'wp-staging')
+                'message' => esc_html__('Invalid Request!', 'wp-staging'),
             ], 401);
         }
 

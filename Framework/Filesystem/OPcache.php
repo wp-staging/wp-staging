@@ -130,7 +130,7 @@ class OPcache
             'wp-settings.php',
             'wp-signup.php',
             'wp-trackback.php',
-            'xmlrpc.php'
+            'xmlrpc.php',
         ];
 
         foreach ($wpCoreFiles as $file) {

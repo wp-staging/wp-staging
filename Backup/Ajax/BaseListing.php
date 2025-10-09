@@ -52,8 +52,8 @@ abstract class BaseListing extends AbstractTemplateComponent
     protected function getCommonRenderData(): array
     {
         return [
-            'directory' => $this->directory,
-            'urlAssets' => trailingslashit(WPSTG_PLUGIN_URL) . 'assets/',
+            'directory'   => $this->directory,
+            'urlAssets'   => trailingslashit(WPSTG_PLUGIN_URL) . 'assets/',
             'hasSchedule' => count($this->backupScheduler->getSchedules()) > 0,
         ];
     }

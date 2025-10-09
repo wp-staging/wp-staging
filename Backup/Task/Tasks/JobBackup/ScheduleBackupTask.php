@@ -54,7 +54,7 @@ class ScheduleBackupTask extends BackupTask
 
     protected function setDefaultBasicScheduleOptions()
     {
-        $this->jobDataDto->setScheduleTime(["0","0"]); // 00:00 - 12 AM Midnight
+        $this->jobDataDto->setScheduleTime(["0", "0"]); // 00:00 - 12 AM Midnight
         $this->jobDataDto->setScheduleRotation(1);
         $this->jobDataDto->setScheduleRecurrence(Cron::BASIC_DAILY);
     }

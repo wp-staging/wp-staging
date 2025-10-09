@@ -113,7 +113,7 @@ class Updating extends Job
         $this->options->excludedFilesFullPath = [
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'db.php',
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'object-cache.php',
-            PathIdentifier::IDENTIFIER_WP_CONTENT . 'advanced-cache.php'
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'advanced-cache.php',
         ];
 
         // Define mainJob to differentiate between cloning, updating and pushing

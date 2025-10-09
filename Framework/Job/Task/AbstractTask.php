@@ -29,6 +29,13 @@ abstract class AbstractTask
      */
     const ACTION_TASK_RESPONSE = 'wpstg_task_response';
 
+    /**
+     * Time threshold in seconds to stop a wait task to avoid resource holding in shared hosting.
+     * currently set to 0.5 seconds
+     * @var int
+     */
+    const WAIT_TASK_THRESHOLD_IN_MICROSECONDS = 500000;
+
     /** @var Logger */
     protected $logger;
 
@@ -62,6 +69,9 @@ abstract class AbstractTask
 
     /** @var SeekableQueueInterface */
     protected $taskQueue;
+
+    /** @var bool Whether this task is a wait task or not. */
+    protected $isWaitTask = false;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
@@ -157,7 +167,9 @@ abstract class AbstractTask
         $response->setStatusTitle(static::getTaskTitle());
         $response->setJobId($this->jobDataDto->getId());
 
-        $this->updateTaskProgress($response);
+        if (!$this->isWaitTask) {
+            $this->updateTaskProgress($response);
+        }
 
         $this->addLogMessageToResponse($response);
 
@@ -179,9 +191,11 @@ abstract class AbstractTask
             $this->persistStepsDto();
         }
 
+        $this->job->getTransientCache()->update();
         Hooks::callInternalHook(self::ACTION_TASK_RESPONSE, [
             'jobDataDto'        => $this->jobDataDto,
-            'jobTransientCache' => $this->job->getTransientCache()
+            'jobTransientCache' => $this->job->getTransientCache(),
+            'isWaitTask'        => $this->isWaitTask,
         ]);
 
         $response = apply_filters('wpstg.task.response', $response);
@@ -298,7 +312,7 @@ abstract class AbstractTask
         if ($this->logger instanceof Logger) {
             $this->logger->pushSseEvent(SseEventCache::EVENT_TYPE_TASK, [
                 'title'      => $response->getStatusTitle(),
-                'percentage' => $response->getPercentage()
+                'percentage' => $response->getPercentage(),
             ]);
         }
     }

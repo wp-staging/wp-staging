@@ -19,7 +19,7 @@ class BackupValidator
         "\n",
         "\r\n",
         "\n\r",
-        PHP_EOL
+        PHP_EOL,
     ];
 
     /** @var BackupsFinder */
@@ -243,7 +243,7 @@ class BackupValidator
         if (!file_exists($path)) {
             $this->missingPartIssues[] = [
                 'name' => $part,
-                'type' => $type
+                'type' => $type,
             ];
 
             return;

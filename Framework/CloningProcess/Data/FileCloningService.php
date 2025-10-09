@@ -72,6 +72,7 @@ abstract class FileCloningService extends CloningService
     /**
      * Handle carriage-return byte character
      * @param string $fileContent
+     * @return string
      */
     protected function normalizeFileContent(string $fileContent): string
     {

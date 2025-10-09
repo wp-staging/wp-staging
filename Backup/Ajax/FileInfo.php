@@ -62,7 +62,7 @@ class FileInfo extends AbstractTemplateComponent
             'muPlugins' => $this->isBackupPartExcluded(PartIdentifier::MU_PLUGIN_PART_IDENTIFIER),
             'uploads'   => $this->isBackupPartExcluded(PartIdentifier::UPLOAD_PART_IDENTIFIER),
             'wpContent' => $this->isBackupPartExcluded(PartIdentifier::WP_CONTENT_PART_IDENTIFIER),
-            'wpRoot'    => $this->isBackupPartExcluded(PartIdentifier::WP_ROOT_PART_IDENTIFIER)
+            'wpRoot'    => $this->isBackupPartExcluded(PartIdentifier::WP_ROOT_PART_IDENTIFIER),
         ];
 
         $replaced = [
@@ -78,7 +78,7 @@ class FileInfo extends AbstractTemplateComponent
         $viewData = [
             'info'     => $info,
             'excluded' => $excluded,
-            'replaced' => $replaced
+            'replaced' => $replaced,
         ];
 
         $result = $this->templateEngine->render(

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.8
-Stable tag: 4.3.1
+Stable tag: 4.3.2
 Requires PHP: 7.0
 
 Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
@@ -286,6 +286,26 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.3.2 =
+* New: Compatible up to WordPress 6.8.3.
+* Enh: Present new automatic login to staging sites. #4585
+* Fix: Resolved incorrect file path issue that was preventing old backup files from being deleted on FTP/SFTP servers. (Pro) #4582
+* Fix: Resolved issue preventing data from being saved in the clone edit modal. (Pro) #4600
+* Fix: Upload backup using the URL is not working, stuck at 0%. #4588
+* Fix: Add additional JavaScript backup URL validation to ensure only valid .wpstg backup files are accepted. #4504
+* Fix: Auto-login occasionally fails on older staging sites. (Pro) #4607
+* Fix: False 'Insufficient Database Permissions' warning when database name contains escaped underscores. (Pro) #4590
+* Fix: Backup upload failure for wasabi s3 due to timeout on fast server. (Pro) #4616
+* Fix: Database prefixes were not replaced for subsites when restoring multisite backups. #4578
+* Fix: Case-Insensitive file conflict in same directory. #4612
+* Dev: Move `renderAlertMessage` into the correct UI namespace for cleaner architecture. #4573
+* Dev: Improve phpcs rules to catch and fix file formatting (space left over or wrong indentation). #4250
+* Dev: Add analytics for remote sync feature. Change authentication workflow for remote sync. Add truly background support for one way remote sync. #4515
+* Dev: Implement site-specific reset command functionality. #2877
+* Dev: Add phpcs new rules. #4602
+* Dev: Update login form snapshots. #4592
+* Dev: Wrong string formatting and phpcs issues. #4598
 
 = 4.3.1 =
 * Enh: Add filter `wpstg.backup.restore.exclude.tables` to support excluding of specific tables during the backup restore process. #4430
@@ -1192,5 +1212,5 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Compatible up to WordPress 6.8.1.
+Compatible up to WordPress 6.8.3.
 Many improvements for reliability and bug fixes. Please update to the latest version!

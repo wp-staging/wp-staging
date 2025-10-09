@@ -42,17 +42,17 @@ class Htaccess
     public function create($path)
     {
         return $this->filesystem->create($path, implode(PHP_EOL, [
-                    '<IfModule mod_mime.c>',
-                    'AddType application/octet-stream .log',
-                    'AddType application/octet-stream .wpstg',
-                    '</IfModule>',
-                    '<IfModule mod_dir.c>',
-                    'DirectoryIndex index.php',
-                    '</IfModule>',
-                    '<IfModule mod_autoindex.c>',
-                    'Options -Indexes',
-                    '</IfModule>',
-                ]));
+            '<IfModule mod_mime.c>',
+            'AddType application/octet-stream .log',
+            'AddType application/octet-stream .wpstg',
+            '</IfModule>',
+            '<IfModule mod_dir.c>',
+            'DirectoryIndex index.php',
+            '</IfModule>',
+            '<IfModule mod_autoindex.c>',
+            'Options -Indexes',
+            '</IfModule>',
+        ]));
     }
 
     /**
@@ -70,10 +70,10 @@ class Htaccess
         }
 
         return $this->filesystem->createWithMarkers($path, 'LiteSpeed', [
-                    '<IfModule Litespeed>',
-                    'SetEnv noabort 1',
-                    '</IfModule>',
-                ]);
+            '<IfModule Litespeed>',
+            'SetEnv noabort 1',
+            '</IfModule>',
+        ]);
     }
 
     /**
@@ -86,20 +86,20 @@ class Htaccess
     public function createForStagingNetwork($path, $baseDirectory)
     {
         return $this->filesystem->create($path, implode(PHP_EOL, [
-                    'RewriteEngine On',
-                    'RewriteBase ' . trailingslashit($baseDirectory),
-                    'RewriteRule ^index\.php$ - [L]',
-                    '',
-                    '# add a trailing slash to /wp-admin',
-                    'RewriteRule ^([_0-9a-zA-Z-]+/)?wp-admin$ $1wp-admin/ [R=301,L]',
-                    '',
-                    'RewriteCond %{REQUEST_FILENAME} -f [OR]',
-                    'RewriteCond %{REQUEST_FILENAME} -d',
-                    'RewriteRule ^ - [L]',
-                    'RewriteRule ^([_0-9a-zA-Z-]+/)?(wp-(content|admin|includes).*) $2 [L]',
-                    'RewriteRule ^([_0-9a-zA-Z-]+/)?(.*\.php)$ $2 [L]',
-                    'RewriteRule . index.php [L]',
-                    '',
-                ]));
+            'RewriteEngine On',
+            'RewriteBase ' . trailingslashit($baseDirectory),
+            'RewriteRule ^index\.php$ - [L]',
+            '',
+            '# add a trailing slash to /wp-admin',
+            'RewriteRule ^([_0-9a-zA-Z-]+/)?wp-admin$ $1wp-admin/ [R=301,L]',
+            '',
+            'RewriteCond %{REQUEST_FILENAME} -f [OR]',
+            'RewriteCond %{REQUEST_FILENAME} -d',
+            'RewriteRule ^ - [L]',
+            'RewriteRule ^([_0-9a-zA-Z-]+/)?(wp-(content|admin|includes).*) $2 [L]',
+            'RewriteRule ^([_0-9a-zA-Z-]+/)?(.*\.php)$ $2 [L]',
+            'RewriteRule . index.php [L]',
+            '',
+        ]));
     }
 }

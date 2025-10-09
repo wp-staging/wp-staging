@@ -144,7 +144,7 @@ class Report
             $errors[] = [
                 "status"  => 'already_submitted',
                 "message" => __("You've already submitted a ticket!<br/>" .
-                    "Do you want to send another one?", 'wp-staging')
+                    "Do you want to send another one?", 'wp-staging'),
             ];
             return $errors;
         }
@@ -182,7 +182,7 @@ class Report
             return [
                 "sent"    => false,
                 "status"  => 'already_submitted',
-                "message" => __("Email already submitted!  Please select force send option to send it again.", "wp-staging")
+                "message" => __("Email already submitted!  Please select force send option to send it again.", "wp-staging"),
             ];
         }
 
@@ -203,7 +203,7 @@ class Report
         $errors = [
             "sent"    => $isSent,
             "status"  => $isSent ? 'submitted' : 'failed',
-            "message" => $response
+            "message" => $response,
         ];
 
         $this->deleteBundledLogs();

@@ -6,7 +6,7 @@ trait WithAnalyticsAPI
 {
     protected function getApiUrl($endpoint)
     {
-        if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) {
+        if ($this->isDev() && !$this->useLiveAnalyticsOnDev()) {
             $url = 'http://analytics.local:8080';
         } else {
             $url = 'https://analytics.wp-staging.com';
@@ -40,5 +40,15 @@ trait WithAnalyticsAPI
         }
 
         return wp_hash($authSalt . $hostName);
+    }
+
+    protected function isDev(): bool
+    {
+        return defined('WPSTG_IS_DEV') && WPSTG_IS_DEV;
+    }
+
+    protected function useLiveAnalyticsOnDev(): bool
+    {
+        return defined('WPSTG_DEV_LIVE_ANALYTICS') && WPSTG_DEV_LIVE_ANALYTICS;
     }
 }

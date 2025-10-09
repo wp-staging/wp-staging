@@ -5,7 +5,6 @@ namespace WPStaging\Backup\Ajax\Restore;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Backup\Job\Jobs\JobRestore;
-use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Database\TableService;
@@ -15,10 +14,13 @@ use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
+use WPStaging\Framework\Job\Traits\WithTmpDatabasePrefix;
 use WPStaging\Framework\Security\Auth;
 
 class PrepareRestore extends PrepareJob
 {
+    use WithTmpDatabasePrefix;
+
     /** @var JobRestoreDataDto*/
     private $jobDataDto;
 
@@ -27,9 +29,6 @@ class PrepareRestore extends PrepareJob
 
     /** @var TableService */
     private $tableService;
-
-    /** @var string */
-    const CUSTOM_TMP_PREFIX_FILTER = 'wpstg.restore.tmp_database_prefix';
 
     public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock, TableService $tableService)
     {
@@ -88,7 +87,7 @@ class PrepareRestore extends PrepareJob
                 'isExportingUploads'             => 'bool',
                 'isExportingOtherWpContentFiles' => 'bool',
                 'isExportingOtherWpRootFiles'    => 'bool',
-                'isExportingDatabase'            => 'bool'
+                'isExportingDatabase'            => 'bool',
             ]);
         }
 
@@ -160,39 +159,5 @@ class PrepareRestore extends PrepareJob
         }
 
         return $sanitizedData;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getTmpDatabasePrefix()
-    {
-        $tmpDatabasePrefix = apply_filters(self::CUSTOM_TMP_PREFIX_FILTER, DatabaseImporter::TMP_DATABASE_PREFIX);
-        if ($tmpDatabasePrefix === DatabaseImporter::TMP_DATABASE_PREFIX) {
-            return DatabaseImporter::TMP_DATABASE_PREFIX;
-        }
-
-        if ($this->isTmpPrefixAvailable($tmpDatabasePrefix)) {
-            return $tmpDatabasePrefix;
-        }
-
-        return DatabaseImporter::TMP_DATABASE_PREFIX;
-    }
-
-    /**
-     * @param string $tmpDatabasePrefix
-     * @return bool
-     */
-    protected function isTmpPrefixAvailable($tmpDatabasePrefix)
-    {
-        if (count($this->tableService->findTableNamesStartWith($tmpDatabasePrefix)) > 0) {
-            return false;
-        }
-
-        if (count($this->tableService->findViewsNamesStartWith($tmpDatabasePrefix)) > 0) {
-            return false;
-        }
-
-        return true;
     }
 }

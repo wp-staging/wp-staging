@@ -165,40 +165,40 @@ class Browser
     public $BROWSER_UNKNOWN = 'unknown';
     public $VERSION_UNKNOWN = 'unknown';
 
-    public $BROWSER_OPERA              = 'Opera';                     // Http://www.opera.com/
-    public $BROWSER_OPERA_MINI         = 'Opera Mini';                // Http://www.opera.com/mini/
-    public $BROWSER_WEBTV              = 'WebTV';                     // Http://www.webtv.net/pc/
-    public $BROWSER_IE                 = 'Internet Explorer';         // Http://www.microsoft.com/ie/
-    public $BROWSER_POCKET_IE          = 'Pocket Internet Explorer';  // Http://en.wikipedia.org/wiki/Internet_Explorer_Mobile
-    public $BROWSER_KONQUEROR          = 'Konqueror';                 // Http://www.konqueror.org/
-    public $BROWSER_ICAB               = 'iCab';                      // Http://www.icab.de/
-    public $BROWSER_OMNIWEB            = 'OmniWeb';                   // Http://www.omnigroup.com/applications/omniweb/
-    public $BROWSER_FIREBIRD           = 'Firebird';                  // Http://www.ibphoenix.com/
-    public $BROWSER_FIREFOX            = 'Firefox';                   // Http://www.mozilla.com/en-US/firefox/firefox.html
-    public $BROWSER_ICEWEASEL          = 'Iceweasel';                 // Http://www.geticeweasel.org/
-    public $BROWSER_SHIRETOKO          = 'Shiretoko';                 // Http://wiki.mozilla.org/Projects/shiretoko
-    public $BROWSER_MOZILLA            = 'Mozilla';                   // Http://www.mozilla.com/en-US/
-    public $BROWSER_AMAYA              = 'Amaya';                     // Http://www.w3.org/Amaya/
-    public $BROWSER_LYNX               = 'Lynx';                      // Http://en.wikipedia.org/wiki/Lynx
-    public $BROWSER_SAFARI             = 'Safari';                    // Http://apple.com
-    public $BROWSER_IPHONE             = 'iPhone';                    // Http://apple.com
-    public $BROWSER_IPOD               = 'iPod';                      // Http://apple.com
-    public $BROWSER_IPAD               = 'iPad';                      // Http://apple.com
-    public $BROWSER_CHROME             = 'Chrome';                    // Http://www.google.com/chrome
-    public $BROWSER_ANDROID            = 'Android';                   // Http://www.android.com/
-    public $BROWSER_GOOGLEBOT          = 'GoogleBot';                 // Http://en.wikipedia.org/wiki/Googlebot
-    public $BROWSER_SLURP              = 'Yahoo! Slurp';              // Http://en.wikipedia.org/wiki/Yahoo!_Slurp
-    public $BROWSER_W3CVALIDATOR       = 'W3C Validator';             // Http://validator.w3.org/
-    public $BROWSER_BLACKBERRY         = 'BlackBerry';                // Http://www.blackberry.com/
-    public $BROWSER_ICECAT             = 'IceCat';                    // Http://en.wikipedia.org/wiki/GNU_IceCat
-    public $BROWSER_NOKIA_S60          = 'Nokia S60 OSS Browser';     // Http://en.wikipedia.org/wiki/Web_Browser_for_S60
-    public $BROWSER_NOKIA              = 'Nokia Browser';             // * all other WAP-based browsers on the Nokia Platform
-    public $BROWSER_MSN                = 'MSN Browser';               // Http://explorer.msn.com/
-    public $BROWSER_MSNBOT             = 'MSN Bot';                   // Http://search.msn.com/msnbot.htm, Http://en.wikipedia.org/wiki/Msnbot  (used for Bing as well)
-    public $BROWSER_NETSCAPE_NAVIGATOR = 'Netscape Navigator';        // Http://browser.netscape.com/ (DEPRECATED)
-    public $BROWSER_GALEON             = 'Galeon';                    // Http://galeon.sourceforge.net/ (DEPRECATED)
-    public $BROWSER_NETPOSITIVE        = 'NetPositive';               // Http://en.wikipedia.org/wiki/NetPositive (DEPRECATED)
-    public $BROWSER_PHOENIX            = 'Phoenix';                   // Http://en.wikipedia.org/wiki/History_of_Mozilla_Firefox (DEPRECATED)
+    public $BROWSER_OPERA              = 'Opera'; // Http://www.opera.com/
+    public $BROWSER_OPERA_MINI         = 'Opera Mini'; // Http://www.opera.com/mini/
+    public $BROWSER_WEBTV              = 'WebTV'; // Http://www.webtv.net/pc/
+    public $BROWSER_IE                 = 'Internet Explorer'; // Http://www.microsoft.com/ie/
+    public $BROWSER_POCKET_IE          = 'Pocket Internet Explorer'; // Http://en.wikipedia.org/wiki/Internet_Explorer_Mobile
+    public $BROWSER_KONQUEROR          = 'Konqueror'; // Http://www.konqueror.org/
+    public $BROWSER_ICAB               = 'iCab'; // Http://www.icab.de/
+    public $BROWSER_OMNIWEB            = 'OmniWeb'; // Http://www.omnigroup.com/applications/omniweb/
+    public $BROWSER_FIREBIRD           = 'Firebird'; // Http://www.ibphoenix.com/
+    public $BROWSER_FIREFOX            = 'Firefox'; // Http://www.mozilla.com/en-US/firefox/firefox.html
+    public $BROWSER_ICEWEASEL          = 'Iceweasel'; // Http://www.geticeweasel.org/
+    public $BROWSER_SHIRETOKO          = 'Shiretoko'; // Http://wiki.mozilla.org/Projects/shiretoko
+    public $BROWSER_MOZILLA            = 'Mozilla'; // Http://www.mozilla.com/en-US/
+    public $BROWSER_AMAYA              = 'Amaya'; // Http://www.w3.org/Amaya/
+    public $BROWSER_LYNX               = 'Lynx'; // Http://en.wikipedia.org/wiki/Lynx
+    public $BROWSER_SAFARI             = 'Safari'; // Http://apple.com
+    public $BROWSER_IPHONE             = 'iPhone'; // Http://apple.com
+    public $BROWSER_IPOD               = 'iPod'; // Http://apple.com
+    public $BROWSER_IPAD               = 'iPad'; // Http://apple.com
+    public $BROWSER_CHROME             = 'Chrome'; // Http://www.google.com/chrome
+    public $BROWSER_ANDROID            = 'Android'; // Http://www.android.com/
+    public $BROWSER_GOOGLEBOT          = 'GoogleBot'; // Http://en.wikipedia.org/wiki/Googlebot
+    public $BROWSER_SLURP              = 'Yahoo! Slurp'; // Http://en.wikipedia.org/wiki/Yahoo!_Slurp
+    public $BROWSER_W3CVALIDATOR       = 'W3C Validator'; // Http://validator.w3.org/
+    public $BROWSER_BLACKBERRY         = 'BlackBerry'; // Http://www.blackberry.com/
+    public $BROWSER_ICECAT             = 'IceCat'; // Http://en.wikipedia.org/wiki/GNU_IceCat
+    public $BROWSER_NOKIA_S60          = 'Nokia S60 OSS Browser'; // Http://en.wikipedia.org/wiki/Web_Browser_for_S60
+    public $BROWSER_NOKIA              = 'Nokia Browser'; // * all other WAP-based browsers on the Nokia Platform
+    public $BROWSER_MSN                = 'MSN Browser'; // Http://explorer.msn.com/
+    public $BROWSER_MSNBOT             = 'MSN Bot'; // Http://search.msn.com/msnbot.htm, Http://en.wikipedia.org/wiki/Msnbot  (used for Bing as well)
+    public $BROWSER_NETSCAPE_NAVIGATOR = 'Netscape Navigator'; // Http://browser.netscape.com/ (DEPRECATED)
+    public $BROWSER_GALEON             = 'Galeon'; // Http://galeon.sourceforge.net/ (DEPRECATED)
+    public $BROWSER_NETPOSITIVE        = 'NetPositive'; // Http://en.wikipedia.org/wiki/NetPositive (DEPRECATED)
+    public $BROWSER_PHOENIX            = 'Phoenix'; // Http://en.wikipedia.org/wiki/History_of_Mozilla_Firefox (DEPRECATED)
 
     public $PLATFORM_UNKNOWN     = 'unknown';
     public $PLATFORM_WINDOWS     = 'Windows';
@@ -430,8 +430,8 @@ class Browser
     {
         $text1    = $this->getUserAgent(); //grabs the UA (user agent) string
         $UAline1  = substr($text1, 0, 32); //the first line we print should only be the first 32 characters of the UA string
-        $text2    = $this->getUserAgent();//now we grab it again and save it to a string
-        $towrapUA = str_replace($UAline1, '', $text2);//the rest of the printoff (other than first line) is equivolent
+        $text2    = $this->getUserAgent(); //now we grab it again and save it to a string
+        $towrapUA = str_replace($UAline1, '', $text2); //the rest of the printoff (other than first line) is equivolent
         // To the whole string minus the part we printed off. IE
         // User Agent:      thefirst32charactersfromUAline1
         //                  the rest of it is now stored in
@@ -658,13 +658,13 @@ class Browser
             if (stripos($this->userAgent, 'msnb') !== false) {
                 $aresult = explode(' ', stristr(str_replace(';', '; ', $this->userAgent), 'MSN'));
                 $this->setBrowser($this->BROWSER_MSN);
-                $this->setVersion(str_replace(['(',')',';'], '', $aresult[1]));
+                $this->setVersion(str_replace(['(', ')', ';'], '', $aresult[1]));
                 return true;
             }
 
             $aresult = explode(' ', stristr(str_replace(';', '; ', $this->userAgent), 'msie'));
             $this->setBrowser($this->BROWSER_IE);
-            $this->setVersion(str_replace(['(',')',';'], '', $aresult[1]));
+            $this->setVersion(str_replace(['(', ')', ';'], '', $aresult[1]));
             return true;
         } elseif (stripos($this->userAgent, 'mspie') !== false || stripos($this->userAgent, 'pocket') !== false) { // Test for Pocket IE
             $aresult = explode(' ', stristr($this->userAgent, 'mspie'));
@@ -763,7 +763,7 @@ class Browser
         if (stripos($this->userAgent, 'NetPositive') !== false) {
             $aresult  = explode('/', stristr($this->userAgent, 'NetPositive'));
             $aversion = explode(' ', $aresult[1]);
-            $this->setVersion(str_replace(['(',')',';'], '', $aversion[0]));
+            $this->setVersion(str_replace(['(', ')', ';'], '', $aversion[0]));
             $this->setBrowser($this->BROWSER_NETPOSITIVE);
             return true;
         }

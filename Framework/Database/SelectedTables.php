@@ -192,7 +192,7 @@ class SelectedTables
 
             $selectedTables[] = [
                 "name" => $table->Name,
-                "size" => ($table->Data_length + $table->Index_length)
+                "size" => ($table->Data_length + $table->Index_length),
             ];
         }
 

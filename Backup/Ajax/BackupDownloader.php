@@ -16,6 +16,7 @@ use function WPStaging\functions\debug_log;
 class BackupDownloader
 {
     const FILTER_REMOTE_DOWNLOAD_CHUNK_SIZE = 'wpstg.framework.network.ajax_backup_downloader_chunk_size';
+    const FILTER_MINIMUM_BACKUP_SIZE_FOR_DYNAMIC_CHUNK_SIZE = 'wpstg.framework.network.ajax_backup_downloader_minimum_size_for_chunk_size_filter';
     const BACKUP_HEADER_V1_PATTERN = '01101000 01110100 01110100 01110000 01110011 00111010';
     const BACKUP_HEADER_V2_PATTERN = '@^wpstg(\x00)+([0-9a-fA-F]+)@';
     const BACKUP_HEADER_SIZE_FOR_QUICK_VERIFY = 100;
@@ -41,7 +42,7 @@ class BackupDownloader
     {
         if (!$this->auth->isAuthenticatedRequest()) {
             wp_send_json_error([
-                'message' => esc_html__('Invalid Request!', 'wp-staging')
+                'message' => esc_html__('Invalid Request!', 'wp-staging'),
             ], 401);
         }
         try {
@@ -134,7 +135,7 @@ class BackupDownloader
         if ($fileSize === 0) {
             return;
         }
-        $fileSizeThreshold = 500 * MB_IN_BYTES;
+        $fileSizeThreshold = Hooks::applyFilters(self::FILTER_MINIMUM_BACKUP_SIZE_FOR_DYNAMIC_CHUNK_SIZE, 500 * MB_IN_BYTES);
         if ($fileSize < $fileSizeThreshold) {
             return;
         }
@@ -207,7 +208,7 @@ class BackupDownloader
         }
         $this->remoteDownloader->downloadChunk();
         $this->remoteDownloader->closeFileHandle();
-        if (!$this->remoteDownloader->getIsSuccess()) {
+        if ($this->remoteDownloader->getIsSuccess()) {
             $this->remoteDownloader->advanceStartByte();
         }
         if ($this->remoteDownloader->getIsCompleted()) {

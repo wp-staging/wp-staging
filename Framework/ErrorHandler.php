@@ -57,6 +57,8 @@ class ErrorHandler
 
         preg_match('/Allowed memory size of (\d+) bytes exhausted \(tried to allocate (\d+) bytes\)/', $error['message'], $data);
         if (!is_array($data) || count($data) !== 3) {
+            $data['time'] = date('Y/m/d H:i:s', time()); // @see WPStaging\Core\Utils\Logger::LOG_DATETIME_FORMAT, use hardcoded value to avoid loading class
+            $this->logSseEvent($data, false);
             return;
         }
 
@@ -83,7 +85,7 @@ class ErrorHandler
         $this->logSseEvent($data);
     }
 
-    private function logSseEvent(array $data)
+    private function logSseEvent(array $data, bool $isMemoryExhaust = true)
     {
         /**
          * @var JobTransientCache $jobTransientCache
@@ -95,7 +97,10 @@ class ErrorHandler
             return;
         }
 
-        $message         = "Job failed, Memory exceed allowed size! Allowed memory: {$data['allowedMemoryLimit']} bytes. Exceeded memory: {$data['exhaustedMemorySize']} bytes";
+        $message = $isMemoryExhaust ?
+                        "Job failed, Memory exceed allowed size! Allowed memory: {$data['allowedMemoryLimit']} bytes. Exceeded memory: {$data['exhaustedMemorySize']} bytes" :
+                        "Job failed due to a fatal error! Error data: " . print_r($data, true);
+
         $data['jobId']   = $jobId;
         $data['message'] = $message;
 
@@ -106,7 +111,7 @@ class ErrorHandler
         $sseEventCache->setJobId($jobId);
         $sseEventCache->load();
         $sseEventCache->push([
-            'type' => SseEventCache::EVENT_TYPE_MEMORY_EXHAUST,
+            'type' => $isMemoryExhaust ? SseEventCache::EVENT_TYPE_MEMORY_EXHAUST : SseEventCache::EVENT_TYPE_FATAL_ERROR,
             'data' => $data,
         ]);
 

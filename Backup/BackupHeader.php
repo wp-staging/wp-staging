@@ -139,11 +139,11 @@ class BackupHeader
     private function logBackupHeaderEncodingError(string $errorMessage)
     {
         $context = [
-            'backupVersion'          => $this->backupVersion,
-            'filesIndexStartOffset'  => $this->filesIndexStartOffset,
-            'filesIndexEndOffset'    => $this->filesIndexEndOffset,
-            'metadataStartOffset'    => $this->metadataStartOffset,
-            'metadataEndOffset'      => $this->metadataEndOffset,
+            'backupVersion'         => $this->backupVersion,
+            'filesIndexStartOffset' => $this->filesIndexStartOffset,
+            'filesIndexEndOffset'   => $this->filesIndexEndOffset,
+            'metadataStartOffset'   => $this->metadataStartOffset,
+            'metadataEndOffset'     => $this->metadataEndOffset,
         ];
 
         $this->logEncodingErrorWithContext(
@@ -334,7 +334,7 @@ class BackupHeader
                     $this->filesIndexStartOffset,
                     $this->filesIndexEndOffset,
                     $this->metadataStartOffset,
-                    $this->metadataEndOffset
+                    $this->metadataEndOffset,
                 ]
             );
         } catch (\InvalidArgumentException $e) {
@@ -352,7 +352,7 @@ class BackupHeader
                     $this->filesIndexStartOffset,
                     $this->filesIndexEndOffset,
                     $this->metadataStartOffset,
-                    $this->metadataEndOffset
+                    $this->metadataEndOffset,
                 ]
             );
         }

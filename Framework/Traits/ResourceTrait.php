@@ -21,6 +21,9 @@ trait ResourceTrait
     // Set lower maximum execution time for backup restore to avoid 504 errors in large database
     public static $backupRestoreMaxExecutionTimeInSeconds = 10;
 
+    // Set lower maximum execution time for wait to avoid resource holding in shared hosting
+    public static $waitTaskMaxExecutionTimeInSeconds = 5;
+
     /**
      * Let start with a lower value we can try increasing it later when neeeded
      * @var int
@@ -80,6 +83,14 @@ trait ResourceTrait
     public function isDatabaseRestoreThreshold()
     {
         return $this->isMemoryLimit() || $this->isDatabaseRestoreTimeLimit();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWaitTaskThreshold()
+    {
+        return $this->isMemoryLimit() || $this->isWaitTaskTimeLimit();
     }
 
     /**
@@ -151,6 +162,17 @@ trait ResourceTrait
     public function isFileAppendTimeLimit(): bool
     {
         $timeLimit = (int)Hooks::applyFilters('wpstg.resource.file_append_time_limit', static::$fileAppendMaxExecutionTimeInSeconds);
+        return $this->getRunningTime() > $timeLimit;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWaitTaskTimeLimit(): bool
+    {
+        $phpTimeLimit = $this->findExecutionTimeLimit();
+        $timeLimit    = min($phpTimeLimit, self::$waitTaskMaxExecutionTimeInSeconds);
+
         return $this->getRunningTime() > $timeLimit;
     }
 

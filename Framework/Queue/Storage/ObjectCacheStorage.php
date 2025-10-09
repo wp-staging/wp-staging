@@ -118,7 +118,7 @@ class ObjectCacheStorage implements StorageInterface, ShutdownableInterface
         if (!$cacheInfo = wp_cache_get($this->baseCacheKey(), self::GROUP)) {
             return [
                 'currentRotation' => 1,
-                'totalCount' => 0,
+                'totalCount'      => 0,
                 'highestRotation' => 0,
             ];
         }
@@ -132,7 +132,7 @@ class ObjectCacheStorage implements StorageInterface, ShutdownableInterface
 
         $cacheInfo = [
             'currentRotation' => $newCacheRotation,
-            'totalCount' => $this->totalCount,
+            'totalCount'      => $this->totalCount,
             'highestRotation' => max($this->cacheRotation, $this->getCacheInfo()['highestRotation']),
         ];
 

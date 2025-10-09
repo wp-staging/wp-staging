@@ -31,7 +31,7 @@ class FreemiusScript
             'fs_active_plugins',
             'fs_api_cache',
             'fs_dbg_api_cache',
-            'fs_debug_mode'
+            'fs_debug_mode',
         ];
     }
 

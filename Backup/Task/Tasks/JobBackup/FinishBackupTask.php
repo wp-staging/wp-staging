@@ -63,7 +63,9 @@ class FinishBackupTask extends BackupTask
 
         $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
 
-        $this->logger->info("################## FINISH ##################");
+        if (!$this->jobDataDto->getIsSyncRequest()) {
+            $this->logger->info("################## FINISH ##################");
+        }
 
         // This condition prevents duplicate log entries for a single backup process.
         // For example, in background (BG) backups, this task run twice, so we log it only once after the process completes.

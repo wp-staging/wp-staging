@@ -354,7 +354,7 @@ class DataEncryption
 
         return [
             'publicKey'  => $publicKey,
-            'privateKey' => $privateKey
+            'privateKey' => $privateKey,
         ];
     }
 

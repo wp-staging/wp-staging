@@ -115,7 +115,7 @@ class FeatureDetection
 
         $ajaxUrl = add_query_arg([
             'action'      => self::ACTION_AJAX_TEST,
-            '_ajax_nonce' => wp_create_nonce(self::ACTION_AJAX_TEST)
+            '_ajax_nonce' => wp_create_nonce(self::ACTION_AJAX_TEST),
         ], admin_url('admin-ajax.php'));
 
         $hash = md5(uniqid(__CLASS__, true));
@@ -124,7 +124,7 @@ class FeatureDetection
 
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
             'headers'   => [
-                'X-WPSTG-Request' => self::ACTION_AJAX_TEST
+                'X-WPSTG-Request' => self::ACTION_AJAX_TEST,
             ],
             'blocking'  => false,
             'timeout'   => 0.01,

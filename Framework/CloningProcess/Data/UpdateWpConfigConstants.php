@@ -47,7 +47,7 @@ class UpdateWpConfigConstants extends FileCloningService
             "DISABLE_WP_CRON"     => (isset($this->dto->getJob()->getOptions()->cronDisabled) && $this->dto->getJob()->getOptions()->cronDisabled) ? 'true' : 'false',
             "WP_ENVIRONMENT_TYPE" => sprintf("'%s'", 'staging'),
             "WP_DEVELOPMENT_MODE" => sprintf("'%s'", 'all'),
-            "WPSTAGING_DEV_SITE"  => 'true'
+            "WPSTAGING_DEV_SITE"  => 'true',
         ];
 
         if (!$isWpContentOutsideAbspath) {
@@ -120,6 +120,10 @@ class UpdateWpConfigConstants extends FileCloningService
         if ($isWpContentOutsideAbspath && !$this->isFlywheelHosting()) {
             $delete[] = "WP_CONTENT_DIR";
             $delete[] = "WP_CONTENT_URL";
+        }
+
+        if ($this->dto->isExternal() && !$this->dto->getExternalDatabaseSsl()) {
+            $delete[] = "MYSQL_CLIENT_FLAGS";
         }
 
         /**

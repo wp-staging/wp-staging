@@ -89,7 +89,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
             if ($files->isFile()) {
                 $absoluteFilePath = $files->getRealPath();
-                $fileName         = str_replace($wpContentDir, '', $absoluteFilePath);
+                $fileName         = $files->getFilename();
                 if ($fileName === 'debug.log' || $fileName === 'index.php') {
                     continue;
                 }
@@ -143,6 +143,11 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             }
 
             if ($this->isExcludedOtherFile($absDestPath) || $this->isExcludedFile($absDestPath)) {
+                continue;
+            }
+
+            // Preserve debug.log and index.php
+            if ($relativePath === 'debug.log' || $relativePath === 'index.php') {
                 continue;
             }
 
@@ -223,7 +228,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             [
                 $this->directory->getLangsDirectory(),
                 $this->directory->getPluginWpContentDirectory(),
-                trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false))
+                trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false)),
             ]
         );
     }

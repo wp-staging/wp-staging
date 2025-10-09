@@ -57,8 +57,8 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
     public function enqueueFinishEvent($jobId, $eventData, $eventOverrides = [])
     {
         parent::enqueueFinishEvent($jobId, null, [
-            'filesystem_size' => $eventData->getFilesystemSize(),
-            'database_size' => $eventData->getDatabaseFileSize(),
+            'filesystem_size'  => $eventData->getFilesystemSize(),
+            'database_size'    => $eventData->getDatabaseFileSize(),
             'discovered_files' => (int)$eventData->getDiscoveredFiles(), // int to convert null to zero
         ]);
     }

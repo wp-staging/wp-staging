@@ -11,7 +11,7 @@
 
 $wpstgAdminUrl          = get_admin_url() . 'admin.php?page=';
 $menu = [
-    'tab-staging' => [
+    'tab-staging'     => [
         'tab'       => esc_html__('Staging', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--staging',
         'targetId'  => '',
@@ -19,7 +19,7 @@ $menu = [
         'page'      => 'wpstg_clone',
         'isActive'  => !empty($isStagingPage),
     ],
-    'tab-backup' => [
+    'tab-backup'      => [
         'tab'       => esc_html__('Backup & Migration', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--backup',
         'targetId'  => '',
@@ -27,7 +27,7 @@ $menu = [
         'page'      => 'wpstg_backup',
         'isActive'  => !empty($isBackupPage),
     ],
-    'tab-settings' => [
+    'tab-settings'    => [
         'tab'       => esc_html__('Settings', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--settigs',
         'targetId'  => '',
@@ -43,14 +43,14 @@ $menu = [
         'page'      => 'wpstg-tools',
         'isActive'  => !empty($isActiveSystemInfoPage),
     ],
-    'tab-license' => [
+    'tab-license'     => [
         'tab'       => esc_html__('Upgrade to Pro', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--license',
         'targetId'  => '',
         'targetUrl' => 'https://wp-staging.com',
         'page'      => 'wpstg-license',
         'isActive'  => !empty($isActiveLicensePage),
-    ]
+    ],
 ];
 
 if ($isCalledFromIndex) {

@@ -324,7 +324,7 @@ class RowsExporter extends AbstractExporter
                     $value      = "'$binaryFlag$value'";
                     continue;
                 }
-                if ($prefixedTableName === '{WPSTG_TMP_PREFIX}options' && $column === 'option_name') {
+                if ($this->isRowNeedSpecialSearchReplace($prefixedTableName, $column)) {
                     if (substr($value, 0, 1) === '_') {
                         foreach (['_transient_', '_site_transient_', '_wc_session_'] as $excludedOption) {
                             if (strpos($value, $excludedOption) === 0) {
@@ -369,6 +369,20 @@ class RowsExporter extends AbstractExporter
             $this->queriesToInsert .= $insertQuery;
         } catch (Exception $e) {
             }
+    }
+
+    protected function isRowNeedSpecialSearchReplace(string $prefixedTableName, string $column): bool
+    {
+        if ($column !== 'option_name') {
+            return false;
+        }
+        if ($prefixedTableName === '{WPSTG_TMP_PREFIX}options') {
+            return true;
+        }
+        if (preg_match('/\{WPSTG_TMP_PREFIX\}\d+_options/', $prefixedTableName)) {
+            return true;
+        }
+        return false;
     }
 
     protected function throwUnableToCountException()

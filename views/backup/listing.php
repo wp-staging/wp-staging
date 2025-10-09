@@ -58,17 +58,29 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
 
 <div id="wpstg-step-1">
     <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledPropertyCreateBackup); ?>>
+        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/update.svg" alt="create" />
         <?php esc_html_e('Create Backup', 'wp-staging'); ?>
     </button>
     <button type="button" id="wpstg-upload-backup" class="wpstg-button wpstg-border-thin-button">
+        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/upload-cloud.svg" alt="upload" />
         <?php esc_html_e('Upload Backup', 'wp-staging'); ?>
     </button>
     <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button">
+        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/edit.svg" alt="edit" />
         <?php esc_html_e('Edit Backup Plans', 'wp-staging'); ?>
     </button>
     <?php if (defined('WPSTG_REMOTE_SYNC_ENABLED') && WPSTG_REMOTE_SYNC_ENABLED) : ?>
-    <button id="wpstg-remote-sync" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-15px" disabled>
-        <?php echo esc_html__("Remote Site Migration", "wp-staging"); ?>
+    <button id="wpstg-remote-sync" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-15px wpstg--tooltip" disabled>
+        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/push.svg" alt="remote sync" />
+        <?php echo esc_html__("Remote Sync (See Demo)", "wp-staging"); ?>
+        <span class="wpstg--tooltiptext" style="width: 350px;line-height: 1.5;margin-top: -1px;white-space: normal;">
+                    <?php esc_html_e('Connect this site to any other WordPress site to pull and sync its data remotely with one click.', 'wp-staging'); ?>
+                    <br>
+                    <?php esc_html_e('(Requires WP Staging Pro version.)', 'wp-staging'); ?>
+                    <br>
+                    <br>
+                    <a href="https://wp-staging.com" target="_blank" rel="noopener noreferrer" class="wpstg-link-btn wpstg-blue-primary" style="transition:none"><?php echo esc_html__('Watch a demo', 'wp-staging'); ?></a>
+        </span>
     </button>
     <?php endif; ?>
 </div>

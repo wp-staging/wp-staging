@@ -368,7 +368,7 @@ class Administrator
 
         // Tabs
         $tabs = new Tabs(Hooks::applyFilters(self::FILTER_MAIN_SETTING_TABS, [
-            "general" => __("General", "wp-staging")
+            "general" => __("General", "wp-staging"),
         ]));
 
         WPStaging::getInstance()
@@ -429,7 +429,7 @@ class Administrator
     {
         // Tabs
         $tabs = new Tabs([
-            "system-info" => __("System Info", "wp-staging")
+            "system-info" => __("System Info", "wp-staging"),
         ]);
 
         WPStaging::getInstance()->set("tabs", $tabs);
@@ -667,7 +667,7 @@ class Administrator
 
         wp_send_json([
             "status"  => "failed",
-            "message" => $result
+            "message" => $result,
         ]);
     }
 
@@ -735,7 +735,7 @@ class Administrator
             $message = $cloning->getErrorMessage();
             wp_send_json([
                 'success' => false,
-                'message' => $message !== '' ? $message : 'Can not save clone data'
+                'message' => $message !== '' ? $message : 'Can not save clone data',
             ]);
 
             wp_die();
@@ -1004,8 +1004,8 @@ class Administrator
                 'isNetworkClone' => $scan->isNetworkClone(),
                 'options'        => $options,
                 'showAll'        => true,
-                'selected'       => $tables
-            ])
+                'selected'       => $tables,
+            ]),
         ]);
 
         exit();
@@ -1047,7 +1047,7 @@ class Administrator
     public function getTempLoginsPage()
     {
         Hooks::applyFilters(Administrator::FILTER_MAIN_SETTING_TABS, [
-            "temporary-logins" => __("Temporary Logins", "wp-staging")
+            "temporary-logins" => __("Temporary Logins", "wp-staging"),
         ]);
     }
 
@@ -1156,7 +1156,7 @@ class Administrator
                 'scan'         => $scan,
                 'options'      => $scan->getOptions(),
                 'excludeUtils' => WPStaging::make(ExcludeFilter::class),
-            ])
+            ]),
         ]);
 
         exit();

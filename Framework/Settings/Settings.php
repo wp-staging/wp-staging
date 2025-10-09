@@ -130,7 +130,7 @@ class Settings
         if ($this->auth->isAuthenticatedRequest() === false) {
             wp_send_json([
                 'success' => false,
-                'message' => esc_html__('Error 403: Unauthorized Request', 'wp-staging')
+                'message' => esc_html__('Error 403: Unauthorized Request', 'wp-staging'),
             ]);
         }
 
@@ -139,20 +139,20 @@ class Settings
         if ($result === false) {
             wp_send_json([
                 'success' => false,
-                'message' => esc_html__('Unable to purge queue table', 'wp-staging')
+                'message' => esc_html__('Unable to purge queue table', 'wp-staging'),
             ]);
         }
 
         if ($result === 0) {
             wp_send_json([
                 'success' => true,
-                'message' => sprintf(esc_html__('Table %s is already empty.', 'wp-staging'), esc_html($this->queue->getTableName()))
+                'message' => sprintf(esc_html__('Table %s is already empty.', 'wp-staging'), esc_html($this->queue->getTableName())),
             ]);
         }
 
         wp_send_json([
             'success' => true,
-            'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), esc_html($result))
+            'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), esc_html($result)),
         ]);
 
         return null;

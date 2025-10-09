@@ -102,7 +102,7 @@ class WpDbInfo implements iDbInfo
             'db_engine'     => $this->getDbEngine(),
             'db_collation'  => $this->getDbCollation(),
             'db_server_ver' => $this->getMySqlServerVersion(),
-            'db_client_ver' => $this->getMySqlClientVersion()
+            'db_client_ver' => $this->getMySqlClientVersion(),
         ];
     }
 

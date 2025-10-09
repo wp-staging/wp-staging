@@ -149,6 +149,16 @@ class BackgroundLogger
                     continue;
                 }
 
+                if ($event['type'] === SseEventCache::EVENT_TYPE_FATAL_ERROR) {
+                    $this->output($jobId, SseEventCache::EVENT_TYPE_FATAL_ERROR, json_encode($event['data']));
+                    $this->output($jobId, '', json_encode([
+                        'type'    => Logger::TYPE_ERROR,
+                        'date'    => $event['data']['time'],
+                        'message' => "Job failed due to a fatal error! Error data: " . print_r($event['data'], true),
+                    ]));
+                    continue;
+                }
+
                 $this->output($jobId, '', json_encode($event));
             }
 

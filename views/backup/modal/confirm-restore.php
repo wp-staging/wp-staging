@@ -22,51 +22,51 @@ $backupParts = [
         'backupContains'       => $info->getIsExportingDatabase(),
         'excluded'             => $excluded['database'],
         'messageWhenRestoring' => $info->getBackupType() === BackupMetadata::BACKUP_TYPE_MULTISITE ? __('Database tables of whole network will be replaced.', 'wp-staging') : __('Database tables of current site will be replaced.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Database restore excluded by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Database restore excluded by filter.', 'wp-staging'),
     ],
     [
         // Importing Users in Database for restoring single/subsite backups on subsite
         'backupContains'       => $info->getIsExportingDatabase() && is_multisite() && $info->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE,
         'excluded'             => $excluded['database'],
         'messageWhenRestoring' => __('Users from the backup will be imported.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Importing user excluded by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Importing user excluded by filter.', 'wp-staging'),
     ],
     [
         'backupContains'       => $info->getIsExportingPlugins(),
         'excluded'             => $excluded['plugins'],
         'messageWhenRestoring' => $replaced['plugins'] ? __('Plugins will be replaced.', 'wp-staging') : __('Plugins will be added.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Plugins restore excluded by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Plugins restore excluded by filter.', 'wp-staging'),
     ],
     [
         'backupContains'       => $info->getIsExportingThemes(),
         'excluded'             => $excluded['themes'],
         'messageWhenRestoring' => $replaced['themes'] ? __('Themes will be replaced.', 'wp-staging') : __('Themes will be added.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Themes restore excluded by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Themes restore excluded by filter.', 'wp-staging'),
     ],
     [
         'backupContains'       => $info->getIsExportingMuPlugins(),
         'excluded'             => $excluded['muPlugins'],
         'messageWhenRestoring' => $replaced['muPlugins'] ? __('Mu-plugins will be replaced.', 'wp-staging') : __('Mu-plugins will be added.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Mu-plugins restore excluded by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Mu-plugins restore excluded by filter.', 'wp-staging'),
     ],
     [
         'backupContains'       => $info->getIsExportingUploads(),
         'excluded'             => $excluded['uploads'],
         'messageWhenRestoring' => $replaced['uploads'] ? __('Media files and images will be replaced.', 'wp-staging') : __('Media files and images will be added.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Media files and images restore excluded by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Media files and images restore excluded by filter.', 'wp-staging'),
     ],
     [
         'backupContains'       => $info->getIsExportingOtherWpContentFiles(),
         'excluded'             => $excluded['wpContent'],
         'messageWhenRestoring' => $replaced['wpContent'] ? __('Other files in wp-content folder will be replaced.', 'wp-staging') : __('Other files in wp-content folder will be added.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Other files in wp-content folder restore excluded by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Other files in wp-content folder restore excluded by filter.', 'wp-staging'),
     ],
     [
         'backupContains'       => $info->getIsExportingOtherWpRootFiles(),
         'excluded'             => $excluded['wpRoot'],
         'messageWhenRestoring' => $replaced['wpRoot'] ? __('Other files in WP root folder will be replaced.', 'wp-staging') : __('Other files in WP root folder will be added.', 'wp-staging'),
-        'messageWhenExcluded'  => __('Other files in WP root folder restore excluded by filter.', 'wp-staging')
-    ]
+        'messageWhenExcluded'  => __('Other files in WP root folder restore excluded by filter.', 'wp-staging'),
+    ],
 ];
 
 $isDatabaseOnlyBackup = $info->getIsExportingDatabase() && !$excluded['database']

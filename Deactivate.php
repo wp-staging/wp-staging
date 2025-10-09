@@ -102,7 +102,7 @@ class Deactivate
             BackgroundProcessingServiceProvider::ACTION_QUEUE_MAINTAIN,
             QueueProcessor::ACTION_QUEUE_PROCESS,
             Cron::ACTION_WEEKLY_EVENT,
-            Cron::ACTION_DAILY_EVENT
+            Cron::ACTION_DAILY_EVENT,
         ];
 
         foreach ($hooks as $hook) {
