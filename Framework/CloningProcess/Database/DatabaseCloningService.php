@@ -226,6 +226,11 @@ class DatabaseCloningService
             $this->log("COPY table {$this->dto->getExternalDatabaseName()}.$srcTableName");
             $sql = $this->getTableCreateStatement($srcTableName);
 
+            // Handle case where getTableCreateStatement returns empty array on error
+            if ($sql === []) {
+                throw new FatalException("DB External Copy - Fatal Error: Could not get CREATE statement for table $srcTableName");
+            }
+
             // Replace whole table name if it begins with WordPress prefix.
             // Don't replace it if it's a custom table beginning with another prefix #1303
             // Prevents bug where $old table prefix contains no underscore | Fix missing underscore issue #251.
@@ -262,7 +267,7 @@ class DatabaseCloningService
      */
     public function removeDBPrefix($tableName)
     {
-        return (new Strings())->str_replace_first(WPStaging::getTablePrefix(), null, $tableName);
+        return (new Strings())->str_replace_first(WPStaging::getTablePrefix(), '', $tableName);
     }
 
     /**
@@ -271,7 +276,7 @@ class DatabaseCloningService
      */
     public function removeDbBasePrefix($tableName)
     {
-        return (new Strings())->str_replace_first(WPStaging::getTableBasePrefix(), null, $tableName);
+        return (new Strings())->str_replace_first(WPStaging::getTableBasePrefix(), '', $tableName);
     }
 
     /**
@@ -299,7 +304,7 @@ class DatabaseCloningService
      * Only used by external databases
      *
      * @param string $tableName Table name
-     * @return array
+     * @return string|array Returns CREATE TABLE statement as string, or empty array on error
      */
     private function getTableCreateStatement($tableName)
     {

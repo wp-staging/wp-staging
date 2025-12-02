@@ -471,12 +471,6 @@ class RenameDatabaseTask extends RestoreTask
         $this->logger->info('Database restored successfully.');
 
         do_action('wpstg.backup.import.database.postDatabaseRestoreActions');
-
-        // Otherwise wp.com might throw a private site error, stopping restore to continue further.
-        if (!$this->siteInfo->isHostedOnWordPressCom()) {
-            // Logs the user out
-            wp_logout();
-        }
     }
 
     /**

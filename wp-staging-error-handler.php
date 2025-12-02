@@ -95,12 +95,16 @@ function shutdown_function()
         E_USER_ERROR        => "E_USER_ERROR",
         E_USER_WARNING      => "E_USER_WARNING",
         E_USER_NOTICE       => "E_USER_NOTICE",
-        E_STRICT            => "E_STRICT",
         E_RECOVERABLE_ERROR => "E_RECOVERABLE_ERROR",
         E_DEPRECATED        => "E_DEPRECATED",
         E_USER_DEPRECATED   => "E_USER_DEPRECATED",
         E_ALL               => "E_ALL",
     ];
+
+    // E_STRICT is deprecated in PHP 8.4+, so only add it for older versions
+    if (version_compare(PHP_VERSION, '8.4.0', '<')) {
+        $allErrorTypes[E_STRICT] = "E_STRICT";
+    }
 
     $isFatalError       = isset($fatalErrorTypes[$error['type']]);
     $comesFromWpStaging = strpos($error['file'], WPSTG_PLUGIN_SLUG) !== false;

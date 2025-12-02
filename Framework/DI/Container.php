@@ -18,7 +18,7 @@ class Container extends BaseContainer
     /**
      * Somehow the singleton version of this child container is not working on unit tests with 3.3.5 version of DI52
      * so we have to use the parent container to make it work for unit tests.
-     * @param bool $resolveUnboundAsSingletons
+     * @param false $resolveUnboundAsSingletons
      * @param bool $useBaseContainer
      */
     public function __construct($resolveUnboundAsSingletons = false, $useBaseContainer = false)

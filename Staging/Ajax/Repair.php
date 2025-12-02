@@ -108,7 +108,7 @@ class Repair extends AbstractTemplateComponent
      */
     private function backupOldOption($corruptedOption): bool
     {
-        return add_option(self::OPTION_PREFIX_FOR_STAGING_SITES_BACKUP . time(), $corruptedOption, '', 'no');
+        return add_option(self::OPTION_PREFIX_FOR_STAGING_SITES_BACKUP . time(), $corruptedOption, '', false);
     }
 
     /**

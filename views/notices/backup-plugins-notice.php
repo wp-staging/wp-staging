@@ -19,7 +19,7 @@
         </p>
         <div class="wpstg-backup-plugin-action-container">
             <div>
-                <a href="<?php echo esc_url('https://wp-staging.com/wp-staging-benchmarks/', 'wp-staging');?>" target="_blank"
+                <a href="<?php echo esc_url('https://wp-staging.com/wp-staging-benchmarks/');?>" target="_blank"
                    class="wpstg-backup-read-report-button"><?php esc_html_e('Read the performance report', 'wp-staging'); ?></a>
             </div>
             <div class="wpstg-backup-plugin-actions-button">

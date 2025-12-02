@@ -162,7 +162,7 @@ class FeatureDetection
         do {
             debug_log('runAjaxFeatureTest waited ' . number_format($waited / 1e6, 1) . ' seconds...', 'info', false);
             $waited += $waitStep;
-            usleep($waitStep);
+            usleep((int)$waitStep);
 
             if ($test()) {
                 // Look no further, it worked.

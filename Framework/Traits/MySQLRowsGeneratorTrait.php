@@ -92,11 +92,11 @@ trait MySQLRowsGeneratorTrait
                 }
 
                 if ($this->columnToExclude && $this->valuesToExclude) {
-                    $query                 = $this->getQueryForExclusion($numericPrimaryKey, $table, $offset, $batchSize);
+                    $query                 = $this->getQueryForExclusion($numericPrimaryKey, $table, $offset, (string)$batchSize);
                     $this->columnToExclude = '';
                     $this->valuesToExclude = '';
                 } else {
-                    $query = $this->getQueryWithoutExclusion($numericPrimaryKey, $table, $offset, $batchSize);
+                    $query = $this->getQueryWithoutExclusion($numericPrimaryKey, $table, $offset, (string)$batchSize);
                 }
 
                 $jobDataDto->setLastQueryInfoJSON(json_encode([$requestId, $table, $offset, $batchSize]));

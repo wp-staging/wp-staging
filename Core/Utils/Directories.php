@@ -16,11 +16,6 @@ class Directories
 {
 
     /**
-     * @var string
-     */
-    private $OS;
-
-    /**
      * @var Logger
      */
     private $log;
@@ -30,10 +25,7 @@ class Directories
      */
     public function __construct()
     {
-        $info = new Info();
-
-        $this->log          = WPStaging::getInstance()->get("logger");
-        $this->OS           = $info->getOS();
+        $this->log = WPStaging::getInstance()->get("logger");
     }
 
 

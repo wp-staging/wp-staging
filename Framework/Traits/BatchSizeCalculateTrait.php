@@ -96,7 +96,7 @@ trait BatchSizeCalculateTrait
         $batchSize    = min($maxBatchSize, $batchSize);
         $batchSize    = ceil($batchSize);
 
-        $jobDataDto->setBatchSize($batchSize);
+        $jobDataDto->setBatchSize((int)$batchSize);
 
         return $batchSize;
     }

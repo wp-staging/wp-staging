@@ -2,9 +2,9 @@
 
 namespace WPStaging\Backup;
 
+use SplFileInfo;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
-use WPStaging\Framework\Filesystem\FileObject;
 
 class BackupDeleter
 {
@@ -69,7 +69,7 @@ class BackupDeleter
     }
 
     /**
-     * @param FileObject $backup
+     * @param SplFileInfo $backup
      * @param BackupMetadata $metadata
      */
     public function deleteBackup($backup, $metadata = null)

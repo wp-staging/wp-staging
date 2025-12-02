@@ -5,6 +5,13 @@
  * @see src/views/clone/index.php
  */
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Notices\CliIntegrationNotice;
+
+// Show CLI integration notice
+$cliNotice = WPStaging::make(CliIntegrationNotice::class);
+$cliNotice->maybeShowCliNotice();
+
 ?>
 
 <div id="wpstg-workflow"></div>

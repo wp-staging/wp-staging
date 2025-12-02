@@ -77,6 +77,7 @@ class StartRestoreTask extends RestoreTask
             $this->logger->writeLogHeader($this->jobDataDto->getIsSyncRequest() ? ' - Destination Site: ' . home_url() : '');
             $this->logger->writeInstalledPluginsAndThemes();
             $this->logger->add(sprintf('Backup Format: %s', $this->jobDataDto->getBackupMetadata()->getIsBackupFormatV1() ? 'v1' : 'v2'), Logger::TYPE_INFO);
+            $this->logger->add('Performance Mode : ' . ($this->jobDataDto->getIsFastPerformanceMode() ? 'Fast' : 'Safe'), Logger::TYPE_INFO_SUB);
             $this->logger->info('Is Same Site Restore: ' . ($this->jobDataDto->getIsSameSiteBackupRestore() ? 'Yes' : 'No'));
             $this->writeRestoreFiltersUsed();
         } catch (RuntimeException $e) {

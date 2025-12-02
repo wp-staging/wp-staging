@@ -32,7 +32,9 @@ class ContainerException extends Exception implements ContainerExceptionInterfac
         do {
             if ($reflectionClass->hasProperty($property)) {
                 $traceProperty = $reflectionClass->getProperty($property);
-                $traceProperty->setAccessible(\true);
+                if (\PHP_VERSION_ID < 80100) {
+                    $traceProperty->setAccessible(\true);
+                }
                 return $traceProperty->getValue($object);
             }
             $reflectionClass = $reflectionClass->getParentClass();
@@ -54,7 +56,9 @@ class ContainerException extends Exception implements ContainerExceptionInterfac
         do {
             if ($reflectionClass->hasProperty($property)) {
                 $traceProperty = $reflectionClass->getProperty($property);
-                $traceProperty->setAccessible(\true);
+                if (\PHP_VERSION_ID < 80100) {
+                    $traceProperty->setAccessible(\true);
+                }
                 $traceProperty->setValue($object, $value);
                 return \true;
             }

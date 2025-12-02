@@ -152,7 +152,7 @@ class Settings
 
         wp_send_json([
             'success' => true,
-            'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), esc_html($result)),
+            'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), esc_html((string)$result)),
         ]);
 
         return null;

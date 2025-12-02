@@ -18,8 +18,10 @@ use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\FormatTrait;
 
 /**
- * Don't use any wp core functions or classes in this class
- * This class is to be used in standalone restore tool.
+ * Base class for extracting files from backup archives during restoration
+ *
+ * Handles the core logic for reading backup files, extracting file entries, and writing them to disk.
+ * Designed to work independently of WordPress core for use in standalone restore tools.
  */
 abstract class AbstractExtractor
 {
@@ -255,7 +257,7 @@ abstract class AbstractExtractor
             $this->extractorDto->setCurrentIndexOffset($this->extractorDto->getIndexStartOffset());
         }
 
-        $this->wpstgFile->fseek($this->extractorDto->getCurrentIndexOffset());
+        $this->setWpstgFileOffset();
 
         // Store the index position when reading the current file
         $this->wpstgIndexOffsetForCurrentFile = $this->wpstgFile->ftell();
@@ -301,11 +303,7 @@ abstract class AbstractExtractor
             throw new \RuntimeException("Could not create folder to extract backup file: $extractFolder");
         }
 
-        $this->extractingFile = new FileBeingExtracted($backupFileIndex->getIdentifiablePath(), $extractFolder, $this->pathIdentifier, $backupFileIndex);
-        $this->extractingFile->setWrittenBytes($this->extractorDto->getExtractorFileWrittenBytes());
-        $this->extractingFile->setReadBytes($this->extractorDto->getExtractorFileReadBytes());
-        $this->extractingFile->setHeaderBytesRemoved($this->extractorDto->getHeaderBytesRemoved());
-
+        $this->setupExtractingFile($backupFileIndex, $extractFolder);
         if ($this->isFileExtracted($backupFileIndex, $this->extractingFile->getBackupPath())) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
@@ -443,6 +441,26 @@ abstract class AbstractExtractor
         }
 
         $this->removeLastCharInExtractedFile();
+    }
+
+    protected function setupExtractingFile(IndexLineInterface $backupFileIndex, string $extractFolder)
+    {
+        $this->extractingFile = new FileBeingExtracted($backupFileIndex->getIdentifiablePath(), $extractFolder, $this->pathIdentifier, $backupFileIndex);
+        $this->extractingFile->setWrittenBytes($this->extractorDto->getExtractorFileWrittenBytes());
+        $this->extractingFile->setReadBytes($this->extractorDto->getExtractorFileReadBytes());
+        $this->extractingFile->setHeaderBytesRemoved($this->extractorDto->getHeaderBytesRemoved());
+    }
+
+    protected function setWpstgFileOffset()
+    {
+        $this->wpstgFile->fseek($this->extractorDto->getCurrentIndexOffset());
+    }
+
+    protected function updateExtractorDto()
+    {
+        $this->extractorDto->setHeaderBytesRemoved($this->extractingFile->getHeaderBytesRemoved());
+        $this->extractorDto->setExtractorFileWrittenBytes($this->extractingFile->getWrittenBytes());
+        $this->extractorDto->setExtractorFileReadBytes($this->extractingFile->getReadBytes());
     }
 
     /**

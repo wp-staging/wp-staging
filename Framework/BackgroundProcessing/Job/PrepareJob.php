@@ -286,7 +286,7 @@ abstract class PrepareJob
      * @return void The method does not return any value and will have the side effect of
      *              persisting the task DTO to the Action custom field.
      */
-    private function persistDtoToAction(Action $action = null, TaskResponseDto $dto = null)
+    private function persistDtoToAction($action = null, $dto = null)
     {
         try {
             if ($action === null || $dto === null) {

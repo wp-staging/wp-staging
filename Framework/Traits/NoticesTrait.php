@@ -19,20 +19,25 @@ trait NoticesTrait
      */
     public function isWPStagingAdminPage()
     {
-        // Early bail if it is not an admin page
-        if (!is_admin()) {
-            return false;
-        }
-
-        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
-        if (empty($currentPage)) {
+        // Early bail if it's neither admin nor AJAX
+        if (!is_admin() && !wp_doing_ajax()) {
             return false;
         }
 
         $allowedPrefixes = ["wpstg-", "wpstg_"];
+        $currentPage     = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+        $ajaxAction      = isset($_POST['action']) ? Sanitize::sanitizeString($_POST['action']) : null;
+        if (empty($currentPage) && empty($ajaxAction)) {
+            return false;
+        }
 
         foreach ($allowedPrefixes as $prefix) {
-            if (strpos($currentPage, $prefix) === 0) {
+            if (!empty($currentPage) && strpos($currentPage, $prefix) === 0) {
+                return true;
+            }
+
+
+            if (!empty($ajaxAction) && strpos($ajaxAction, $prefix) === 0) {
                 return true;
             }
         }

@@ -66,7 +66,6 @@ class Cancel extends Job
     public function check()
     {
         return (
-              isset($this->options) &&
               isset($this->options->clone) &&
               isset($this->options->cloneNumber) &&
               isset($this->options->cloneDirectoryName) &&

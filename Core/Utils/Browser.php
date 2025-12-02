@@ -156,7 +156,6 @@ class Browser
     private $browserName = '';
     private $version     = '';
     private $platform    = '';
-    private $os          = '';
     private $isAol       = false;
     private $isMobile    = false;
     private $isRobot     = false;
@@ -241,7 +240,6 @@ class Browser
         $this->browserName = $this->BROWSER_UNKNOWN;
         $this->version     = $this->VERSION_UNKNOWN;
         $this->platform    = $this->PLATFORM_UNKNOWN;
-        $this->os          = $this->OPERATING_SYSTEM_UNKNOWN;
         $this->isAol       = false;
         $this->isMobile    = false;
         $this->isRobot     = false;
@@ -990,7 +988,7 @@ class Browser
             $this->setBrowser($this->BROWSER_MOZILLA);
             return true;
         } elseif (stripos($this->userAgent, 'mozilla') !== false && preg_match('/rv:[0-9]\.[0-9]/i', $this->userAgent) && stripos($this->userAgent, 'netscape') === false) {
-            $aversion = explode('', stristr($this->userAgent, 'rv:'));
+            $aversion = explode('', stristr($this->userAgent, 'rv:')); // @phpstan-ignore-line
             $this->setVersion(str_replace('rv:', '', $aversion[0])); // @phpstan-ignore-line
             $this->setBrowser($this->BROWSER_MOZILLA);
             return true;

@@ -147,11 +147,14 @@ class SystemInfo
 
         $permissions = fileperms(ABSPATH);
 
-        $output .= $this->info("ABSPATH Fileperms:", $permissions);
-
-        $permissions = substr(sprintf('%o', $permissions), -4);
-
-        $output .= $this->info("ABSPATH Permissions:", $permissions);
+        if ($permissions !== false) {
+            $output .= $this->info("ABSPATH Fileperms:", (string)$permissions);
+            $permissions = substr(sprintf('%o', $permissions), -4);
+            $output .= $this->info("ABSPATH Permissions:", $permissions);
+        } else {
+            $output .= $this->info("ABSPATH Fileperms:", "N/A");
+            $output .= $this->info("ABSPATH Permissions:", "N/A");
+        }
 
         $absPathStat = stat(ABSPATH);
         if (!$absPathStat) {
@@ -229,7 +232,7 @@ class SystemInfo
         $multisite = new Multisite();
 
         $output = $this->info("Multisite:", "Yes");
-        $output .= $this->info("Multisite Blog ID:", get_current_blog_id());
+        $output .= $this->info("Multisite Blog ID:", (string)get_current_blog_id());
         $output .= $this->info("MultiSite URL:", $multisite->getHomeURL());
         $output .= $this->info("MultiSite URL without scheme:", $multisite->getHomeUrlWithoutScheme());
         $output .= $this->info("MultiSite is Main Site:", is_main_site() ? 'Yes' : 'No');
@@ -625,7 +628,7 @@ class SystemInfo
     public function php(): string
     {
         $output = $this->info("PHP memory_limit:", ini_get("memory_limit"));
-        $output .= $this->info("PHP memory_limit in Bytes:", wp_convert_hr_to_bytes(ini_get("memory_limit")));
+        $output .= $this->info("PHP memory_limit in Bytes:", (string)wp_convert_hr_to_bytes(ini_get("memory_limit")));
         $output .= $this->info("PHP max_execution_time:", ini_get("max_execution_time"));
         $output .= $this->info("PHP Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
         $output .= $this->info("PHP Upload Max File Size:", ini_get("upload_max_filesize"));
@@ -850,11 +853,11 @@ class SystemInfo
         /** @var Queue */
         $queue = WPStaging::make(Queue::class);
 
-        $output .= $this->info("Backup All Actions in DB:", $queue->count());
-        $output .= $this->info("Backup Pending Actions (ready):", $queue->count(Queue::STATUS_READY));
-        $output .= $this->info("Backup Processing Actions (processing):", $queue->count(Queue::STATUS_PROCESSING));
-        $output .= $this->info("Backup Completed Actions (completed):", $queue->count(Queue::STATUS_COMPLETED));
-        $output .= $this->info("Backup Failed Actions (failed):", $queue->count(Queue::STATUS_FAILED));
+        $output .= $this->info("Backup All Actions in DB:", (string)$queue->count());
+        $output .= $this->info("Backup Pending Actions (ready):", (string)$queue->count(Queue::STATUS_READY));
+        $output .= $this->info("Backup Processing Actions (processing):", (string)$queue->count(Queue::STATUS_PROCESSING));
+        $output .= $this->info("Backup Completed Actions (completed):", (string)$queue->count(Queue::STATUS_COMPLETED));
+        $output .= $this->info("Backup Failed Actions (failed):", (string)$queue->count(Queue::STATUS_FAILED));
 
         return $output;
     }
@@ -878,14 +881,14 @@ class SystemInfo
     {
         $backups = WPStaging::make(ListableBackupsCollection::class)->getListableBackups();
 
-        $output = $this->info("Number of Backups:", count($backups));
+        $output = $this->info("Number of Backups:", (string)count($backups));
 
         $totalBackupSize = 0;
         foreach ($backups as $backup) {
             $totalBackupSize += (float)$backup->size;
         }
 
-        $output .= $this->info("Backup Total File Size:", esc_html($totalBackupSize) . 'M');
+        $output .= $this->info("Backup Total File Size:", esc_html((string)$totalBackupSize) . 'M');
 
         return $output;
     }

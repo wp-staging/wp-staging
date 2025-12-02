@@ -99,7 +99,7 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
             <li><span><?php esc_html_e('Database Name', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-database-name"><?php echo esc_html($stagingSiteItem->databaseName); ?></span></li>
             <li><span><?php esc_html_e('Database Prefix', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-database-prefix"><?php echo esc_html($stagingSiteItem->databasePrefix); ?></span></li>
             <li><span><?php esc_html_e('Directory Path', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-path"><?php echo esc_html($stagingSiteItem->path); ?></span></li>
-            <li><span><?php esc_html_e('URL', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-url"><?php echo empty($stagingSiteItem->url) ? '' : sprintf('<a href="%1$s" target="_blank">%1$s</a>', esc_url($stagingSiteItem->url)); ?></span></li>
+            <li><span><?php esc_html_e('URL', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-url"><?php echo empty($stagingSiteItem->url) ? '' : sprintf('<a href="%1$s" id="wpstg-staging-site-url" target="_blank">%1$s</a>', esc_url($stagingSiteItem->url)); ?></span></li>
             <li><span><?php esc_html_e('Created By', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-created-by"><?php echo esc_html($stagingSiteItem->createdBy); ?></span></li>
             <li>
             <?php if (!empty($stagingSiteItem->status) && $stagingSiteItem->status !== 'finished') : ?>

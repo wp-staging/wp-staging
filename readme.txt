@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
-Tested up to: 6.8
-Stable tag: 4.3.2
+Tested up to: 6.9
+Stable tag: 4.4.0
 Requires PHP: 7.0
 
 Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
@@ -286,6 +286,36 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.4.0 =
+* New: Compatible up to WordPress 6.9
+* New: Tested up to PHP 8.5 RC5.
+* New: Create local containerized and docker compatible development environments with wp staging cli. (Requires Pro Developer Plan or higher) #4688
+* New: Add support for uploading backup files to shared Google Drive folders. (Pro) #3993
+* New: Add autoscroll toggle to log modals. Hovering or scrolling inside the log window pauses automatic scrolling, allowing users to review previous log entries while new ones arrive. Hovering outside re-enables autoscroll. A small "Autoscroll: on/off" indicator appears in the bottom-right corner. Increases performance by reducing unnecessary scroll events when users are interacting with the log content and caching DOM elements. #4614
+* New: Redesign the settings page with a cleaner layout and better visual hierarchy. #4595
+* Enh: Make pro features dynamically accessible based on license types. (Pro) #4558
+* Enh: Show backup storage connection test results in modal instead of toast when there is an error or warning. (Pro) #4463
+* Fix: Ensure the initial login session on new staging sites follows the default WordPress session expiration. (Pro) #4646
+* Fix: Fixes very rare file index issues on misconfigured and buggy server by implementing the filter `wpstg.job.performance_mode` (when set to `safe`). #4628
+* Fix: Show clearer error messages when a directory is not writable due to permission issues or open_basedir restrictions. #4679
+* Fix: Increase default ZIP file size limit from 10 MB to 50 MB during backup creation. #4674
+* Fix: Simplify logout logic during database restore to avoid potential 503 error that disrupt the logout workflow. #4633
+* Fix: Allow emails with subdomains when creating temporary login users. (Pro) #4621
+* Fix: Show backup size in the UI for corrupted backups. #4637
+* Fix: Prevent 'E_STRICT' deprecation notice on PHP 8.4+. #4544
+* Fix: Don't copy background processor table wpstg_queue during cloning. #4636
+* Fix: Several fixes and UX improvements to the cli modals #4707
+* Fix: Allow 5-site Business license to have access to all Pro features (Pro) #4691
+* Fix: Make buttons grey when license is not active #4682
+* Fix: Exclude debug.log from backup creation by default #4693
+* UX: Enhance the license activation error notice to display a clearer and more informative message when activation fails due to any error. (Pro) #4657
+* Dev: Convert codeception remote storage tests to Playwright. #4551
+* Dev: Fix flaky playwright tests. #4662
+* Dev: Make code base pass with phpstan level 5. #4650
+* Dev: Refactored `getLoaderAndSwal` to ensure single responsibility by separating loader initialization and display logic. #4640
+* Dev: Make code base pass with phpstan level 4. #4648
+* Dev: Use updated playwright docker image #4699
 
 = 4.3.2 =
 * New: Compatible up to WordPress 6.8.3.

@@ -117,7 +117,7 @@ class Settings
     }
 
     /**
-     * @param array $settings
+     * @param array|object $settings
      * @return $this
      */
     public function hydrate($settings = [])

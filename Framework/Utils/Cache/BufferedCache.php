@@ -16,6 +16,20 @@ use WPStaging\Framework\Job\Exception\ThresholdException;
 
 use function WPStaging\functions\debug_log;
 
+/**
+ * High-performance file-based cache that reads and writes files in buffered chunks
+ *
+ * Optimized for large files, supporting operations like append, prepend, reverse,
+ * and partial reads while managing memory efficiently for backup operations.
+ *
+ * @example
+ * $cache = new BufferedCache();
+ * $cache->setFilename('backup_queue');
+ * $cache->append('file_path_1');
+ * $cache->append('file_path_2');
+ * $firstItem = $cache->first(); // Returns and removes first item
+ */
+
 // TODO DRY; re-use \WPStaging\Framework\Filesystem\FileObject
 // Buffered cache reads the file partially
 class BufferedCache extends AbstractCache
@@ -35,7 +49,7 @@ class BufferedCache extends AbstractCache
     const FILE_EXTENSION = 'cache.php';
 
     /** @var int */
-    protected $chunkReadingSizeForAppendingFile = 500 * 1024; // 500KB
+    protected $chunkReadingSizeForAppendingFile = 512 * 1024; // 512KB
 
     /**
      * @throws IOException

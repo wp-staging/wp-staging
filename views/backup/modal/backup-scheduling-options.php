@@ -85,7 +85,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
             </label>
             <select name="backupScheduleRotation" id="backupScheduleRotation">
                 <?php for ($i = 1; $i <= 10; $i++) : ?>
-                    <option value="<?php echo esc_attr($i) ?>" <?php echo $isProVersion ? "" : ($i === 1 ? 'selected' : 'disabled') ?>>
+                    <option value="<?php echo esc_attr((string)$i) ?>" <?php echo $isProVersion ? "" : ($i === 1 ? 'selected' : 'disabled') ?>>
                         <?php echo sprintf(esc_html__('Keep last %d backup%s', 'wp-staging'), (int)$i, (int)$i > 1 ? 's' : ''); ?>
                     </option>
                 <?php endfor; ?>

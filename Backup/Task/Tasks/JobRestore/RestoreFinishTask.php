@@ -59,7 +59,10 @@ class RestoreFinishTask extends RestoreTask
             $this->logger->info("################## FINISH ##################");
 
             $this->logBackupRestoreCompleted($this->jobDataDto->getBackupMetadata());
-            $this->clearCacheAndLogoutOnWpCom();
+            $this->clearCacheOnWpCom();
+
+            // Let call logout only at the end of the restore process
+            wp_logout();
         } catch (RuntimeException $e) {
             $this->logger->critical($e->getMessage());
 
@@ -74,10 +77,10 @@ class RestoreFinishTask extends RestoreTask
     }
 
     /**
-     * Clear cache and logout when restoring on wpcom hosted sites and when restoring database
+     * Clear cache when restoring on wpcom hosted sites and when restoring database
      * @return void
      */
-    protected function clearCacheAndLogoutOnWpCom()
+    protected function clearCacheOnWpCom()
     {
         // Early bail: if not wp.com site or database was not restored
         if (!$this->siteInfo->isHostedOnWordPressCom() || !$this->jobDataDto->getBackupMetadata()->getIsExportingDatabase() || $this->jobDataDto->getIsDatabaseRestoreSkipped()) {
@@ -97,8 +100,6 @@ class RestoreFinishTask extends RestoreTask
         $wpdb->flush();
         $wp_object_cache->flush();
         wp_suspend_cache_addition(true);
-
-        wp_logout();
     }
 
     /**

@@ -26,7 +26,11 @@ trait ArrayableTrait
                 continue;
             }
 
-            $prop->setAccessible(true);
+            // setAccessible is true by default and has no effect since PHP 8.1 and is deprecated since 8.5
+            if (PHP_VERSION_ID < 80100) {
+                $prop->setAccessible(true);
+            }
+
             $value = $prop->getValue($this);
 
             if ($value instanceof \DateTime) {

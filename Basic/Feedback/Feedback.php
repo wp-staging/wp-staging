@@ -78,9 +78,9 @@ class Feedback
         $success = WPStaging::make(Notifications::class)->sendEmail(self::WPSTG_FEEDBACK_EMAIL, $subject, $message, $from, [], false);
 
         if ($success) {
-            wp_die(1);
+            wp_die('1');
         }
 
-        wp_die(0);
+        wp_die('0');
     }
 }

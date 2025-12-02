@@ -169,19 +169,19 @@ class Times
         // Add the hour part to the string.
         if (is_numeric($hour)) {
             /* translators: %s: Time duration in hour or hours. */
-            $human_readable_duration[] = sprintf(_n('%s hour', '%s hours', $hour, 'wp-staging'), (int)$hour);
+            $human_readable_duration[] = sprintf(_n('%s hour', '%s hours', (int)$hour, 'wp-staging'), (int)$hour);
         }
 
         // Add the minute part to the string.
         if (is_numeric($minute)) {
             /* translators: %s: Time duration in minute or minutes. */
-            $human_readable_duration[] = sprintf(_n('%s minute', '%s minutes', $minute, 'wp-staging'), (int)$minute);
+            $human_readable_duration[] = sprintf(_n('%s minute', '%s minutes', (int)$minute, 'wp-staging'), (int)$minute);
         }
 
         // Add the second part to the string.
         if (is_numeric($second)) {
             /* translators: %s: Time duration in second or seconds. */
-            $human_readable_duration[] = sprintf(_n('%s second', '%s seconds', $second, 'wp-staging'), (int)$second);
+            $human_readable_duration[] = sprintf(_n('%s second', '%s seconds', (int)$second, 'wp-staging'), (int)$second);
         }
 
         return implode(', ', $human_readable_duration);

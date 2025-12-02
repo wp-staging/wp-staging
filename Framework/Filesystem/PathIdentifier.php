@@ -39,7 +39,7 @@ class PathIdentifier
     const IDENTIFIER_LANG = 'wpstg_l_';
 
     /**
-     * @var string The identifier of the last match.
+     * @var string|null The identifier of the last match.
      *             We will try to match the path/identifier of the next item starting from this one. It's a form of cache,
      *             making it more efficient to transform long lists of similar paths.
      */

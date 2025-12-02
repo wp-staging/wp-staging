@@ -1,7 +1,15 @@
 <?php
 
+/**
+ * Extracts files from backup archives during WordPress site restoration
+ *
+ * Manages the file extraction process across multiple requests, handling large files,
+ * disk space validation, and progress tracking while restoring WordPress files.
+ */
+
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
+use WPStaging\Backup\Dto\File\ExtractorDto;
 use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
@@ -12,13 +20,14 @@ use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Interfaces\ExtractorTaskInterface;
 use WPStaging\Backup\Service\Extractor;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 
-class ExtractFilesTask extends RestoreTask
+class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
 {
     /** @var Extractor */
     protected $extractorService;
@@ -108,6 +117,16 @@ class ExtractFilesTask extends RestoreTask
         return $this->generateResponse(false);
     }
 
+    /**
+     * @return void
+     */
+    public function persistDto(ExtractorDto $extractorDto)
+    {
+        $this->currentTaskDto->fromExtractorDto($extractorDto);
+        $this->setCurrentTaskDto($this->currentTaskDto);
+        $this->persistJobDataDto();
+    }
+
     protected function getExtractSpeed()
     {
         $elapsed = microtime(true) - $this->start;
@@ -127,8 +146,9 @@ class ExtractFilesTask extends RestoreTask
     {
         $this->metadata   = $this->jobDataDto->getBackupMetadata();
         $this->totalFiles = $this->metadata->getTotalFiles();
+        $this->extractorService->setIsFastPerformanceMode($this->jobDataDto->getIsFastPerformanceMode());
         $this->extractorService->setIsBackupFormatV1($this->metadata->getIsBackupFormatV1(false));
-        $this->extractorService->setLogger($this->logger);
+        $this->extractorService->inject($this, $this->logger);
         $this->extractorService->setExcludedIdentifiers($this->getExcludedIdentifiers());
         $this->extractorService->setIsRepairMultipleHeadersIssue($this->canHaveMultipleHeadersIssue());
         $this->setupExtractor();

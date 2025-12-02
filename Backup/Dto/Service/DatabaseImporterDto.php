@@ -97,7 +97,7 @@ class DatabaseImporterDto
 
     public function addShortNameTable(string $table, string $prefix): string
     {
-        $shortName = uniqid($prefix) . str_pad(rand(0, 999999), 6, '0');
+        $shortName = uniqid($prefix) . str_pad((string)rand(0, 999999), 6, '0');
         if ($prefix === $this->tmpPrefix) {
             $this->shortTablesToRestore[$shortName] = $table;
         } elseif ($prefix === DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) {

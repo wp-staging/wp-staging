@@ -53,6 +53,7 @@
             <li><a href="https://wp-staging.com/docs/how-to-backup-and-restore-your-wordpress-website/" target="_blank" rel="noopener"><?php esc_html_e('Backup & migration for wordpress.com hosted sites.', 'wp-staging'); ?></a></li>
             <li><a href="https://wp-staging.com/quality-assurance-for-wp-staging/" target="_blank" rel="noopener"><?php esc_html_e('100% code coverage through extensive unit and end-to-end testing.', 'wp-staging'); ?></a></li>
         </ul>
-        <a href="https://wp-staging.com/pro-features/" target="_blank" id="wpstg-button-backup-upgrade" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet" rel="noopener"><?php esc_html_e('See All Pro Features', 'wp-staging'); ?></a>
+        <a href="https://wp-staging.com/#pricing" target="_blank" id="wpstg-button-backup-upgrade" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet" rel="noopener"><?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?></a>
+        <a href="https://wp-staging.com/pro-features/" target="_blank" id="wpstg-button-backup-upgrade" style="margin-left: 15px;" class="wpstg-button--primary wpstg-button--cta-blue" rel="noopener"><?php esc_html_e('Explore all features', 'wp-staging'); ?></a>
     </div>
 </div>

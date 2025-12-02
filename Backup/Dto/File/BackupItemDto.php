@@ -48,7 +48,7 @@ class BackupItemDto
     {
         $backupFile = new BackupItemDto();
         $backupFile->setIdentifiablePath($indexLineDto->getIdentifiablePath());
-        $backupFile->setSize($indexLineDto->getUncompressedSize());
+        $backupFile->setSize((string)$indexLineDto->getUncompressedSize());
         $backupFile->setIsDatabase(false);
 
         return $backupFile;

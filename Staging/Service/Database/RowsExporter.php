@@ -12,6 +12,16 @@ use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
  */
 class RowsExporter extends AbstractRowsExporter
 {
+    const FILTER_EXCLUDE_TABLES_DATA = 'wpstg.cloning.database.exclude_tables_data';
+
+    /**
+     * Tables without prefix to exclude from data copying. If not excluded in UI or other filters these tables will be created without data.
+     * @var string[]
+     */
+    const TABLES_EXCLUDED_FROM_DATA_COPYING = [
+        'wpstg_queue'
+    ];
+
     /** @var string */
     protected $stagingPrefix;
 

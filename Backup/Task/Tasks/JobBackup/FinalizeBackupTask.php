@@ -301,7 +301,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setPhpVersion(phpversion());
         $backupMetadata->setWpVersion($wp_version);
         /** @phpstan-ignore-line */
-        $backupMetadata->setWpDbVersion($wp_db_version);
+        $backupMetadata->setWpDbVersion((string)$wp_db_version);
         /** @phpstan-ignore-line */
         $backupMetadata->setDbCollate($this->wpdb->collate);
         $backupMetadata->setDbCharset($this->wpdb->charset);

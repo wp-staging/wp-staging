@@ -121,7 +121,14 @@ class PrepareDatabaseRowsTask extends StagingTask
         $this->rowsExporter->inject($this->logger, $this->jobDataDto, $this->currentTaskDto->toRowsExporterDto());
         $this->rowsExporter->setFileName($this->directory->getCacheDirectory() . $this->jobDataDto->getId() . '.wpstgdbtmp.sql');
         $this->rowsExporter->setTables($tables);
-        $this->rowsExporter->setTablesToExclude($this->jobDataDto->getExcludedTables());
+
+        // Merge the tables that were completely excluded as well as the tables whose data needs to be excluded
+        $tablesToExclude = array_merge(
+            $this->jobDataDto->getExcludedTables(),
+            apply_filters(RowsExporter::FILTER_EXCLUDE_TABLES_DATA, RowsExporter::TABLES_EXCLUDED_FROM_DATA_COPYING)
+        );
+
+        $this->rowsExporter->setTablesToExclude($tablesToExclude);
         $this->rowsExporter->prefixSpecialFields();
         if (!$this->stepsDto->getTotal()) {
             $this->stepsDto->setCurrent(0);

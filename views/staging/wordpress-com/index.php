@@ -11,8 +11,15 @@
  * We will support this feature in the future but for now we will show a notice to the user that he can use the backup & migration feature instead.
  */
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Notices\CliIntegrationNotice;
+
 $urlToMigrationArticle    = 'https://wp-staging.com/docs/migrate-a-self-hosted-wordpress-website-to-wordpress-com/';
 $urlToWpComStagingArticle = 'https://wp-staging.com/wordpress-com-how-to-create-staging-site/';
+// Show CLI integration notice
+$cliNotice = WPStaging::make(CliIntegrationNotice::class);
+$cliNotice->maybeShowCliNotice();
+
 ?>
 <div class="wpstg-notice-alert">
     <p class="wpstg-m-0">

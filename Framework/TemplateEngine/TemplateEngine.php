@@ -24,7 +24,7 @@ class TemplateEngine implements TemplateEngineInterface
     /** @var string */
     const ACTION_BACKUP_TAB = 'wpstg.views.backup.tab_backup';
 
-    /** @var string Absolute path to the views directory.  */
+    /** @var string|null Absolute path to the views directory.  */
     protected $views;
 
     /** @var Assets */

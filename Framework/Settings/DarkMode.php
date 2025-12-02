@@ -34,21 +34,10 @@ class DarkMode
      */
     private $defaultColorMode;
 
-    /**
-     * @var string
-     */
-    private $defaultOsColorMode;
-
-    /**
-     * @var Notices
-     */
-    private $notices;
-
     public function __construct()
     {
         $this->auth = WPStaging::make(Auth::class);
         $this->sanitize = WPStaging::make(Sanitize::class);
-        $this->notices = WPStaging::make(Notices::class);
         $this->getDefaultColorMode();
     }
 
@@ -143,14 +132,5 @@ class DarkMode
     {
         $this->defaultColorMode = get_option(self::OPTION_DEFAULT_COLOR_MODE, '');
         return $this->defaultColorMode;
-    }
-
-    /**
-     * @return string
-     */
-    private function getDefaultOsColorMode()
-    {
-        $this->defaultOsColorMode = get_option(self::OPTION_DEFAULT_OS_COLOR_MODE, '');
-        return $this->defaultOsColorMode;
     }
 }

@@ -35,7 +35,7 @@ include WPSTG_VIEWS_DIR . 'job/modal/process.php';
     ))
     ?>
 </span>
-
+<?php require_once WPSTG_VIEWS_DIR . 'staging/_partials/file-size-notice.php';?>
 <div class="wpstg-tabs-wrapper">
     <p class="wpstg-tables-selection-note">
         <b class="wpstg--red"><?php esc_html_e("Note: ", "wp-staging") ?></b>

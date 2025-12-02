@@ -1031,7 +1031,7 @@ class TablesRenamer
         }
 
         if ($this->logEachRename && $this->logger instanceof Logger) {
-            /** @var \wpdb */
+            /** @var string */
             $error = $this->tableService->getLastWpdbError();
             $this->logger->warning(sprintf("DB Rename: Unable to rename table %s to %s. Error: %s", $tableToRename, $tableAfterRenamed, $error));
         }

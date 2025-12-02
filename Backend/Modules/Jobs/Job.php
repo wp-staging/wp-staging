@@ -79,7 +79,7 @@ abstract class Job implements ShutdownableInterface
     protected $logger;
 
     /**
-     * @var object
+     * @var object|null
      */
     protected $options;
 

@@ -11,6 +11,20 @@ use WPStaging\Framework\Utils\Strings;
 
 use function WPStaging\functions\debug_log;
 
+/**
+ * Validates backup file integrity and structure
+ *
+ * This class performs comprehensive validation checks on backup files including:
+ * - File index validation (verifying the list of files in the backup matches metadata)
+ * - Multipart backup validation (checking all parts exist with correct sizes)
+ * - Backup version compatibility checks
+ * - Detection of missing or corrupted backup parts
+ * - Verification of file index first line format
+ *
+ * The validator maintains lists of validation issues (missing parts, size mismatches)
+ * that can be retrieved for display to users. It works with BackupMetadata to access
+ * backup structure information and ensures backups are restorable before restoration attempts.
+ */
 class BackupValidator
 {
     /** @var string[] */
@@ -45,11 +59,11 @@ class BackupValidator
 
     public function __construct(BackupsFinder $backupsFinder, Strings $strings)
     {
-        $this->partSizeIssues = [];
+        $this->partSizeIssues    = [];
         $this->missingPartIssues = [];
-        $this->backupsFinder = $backupsFinder;
-        $this->backupDir = '';
-        $this->strings = $strings;
+        $this->backupsFinder     = $backupsFinder;
+        $this->backupDir         = '';
+        $this->strings           = $strings;
     }
 
     /** @return array */
@@ -82,10 +96,11 @@ class BackupValidator
             return true;
         }
 
-        $start = $metadata->getHeaderStart();
-        $end = $metadata->getHeaderEnd();
+        $start      = $metadata->getHeaderStart();
+        $end        = $metadata->getHeaderEnd();
+        $backupFile = $this->strings->maskBackupFilename($file->getFilename());
         if ($end - $start < 4) {
-            $error = sprintf(esc_html('File Index of %s not found!'), $file->getFilename());
+            $error = sprintf(esc_html('File Index of %s not found!'), $backupFile);
             debug_log($error);
             $this->error = $error;
 
@@ -109,7 +124,7 @@ class BackupValidator
 
         $totalFiles = $metadata->getTotalFiles();
         if ($count !== $totalFiles && !$metadata->getIsMultipartBackup()) {
-            $error = sprintf(esc_html('File Index of %s is invalid! Actual number of files in the backup index: %s. Expected number of files: %s'), $file->getFilename(), $count, $totalFiles);
+            $error = sprintf(esc_html('File Index of %s is invalid! Actual number of files in the backup index: %s. Expected number of files: %s.'), $backupFile, $count, $totalFiles);
             $this->error = $error;
             debug_log($error);
 
@@ -122,7 +137,7 @@ class BackupValidator
 
         $totalFiles = $metadata->getMultipartMetadata()->getTotalFiles();
         if ($count !== $totalFiles && $metadata->getIsMultipartBackup()) {
-            $error = sprintf(esc_html('File Index of %s multipart backup is invalid! Actual number of files in the backup index: %s. Expected number of files: %s'), $file->getFilename(), $count, $totalFiles);
+            $error = sprintf(esc_html('File Index of %s multipart backup is invalid! Actual number of files in the backup index: %s. Expected number of files: %s.'), $backupFile, $count, $totalFiles);
             $this->error = $error;
             debug_log($error);
 
@@ -156,8 +171,9 @@ class BackupValidator
             $line = $file->readAndMoveNext(); // first line is break line, that's fine, move to next then!
         }
 
+        $backupFile = $this->strings->maskBackupFilename($file->getFilename());
         if (!$this->strings->startsWith($line, 'wpstg_')) {
-            $error = sprintf(esc_html('File Index of %s is invalid! The file index first line does not begin with `wpstg_`. The current first line is: %s'), $file->getFilename(), $line);
+            $error = sprintf(esc_html('File Index of %s is invalid! The file index first line does not begin with `wpstg_`. The current first line is: %s.'), $backupFile, $line);
             $this->error = $error;
             debug_log($error);
 

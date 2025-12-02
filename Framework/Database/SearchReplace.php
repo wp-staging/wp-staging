@@ -254,7 +254,7 @@ class SearchReplace
             $regexExclude .= $excludeString . '(*SKIP)(*FAIL)|';
         }
 
-        $pattern = '#' . $regexExclude . preg_quote($this->currentSearch, null) . '#';
+        $pattern = '#' . $regexExclude . preg_quote($this->currentSearch, '#') . '#';
         if (!$this->caseSensitive) {
             $pattern .= 'i';
         }

@@ -15,6 +15,6 @@ class LoginUrl extends AbstractTemplateComponent
             wp_send_json_error(null, 401);
         }
 
-        wp_send_json_success(['loginUrl' => wp_login_url(null, true)]);
+        wp_send_json_success(['loginUrl' => wp_login_url('', true)]);
     }
 }

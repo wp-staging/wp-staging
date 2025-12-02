@@ -108,7 +108,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
          * Allow user to exclude files with extension larger than given size from being backup.
          */
         $this->ignoreFileExtensionFilesBiggerThan = (array)apply_filters('wpstg.export.files.ignore.file_extension_bigger_than', [
-            'zip' => 10 * MB_IN_BYTES,
+            'zip' => 50 * MB_IN_BYTES,
         ]);
 
         // Allows us to use isset for performance
@@ -679,7 +679,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
             return $this->pluginInfo->getActiveThemes();
         }
 
-        if (isset($this->isNetworkSiteBackup) && $this->isNetworkSiteBackup) {
+        if ($this->isNetworkSiteBackup) {
             return $this->pluginInfo->getActiveThemes();
         }
 
@@ -729,7 +729,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         }
 
         // Multisite but only current site is being backup
-        if (isset($this->isNetworkSiteBackup) && $this->isNetworkSiteBackup) {
+        if ($this->isNetworkSiteBackup) {
             return wp_get_active_and_valid_plugins();
         }
 

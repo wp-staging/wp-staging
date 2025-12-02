@@ -50,25 +50,26 @@ class Archiver
     const TMP_BACKUP_EXTENSION = 'wpstgtmp';
 
     /**
-     * After this number of failed requests, we will increase the execution by 5s for file append.
+     * After this number of failed requests, we will extend the execution time by 5s for file append.
      * @var int
      */
-    const MAX_RETRIES = 1;
+    const MAX_RETRIES_BEFORE_EXTENDING_TIME_LIMIT = 1;
 
     /**
-     * This is max time limit we can allow even when php time limit is set higher.
-     * @var int
+     * The maximum execution time limit allowed (in seconds), even if PHP is configured
+     * * with a higher value or unlimited (0 or -1).
      */
     const MAX_ALLOWED_PHP_TIME_LIMIT = 60;
 
     /**
-     * In some cases when, server may have defined max_execution_time as 0 or -1, so we forcefully set it to 10s in those cases.
-     * @var int
-     */
+     * The minimum execution time limit (in seconds) enforced when the server configuration
+     * * sets a very low value for max_execution_time below this threshold.
+    */
     const MIN_ALLOWED_PHP_TIME_LIMIT = 10;
 
     /**
-     * This is the fraction of php time limit, so we still have some room left to finish the execution when threshold reaches
+     * The fraction (percentage) of the allowed PHP time limit to use.
+     * This ensures some buffer time remains before reaching the actual limit.
      * @var float
      */
     const PHP_TIME_LIMIT_IN_FRACTION = 0.8;
@@ -303,7 +304,7 @@ class Archiver
 
         do {
             if ($retries > 0) {
-                usleep($this->getDelayForRetry($retries));
+                usleep((int)$this->getDelayForRetry($retries));
             }
 
             $bytesAddedForIndex = $this->addIndex($writtenBytesIncludingFileHeader, $newBytesWritten);
@@ -562,7 +563,7 @@ class Archiver
     protected function maybeIncrementFileAppendTimeLimit()
     {
         $this->jobDataDto->incrementNumberOfRetries();
-        if ($this->jobDataDto->getNumberOfRetries() > self::MAX_RETRIES) {
+        if ($this->jobDataDto->getNumberOfRetries() > self::MAX_RETRIES_BEFORE_EXTENDING_TIME_LIMIT) {
             return;
         }
 
@@ -809,7 +810,7 @@ class Archiver
         $lastLine = array_filter($lastLine, [$this->backupFileIndex, 'isIndexLine']);
 
         if (count($lastLine) !== 1) {
-            debug_log('Failed to read backup metadata file index information. Error: The last line is not an array or element with countable interface. Last line: ' . print_r($lastLine, 1));
+            debug_log('Failed to read backup metadata file index information. Error: The last line is not an array or element with countable interface. Last line: ' . print_r($lastLine, true));
             throw new RuntimeException('Failed to read backup metadata file index information. Error: The last line is not an array or element with countable interface.');
         }
 

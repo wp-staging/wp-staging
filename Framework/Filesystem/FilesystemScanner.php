@@ -208,8 +208,19 @@ class FilesystemScanner extends AbstractFilesystemScanner
             return;
         }
 
-        // Lazy-built relative path
+        // Lazy-build relative path
         $relativePath = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $normalizedPath);
+
+        // Exclude wp-content/debug.log to prevent checksum failures caused by new log entries during backup
+        $normalizedDebugPath = $this->filesystem->normalizePath(WP_CONTENT_DIR . '/debug.log');
+        if ($normalizedPath === $normalizedDebugPath) {
+            $this->logger->notice(sprintf(
+                '%s: Skipped file "%s". Excluded by rule.',
+                esc_html($this->logTitle),
+                esc_html($relativePath)
+            ));
+            return;
+        }
 
         if ($this->canExcludeLogFile($fileExtension) || $this->canExcludeCacheFile($fileExtension) || isset($this->ignoreFileExtensions[$fileExtension])) {
             // Early bail: File has an ignored extension

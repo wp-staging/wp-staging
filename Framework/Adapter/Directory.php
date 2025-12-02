@@ -32,58 +32,58 @@ class Directory implements DirectoryInterface
      */
     const TMP_THEMES_DIRECTORY = 'wpstg-tmp-themes';
 
-    /** @var string The directory that holds the uploads, usually wp-content/uploads */
+    /** @var string|null The directory that holds the uploads, usually wp-content/uploads */
     protected $uploadDir;
 
-    /** @var string The directory that holds the WP STAGING cache directory, usually wp-content/uploads/wp-staging/cache */
+    /** @var string|null The directory that holds the WP STAGING cache directory, usually wp-content/uploads/wp-staging/cache */
     protected $cacheDirectory;
 
-    /** @var string The directory that holds the WP STAGING backup tmp directory, usually wp-content/wp-staging/tmp/import */
+    /** @var string|null The directory that holds the WP STAGING backup tmp directory, usually wp-content/wp-staging/tmp/import */
     protected $tmpDirectory;
 
-    /** @var string The directory that holds the WP STAGING logs directory, usually wp-content/uploads/wp-staging/logs */
+    /** @var string|null The directory that holds the WP STAGING logs directory, usually wp-content/uploads/wp-staging/logs */
     protected $logDirectory;
 
-    /** @var string The directory that holds the WP STAGING backup directory, usually wp-content/uploads/wp-staging/backups */
+    /** @var string|null The directory that holds the WP STAGING backup directory, usually wp-content/uploads/wp-staging/backups */
     protected $backupDirectory;
 
-    /** @var string The directory that holds the WP STAGING data directory inside uploads folder, usually wp-content/uploads/wp-staging */
+    /** @var string|null The directory that holds the WP STAGING data directory inside uploads folder, usually wp-content/uploads/wp-staging */
     protected $pluginUploadsDirectory;
 
-    /** @var string The directory that holds the WP STAGING data directory directly inside wp-content, usually wp-content/wp-staging */
+    /** @var string|null The directory that holds the WP STAGING data directory directly inside wp-content, usually wp-content/wp-staging */
     protected $pluginWpContentDirectory;
 
-    /** @var string The directory that holds the plugins, usually wp-content/plugins */
+    /** @var string|null The directory that holds the plugins, usually wp-content/plugins */
     protected $pluginsDir;
 
-    /** @var string The directory that holds the mu-plugins, usually wp-content/mu-plugins */
+    /** @var string|null The directory that holds the mu-plugins, usually wp-content/mu-plugins */
     protected $muPluginsDir;
 
-    /** @var array An array of directories that holds themes, usually ['wp-content/themes'] */
+    /** @var array|null An array of directories that holds themes, usually ['wp-content/themes'] */
     protected $themesDirs;
 
-    /** @var string The directory that holds the currently active theme, usually wp-content/themes */
+    /** @var string|null The directory that holds the currently active theme, usually wp-content/themes */
     protected $activeThemeParentDir;
 
-    /** @var array An array of default directories, such as ['wp-content/themes/', 'wp-content/plugins/', 'wp-content/mu-plugins/', 'wp-content/uploads/'] */
+    /** @var array|null An array of default directories, such as ['wp-content/themes/', 'wp-content/plugins/', 'wp-content/mu-plugins/', 'wp-content/uploads/'] */
     protected $defaultWordPressFolders;
 
-    /** @var string The directory that points to the wp-content folder, usually wp-content/ */
+    /** @var string|null The directory that points to the wp-content folder, usually wp-content/ */
     protected $wpContentDirectory;
 
-    /** @var string The directory that points to the wp-includes folder, usually wp-includes/ */
+    /** @var string|null The directory that points to the wp-includes folder, usually wp-includes/ */
     protected $wpIncludesDirectory;
 
-    /** @var string The directory that points to the wp-admin folder, usually wp-admin/ */
+    /** @var string|null The directory that points to the wp-admin folder, usually wp-admin/ */
     protected $wpAdminDirectory;
 
-    /** @var string The directory that points to the languages folder, usually wp-content/languages/ */
+    /** @var string|null The directory that points to the languages folder, usually wp-content/languages/ */
     protected $langDir;
 
-    /** @var string The directory that points to the ABSPATH folder */
+    /** @var string|null The directory that points to the ABSPATH folder */
     protected $absPath;
 
-    /** @var string The directory that points to main site uploads folder, usually wp-content/uploads */
+    /** @var string|null The directory that points to main site uploads folder, usually wp-content/uploads */
     protected $mainSiteUploadsDir;
 
     /** @var Filesystem */
@@ -92,7 +92,7 @@ class Directory implements DirectoryInterface
     /** @var Strings */
     protected $strUtils;
 
-    /** @var string The directory that points to the temp directory for downloads */
+    /** @var string|null The directory that points to the temp directory for downloads */
     protected $downloadsDirectory;
 
     /** @var string The directory that stores the sse events cache used for background logging */
