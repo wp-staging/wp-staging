@@ -1,5 +1,8 @@
 <?php
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Utils\Strings;
+
 /**
  * @var string $id
  * @var array $missingParts
@@ -12,6 +15,9 @@
 if (!isset($urlAssets)) {
     $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 }
+
+/** @var Strings $strings */
+$strings = WPStaging::make(Strings::class);
 
 ?>
 
@@ -38,7 +44,7 @@ if (!isset($urlAssets)) {
     </h5>
     <ol>
         <?php foreach ($existingBackupParts as $existingPart) : ?>
-            <li><?php echo esc_html($existingPart); ?></li>
+            <li><?php echo esc_html($strings->maskBackupFilename($existingPart)); ?></li>
         <?php endforeach; ?>
     </ol>
 
@@ -59,7 +65,7 @@ if (!isset($urlAssets)) {
         </h5>
         <ol>
             <?php foreach ($missingParts as $part) : ?>
-                <li><?php echo esc_html($part['name']); ?></li>
+                <li><?php echo esc_html($strings->maskBackupFilename($part['name'])); ?></li>
             <?php endforeach; ?>
         </ol>
     <?php endif; ?>
@@ -67,7 +73,7 @@ if (!isset($urlAssets)) {
         <h5><?php esc_html_e('Parts with invalid size that should be uploaded again:', 'wp-staging') ?></h5>
         <ol>
             <?php foreach ($sizeIssues as $part) : ?>
-                <li><?php echo esc_html($part); ?></li>
+                <li><?php echo esc_html($strings->maskBackupFilename($part)); ?></li>
             <?php endforeach; ?>
         </ol>
     <?php endif; ?>

@@ -15,6 +15,20 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\Urls;
 
+/**
+ * Collects and prepares backup files for display in the backup list UI
+ *
+ * This class is responsible for:
+ * - Finding all backup files in the backup directory (both generated and uploaded)
+ * - Hydrating backup metadata from .wpstg files
+ * - Validating backup integrity (file index, multipart structure, corruption checks)
+ * - Converting backup files into ListableBackup entities for UI rendering
+ * - Handling legacy .sql backup files
+ * - Preventing duplicate listings when files exist in multiple locations
+ *
+ * The class works with BackupsFinder to locate files and BackupValidator to ensure
+ * backup integrity before presenting them to users.
+ */
 class ListableBackupsCollection
 {
     use WithBackupIdentifier;
@@ -88,7 +102,7 @@ class ListableBackupsCollection
                     $listableBackup->relativePath          = $relativePath;
                     $listableBackup->backupName            = $relativePath;
                     $listableBackup->name                  = $file->getFilename();
-                    $listableBackup->size                  = size_format($file->getSize(), 2); // @phpstan-ignore-line
+                    $listableBackup->size                  = (int)$file->getSize();
                     $listableBackup->id                    = $md5Basename;
                     $listableBackup->md5BaseName           = $md5Basename;
                     $listableBackup->isCorrupt             = true;
@@ -106,7 +120,7 @@ class ListableBackupsCollection
                 $listableBackup->backupName          = $file->getBasename();
                 $listableBackup->downloadUrl         = $downloadUrl;
                 $listableBackup->name                = $file->getFilename();
-                $listableBackup->size                = size_format($file->getSize(), 2); // @phpstan-ignore-line
+                $listableBackup->size                = (int)$file->getSize();
                 $listableBackup->md5BaseName         = $md5Basename;
             } else {
                 continue;
@@ -128,7 +142,7 @@ class ListableBackupsCollection
             $listableBackup->automatedBackup                  = $backupMetadata->getIsAutomatedBackup();
             $listableBackup->backupName                       = $backupMetadata->getName();
             $listableBackup->dateCreatedTimestamp             = intval($backupMetadata->getDateCreated());
-            $listableBackup->dateCreatedFormatted             = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($backupMetadata->getDateCreated()));
+            $listableBackup->dateCreatedFormatted             = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp((int)$backupMetadata->getDateCreated()));
             $listableBackup->dateUploadedTimestamp            = $file->getCTime();
             $listableBackup->dateUploadedFormatted            = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
             $listableBackup->downloadUrl                      = $downloadUrl;
@@ -147,7 +161,7 @@ class ListableBackupsCollection
             $listableBackup->createdOnPro                     = $backupMetadata->getCreatedOnPro();
             $listableBackup->name                             = $file->getFilename();
             $listableBackup->notes                            = $backupMetadata->getNote();
-            $listableBackup->size                             = size_format($backupMetadata->getBackupSize(), 2); // @phpstan-ignore-line
+            $listableBackup->size                             = $backupMetadata->getBackupSize();
             $listableBackup->md5BaseName                      = $md5Basename;
             $listableBackup->isValidFileIndex                 = $this->backupValidator->validateFileIndex($fileObject, $backupMetadata);
             $listableBackup->isValidMultipartBackup           = $this->backupValidator->checkIfSplitBackupIsValid($backupMetadata);
@@ -160,6 +174,11 @@ class ListableBackupsCollection
             $listableBackup->isZlibCompressed                 = $backupMetadata->getIsZlibCompressed();
             $listableBackup->isContaining2GBFile              = $backupMetadata->getIsContaining2GBFile();
 
+            if (empty($backupMetadata->getBackupSize())) {
+                $listableBackup->size             = (int)$file->getSize();
+                $listableBackup->isUnsignedBackup = true;
+            }
+
             return $listableBackup;
         } catch (Throwable $exception) {
             $listableBackup                        = new ListableBackup();
@@ -171,11 +190,14 @@ class ListableBackupsCollection
             $listableBackup->relativePath          = $relativePath;
             $listableBackup->backupName            = $relativePath;
             $listableBackup->name                  = $file->getFilename();
-            $listableBackup->size                  = size_format($file->getSize(), 2); // @phpstan-ignore-line
+            $listableBackup->size                  = (int)$file->getSize();
             $listableBackup->id                    = $md5Basename;
             $listableBackup->md5BaseName           = $md5Basename;
             $listableBackup->isCorrupt             = true;
             $listableBackup->isMultipartBackup     = false;
+            if (empty($backupMetadata->getBackupSize())) {
+                $listableBackup->isUnsignedBackup = true;
+            }
 
             return $listableBackup;
         }

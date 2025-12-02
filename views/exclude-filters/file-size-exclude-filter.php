@@ -5,7 +5,7 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 
 /**
  * @var string $comparison
- * @var int $bytes
+ * @var string $bytes
  * @var string $size
  *
  * @see \WPStaging\Framework\Filesystem\Filters\ExcludeFilter::renderSizeExclude For details on $comparison, $size and $bytes.

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Base class for individual tasks that execute within a multi-step job
+ *
+ * Provides common functionality for task execution including progress tracking,
+ * logging, caching, and response generation for long-running operations.
+ */
+
 namespace WPStaging\Framework\Job\Task;
 
 use Exception;
@@ -265,7 +272,7 @@ abstract class AbstractTask
     public function setupLogger()
     {
         if ($this->logger instanceof Logger) {
-            $this->logger->setupSseLogger($this->jobId);
+            $this->logger->setupSseLogger((string)$this->jobId);
         }
     }
 
@@ -297,6 +304,14 @@ abstract class AbstractTask
     public function getJobTransientCache(): JobTransientCache
     {
         return $this->job->getTransientCache();
+    }
+
+    /**
+     * @return void
+     */
+    public function persistJobDataDto()
+    {
+        $this->job->persistJobDataDto();
     }
 
     /**

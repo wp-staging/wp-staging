@@ -19,6 +19,7 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
  * @var bool                        $isProVersion
  * @var bool                        $isValidLicense
  * @var bool                        $isPersonalLicense
+ * @var string                      $licenseType
  */
 
 WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();

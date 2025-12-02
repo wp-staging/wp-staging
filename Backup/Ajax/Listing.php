@@ -47,6 +47,7 @@ class Listing extends BaseListing
             'isProVersion'      => false,
             'isValidLicense'    => false,
             'isPersonalLicense' => false,
+            'licenseType'       => 'basic', // see Licensing::LICENSE_TYPE_BASIC
         ]);
     }
 }

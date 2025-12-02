@@ -4,6 +4,7 @@
  * @var bool $isProVersion
  * @var string $storagesPrefix
  * @var bool $isPersonalLicense
+ * @var string $licenseType
  */
 
 use WPStaging\Core\WPStaging;
@@ -14,6 +15,16 @@ use WPStaging\Backup\Storage\Providers;
 /** @var Providers */
 $storages = WPStaging::make(Providers::class);
 $assets   = WPStaging::make(Assets::class);
+$restrictedStorages = [
+    'personal'           => ['all'], // all pro storages are restricted
+    'personal_legacy'    => ['pcloud', 'one-drive'], // only pcloud and one-drive are restricted
+    'basic'              => ['all'], // all pro storages are restricted
+    'business'           => ['none'], // no storages are restricted
+    'developer'          => ['none'], // no storages are restricted
+    'developer_legacy'   => ['none'], // no storages are restricted
+    'developer_30_sites' => ['none'], // no storages are restricted
+    'agency'             => ['none'], // no storages are restricted
+];
 ?>
 <div class="wpstg-storages-section">
     <?php if ($storagesPrefix !== 'storage-') :?>
@@ -30,7 +41,7 @@ $assets   = WPStaging::make(Assets::class);
         if ($storagesPrefix === 'storage-') :
             $itemCount++;
             ?>
-            <div class="wpstg-storages-option" data-row="<?php echo esc_attr($rowCount); ?>" data-position="0">
+            <div class="wpstg-storages-option" data-row="<?php echo esc_attr((string)$rowCount); ?>" data-position="0">
                 <label class="wpstg-storages-label">
                     <?php Checkbox::render("storage-localStorage", 'storages', 'localStorage', true); ?>
                     <div class="wpstg-storages-content">
@@ -42,8 +53,14 @@ $assets   = WPStaging::make(Assets::class);
         <?php endif; ?>
 
         <?php
-        $allStorages = $storages->getStorages($enabled = true);
+        $allStorages         = $storages->getStorages($enabled = true);
+        $currentRestrictions = $restrictedStorages[$licenseType] ?? ['none'];
         foreach ($allStorages as $storageKey => $storage) :
+            $isRestrictedStorage = false;
+            if (in_array('all', $currentRestrictions, true) || in_array($storage['id'], $currentRestrictions, true)) {
+                $isRestrictedStorage = true;
+            }
+
             $positionInRow = $itemCount % 2;
             if ($positionInRow === 0) {
                 $rowCount++;
@@ -51,16 +68,16 @@ $assets   = WPStaging::make(Assets::class);
 
             $itemCount++;
             ?>
-            <div class="wpstg-storages-option" data-row="<?php echo esc_attr($rowCount); ?>" data-position="<?php echo esc_attr($positionInRow); ?>">
+            <div class="wpstg-storages-option" data-row="<?php echo esc_attr((string)$rowCount); ?>" data-position="<?php echo esc_attr((string)$positionInRow); ?>">
                 <?php
                 $isActivated   = $storages->isActivated($storage['authClass']);
                 $isProStorage  = empty($storage['authClass']);
-                $isDisabled    = !$isActivated || (!$isProVersion && $isProStorage) || $isPersonalLicense;
+                $isDisabled    = !$isActivated || (!$isProVersion && $isProStorage) || $isPersonalLicense || $isRestrictedStorage;
                 $disabledClass = $isDisabled ? 'wpstg-storages-settings-disabled' : '';
                 $tooltipClass  = $isDisabled && $isProVersion ? 'wpstg--tooltip' : '';
                 $tooltipText   = __('Click on "Configure" to set up and activate the storage provider first.', 'wp-staging');
                 $upgradeLink   = sprintf('https://wp-staging.com/get-%s', $storage['id']);
-                if ($isPersonalLicense) {
+                if ($isPersonalLicense || ($isRestrictedStorage && $licenseType !== 'basic')) {
                     $upgradeLink = admin_url('admin.php?page=wpstg-license');
                     $tooltipText = __('Upgrade to the Business plan (or higher) to start using this feature.', 'wp-staging');
                 }
@@ -81,7 +98,7 @@ $assets   = WPStaging::make(Assets::class);
                         </span>
                     <?php endif; ?>
                 </label>
-                <?php if (!$isProVersion && $isProStorage || $isPersonalLicense) { ?>
+                <?php if (!$isProVersion && $isProStorage || $isPersonalLicense || $isRestrictedStorage) { ?>
                     <a href="<?php echo esc_url($upgradeLink); ?>" target="_blank" class="wpstg-upgrade-btn"><?php esc_html_e('Upgrade', 'wp-staging'); ?></a>
                 <?php } else { ?>
                     <a href="javascript:void(0)" class="wpstg-configure-btn" data-id="<?php echo esc_attr($storage['id']); ?>">
@@ -91,7 +108,7 @@ $assets   = WPStaging::make(Assets::class);
             </div>
 
             <?php if ($positionInRow === 1 || $storageKey === count($allStorages) - 1) :?>
-                <div id="wpstg-<?php echo esc_html($storagesPrefix);?>settings-<?php echo esc_attr($rowCount); ?>" class="wpstg-storages-clear"></div>
+                <div id="wpstg-<?php echo esc_html($storagesPrefix);?>settings-<?php echo esc_attr((string)$rowCount); ?>" class="wpstg-storages-clear"></div>
             <?php endif; ?>
         <?php endforeach; ?>
     </div>

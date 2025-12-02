@@ -247,8 +247,8 @@ class Queue
      *
      * If the table does not exist, then the method will try to create or update it.
      *
-     * @param false $force Whether to force the check on the table or trust the state
-     *                     cached from a previous check.
+     * @param bool $force Whether to force the check on the table or trust the state
+     *                    cached from a previous check.
      *
      * @return int The value of one of the `TABLE` class constants to indicate the
      *             table status.

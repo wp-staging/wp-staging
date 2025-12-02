@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Extracts files from WP Staging backup archives to restore sites
+ *
+ * Handles the extraction process for both compressed and uncompressed backups,
+ * including validation, disk space checks, and file restoration with proper permissions.
+ */
+
 namespace WPStaging\Backup\Service;
 
 use Exception;
@@ -10,6 +17,7 @@ use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Exceptions\EmptyChunkException;
 use WPStaging\Backup\FileHeader;
+use WPStaging\Backup\Interfaces\ExtractorTaskInterface;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
@@ -42,8 +50,17 @@ class Extractor extends AbstractExtractor
     /** @var ZlibCompressor */
     protected $zlibCompressor;
 
+    /** @var ExtractorTaskInterface */
+    protected $extractorTask;
+
     /** @var bool */
     protected $isRepairMultipleHeadersIssue = false;
+
+    /** @var bool */
+    protected $isFastPerformanceMode = true;
+
+    /** @var bool */
+    protected $isLastRequestGracefulShutdown = true;
 
     public function __construct(
         PathIdentifier $pathIdentifier,
@@ -83,13 +100,25 @@ class Extractor extends AbstractExtractor
         $this->isRepairMultipleHeadersIssue = $isRepairMultipleHeadersIssue;
     }
 
+    public function setIsFastPerformanceMode(bool $isFastPerformanceMode)
+    {
+        $this->isFastPerformanceMode = $isFastPerformanceMode;
+    }
+
+    public function setIsLastRequestGracefulShutdown(bool $isLastRequestGracefulShutdown)
+    {
+        $this->isLastRequestGracefulShutdown = $isLastRequestGracefulShutdown;
+    }
+
     /**
+     * @param ExtractorTaskInterface $extractorTask
      * @param LoggerInterface $logger
      * @return void
      */
-    public function setLogger(LoggerInterface $logger)
+    public function inject(ExtractorTaskInterface $extractorTask, LoggerInterface $logger)
     {
-        $this->logger = $logger;
+        $this->extractorTask = $extractorTask;
+        $this->logger        = $logger;
     }
 
     /**
@@ -229,6 +258,10 @@ class Extractor extends AbstractExtractor
             return;
         }
 
+        if ($this->extractingFile->getWrittenBytes() > 0) {
+            $this->logger->debug(sprintf('Resuming extraction of file %s from byte %d. Total size: %d...', $this->extractingFile->getRelativePath(), $this->extractingFile->getWrittenBytes(), $this->extractingFile->getTotalBytes()));
+        }
+
         try {
             if ($this->isThreshold()) {
                 // Prevent considering a file as big just because we start extracting at the threshold
@@ -260,6 +293,11 @@ class Extractor extends AbstractExtractor
         }
 
         $this->validateExtractedFileAndMoveNext();
+        if ($this->isFastPerformanceMode) {
+            return;
+        }
+
+        $this->extractorTask->persistDto($this->extractorDto);
     }
 
     /**
@@ -290,10 +328,22 @@ class Extractor extends AbstractExtractor
         }
 
         $destinationFileResource = @fopen($destinationFilePath, FileObject::MODE_APPEND);
-
         if (!$destinationFileResource) {
             $this->diskWriteCheck->testDiskIsWriteable();
             throw new Exception("Can not extract file $destinationFilePath");
+        }
+
+        /**
+         * When last request is not graceful shutdown and it is not fast performance mode (i.e. safe performance mode),
+         * we need to set the file pointer to the correct position in the backup file to continue extraction from where it left off.
+         * But this solution only works for non-compressed backups
+         */
+        if (!$this->isLastRequestGracefulShutdown && !$this->isFastPerformanceMode && !$this->extractingFile->getIsCompressed()) {
+            $fileSize = filesize($destinationFilePath);
+            $this->wpstgFile->fseek($this->extractingFile->getStart() + $fileSize);
+            $this->extractingFile->setReadBytes($fileSize);
+            $this->extractingFile->setWrittenBytes($fileSize);
+            $this->logger->debug(sprintf('DEBUG: Seeking to byte %d in backup file to continue extraction of %s...', $this->extractingFile->getStart() + $fileSize, $this->extractingFile->getRelativePath()));
         }
 
         $lastDebugMessage = '';
@@ -333,6 +383,8 @@ class Extractor extends AbstractExtractor
 
             $this->extractingFile->addReadBytes($readBytesAfter);
             $this->extractingFile->addWrittenBytes($writtenBytes);
+
+            $this->persistDto();
         }
 
         if (!empty($lastDebugMessage)) {
@@ -341,5 +393,15 @@ class Extractor extends AbstractExtractor
 
         fclose($destinationFileResource);
         $destinationFileResource = null;
+    }
+
+    protected function persistDto()
+    {
+        if ($this->isFastPerformanceMode) {
+            return;
+        }
+
+        $this->updateExtractorDto();
+        $this->extractorTask->persistDto($this->extractorDto);
     }
 }

@@ -34,10 +34,11 @@ $isProVersion           = WPStaging::isPro();
 $requires64Bit          = empty($size) && (PHP_INT_SIZE !== 8);
 $isContaining2GbFile    = $backup->isContaining2GBFile;
 $backupVersion          = $backup->generatedOnBackupVersion;
+$isUnsignedBackup       = $backup->isUnsignedBackup;
 
 // Default error message
 if (empty($indexFileError)) {
-    $indexFileError = __("This backup has an invalid files index. Please create a new backup!", 'wp-staging');
+    $indexFileError = __("This backup has an invalid files index.", 'wp-staging');
 }
 
 // Download URL of backup file
@@ -234,7 +235,8 @@ $wpstgRestorePageUrl = add_query_arg([
             <?php endif; ?>
             <li>
                 <strong><?php esc_html_e('Size: ', 'wp-staging'); ?></strong>
-                <?php echo $requires64Bit ? '<b class="wpstg--red"> 2GB+ </b>' : esc_html($size); ?>
+                <?php echo $requires64Bit ? '<b class="wpstg--red"> 2GB+ </b>' : esc_html((string)size_format($size, 2));?>
+
             </li>
             <?php if (!$isCorrupt) : ?>
                 <li class="single-backup-includes">
@@ -279,16 +281,27 @@ $wpstgRestorePageUrl = add_query_arg([
                 Alert::render($title, $description);
             }
 
-            if (!$isMultipartBackup && !$isValidFileIndex && !$requires64Bit) {
-                $title = __('Corrupted Backup', 'wp-staging');
-                Alert::render($title, $indexFileError);
+            $errors = [];
+            if ($isCorrupt) {
+                $errors[] = __('This backup file is corrupt.', 'wp-staging');
             }
 
-            if ($isCorrupt) {
-                $title       = __('Corrupted Backup', 'wp-staging');
-                $description = __('This backup file is corrupt. Please create a new backup!', 'wp-staging');
-                Alert::render($title, $description);
+            if (!$isMultipartBackup && !$isValidFileIndex && !$requires64Bit) {
+                $errors[] = $indexFileError;
             }
+
+            if ($isUnsignedBackup) {
+                $errors[] = __('Backup file couldn’t be signed properly.', 'wp-staging');
+            }
+
+            if (!empty($errors)) {
+                $title       = __('Corrupted Backup', 'wp-staging');
+                $description = implode(' ', $errors);
+                $footer      = __('Please create a new backup.', 'wp-staging');
+
+                Alert::render($title, $description . ' ' . $footer);
+            }
+
 
             if ($isUnsupported && !$isCorrupt) {
                 $title       = __('Backup Restore Requires Upgrade', 'wp-staging');

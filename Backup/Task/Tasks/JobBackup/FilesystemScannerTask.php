@@ -212,7 +212,7 @@ class FilesystemScannerTask extends BackupTask
          * Allow user to exclude files with extension larger than given size from being backup.
          */
         $this->ignoreFileExtensionFilesBiggerThan = (array)apply_filters('wpstg.export.files.ignore.file_extension_bigger_than', [
-            'zip' => 10 * MB_IN_BYTES,
+            'zip' => 50 * MB_IN_BYTES,
         ]);
 
         // Allows us to use isset for performance

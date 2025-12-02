@@ -100,7 +100,7 @@ $areFilesExcluded = $excluded['plugins']
         <?php if (!$isDatabaseOnlyBackup && !empty($info->getTotalFiles())) : ?>
             <div class="wpstg-db-table" style="margin-top:5px;">
                 <strong><?php esc_html_e('Total Files:', 'wp-staging') ?></strong>
-                <span><?php echo esc_html($info->getTotalFiles()) ?></span>
+                <span><?php echo esc_html((string)$info->getTotalFiles()) ?></span>
                 <?php if ($areFilesExcluded) : ?>
                     <span class="wpstg--red-warning">(<?php esc_html_e('Some files restore will be excluded by filter', 'wp-staging') ?>)</span>
                 <?php endif; ?>

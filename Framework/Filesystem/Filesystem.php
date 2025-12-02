@@ -933,11 +933,14 @@ class Filesystem extends FilterableDirectoryIterator
     /**
      * @param int $errno
      * @param string $errstr
-     * @return void
+     * @param string $errfile
+     * @param int $errline
+     * @return bool
      */
-    public function handleMkdirError(int $errno, string $errstr)
+    public function handleMkdirError(int $errno, string $errstr, string $errfile = '', int $errline = 0): bool
     {
         $this->logs[] = "Unable to create directory. Reason: " . $errstr;
+        return true; // Return true to prevent PHP's internal error handler from running
     }
 
     /**

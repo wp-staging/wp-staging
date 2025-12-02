@@ -9,6 +9,14 @@ use WPStaging\Vendor\lucatume\DI52\Builders\Resolver as BaseResolver;
 class Resolver extends BaseResolver
 {
     /**
+     * @param false $resolveUnboundAsSingletons
+     */
+    public function __construct($resolveUnboundAsSingletons = false)
+    {
+        parent::__construct($resolveUnboundAsSingletons);
+    }
+
+    /**
      * Allows to enqueue the ShutdownableInterface hook
      * on classes resolved by the DI container, such as
      * dependencies injected in the __construct.

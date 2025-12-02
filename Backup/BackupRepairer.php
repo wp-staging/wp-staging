@@ -72,7 +72,13 @@ class BackupRepairer
          * Before: "backupSize": "" // 2 bytes are already consumed by the string ""
          * After:  "backupSize": 123456 // 4 additional bytes are added = 6 (4+2)
          */
-        $backupSize = $file->getSize() - 2 + strlen($file->getSize());
+        $fileSize = $file->getSize();
+        if ($fileSize === false || $fileSize < 1) {
+            $this->error = __('Backup size cannot be determined or is zero', 'wp-staging');
+            return false;
+        }
+
+        $backupSize = $fileSize - 2 + strlen((string)$fileSize);
         if ($backupSize < 1) {
             $this->error = __('Backup size cannot be zero or less', 'wp-staging');
             return false;

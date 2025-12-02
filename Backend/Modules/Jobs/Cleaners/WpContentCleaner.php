@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs\Cleaners;
 
-use WPStaging\Backend\Modules\Jobs\Files;
+use WPStaging\Backend\Modules\Jobs\JobExecutable;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Utils\SlashMode;
@@ -27,7 +27,7 @@ class WpContentCleaner
     private $job;
 
     /**
-     * @param Files $job
+     * @param JobExecutable $job
      */
     public function __construct($job)
     {
@@ -66,7 +66,7 @@ class WpContentCleaner
         $wpDirectories = new WpDefaultDirectories();
         $directory     = trailingslashit($directory);
         $paths         = [];
-        if ($options->deleteUploadsFolder && !$options->backupUploadsFolder && $options->statusContentCleaner = 'pending') {
+        if ($options->deleteUploadsFolder && !$options->backupUploadsFolder && $options->statusContentCleaner === 'pending') {
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeUploadPath());
         }
 

@@ -10,7 +10,9 @@ use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Staging\Service\Database\RowsExporter;
 
 /**
  * Class Database
@@ -211,13 +213,21 @@ class Database extends CloningProcess
             return false;
         }
 
+        $this->finishDataCopying();
+
+        return true;
+    }
+
+    /**
+     * @return void
+     */
+    private function finishDataCopying()
+    {
         // Add it to cloned tables listing
         $this->options->clonedTables[] = isset($this->options->tables[$this->options->currentStep]) ? $this->options->tables[$this->options->currentStep] : false;
 
         // Reset job
         $this->options->job = new stdClass();
-
-        return true;
     }
 
     /**
@@ -263,16 +273,17 @@ class Database extends CloningProcess
     {
         $srcTableName = is_object($srcTableName) ? $srcTableName->name : $srcTableName;
 
-        $destTableName = $this->getStagingPrefix() . $this->databaseCloningService->removeDBPrefix($srcTableName);
+        $tableWithoutPrefix = $this->databaseCloningService->removeDBPrefix($srcTableName);
+        $destTableName      = $this->getStagingPrefix() . $tableWithoutPrefix;
 
         if ($this->isMultisiteAndPro()) {
             // Build full name of table 'users' from main site e.g. wp_users
-            if ($this->databaseCloningService->removeDBPrefix($srcTableName) === 'users') {
+            if ($tableWithoutPrefix === 'users') {
                 $srcTableName = $this->productionDb->base_prefix . 'users';
             }
 
             // Build full name of table 'usermeta' from main site e.g. wp_usermeta
-            if ($this->databaseCloningService->removeDBPrefix($srcTableName) === 'usermeta') {
+            if ($tableWithoutPrefix === 'usermeta') {
                 $srcTableName = $this->productionDb->base_prefix . 'usermeta';
             }
         }
@@ -285,6 +296,13 @@ class Database extends CloningProcess
         $this->setJob($destTableName);
 
         if (!$this->startJob($destTableName, $srcTableName)) {
+            return true;
+        }
+
+        $tablesToExcludeData = Hooks::applyFilters(RowsExporter::FILTER_EXCLUDE_TABLES_DATA, RowsExporter::TABLES_EXCLUDED_FROM_DATA_COPYING);
+        if (in_array($tableWithoutPrefix, $tablesToExcludeData)) {
+            $this->log("Skipping data copy for table {$srcTableName}", Logger::TYPE_INFO);
+            $this->finishDataCopying();
             return true;
         }
 

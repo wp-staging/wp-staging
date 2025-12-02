@@ -2,6 +2,20 @@
 
 namespace WPStaging\Backup\Entity;
 
+/**
+ * Entity representing a backup file for display in the backup list UI
+ *
+ * This class holds all the metadata and properties needed to display a backup in the
+ * WordPress admin interface, including:
+ * - Backup identification (name, ID, timestamps)
+ * - Content flags (database, plugins, themes, uploads, etc.)
+ * - Validation status (corrupt, valid, multipart integrity)
+ * - Display formatting (dates, size, download URL)
+ * - Backup type (single site, multisite, network subsite)
+ * - Version information and compatibility checks
+ *
+ * All properties are public for easy access in templates and AJAX responses.
+ */
 class ListableBackup
 {
     /** @var string */
@@ -120,6 +134,9 @@ class ListableBackup
 
     /** @var bool */
     public $isContaining2GBFile = false;
+
+    /** @var bool */
+    public $isUnsignedBackup = false;
 
     /**
      * @return string

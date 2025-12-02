@@ -498,6 +498,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
             'passphrase',
             'accessToken',
             'refreshToken',
+            'sharedDriveId',
         ];
 
         $providerOptions = WPStaging::make($authClass)->getOptions();

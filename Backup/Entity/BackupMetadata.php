@@ -45,7 +45,7 @@ class BackupMetadata extends AbstractBackupMetadata
         $this->setAbsPath(ABSPATH);
         $this->setBlogId(get_current_blog_id());
         $this->setNetworkId($wpAdapter->getCurrentNetworkId());
-        $this->setDateCreated(time());
+        $this->setDateCreated((string)time());
         $this->setDateCreatedTimezone($time->getSiteTimezoneString());
         $this->setBackupType(is_multisite() ? self::BACKUP_TYPE_MULTISITE : self::BACKUP_TYPE_SINGLE);
         $this->setPhpShortOpenTags($siteInfo->isPhpShortTagsEnabled());

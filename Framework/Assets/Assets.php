@@ -350,7 +350,7 @@ class Assets
         }
 
         $asset = $this->getJsAssetsFileName('wpstg-blank-loader');
-        wp_enqueue_script('wpstg-global', $this->getAssetsUrl($asset), [], [], false);
+        wp_enqueue_script('wpstg-global', $this->getAssetsUrl($asset), [], false, false);
 
         $vars = [
             'nonce' => wp_create_nonce(Nonce::WPSTG_NONCE),
@@ -423,7 +423,7 @@ class Assets
      * @action admin_enqueue_scripts 100 1
      * @see AssetServiceProvider.php
      *
-     * @param bool $hook
+     * @param string $hook
      */
     public function removeWPCoreJs($hook)
     {

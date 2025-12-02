@@ -218,6 +218,7 @@ class I18n
                 'setup_download_modal_title'                          => esc_html__('Downloading backup from remote', 'wp-staging'),
                 'provider_failed_to_save_settings'                    => esc_html__('Could not save settings. Ensure that storage provider\'s credentials are correct!', 'wp-staging'),
                 'connection_test_failed_title'                        => esc_html__('Connection Failed', 'wp-staging'),
+                'log_instruction'                                     => esc_html__('Open System Info > Logs', 'wp-staging'),
                 'connection_test_has_warning_title'                   => esc_html__('Warning', 'wp-staging'),
             ],
             'backup_create'                                       => [
@@ -295,6 +296,9 @@ class I18n
             'sync_connection_expired'                             => esc_html__('Connection has expired. Please connect again.', 'wp-staging'),
             'sync_connection_expires_in'                          => esc_html__('Sync connection expires in %s.', 'wp-staging'),
             'remote_site'                                         => esc_html__('remote site.', 'wp-staging'),
+            'reset_settings_confirmation'                         => esc_html__('Are you sure you want to reset all settings to default values?', 'wp-staging'),
+            'directory_not_writable'                              => esc_html__('The directory isn’t writable. This might be caused by incorrect folder permissions or server configuration restrictions (such as open_basedir).', 'wp-staging'),
+            'install_wp_staging_cli'                              => esc_html__('Install WP Staging CLI', 'wp-staging'),
         ];
     }
 }

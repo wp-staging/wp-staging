@@ -27,11 +27,6 @@ class Directories extends JobExecutable
     protected $excludedPlugins;
 
     /**
-     * @var array
-     */
-    private $files = [];
-
-    /**
      * Total steps to do
      * @var int
      */

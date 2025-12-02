@@ -228,7 +228,7 @@ class Report
         }
 
         if (!empty($postData['forceSend'])) {
-            $forceSend = trim($this->sanitize->sanitizeBool($postData['forceSend']));
+            $forceSend = trim((string)$this->sanitize->sanitizeBool($postData['forceSend']));
         }
 
         $loggedInUser      = wp_get_current_user();

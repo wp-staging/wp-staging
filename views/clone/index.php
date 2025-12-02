@@ -11,6 +11,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
@@ -19,7 +20,9 @@ $notice       = WPStaging::make(Notices::class);
 $isCalledFromIndex = true;
 
 const STAGING_LOADING_BAR_COUNT = 4;
+const WPCOM_STAGING_LOADING_BAR_COUNT = 10;
 const OTHER_LOADING_BAR_COUNT   = 10;
+const NOT_CLONEABLE_LOADING_BAR_COUNT = 6;
 ?>
 
 <div id="wpstg-clonepage-wrapper">
@@ -69,8 +72,20 @@ const OTHER_LOADING_BAR_COUNT   = 10;
 
         <div class="wpstg--tab--contents <?php echo $isStagingPage ? 'min-h-152' : 'min-h-375'; ?>">
             <?php
-                $numberOfLoadingBars = $isStagingPage ? STAGING_LOADING_BAR_COUNT : OTHER_LOADING_BAR_COUNT;
-                include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
+            $numberOfLoadingBars = $isStagingPage ? STAGING_LOADING_BAR_COUNT : OTHER_LOADING_BAR_COUNT;
+            if ($isStagingPage && !$this->siteInfo->isCloneable()) {
+                $numberOfLoadingBars = NOT_CLONEABLE_LOADING_BAR_COUNT;
+            }
+
+            if ($this->siteInfo->isHostedOnWordPressCom()) {
+                $numberOfLoadingBars = WPCOM_STAGING_LOADING_BAR_COUNT;
+            }
+
+            if ($isStagingPage && get_transient(CliIntegrationNotice::TRANSIENT_CLI_NOTICE_DISMISSED) === false && !WPStaging::isBasic()) {
+                $numberOfLoadingBars += 2;
+            }
+
+            include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
             ?>
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
             <?php

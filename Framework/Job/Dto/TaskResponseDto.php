@@ -69,7 +69,7 @@ class TaskResponseDto extends AbstractDto
     }
 
     /**
-     * @param string $message
+     * @param string|array $message
      */
     public function addMessage($message)
     {
@@ -97,7 +97,7 @@ class TaskResponseDto extends AbstractDto
     }
 
     /**
-     * @param string $jobStatus
+     * @param string|bool $jobStatus
      */
     public function setJobStatus($jobStatus)
     {

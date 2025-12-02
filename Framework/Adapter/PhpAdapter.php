@@ -17,7 +17,7 @@ class PhpAdapter
      * is_callable doesn't return true if it is non static methods written statically in PHP 8,
      * So we fixed that behaviour for PHP 8
      *
-     * @param string|null $maybeCallable
+     * @param string|array|null $maybeCallable
      * @return bool
      */
     public function isCallable($maybeCallable): bool

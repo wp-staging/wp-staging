@@ -118,7 +118,7 @@ class FinishBackupTask extends BackupTask
 
             if ($response instanceof FinalizeBackupResponseDto) {
                 $response->setBackupMd5($md5);
-                $response->setBackupSize($backup ? size_format($backup->size) : null);
+                $response->setBackupSize($backup ? $backup->size : null);
                 $response->setIsLocalBackup($this->jobDataDto->isLocalBackup());
                 $response->setIsMultipartBackup($this->jobDataDto->getIsMultipartBackup());
                 $response->setIsGlitchInBackup($this->jobDataDto->getIsGlitchInBackup());

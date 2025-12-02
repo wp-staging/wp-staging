@@ -132,6 +132,14 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->currentTask->persistStepsDto();
         }
 
+        $this->persistJobDataDto();
+    }
+
+    /**
+     * @return void
+     */
+    public function persistJobDataDto()
+    {
         $data = $this->jobDataDto->toArray();
 
         try {

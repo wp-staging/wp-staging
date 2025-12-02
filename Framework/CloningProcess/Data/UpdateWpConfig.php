@@ -33,7 +33,7 @@ class UpdateWpConfig extends FileCloningService
         $content = preg_replace($pattern, $replacement, $content);
 
         if ($content === null) {
-            throw new FatalException("Failed to update table_prefix in {$path}. Regex error", Logger::TYPE_ERROR);
+            throw new FatalException("Failed to update table_prefix in {$path}. Regex error");
         }
 
         // Replace URLs

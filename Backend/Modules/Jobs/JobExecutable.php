@@ -58,7 +58,7 @@ abstract class JobExecutable extends Job
         @ini_set('max_input_time', '-1');
 
         // Set maximum backtracking steps
-        @ini_set('pcre.backtrack_limit', PHP_INT_MAX);
+        @ini_set('pcre.backtrack_limit', (string)PHP_INT_MAX);
 
         $this->strUtil = WPStaging::make(Strings::class);
     }

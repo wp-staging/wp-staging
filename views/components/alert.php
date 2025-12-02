@@ -7,13 +7,20 @@
  * @var string $buttonText
  * @var string $buttonUrl
  * @var bool $closeable
- * @var bool $visible
+ * @var string $id
+ * @var string $style
+ * @var string $class
  *
  * @package WPStaging\Component
  * @see \WPStaging\Component\Alert::render()
  */
 ?>
-<div class="wpstg-banner" style="display: <?php echo $visible ? 'block' : 'none'; ?>;">
+<div 
+    <?php if (!empty($id)) : ?>
+        id="<?php echo esc_attr($id); ?>"
+    <?php endif; ?>
+    class="wpstg-banner <?php echo esc_attr($class);?>"
+    style="<?php echo esc_attr($style); ?>">
     <div class="wpstg-banner-content">
         <div class="wpstg-banner-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444"

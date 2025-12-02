@@ -6,6 +6,7 @@
  * @var bool $isProVersion
  * @var bool $hasSchedule
  * @var bool $isPersonalLicense
+ * @var string $licenseType
  */
 
 use WPStaging\Backup\Entity\BackupMetadata;
@@ -139,7 +140,7 @@ $storagesPrefix = 'storage-';
             <input type="hidden" name="wpContentDir" value="<?php echo esc_attr($directories['wpContent']); ?>"/>
             <input type="hidden" name="wpStagingDir" value="<?php echo esc_attr($directories['wpStaging']); ?>"/>
             <?php unset($directories['wpContent'], $directories['wpStaging']) ?>
-            <input type="hidden" name="availableDirectories" value="<?php echo esc_attr(implode('|', (array)$directories)); ?>"/>
+            <input type="hidden" name="availableDirectories" value="<?php echo esc_attr(implode('|', array_map('strval', (array)$directories))); ?>"/>
             <?php if (!is_multisite()) { ?>
                 <input type="hidden" name="backupType" value="<?php echo esc_attr(BackupMetadata::BACKUP_TYPE_SINGLE); ?>"/>
             <?php } else { ?>
@@ -164,6 +165,7 @@ $storagesPrefix = 'storage-';
                     </div>
                 </div>
             </div>
+            <?php require_once WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-filters-notice.php'; ?>
             <!--calculate backup size-->
             <!-- Advanced Options -->
             <div id="wpstg-backup-advance-section-header" data-id="#wpstg-backup-advance-section">

@@ -150,6 +150,6 @@ class BackupSigner
      */
     private function reCalcBackupSize(int $backupSize = 0): int
     {
-        return $backupSize - 2 + strlen($backupSize);
+        return $backupSize - 2 + strlen((string)$backupSize);
     }
 }

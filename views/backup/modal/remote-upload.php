@@ -4,6 +4,7 @@
  * @var string $urlAssets
  * @var bool   $isProVersion
  * @var bool   $isPersonalLicense
+ * @var string $licenseType
  */
 
 use WPStaging\Backup\Storage\Providers;

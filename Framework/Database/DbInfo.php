@@ -67,6 +67,7 @@ class DbInfo extends WpDbInfo
             }
 
             $db = mysqli_init();
+            // @phpstan-ignore-next-line - null is valid for port and socket parameters
             $db->real_connect($this->server, $this->user, $this->password, $this->database, null, null, MYSQL_CLIENT_FLAGS);
         } else {
             $db = new mysqli($this->server, $this->user, $this->password, $this->database);

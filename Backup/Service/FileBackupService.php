@@ -1,11 +1,20 @@
 <?php
 
+/**
+ * Manages the file backup process for adding files to backup archives
+ *
+ * Coordinates file archiving operations including reading files from disk,
+ * handling large files across multiple requests, and managing backup queues.
+ */
+
 namespace WPStaging\Backup\Service;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Dto\Service\ArchiverDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Exceptions\BackupSkipItemException;
+use WPStaging\Backup\Task\FileBackupTask;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScanner;
@@ -27,6 +36,9 @@ class FileBackupService implements ServiceInterface
     /** @var Archiver */
     protected $archiver;
 
+    /** @var Directory */
+    protected $directory;
+
     /** @var Filesystem */
     protected $filesystem;
 
@@ -45,8 +57,14 @@ class FileBackupService implements ServiceInterface
     /** @var int|ArchiverDto If a file couldn't be processed in a single request, this will be populated */
     protected $bigFileBeingProcessed;
 
+    /** @var FileBackupTask */
+    protected $fileBackupTask;
+
     /** @var bool */
     protected $isWpContentOutsideAbspath = false;
+
+    /** @var bool */
+    protected $isGracefulShutdown = true;
 
     /** @var float */
     protected $start;
@@ -54,27 +72,39 @@ class FileBackupService implements ServiceInterface
     /** @var string */
     protected $fileIdentifier;
 
-    public function __construct(Archiver $archiver, Filesystem $filesystem, SiteInfo $siteInfo)
+    public function __construct(Archiver $archiver, Directory $directory, Filesystem $filesystem, SiteInfo $siteInfo)
     {
         $this->archiver   = $archiver;
+        $this->directory  = $directory;
         $this->filesystem = $filesystem;
 
         $this->isWpContentOutsideAbspath = $siteInfo->isWpContentOutsideAbspath();
     }
 
     /**
+     * @param FileBackupTask $fileBackupTask
      * @param SeekableQueueInterface $taskQueue
      * @param LoggerInterface $logger
      * @param JobBackupDataDto $jobDataDto
      * @param StepsDto $stepsDto
      * @return void
      */
-    public function inject(SeekableQueueInterface $taskQueue, LoggerInterface $logger, JobBackupDataDto $jobDataDto, StepsDto $stepsDto)
+    public function inject(FileBackupTask $fileBackupTask, SeekableQueueInterface $taskQueue, LoggerInterface $logger, JobBackupDataDto $jobDataDto, StepsDto $stepsDto)
     {
-        $this->taskQueue  = $taskQueue;
-        $this->logger     = $logger;
-        $this->jobDataDto = $jobDataDto;
-        $this->stepsDto   = $stepsDto;
+        $this->fileBackupTask = $fileBackupTask;
+        $this->taskQueue      = $taskQueue;
+        $this->logger         = $logger;
+        $this->jobDataDto     = $jobDataDto;
+        $this->stepsDto       = $stepsDto;
+    }
+
+    /**
+     * @param bool $isGracefulShutdown
+     * @return void
+     */
+    public function setIsGracefulShutdown(bool $isGracefulShutdown)
+    {
+        $this->isGracefulShutdown = $isGracefulShutdown;
     }
 
     /**
@@ -134,6 +164,7 @@ class FileBackupService implements ServiceInterface
 
         if ($archiverDto->getWrittenBytesTotal() !== 0) {
             $archiverDto->setIndexPositionCreated(true);
+            $this->logger->debug('Resuming backup of a large file from previous request.');
         }
 
         $path = $this->taskQueue->dequeue();
@@ -178,11 +209,13 @@ class FileBackupService implements ServiceInterface
         if ($isFileWrittenCompletely === true) {
             $this->jobDataDto->setFileBeingBackupWrittenBytes(0);
             $this->stepsDto->incrementCurrentStep();
+            $this->jobDataDto->setQueueOffset($this->taskQueue->getOffset());
 
             if (!$this->jobDataDto->getIsMultipartBackup()) {
                 $this->jobDataDto->incrementFilesInPart($this->fileIdentifier);
             }
 
+            $this->persistJobDataDto();
             return;
         }
 
@@ -200,6 +233,7 @@ class FileBackupService implements ServiceInterface
             $this->bigFileBeingProcessed = $archiverDto;
         }
 
+        $this->persistJobDataDto();
         if ($isFileWrittenCompletely === null) {
             throw new ThresholdException();
         }
@@ -215,6 +249,15 @@ class FileBackupService implements ServiceInterface
 
         if ($bytesPerSecond === 10 * GB_IN_BYTES) {
             return '10GB/s+';
+        }
+
+        // Format with 2 decimal places if faster than 1MB/s
+        if ($bytesPerSecond >= MB_IN_BYTES) {
+            if ($bytesPerSecond >= GB_IN_BYTES) {
+                return number_format($bytesPerSecond / GB_IN_BYTES, 2) . 'GB/s';
+            }
+
+            return number_format($bytesPerSecond / MB_IN_BYTES, 2) . 'MB/s';
         }
 
         return size_format($bytesPerSecond) . '/s';
@@ -287,5 +330,14 @@ class FileBackupService implements ServiceInterface
             default:
                 return $this->fileIdentifier; // fallback
         }
+    }
+
+    protected function persistJobDataDto()
+    {
+        if ($this->jobDataDto->getIsFastPerformanceMode()) {
+            return;
+        }
+
+        $this->fileBackupTask->persistJobDataDto();
     }
 }

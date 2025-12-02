@@ -33,6 +33,7 @@ trait EventLoggerTrait
         'wasabi-s3'           => 'WS3',
         'generic-s3'          => 'GS3',
         'one-drive'           => 'OD',
+        'pcloud'              => 'PC',
     ];
     protected $backupUploadPrefixIdentifier = 'BU';
     private $sanitize;
@@ -141,7 +142,7 @@ trait EventLoggerTrait
     private function writeEventStatus(string $process, bool $status = true): bool
     {
         $this->initializeObjects();
-        $content = date('dm') . $process . ($status === $this->processStatusFailed ? '-' : '+');
+        $content = date('dmy') . $process . ($status === $this->processStatusFailed ? '-' : '+');
         clearstatcache(true, $this->filePath);
         if (file_exists($this->filePath) && filesize($this->filePath) > 0) {
             $content = "\n" . $content;

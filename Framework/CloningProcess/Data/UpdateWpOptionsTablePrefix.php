@@ -28,8 +28,8 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
 
     /**
      * @param string $stagingPrefix
-     * @param wpdb   $productionDb
-     * @param wpdb   $stagingDb
+     * @param \wpdb  $productionDb
+     * @param \wpdb  $stagingDb
      * @return boolean
      */
     private function updateAllOptionsTables($stagingPrefix, $productionDb, $stagingDb)
@@ -48,7 +48,7 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
      * @param string $tableName
      * @param string $stagingPrefix
      * @param string $productionPrefix
-     * @param wpdb   $stagingDb
+     * @param \wpdb  $stagingDb
      * @return boolean
      *
      * @throws FatalException

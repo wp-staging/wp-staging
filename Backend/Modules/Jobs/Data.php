@@ -55,7 +55,7 @@ class Data extends DataJob
         $strings = new Strings();
         $this->tables = [];
         foreach ($this->options->tables as $table) {
-            $this->tables[] = $this->options->prefix . $strings->strReplaceFirst(WPStaging::getTablePrefix(), null, $table);
+            $this->tables[] = $this->options->prefix . $strings->strReplaceFirst(WPStaging::getTablePrefix(), '', $table);
         }
     }
 

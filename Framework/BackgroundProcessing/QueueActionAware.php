@@ -30,7 +30,7 @@ trait QueueActionAware
      * @param Action|null $action The reference to the Action object that is currently being processed
      *                            in the context of the Queue processing.
      */
-    public function setCurrentAction(Action $action = null)
+    public function setCurrentAction($action = null)
     {
         $this->queueCurrentAction = $action;
     }
