@@ -270,6 +270,8 @@ class SystemInfo
     {
         $settings                               = (object)get_option('wpstg_settings', []);
         $optionBackupScheduleErrorReport        = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT);
+        $optionBackupScheduleWarningReport      = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_WARNING_REPORT);
+        $optionBackupScheduleGeneralReport      = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_GENERAL_REPORT);
         $optionBackupScheduleReportEmail        = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         $optionBackupScheduleSlackErrorReport   = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT);
         $optionBackupScheduleReportSlackWebhook = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK);
@@ -307,8 +309,10 @@ class SystemInfo
         $output .= $this->info("Admin Bar Color:", isset($settings->adminBarColor) ? $settings->adminBarColor : self::NOT_SET_LABEL);
         $analyticsHasConsent = get_option('wpstg_analytics_has_consent');
         $output .= $this->info("Send Usage Information:", !empty($analyticsHasConsent) ? 'true' : 'false');
-        $output .= $this->info("Send Backup Errors via E-Mail:", !empty($optionBackupScheduleErrorReport) && $optionBackupScheduleErrorReport === 'true' ? 'true' : 'false');
-        $output .= $this->info("E-Mail Address:", !empty($optionBackupScheduleReportEmail) && is_email($optionBackupScheduleReportEmail) ? $optionBackupScheduleReportEmail : self::NOT_SET_LABEL);
+        $output .= $this->info("Send Backup Errors via Email:", !empty($optionBackupScheduleErrorReport) && $optionBackupScheduleErrorReport === 'true' ? 'true' : 'false');
+        $output .= $this->info("Send Backup Warnings via Email:", !empty($optionBackupScheduleWarningReport) && $optionBackupScheduleWarningReport === 'true' ? 'true' : 'false');
+        $output .= $this->info("Send Backup General Report via Email:", !empty($optionBackupScheduleGeneralReport) && $optionBackupScheduleGeneralReport === 'true' ? 'true' : 'false');
+        $output .= $this->info("Email Address:", !empty($optionBackupScheduleReportEmail) && is_email($optionBackupScheduleReportEmail) ? $optionBackupScheduleReportEmail : self::NOT_SET_LABEL);
         $output .= $this->info("Send Backup Errors via Slack Webhook:", !empty($optionBackupScheduleSlackErrorReport) && $optionBackupScheduleSlackErrorReport === 'true' ? 'true' : ( WPStaging::isPro() ? 'false' : self::NOT_SET_LABEL ));
         $output .= $this->info("Slack Webhook URL:", WPStaging::isPro() && !empty($optionBackupScheduleReportSlackWebhook) ? self::REMOVED_LABEL : self::NOT_SET_LABEL);
         $output .= $this->info("Backup Compression:", isset($settings->enableCompression) ? ($settings->enableCompression ? 'On' : 'Off') : self::NOT_SET_LABEL);

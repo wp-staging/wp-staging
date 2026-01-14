@@ -31,7 +31,12 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
             <option value="<?php echo esc_attr(Cron::TWELVE_HOURS); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::TWELVE_HOURS)) . esc_html($proFeature); ?></option>
             <option value="<?php echo esc_attr(Cron::DAILY); ?>" selected> <?php echo esc_html(Cron::getCronDisplayName(Cron::DAILY));?></option>
             <option value="<?php echo esc_attr(Cron::EVERY_TWO_DAYS); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::EVERY_TWO_DAYS)) . esc_html($proFeature); ?></option>
-            <option value="<?php echo esc_attr(Cron::WEEKLY); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::WEEKLY)) . esc_html($proFeature); ?></option>
+            <?php // Weekly schedules with day selection (1-7: Monday-Sunday, ISO 8601) ?>
+            <?php for ($day = 1; $day <= 7; $day++) :
+                $weeklyDay = Cron::WEEKLY . '_' . $day;
+                ?>
+            <option value="<?php echo esc_attr($weeklyDay); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName($weeklyDay)) . esc_html($proFeature); ?></option>
+            <?php endfor; ?>
             <option value="<?php echo esc_attr(Cron::EVERY_TWO_WEEKS); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::EVERY_TWO_WEEKS)) . esc_html($proFeature); ?></option>
             <option value="<?php echo esc_attr(Cron::MONTHLY); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::MONTHLY)) . esc_html($proFeature); ?></option>
         </select>

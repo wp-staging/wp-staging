@@ -20,7 +20,7 @@ class CliIntegrationNotice
      * @var bool Set to true to enable the CLI integration banner
      * @todo Enable this in next version when the feature is ready
      */
-    const IS_ENABLED = false;
+    const IS_ENABLED = true;
 
     /**
      * @var string Transient key for 24-hour dismissal
@@ -120,10 +120,22 @@ class CliIntegrationNotice
             }
         }
 
+        // Check if there are valid (non-corrupt, non-legacy) backups
+        $hasBackups = false;
+        foreach ($backups as $backup) {
+            if (!$backup->isCorrupt && !$backup->isLegacy) {
+                $hasBackups = true;
+                break;
+            }
+        }
+
         ob_start();
         include WPSTG_VIEWS_DIR . 'cli/cli-backup-list.php';
         $html = ob_get_clean();
 
-        wp_send_json_success(['html' => $html]);
+        wp_send_json_success([
+            'html'       => $html,
+            'hasBackups' => $hasBackups,
+        ]);
     }
 }

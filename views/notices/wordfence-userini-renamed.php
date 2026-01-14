@@ -16,7 +16,7 @@ use WPStaging\Framework\ThirdParty\WordFence;
         <?php esc_html_e('When you push this site to live, your WordFence firewall settings on the live site will not be affected by this step.', 'wp-staging'); ?> <br/>
     </p>
         <ul>
-          <li>- <?php echo sprintf(__('<a href="%s" target="_blank">Read this</a> why we had to disable the firewall and how you can activate it if you like to.', 'wp-staging'), 'https://wp-staging.com/docs/wordfence-fatal-error-after-migration/'); ?></li>
+            <li>- <?php echo sprintf(__('<a href="%s" target="_blank">Read this</a> why we had to disable the firewall and how you can activate it if you like to.', 'wp-staging'), 'https://wp-staging.com/docs/wordfence-fatal-error-after-migration/'); ?></li>
         </ul>
     <p>
     <?php Notices::renderNoticeDismissAction(

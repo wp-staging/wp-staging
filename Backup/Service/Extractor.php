@@ -310,7 +310,7 @@ class Extractor extends AbstractExtractor
         $destinationFilePath = $this->extractingFile->getBackupPath();
 
         if (strpos($destinationFilePath, '.sql') !== false) {
-            $this->logger->debug(sprintf('DEBUG: Restoring SQL file %s', $destinationFilePath));
+            $this->logger->debug(sprintf('DEBUG: Extracting SQL file %s', $destinationFilePath));
         }
 
         wp_mkdir_p(dirname($destinationFilePath));

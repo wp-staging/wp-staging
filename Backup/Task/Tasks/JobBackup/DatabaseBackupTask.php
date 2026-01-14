@@ -15,6 +15,7 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Framework\Utils\Times;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use wpdb;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
@@ -200,9 +201,9 @@ class DatabaseBackupTask extends BackupTask
             ));
 
             $this->logger->debug(sprintf(
-                'Backup database: Table %s. Query time: %s s. Batch Size: %s. Last query json: %s',
+                'Backup database: Table %s. Query time: %s. Batch Size: %s. Last query json: %s',
                 $rowsExporter->getTableBeingBackup(),
-                $this->jobDataDto->getDbRequestTime(),
+                Times::formatQueryTime($this->jobDataDto->getDbRequestTime()),
                 $this->jobDataDto->getBatchSize(),
                 $this->jobDataDto->getLastQueryInfoJSON()
             ));

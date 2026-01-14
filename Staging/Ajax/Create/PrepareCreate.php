@@ -8,14 +8,14 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\JobTransientCache;
-use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
+use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteCreate;
 use WPStaging\Staging\Service\StagingSetup;
 
 class PrepareCreate extends PrepareJob
 {
-    /** @var StagingSiteCreateDataDto */
+    /** @var StagingSiteJobsDataDto */
     protected $jobDataDto;
 
     /** @var StagingSiteCreate */
@@ -191,10 +191,12 @@ class PrepareCreate extends PrepareJob
         $data['customUrl']  = '';
 
         // Other settings
-        $data['emailsAllowed']         = true;
-        $data['cronDisabled']          = false;
-        $data['wooSchedulerDisabled']  = false;
-        $data['emailsReminderAllowed'] = false;
+        $data['isEmailsAllowed']         = true;
+        $data['isUploadsSymlinked']      = false;
+        $data['isCronEnabled']           = true;
+        $data['isWooSchedulerEnabled']   = true;
+        $data['isEmailsReminderEnabled'] = false;
+        $data['isAutoUpdatePlugins']     = false;
 
         return $data;
     }
@@ -210,8 +212,8 @@ class PrepareCreate extends PrepareJob
 
         // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
         $services = WPStaging::getInstance()->getContainer();
-        /** @var StagingSiteCreateDataDto */
-        $this->jobDataDto = $services->get(StagingSiteCreateDataDto::class);
+        /** @var StagingSiteJobsDataDto */
+        $this->jobDataDto = $services->get(StagingSiteJobsDataDto::class);
         /** @var StagingSiteCreate */
         $this->jobCreate  = $services->get($this->getJobClass());
 

@@ -289,4 +289,19 @@ class Times
     {
         return (new DateTime('now', $this->getSiteTimezoneObject()))->getTimestamp();
     }
+
+    /**
+     * Format query execution time to human-readable format
+     *
+     * @param float $seconds Time in seconds
+     * @return string Formatted time (e.g., "20.8 ms" or "2.35 s")
+     */
+    public static function formatQueryTime(float $seconds): string
+    {
+        if ($seconds < 1) {
+            return round($seconds * 1000, 1) . ' ms';
+        }
+
+        return round($seconds, 2) . ' s';
+    }
 }

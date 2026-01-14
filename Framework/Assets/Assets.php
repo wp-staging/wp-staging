@@ -5,7 +5,6 @@ namespace WPStaging\Framework\Assets;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
@@ -18,6 +17,7 @@ use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Rest\Rest;
+use WPStaging\Backup\Storage\Providers;
 
 class Assets
 {
@@ -33,6 +33,11 @@ class Assets
     const FILTER_BACKUP_STATUS_REQUEST_INTERVAL = 'wpstg.backup.interval.status_request';
 
     /** @var string */
+    const FILTER_STAGING_SITE_TITLE = 'wpstg_staging_site_title';
+
+    const FILTER_TESTS_MAXIMUM_RETRIES = 'wpstg.tests.maximum_retries';
+
+    /** @var string */
     const TRANSIENT_REST_URL = 'wpstg_rest_url';
 
     private $accessToken;
@@ -44,12 +49,16 @@ class Assets
     /** @var I18n */
     private $i18n;
 
-    public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent, I18n $i18n)
+    /** @var Providers */
+    private $providers;
+
+    public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent, I18n $i18n, Providers $providers)
     {
         $this->accessToken      = $accessToken;
         $this->settings         = $settings;
         $this->analyticsConsent = $analyticsConsent;
         $this->i18n             = $i18n;
+        $this->providers        = $providers;
     }
 
     /**
@@ -221,6 +230,18 @@ class Assets
             false
         );
 
+        // Load settings page js file
+        if (is_admin() && isset($_GET['page']) && $_GET['page'] === 'wpstg-settings') {
+            $asset = $this->getJsAssetsFileName('wpstg-admin-settings');
+            wp_enqueue_script(
+                'wpstg-admin-settings-script',
+                $this->getAssetsUrl($asset),
+                [],
+                $this->getAssetsVersion($asset),
+                true
+            );
+        }
+
         // Sweet Alert
         $asset = $this->getJsAssetsFileName('wpstg-sweetalert2');
         wp_enqueue_script(
@@ -259,6 +280,9 @@ class Assets
 
         // Internal hook to enqueue backup scripts, used by the backup addon
         Hooks::doAction(BackupServiceProvider::ACTION_BACKUP_ENQUEUE_SCRIPTS);
+
+        // Load storage array to js for show/hide the badge-pill
+        wp_localize_script('wpstg-backup', 'wpstgAllStorages', $this->providers->getStorages(true));
 
         // Load admin js pro files
         if (WPStaging::isPro()) {
@@ -302,7 +326,7 @@ class Assets
             'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
             'analyticsConsentLater'  => esc_url($this->analyticsConsent->getRemindMeLaterConsentLink()),
             'isPro'                  => WPStaging::isPro(),
-            'maxFailedRetries'       => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
+            'maxFailedRetries'       => apply_filters(self::FILTER_TESTS_MAXIMUM_RETRIES, 10),
             'i18n'                   => $this->i18n->getTranslations(),
             'isCloneable'            => (new SiteInfo())->isCloneable(),
             'isTestMode'             => defined('WPSTG_TEST') && WPSTG_TEST,
@@ -494,7 +518,7 @@ class Assets
             $blogName  = $parsedUrl['host'];
         }
 
-        $siteTitle = apply_filters('wpstg_staging_site_title', 'STAGING');
+        $siteTitle = Hooks::applyFilters(self::FILTER_STAGING_SITE_TITLE, 'STAGING');
         $title     = (strlen($blogName) > 20) ? substr($blogName, 0, 20) . '...' : $blogName;
         $wp_admin_bar->add_menu(
             [

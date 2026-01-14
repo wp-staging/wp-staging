@@ -354,6 +354,7 @@ if (isset($_REQUEST['action'])) {
                     $isActivatingAnotherWpStaging = plugin_basename($plugin) !== plugin_basename($pluginFilePath);
 
                     if ($isActivatingWpStaging && $isActivatingAnotherWpStaging && wpstgCanThrowAnotherInstanceLoadedException($plugin) && current_user_can('deactivate_plugin', plugin_basename($pluginFilePath))) {
+                        // @todo consider changing this! Leads to populating debug.log with thousands of entries during testing
                         throw new Exception("Activating another WPSTAGING Plugin. Plugin that bailed bootstrapping: $pluginFilePath");
                     }
                 }

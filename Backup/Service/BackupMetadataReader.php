@@ -6,6 +6,9 @@ use WPStaging\Framework\Filesystem\FileObject;
 
 class BackupMetadataReader
 {
+    /** @var string */
+    const FILTER_MAX_BACKUP_METADATA_SIZE = 'wpstg_max_backup_metadata_size';
+
     /** @var int */
     private $existingMetadataPosition;
 
@@ -81,7 +84,8 @@ class BackupMetadataReader
             return false;
         }
 
-        $network = $maybeMetadata['networks']['1'];
+        // We only have one network, pop it to check for blogs.
+        $network = array_pop($maybeMetadata['networks']);
         if (!is_array($network) || !array_key_exists('blogs', $network) || !is_array($network['blogs'])) {
             return false;
         }
@@ -105,6 +109,6 @@ class BackupMetadataReader
             return $maxBackupMetadataSize;
         }
 
-        return apply_filters('wpstg_max_backup_metadata_size', $maxBackupMetadataSize);
+        return apply_filters(self::FILTER_MAX_BACKUP_METADATA_SIZE, $maxBackupMetadataSize);
     }
 }

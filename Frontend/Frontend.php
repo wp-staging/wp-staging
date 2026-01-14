@@ -3,6 +3,7 @@
 namespace WPStaging\Frontend;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\SiteInfo;
 
@@ -14,6 +15,9 @@ use function WPStaging\functions\debug_log;
  */
 class Frontend
 {
+    /** @var string */
+    const FILTER_FRONTEND_SHOW_LOGIN_FORM = 'wpstg.frontend.showLoginForm';
+
     /**
      * @var object
      */
@@ -96,7 +100,7 @@ class Frontend
         }
 
         // Don't show login form if showLoginForm filter is set to false. Used by Real Cookie Banner plugin
-        if (apply_filters('wpstg.frontend.showLoginForm', false)) {
+        if (Hooks::applyFilters(self::FILTER_FRONTEND_SHOW_LOGIN_FORM, false)) {
             return false;
         }
 

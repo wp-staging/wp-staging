@@ -4,11 +4,15 @@ namespace WPStaging\Backup;
 
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\ThirdParty\NinjaForms;
 
 class AfterRestore
 {
+    /** @var string */
+    const FILTER_BACKUP_IMPORT_DATABASE_DROP_OLD_TABLES_AFTER_RESTORE = 'wpstg.backup.import.database.dropOldTablesAfterRestore';
+
     /**
      * @var TableService
      */
@@ -50,7 +54,7 @@ class AfterRestore
         // Disable WordPress automatic background updates on this request.
         add_filter('automatic_updater_disabled', '__return_false');
 
-        if (apply_filters('wpstg.backup.import.database.dropOldTablesAfterRestore', true)) {
+        if (Hooks::applyFilters(self::FILTER_BACKUP_IMPORT_DATABASE_DROP_OLD_TABLES_AFTER_RESTORE, true)) {
             $this->tableService->deleteTablesStartWith(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP, [], true);
         }
 

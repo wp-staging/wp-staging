@@ -134,7 +134,7 @@ $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
                         <?php esc_html_e('Create Local Site', 'wp-staging'); ?>
                     </button>
                 <?php else : ?>
-                    <a href="https://wp-staging.com/#pricing" target="_blank" rel="noreferrer noopener" class="wpstg-button wpstg-blue-primary wpstg-banner-button-primary">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>" target="_self" class="wpstg-button wpstg-blue-primary wpstg-banner-button-primary">
                         <?php esc_html_e('Upgrade Your Plan', 'wp-staging'); ?>
                     </a>
                 <?php endif; ?>

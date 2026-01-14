@@ -51,7 +51,7 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
     <?php
     printf(
         '%s %s',
-        '<span style="font-weight: bold">' . esc_html_e('Download WP Staging Restore and Extraction Tool:', 'wp-staging') . '</span>',
+        '<span style="font-weight: bold">' . esc_html__('Download WP Staging Restore and Extraction Tool:', 'wp-staging') . '</span>',
         '<a href="https://wp-staging.com/docs/wp-staging-restore/">' . esc_html__('Read More or Upgrade to Pro', 'wp-staging') . '</a>'
     );
     ?>

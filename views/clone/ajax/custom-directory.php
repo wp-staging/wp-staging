@@ -4,8 +4,10 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Facades\UI\Checkbox;
+use WPStaging\Staging\CloneOptions;
 
 /**
  * This file is currently being called for the both FREE and PRO version:
@@ -37,10 +39,10 @@ $customHostname = $hostname;
 
 // Apply Filters in only PRO version
 if ($isPro) {
-    $hostname       = apply_filters('wpstg_cloning_target_hostname', $hostname);
-    $customHostname = apply_filters('wpstg_cloning_target_hostname', '');
-    $directory      = apply_filters('wpstg_cloning_target_dir', $directory);
-    $customDir      = apply_filters('wpstg_cloning_target_dir', '');
+    $hostname       = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_HOSTNAME, $hostname);
+    $customHostname = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_HOSTNAME, '');
+    $directory      = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_DIR, $directory);
+    $customDir      = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_DIR, '');
 } else {
     // Disable pro settings when not PRO version
     $customDir           = '';
@@ -63,16 +65,16 @@ if ($isPro && !empty($options->current)) {
     <span class="wpstg--tooltip wpstg-tooltip-icon">
         <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info"/>
         <span class="wpstg--tooltiptext">
-      <strong> <?php esc_html_e('You can copy the staging site to a custom directory and can use a different hostname.', 'wp-staging'); ?></strong>
-      <br/> <br/>
-      <?php echo sprintf(
-          Escape::escapeHtml(__('<strong>Destination Path:</strong> An absolute path like <code>/www/public_html/dev</code>. File permissions should be 755 and it must be writeable by php user <code>%s</code>', 'wp-staging')),
-          esc_html((new SystemInfo())->getPHPUser())
-      ); ?>
-      <br/> <br/>
-      <?php echo Escape::escapeHtml(__('<strong>Target Hostname:</strong> The hostname of the destination site, for instance <code>https://subdomain.example.com</code> or <code>https://example.com/staging</code>', 'wp-staging')) ?>
-      <br/> <br/>
-      <?php esc_html_e('Make sure the hostname points to the destination directory from above.', 'wp-staging'); ?>
+        <strong> <?php esc_html_e('You can copy the staging site to a custom directory and can use a different hostname.', 'wp-staging'); ?></strong>
+        <br/> <br/>
+        <?php echo sprintf(
+            Escape::escapeHtml(__('<strong>Destination Path:</strong> An absolute path like <code>/www/public_html/dev</code>. File permissions should be 755 and it must be writeable by php user <code>%s</code>', 'wp-staging')),
+            esc_html((new SystemInfo())->getPHPUser())
+        ); ?>
+        <br/> <br/>
+        <?php echo Escape::escapeHtml(__('<strong>Target Hostname:</strong> The hostname of the destination site, for instance <code>https://subdomain.example.com</code> or <code>https://example.com/staging</code>', 'wp-staging')) ?>
+        <br/> <br/>
+        <?php esc_html_e('Make sure the hostname points to the destination directory from above.', 'wp-staging'); ?>
     </span>
     </span>
 </div>

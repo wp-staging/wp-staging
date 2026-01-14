@@ -11,6 +11,9 @@ class Permissions
     /** @var string */
     const FILTER_FOLDER_PERMISSION = 'wpstg_folder_permission';
 
+    /** @var string */
+    const FILTER_FILE_PERMISSION = 'wpstg_file_permission';
+
     /** @var int */
     const DEFAULT_FILE_PERMISSION = 0644;
 
@@ -39,27 +42,29 @@ class Permissions
     public function getFilesOctal(): int
     {
         if (!defined('FS_CHMOD_FILE')) {
-            return self::DEFAULT_FILE_PERMISSION;
+            return $this->applyFilters(self::FILTER_FILE_PERMISSION, self::DEFAULT_FILE_PERMISSION);
         }
 
         if ($this->isValidPermission(FS_CHMOD_FILE)) {
-            return FS_CHMOD_FILE;
+            return $this->applyFilters(self::FILTER_FILE_PERMISSION, FS_CHMOD_FILE);
         }
 
-        return self::DEFAULT_FILE_PERMISSION;
+        return $this->applyFilters(self::FILTER_FILE_PERMISSION, self::DEFAULT_FILE_PERMISSION);
     }
 
+    /**
+     * Validates if a permission value is within valid Unix permission range.
+     *
+     * Valid Unix permissions are 0 to 0777 (511 decimal).
+     * Note: This validates the permission value itself, not its octal representation,
+     * since octal is just a way to represent the number.
+     *
+     * @param int $permission The permission value to validate
+     * @return bool True if permission is valid, false otherwise
+     */
     private function isValidPermission(int $permission): bool
     {
-        // check if it is octal?
-        if (!preg_match('/^[0-7]+$/', ((string)$permission))) {
-            return false;
-        }
-
-        if (decoct(octdec((string)$permission)) !== (string)$permission) {
-            return false;
-        }
-
+        // Valid Unix permissions are 0 to 0777 (511 decimal)
         return $permission >= 0 && $permission <= 0777;
     }
 }

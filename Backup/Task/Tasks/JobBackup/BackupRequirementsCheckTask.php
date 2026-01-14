@@ -9,6 +9,7 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\BackupScheduler;
@@ -18,9 +19,12 @@ use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use WPStaging\Framework\Traits\RenameTmpDirectoryTrait;
 
 class BackupRequirementsCheckTask extends BackupTask
 {
+    use RenameTmpDirectoryTrait;
+
     /** @var Directory */
     protected $directory;
 
@@ -45,6 +49,9 @@ class BackupRequirementsCheckTask extends BackupTask
     /** @var ZlibCompressor */
     protected $zlibCompressor;
 
+    /** @var Filesystem */
+    protected $filesystem;
+
     public function __construct(
         Directory $directory,
         LoggerInterface $logger,
@@ -57,7 +64,8 @@ class BackupRequirementsCheckTask extends BackupTask
         Archiver $archiver,
         SystemInfo $systemInfo,
         Providers $providers,
-        ZlibCompressor $zlibCompressor
+        ZlibCompressor $zlibCompressor,
+        Filesystem $filesystem
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->directory             = $directory;
@@ -68,6 +76,7 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->systemInfo            = $systemInfo;
         $this->providers             = $providers;
         $this->zlibCompressor        = $zlibCompressor;
+        $this->filesystem            = $filesystem;
     }
 
     public static function getTaskName()
@@ -101,6 +110,7 @@ class BackupRequirementsCheckTask extends BackupTask
             $this->cannotBackupEmptyBackup();
             $this->cannotRestoreIfCantWriteToDisk();
             $this->checkFilesystemPermissions();
+            $this->cleanupValidationDirs();
         } catch (RuntimeException $e) {
             // todo: Set the requirement check fail reason
             $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
@@ -243,6 +253,7 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->logger->add('- Validation : True', Logger::TYPE_INFO_SUB);
         $this->logInformation($this->getBackupScheduleOptions());
         $this->logger->add('- Is Multipart Backup : ' . ($this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No'), Logger::TYPE_INFO_SUB);
+        $this->logger->add('- Backup Type : ' . ($this->jobDataDto->getBackupType()), Logger::TYPE_INFO_SUB);
         $this->logger->add('- Storages : ' . implode(', ', $this->jobDataDto->getStorages()), Logger::TYPE_INFO_SUB);
         $this->logger->add(sprintf('- Backup Format : %s', $this->jobDataDto->getIsBackupFormatV1() ? 'v1' : 'v2'), Logger::TYPE_INFO_SUB);
         $this->logger->add('- Performance Mode : ' . ($this->jobDataDto->getIsFastPerformanceMode() ? 'Fast' : 'Safe'), Logger::TYPE_INFO_SUB);
@@ -343,5 +354,39 @@ class BackupRequirementsCheckTask extends BackupTask
 
             $this->logger->logProviderSettings($providerName, $authClass);
         }
+    }
+
+    /**
+     * @return void
+     * @throws RuntimeException
+     */
+    private function cleanupValidationDirs()
+    {
+        $validationDir = $this->directory->getTmpDirectory();
+        $validationDir = untrailingslashit($validationDir);
+        if (!is_dir($validationDir)) {
+            $this->logger->info('Cleanup: Temporary directory not found. Skipping cleanup.');
+            return;
+        }
+
+        $validateDirRelativePath = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($validationDir, true));
+        $renameDirPath           = $validateDirRelativePath . '_old_' . date('Y-m-d_H-i-s');
+        try {
+            if (!$this->filesystem->setRecursive(true)->delete($validationDir)) {
+                $this->logger->warning(sprintf("Could not delete temporary validation directory '%s'.", $validateDirRelativePath));
+                $this->logger->warning(sprintf("Renaming '%s' to '%s'.", $validateDirRelativePath, $renameDirPath));
+                $this->renameTmpDirectory($validationDir);
+                $this->logger->warning(sprintf("Please delete the '%s' folder manually.", $renameDirPath));
+                return;
+            }
+        } catch (RuntimeException $ex) {
+            $this->logger->warning(sprintf("Could not delete temporary validation directory '%s'.", $validateDirRelativePath));
+            $this->logger->warning(sprintf("Renaming '%s' to '%s'.", $validateDirRelativePath, $renameDirPath));
+            $this->renameTmpDirectory($validationDir);
+            $this->logger->warning(sprintf("Please delete the '%s' folder manually.", $renameDirPath));
+            return;
+        }
+
+        $this->logger->info('Cleanup: Temporary directory deleted successfully.');
     }
 }

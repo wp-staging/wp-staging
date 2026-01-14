@@ -16,6 +16,7 @@ use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Staging\Sites;
@@ -32,6 +33,12 @@ class Cloning extends Job
      * @var string
      */
     const WPSTG_REQUEST = 'wpstg_cloning';
+
+    /** @var string */
+    const FILTER_CLONE_EXCLUDED_FILES_FULL_PATH = 'wpstg.clone.excluded_files_full_path';
+
+    /** @var string */
+    const FILTER_CLONE_EXCLUDED_FILES = 'wpstg_clone_excluded_files';
 
     /**
      * @var object
@@ -134,7 +141,7 @@ class Cloning extends Job
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
         $this->options->extraDirectories    = [];
-        $this->options->excludedFiles       = apply_filters('wpstg_clone_excluded_files', [
+        $this->options->excludedFiles       = Hooks::applyFilters(self::FILTER_CLONE_EXCLUDED_FILES, [
             '.DS_Store',
             '*.git',
             '*.svn',
@@ -161,7 +168,7 @@ class Cloning extends Job
             $this->options->tmpExcludedGoDaddyFiles[] = $muPluginsDir . 'gd-system-plugin.php';
         }
 
-        $this->options->excludedFilesFullPath = apply_filters('wpstg.clone.excluded_files_full_path', $excludedFilesFullPath);
+        $this->options->excludedFilesFullPath = Hooks::applyFilters(self::FILTER_CLONE_EXCLUDED_FILES_FULL_PATH, $excludedFilesFullPath);
 
         $this->options->currentStep = 0;
 

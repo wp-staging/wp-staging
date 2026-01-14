@@ -7,6 +7,7 @@ use UnexpectedValueException;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\PathChecker;
@@ -22,6 +23,9 @@ use WPStaging\Framework\Utils\Strings;
 class Directories extends JobExecutable
 {
     use FileScanToCacheTrait;
+
+    /** @var string */
+    const FILTER_CLONE_EXCLUDED_FILE_SIZE = 'wpstg_clone_file_size_exclude';
 
     /** @var ExcludedPlugins */
     protected $excludedPlugins;
@@ -533,7 +537,7 @@ class Directories extends JobExecutable
      */
     protected function getFilteredExcludedFileSizes(): array
     {
-        return apply_filters('wpstg_clone_file_size_exclude', $this->options->excludeSizeRules);
+        return Hooks::applyFilters(self::FILTER_CLONE_EXCLUDED_FILE_SIZE, $this->options->excludeSizeRules);
     }
 
     /**
@@ -565,9 +569,9 @@ class Directories extends JobExecutable
         }
 
         if ($this->isMultisiteAndPro()) {
-            $excludePaths = apply_filters('wpstg_clone_mu_excl_folders', $excludePaths);
+            $excludePaths = apply_filters(Directory::FILTER_CLONE_MU_EXCLUDED_FOLDERS, $excludePaths);
         } else {
-            $excludePaths = apply_filters('wpstg_clone_excl_folders', $excludePaths);
+            $excludePaths = apply_filters(Directory::FILTER_CLONE_EXCLUDED_FOLDERS, $excludePaths);
         }
 
         $excludeFilters   = new ExcludeFilter();

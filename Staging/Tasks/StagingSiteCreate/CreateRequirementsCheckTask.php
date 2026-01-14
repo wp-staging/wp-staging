@@ -14,7 +14,7 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
-use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
+use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
@@ -40,7 +40,7 @@ class CreateRequirementsCheckTask extends StagingTask
     /** @var SystemInfo */
     protected $systemInfo;
 
-    /** @var StagingSiteCreateDataDto $jobDataDto */
+    /** @var StagingSiteJobsDataDto $jobDataDto */
     protected $jobDataDto;
 
     /** @var Sites */

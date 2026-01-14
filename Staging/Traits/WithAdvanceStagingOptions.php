@@ -41,16 +41,22 @@ trait WithAdvanceStagingOptions
     private $customPath = '';
 
     /** @var bool */
-    private $emailsAllowed = true;
+    private $isEmailsAllowed = true;
 
     /** @var bool */
-    private $cronDisabled = false;
+    private $isUploadsSymlinked = false;
 
     /** @var bool */
-    private $wooSchedulerDisabled = false;
+    private $isCronEnabled = true;
 
     /** @var bool */
-    private $emailsReminderAllowed = false;
+    private $isWooSchedulerEnabled = true;
+
+    /** @var bool */
+    private $isEmailsReminderEnabled = false;
+
+    /** @var bool */
+    private $isAutoUpdatePlugins = false;
 
     /** @var string[] */
     private $tmpExcludedFullPaths = [];
@@ -263,71 +269,98 @@ trait WithAdvanceStagingOptions
     }
 
     /**
-     * @param bool $emailsAllowed
+     * @param bool $isEmailsAllowed
      * @return void
      */
-    public function setEmailsAllowed(bool $emailsAllowed)
+    public function setIsEmailsAllowed(bool $isEmailsAllowed)
     {
-        $this->emailsAllowed = $emailsAllowed;
+        $this->isEmailsAllowed = $isEmailsAllowed;
     }
 
     /**
      * @return bool
      */
-    public function getEmailsAllowed(): bool
+    public function getIsEmailsAllowed(): bool
     {
-        return $this->emailsAllowed;
+        return $this->isEmailsAllowed;
+    }
+
+    public function setIsUploadsSymlinked(bool $isUploadsSymlinked)
+    {
+        $this->isUploadsSymlinked = $isUploadsSymlinked;
+    }
+
+    public function getIsUploadsSymlinked(): bool
+    {
+        return $this->isUploadsSymlinked;
     }
 
     /**
-     * @param bool $cronDisabled
+     * @param bool $isCronEnabled
      * @return void
      */
-    public function setCronDisabled(bool $cronDisabled)
+    public function setIsCronEnabled(bool $isCronEnabled)
     {
-        $this->cronDisabled = $cronDisabled;
+        $this->isCronEnabled = $isCronEnabled;
     }
 
     /**
      * @return bool
      */
-    public function getCronDisabled(): bool
+    public function getIsCronEnabled(): bool
     {
-        return $this->cronDisabled;
+        return $this->isCronEnabled;
     }
 
     /**
-     * @param bool $wooSchedulerDisabled
+     * @param bool $isWooSchedulerEnabled
      * @return void
      */
-    public function setWooSchedulerDisabled(bool $wooSchedulerDisabled)
+    public function setIsWooSchedulerEnabled(bool $isWooSchedulerEnabled)
     {
-        $this->wooSchedulerDisabled = $wooSchedulerDisabled;
+        $this->isWooSchedulerEnabled = $isWooSchedulerEnabled;
     }
 
     /**
      * @return bool
      */
-    public function getWooSchedulerDisabled(): bool
+    public function getIsWooSchedulerEnabled(): bool
     {
-        return $this->wooSchedulerDisabled;
+        return $this->isWooSchedulerEnabled;
     }
 
     /**
-     * @param bool $emailsReminderAllowed
+     * @param bool $isEmailsReminderEnabled
      * @return void
      */
-    public function setEmailsReminderAllowed(bool $emailsReminderAllowed)
+    public function setIsEmailsReminderEnabled(bool $isEmailsReminderEnabled)
     {
-        $this->emailsReminderAllowed = $emailsReminderAllowed;
+        $this->isEmailsReminderEnabled = $isEmailsReminderEnabled;
     }
 
     /**
      * @return bool
      */
-    public function getEmailsReminderAllowed(): bool
+    public function getIsEmailsReminderEnabled(): bool
     {
-        return $this->emailsReminderAllowed;
+        return $this->isEmailsReminderEnabled;
+    }
+
+    /**
+     * @param bool $isAutoUpdatePlugins
+     * @return void
+     */
+    public function setIsAutoUpdatePlugins(bool $isAutoUpdatePlugins)
+    {
+        $this->isAutoUpdatePlugins = $isAutoUpdatePlugins;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsAutoUpdatePlugins(): bool
+    {
+        return $this->isAutoUpdatePlugins;
     }
 
     /**

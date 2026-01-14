@@ -14,9 +14,11 @@ use WPStaging\Pro\Staging\NetworkClone;
 use WPStaging\Backup\BackupRetentionHandler;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Backup\BackupScheduler;
+use WPStaging\Framework\Adapter\WpAdapter;
 
 class UpdateStagingOptionsTable extends DBCloningService
 {
+    /** @var string */
     const FILTER_CLONING_UPDATE_ACTIVE_PLUGINS = 'wpstg.cloning.update_active_plugins';
 
     /** @var string */
@@ -221,14 +223,14 @@ class UpdateStagingOptionsTable extends DBCloningService
         }
 
         // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
-        remove_all_filters('option_active_plugins');
+        remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
         $activePlugins = get_option('active_plugins');
         if (!is_array($activePlugins)) {
             $activePlugins = [];
         }
 
-        $activePlugins = apply_filters(self::FILTER_CLONING_UPDATE_ACTIVE_PLUGINS, $activePlugins);
+        $activePlugins = Hooks::applyFilters(self::FILTER_CLONING_UPDATE_ACTIVE_PLUGINS, $activePlugins);
 
         return $activePlugins;
     }

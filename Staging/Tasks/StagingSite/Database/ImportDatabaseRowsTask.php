@@ -20,6 +20,10 @@ use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
+/**
+ * This class is responsible for importing database records from the dump in the staging site tables.
+ * @see PrepareDatabaseRowsTask for creating the dump.
+ */
 class ImportDatabaseRowsTask extends StagingTask
 {
     use WithStagingDatabase;

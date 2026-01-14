@@ -11,9 +11,12 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Backup\Task\BackupTask;
+use WPStaging\Framework\Traits\RenameTmpDirectoryTrait;
 
 class CleanupValidationFilesTask extends BackupTask
 {
+    use RenameTmpDirectoryTrait;
+
     /** @var Filesystem */
     private $filesystem;
 
@@ -48,7 +51,7 @@ class CleanupValidationFilesTask extends BackupTask
      */
     public static function getTaskTitle()
     {
-        return 'Cleaning Up Validation Files';
+        return 'Cleaning Validation Files';
     }
 
     /**
@@ -80,6 +83,12 @@ class CleanupValidationFilesTask extends BackupTask
                 static::getTaskTitle(),
                 $relativePathForLogging
             ));
+
+            if ($this->renameTmpDirectory($validationDir)) {
+                $this->logger->info(sprintf('%s: Successfully renamed path "%s".', static::getTaskTitle(), $relativePathForLogging));
+            } else {
+                $this->logger->warning(sprintf('%s: Failed to rename path "%s".', static::getTaskTitle(), $relativePathForLogging));
+            }
 
             return $this->generateResponse();
         }

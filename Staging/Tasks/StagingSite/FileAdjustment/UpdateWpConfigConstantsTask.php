@@ -16,12 +16,17 @@ use WPStaging\Staging\Tasks\FileAdjustmentTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 /**
+ * Updates WordPress constants in the staging site's wp-config.php file.
+ *
  * Replacement for WPStaging\Framework\CloningProcess\Data\UpdateWpConfigConstants
  */
 class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 {
     /** @var string */
     const ABSPATH_REGEX = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
+
+    /** @var string */
+    const FILTER_CONSTANTS_REPLACE_OR_ADD = 'wpstg_constants_replace_or_add';
 
     /**
      * @var Directory
@@ -92,7 +97,7 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
             "WP_HOME"             => sprintf("'%s'", $this->escapeSingleQuotes($this->jobDataDto->getStagingSiteUrl())),
             "WP_SITEURL"          => sprintf("'%s'", $this->escapeSingleQuotes($this->jobDataDto->getStagingSiteUrl())),
             "WP_CACHE"            => 'false',
-            "DISABLE_WP_CRON"     => $this->jobDataDto->getCronDisabled() ? 'true' : 'false',
+            "DISABLE_WP_CRON"     => $this->jobDataDto->getIsCronEnabled() ? 'false' : 'true',
             "WP_ENVIRONMENT_TYPE" => sprintf("'%s'", 'staging'),
             "WP_DEVELOPMENT_MODE" => sprintf("'%s'", 'all'),
             "WPSTAGING_DEV_SITE"  => 'true',
@@ -166,7 +171,7 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
          *
          * @return array The array of constants.
          */
-        $replaceOrAdd = (array)apply_filters('wpstg_constants_replace_or_add', $replaceOrAdd);
+        $replaceOrAdd = (array)apply_filters(self::FILTER_CONSTANTS_REPLACE_OR_ADD, $replaceOrAdd);
 
         $content = $this->readWpConfig();
         foreach ($replaceOrAdd as $constant => $newDefinition) {

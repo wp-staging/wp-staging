@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\UI\Alert;
 use WPStaging\Framework\Utils\Urls;
+use WPStaging\Core\Cron\Cron;
 
 /**
  * @var \WPStaging\Framework\TemplateEngine\TemplateEngine $this
@@ -255,7 +256,16 @@ $wpstgRestorePageUrl = add_query_arg([
                 </li>
                 <?php if ($automatedBackup) : ?>
                     <li class="wpstg-automated-backup">
-                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/update.svg"/> <?php esc_html_e('Backup created automatically.', 'wp-staging'); ?>
+                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/update.svg"/> 
+                        <?php
+                        $message = 'Backup created automatically.';
+                        if (!empty($backup->scheduleRecurrence)) {
+                            $scheduleDisplay = Cron::getCronDisplayName($backup->scheduleRecurrence);
+                            $message = sprintf(__('Backup created automatically (%s).', 'wp-staging'), esc_html($scheduleDisplay));
+                        }
+
+                        echo esc_html($message);
+                        ?>
                     </li>
                 <?php endif; ?>
                 <?php if ($isLegacy) : ?>

@@ -97,7 +97,7 @@ trait WithQueueAwareness
             'blocking'  => $this->useBlockingRequest(),
             'timeout'   => $this->useBlockingRequest() ? 30 : 0.01, // 0.01 for a non-blocking request
             'cookies'   => $this->getLoginRelatedCookies(),
-            'sslverify' => apply_filters('https_local_ssl_verify', false),
+            'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
 
@@ -168,7 +168,7 @@ trait WithQueueAwareness
             'blocking'  => true,
             'timeout'   => 10,
             'cookies'   => $this->getLoginRelatedCookies(),
-            'sslverify' => apply_filters('https_local_ssl_verify', false),
+            'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
 

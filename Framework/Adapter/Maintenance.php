@@ -7,6 +7,10 @@ use WPStaging\Framework\Filesystem\Filesystem;
 
 class Maintenance
 {
+    /** @var string */
+    const FILTER_ENABLE_MAINTENANCE = 'enable_maintenance_mode';
+
+    /** @var string */
     const FILE_NAME = '.maintenance';
 
     public function isMaintenance()

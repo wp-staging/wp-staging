@@ -8,6 +8,7 @@ use WPStaging\Backup\Job\Jobs\JobRestore;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Job\Ajax\PrepareJob;

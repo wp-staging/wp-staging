@@ -25,13 +25,40 @@ class OPcache
         $this->serverVars = WPStaging::make(ServerVars::class);
     }
 
+    /**
+     * Check if OPcache API is accessible (not restricted by opcache.restrict_api)
+     * @return bool
+     */
+    private function isOpCacheApiAccessible(): bool
+    {
+        $restrictApi = ini_get('opcache.restrict_api');
+        if (empty($restrictApi)) {
+            return true;
+        }
+
+        if (empty($_SERVER['SCRIPT_FILENAME'])) {
+            return false;
+        }
+
+        $scriptPath = realpath($_SERVER['SCRIPT_FILENAME']); // phpcs:ignore
+        if ($scriptPath === false) {
+            return false;
+        }
+
+        return stripos($scriptPath, $restrictApi) === 0;
+    }
+
     public function reset(): bool
     {
         if (!function_exists('opcache_reset') || $this->serverVars->isFunctionDisabled('opcache_reset')) {
             return false;
         }
 
-        return opcache_reset();
+        if (!$this->isOpCacheApiAccessible()) {
+            return false;
+        }
+
+        return @opcache_reset();
     }
 
     /**
@@ -58,7 +85,11 @@ class OPcache
             return false;
         }
 
-        return opcache_invalidate($filePath, $force);
+        if (!$this->isOpCacheApiAccessible()) {
+            return false;
+        }
+
+        return @opcache_invalidate($filePath, $force);
     }
 
     /**
@@ -103,8 +134,8 @@ class OPcache
         debug_log('Trigger opcache invalidate.', 'info', false);
 
         // If can use opcache_get_status
-        if (function_exists('opcache_get_status') && !$this->serverVars->isFunctionDisabled('opcache_get_status')) {
-            $opcacheStatus = opcache_get_status();
+        if (function_exists('opcache_get_status') && !$this->serverVars->isFunctionDisabled('opcache_get_status') && $this->isOpCacheApiAccessible()) {
+            $opcacheStatus = @opcache_get_status();
             if (!empty($opcacheStatus['scripts'])) {
                 foreach ($opcacheStatus['scripts'] as $file => $data) {
                     $this->invalidateFile($file, true);

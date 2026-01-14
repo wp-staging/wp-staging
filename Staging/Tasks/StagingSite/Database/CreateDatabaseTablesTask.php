@@ -17,6 +17,11 @@ use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Staging\Tasks\StagingTask;
 
+/**
+ * This class is responsible for creating empty database tables on the staging site.
+ * This class is used during staging site create and reset operations.
+ * @see PrepareStagingSiteTablesTask for staging site update.
+ */
 class CreateDatabaseTablesTask extends StagingTask
 {
     use WithStagingDatabase;

@@ -1,12 +1,15 @@
 <?php
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\UI\Toggle;
 use WPStaging\Framework\Settings\Settings;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Notifications\Notifications;
+use WPStaging\Framework\Adapter\Directory;
 
+$directory = WPStaging::make(Directory::class);
 ?>
 
 <!-- General Settings -->
@@ -66,7 +69,7 @@ use WPStaging\Notifications\Notifications;
                 continue;
             }
 
-            /** @var WPStaging\Core\Forms\Form */
+            /** @var \WPStaging\Core\Forms\Form */
             $form = \WPStaging\Core\WPStaging::getInstance()->get("forms")->get($id);
 
             if ($form === null) {
@@ -245,23 +248,47 @@ use WPStaging\Notifications\Notifications;
                                 </div>
                             <?php endif; ?>
                             <hr class="wpstg-settings-separator"/>
-                            <div class="wpstg-settings-field wpstg-settings-has-toggle">
-                                <div>
-                                    <div class="wpstg-settings-field-header">
-                                        <span class="wpstg-settings-field-label"><?php esc_html_e('Email Notifications', 'wp-staging'); ?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php esc_html_e('Send email notifications for backup failures, staging site reminders and other alerts!', 'wp-staging'); ?>
-                                    </div>
+                            <div class="wpstg-settings-field wpstg-settings-has-toggle wpstg-notification-toggles">
+                                <div class="wpstg-notification-toggles-header">
+                                    <span class="wpstg-settings-field-label"><?php esc_html_e('Email Notifications', 'wp-staging'); ?></span>
                                 </div>
-                                <div class="wpstg-settings-field-input">
-                                    <?php
-                                    $isCheckboxChecked = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) === 'true';
-                                    Toggle::render('wpstg-send-schedules-error-report', 'wpstg_settings[schedulesErrorReport]', 'true', $isCheckboxChecked, ['classes' => 'wpstg-settings-field']);
-                                    ?>
+                                <div class="wpstg-notification-toggles-input">
+                                    <div class="wpstg-notification-toggle-row">
+                                        <div class="wpstg-notification-toggle-label">
+                                            <?php esc_html_e('Errors', 'wp-staging'); ?>
+                                        </div>
+                                        <div class="wpstg-notification-toggle-switch">
+                                            <?php
+                                            $isErrorCheckboxChecked = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) === 'true';
+                                            Toggle::render('wpstg-send-schedules-error-report', 'wpstg_settings[schedulesErrorReport]', 'true', $isErrorCheckboxChecked, ['classes' => 'wpstg-settings-field']);
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <div class="wpstg-notification-toggle-row">
+                                        <div class="wpstg-notification-toggle-label">
+                                            <?php esc_html_e('Warnings', 'wp-staging'); ?>
+                                        </div>
+                                        <div class="wpstg-notification-toggle-switch">
+                                            <?php
+                                            $isWarningCheckboxChecked = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_WARNING_REPORT) === 'true';
+                                            Toggle::render('wpstg-send-schedules-warning-report', 'wpstg_settings[schedulesWarningReport]', 'true', $isWarningCheckboxChecked, ['classes' => 'wpstg-settings-field']);
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <div class="wpstg-notification-toggle-row">
+                                        <div class="wpstg-notification-toggle-label">
+                                            <?php esc_html_e('General Backup Status', 'wp-staging'); ?>
+                                        </div>
+                                        <div class="wpstg-notification-toggle-switch">
+                                            <?php
+                                            $isGeneralCheckboxChecked = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_GENERAL_REPORT) === 'true';
+                                            Toggle::render('wpstg-send-schedules-general-report', 'wpstg_settings[schedulesGeneralReport]', 'true', $isGeneralCheckboxChecked, ['classes' => 'wpstg-settings-field']);
+                                            ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="wpstg-email-controls-container <?php echo $isCheckboxChecked ? '' : 'hidden';?>" id="wpstg-send-schedules-error-report-input">
+                            <div class="wpstg-email-controls-container wpstg-two-column-settings <?php echo $isErrorCheckboxChecked || $isWarningCheckboxChecked || $isGeneralCheckboxChecked ? '' : 'hidden';?>" id="wpstg-send-schedules-email-notification-input">
                                 <div class="wpstg-settings-field wpstg-settings-has-toggle">
                                     <div>
                                         <div class="wpstg-settings-field-header">
@@ -274,8 +301,6 @@ use WPStaging\Notifications\Notifications;
                                     <div class="wpstg-settings-field-input">
                                         <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL)) ?>"/>
                                     </div>
-                                </div>
-                                <div class="wpstg-settings-field wpstg-settings-has-toggle">
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php esc_html_e('Email as HTML', 'wp-staging') ?></span>
@@ -321,7 +346,14 @@ use WPStaging\Notifications\Notifications;
                                     </div>
                                     <div class="wpstg-settings-field-description">
                                         <?php
-                                        echo Escape::escapeHtml(__('Send Slack notifications by using a Webhook URL. Read <a href="https://api.slack.com/messaging/webhooks" target=_blank rel="noopener">this article</a> to learn how to create one.', 'wp-staging'));
+                                        $link = '<a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener">' .
+                                                esc_html__('Slack webhooks documentation', 'wp-staging') .
+                                                '</a>';
+                                        echo wp_kses_post(sprintf(
+                                            /* translators: %s is a link to Slack webhook documentation */
+                                            Escape::escapeHtml(__('Send Slack notifications by using a Webhook URL. Read the %s to learn how to create one.', 'wp-staging')),
+                                            $link
+                                        ));
                                         ?>
                                     </div>
                                 </div>
@@ -529,12 +561,8 @@ use WPStaging\Notifications\Notifications;
                                     </div>
                                     <div class="wpstg-settings-field-description">
                                         <?php
-                                        echo sprintf(esc_html__(
-                                            "Activate this to check sizes of each directory on scanning process.
-                                    %s
-                                    Warning this may cause timeout problems in large directory / file structures.",
-                                            "wp-staging"
-                                        ), "<br>"); ?>
+                                            echo sprintf(esc_html__("Activate this to check sizes of each directory on scanning process. %s Warning this may cause timeout problems in large directory / file structures.", "wp-staging"), "<br>");
+                                        ?>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">
@@ -550,10 +578,21 @@ use WPStaging\Notifications\Notifications;
                                     <div class="wpstg-settings-field-description">
                                         <?php
                                         esc_html_e(
-                                            "Activate this if you like to remove all data when the plugin is deleted.
-                                    This will not remove staging site's files or database tables.",
+                                            "Remove all WP STAGING settings and data on uninstall. Staging site data, backups, and related database tables will not be deleted unless empty.",
                                             "wp-staging"
-                                        ); ?>
+                                        );
+                                        ?>
+                                        <br><br>
+                                        <strong><?php echo esc_html__("Note:", "wp-staging"); ?></strong>
+                                        <br>
+                                        <?php
+                                        echo sprintf(
+                                            esc_html__("The backups folder %s will only be deleted if it does not contain any backup files.", "wp-staging"),
+                                            "<strong>" . esc_html($directory->getBackupDirectory()) . "</strong>"
+                                        );
+                                        ?>
+                                        <br>
+                                        <?php esc_html_e("Staging site data is never deleted while staging sites exist.", "wp-staging");?>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">

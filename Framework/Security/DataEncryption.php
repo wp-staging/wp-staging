@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Security;
 
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Vendor\phpseclib3\Crypt\RSA;
 use WPStaging\Vendor\phpseclib3\Crypt\PublicKeyLoader;
 
@@ -16,6 +17,9 @@ use function WPStaging\functions\debug_log;
  */
 class DataEncryption
 {
+    /** @var string */
+    const FILTER_FRAMEWORK_SECURITY_DATA_ENCRYPTION_USE_SSL = 'wpstg.framework.security.dataEncryption.useSsl';
+
     /** @var bool */
     private $hasSsl;
 
@@ -30,7 +34,7 @@ class DataEncryption
 
     public function __construct()
     {
-        if (!apply_filters('wpstg.framework.security.dataEncryption.useSsl', true)) {
+        if (!Hooks::applyFilters(self::FILTER_FRAMEWORK_SECURITY_DATA_ENCRYPTION_USE_SSL, true)) {
             $this->hasSsl = false;
         } else {
             $this->hasSsl = extension_loaded('openssl') && function_exists('openssl_encrypt') && function_exists('openssl_decrypt') && (bool)in_array('aes-256-ctr', openssl_get_cipher_methods());

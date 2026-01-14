@@ -4,9 +4,12 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
+use WPStaging\Backup\Ajax\BackupSizeCalculator;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Backup\Task\FileBackupTask;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScanner;
 use WPStaging\Framework\Filesystem\FilesystemScannerDto;
@@ -197,7 +200,7 @@ class FilesystemScannerTask extends BackupTask
         /**
          * Allow user to exclude certain file extensions from being backup.
          */
-        $this->ignoreFileExtensions = (array)apply_filters('wpstg.export.files.ignore.file_extension', [
+        $this->ignoreFileExtensions = (array)Hooks::applyFilters(BackupSizeCalculator::FILTER_EXPORT_FILES_IGNORE_FILE_EXTENSIONS, [
             'wpstg', // WP STAGING backup files
             'gz',
             'tmp',
@@ -206,12 +209,12 @@ class FilesystemScannerTask extends BackupTask
         /**
          * Allow user to exclude files larger than given size from being backup.
          */
-        $this->ignoreFileBiggerThan = (int)apply_filters('wpstg.export.files.ignore.file_bigger_than', 200 * MB_IN_BYTES);
+        $this->ignoreFileBiggerThan = (int)Hooks::applyFilters(BackupSizeCalculator::FILTER_EXPORT_FILES_IGNORE_FILE_BIGGER_THAN, 200 * MB_IN_BYTES);
 
         /**
          * Allow user to exclude files with extension larger than given size from being backup.
          */
-        $this->ignoreFileExtensionFilesBiggerThan = (array)apply_filters('wpstg.export.files.ignore.file_extension_bigger_than', [
+        $this->ignoreFileExtensionFilesBiggerThan = (array)Hooks::applyFilters(BackupSizeCalculator::FILTER_EXPORT_FILES_IGNORE_LARGE_FILES_BY_EXTENSION, [
             'zip' => 50 * MB_IN_BYTES,
         ]);
 
@@ -411,7 +414,7 @@ class FilesystemScannerTask extends BackupTask
          *
          * @return array An array of directories to exclude.
          */
-        $excludedDirs = (array)apply_filters('wpstg.backup.exclude.directories', $excludedDirs);
+        $excludedDirs = (array)apply_filters(BackupSizeCalculator::FILTER_BACKUP_EXCLUDED_DIRECTORIES, $excludedDirs);
 
         return $excludedDirs;
     }
@@ -542,7 +545,7 @@ class FilesystemScannerTask extends BackupTask
     private function getActivePlugins(): array
     {
         // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
-        remove_all_filters('option_active_plugins');
+        remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
         // Not multisite
         if (!is_multisite()) {
@@ -555,7 +558,7 @@ class FilesystemScannerTask extends BackupTask
         }
 
         // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
-        remove_all_filters('site_option_active_sitewide_plugins');
+        remove_all_filters(WpAdapter::FILTER_SITE_OPTION_ACTIVE_SITEWIDE_PLUGINS);
 
         return array_merge(wp_get_active_network_plugins(), $this->pluginInfo->getAllActivePluginsInSubsites());
     }

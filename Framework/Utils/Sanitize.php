@@ -4,6 +4,13 @@ namespace WPStaging\Framework\Utils;
 
 use WPStaging\Core\WPStaging;
 
+/**
+ * Sanitizes user input for safe use across the application
+ *
+ * Provides various sanitization methods for strings, integers, booleans,
+ * emails, paths, arrays, and CLI-specific inputs like domains, table prefixes,
+ * and license keys.
+ */
 class Sanitize
 {
     protected $config = [];
@@ -253,5 +260,53 @@ class Sanitize
     public function sanitizeUrl($url, $protocols = null)
     {
         return esc_url($url, $protocols, 'db');
+    }
+
+    /**
+     * Sanitize a domain name for safe use in CLI commands.
+     * Only allows alphanumeric characters, dots, and hyphens.
+     *
+     * @param string $domain
+     * @return string
+     */
+    public function sanitizeDomainForCli($domain)
+    {
+        if (!is_string($domain)) {
+            return '';
+        }
+
+        return preg_replace('/[^a-zA-Z0-9.\-]/', '', $domain);
+    }
+
+    /**
+     * Sanitize a database table prefix for safe use in CLI commands.
+     * Only allows alphanumeric characters and underscores.
+     *
+     * @param string $prefix
+     * @return string
+     */
+    public function sanitizeTablePrefixForCli($prefix)
+    {
+        if (!is_string($prefix)) {
+            return '';
+        }
+
+        return preg_replace('/[^a-zA-Z0-9_]/', '', $prefix);
+    }
+
+    /**
+     * Sanitize a license key for safe use in CLI commands.
+     * Only allows alphanumeric characters and hyphens.
+     *
+     * @param string $licenseKey
+     * @return string
+     */
+    public function sanitizeLicenseKeyForCli($licenseKey)
+    {
+        if (!is_string($licenseKey)) {
+            return '';
+        }
+
+        return preg_replace('/[^a-zA-Z0-9\-]/', '', $licenseKey);
     }
 }

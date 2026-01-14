@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Service\Database;
 
 use RuntimeException;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -57,6 +58,15 @@ class TableCreateService
         $this->stagingPrefix    = $this->stagingDb->getPrefix();
     }
 
+    public function getTableWithoutPrefix(string $srcTableName): string
+    {
+        if (strpos($srcTableName, $this->productionPrefix) !== 0) {
+            return $srcTableName;
+        }
+
+        return substr($srcTableName, strlen($this->productionPrefix));
+    }
+
     public function getDestinationTable(string $srcTableName): string
     {
         if (strpos($srcTableName, $this->productionPrefix) !== 0) {
@@ -73,6 +83,22 @@ class TableCreateService
     public function setIsResetExistingTables(bool $isResetExistingTables)
     {
         $this->isResetExistingTables = $isResetExistingTables;
+    }
+
+    public function isTableExist(string $tableName): bool
+    {
+        return $this->tableService->tableExists($tableName);
+    }
+
+    public function preserveExistingTable(string $tableName, string $tableWithoutPrefix): string
+    {
+        $newTableName = DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP . $tableWithoutPrefix;
+        $this->logger->info(sprintf("Preserving existing table %s by renaming it to %s", esc_html($tableName), esc_html($newTableName)));
+        if ($this->tableService->renameTable($tableName, $newTableName)) {
+            return $newTableName;
+        }
+
+        throw new RuntimeException("Cleanup Table - Cannot preserve existing table. Error: Unable to rename table $tableName to $newTableName");
     }
 
     /**

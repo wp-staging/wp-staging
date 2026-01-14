@@ -9,8 +9,8 @@ use RuntimeException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Exceptions\WPStagingException;
-use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
@@ -32,12 +32,6 @@ use function WPStaging\functions\debug_log;
 abstract class AbstractJob implements ShutdownableInterface
 {
     use BenchmarkTrait;
-
-    /**
-     * Filter name for storing the number of maximum request retries
-     * @var string
-     */
-    const TEST_FILTER_MAXIMUM_RETRIES = 'wpstg.tests.maximum_retries';
 
     /** @var JobDataDto */
     protected $jobDataDto;
@@ -95,7 +89,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
         $this->processLock   = $processLock;
         $this->diskFullCheck = $diskFullCheck;
-        $this->maxRetries    = Hooks::applyFilters(self::TEST_FILTER_MAXIMUM_RETRIES, $this->maxRetries);
+        $this->maxRetries    = apply_filters(Assets::FILTER_TESTS_MAXIMUM_RETRIES, $this->maxRetries);
 
         $this->jobTransientCache = $jobTransientCache;
     }

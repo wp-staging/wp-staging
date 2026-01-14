@@ -11,6 +11,7 @@ use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\Database;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\AnalyticsServiceProvider;
 use WPStaging\Framework\AssetServiceProvider;
@@ -175,9 +176,6 @@ final class WPStaging
 
             // Lets delete sse files older than 1 hour
             $this->cleanupDirectory(WP_CONTENT_DIR . '/wp-staging/sse', $maxAge, $now, $scanChildren = false);
-
-            // Lets also delete validation files older than 1 hour
-            $this->cleanupDirectory(WP_CONTENT_DIR . '/wp-staging/tmp/restore/validate', $maxAge, $now);
         }, 1);
     }
 
@@ -347,7 +345,7 @@ final class WPStaging
         $path          = $wp_upload_dir['basedir'] . '/wp-staging';
         (new Filesystem())->mkdir($path);
 
-        return apply_filters('wpstg_get_upload_dir', $path . '/');
+        return Hooks::applyFilters(Directory::FILTER_GET_UPLOAD_DIR, $path . '/');
     }
 
     /**

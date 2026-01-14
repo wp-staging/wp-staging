@@ -55,6 +55,15 @@ class FilesystemScannerTask extends StagingTask
     /** @var int */
     const STEP_SCAN_OTHER_WP_ROOT_DIRECTORIES = 8;
 
+    /** @var string */
+    const FILTER_IGNORE_FILE_EXTENSION = 'wpstg.cloning.files.ignore.file_extension';
+
+    /** @var string */
+    const FILTER_IGNORE_FILE_BIGGER_THAN = 'wpstg.cloning.files.ignore.file_bigger_than';
+
+    /** @var string */
+    const FILTER_EXCLUDE_DIRECTORIES = 'wpstg.cloning.exclude.directories';
+
     /**
      * 9 steps for scanning each identifier and the last step to deep scan non-scanned directories
      * @var int
@@ -226,14 +235,14 @@ class FilesystemScannerTask extends StagingTask
             'git',
         ]);
 
-        $this->ignoreFileExtensions = (array)apply_filters('wpstg.cloning.files.ignore.file_extension', $this->ignoreFileExtensions);
+        $this->ignoreFileExtensions = (array)apply_filters(self::FILTER_IGNORE_FILE_EXTENSION, $this->ignoreFileExtensions);
 
         $excludeSizeGreaterThanInMb = $this->jobDataDto->getExcludeSizeGreaterThan();
 
         /**
          * Allow user to exclude files larger than given size from being copied.
          */
-        $this->ignoreFileBiggerThan = (int)apply_filters('wpstg.cloning.files.ignore.file_bigger_than', $excludeSizeGreaterThanInMb * MB_IN_BYTES);
+        $this->ignoreFileBiggerThan = (int)apply_filters(self::FILTER_IGNORE_FILE_BIGGER_THAN, $excludeSizeGreaterThanInMb * MB_IN_BYTES);
 
         // Allows us to use isset for performance
         $this->ignoreFileExtensions = array_flip($this->ignoreFileExtensions);
@@ -462,7 +471,6 @@ class FilesystemScannerTask extends StagingTask
     {
         $excludedDirs = [];
 
-        $excludedDirs[] = WPSTG_PLUGIN_DIR;
         $excludedDirs[] = $this->directory->getPluginUploadsDirectory();
         $excludedDirs[] = $this->directory->getPluginWpContentDirectory();
         $excludedDirs[] = trailingslashit(WP_CONTENT_DIR) . 'cache';
@@ -504,7 +512,7 @@ class FilesystemScannerTask extends StagingTask
          *
          * @return array An array of directories to exclude.
          */
-        $excludedDirs = (array)apply_filters('wpstg.cloning.exclude.directories', $excludedDirs);
+        $excludedDirs = (array)apply_filters(self::FILTER_EXCLUDE_DIRECTORIES, $excludedDirs);
 
         return $excludedDirs;
     }

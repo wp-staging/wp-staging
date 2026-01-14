@@ -109,7 +109,7 @@ class FinishBackupTask extends BackupTask
      */
     private function overrideGenerateResponse($backup = null)
     {
-        add_filter('wpstg.task.response', function ($response) use ($backup) {
+        add_filter(self::FILTER_TASK_RESPONSE, function ($response) use ($backup) {
 
             $md5 = $backup ? $backup->md5BaseName : null;
             if ($this->jobDataDto->getIsMultipartBackup()) {

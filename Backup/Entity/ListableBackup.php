@@ -90,6 +90,9 @@ class ListableBackup
     /** @var bool Whether this backup was automatically generated. (Eg: pushing staging into production) */
     public $automatedBackup = false;
 
+    /** @var string|null The schedule recurrence type (e.g., wpstg_hourly, wpstg_weekly, wpstg_monthly) */
+    public $scheduleRecurrence;
+
     /** @var bool Whether this listable refers to a legacy .SQL file backup */
     public $isLegacy = false;
 

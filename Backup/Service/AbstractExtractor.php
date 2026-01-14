@@ -300,7 +300,7 @@ abstract class AbstractExtractor
         $extractFolder = $this->getExtractFolder($identifier);
 
         if (!$this->createDirectory($extractFolder)) {
-            throw new \RuntimeException("Could not create folder to extract backup file: $extractFolder");
+            throw new \RuntimeException("Could not create folder to extract backup file: $extractFolder. Please check folder permissions.");
         }
 
         $this->setupExtractingFile($backupFileIndex, $extractFolder);

@@ -83,6 +83,16 @@ class JobTransientCache
     /**
      * @var string
      */
+    const JOB_TYPE_STAGING_UPDATE = 'Staging_Update';
+
+    /**
+     * @var string
+     */
+    const JOB_TYPE_STAGING_RESET = 'Staging_Reset';
+
+    /**
+     * @var string
+     */
     const JOB_TYPE_STAGING_DELETE = 'Staging_Delete';
 
     /**
@@ -109,6 +119,8 @@ class JobTransientCache
         self::JOB_TYPE_PULL_PREPARE,
         self::JOB_TYPE_PULL_RESTORE,
         self::JOB_TYPE_STAGING_CREATE,
+        self::JOB_TYPE_STAGING_UPDATE,
+        self::JOB_TYPE_STAGING_RESET,
         self::JOB_TYPE_REMOTE_UPLOAD,
     ];
 

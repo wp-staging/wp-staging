@@ -24,6 +24,9 @@ class RestorePluginsTask extends FileRestoreTask
      */
     const FILTER_KEEP_EXISTING_PLUGINS = 'wpstg.backup.restore.keepExistingPlugins';
 
+    /** @var string */
+    const FILTER_IMPORT_PLUGINS_DEST_DIR = 'wpstg.import.plugins.destDir';
+
     /**
      * @var string
      */
@@ -66,7 +69,7 @@ class RestorePluginsTask extends FileRestoreTask
         try {
             $existingPlugins = $this->getExistingPlugins();
         } catch (\Exception $e) {
-            $this->logger->critical(sprintf('Destination plugins folder could not be found not created at "%s"', (string)apply_filters('wpstg.import.plugins.destDir', $destDir)));
+            $this->logger->critical(sprintf('Destination plugins folder could not be found not created at "%s"', (string)Hooks::applyFilters(self::FILTER_IMPORT_PLUGINS_DEST_DIR, $destDir)));
 
             return;
         }
@@ -150,7 +153,7 @@ class RestorePluginsTask extends FileRestoreTask
     private function getExistingPlugins()
     {
         $destDir = $this->directory->getPluginsDirectory();
-        $destDir = (string)apply_filters('wpstg.import.plugins.destDir', $destDir);
+        $destDir = (string)Hooks::applyFilters(self::FILTER_IMPORT_PLUGINS_DEST_DIR, $destDir);
         $this->filesystem->mkdir($destDir);
 
         return $this->findPluginsInDir($destDir);

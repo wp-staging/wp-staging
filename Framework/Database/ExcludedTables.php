@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Database;
 
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Framework\Facades\Hooks;
 
 /**
  * Provide list of table excluded from Database Copy and SearchReplace Job
@@ -63,7 +64,7 @@ class ExcludedTables
      */
     public function getExcludedTables($networkClone = false)
     {
-        $excludedCustomTables = apply_filters(self::CLONE_DATABASE_TABLES_EXCLUDE_FILTER, []);
+        $excludedCustomTables = Hooks::applyFilters(self::CLONE_DATABASE_TABLES_EXCLUDE_FILTER, []);
 
         if ($networkClone) {
             return array_merge($this->excludedTables, $excludedCustomTables);
@@ -80,8 +81,8 @@ class ExcludedTables
      */
     public function getExcludedTablesForSearchReplace($networkClone = false)
     {
-        $excludedCustomCloneTables = apply_filters(self::CLONE_SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, []);
-        $excludedCustomClonePushTables = apply_filters(self::SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, $this->excludedTablesSearchReplaceOnly);
+        $excludedCustomCloneTables = Hooks::applyFilters(self::CLONE_SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, []);
+        $excludedCustomClonePushTables = Hooks::applyFilters(self::SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, $this->excludedTablesSearchReplaceOnly);
         $searchReplaceExcludedTables = array_merge($excludedCustomCloneTables, $excludedCustomClonePushTables);
         return array_merge($this->getExcludedTables($networkClone), $searchReplaceExcludedTables);
     }
@@ -93,6 +94,6 @@ class ExcludedTables
      */
     public function getExcludedTablesForSearchReplacePushOnly()
     {
-        return apply_filters(self::SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, $this->excludedTablesSearchReplaceOnly);
+        return Hooks::applyFilters(self::SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, $this->excludedTablesSearchReplaceOnly);
     }
 }

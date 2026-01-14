@@ -7,6 +7,7 @@ use wpdb;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\Utils\Multisite;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
@@ -28,6 +29,15 @@ class SearchReplace extends CloningProcess
     use TotalStepsAreNumberOfTables;
     use DbRowsGeneratorTrait;
     use DatabaseSearchReplaceTrait;
+
+    /** @var string */
+    const FILTER_CLONE_SEARCH_REPLACE_EXCLUDED_ROWS = 'wpstg_clone_searchreplace_excl_rows';
+
+    /** @var string */
+    const FILTER_CLONE_SEARCH_REPLACE_EXCLUDED = 'wpstg_clone_searchreplace_excl';
+
+    /** @var string */
+    const FILTER_CLONE_SEARCH_REPLACE_PARAMS = 'wpstg_clone_searchreplace_params';
 
     /**
      * The maximum number of failed attempts after which the Job should just move on.
@@ -299,7 +309,7 @@ class SearchReplace extends CloningProcess
         $args['skip_transients'] = 'on';
 
         // Allow filtering of search & replace parameters
-        $args = apply_filters('wpstg_clone_searchreplace_params', $args);
+        $args = Hooks::applyFilters(self::FILTER_CLONE_SEARCH_REPLACE_PARAMS, $args);
 
         // Get columns and primary keys
         $primaryKeyAndColumns = $this->getColumns($table);
@@ -330,7 +340,7 @@ class SearchReplace extends CloningProcess
         // Filter certain rows (of other plugins)
         $filter = $this->excludedStrings();
 
-        $filter = apply_filters('wpstg_clone_searchreplace_excl_rows', $filter);
+        $filter = apply_filters(self::FILTER_CLONE_SEARCH_REPLACE_EXCLUDED_ROWS, $filter);
 
         $processed = 0;
 
@@ -388,7 +398,7 @@ class SearchReplace extends CloningProcess
                     continue;
                 }
 
-                $excludes = apply_filters('wpstg_clone_searchreplace_excl', []);
+                $excludes = Hooks::applyFilters(self::FILTER_CLONE_SEARCH_REPLACE_EXCLUDED, []);
                 $searchReplace = new \WPStaging\Framework\Database\SearchReplace($args['search_for'], $args['replace_with'], $args['case_insensitive'], $excludes);
                 /** @var SiteInfo */
                 $siteInfo = WPStaging::make(SiteInfo::class);

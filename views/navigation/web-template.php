@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see views/_main/main-navigation.php
  * @see views/clone/index.php
@@ -9,7 +10,15 @@
  * @var bool $isCalledFromIndex
  */
 
-$wpstgAdminUrl          = get_admin_url() . 'admin.php?page=';
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Newsfeed\NewsfeedProvider;
+
+$wpstgAdminUrl = get_admin_url() . 'admin.php?page=';
+
+// Get newsfeed data for header notification badge (JS handles seen state via localStorage)
+$newsfeedProvider  = WPStaging::make(NewsfeedProvider::class);
+$newsfeedData      = $newsfeedProvider->getNewsfeedData();
+$showNewsfeedBadge = !empty($newsfeedData);
 $menu = [
     'tab-staging'     => [
         'tab'       => esc_html__('Staging', 'wp-staging'),
@@ -108,6 +117,18 @@ if (defined('WPSTGPRO_VERSION') && ((!empty($license->license) && $license->lice
                 ?>
             </li>
         <?php endforeach; ?>
+        <?php if ($showNewsfeedBadge) : ?>
+        <li class="wpstg-tab-item--vert-center">
+            <a href="#wpstg-newsfeed-container"
+               class="wpstg-newsfeed-notification"
+               id="wpstg-newsfeed-header-link"
+               style="display: none;">
+                <span class="wpstg-newsfeed-notification-badge">
+                    <?php esc_html_e('NEW', 'wp-staging'); ?>
+                </span>
+            </a>
+        </li>
+        <?php endif; ?>
         <li class="wpstg-tab-item--vert-center wpstg-tab-header-loader">
             <span class="wpstg-loader"></span>
         </li>

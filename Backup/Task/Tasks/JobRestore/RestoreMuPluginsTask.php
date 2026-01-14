@@ -18,6 +18,9 @@ class RestoreMuPluginsTask extends FileRestoreTask
      */
     const FILTER_KEEP_EXISTING_MUPLUGINS = 'wpstg.backup.restore.keepExistingMuPlugins';
 
+    /** @var string */
+    const FILTER_IMPORT_MUPLUGINS_DEST_DIR = 'wpstg.import.muPlugins.destDir';
+
     public static function getTaskName(): string
     {
         return 'backup_restore_muplugins';
@@ -61,7 +64,7 @@ class RestoreMuPluginsTask extends FileRestoreTask
             $this->logger->critical(
                 sprintf(
                     esc_html('Destination mu-plugins folder could not be found nor created at "%s"'),
-                    esc_html((string)apply_filters('wpstg.import.muPlugins.destDir', $destDir))
+                    esc_html((string)Hooks::applyFilters(self::FILTER_IMPORT_MUPLUGINS_DEST_DIR, $destDir))
                 )
             );
 
@@ -143,7 +146,7 @@ class RestoreMuPluginsTask extends FileRestoreTask
     private function getExistingMuPlugins(): array
     {
         $destDir = $this->directory->getMuPluginsDirectory();
-        $destDir = (string)apply_filters('wpstg.import.muPlugins.destDir', $destDir);
+        $destDir = (string)Hooks::applyFilters(self::FILTER_IMPORT_MUPLUGINS_DEST_DIR, $destDir);
         $this->filesystem->mkdir($destDir);
 
         return $this->findMuPluginsInDir($destDir);

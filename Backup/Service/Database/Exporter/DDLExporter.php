@@ -5,8 +5,10 @@ use WPStaging\Backup\BackupHeader;
 use WPStaging\Framework\Database\Exporter\AbstractExporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Facades\Hooks;
 class DDLExporter extends AbstractExporter
 {
+    const FILTER_BACKUP_TABLES_NON_PREFIXED = 'wpstg.backup.tables.non-prefixed';
     protected $tableService;
     protected $viewDDLOrder;
     protected $tables = [];
@@ -81,7 +83,7 @@ class DDLExporter extends AbstractExporter
 
     protected function getNonPrefixedTablesFromFilter()
     {
-        $nonPrefixedTables = apply_filters('wpstg.backup.tables.non-prefixed', []);
+        $nonPrefixedTables = Hooks::applyFilters(self::FILTER_BACKUP_TABLES_NON_PREFIXED, []);
         return is_array($nonPrefixedTables) ? $nonPrefixedTables : [];
     }
 

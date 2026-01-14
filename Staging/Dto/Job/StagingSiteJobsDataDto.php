@@ -16,7 +16,10 @@ use WPStaging\Staging\Traits\StagingOperationDtoTrait;
 use WPStaging\Staging\Traits\WithAdvanceStagingOptions;
 use WPStaging\Staging\Traits\WithStagingSiteDto;
 
-class StagingSiteCreateDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingSiteDtoInterface, StagingOperationDtoInterface, AdvanceStagingOptionsInterface, FilesystemScannerDtoInterface, StagingNetworkDtoInterface
+/**
+ * This is a common dto that is used for staging site jobs (create, update, reset)
+ */
+class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingSiteDtoInterface, StagingOperationDtoInterface, AdvanceStagingOptionsInterface, FilesystemScannerDtoInterface, StagingNetworkDtoInterface
 {
     use FilesystemScannerDtoTrait;
 
@@ -32,6 +35,18 @@ class StagingSiteCreateDataDto extends JobDataDto implements StagingDatabaseDtoI
 
     /** @var string */
     private $name = '';
+
+    /**
+     * Used in update job
+     * @var bool
+     */
+    private $isCleanPluginsThemes = false;
+
+    /**
+     * Used in update job
+     * @var bool
+     */
+    private $isCleanUploads = false;
 
     /**
      * @param string $cloneId
@@ -65,5 +80,39 @@ class StagingSiteCreateDataDto extends JobDataDto implements StagingDatabaseDtoI
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @param bool $cleanPluginsThemes
+     * @return void
+     */
+    public function setIsCleanPluginsThemes(bool $cleanPluginsThemes)
+    {
+        $this->isCleanPluginsThemes = $cleanPluginsThemes;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsCleanPluginsThemes(): bool
+    {
+        return $this->isCleanPluginsThemes;
+    }
+
+    /**
+     * @param bool $cleanUploads
+     * @return void
+     */
+    public function setIsCleanUploads(bool $cleanUploads)
+    {
+        $this->isCleanUploads = $cleanUploads;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsCleanUploads(): bool
+    {
+        return $this->isCleanUploads;
     }
 }

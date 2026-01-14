@@ -13,6 +13,6 @@ trait MaintenanceTrait
 
     public function skipMaintenanceMode()
     {
-        apply_filters('enable_maintenance_mode', false);
+        apply_filters(Maintenance::FILTER_ENABLE_MAINTENANCE, false);
     }
 }
