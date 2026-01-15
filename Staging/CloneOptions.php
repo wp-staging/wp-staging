@@ -21,6 +21,12 @@ class CloneOptions
      */
     const WPSTG_CLONE_SETTINGS_KEY = 'wpstg_clone_settings';
 
+    /** @var string */
+    const FILTER_CLONING_TARGET_HOSTNAME = 'wpstg_cloning_target_hostname';
+
+    /** @var string */
+    const FILTER_CLONING_TARGET_DIR = 'wpstg_cloning_target_dir';
+
     /**
      * Get the value of the given option,
      * If no option given return all settings

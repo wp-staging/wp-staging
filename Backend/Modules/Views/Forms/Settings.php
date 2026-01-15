@@ -11,6 +11,8 @@ use WPStaging\Core\Forms\Elements\Toggle;
 use WPStaging\Core\Forms\Form;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Framework\Assets\Assets;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 
 /**
  * Builds and manages the settings form for WP Staging plugin configuration
@@ -109,7 +111,7 @@ class Settings
             ]
         );
 
-        $defaultFileLimit = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV ? 500 : 50;
+        $defaultFileLimit = (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV || defined('WPSTG_TEST') && WPSTG_TEST) ? 500 : 50;
 
         $this->form["general"]->add(
             $element->setLabel(__("File Copy Limit", "wp-staging"))
@@ -300,7 +302,7 @@ class Settings
                 ['1' => '']
             );
 
-            $isMultiPartEnabled = apply_filters('wpstg.backup.isMultipartBackup', false);
+            $isMultiPartEnabled = Hooks::applyFilters(JobDataDto::FILTER_IS_MULTIPART_BACKUP, false);
 
             if (!$isMultiPartEnabled) {
                 $this->form["general"]->add(

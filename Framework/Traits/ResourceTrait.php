@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Traits;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 
 trait ResourceTrait
 {
@@ -152,7 +153,7 @@ trait ResourceTrait
      */
     public function isDatabaseRestoreTimeLimit()
     {
-        $timeLimit = (int)Hooks::applyFilters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', static::$backupRestoreMaxExecutionTimeInSeconds);
+        $timeLimit = (int)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_BACKUP_RESTORE_MAX_EXECUTION_TIME_IN_SECONDS, static::$backupRestoreMaxExecutionTimeInSeconds);
         return $this->getRunningTime() > $timeLimit;
     }
 
@@ -161,7 +162,7 @@ trait ResourceTrait
      */
     public function isFileAppendTimeLimit(): bool
     {
-        $timeLimit = (int)Hooks::applyFilters('wpstg.resource.file_append_time_limit', static::$fileAppendMaxExecutionTimeInSeconds);
+        $timeLimit = (int)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_FILE_APPEND_TIME_LIMIT, static::$fileAppendMaxExecutionTimeInSeconds);
         return $this->getRunningTime() > $timeLimit;
     }
 
@@ -228,10 +229,10 @@ trait ResourceTrait
 
         // Allow overwriting of the max execution time limit.
         // Important: Use a value lower than the actual PHP limit. (reduce it by 10seconds or more). Also adjust the nginx/php timeout limit
-        $this->executionTimeLimit = (int)Hooks::applyFilters('wpstg.resources.executionTimeLimit', $this->executionTimeLimit);
+        $this->executionTimeLimit = (int)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_EXECUTION_TIME_LIMIT, $this->executionTimeLimit);
 
         // Allow disabling of the execution time limit
-        if ((bool)Hooks::applyFilters('wpstg.resources.ignoreTimeLimit', false)) {
+        if ((bool)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_IGNORE_TIME_LIMIT, false)) {
             $this->executionTimeLimit = PHP_INT_MAX;
         }
 
@@ -306,7 +307,7 @@ trait ResourceTrait
         }
 
         // Allow custom overwriting
-        $this->memoryLimit = Hooks::applyFilters('wpstg.resources.memoryLimit', $memoryLimit);
+        $this->memoryLimit = Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_MEMORY_LIMIT, $memoryLimit);
 
         // Unexpected memory limit after filter and also make sure it is never below 64MB
         if (!is_int($this->memoryLimit) || $this->memoryLimit < (64 * MB_IN_BYTES)) {
@@ -317,7 +318,7 @@ trait ResourceTrait
         $this->memoryLimit = (min($this->memoryLimit, 256 * MB_IN_BYTES));
 
         // Allow disabling the memory limit
-        if ((bool)Hooks::applyFilters('wpstg.resources.ignoreMemoryLimit', false)) {
+        if ((bool)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_IGNORE_MEMORY_LIMIT, false)) {
             $this->memoryLimit = PHP_INT_MAX;
         }
 

@@ -90,6 +90,8 @@ class Settings
 
         if (is_array($data)) {
             $optionBackupScheduleErrorReport = isset($data['schedulesErrorReport']) ? 'true' : '';
+            $optionBackupScheduleWarningReport = isset($data['schedulesWarningReport']) ? 'true' : '';
+            $optionBackupScheduleGeneralReport = isset($data['schedulesGeneralReport']) ? 'true' : '';
             $optionBackupScheduleReportEmail = !empty($data['schedulesReportEmail']) ? $this->sanitize->sanitizeEmail($data['schedulesReportEmail']) : '';
 
             if (empty($optionBackupScheduleReportEmail)) {
@@ -108,7 +110,15 @@ class Settings
 
             unset($data['schedulesErrorSlackReport'], $data['schedulesReportSlackWebhook']);
 
-            $this->setErrorReportOptions($optionBackupScheduleErrorReport, $optionBackupScheduleReportEmail, $optionBackupScheduleSlackErrorReport, $optionBackupScheduleReportSlackWebhook, $optionSendEmailAsHTML);
+            $this->setErrorReportOptions(
+                $optionBackupScheduleErrorReport,
+                $optionBackupScheduleWarningReport,
+                $optionBackupScheduleGeneralReport,
+                $optionBackupScheduleReportEmail,
+                $optionBackupScheduleSlackErrorReport,
+                $optionBackupScheduleReportSlackWebhook,
+                $optionSendEmailAsHTML
+            );
         }
 
         $sanitized = $this->sanitizeData($data);
@@ -208,6 +218,8 @@ class Settings
      * Set backup schedule error reporting options
      *
      * @param string $optionBackupScheduleErrorReport 'true' if active
+     * @param string $optionBackupScheduleWarningReport 'true' if active
+     * @param string $optionBackupScheduleGeneralReport 'true' if active
      * @param string $optionBackupScheduleReportEmail
      * @param string $optionBackupScheduleSlackErrorReport 'true' if active
      * @param string $optionBackupScheduleReportSlackWebhook
@@ -216,6 +228,8 @@ class Settings
      */
     protected function setErrorReportOptions(
         string $optionBackupScheduleErrorReport,
+        string $optionBackupScheduleWarningReport,
+        string $optionBackupScheduleGeneralReport,
         string $optionBackupScheduleReportEmail,
         string $optionBackupScheduleSlackErrorReport,
         string $optionBackupScheduleReportSlackWebhook,
@@ -225,10 +239,12 @@ class Settings
             return;
         }
 
-        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, $optionBackupScheduleErrorReport);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, $optionBackupScheduleErrorReport, false);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_WARNING_REPORT, $optionBackupScheduleWarningReport, false);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_GENERAL_REPORT, $optionBackupScheduleGeneralReport, false);
         update_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
-        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT, $optionBackupScheduleSlackErrorReport);
-        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK, $optionBackupScheduleReportSlackWebhook);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT, $optionBackupScheduleSlackErrorReport, false);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK, $optionBackupScheduleReportSlackWebhook, false);
         update_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, $optionSendEmailAsHTML);
     }
 }

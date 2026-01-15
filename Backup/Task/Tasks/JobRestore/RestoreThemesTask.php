@@ -18,6 +18,9 @@ class RestoreThemesTask extends FileRestoreTask
      */
     const FILTER_KEEP_EXISTING_THEMES = 'wpstg.backup.restore.keepExistingThemes';
 
+    /** @var string */
+    const FILTER_IMPORT_THEMES_DEST_DIR = 'wpstg.import.themes.destDir';
+
     public static function getTaskName(): string
     {
         return 'backup_restore_themes';
@@ -55,7 +58,7 @@ class RestoreThemesTask extends FileRestoreTask
         try {
             $existingThemes = $this->getExistingThemes();
         } catch (\Exception $e) {
-            $this->logger->critical(sprintf('Destination themes folder could not be found or created at "%s"', (string)apply_filters('wpstg.import.themes.destDir', $destDir)));
+            $this->logger->critical(sprintf('Destination themes folder could not be found or created at "%s"', (string)Hooks::applyFilters(self::FILTER_IMPORT_THEMES_DEST_DIR, $destDir)));
 
             return;
         }
@@ -131,7 +134,7 @@ class RestoreThemesTask extends FileRestoreTask
     private function getExistingThemes()
     {
         $destDir = $this->directory->getActiveThemeParentDirectory();
-        $destDir = (string)apply_filters('wpstg.import.themes.destDir', $destDir);
+        $destDir = (string)Hooks::applyFilters(self::FILTER_IMPORT_THEMES_DEST_DIR, $destDir);
         $this->filesystem->mkdir($destDir);
 
         return $this->findThemesInDir($destDir);

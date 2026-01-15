@@ -26,6 +26,8 @@ class DatabaseImporter
     const TMP_DATABASE_PREFIX_TO_DROP = 'wpstgbak_';
     const NULL_FLAG = "{WPSTG_NULL}";
     const BINARY_FLAG = "{WPSTG_BINARY}";
+    const FILTER_BACKUP_RESTORE_INNODB_STRICT_MODE_OFF = 'wpstg.backup.restore.innodbStrictModeOff';
+    const FILTER_DATABASE_IMPORT_EXCLUDED_QUERIES = 'wpstg.database.import.excludedQueries';
     private $file;
     private $totalLines;
     private $client;
@@ -90,7 +92,7 @@ class DatabaseImporter
             throw new \RuntimeException('Restore file is not set');
         }
         $this->exec("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
-        if ($this->applyFilters('wpstg.backup.restore.innodbStrictModeOff', false) === true) {
+        if ($this->applyFilters(self::FILTER_BACKUP_RESTORE_INNODB_STRICT_MODE_OFF, false) === true) {
             $this->exec("SET SESSION innodb_strict_mode=OFF");
         }
     }
@@ -592,7 +594,7 @@ class DatabaseImporter
 
     private function isExcludedInsertQuery($query)
     {
-        $excludedQueries = $this->applyFilters('wpstg.database.import.excludedQueries', []);
+        $excludedQueries = $this->applyFilters(self::FILTER_DATABASE_IMPORT_EXCLUDED_QUERIES, []);
         if (empty($excludedQueries)) {
             return false;
         }

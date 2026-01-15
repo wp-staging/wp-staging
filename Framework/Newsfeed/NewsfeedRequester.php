@@ -2,23 +2,14 @@
 
 namespace WPStaging\Framework\Newsfeed;
 
-use WPStaging\Framework\Newsfeed\NewsfeedValidator;
-
 use function WPStaging\functions\debug_log;
 
 /**
- * This class is responsible for getting the newsfeed data from several remote endpoints and for caching it in the database.
- * The remote source URLs need to provide html content with structure below.
+ * Fetches newsfeed JSON data from remote endpoints and caches it in the database.
  *
- * Example:
- * <div class="wpstg-block--header">
- *     <strong class="wpstg-block--title">That#s a headline</strong>
- *     <span class="wpstg-block--date">September 27, 2024</span>
- * </div>
- * Regular text or html including links is allowed <a href="https://wp-staging.com" target="_blank">An example link</a>.
- * </br>
+ * The remote source URLs must provide valid JSON content with the newsfeed data structure.
+ * Data is cached for 24 hours using WordPress transients.
  */
-
 class NewsfeedRequester
 {
     /**
@@ -60,23 +51,25 @@ class NewsfeedRequester
     }
 
     /**
-     * @return string
+     * Fetch and return newsfeed data as an array
+     *
+     * @return array|null Parsed JSON data or null on failure
      */
-    public function returnData(): string
+    public function returnData()
     {
-        $data = get_transient($this->transientIdentifier);
+        $cached = get_transient($this->transientIdentifier);
 
-        if ($data !== false && !$this->isDebug) {
-            return $data;
+        if ($cached !== false && !$this->isDebug) {
+            return $cached;
         }
 
         $data = $this->getRemoteData();
-        if (empty($data) || !$this->validator->validate($data)) {
-            return '';
+        if ($data === null || !$this->validator->validate($data)) {
+            return null;
         }
 
         if (!$this->isDebug) {
-            set_transient($this->transientIdentifier, wp_kses_post($data), self::TRANSIENT_EXPIRATION_TIME);
+            set_transient($this->transientIdentifier, $data, self::TRANSIENT_EXPIRATION_TIME);
         }
 
         return $data;
@@ -92,30 +85,39 @@ class NewsfeedRequester
     }
 
     /**
-     * @return string
+     * Fetch and parse JSON from remote URL
+     *
+     * @return array|null Parsed JSON data or null on failure
      */
-    private function getRemoteData(): string
+    private function getRemoteData()
     {
         if (!filter_var($this->url, FILTER_VALIDATE_URL)) {
             debug_log(sprintf('Invalid URL for retrieving the news from %s', $this->url));
-            return '';
+            return null;
         }
 
         $response = wp_remote_get($this->url, ['timeout' => 5, 'sslverify' => true]);
 
         if (is_wp_error($response)) {
             debug_log(sprintf('Cannot retrieve news data from URL %s. Error: %s', $this->url, $response->get_error_message()));
-            return '';
+            return null;
         }
 
-        $status_code = wp_remote_retrieve_response_code($response);
+        $statusCode = wp_remote_retrieve_response_code($response);
 
-        if ($status_code !== 200) {
-            debug_log(sprintf('Can not get remote news data from url %s Response: %s', $this->url, $status_code));
-            return '';
+        if ($statusCode !== 200) {
+            debug_log(sprintf('Cannot get remote news data from url %s Response: %s', $this->url, $statusCode));
+            return null;
         }
 
-        $content = wp_remote_retrieve_body($response);
-        return trim($content);
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode(trim($body), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            debug_log(sprintf('Newsfeed JSON parse error from %s: %s', $this->url, json_last_error_msg()));
+            return null;
+        }
+
+        return $data;
     }
 }

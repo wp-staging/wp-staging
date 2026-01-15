@@ -580,14 +580,14 @@ class Archiver
         $maxAllowedPhpTimeLimit = (int)ini_get('max_execution_time');
         if ($maxAllowedPhpTimeLimit === 0 || $maxAllowedPhpTimeLimit === -1) {
             $maxAllowedPhpTimeLimit = self::MAX_ALLOWED_PHP_TIME_LIMIT * self::PHP_TIME_LIMIT_IN_FRACTION;
-            return (int)Hooks::applyFilters('wpstg.resources.executionTimeLimit', $maxAllowedPhpTimeLimit);
+            return (int)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_EXECUTION_TIME_LIMIT, $maxAllowedPhpTimeLimit);
         }
 
         $maxAllowedPhpTimeLimit = max(self::MIN_ALLOWED_PHP_TIME_LIMIT, $maxAllowedPhpTimeLimit);
         $maxAllowedPhpTimeLimit = min(self::MAX_ALLOWED_PHP_TIME_LIMIT, $maxAllowedPhpTimeLimit);
         $maxAllowedPhpTimeLimit = $maxAllowedPhpTimeLimit * self::PHP_TIME_LIMIT_IN_FRACTION;
 
-        return (int)Hooks::applyFilters('wpstg.resources.executionTimeLimit', $maxAllowedPhpTimeLimit);
+        return (int)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_EXECUTION_TIME_LIMIT, $maxAllowedPhpTimeLimit);
     }
 
     /**

@@ -45,11 +45,11 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
             <?php
             $hasRules = false;
             if ($scanner->isUpdateOrResetJob()) :
-                foreach ($options->currentClone['excludeSizeRules'] as $rule) :
+                foreach ($stagingSiteDto->getExcludeSizeRules() as $rule) :
                     $hasRules = true;
                     echo $excludeUtils->renderSizeExclude($rule); // phpcs:ignore
                 endforeach;
-                foreach ($options->currentClone['excludeGlobRules'] as $rule) :
+                foreach ($stagingSiteDto->getExcludeGlobRules() as $rule) :
                     $hasRules = true;
                     echo $excludeUtils->renderGlobExclude($rule); // phpcs:ignore
                 endforeach;

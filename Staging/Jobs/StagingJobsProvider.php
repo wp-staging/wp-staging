@@ -18,6 +18,14 @@ class StagingJobsProvider
             return WPStaging::make(StagingSiteCreate::class);
         }
 
+        if ($jobType === JobTransientCache::JOB_TYPE_STAGING_UPDATE) {
+            return WPStaging::make(StagingSiteUpdate::class);
+        }
+
+        if ($jobType === JobTransientCache::JOB_TYPE_STAGING_RESET) {
+            return WPStaging::make(StagingSiteReset::class);
+        }
+
         throw new \Exception('Not a valid job name!');
     }
 }

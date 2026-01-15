@@ -33,6 +33,9 @@ class RenameDatabaseTask extends RestoreTask
      */
     const HOOK_KEEP_OPTIONS = 'wpstg.backup.restore.keep_options';
 
+    /** @var string */
+    const FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS = 'wpstg.backup.import.database.postDatabaseRestoreActions';
+
     /**
      * @var string
      */
@@ -306,6 +309,7 @@ class RenameDatabaseTask extends RestoreTask
         $this->jobDataDto->setTotalTablesToRename($totalTablesToRename);
         $this->jobDataDto->setTotalTablesRenamed(0);
 
+        $this->tablesRenamer->resetErrors();
         $dataToPreserve = [
             'accessToken'              => $accessToken,
             'isNetworkActivatedPlugin' => $isNetworkActivatedPlugin,
@@ -316,6 +320,13 @@ class RenameDatabaseTask extends RestoreTask
 
         if (is_multisite() && !$this->isSubsiteRestore()) {
             $dataToPreserve['activeSitewidePlugins'] = $this->tablesRenamer->getActiveSitewidePluginsToPreserve();
+        }
+
+        $errors = $this->tablesRenamer->getErrors();
+        if (!empty($errors)) {
+            foreach ($errors as $error) {
+                $this->logger->warning($error);
+            }
         }
 
         $this->jobDataDto->setDatabaseDataToPreserve($dataToPreserve);
@@ -432,12 +443,20 @@ class RenameDatabaseTask extends RestoreTask
         // Force direct activation of this plugin in the database by bypassing activate_plugin at a low-level.
         $activeWpstgPlugin = plugin_basename(trim(WPSTG_PLUGIN_FILE));
 
+        $this->tablesRenamer->resetErrors();
         $this->tablesRenamer->restorePreservedActivePlugins($databaseData['activePlugins'], $activeWpstgPlugin, $isNetworkActivatedPlugin);
         if ($isNetworkActivatedPlugin && !$this->isSubsiteRestore()) {
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $activeWpstgPlugin);
         } elseif (is_multisite() && !$this->isSubsiteRestore()) {
             // Don't activate any wp staging plugin if it is not network activated on current site
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $wpstgPluginToActivate = '');
+        }
+
+        $errors = $this->tablesRenamer->getErrors();
+        if (!empty($errors)) {
+            foreach ($errors as $error) {
+                $this->logger->warning($error);
+            }
         }
 
         /**
@@ -470,7 +489,7 @@ class RenameDatabaseTask extends RestoreTask
 
         $this->logger->info('Database restored successfully.');
 
-        do_action('wpstg.backup.import.database.postDatabaseRestoreActions');
+        Hooks::doAction(self::FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS);
     }
 
     /**

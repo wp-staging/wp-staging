@@ -144,7 +144,7 @@ class FinalizeBackupTask extends BackupTask
 
         if ($metadataAdded && $isLastStep) {
             $steps->finish();
-            $this->logger->info('Successfully created backup file');
+            $this->logger->info('Backup file finalized successfully. Now testing backup integrity...');
 
             return $this->generateResponse(false);
         }
@@ -236,6 +236,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setIsExportingOtherWpRootFiles($this->jobDataDto->getIsExportingOtherWpRootFiles());
         $backupMetadata->setIsExportingDatabase($this->jobDataDto->getIsExportingDatabase());
         $backupMetadata->setScheduleId($this->jobDataDto->getScheduleId());
+        $backupMetadata->setScheduleRecurrence($this->jobDataDto->getScheduleRecurrence());
         $backupMetadata->setMultipartMetadata(null);
         $backupMetadata->setCreatedOnPro(WPStaging::isPro());
         $backupMetadata->setHostingType($this->siteInfo->getHostingType());

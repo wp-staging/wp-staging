@@ -37,7 +37,7 @@ class Cron
     const EVERY_TWO_WEEKS = 'wpstg_every_two_weeks';
 
     /** @var string */
-    const MONTHLY         = 'wpstg_montly';
+    const MONTHLY         = 'wpstg_montly'; // @todo: fix the typo in "montly"
 
     /** @var string */
     const BASIC_DAILY     = 'wpstg_basic_daily';
@@ -69,12 +69,12 @@ class Cron
 
         // add weekly and monthly intervals
         $schedules['weekly'] = [
-            'interval' => 604800,
+            'interval' => WEEK_IN_SECONDS,
             'display'  => __('Once Weekly', 'wp-staging'),
         ];
 
         $schedules['monthly'] = [
-            'interval' => 2635200,
+            'interval' => MONTH_IN_SECONDS,
             'display'  => __('Once a month', 'wp-staging'),
         ];
 
@@ -108,6 +108,19 @@ class Cron
             'display'  => __('WP Staging events that happens weekly', 'wp-staging'),
         ];
 
+        // Weekly schedules for specific days (1-7, Monday-Sunday, ISO 8601 standard)
+        // Day 1 = Monday, Day 2 = Tuesday, ..., Day 7 = Sunday
+        for ($day = 1; $day <= 7; $day++) {
+            $dayName = $this->getDayName($day);
+            $schedules[static::WEEKLY . '_' . $day] = [
+                'interval' => WEEK_IN_SECONDS,
+                'display'  => sprintf(
+                    __('WP Staging events that happen weekly - %s', 'wp-staging'),
+                    $dayName
+                ),
+            ];
+        }
+
         $schedules[static::EVERY_TWO_WEEKS] = [
             'interval' => WEEK_IN_SECONDS * 2,
             'display'  => __('WP Staging events that happens every two weeks', 'wp-staging'),
@@ -131,8 +144,68 @@ class Cron
         return $schedules;
     }
 
+    /**
+     * Get day name from day number (1-7, Monday-Sunday, ISO 8601)
+     *
+     * @param int $dayNumber Day number (1=Monday, 7=Sunday)
+     * @return string Day name
+     */
+    public static function getDayName(int $dayNumber): string
+    {
+        $days = [
+            1 => __('Monday', 'wp-staging'),
+            2 => __('Tuesday', 'wp-staging'),
+            3 => __('Wednesday', 'wp-staging'),
+            4 => __('Thursday', 'wp-staging'),
+            5 => __('Friday', 'wp-staging'),
+            6 => __('Saturday', 'wp-staging'),
+            7 => __('Sunday', 'wp-staging'),
+        ];
+
+        return isset($days[$dayNumber]) ? $days[$dayNumber] : '';
+    }
+
+    /**
+     * Extract day number from schedule name
+     *
+     * @param string $cronInterval Schedule name (e.g., 'wpstg_weekly_3')
+     * @return int|null Day number (1-7) or null if not a day-specific schedule
+     */
+    public static function extractDayFromSchedule(string $cronInterval)
+    {
+        // Check for day-specific schedules (format: schedule_type_day)
+        if (preg_match('/_(\d+)$/', $cronInterval, $matches)) {
+            $day = (int)$matches[1];
+            // Validate it's in the range 1-7
+            if ($day >= 1 && $day <= 7) {
+                return $day;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $cronInterval
+     * @return string
+     */
     public static function getCronDisplayName($cronInterval)
     {
+        // Check for day-specific schedules (e.g., wpstg_weekly_1, wpstg_weekly_2)
+        $day = self::extractDayFromSchedule($cronInterval);
+        if ($day !== null) {
+            // Extract base schedule type
+            $baseSchedule = preg_replace('/_\d+$/', '', $cronInterval);
+
+            if ($baseSchedule === static::WEEKLY) {
+                return sprintf(
+                    __('Weekly - %s', 'wp-staging'),
+                    self::getDayName($day)
+                );
+            }
+        }
+
+        // Handle regular schedules
         switch ($cronInterval) {
             case static::HOURLY:
                 return __('Hourly', 'wp-staging');
@@ -145,7 +218,7 @@ class Cron
             case static::EVERY_TWO_DAYS:
                 return __('Every 2 Days', 'wp-staging');
             case static::WEEKLY:
-                return __('Weekly', 'wp-staging');
+                return __('Weekly', 'wp-staging'); // Backward compatibility: plain wpstg_weekly without day
             case static::EVERY_TWO_WEEKS:
                 return __('Every 2 weeks', 'wp-staging');
             case static::MONTHLY:

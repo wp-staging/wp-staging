@@ -28,7 +28,7 @@ class Create extends AbstractTemplateComponent
         $tmpFileToDelete = $this->getMemoryExhaustErrorTmpFile(self::WPSTG_REQUEST);
 
         $jobCreate = $this->getCreateJob();
-        $jobCreate->setMemoryExhaustErrorTmpFile($tmpFileToDelete); // @phpstan-ignore-line
+        $jobCreate->setMemoryExhaustErrorTmpFile($tmpFileToDelete);
 
         wp_send_json($jobCreate->prepareAndExecute());
     }
@@ -38,6 +38,6 @@ class Create extends AbstractTemplateComponent
      */
     protected function getCreateJob()
     {
-        return WPStaging::make(StagingSiteCreate::class); // @phpstan-ignore-line
+        return WPStaging::make(StagingSiteCreate::class);
     }
 }

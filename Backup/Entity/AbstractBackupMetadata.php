@@ -169,6 +169,9 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     /** @var string If this backup was created automatically as part of a schedule, this will hold the schedule ID. */
     private $scheduleId;
 
+    /** @var string|null The schedule recurrence type (e.g., wpstg_hourly, wpstg_weekly, wpstg_monthly) */
+    private $scheduleRecurrence;
+
     /** @var array|null Sites backup during multisite backups. */
     private $sites;
 
@@ -972,6 +975,23 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     public function setScheduleId($scheduleId)
     {
         $this->scheduleId = $scheduleId;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getScheduleRecurrence()
+    {
+        return $this->scheduleRecurrence;
+    }
+
+    /**
+     * @param string|null $scheduleRecurrence
+     * @return void
+     */
+    public function setScheduleRecurrence($scheduleRecurrence)
+    {
+        $this->scheduleRecurrence = $scheduleRecurrence;
     }
 
     /**

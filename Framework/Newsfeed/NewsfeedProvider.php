@@ -2,9 +2,14 @@
 
 namespace WPStaging\Framework\Newsfeed;
 
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 
+/**
+ * Provides newsfeed data for display in the admin interface.
+ *
+ * Fetches JSON newsfeed data from remote server based on user's language preference
+ * and provides it to the view for rendering.
+ */
 class NewsfeedProvider
 {
     /** @var Language */
@@ -13,19 +18,19 @@ class NewsfeedProvider
     /** @var bool */
     private $isDebug = false;
 
-    /** @param Language */
+    /** @param Language $language */
     public function __construct(Language $language)
     {
         $this->language = $language;
     }
 
     /**
-     * @return string
+     * Get newsfeed data as an array for rendering
+     *
+     * @return array|null Newsfeed data or null if unavailable
      */
-    public function getNewsfeed(): string
+    public function getNewsfeedData()
     {
-        $newsfeeds = [];
-
         $newsfeedUrls = $this->getNewsfeedUrls();
         $languageCode = $this->language->getLocaleLanguageCode();
 
@@ -34,43 +39,70 @@ class NewsfeedProvider
                 continue;
             }
 
-            $newsfeed = new NewsfeedRequester($newsfeedUrl['id'], $languageCode === 'de' ? $newsfeedUrl['de_url'] : $newsfeedUrl['en_url']);
-            $newsfeed->setIsDebug($this->isDebug);
-            $newsfeeds[] = $newsfeed->returnData();
+            $url = $languageCode === 'de' ? $newsfeedUrl['de_url'] : $newsfeedUrl['en_url'];
+            $requester = new NewsfeedRequester($newsfeedUrl['id'] . '_' . $languageCode, $url);
+            $requester->setIsDebug($this->isDebug);
+
+            $data = $requester->returnData();
+            if ($data !== null) {
+                return $data;
+            }
         }
 
-        $newsfeeds = array_filter($newsfeeds);
-        return empty($newsfeeds) ? '' : implode('<hr>', $newsfeeds);
+        return null;
     }
 
     /**
+     * Set debug mode (bypasses cache and uses e2e-tests folder)
+     *
+     * @param bool $isDebug
      * @return void
      */
-    public function printNewsfeed()
+    public function setIsDebug(bool $isDebug)
     {
-        echo wp_kses_post($this->getNewsfeed());
+        $this->isDebug = $isDebug;
     }
 
     /**
+     * Count the number of Pro-only features in the newsfeed data
+     *
+     * @param array $data
+     * @return int
+     */
+    public function countProFeatures(array $data): int
+    {
+        $count = 0;
+
+        foreach ($data['highlights'] ?? [] as $item) {
+            if (!empty($item['pro_only'])) {
+                $count++;
+            }
+        }
+
+        foreach ($data['fixes'] ?? [] as $item) {
+            if (!empty($item['pro_only'])) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Get configured newsfeed URLs
+     *
      * @return array
      */
     private function getNewsfeedUrls(): array
     {
-
         $testFolder = $this->isDebug ? '/e2e-tests/' : '/';
 
         return [
             [
-                'id'     => 'partner_newsfeed',
-                'show'   => !WPStaging::isPro() && (defined('BORLABS_COOKIE_VERSION') && version_compare(BORLABS_COOKIE_VERSION, '3.2', '<')),
-                'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'partner-newsfeed-de.txt',
-                'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'partner-newsfeed-en.txt',
-            ],
-            [
                 'id'     => 'newsfeed',
                 'show'   => true,
-                'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-de.txt',
-                'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-en.txt',
+                'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-de.json',
+                'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-en.json',
             ],
         ];
     }

@@ -4,6 +4,7 @@ namespace WPStaging\Framework\CloningProcess;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Staging\CloneOptions;
 
@@ -117,9 +118,9 @@ class ExcludedPlugins
     {
         // Apply filter
         if (is_multisite()) {
-            $filteredExcludedPlugins = apply_filters('wpstg_clone_mu_excl_folders', $this->getPluginsToExcludeWithRelativePath());
+            $filteredExcludedPlugins = apply_filters(Directory::FILTER_CLONE_MU_EXCLUDED_FOLDERS, $this->getPluginsToExcludeWithRelativePath());
         } else {
-            $filteredExcludedPlugins = apply_filters('wpstg_clone_excl_folders', $this->getPluginsToExcludeWithRelativePath());
+            $filteredExcludedPlugins = apply_filters(Directory::FILTER_CLONE_EXCLUDED_FOLDERS, $this->getPluginsToExcludeWithRelativePath());
         }
 
         if ($installedPlugins === []) {

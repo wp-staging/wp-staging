@@ -8,7 +8,7 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
+use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Dto\Task\Response\FinishStagingSiteResponseDto;
 use WPStaging\Staging\Jobs\StagingSiteCreate;
@@ -20,7 +20,7 @@ use function WPStaging\functions\debug_log;
 
 class FinishStagingSiteCreateTask extends StagingTask
 {
-    /** @var StagingSiteCreateDataDto */
+    /** @var StagingSiteJobsDataDto */
     protected $jobDataDto;
 
     /** @var Sites */
@@ -101,7 +101,7 @@ class FinishStagingSiteCreateTask extends StagingTask
      */
     private function overrideGenerateResponse()
     {
-        add_filter('wpstg.task.response', function ($response) {
+        add_filter(self::FILTER_TASK_RESPONSE, function ($response) {
             if ($response instanceof FinishStagingSiteResponseDto) {
                 $response->setCloneId($this->jobDataDto->getCloneId());
                 $response->setStagingSiteUrl($this->jobDataDto->getStagingSiteUrl());

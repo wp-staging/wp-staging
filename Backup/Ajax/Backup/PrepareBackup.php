@@ -175,6 +175,13 @@ class PrepareBackup extends PrepareJob
      */
     public function validateAndSanitizeData($data): array
     {
+        // Map 'schedule' key to 'scheduleRecurrence' for cron-created backups
+        // This must happen before array_intersect_key filters out unrecognized keys
+        if (isset($data['schedule']) && !empty($data['schedule'])) {
+            $data['scheduleRecurrence'] = $data['schedule'];
+            unset($data['schedule']); // Remove the old key
+        }
+
         // Unset any empty value so that we replace them with the defaults.
         foreach ($data as $key => $value) {
             if (empty($value)) {

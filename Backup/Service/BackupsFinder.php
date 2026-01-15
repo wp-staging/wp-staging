@@ -13,6 +13,7 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
+use WPStaging\Framework\Facades\Hooks;
 
 use function WPStaging\functions\debug_log;
 
@@ -25,6 +26,9 @@ use function WPStaging\functions\debug_log;
  */
 class BackupsFinder extends AbstractBackupsFinder
 {
+    /** @var string */
+    const FILTER_BACKUP_DIRECTORY = 'wpstg.backup.directory';
+
     /** @var Directory */
     private $directory;
 
@@ -67,7 +71,7 @@ class BackupsFinder extends AbstractBackupsFinder
              * @param string $defaultBackupUploadsDirectory The default path to the directory Backups will be read from and
              *                                              written to.
              */
-            $directory = apply_filters('wpstg.backup.directory', $defaultBackupUploadsDirectory);
+            $directory = Hooks::applyFilters(self::FILTER_BACKUP_DIRECTORY, $defaultBackupUploadsDirectory);
 
             $directory = trailingslashit(wp_normalize_path($directory));
 

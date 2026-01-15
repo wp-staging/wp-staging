@@ -5,6 +5,7 @@ namespace WPStaging\Staging\Tasks\StagingSite\DatabaseAdjustment;
 use WPStaging\Backup\BackupRetentionHandler;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\Adapter\Database;
+use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\StepsDto;
@@ -93,9 +94,9 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
 
         $jobType      = $this->jobDataDto->getJobType();
         $cloneOptions = [
-            FirstRun::MAILS_DISABLED_KEY          => !((bool) $this->jobDataDto->getEmailsAllowed()),
+            FirstRun::MAILS_DISABLED_KEY          => !((bool) $this->jobDataDto->getIsEmailsAllowed()),
             ExcludedPlugins::EXCLUDED_PLUGINS_KEY => $this->excludedPlugins->getFilteredPluginsToExclude(),
-            FirstRun::WOO_SCHEDULER_DISABLED_KEY  => (bool) $this->jobDataDto->getWooSchedulerDisabled(),
+            FirstRun::WOO_SCHEDULER_DISABLED_KEY  => !(bool) $this->jobDataDto->getIsWooSchedulerEnabled(),
         ];
 
         $this->adjustCloneOptions($cloneOptions);
@@ -226,7 +227,7 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
     protected function getActivePluginsToUpdate(): array
     {
         // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
-        remove_all_filters('option_active_plugins');
+        remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
         $activePlugins = get_option('active_plugins');
         if (!is_array($activePlugins)) {

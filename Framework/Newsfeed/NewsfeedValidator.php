@@ -2,158 +2,62 @@
 
 namespace WPStaging\Framework\Newsfeed;
 
-use WPStaging\Core\WPStaging;
-
 use function WPStaging\functions\debug_log;
 
+/**
+ * Validates newsfeed JSON data structure.
+ *
+ * Ensures that newsfeed data contains required fields and proper array structures
+ * for highlights, fixes, and tips sections.
+ */
 class NewsfeedValidator
 {
     /**
-     * @param string
-     * @return bool
+     * Validate newsfeed data structure
+     *
+     * @param array|mixed $data The parsed JSON data to validate
+     * @return bool True if valid, false otherwise
      */
-    public function validate($content): bool
+    public function validate($data): bool
     {
-        if (!$this->validateContentStructure($content)) {
+        if (!is_array($data)) {
+            debug_log('Newsfeed validation failed: data is not an array');
             return false;
         }
 
-        // If not exists, abort and return true
-        if (!class_exists('DOMDocument') || !function_exists('libxml_get_last_error') || !function_exists('libxml_use_internal_errors')) {
-            return true;
+        // Required fields
+        $required = ['version', 'date'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                debug_log(sprintf('Newsfeed validation failed: missing required field "%s"', $field));
+                return false;
+            }
         }
 
-        try {
-            // To detect invalid tag
-            libxml_use_internal_errors(true);
-            // Prevent htmlParseEntityRef errors
-            $content = $this->htmlEncodeBareAmpersands($content);
-            // Validate using DOMDocument
-            $dom = new \DOMDocument();
-            @$dom->loadHTML($content);
-
-            $errors = libxml_get_errors();
-
-            // Return true if no errors
-            if (empty($errors)) {
-                return true;
-            }
-
-            foreach ($errors as $errObject) {
-                if (empty($errObject->message)) {
-                    continue;
-                }
-
-                // Return true if html5 tags, false otherwise
-                if (preg_match('@Tag\s(.*?)\sinvalid@i', $errObject->message, $matches)) {
-                    return $this->isHtml5Tags($matches[1]);
-                // Return true if tag in exclude list
-                } elseif (preg_match('@Unexpected end tag :\s([a-z]+)@i', $errObject->message, $matches)) {
-                    return $this->isAllowInvalidEndTag($matches[1]);
-                } else {
-                    debug_log(sprintf('%s: %s', __METHOD__, $errObject->message));
-                    return false;
-                }
-            }
-        } catch (\Throwable $e) {
-            debug_log(sprintf('%s: failed to validate using DOMDocument: %s', __METHOD__, $e->getMessage()));
+        // Validate highlights array if present
+        if (isset($data['highlights']) && !is_array($data['highlights'])) {
+            debug_log('Newsfeed validation failed: highlights must be an array');
+            return false;
         }
 
-        // Return true if DOMDocument failed
+        // Validate fixes array if present
+        if (isset($data['fixes']) && !is_array($data['fixes'])) {
+            debug_log('Newsfeed validation failed: fixes must be an array');
+            return false;
+        }
+
+        // Validate tips array if present
+        if (isset($data['tips']) && !is_array($data['tips'])) {
+            debug_log('Newsfeed validation failed: tips must be an array');
+            return false;
+        }
+
+        // Validate intro object if present
+        if (isset($data['intro']) && !is_array($data['intro'])) {
+            debug_log('Newsfeed validation failed: intro must be an object');
+            return false;
+        }
+
         return true;
-    }
-
-    /**
-     * Convert ampersand into valid HTML that might cause htmlParseEntityRef errors
-     * @param string $content
-     * @return string
-     */
-    public function htmlEncodeBareAmpersands(string $content): string
-    {
-        return preg_replace_callback('/&(?!(?:#(?:[0-9]+|x[0-9a-fA-F]+)|[a-zA-Z][a-zA-Z0-9]*);)/', function ($matches) {
-            return '&amp;';
-        }, $content);
-    }
-
-    /**
-     * @param string
-     * @return bool
-     */
-    private function validateContentStructure($content): bool
-    {
-        $content = trim($content);
-
-        if (empty($content)) {
-            return false;
-        }
-
-        // Regex pattern to match the content structure:
-        // <div class="wpstg-block--header">
-        //  <strong class="wpstg-block--title">What's new in WP Staging 5.8.7 Pro?</strong>
-        //  <span class="wpstg-block--date">October 1, 2024</span>
-        // </div>
-        // content
-        $pattern = '@<div class="wpstg-block--header">\s*<strong class="wpstg-block--title">[^<]+<\/strong>\s*<span class="wpstg-block--date">[^<]+<\/span>\s*<\/div>([^<]+|[a-zA-Z0-9]+)@';
-
-        return @preg_match($pattern, $content) ? true : false;
-    }
-
-    /**
-     * @param string
-     * @return bool
-     */
-    private function isHtml5Tags(string $tag): bool
-    {
-        $tag = trim($tag);
-
-        if (empty($tag)) {
-            return false;
-        }
-
-        $tags = [
-            'article',
-            'aside',
-            'audio',
-            'bdi',
-            'canvas',
-            'data',
-            'datalist',
-            'details',
-            'dialog',
-            'figcaption',
-            'figure',
-            'footer',
-            'header',
-            'main',
-            'mark',
-            'menuitem',
-            'meter',
-            'nav',
-            'progress',
-            'rp',
-            'rt',
-            'ruby',
-            'section',
-            'summary',
-            'svg',
-            'time',
-            'video',
-            'wbr',
-        ];
-
-        return in_array($tag, $tags);
-    }
-
-    /**
-     * @param string
-     * @return bool
-     */
-    private function isAllowInvalidEndTag(string $tag): bool
-    {
-        $tags = [
-            'br', /* Invalid end tag '</br>', no effect on html content -> <br>content</br> */
-        ];
-
-        return in_array($tag, $tags);
     }
 }

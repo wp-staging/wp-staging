@@ -3,15 +3,22 @@
 namespace WPStaging\Framework\Filesystem;
 
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 
 class DiskWriteCheck
 {
-    protected $directory;
-    protected $filesystem;
-    protected $reservedMemory;
-
+    /** @var string */
     const OPTION_DISK_WRITABLE_FAILED = 'wpstg_disk_writable_check_failed';
+
+    /** @var string */
+    const FILTER_FILESYSTEM_DISABLED_DISK_FREE_SPACE_CHECK = 'wpstg.filesystem.disableDiskFreeSpaceCheck';
+
+    protected $directory;
+
+    protected $filesystem;
+
+    protected $reservedMemory;
 
     public function __construct(Filesystem $filesystem, Directory $directory)
     {
@@ -31,7 +38,7 @@ class DiskWriteCheck
     public function checkPathCanStoreEnoughBytes($path, $bytesToStore)
     {
         // Early bail: Disabled by filter
-        if (apply_filters('wpstg.filesystem.disableDiskFreeSpaceCheck', false)) {
+        if (Hooks::applyFilters(self::FILTER_FILESYSTEM_DISABLED_DISK_FREE_SPACE_CHECK, false)) {
             throw new \RuntimeException();
         }
 

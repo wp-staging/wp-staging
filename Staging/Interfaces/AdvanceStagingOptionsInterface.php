@@ -52,21 +52,29 @@ interface AdvanceStagingOptionsInterface
 
     public function getCustomPath(): string;
 
-    public function setEmailsAllowed(bool $emailsAllowed);
+    public function setIsEmailsAllowed(bool $emailsAllowed);
 
-    public function getEmailsAllowed(): bool;
+    public function getIsEmailsAllowed(): bool;
 
-    public function setCronDisabled(bool $cronDisabled);
+    public function setIsUploadsSymlinked(bool $uploadsSymlinked);
 
-    public function getCronDisabled(): bool;
+    public function getIsUploadsSymlinked(): bool;
 
-    public function setWooSchedulerDisabled(bool $wooSchedulerDisabled);
+    public function setIsCronEnabled(bool $cronEnabled);
 
-    public function getWooSchedulerDisabled(): bool;
+    public function getIsCronEnabled(): bool;
 
-    public function setEmailsReminderAllowed(bool $emailsReminderAllowed);
+    public function setIsWooSchedulerEnabled(bool $wooSchedulerEnabled);
 
-    public function getEmailsReminderAllowed(): bool;
+    public function getIsWooSchedulerEnabled(): bool;
+
+    public function setIsEmailsReminderEnabled(bool $emailsReminderEnabled);
+
+    public function getIsEmailsReminderEnabled(): bool;
+
+    public function setIsAutoUpdatePlugins(bool $autoUpdatePlugins);
+
+    public function getIsAutoUpdatePlugins(): bool;
 
     public function getTmpExcludedFullPaths(): array;
 

@@ -11,6 +11,8 @@ abstract class QueryInserter
 {
     use I18nTrait;
     use ApplyFiltersTrait;
+    const FILTER_RESTORE_DATABASE_MAX_ALLOWED_PACKET = 'wpstg.restore.database.maxAllowedPacket';
+    const FILTER_RESTORE_DATABASE_INNODB_LOG_SIZE = 'wpstg.restore.database.innoDbLogSize';
     protected $client;
     protected $databaseImporterDto;
     protected $limitedMaxAllowedPacket;
@@ -70,7 +72,7 @@ abstract class QueryInserter
         } catch (\Error $ex) {
             $limitedMaxAllowedPacket = (1 * MB_IN_BYTES) * 0.9;
         }
-        $limitedMaxAllowedPacket = $this->applyFilters('wpstg.restore.database.maxAllowedPacket', $limitedMaxAllowedPacket);
+        $limitedMaxAllowedPacket = $this->applyFilters(self::FILTER_RESTORE_DATABASE_MAX_ALLOWED_PACKET, $limitedMaxAllowedPacket);
         $this->limitedMaxAllowedPacket = (int)$limitedMaxAllowedPacket;
         $this->realMaxAllowedPacket = (int)$realMaxAllowedPacket;
     }
@@ -92,7 +94,7 @@ abstract class QueryInserter
         } catch (\Error $ex) {
             $innoDbLogSize = 9 * MB_IN_BYTES;
         }
-        $innoDbLogSize = $this->applyFilters('wpstg.restore.database.innoDbLogSize', $innoDbLogSize);
+        $innoDbLogSize = $this->applyFilters(self::FILTER_RESTORE_DATABASE_INNODB_LOG_SIZE, $innoDbLogSize);
         $this->maxInnoDbLogSize = (int)$innoDbLogSize;
     }
 

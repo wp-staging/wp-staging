@@ -12,6 +12,8 @@ class Language
     /** @var string */
     const TEXT_DOMAIN = 'wp-staging';
 
+    const FILTER_PLUGIN_LOCALE = 'plugin_locale';
+
     /**
      * @return void
      */
@@ -28,7 +30,7 @@ class Language
         }
 
         // Traditional WP plugin locale filter
-        $locale = apply_filters('plugin_locale', $locale, self::TEXT_DOMAIN);
+        $locale = apply_filters(self::FILTER_PLUGIN_LOCALE, $locale, self::TEXT_DOMAIN);
         $localMoFile  = $this->getLocalMoFile($locale);
         $globalMoFile = $this->getGlobalMoFile($locale);
         // Unfiltered mo file name

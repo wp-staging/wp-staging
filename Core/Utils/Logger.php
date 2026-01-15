@@ -11,6 +11,7 @@ namespace WPStaging\Core\Utils;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Logger\SseEventCache;
@@ -148,12 +149,23 @@ class Logger implements LoggerInterface, ShutdownableInterface
             $host   = 'Flywheel';
         }
 
+        /** @var WpAdapter */
+        $wpAdapter = WPStaging::make(WpAdapter::class);
+
         $this->info('System Info' . $additionalHeader);
         $this->add(sprintf('- WP Staging Version: %s', $systemInfo->getWpStagingVersion()), self::TYPE_INFO_SUB);
         $this->add(sprintf('- PHP Version: %s', $systemInfo->getPhpVersion()), self::TYPE_INFO_SUB);
         $this->add(sprintf('- Server: %s', $systemInfo->getWebServerInfo()), self::TYPE_INFO_SUB);
         $this->add(sprintf('- MySQL: %s', $systemInfo->getMySqlVersionCompact()), self::TYPE_INFO_SUB);
         $this->add(sprintf('- WP Version: %s', get_bloginfo("version")), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- Site URL: %s', esc_html(get_site_url())), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- Home URL: %s', esc_html(get_home_url())), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- Site Type: %s', is_multisite() ? 'Multisite' : 'Single site'), self::TYPE_INFO_SUB);
+        if (is_multisite()) {
+            $this->add(sprintf('- Network ID: %s', $wpAdapter->getCurrentNetworkId()), self::TYPE_INFO_SUB);
+            $this->add(sprintf('- Current Subsite ID: %s', get_current_blog_id()), self::TYPE_INFO_SUB);
+        }
+
         $this->add(sprintf('- Host: %s', esc_html($host)), self::TYPE_INFO_SUB);
         $this->add(sprintf('- PHP Memory Limit: %s', $this->formatSize(wp_convert_hr_to_bytes(ini_get("memory_limit")), 2, true)), self::TYPE_INFO_SUB);
         $this->add(sprintf('- WP Memory Limit: %s', (defined('WP_MEMORY_LIMIT') ? $this->formatSize(wp_convert_hr_to_bytes(WP_MEMORY_LIMIT), 2, true) : '')), self::TYPE_INFO_SUB);

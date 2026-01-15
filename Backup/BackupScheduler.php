@@ -8,7 +8,9 @@ use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Capabilities;
@@ -18,13 +20,29 @@ use WPStaging\Notifications\Notifications;
 
 use function WPStaging\functions\debug_log;
 
+/**
+ * BackupScheduler - Manages backup scheduling and cron jobs
+ *
+ * Day-Specific Weekly Schedules:
+ * - Weekly schedules support day-specific variants (e.g., wpstg_weekly_1 for Monday, wpstg_weekly_7 for Sunday)
+ * - Day numbering uses ISO 8601 standard: 1=Monday, 2=Tuesday, ..., 7=Sunday
+ * - This makes it easy to extend to other schedules in the future
+ *
+ * Backward Compatibility:
+ * - Existing plain 'wpstg_weekly' schedules (without day suffix) continue to work
+ * - They run every 7 days from their original start time, regardless of day
+ * - The system automatically handles both old and new schedule formats
+ */
 class BackupScheduler
 {
     /** @var string */
     const OPTION_BACKUP_SCHEDULE_ERROR_REPORT = 'wpstg_backup_schedules_send_error_report';
 
     /** @var string */
-    const TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT = 'wpstg.backup.schedules.report_sent';
+    const OPTION_BACKUP_SCHEDULE_WARNING_REPORT = 'wpstg_backup_schedules_send_warning_report';
+
+    /** @var string */
+    const OPTION_BACKUP_SCHEDULE_GENERAL_REPORT = 'wpstg_backup_schedules_send_general_report';
 
     /** @var string */
     const OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT = 'wpstg_backup_schedules_send_slack_error_report';
@@ -33,10 +51,34 @@ class BackupScheduler
     const OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK = 'wpstg_backup_schedules_report_slack_webhook';
 
     /** @var string */
+    const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
+
+    /** @var string */
+    const TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT = 'wpstg.backup.schedules.error_report_sent';
+
+    /** @var string */
+    const TRANSIENT_BACKUP_SCHEDULE_WARNING_REPORT_SENT = 'wpstg.backup.schedules.warning_report_sent';
+
+    /** @var string */
+    const TRANSIENT_BACKUP_SCHEDULE_GENERAL_REPORT_SENT = 'wpstg.backup.schedules.general_report_sent';
+
+    /** @var string */
     const TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT = 'wpstg.backup.schedules.slack_report_sent';
 
     /** @var string */
-    const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
+    const REPORT_TYPE_ERROR = 'error';
+
+    /** @var string */
+    const REPORT_TYPE_WARNING = 'warning';
+
+    /** @var string */
+    const REPORT_TYPE_GENERAL = 'general';
+
+    /** @var string */
+    const FILTER_SCHEDULES_BACKUP_INTERVAL = 'wpstg.schedulesBackup.interval';
+
+    /** @var string */
+    const FILTER_CRON_REQUEST = 'cron_request';
 
     /** @var BackupsFinder */
     protected $backupsFinder;
@@ -170,7 +212,9 @@ class BackupScheduler
 
         $firstSchedule = new \DateTime('now', wp_timezone());
         $time          = $jobBackupDataDto->getScheduleTime();
-        $this->setUpcomingDateTime($firstSchedule, $time);
+        $recurrence    = $jobBackupDataDto->getScheduleRecurrence();
+        $dayOfWeek     = Cron::extractDayFromSchedule($recurrence);
+        $this->setUpcomingDateTime($firstSchedule, $time, $dayOfWeek, $recurrence);
 
         $backupSchedule = [
             'scheduleId'                     => $scheduleId,
@@ -341,7 +385,8 @@ class BackupScheduler
             if (isset(wp_get_schedules()[$schedule['schedule']]) && isset($schedule['firstSchedule']) && ($schedule['scheduleId'] !== $scheduleBeingEdit)) {
                 $this->setNextSchedulingDate($timeToSchedule, $schedule);
             } else {
-                $this->setUpcomingDateTime($timeToSchedule, $schedule['time']);
+                $dayOfWeek = Cron::extractDayFromSchedule($schedule['schedule']);
+                $this->setUpcomingDateTime($timeToSchedule, $schedule['time'], $dayOfWeek, $schedule['schedule']);
             }
 
             /** @see BackupServiceProvider::enqueueAjaxListeners */
@@ -423,33 +468,46 @@ class BackupScheduler
         global $wp_version;
 
         $this->cronMessage = '';
+        // Add arrays to collect warnings and general messages
+        $warningMessages = [];
+        $generalMessages = [];
+        // Track the overall result
+        $cronStatusResult = true;
 
         if ($this->isCronjobsOverdue()) {
             if (WPStaging::isPro()) {
-                $this->cronMessage .= sprintf(
+                $overdueMessage = sprintf(
                     __('There are %s scheduled WordPress tasks overdue. This means the WordPress cron jobs are not working properly, unless this a development site or no users are visiting this website. <a href="%s">Read this article</a> to find a solution.<br><br>', 'wp-staging'),
                     $this->numberOverdueCronjobs,
                     'https://wp-staging.com/docs/wp-cron-is-not-working-correctly/'
                 );
+                $this->cronMessage .= $overdueMessage;
+                $warningMessages[] = $overdueMessage;
 
                 if (WPStaging::make(ServerVars::class)->isLitespeed()) {
-                    $this->cronMessage .= sprintf(
+                    $litespeedMessage = sprintf(
                         Escape::escapeHtml(__('This site is using LiteSpeed server, this could prevent the scheduled backups from working properly. Please read <a href="%s" target="_blank">this article here</a> if the backup scheduling is not working properly.', 'wp-staging')),
                         'https://wp-staging.com/docs/scheduled-backups-do-not-work-hosting-company-uses-the-litespeed-webserver-fix-wp-cron/'
                     );
+                    $this->cronMessage .= $litespeedMessage;
+                    $generalMessages[] = $litespeedMessage;
                 }
             } else {
-                $this->cronMessage .= sprintf(
+                $overdueMessage = sprintf(
                     __('There are %s scheduled WordPress tasks overdue. This means the WordPress cron jobs are not working properly, unless this a development site or no users are visiting this website.<br> <a href="%s">Write to us in the forum</a> to get a solution for this issue from the WP STAGING support team.<br><br>', 'wp-staging'),
                     $this->numberOverdueCronjobs,
                     'https://wordpress.org/support/plugin/wp-staging/'
                 );
+                $this->cronMessage .= $overdueMessage;
+                $warningMessages[] = $overdueMessage;
 
                 if (WPStaging::make(ServerVars::class)->isLitespeed()) {
-                    $this->cronMessage .= sprintf(
+                    $litespeedMessage = sprintf(
                         Escape::escapeHtml(__('This site is using LiteSpeed server, this could prevent the scheduled backups from working properly. <a href="%s">Write to us in the forum</a> to get a solution for that issue.', 'wp-staging')),
                         'https://wordpress.org/support/plugin/wp-staging/'
                     );
+                    $this->cronMessage .= $litespeedMessage;
+                    $generalMessages[] = $litespeedMessage;
                 }
             }
         }
@@ -463,25 +521,28 @@ class BackupScheduler
 
         foreach ($thirdPartyCronPlugins as $class => $plugin) {
             if (class_exists($class)) {
-                $this->cronMessage .= sprintf(
+                $thirdPartyMessage = sprintf(
                     __('WP Cron is being managed by a third party plugin: %s plugin.', 'wp-staging'),
                     $plugin
                 );
+                $this->cronMessage .= $thirdPartyMessage;
+                $generalMessages[] = $thirdPartyMessage;
 
-                return true;
+                $cronStatusResult = true;
+                break;
             }
         }
 
         if (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) {
             if (WPStaging::isPro()) {
-                $this->cronMessage .= sprintf(
+                $disabledCronMessage = sprintf(
                     __('The background backup creation depends on WP-Cron but %s is set to %s in wp-config.php. Background processing might not work. Remove this constant or set its value to %s. Ignore this if you use an external cron job.', 'wp-staging'),
                     '<code>DISABLE_WP_CRON</code>',
                     '<code>true</code>',
                     '<code>false</code>'
                 );
             } else {
-                $this->cronMessage .= sprintf(
+                $disabledCronMessage = sprintf(
                     __('The background backup creation depends on WP-Cron but %s is set to %s in wp-config.php. Background processing might not work. Remove this constant or set its value to %s. Ignore this if you use an external cron job. <a href="%s" target="_blank">Ask us in the forum</a> if you need more information.', 'wp-staging'),
                     '<code>DISABLE_WP_CRON</code>',
                     '<code>true</code>',
@@ -490,16 +551,21 @@ class BackupScheduler
                 );
             }
 
-            return true;
+            $this->cronMessage .= $disabledCronMessage;
+            $warningMessages[] = $disabledCronMessage;
+
+            $cronStatusResult = true;
         }
 
         if (defined('ALTERNATE_WP_CRON') && ALTERNATE_WP_CRON) {
-                $this->cronMessage .= sprintf(
-                    __('The constant %s is set to true.', 'wp-staging'),
-                    'ALTERNATE_WP_CRON'
-                );
+            $alternateCronMessage = sprintf(
+                __('The constant %s is set to true.', 'wp-staging'),
+                'ALTERNATE_WP_CRON'
+            );
+            $this->cronMessage .= $alternateCronMessage;
+            $generalMessages[] = $alternateCronMessage;
 
-            return true;
+            $cronStatusResult = true;
         }
 
         // Don't do the next time expensive checking if no schedules are set
@@ -511,41 +577,56 @@ class BackupScheduler
         $doingWpCron = sprintf('%.22F', microtime(true));
         $urlEndpoint = add_query_arg('doing_wp_cron', $doingWpCron, site_url('wp-cron.php'));
 
-        $cronRequest = apply_filters('cron_request', [
+        $cronRequest = apply_filters(self::FILTER_CRON_REQUEST, [
             'url'  => $urlEndpoint,
             'key'  => $doingWpCron,
             'args' => [
                 'timeout'   => 10,
                 'blocking'  => true,
-                'sslverify' => apply_filters('https_local_ssl_verify', $sslverify),
+                'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, $sslverify),
             ],
         ]);
 
         $cronRequest['args']['blocking'] = true;
-
         $result = wp_remote_post($cronRequest['url'], $cronRequest['args']);
 
+        // Action hook for internal use only: used during cron failure test
+        Hooks::doAction('wpstg.tests.backup.scheduler.failing_schedule_error');
+
         if (is_wp_error($result)) {
-            $this->cronMessage .= "Can not create scheduled backups because cron jobs do not work on this site. Error: " . $result->get_error_message() . ". Can not reach endpoint: " . esc_url($urlEndpoint);
+            $errorCronMessage = "Can not create scheduled backups because cron jobs do not work on this site. Error: " . $result->get_error_message() . ". Can not reach endpoint: " . esc_url($urlEndpoint);
             // Only send the error report mail if error is caused by WP STAGING
             if ($this->isWpstgError()) {
-                $this->sendErrorReport($this->cronMessage);
+                $this->sendErrorReport($errorCronMessage);
             }
 
-            return false;
+            $this->cronMessage .= $errorCronMessage;
+
+            $cronStatusResult = false;
         }
 
         if (wp_remote_retrieve_response_code($result) >= 300) {
-            $this->cronMessage .= sprintf(
+            $httpWarningMessage = sprintf(
                 __('Unexpected HTTP response code: %s. Cron jobs and backup schedule might still work, but we recommend checking the HTTP response of %s', 'wp-staging'),
                 intval(wp_remote_retrieve_response_code($result)),
                 esc_url($urlEndpoint)
             );
+            $this->cronMessage .= $httpWarningMessage;
+            $warningMessages[] = $httpWarningMessage;
 
-            return false;
+            $cronStatusResult = false;
         }
 
-        return true;
+        // Send accumulated warning and general reports ONLY ONCE at the end
+        if (!empty($warningMessages)) {
+            $this->sendWarningReport(implode("\n\n", $warningMessages));
+        }
+
+        if (!empty($generalMessages)) {
+            $this->sendGeneralReport(implode("\n\n", $generalMessages));
+        }
+
+        return $cronStatusResult;
     }
 
     /**
@@ -597,9 +678,11 @@ class BackupScheduler
      *
      * @param DateTime $datetime
      * @param string|array $time
+     * @param int|null $dayOfWeek Day of week (1-7, Monday-Sunday, ISO 8601) for weekly schedules
+     * @param string|null $scheduleRecurrence The schedule recurrence type
      * @return void
      */
-    protected function setUpcomingDateTime(DateTime &$datetime, $time)
+    protected function setUpcomingDateTime(DateTime &$datetime, $time, $dayOfWeek = null, $scheduleRecurrence = null)
     {
         if (is_array($time)) {
             $hourAndMinute = $time;
@@ -607,9 +690,40 @@ class BackupScheduler
             $hourAndMinute = explode(':', $time);
         }
 
-        // The event should be scheduled later today or tomorrow? Compares "Hi (Hourminute)" timestamps to figure out.
-        if ((int)sprintf('%s%s', $hourAndMinute[0], $hourAndMinute[1]) < (int)$datetime->format('Hi')) {
-            $datetime->add(new \DateInterval('P1D'));
+        // For weekly schedules with a specific day of week
+        $isWeeklySchedule = $scheduleRecurrence === Cron::WEEKLY ||
+                           $scheduleRecurrence === Cron::EVERY_TWO_WEEKS ||
+                           strpos($scheduleRecurrence, Cron::WEEKLY . '_') === 0;
+
+        if ($dayOfWeek !== null && $isWeeklySchedule) {
+            // Use ISO 8601 day numbers: 1 (Monday) through 7 (Sunday)
+            // PHP's date('N') returns the same format
+            $currentDayOfWeek = (int)$datetime->format('N');
+            $targetDayOfWeek  = (int)$dayOfWeek;
+
+            // Convert time to comparable integer HHMM
+            $targetTimeInt    = (int) sprintf('%02d%02d', $hourAndMinute[0], $hourAndMinute[1]);
+            $currentTimeInt   = (int) $datetime->format('Hi');
+            $daysUntilTarget  = $targetDayOfWeek - $currentDayOfWeek;
+
+            if ($daysUntilTarget < 0) {
+                $daysUntilTarget += 7;
+            }
+
+            // If same day and target time already passed then schedule next week
+            if ($daysUntilTarget === 0 && $targetTimeInt <= $currentTimeInt) {
+                $daysUntilTarget = 7;
+            }
+
+            // Apply date shift
+            if ($daysUntilTarget > 0) {
+                $datetime->add(new \DateInterval("P{$daysUntilTarget}D"));
+            }
+        } else {
+            // The event should be scheduled later today or tomorrow? Compares "Hi (Hourminute)" timestamps to figure out.
+            if ((int)sprintf('%s%s', $hourAndMinute[0], $hourAndMinute[1]) < (int)$datetime->format('Hi')) {
+                $datetime->add(new \DateInterval('P1D'));
+            }
         }
 
         $datetime->setTime($hourAndMinute[0], $hourAndMinute[1]);
@@ -627,7 +741,8 @@ class BackupScheduler
         $next = $schedule['firstSchedule'];
         $now  = $datetime->getTimestamp();
         if ($next >= $now) {
-            $this->setUpcomingDateTime($datetime, $schedule['time']);
+            $dayOfWeek = Cron::extractDayFromSchedule($schedule['schedule']);
+            $this->setUpcomingDateTime($datetime, $schedule['time'], $dayOfWeek, $schedule['schedule']);
             return;
         }
 
@@ -657,7 +772,7 @@ class BackupScheduler
     /**
      * Send an error report email
      * A Generic title will be used if no title is provided
-     * Internally use of sendEmailReport()
+     * Internally uses sendEmailReport()
      *
      * @param string $message
      * @param string $title
@@ -665,6 +780,10 @@ class BackupScheduler
      */
     public function sendErrorReport(string $message, string $title = ''): bool
     {
+        if (get_option(self::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) !== 'true') {
+            return false;
+        }
+
         if (empty($message)) {
             return false;
         }
@@ -684,26 +803,17 @@ class BackupScheduler
     }
 
     /**
-     * Send a report email
+     * Send a warning report email
      * A Generic title will be used if no title is provided
+     * Internally uses sendEmailReport()
      *
      * @param string $message
      * @param string $title
      * @return bool
      */
-    public function sendEmailReport(string $message, string $title = ''): bool
+    public function sendWarningReport(string $message, string $title = ''): bool
     {
-        if (get_option(self::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) !== 'true') {
-            return false;
-        }
-
-        $reportEmail = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
-        if (!filter_var($reportEmail, FILTER_VALIDATE_EMAIL)) {
-            return false;
-        }
-
-        // Only send the error report mail once every 5 minutes
-        if (get_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT) !== false) {
+        if (get_option(self::OPTION_BACKUP_SCHEDULE_WARNING_REPORT) !== 'true') {
             return false;
         }
 
@@ -712,11 +822,81 @@ class BackupScheduler
         }
 
         if (empty($title)) {
-            $title = esc_html__('WP Staging - Backup Report', 'wp-staging');
+            $title = esc_html__('WP Staging - Backup Warning Report', 'wp-staging');
+        }
+
+        $this->sendEmailReport($message, $title, self::REPORT_TYPE_WARNING);
+
+        return true;
+    }
+
+    /**
+     * Send a general report email
+     * A Generic title will be used if no title is provided
+     * Internally uses sendEmailReport()
+     *
+     * @param string $message
+     * @param string $title
+     * @return bool
+     */
+    public function sendGeneralReport(string $message, string $title = ''): bool
+    {
+        if (get_option(self::OPTION_BACKUP_SCHEDULE_GENERAL_REPORT) !== 'true') {
+            return false;
+        }
+
+        if (empty($message)) {
+            return false;
+        }
+
+        if (empty($title)) {
+            $title = esc_html__('WP Staging - Backup General Report', 'wp-staging');
+        }
+
+        $this->sendEmailReport($message, $title, self::REPORT_TYPE_GENERAL);
+
+        return true;
+    }
+
+    /**
+     * Send a report email
+     * A Generic title will be used if no title is provided
+     *
+     * @param string $message
+     * @param string $title
+     * @return bool
+     */
+    public function sendEmailReport(string $message, string $title = '', string $reportType = self::REPORT_TYPE_ERROR): bool
+    {
+        $optionName = $this->getReportOptionName($reportType);
+
+        if (get_option($optionName) !== 'true') {
+            return false;
+        }
+
+        $reportEmail = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        if (!filter_var($reportEmail, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        // Only send the report mail once every 5 minutes
+        $transientName = $this->getReportTransientName($reportType);
+        if (get_transient($transientName) !== false) {
+            return false;
+        }
+
+        if (empty($message)) {
+            return false;
+        }
+
+        if (empty($title)) {
+            $title = $this->getDefaultReportTitle($reportType);
         }
 
         // Set the transient to prevent sending the error report mail again for 5 minutes
-        set_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT, true, 5 * 60);
+        $transientName = $this->getReportTransientName($reportType);
+        set_transient($transientName, true, 5 * 60);
+
         if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
             return $this->notifications->sendEmailAsHTML($reportEmail, $title, $message);
         }
@@ -763,6 +943,61 @@ class BackupScheduler
         // Set the transient to prevent sending the error report mail again for 5 minutes
         set_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT, true, 5 * 60);
         return $this->notifications->sendSlack($webhook, $title, $message);
+    }
+
+    /**
+     * Get the option name for a specific report type
+     *
+     * @param string $reportType
+     * @return string
+     */
+    private function getReportOptionName(string $reportType): string
+    {
+        switch ($reportType) {
+            case self::REPORT_TYPE_WARNING:
+                return self::OPTION_BACKUP_SCHEDULE_WARNING_REPORT;
+            case self::REPORT_TYPE_GENERAL:
+                return self::OPTION_BACKUP_SCHEDULE_GENERAL_REPORT;
+            default:
+                return self::OPTION_BACKUP_SCHEDULE_ERROR_REPORT;
+        }
+    }
+
+    /**
+     * Get the transient name for a specific report type
+     *
+     * @param string $reportType
+     * @return string
+     */
+    private function getReportTransientName(string $reportType): string
+    {
+        switch ($reportType) {
+            case self::REPORT_TYPE_WARNING:
+                return self::TRANSIENT_BACKUP_SCHEDULE_WARNING_REPORT_SENT;
+            case self::REPORT_TYPE_GENERAL:
+                return self::TRANSIENT_BACKUP_SCHEDULE_GENERAL_REPORT_SENT;
+            case self::REPORT_TYPE_ERROR:
+            default:
+                return self::TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT;
+        }
+    }
+
+    /**
+     * Get the default title for a specific report type
+     *
+     * @param string $reportType
+     * @return string
+     */
+    private function getDefaultReportTitle(string $reportType): string
+    {
+        switch ($reportType) {
+            case self::REPORT_TYPE_WARNING:
+                return esc_html__('WP Staging - Backup Warning Report', 'wp-staging');
+            case self::REPORT_TYPE_GENERAL:
+                return esc_html__('WP Staging - Backup General Report', 'wp-staging');
+            default:
+                return esc_html__('WP Staging - Backup Error Report', 'wp-staging');
+        }
     }
 
     /**

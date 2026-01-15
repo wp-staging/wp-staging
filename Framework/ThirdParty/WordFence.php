@@ -25,6 +25,8 @@ class WordFence extends BooleanNotice
      */
     const NOTICE_NAME = 'wordfence_userini_renamed';
 
+    const FILTER_ACTIVE_PLUGINS = 'active_plugins';
+
     /**
      * Check if .user.ini file exists. If it exists rename it to .user.ini.bak and enable the notice
      */
@@ -36,7 +38,7 @@ class WordFence extends BooleanNotice
             return;
         }
 
-        $activePlugins = apply_filters('active_plugins', (array)get_option('active_plugins'));
+        $activePlugins = apply_filters(self::FILTER_ACTIVE_PLUGINS, (array)get_option('active_plugins'));
         if (!in_array('wordfence/wordfence.php', $activePlugins)) {
             return;
         }

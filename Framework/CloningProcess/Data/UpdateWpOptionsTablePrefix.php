@@ -4,9 +4,13 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\Facades\Hooks;
 
 class UpdateWpOptionsTablePrefix extends DBCloningService
 {
+    /** @var string */
+    const FILTER_DATA_EXCLUDED_ROWS = 'wpstg_data_excl_rows';
+
     protected function internalExecute()
     {
         $stagingPrefix = $this->dto->getPrefix();
@@ -69,7 +73,7 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
             'db_version',
         ];
 
-        $filters = apply_filters('wpstg_data_excl_rows', $filters);
+        $filters = Hooks::applyFilters(self::FILTER_DATA_EXCLUDED_ROWS, $filters);
 
         $where = "";
         foreach ($filters as $filter) {

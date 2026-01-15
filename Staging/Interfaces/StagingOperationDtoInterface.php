@@ -30,6 +30,12 @@ interface StagingOperationDtoInterface
 
     public function addStagingTable(string $srcTable, string $destTable);
 
+    public function setPreserveTables(array $tables);
+
+    public function getPreserveTables(): array;
+
+    public function addPreserveTable(string $destTable, string $backupTable);
+
     public function setAllTablesExcluded(bool $excluded);
 
     public function getAllTablesExcluded(): bool;

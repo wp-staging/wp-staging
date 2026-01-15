@@ -28,6 +28,9 @@ class FeatureDetection
     const ACTION_AJAX_SUPPORT_FEATURE_DETECTION = 'wpstg_q_ajax_support_feature_detection';
 
     /** @var string */
+    const FILTER_HTTPS_LOCAL_SSL_VERIFY = 'https_local_ssl_verify';
+
+    /** @var string */
     const AJAX_OPTION_NAME = 'wpstg_q_feature_detection_ajax_available';
 
     /** @var string */
@@ -129,7 +132,7 @@ class FeatureDetection
             'blocking'  => false,
             'timeout'   => 0.01,
             'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
-            'sslverify' => apply_filters('https_local_ssl_verify', false),
+            'sslverify' => apply_filters(self::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
             'body'      => [self::AJAX_OPTION_NAME => $hash],
         ]);
 

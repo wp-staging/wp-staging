@@ -40,6 +40,7 @@ use WPStaging\Basic\Feedback\Feedback;
 use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
+use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 
 /**
  * Class Administrator

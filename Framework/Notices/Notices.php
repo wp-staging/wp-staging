@@ -55,6 +55,11 @@ class Notices
     /** @var string */
     const ACTION_ALL_ADMIN_NOTICES = 'wpstg.all_admin_notices';
 
+    /** @var string */
+    const FILTER_NOTICES_HIDE_DIRECTORY_LISTING_WARNINGS = 'wpstg.notices.hideDirectoryListingWarnings';
+
+    const FILTER_NOTICES_HIDE_MISSING_PRIMARY_KEY_NOTICE = 'wpstg.notices.hideMissingPrimaryKeyNotice';
+
     /** @var Assets */
     private $assets;
 
@@ -282,7 +287,7 @@ class Notices
         }
 
         // Early bail: These warnings were disabled by the user.
-        if (apply_filters('wpstg.notices.hideDirectoryListingWarnings', false)) {
+        if (Hooks::applyFilters(self::FILTER_NOTICES_HIDE_DIRECTORY_LISTING_WARNINGS, false)) {
             return;
         }
 
@@ -376,7 +381,7 @@ class Notices
      */
     private function noticeDbHasMissingOrUnexpectedPrimaryKeys()
     {
-        if (Hooks::applyFilters('wpstg.notices.hideMissingPrimaryKeyNotice', false)) {
+        if (Hooks::applyFilters(self::FILTER_NOTICES_HIDE_MISSING_PRIMARY_KEY_NOTICE, false)) {
             return;
         }
 

@@ -486,7 +486,10 @@ class Files extends JobExecutable
     }
 
     /**
-     * Set directory permissions
+     * Set directory permissions on the parent directory of a given file path.
+     *
+     * WARNING: This method applies chmod to dirname($file), not to $file itself. dirname($file) returns the parent directory of the file or directory given.
+     *
      * @param string $file
      * @return bool
      */

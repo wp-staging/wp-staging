@@ -16,15 +16,29 @@ use function WPStaging\functions\debug_log;
 
 class JobDataDto extends AbstractDto
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     const FILTER_IS_MULTIPART_BACKUP = 'wpstg.backup.isMultipartBackup';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     const FILTER_MAX_MULTIPART_BACKUP_SIZE = 'wpstg.backup.maxMultipartBackupSize';
+
+    /** @var string */
+    const FILTER_RESOURCES_EXECUTION_TIME_LIMIT = 'wpstg.resources.executionTimeLimit';
+
+    /** @var string */
+    const FILTER_RESOURCES_BACKUP_RESTORE_MAX_EXECUTION_TIME_IN_SECONDS = 'wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds';
+
+    /** @var string */
+    const FILTER_RESOURCES_FILE_APPEND_TIME_LIMIT = 'wpstg.resource.file_append_time_limit';
+
+    /** @var string */
+    const FILTER_RESOURCES_IGNORE_TIME_LIMIT = 'wpstg.resources.ignoreTimeLimit';
+
+    /** @var string */
+    const FILTER_RESOURCES_MEMORY_LIMIT = 'wpstg.resources.memoryLimit';
+
+    /** @var string */
+    const FILTER_RESOURCES_IGNORE_MEMORY_LIMIT = 'wpstg.resources.ignoreMemoryLimit';
 
     /**
      * @var string

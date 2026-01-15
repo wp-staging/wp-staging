@@ -45,6 +45,13 @@ trait StagingOperationDtoTrait
      */
     private $stagingTables = [];
 
+    /**
+     * Tables that are preserved during staging site update or reset.
+     * During cancel or failure of the job, these tables will be restored back to their original state.
+     * @var array
+     */
+    private $preserveTables = [];
+
     /** @var bool */
     private $allTablesExcluded = false;
 
@@ -247,6 +254,33 @@ trait StagingOperationDtoTrait
         $this->stagingTables[] = [
             'source'      => $srcTable,
             'destination' => $destTable,
+        ];
+    }
+
+    /**
+     * @param array $tables
+     * @return void
+     */
+    public function setPreserveTables(array $tables)
+    {
+        $this->preserveTables = $tables;
+    }
+
+    public function getPreserveTables(): array
+    {
+        return $this->preserveTables;
+    }
+
+    /**
+     * @param string $destTable
+     * @param string $backupTable
+     * @return void
+     */
+    public function addPreserveTable(string $destTable, string $backupTable)
+    {
+        $this->preserveTables[] = [
+            'destination' => $destTable,
+            'backup'      => $backupTable,
         ];
     }
 

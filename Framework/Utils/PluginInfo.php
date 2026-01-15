@@ -4,6 +4,12 @@ namespace WPStaging\Framework\Utils;
 
 class PluginInfo
 {
+    /** @var string */
+    const FILTER_STYLESHEET_DIRECTORY = 'stylesheet_directory';
+
+    /** @var string */
+    const FILTER_TEMPLATE_DIRECTORY = 'template_directory';
+
     /**
      * Checks if the admin menu can be displayed. The different cases are:
      *  - if the free only version is active;
@@ -76,8 +82,8 @@ class PluginInfo
         $activeThemes = [];
         $sites        = get_sites();
 
-        remove_all_filters('stylesheet_directory'); // to get the real value of get_stylesheet_directory().
-        remove_all_filters('template_directory'); // to get the real value of get_template_directory().
+        remove_all_filters(self::FILTER_STYLESHEET_DIRECTORY); // to get the real value of get_stylesheet_directory().
+        remove_all_filters(self::FILTER_TEMPLATE_DIRECTORY); // to get the real value of get_template_directory().
 
         foreach ($sites as $site) {
             switch_to_blog($site->blog_id);
@@ -99,8 +105,8 @@ class PluginInfo
     {
         $activeThemes = [];
 
-        remove_all_filters('stylesheet_directory'); // to get the real value of get_stylesheet_directory().
-        remove_all_filters('template_directory'); // to get the real value of get_template_directory().
+        remove_all_filters(self::FILTER_STYLESHEET_DIRECTORY); // to get the real value of get_stylesheet_directory().
+        remove_all_filters(self::FILTER_TEMPLATE_DIRECTORY); // to get the real value of get_template_directory().
 
         $activeThemes[] = get_stylesheet_directory(); // child theme
         $activeThemes[] = get_template_directory(); // parent theme

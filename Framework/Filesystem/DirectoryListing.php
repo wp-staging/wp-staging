@@ -8,6 +8,7 @@ use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\Hooks;
 
 /**
  * Class DirectoryListing
@@ -18,6 +19,9 @@ use WPStaging\Framework\Adapter\Directory;
  */
 class DirectoryListing
 {
+    /** @var string */
+    const FILTER_DIRECTORY_LISTING_INTERVAL_CHECK = 'wpstg.directory_listing.interval_check';
+
     /**  @var Directory */
     private $directory;
 
@@ -130,7 +134,7 @@ class DirectoryListing
      */
     private function getInterval()
     {
-        return (int)apply_filters('wpstg.directory_listing.interval_check', 15 * 60);
+        return (int)Hooks::applyFilters(self::FILTER_DIRECTORY_LISTING_INTERVAL_CHECK, 15 * 60);
     }
 
     /**
@@ -163,18 +167,18 @@ class DirectoryListing
         if (!file_exists($path . 'index.php')) {
             $indexPhpCreated = file_put_contents($path . 'index.php', <<<PHP
 <?php
-/** 
+/**
  * WPSTAGING automatically places this index file on all folders it creates to prevent
  * directory listing on servers that might have directory listing enabled.
- * 
+ *
  * You might have Directory Listing disabled already. If you do, feel free to ignore this file.
- * 
+ *
  * @link https://www.google.com/search?q=directory+listing+vulnerability
  *       Read more about why Directory Listing can be a security risk.
- *       
+ *
  * @link https://www.google.com/search?q=disable+directory+listing+apache
  *       How to disable Directory Listing on Apache.
- *       
+ *
  * @link https://www.google.com/search?q=disable+directory+listing+nginx
  *       How to disable Directory Listing on Nginx.
  */

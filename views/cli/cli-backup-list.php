@@ -69,19 +69,19 @@
                         <?php if ($backup->isExportingMuPlugins) : ?>
                             <span class="wpstg--tooltip wpstg-cli-backup-icon">
                                 <img src="<?php echo esc_url($urlAssets); ?>svg/plugins-checked.svg" alt="MU Plugins" />
-                                <span class="wpstg--tooltiptext"><?php echo esc_html__('MU Plugins', 'wp-staging'); ?></span>
+                                <span class="wpstg--tooltiptext"><?php echo esc_html__('Must-Use Plugins', 'wp-staging'); ?></span>
                             </span>
                         <?php endif; ?>
                         <?php if ($backup->isExportingOtherWpContentFiles) : ?>
                             <span class="wpstg--tooltip wpstg-cli-backup-icon">
                                 <img src="<?php echo esc_url($urlAssets); ?>svg/admin-generic.svg" alt="WP Content" />
-                                <span class="wpstg--tooltiptext"><?php echo esc_html__('Other WP Content', 'wp-staging'); ?></span>
+                                <span class="wpstg--tooltiptext"><?php echo esc_html__('Other files in wp-content', 'wp-staging'); ?></span>
                             </span>
                         <?php endif; ?>
                         <?php if ($backup->isExportingOtherWpRootFiles) : ?>
                             <span class="wpstg--tooltip wpstg-cli-backup-icon">
                                 <img src="<?php echo esc_url($urlAssets); ?>svg/root-folder.svg" alt="WP Root" />
-                                <span class="wpstg--tooltiptext"><?php echo esc_html__('WP Root Files', 'wp-staging'); ?></span>
+                                <span class="wpstg--tooltiptext"><?php echo esc_html__('Other files in WP root folder', 'wp-staging'); ?></span>
                             </span>
                         <?php endif; ?>
                     </span>
@@ -93,7 +93,14 @@
         </div>
     </div>
 <?php else : ?>
-    <div class="wpstg-cli-no-backups">
-        <p><?php echo esc_html__('No backups found. Create a backup first to restore it on your local Docker site.', 'wp-staging'); ?></p>
+    <div class="wpstg-cli-no-backups wpstg-cli-no-backups-warning">
+        <p>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="wpstg-cli-warning-icon">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <?php echo esc_html__('No backups found. Create a backup first, then come back here to get the command to restore the backup on your new local Docker site.', 'wp-staging'); ?>
+        </p>
     </div>
 <?php endif; ?>

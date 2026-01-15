@@ -50,10 +50,33 @@ abstract class AbstractStagingSetup
         $this->wpDefaultDirectories = $wpDefaultDirectories;
     }
 
+    /**
+     * @return void
+     */
     public function initNewStagingSite()
     {
         $this->stagingJob     = StagingSetup::JOB_NEW_STAGING_SITE;
         $this->stagingSiteDto = new StagingSiteDto();
+    }
+
+    /**
+     * @param StagingSiteDto $stagingSiteDto
+     * @return void
+     */
+    public function initUpdateJob(StagingSiteDto $stagingSiteDto)
+    {
+        $this->stagingJob     = StagingSetup::JOB_UPDATE;
+        $this->stagingSiteDto = $stagingSiteDto;
+    }
+
+    /**
+     * @param StagingSiteDto $stagingSiteDto
+     * @return void
+     */
+    public function initResetJob(StagingSiteDto $stagingSiteDto)
+    {
+        $this->stagingJob     = StagingSetup::JOB_RESET;
+        $this->stagingSiteDto = $stagingSiteDto;
     }
 
     public function isNewStagingSite(): bool

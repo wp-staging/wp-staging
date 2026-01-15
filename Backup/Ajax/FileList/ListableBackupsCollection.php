@@ -140,6 +140,7 @@ class ListableBackupsCollection
             $listableBackup->type                             = $backupMetadata->getBackupType();
             $listableBackup->subsiteType                      = $listableBackup->type === 'single' ? '' : ($backupMetadata->getSubdomainInstall() ? 'Subdomains' : 'Subdirectories');
             $listableBackup->automatedBackup                  = $backupMetadata->getIsAutomatedBackup();
+            $listableBackup->scheduleRecurrence               = $backupMetadata->getScheduleRecurrence();
             $listableBackup->backupName                       = $backupMetadata->getName();
             $listableBackup->dateCreatedTimestamp             = intval($backupMetadata->getDateCreated());
             $listableBackup->dateCreatedFormatted             = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp((int)$backupMetadata->getDateCreated()));

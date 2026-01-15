@@ -3,7 +3,7 @@
 namespace WPStaging\Staging\Jobs;
 
 use WPStaging\Framework\Job\AbstractJob;
-use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
+use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Tasks\StagingSite\Database\CreateDatabaseTablesTask;
 use WPStaging\Staging\Tasks\StagingSite\Database\ImportDatabaseRowsTask;
 use WPStaging\Staging\Tasks\StagingSite\Database\PrepareDatabaseRowsTask;
@@ -28,7 +28,7 @@ class StagingSiteCreate extends AbstractJob
     /** @var string */
     const ACTION_CLONING_COMPLETE = 'wpstg_cloning_complete';
 
-    /** @var StagingSiteCreateDataDto $jobDataDto */
+    /** @var StagingSiteJobsDataDto $jobDataDto */
     protected $jobDataDto;
 
     /** @var array The array of tasks to execute for this job. Populated at init(). */

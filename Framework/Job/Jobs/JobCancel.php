@@ -8,6 +8,7 @@ use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\Task\Tasks\CleanupTmpBackupsTask;
 use WPStaging\Framework\Job\Task\Tasks\CleanupTmpFilesTask;
 use WPStaging\Framework\Job\Task\Tasks\CleanupTmpTablesTask;
+use WPStaging\Framework\Job\Task\Tasks\FinishCancelTask;
 
 class JobCancel extends AbstractJob
 {
@@ -51,5 +52,6 @@ class JobCancel extends AbstractJob
 
         $this->tasks[] = CleanupTmpFilesTask::class;
         $this->tasks[] = CleanupTmpTablesTask::class;
+        $this->tasks[] = FinishCancelTask::class;
     }
 }

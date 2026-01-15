@@ -30,6 +30,18 @@ abstract class AbstractTask
 {
     use ResourceTrait;
 
+    /** @var string */
+    const FILTER_TASK_RESPONSE = 'wpstg.task.response';
+
+    /** @var string */
+    const FILTER_REMOTE_STORAGES_CHUNK_SIZE = 'wpstg.remoteStorages.chunkSize';
+
+    /** @var string */
+    const FILTER_REMOTE_STORAGES_DELAY_BETWEEN_REQUESTS = 'wpstg.remoteStorages.delayBetweenRequests';
+
+    /** @var string */
+    const FILTER_CHUNK_DOWNLOAD_CLOUD_FILE_TO_FOLDER_CHUNK_SIZE = 'wpstg.chunkDownloadCloudFileToFolder.chunkSize';
+
     /**
      * Action called when a task response is generated.
      * @var string
@@ -205,7 +217,7 @@ abstract class AbstractTask
             'isWaitTask'        => $this->isWaitTask,
         ]);
 
-        $response = apply_filters('wpstg.task.response', $response);
+        $response = Hooks::applyFilters(self::FILTER_TASK_RESPONSE, $response);
 
         return $response;
     }
