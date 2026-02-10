@@ -15,18 +15,18 @@
 use WPStaging\Framework\Facades\UI\Checkbox;
 
 $settingsEnabled = true;
-$cronDisabled   = false;
+$isCronEnabled     = true;
 // If plugin is not pro disable this Option
 if (!$isPro) {
     $settingsEnabled = false;
 }?>
 <div class="wpstg--advanced-settings--checkbox">
-    <label for="wpstg_disable_cron"><?php esc_html_e('Disable Cron Jobs', 'wp-staging'); ?></label>
-    <?php Checkbox::render('wpstg_disable_cron', 'wpstg_disable_cron', 'true', $cronDisabled, ['isDisabled' => !$settingsEnabled]); ?>
+    <label for="wpstg_enable_cron"><?php esc_html_e('Enable Cron Jobs', 'wp-staging'); ?></label>
+    <?php Checkbox::render('wpstg_enable_cron', 'wpstg_enable_cron', 'true', $isCronEnabled, ['isDisabled' => !$settingsEnabled]); ?>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
-            <?php esc_html_e('Will disable WordPress cron on the staging site.', 'wp-staging'); ?>
+            <?php esc_html_e('Will enable WordPress cron on the staging site.', 'wp-staging'); ?>
         </span>
     </span>
 </div>

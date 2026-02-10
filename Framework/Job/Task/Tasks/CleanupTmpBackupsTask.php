@@ -5,6 +5,7 @@ namespace WPStaging\Framework\Job\Task\Tasks;
 use DirectoryIterator;
 use WPStaging\Backup\Service\Archiver;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Network\RemoteDownloader;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -80,6 +81,9 @@ class CleanupTmpBackupsTask extends AbstractTask
     }
 
     /**
+     * Check if a file is a temporary backup that should be cleaned up.
+     * Matches both .wpstgtmp files and .wpstgtmp.uploading files.
+     *
      * @param string $filename
      * @return bool
      */
@@ -87,6 +91,18 @@ class CleanupTmpBackupsTask extends AbstractTask
     {
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
 
-        return $extension === Archiver::TMP_BACKUP_EXTENSION;
+        // Match .wpstgtmp files
+        if ($extension === Archiver::TMP_BACKUP_EXTENSION) {
+            return true;
+        }
+
+        // Match .wpstgtmp.uploading files (in-progress downloads)
+        if ($extension === RemoteDownloader::UPLOADING_EXTENSION) {
+            $filenameWithoutUploading = pathinfo($filename, PATHINFO_FILENAME);
+            $innerExtension = pathinfo($filenameWithoutUploading, PATHINFO_EXTENSION);
+            return $innerExtension === Archiver::TMP_BACKUP_EXTENSION;
+        }
+
+        return false;
     }
 }

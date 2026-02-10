@@ -44,7 +44,7 @@ class UpdateWpConfigConstants extends FileCloningService
             "WP_HOME"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_SITEURL"          => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_CACHE"            => 'false',
-            "DISABLE_WP_CRON"     => (isset($this->dto->getJob()->getOptions()->cronDisabled) && $this->dto->getJob()->getOptions()->cronDisabled) ? 'true' : 'false',
+            "DISABLE_WP_CRON"     => empty($this->dto->getJob()->getOptions()->isCronEnabled) ? 'true' : 'false',
             "WP_ENVIRONMENT_TYPE" => sprintf("'%s'", 'staging'),
             "WP_DEVELOPMENT_MODE" => sprintf("'%s'", 'all'),
             "WPSTAGING_DEV_SITE"  => 'true',

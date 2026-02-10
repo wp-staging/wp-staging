@@ -24,13 +24,13 @@ class ListableBackup
     /** @var int A timestamp of the date this backup was created */
     public $dateCreatedTimestamp;
 
-    /** @var int A formatted $dateCreatedTimestamp */
+    /** @var string A formatted $dateCreatedTimestamp */
     public $dateCreatedFormatted;
 
     /** @var int A timestamp of the date this backup was uploaded */
     public $dateUploadedTimestamp;
 
-    /** @var int A formatted $dateUploadedTimestamp */
+    /** @var string A formatted $dateUploadedTimestamp */
     public $dateUploadedFormatted;
 
     /** @var string */

@@ -52,7 +52,7 @@ interface AdvanceStagingOptionsInterface
 
     public function getCustomPath(): string;
 
-    public function setIsEmailsAllowed(bool $emailsAllowed);
+    public function setIsEmailsAllowed(bool $isEmailsAllowed);
 
     public function getIsEmailsAllowed(): bool;
 
@@ -60,11 +60,11 @@ interface AdvanceStagingOptionsInterface
 
     public function getIsUploadsSymlinked(): bool;
 
-    public function setIsCronEnabled(bool $cronEnabled);
+    public function setIsCronEnabled(bool $isCronEnabled);
 
     public function getIsCronEnabled(): bool;
 
-    public function setIsWooSchedulerEnabled(bool $wooSchedulerEnabled);
+    public function setIsWooSchedulerEnabled(bool $isWooSchedulerEnabled);
 
     public function getIsWooSchedulerEnabled(): bool;
 

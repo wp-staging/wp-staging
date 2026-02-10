@@ -8,7 +8,6 @@ use WPStaging\Framework\Job\Ajax\Cancel;
 use WPStaging\Framework\Job\Ajax\Heartbeat;
 use WPStaging\Framework\Job\Ajax\LoginUrl;
 use WPStaging\Framework\Job\Ajax\PrepareCancel;
-use WPStaging\Framework\Job\Ajax\Status;
 use WPStaging\Framework\Job\Dto\JobCancelDataDto;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Jobs\JobCancel;
@@ -38,7 +37,6 @@ class JobServiceProvider extends FeatureServiceProvider
 
     protected function enqueueAjaxListeners()
     {
-        add_action('wp_ajax_wpstg--job--status', $this->container->callback(Status::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--job--heartbeat', $this->container->callback(Heartbeat::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--job--prepare-cancel', $this->container->callback(PrepareCancel::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--job--cancel', $this->container->callback(Cancel::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -46,7 +44,6 @@ class JobServiceProvider extends FeatureServiceProvider
 
         // no-priv
         add_action('wp_ajax_nopriv_raw_wpstg--login-url', $this->container->callback(LoginUrl::class, 'ajaxLoginUrl')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_nopriv_wpstg--job--status', $this->container->callback(Status::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_nopriv_wpstg--job--heartbeat', $this->container->callback(Heartbeat::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 

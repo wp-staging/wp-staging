@@ -384,20 +384,29 @@ abstract class AbstractExtractor
             }
         }
 
+        $this->moveToNextFile($destinationFilePath);
+        if (!$isValidated) {
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return void
+     */
+    protected function moveToNextFile(string $destinationFilePath = '')
+    {
         $this->lastIdentifiablePath = $this->indexLineDto->getIdentifiablePath();
         // Jump to the next file of the index
         $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
-
         $this->extractorDto->incrementTotalFilesExtracted();
 
-        // Reset offset pointer
+        // Reset offset pointers
         $this->extractorDto->setHeaderBytesRemoved(0);
         $this->extractorDto->setExtractorFileWrittenBytes(0);
         $this->extractorDto->setExtractorFileReadBytes(0);
-        $this->deleteValidationFile($destinationFilePath);
 
-        if (!$isValidated) {
-            throw $exception;
+        if (!empty($destinationFilePath)) {
+            $this->deleteValidationFile($destinationFilePath);
         }
     }
 

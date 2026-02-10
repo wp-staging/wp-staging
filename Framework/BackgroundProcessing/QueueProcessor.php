@@ -203,7 +203,10 @@ class QueueProcessor
             }
         } catch (\Throwable $e) {
             debug_log($e->getMessage() . ' ' . $e->getTraceAsString());
-            $markFailed();
+            // Only mark as failed if not cancelled (499).
+            if ($e->getCode() !== 499) {
+                $markFailed();
+            }
 
             return false;
         }

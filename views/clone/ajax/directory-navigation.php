@@ -19,7 +19,6 @@ use WPStaging\Framework\Facades\UI\Checkbox;
  * @var string $directoryDisabled
  * @var string $dirName
  * @var string $gifLoaderPath
- * @var string $formattedSize
  * @var bool   $isDebugMode
  * @var string $dataPath
  * @var string $basePath
@@ -49,7 +48,7 @@ $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
     <a href="#" class='wpstg-expand-dirs <?php echo ($isDisabled) ? 'wpstg-storage-settings-disabled' : ''; ?> <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
     <?php if ($isLink) : ?>
         <span class="wpstg--tooltip">
-            <img class="wpstg--dashicons wpstg-mb--4" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info" />
+            <img class="wpstg--dashicons wpstg-u--mb-4" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info" />
             <span class="wpstg--tooltiptext">
                 <?php echo sprintf(
                     esc_html__('The folder %s is a symlink. All the data in this folder will be selected by default.', 'wp-staging'),
@@ -61,7 +60,6 @@ $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
     <?php if ($isNavigatable === 'true' && !empty($gifLoaderPath)) : ?>
     <img src='<?php echo esc_url($gifLoaderPath); ?>' class='wpstg-is-dir-loading' alt='loading' />
     <?php endif; ?>
-    <span class='wpstg-size-info'><?php echo esc_html($formattedSize); ?></span>
     <?php if ($isDebugMode) : ?>
     <span class='wpstg-size-info'><?php echo esc_html($dataPath); ?></span>
     <?php endif; ?>

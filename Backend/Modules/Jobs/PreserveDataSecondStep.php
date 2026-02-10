@@ -100,9 +100,10 @@ class PreserveDataSecondStep extends JobExecutable
 
         // Preserve wpstg_staging_sites in staging database
         $this->preserveStagingOption(Sites::STAGING_SITES_OPTION, $this->preservedData->stagingSites, 'existing clones');
-
-        // Preserve wpstg_settings in staging database
-        $this->preserveStagingOption("wpstg_settings", $this->preservedData->settings, 'settings');
+        // Preserve wpstg_settings in staging database (preserved during update only, not during reset)
+        if ($this->options->mainJob === MainJob::UPDATE && isset($this->preservedData->settings)) {
+            $this->preserveStagingOption("wpstg_settings", $this->preservedData->settings, 'settings');
+        }
 
         // Preserve wpstg_login_link_settings in staging database
         $this->preserveStagingOption("wpstg_login_link_settings", $this->preservedData->loginLinkSettings, 'login settings');
@@ -276,8 +277,13 @@ class PreserveDataSecondStep extends JobExecutable
             return;
         }
 
-        $schedulerKey                      = FirstRun::WOO_SCHEDULER_DISABLED_KEY;
-        $data->{$schedulerKey}             = empty($this->getOptions()->wooSchedulerDisabled) ? false : true;
+        // clean up old option wpstg_woo_scheduler_disabled if exists
+        if (property_exists($data, 'wpstg_woo_scheduler_disabled')) {
+            unset($data->wpstg_woo_scheduler_disabled);
+        }
+
+        $schedulerKey                      = FirstRun::WOO_SCHEDULER_ENABLED_KEY;
+        $data->{$schedulerKey}             = empty($this->getOptions()->isWooSchedulerEnabled) ? false : true;
         $this->preservedData->cloneOptions = maybe_serialize($data);
     }
 }

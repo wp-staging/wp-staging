@@ -18,13 +18,14 @@ use WPStaging\Staging\Service\DirectoryScanner as Scanner;
  * @var string  $directoryDisabled
  * @var string  $dirName
  * @var string  $gifLoaderPath
- * @var string  $formattedSize
+ * @var string  $infoIconPath
  * @var bool    $isDebugMode
  * @var string  $dataPath
  * @var string  $basePath
  * @var bool    $forceDefault
  * @var string  $dirPath
  * @var bool    $isLink
+ * @var bool    $showChild
  */
 
 ?>
@@ -47,7 +48,7 @@ use WPStaging\Staging\Service\DirectoryScanner as Scanner;
     <a href="#" class='wpstg-expand-dirs <?php echo ($isDisabled) ? 'wpstg-storage-settings-disabled' : ''; ?> <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
     <?php if ($isLink) : ?>
         <span class="wpstg--tooltip">
-            <img class="wpstg--dashicons wpstg-mb--4" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
+            <img class="wpstg--dashicons wpstg-u--mb-4" src="<?php echo esc_url($infoIconPath); ?>" alt="info" />
             <span class="wpstg--tooltiptext">
                 <?php echo sprintf(
                     esc_html__('The folder %s is a symlink. All the data in this folder will be selected by default.', 'wp-staging'),
@@ -59,12 +60,11 @@ use WPStaging\Staging\Service\DirectoryScanner as Scanner;
     <?php if ($isNavigatable === 'true' && !empty($gifLoaderPath)) : ?>
     <img src='<?php echo esc_url($gifLoaderPath); ?>' class='wpstg-is-dir-loading' alt='loading' />
     <?php endif; ?>
-    <span class='wpstg-size-info'><?php echo esc_html($formattedSize); ?></span>
     <?php if ($isDebugMode) : ?>
     <span class='wpstg-size-info'><?php echo esc_html($dataPath); ?></span>
     <?php endif; ?>
     <?php if ($isScanned === 'true') : ?>
-        <div class="wpstg-dir wpstg-subdir" style="display: none;">
+        <div class="wpstg-dir wpstg-subdir" style="display: <?php echo $showChild ? 'block' : 'none'; ?>;">
         <?php
             $directories = $scanner->scanDirectory($dirPath, $basePath, $prefix);
             echo $scanner->directoryListing($directories, $parentChecked, $forceDefault); // phpcs:ignore

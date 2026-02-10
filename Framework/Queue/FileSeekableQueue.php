@@ -2,8 +2,6 @@
 
 namespace WPStaging\Framework\Queue;
 
-use Error;
-use Exception;
 use RuntimeException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\Directory;
@@ -282,12 +280,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     {
         try {
             $this->handle->flock(LOCK_UN);
-        } catch (Exception $e) {
-            $message = $e->getMessage();
-            if ($message !== 'Object not initialized') {
-                debug_log("Unable to unlock handle " . $this->taskName . '.task : ' . $message, Logger::TYPE_DEBUG);
-            }
-        } catch (Error $e) {
+        } catch (\Throwable $e) {
             $message = $e->getMessage();
             if ($message !== 'Object not initialized') {
                 debug_log("Unable to unlock handle " . $this->taskName . '.task : ' . $message, Logger::TYPE_DEBUG);

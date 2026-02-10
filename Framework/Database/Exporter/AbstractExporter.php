@@ -44,11 +44,7 @@ abstract class AbstractExporter
 
     public function __construct(Database $database)
     {
-        $this->database = $database;
-        $this->client = $database->getClient();
-        $this->sourceTablePrefix = $this->getWpDb()->prefix;
-        $this->sourceTableBasePrefix = $this->database->getBasePrefix();
-        $this->sourceTablePrefixLength = strlen($this->sourceTablePrefix);
+        $this->setDatabase($database);
     }
 
     /**
@@ -168,5 +164,14 @@ abstract class AbstractExporter
         }
 
         return $newPrefix . substr($prefixedString, strlen($this->sourceTableBasePrefix));
+    }
+
+    protected function setDatabase(Database $database)
+    {
+        $this->database = $database;
+        $this->client = $database->getClient();
+        $this->sourceTablePrefix = $this->getWpDb()->prefix;
+        $this->sourceTableBasePrefix = $this->database->getBasePrefix();
+        $this->sourceTablePrefixLength = strlen($this->sourceTablePrefix);
     }
 }

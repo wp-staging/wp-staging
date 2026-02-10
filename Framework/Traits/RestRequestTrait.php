@@ -6,9 +6,21 @@ use WPStaging\Framework\Rest\Rest;
 
 trait RestRequestTrait
 {
+    /**
+     * Custom request headers sent to remote endpoint.
+     *
+     * @var array<string, string>
+     */
     private $headers = [];
 
     private $verifySsl = false;
+
+    /**
+     * Fire-and-forget mode.
+     * When false, requests use a tiny timeout and do not wait for a full response.
+     * Use only when caller can safely continue without immediate remote result.
+     */
+    private $isBlockingRequest = true;
 
     /**
      * @param string $url
@@ -25,10 +37,17 @@ trait RestRequestTrait
             $headers['Authorization'] = 'Bearer ' . $accessToken;
         }
 
+        $timeout = Rest::REQUEST_TIMEOUT;
+        if (!$this->isBlockingRequest) {
+            // Non-blocking call used to trigger remote background jobs.
+            $timeout = 0.01;
+        }
+
         $args = [
             'method'    => 'POST',
             'headers'   => $headers,
-            'timeout'   => Rest::REQUEST_TIMEOUT,
+            'blocking'  => $this->isBlockingRequest,
+            'timeout'   => $timeout,
             'sslverify' => $this->verifySsl,
         ];
 
@@ -60,5 +79,17 @@ trait RestRequestTrait
     protected function resetHeaders()
     {
         $this->headers = [];
+    }
+
+    /**
+     * @param string $token
+     * @return array<string, string>
+     */
+    protected function getAuthorizationHeader(string $token): array
+    {
+        return [
+            'Authorization'   => 'Bearer ' . $token,
+            'X-WPSTG-Request' => $token,
+        ];
     }
 }

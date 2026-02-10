@@ -63,7 +63,7 @@ class CreateDatabaseTablesTask extends StagingTask
             $srcTable  = $this->tables[$this->stepsDto->getCurrent()];
             $destTable = $this->tableCreateService->getDestinationTable($srcTable);
 
-            $this->tableCreateService->createStagingSiteTable($srcTable, $destTable);
+            $this->tableCreateService->createDestinationTable($srcTable, $destTable);
             $this->jobDataDto->addStagingTable($srcTable, $destTable);
 
             $this->stepsDto->incrementCurrentStep();

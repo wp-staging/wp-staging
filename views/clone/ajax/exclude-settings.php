@@ -10,7 +10,7 @@
 ?>
 
 <div>
-    <h1 class="wpstg-m-0 wpstg-mt-10px wpstg--swal2-title"><?php esc_html_e('Reset Staging Site', 'wp-staging'); ?></h1>
+    <h1 class="wpstg-u-m-0 wpstg-mt-10px wpstg--swal2-title"><?php esc_html_e('Reset Staging Site', 'wp-staging'); ?></h1>
     <p style="text-align: justify;"><?php esc_html_e('Do you really want to reset this staging site with the current state of the production site?', 'wp-staging'); ?></p>
     <p style="font-size: 18px;" class="wpstg--red-warning"><?php esc_html_e('This will delete your modifications!', 'wp-staging'); ?></p>
     <p style="text-align: justify;"><?php esc_html_e('The original selection for tables and files have been preselected. You can adjust and verify them before starting the reset.', 'wp-staging'); ?></p>

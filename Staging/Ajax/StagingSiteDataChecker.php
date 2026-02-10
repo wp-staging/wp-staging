@@ -8,8 +8,10 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 
 /**
- * Class that checks staging site data
- * @package WPStaging\Staging\Ajax
+ * Handles AJAX requests for validating staging site destinations
+ *
+ * Validates that the target directory for staging site creation is writable,
+ * checking both the root path and the wp-content fallback location.
  */
 class StagingSiteDataChecker
 {
@@ -79,12 +81,6 @@ class StagingSiteDataChecker
         $cloneDirRootPath = $this->dirAdapter->getAbsPath();
         if (is_writable($cloneDirRootPath)) {
             wp_send_json_success();
-        }
-
-        if (!defined('WPSTGPRO_VERSION')) {
-            wp_send_json_error([
-                'message' => sprintf(__('Clone destination dir is not writable. Please make <code>%s</code> writable to proceed!', 'wp-staging'), esc_html($cloneDirRootPath)),
-            ]);
         }
 
         $cloneDir = $this->dirAdapter->getStagingSiteDirectoryInsideWpcontent();

@@ -25,8 +25,8 @@ if (!defined("WPINC")) {
 }
 
 /**
- * Class SystemInfo
- * @package WPStaging\Backend\Modules
+ * System Info
+ * Generates system information for debugging and support
  */
 class SystemInfo
 {
@@ -68,6 +68,21 @@ class SystemInfo
     /** @var SiteInfo */
     private $siteInfo;
 
+    /**
+     * @var bool Enable structured data output
+     */
+    private $enableStructuredOutput = false;
+
+    /**
+     * @var array Structured data storage
+     */
+    private $structuredData = [];
+
+    /**
+     * @var string Current section name
+     */
+    private $currentSection = null;
+
     public function __construct()
     {
         $this->isMultiSite   = is_multisite();
@@ -77,22 +92,29 @@ class SystemInfo
         $this->siteInfo      = WPStaging::make(SiteInfo::class);
     }
 
-    /**
-     * Magic method
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->get();
     }
 
-    /**
-     * Get System Information as text
-     * @return string
-     */
+    public function setStructuredOutput(bool $enable = true)
+    {
+        $this->enableStructuredOutput = $enable;
+        if ($enable) {
+            $this->structuredData = [];
+        }
+    }
+
+    public function getSections(): array
+    {
+        $this->setStructuredOutput(true);
+        $this->get(); // This will populate structuredData
+        return $this->getStructuredDataWithDisplayNames();
+    }
+
     public function get(): string
     {
-        $output = $this->server();
+        $output  = $this->server();
         $output .= $this->php();
         $output .= $this->wp();
         $output .= $this->getMultisiteInfo();
@@ -108,24 +130,46 @@ class SystemInfo
         return $output;
     }
 
-    /**
-     * @param string $string
-     * @return string
-     */
     public function header(string $string): string
     {
+        $this->currentSection = $string;
         return PHP_EOL . "### {$string} ###" . PHP_EOL . PHP_EOL;
     }
 
     /**
-     * Formatting title and the value
-     * @param string $title
      * @param string|array $value
-     * @return string
      */
     public function info(string $title, $value): string
     {
+        // Store structured data if enabled
+        if ($this->enableStructuredOutput) {
+            if (!isset($this->structuredData[$this->currentSection])) {
+                $this->structuredData[$this->currentSection] = [];
+            }
+
+            $this->structuredData[$this->currentSection][] = [
+                'label' => rtrim($title, ':'),
+                'value' => $value,
+            ];
+        }
+
         return str_pad($title, 56, ' ', STR_PAD_RIGHT) . print_r($value, true) . PHP_EOL;
+    }
+
+    /**
+     * Get structured data with display names
+     *
+     * @return array Structured data with section display names as keys
+     */
+    public function getStructuredDataWithDisplayNames(): array
+    {
+        $data = [];
+        foreach ($this->structuredData as $sectionId => $items) {
+            $displayName        = SystemInfoParser::getDisplayName($sectionId);
+            $data[$displayName] = $items;
+        }
+
+        return $data;
     }
 
     /**
@@ -134,71 +178,102 @@ class SystemInfo
      */
     public function wp(): string
     {
-        $output = $this->header("WordPress");
-        $output .= $this->info("Site:", ($this->isMultiSite) ? 'Multi Site' : 'Single Site');
-        $output .= $this->info("WP Version:", get_bloginfo("version"));
-        $output .= $this->info("Installed in subdir:", ($this->isSubDir() ? 'Yes' : 'No'));
-        $output .= $this->info("Database Name:", $this->database->getWpdb()->dbname);
-        $output .= $this->info("Table Prefix:", $this->getTablePrefix());
-        $output .= $this->info("site_url():", site_url());
-        $output .= $this->info("home_url():", $this->urlsHelper->getHomeUrl());
-        $output .= $this->info("get_home_path():", get_home_path());
+        // WordPress Environment
+        $this->currentSection = SystemInfoParser::SECTIONS['WORDPRESS_ENVIRONMENT']['id'];
+        $output  = $this->info("Site Type:", ($this->isMultiSite) ? 'Multi Site' : 'Single Site');
+        $output .= $this->info("WordPress Version:", get_bloginfo("version"));
+        $output .= $this->info("Installed in Subdirectory:", ($this->isSubDir() ? 'Yes' : 'No'));
+        $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? (WP_DEBUG ? "Enabled" : "Disabled") : self::NOT_SET_LABEL);
+        $output .= $this->info("WPLANG:", (defined("WPLANG") && WPLANG) ? WPLANG : "en_US");
+        $output .= $this->wpRemotePost();
+
+        // URLs & Paths
+        $this->currentSection = SystemInfoParser::SECTIONS['URLS_PATHS']['id'];
+        $output .= $this->info("Site URL:", site_url());
+        $output .= $this->info("Home URL:", $this->urlsHelper->getHomeUrl());
+        $output .= $this->info("Home Path:", get_home_path());
         $output .= $this->info("ABSPATH:", ABSPATH);
-
         $permissions = fileperms(ABSPATH);
-
         if ($permissions !== false) {
             $output .= $this->info("ABSPATH Fileperms:", (string)$permissions);
             $permissions = substr(sprintf('%o', $permissions), -4);
             $output .= $this->info("ABSPATH Permissions:", $permissions);
         } else {
-            $output .= $this->info("ABSPATH Fileperms:", "N/A");
             $output .= $this->info("ABSPATH Permissions:", "N/A");
         }
 
         $absPathStat = stat(ABSPATH);
         if (!$absPathStat) {
             $absPathStat = "";
-        } else {
-            $absPathStat = json_encode($absPathStat);
         }
 
-        $output .= $this->info("ABSPATH Stat:", $absPathStat);
-        $output .= $this->constantInfo('WP_PLUGIN_DIR');
-        $output .= $this->constantInfo('WP_CONTENT_DIR');
+        if ($this->enableStructuredOutput) {
+            $output .= $this->info("ABSPATH Stat:", $absPathStat);
+        } else {
+            $output .= $this->info("ABSPATH Stat:", json_encode($absPathStat));
+        }
 
-        $output .= $this->info("Is wp-content link:", is_link(WP_CONTENT_DIR) ? 'Yes' : 'No');
-        $output .= $this->info("Is symlink disabled:", Info::canUse('symlink') === false ? 'Yes' : 'No');
+        // WordPress Directories
+        $this->currentSection = SystemInfoParser::SECTIONS['WORDPRESS_DIRECTORIES']['id'];
+        $output .= $this->constantInfo('WP_CONTENT_DIR');
+        $output .= $this->constantInfo('WP_PLUGIN_DIR');
+        $output .= $this->info("Is wp-content Symlink:", is_link(WP_CONTENT_DIR) ? 'Yes' : 'No');
+        $output .= $this->info("Symlinks Disabled:", Info::canUse('symlink') === false ? 'Yes' : 'No');
         if (is_link(WP_CONTENT_DIR)) {
             $output .= $this->info("wp-content link target:", readlink(WP_CONTENT_DIR));
             $output .= $this->info("wp-content realpath:", realpath(WP_CONTENT_DIR));
         }
 
-        $output .= $this->constantInfo('UPLOADS');
-
-        $uploads = wp_upload_dir();
-        $output .= $this->info("uploads['path']:", $uploads['path']);
-        $output .= $this->info("uploads['subdir']:", $uploads['subdir']);
-        $output .= $this->info("uploads['basedir']:", $uploads['basedir']);
-        $output .= $this->info("uploads['baseurl']:", $uploads['baseurl']);
-        $output .= $this->info("uploads['url']:", $uploads['url']);
-
-        $output .= $this->info("UPLOAD_PATH in wp-config.php:", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : self::NOT_SET_LABEL);
-        $output .= $this->info("upload_path in " . $this->database->getPrefix() . 'options:', get_option("upload_path") ?: self::NOT_SET_LABEL);
-        $output .= $this->getPrimaryKeyInfo();
-
         $output .= $this->constantInfo('WP_TEMP_DIR');
 
-        $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? (WP_DEBUG ? "Enabled" : "Disabled") : self::NOT_SET_LABEL);
+        // Media & Uploads
+        $this->currentSection = SystemInfoParser::SECTIONS['MEDIA_UPLOADS']['id'];
+        $output .= $this->constantInfo('UPLOADS');
+        $uploads = wp_upload_dir();
+        $output .= $this->info("Uploads Base Dir:", $uploads['basedir']);
+        $output .= $this->info("Uploads URL:", $uploads['url']);
+        $output .= $this->info("Uploads Path:", $uploads['path']);
+        $output .= $this->info("Uploads Subdir:", $uploads['subdir']);
+        $output .= $this->info("Uploads Base URL:", $uploads['baseurl']);
+        $output .= $this->info("UPLOADS Constant:", (defined("UPLOADS")) ? UPLOADS : self::NOT_SET_LABEL);
+        $output .= $this->info("UPLOAD_PATH (wp-config.php):", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : self::NOT_SET_LABEL);
+        $tableName  = $this->database->getPrefix() . 'options';
+        $output .= $this->info("upload_path ($tableName):", get_option("upload_path") ?: self::NOT_SET_LABEL);
+
+        // WordPress Memory Settings
+        $this->currentSection = SystemInfoParser::SECTIONS['WORDPRESS_MEMORY_SETTINGS']['id'];
         $output .= $this->constantInfo('WP_MEMORY_LIMIT');
         $output .= $this->constantInfo('WP_MAX_MEMORY_LIMIT');
+
+        // Filesystem & Permissions
+        $this->currentSection = SystemInfoParser::SECTIONS['FILESYSTEM_PERMISSIONS']['id'];
         $output .= $this->constantInfo('FS_CHMOD_DIR');
         $output .= $this->constantInfo('FS_CHMOD_FILE');
-        $output .= $this->info("Active Theme:", $this->theme());
-        $output .= $this->info("Permalink Structure:", get_option("permalink_structure") ?: "Default");
-        $output .= $this->wpRemotePost();
-        $output .= $this->info("WPLANG:", (defined("WPLANG") && WPLANG) ? WPLANG : "en_US");
-        $output .= $this->info("Wordpress cron:", wp_json_encode(get_option('cron', [])));
+
+        // Theme & Permalinks
+        $this->currentSection = SystemInfoParser::SECTIONS['THEME_PERMALINKS']['id'];
+        $settings = (object)get_option('wpstg_settings', []);
+        $output  .= $this->info("Active Theme:", $this->theme());
+        $output  .= $this->info("Permalink Structure:", get_option("permalink_structure") ?: "Default");
+        $output  .= $this->info("Keep Permalinks:", isset($settings->keepPermalinks) ? $settings->keepPermalinks : self::NOT_SET_LABEL);
+
+        // WordPress Cron Jobs
+        $this->currentSection = SystemInfoParser::SECTIONS['WORDPRESS_CRON_JOBS']['id'];
+        $cron    = get_option('cron', []);
+        $output .= $this->info("WP-Cron Enabled:", (!defined('DISABLE_WP_CRON') || !DISABLE_WP_CRON) ? 'Yes' : 'No');
+        $output .= $this->info("Scheduled Events:", !empty($cron) ? count($cron) . ' events' : 'No events');
+        if ($this->enableStructuredOutput) {
+            $output .= $this->info("Wordpress cron:", $cron);
+        } else {
+            $output .= $this->info("Wordpress cron:", wp_json_encode($cron));
+        }
+
+        $backupSchedules = get_option('wpstg_backup_schedules', []);
+        if (!empty($backupSchedules)) {
+            $output .= $this->info("Backup Schedule:", $backupSchedules);
+        } else {
+            $output .= $this->info('Backup Schedule:', self::NOT_SET_LABEL);
+        }
 
         return $output;
     }
@@ -212,11 +287,11 @@ class SystemInfo
         // Versions earlier than 3.4
         if (get_bloginfo("version") < "3.4") {
             $themeData = get_theme_data(get_stylesheet_directory() . "/style.css");
-            return "{$themeData["Name"]} {$themeData["Version"]}";
+            return "{$themeData["Name"]} (v{$themeData["Version"]})";
         }
 
         $themeData = wp_get_theme();
-        return "{$themeData->Name} {$themeData->Version}";
+        return "{$themeData->Name} (v{$themeData->Version})";
     }
 
     /**
@@ -229,6 +304,7 @@ class SystemInfo
             return '';
         }
 
+        $this->currentSection = SystemInfoParser::SECTIONS['MULTISITE']['id'];
         $multisite = new Multisite();
 
         $output = $this->info("Multisite:", "Yes");
@@ -244,6 +320,11 @@ class SystemInfo
         $output .= $this->constantInfo('BLOG_ID_CURRENT_SITE');
 
         $networkSites = get_sites();
+        if ($this->enableStructuredOutput) {
+            $output .= $this->info("Network Sites", $networkSites);
+            return $output;
+        }
+
         $output .= PHP_EOL . $this->info("Network Sites:", count($networkSites)) . PHP_EOL;
         foreach ($networkSites as $site) {
             $siteDetails = get_blog_details($site->blog_id);
@@ -278,64 +359,85 @@ class SystemInfo
         $wpStagingFreeVersion                   = wpstgGetPluginData('wp-staging.php');
         $output                                 = PHP_EOL . "## WP Staging ##" . PHP_EOL . PHP_EOL;
 
-        $output .= $this->info("Pro Version:", get_option('wpstgpro_version', self::NOT_SET_LABEL));
+        // WP Staging – Plugin Information
+        $this->currentSection = SystemInfoParser::SECTIONS['WP_STAGING_PLUGIN_INFO']['id'];
         $output .= $this->info("Pro License Key:", $this->getLicenseKey() ?: self::NOT_SET_LABEL);
-        // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_INSTALL_DATE
+        $output .= $this->info("Pro Version:", get_option('wpstgpro_version', self::NOT_SET_LABEL));
         $output .= $this->info("Pro Install Date:", get_option('wpstgpro_install_date', self::NOT_SET_LABEL));
-        // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_UPGRADE_DATE
+        $output .= $this->info("Updated from Pro Version:", get_option('wpstgpro_version_upgraded_from') ?: self::NOT_SET_LABEL);
         $output .= $this->info("Pro Update Date:", get_option('wpstgpro_upgrade_date', self::NOT_SET_LABEL));
-        $output .= $this->info("Free or Pro Install Date (legacy):", get_option('wpstg_installDate', self::NOT_SET_LABEL));
         $output .= $this->info("Free Version:", empty($wpStagingFreeVersion['Version']) ? self::NOT_SET_LABEL : $wpStagingFreeVersion['Version']);
         $output .= $this->info("Free Install Date:", get_option(Upgrade::OPTION_INSTALL_DATE, self::NOT_SET_LABEL));
         $output .= $this->info("Free Update Date:", get_option(Upgrade::OPTION_UPGRADE_DATE, self::NOT_SET_LABEL));
-        $output .= $this->info("Updated from Pro Version:", get_option('wpstgpro_version_upgraded_from') ?: self::NOT_SET_LABEL);
         $output .= $this->info("Updated from Free Version:", get_option('wpstg_version_upgraded_from') ?: self::NOT_SET_LABEL);
-        $output .= $this->info("Is Staging Site:", $this->siteInfo->isStagingSite() ? 'true' : 'false');
+        $output .= $this->info("Free or Pro Install Date (legacy):", get_option('wpstg_installDate', self::NOT_SET_LABEL));
+        $output .= $this->info("Is Staging Site:", $this->siteInfo->isStagingSite() ? 'Yes' : 'No');
+
+        $this->currentSection = SystemInfoParser::SECTIONS['WP_STAGING_BACKUP_STATUS']['id'];
         $output .= $this->getBackupDetails();
-        $output .= $this->getScheduleInfo();
-        $output .= $this->info("DB Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : self::NOT_SET_LABEL);
-        $output .= $this->info("DB Search & Replace Limit:", isset($settings->querySRLimit) ? $settings->querySRLimit : self::NOT_SET_LABEL);
-        $output .= $this->info("File Copy Limit:", isset($settings->fileLimit) ? $settings->fileLimit : self::NOT_SET_LABEL);
-        $output .= $this->info("Maximum File Size:", isset($settings->maxFileSize) ? $settings->maxFileSize : self::NOT_SET_LABEL);
-        $output .= $this->info("File Copy Batch Size:", isset($settings->batchSize) ? $settings->batchSize : self::NOT_SET_LABEL);
-        $output .= $this->info("CPU Load Priority:", isset($settings->cpuLoad) ? $settings->cpuLoad : self::NOT_SET_LABEL);
-        $output .= $this->info("Keep Permalinks:", isset($settings->keepPermalinks) ? $settings->keepPermalinks : self::NOT_SET_LABEL);
-        $output .= $this->info("Debug Mode:", isset($settings->debugMode) ? $settings->debugMode : self::NOT_SET_LABEL);
-        $output .= $this->info("Optimize Active:", isset($settings->optimizer) ? $settings->optimizer : self::NOT_SET_LABEL);
-        $output .= $this->info("Delete on Uninstall:", isset($settings->unInstallOnDelete) ? $settings->unInstallOnDelete : self::NOT_SET_LABEL);
-        $output .= $this->info("Check Directory Size:", isset($settings->checkDirectorySize) ? $settings->checkDirectorySize : self::NOT_SET_LABEL);
-        $output .= $this->info("Access Permissions:", isset($settings->userRoles) ? $settings->userRoles : self::NOT_SET_LABEL);
-        $output .= $this->info("Users With Staging Access:", isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : self::NOT_SET_LABEL);
-        $output .= $this->info("Admin Bar Color:", isset($settings->adminBarColor) ? $settings->adminBarColor : self::NOT_SET_LABEL);
-        $analyticsHasConsent = get_option('wpstg_analytics_has_consent');
-        $output .= $this->info("Send Usage Information:", !empty($analyticsHasConsent) ? 'true' : 'false');
-        $output .= $this->info("Send Backup Errors via Email:", !empty($optionBackupScheduleErrorReport) && $optionBackupScheduleErrorReport === 'true' ? 'true' : 'false');
-        $output .= $this->info("Send Backup Warnings via Email:", !empty($optionBackupScheduleWarningReport) && $optionBackupScheduleWarningReport === 'true' ? 'true' : 'false');
-        $output .= $this->info("Send Backup General Report via Email:", !empty($optionBackupScheduleGeneralReport) && $optionBackupScheduleGeneralReport === 'true' ? 'true' : 'false');
-        $output .= $this->info("Email Address:", !empty($optionBackupScheduleReportEmail) && is_email($optionBackupScheduleReportEmail) ? $optionBackupScheduleReportEmail : self::NOT_SET_LABEL);
-        $output .= $this->info("Send Backup Errors via Slack Webhook:", !empty($optionBackupScheduleSlackErrorReport) && $optionBackupScheduleSlackErrorReport === 'true' ? 'true' : ( WPStaging::isPro() ? 'false' : self::NOT_SET_LABEL ));
-        $output .= $this->info("Slack Webhook URL:", WPStaging::isPro() && !empty($optionBackupScheduleReportSlackWebhook) ? self::REMOVED_LABEL : self::NOT_SET_LABEL);
+        $output .= $this->getQueueInfo();
+
+        // WP Staging – Performance & Limits
+        $this->currentSection = SystemInfoParser::SECTIONS['WP_STAGING_PERFORMANCE']['id'];
+        $output .= $this->info("DB Query Limit:", $this->getSettingValue($settings, 'queryLimit', true));
+        $output .= $this->info("Search & Replace Limit:", $this->getSettingValue($settings, 'querySRLimit', true));
+        $output .= $this->info("File Copy Limit:", $this->getSettingValue($settings, 'fileLimit', true));
+        $output .= $this->info("Maximum File Size:", $this->getSettingValue($settings, 'maxFileSize'));
+        $output .= $this->info("File Copy Batch Size:", $this->getSettingValue($settings, 'batchSize'));
+        $cpuLoad = $this->getSettingValue($settings, 'cpuLoad');
+        $output .= $this->info("CPU Load Priority:", $cpuLoad !== self::NOT_SET_LABEL ? ucfirst(strtolower($cpuLoad)) : $cpuLoad);
+        $output .= $this->info("Optimizer Enabled:", isset($settings->optimizer) && $settings->optimizer ? 'Yes' : 'No');
         $output .= $this->info("Backup Compression:", isset($settings->enableCompression) ? ($settings->enableCompression ? 'On' : 'Off') : self::NOT_SET_LABEL);
+        $output .= $this->info("Debug Mode Enabled:", isset($settings->debugMode) && $settings->debugMode ? 'Yes' : 'No');
+        // WP Staging – Access & Permissions
+        $this->currentSection = SystemInfoParser::SECTIONS['WP_STAGING_ACCESS']['id'];
+        $userRoles = isset($settings->userRoles) ? $settings->userRoles : [];
+        if (is_array($userRoles) && !empty($userRoles)) {
+            $rolesList = implode(', ', array_map('ucfirst', $userRoles));
+        } else {
+            $rolesList = self::NOT_SET_LABEL;
+        }
 
-        $output .= $this->formatStorageSettings('wpstg_googledrive', 'Google Drive Settings');
-        $output .= $this->formatStorageSettings('wpstg_dropbox', 'Dropbox Settings');
-        $output .= $this->formatStorageSettings('wpstg_one-drive', 'Microsoft OneDrive Settings');
-        $output .= $this->formatStorageSettings('wpstg_pcloud', 'pCloud Settings');
-        $output .= $this->formatStorageSettings('wpstg_amazons3', 'Amazon S3 Settings');
-        $output .= $this->formatStorageSettings('wpstg_digitalocean-spaces', 'DigitalOcean Spaces Settings');
-        $output .= $this->formatStorageSettings('wpstg_wasabi-s3', 'Wasabi Settings');
-        $output .= $this->formatStorageSettings('wpstg_generic-s3', 'Generic S3 Settings');
-        $output .= $this->formatStorageSettings('wpstg_sftp', 'SFTP Settings');
+        $output .= $this->info("Allowed Roles:", $rolesList);
+        $usersWithAccess = isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : [];
+        if (is_array($usersWithAccess) && !empty($usersWithAccess)) {
+            $usersList = implode(', ', $usersWithAccess);
+        } else {
+            $usersList = 'Not listed';
+        }
 
-        $output .= PHP_EOL . "-- Existing Staging Sites" . PHP_EOL . PHP_EOL;
+        $output .= $this->info("Users with Staging Access:", $usersList);
+        $output .= $this->info("Delete Data on Uninstall:", isset($settings->unInstallOnDelete) ? ($settings->unInstallOnDelete ? 'Yes' : 'No') : self::NOT_SET_LABEL);
+        $output .= $this->info("Send Usage Information:", !empty(get_option('wpstg_analytics_has_consent')) ? 'true' : 'false');
+        $output .= $this->info("Send Backup Errors via Email:", $this->formatBooleanOption($optionBackupScheduleErrorReport));
+        $output .= $this->info("Send Backup Warnings via Email:", $this->formatBooleanOption($optionBackupScheduleWarningReport));
+        $output .= $this->info("Send Backup General Report via Email:", $this->formatBooleanOption($optionBackupScheduleGeneralReport));
+        $output .= $this->info("Email Address:", !empty($optionBackupScheduleReportEmail) && is_email($optionBackupScheduleReportEmail) ? $optionBackupScheduleReportEmail : self::NOT_SET_LABEL);
+        $output .= $this->info("Send Backup Errors via Slack Webhook:", $this->formatBooleanOption($optionBackupScheduleSlackErrorReport) === 'true' ? 'true' : (WPStaging::isPro() ? 'false' : self::NOT_SET_LABEL));
+        $output .= $this->info("Slack Webhook URL:", WPStaging::isPro() && !empty($optionBackupScheduleReportSlackWebhook) ? self::REMOVED_LABEL : self::NOT_SET_LABEL);
 
-        // Clones data version > 2.x
-        // old name wpstg_existing_clones_beta
-        // New name since version 4.0.3 wpstg_staging_sites
+        $this->currentSection = SystemInfoParser::SECTIONS['WP_STAGING_STORAGE_PROVIDER']['id'];
+        // Use consolidated storage provider configuration
+        $parser            = WPStaging::make(SystemInfoParser::class);
+        $storageProviders = $parser->getStorageProvidersForSystemInfo();
+        foreach ($storageProviders as $provider) {
+            $output .= $this->formatStorageSettings($provider['optionName'], $provider['title']);
+        }
+
+        $this->currentSection = SystemInfoParser::SECTIONS['WP_STAGING_EXISTING_SITES']['id'];
+        if (!$this->enableStructuredOutput) {
+            $output .= PHP_EOL . "-- Existing Staging Sites" . PHP_EOL . PHP_EOL;
+        }
+
         $stagingSites = get_option(Sites::STAGING_SITES_OPTION, []);
         if (is_array($stagingSites)) {
             foreach ($stagingSites as $key => $clone) {
                 $path = !empty($clone['path']) ? $clone['path'] : self::NOT_SET_LABEL;
+                if ($this->enableStructuredOutput) {
+                    $clone['wpVersion'] = $this->getStagingWpVersion($path);
+                    $stagingSites[$key] = $clone;
+                    continue;
+                }
 
                 $output .= $this->info("Number:", isset($clone['number']) ? $clone['number'] : self::NOT_SET_LABEL);
                 $output .= $this->info("directoryName:", isset($clone['directoryName']) ? $clone['directoryName'] : self::NOT_SET_LABEL);
@@ -345,47 +447,17 @@ class SystemInfo
                 $output .= $this->info("DB Prefix wp-config.php:", $this->getStagingPrefix($clone));
                 $output .= $this->info("WP STAGING Version:", isset($clone['version']) ? $clone['version'] : self::NOT_SET_LABEL);
                 $output .= $this->info("WP Version:", $this->getStagingWpVersion($path)) . PHP_EOL . PHP_EOL;
-
-                if (!empty($clone['databasePassword'])) {
-                    $clone['databasePassword'] = self::REMOVED_LABEL;
-                }
-
-                if (!empty($clone['adminPassword'])) {
-                    $clone['adminPassword'] = self::REMOVED_LABEL;
-                }
-
-                $stagingSites[$key] = $clone;
             }
         }
 
-        $stagingSitesOptionBackup = (array)get_option(Sites::BACKUP_STAGING_SITES_OPTION, []);
-        foreach ($stagingSitesOptionBackup as $key => $clone) {
-            if (!empty($clone['databasePassword'])) {
-                $clone['databasePassword'] = self::REMOVED_LABEL;
-            }
-
-            if (!empty($clone['adminPassword'])) {
-                $clone['adminPassword'] = self::REMOVED_LABEL;
-            }
-
-            $stagingSitesOptionBackup[$key] = $clone;
-        }
+        $stagingSites = $this->sanitizeSitePasswords(is_array($stagingSites) ? $stagingSites : []);
+        $stagingSitesOptionBackup = $this->sanitizeSitePasswords((array)get_option(Sites::BACKUP_STAGING_SITES_OPTION, []));
 
         $output .= $this->info(Sites::STAGING_SITES_OPTION . ": ", serialize($stagingSites));
         $output .= $this->info(Sites::BACKUP_STAGING_SITES_OPTION . ": ", serialize($stagingSitesOptionBackup));
-        $output .= PHP_EOL;
-
-        $output .= "-- Legacy Options" . PHP_EOL . PHP_EOL;
-
-        $output .= $this->info("wpstg_existing_clones: ", serialize(get_option('wpstg_existing_clones')));
-        $output .= $this->info(Sites::OLD_STAGING_SITES_OPTION . ": ", serialize(get_option(Sites::OLD_STAGING_SITES_OPTION, [])));
-
         return $output;
     }
 
-    /**
-     * @return string
-     */
     public function getWpStagingVersion(): string
     {
         if (defined('WPSTGPRO_VERSION')) {
@@ -405,9 +477,33 @@ class SystemInfo
      */
     public function browser(): string
     {
-        $output = $this->header("User Browser");
-        $output .= (new Browser());
+        $this->currentSection = SystemInfoParser::SECTIONS['CLIENT_BROWSER_INFO']['id'];
+        $output = $this->header("Client / Browser Information");
+        $browser = new Browser();
+        $browserInfo = (string)$browser;
 
+        // Parse browser info into structured format if enabled
+        // Browser class returns formatted text with str_pad format: "Label:                    Value"
+        if ($this->enableStructuredOutput) {
+            $lines = explode("\n", trim($browserInfo));
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) {
+                    continue;
+                }
+
+                // Browser info uses str_pad format: "Label:                    Value"
+                if (preg_match('/^(.{1,56})\s+(.+)$/', $line, $matches)) {
+                    $label = trim($matches[1]);
+                    $value = trim($matches[2]);
+                    $this->info($label, $value);
+                } else {
+                    $this->info('', $line);
+                }
+            }
+        }
+
+        $output .= $browserInfo;
         return $output;
     }
 
@@ -455,11 +551,8 @@ class SystemInfo
      */
     public function activePlugins(array $allAvailablePlugins, array $activePlugins): string
     {
-        if ($this->isMultiSite) {
-            $output = $this->header("Active Plugins on this Site");
-        } else {
-            $output = $this->header("Active Plugins");
-        }
+        $this->currentSection = SystemInfoParser::SECTIONS['PLUGINS_OVERVIEW']['id'];
+        $output = $this->header("Active Plugins");
 
         foreach ($allAvailablePlugins as $path => $plugin) {
             if (!in_array($path, $activePlugins)) {
@@ -480,6 +573,7 @@ class SystemInfo
      */
     public function inactivePlugins(array $allAvailablePlugins, array $activePlugins): string
     {
+        $this->currentSection = SystemInfoParser::SECTIONS['PLUGINS_OVERVIEW']['id'];
         if ($this->isMultiSite) {
             $output = $this->header("Inactive Plugins (Includes this and other sites in the same network)");
         } else {
@@ -530,6 +624,7 @@ class SystemInfo
             return '';
         }
 
+        $this->currentSection = SystemInfoParser::SECTIONS['PLUGINS_OVERVIEW']['id'];
         $output = $this->header("Active Network Plugins (Includes this and other sites in the same network)");
 
         $plugins       = wp_get_active_network_plugins();
@@ -558,10 +653,12 @@ class SystemInfo
      */
     public function server(): string
     {
-        $output = $this->header("Start System Info");
-        $output .= $this->info("Webserver:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
-        $output .= $this->info("OS architecture:", $this->siteInfo->getOSArchitecture());
-        $output .= $this->info("PHP architecture:", $this->siteInfo->getPhpArchitecture());
+        // Server & Operating System
+        $this->currentSection = SystemInfoParser::SECTIONS['SERVER_AND_OS']['id'];
+        $output = $this->header("Server & Operating System");
+        $output .= $this->info("Web Server:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
+        $output .= $this->info("OS Architecture:", $this->siteInfo->getOSArchitecture());
+        $output .= $this->info("Server User:", $this->getPHPUser());
 
         // Reference: https://dev.mysql.com/doc/refman/9.1/en/identifier-case-sensitivity.html
         switch ($this->database->getLowerTablesNameSettings()) {
@@ -575,12 +672,24 @@ class SystemInfo
             default:
                 $lowerTablesNameSettings = 'N/A';
         }
-        $output .= $this->info("Lower Table Name Settings:", $lowerTablesNameSettings);
 
-        $output .= $this->info("MySQL Server Type:", $this->database->getServerType());
-        $output .= $this->info("MySQL Version:", $this->database->getSqlVersion($compact = true));
-        $output .= $this->info("MySQL Version Full Info:", $this->database->getSqlVersion());
+        // Database (MySQL / MariaDB)
+        $this->currentSection = SystemInfoParser::SECTIONS['DATABASE_MYSQL_MARIADB']['id'];
+        $output .= $this->info("Database Type:", $this->database->getServerType());
+        $output .= $this->info("Version:", $this->database->getSqlVersion($compact = true));
+        $output .= $this->info("Full Version:", $this->database->getSqlVersion());
+        $output .= $this->info("Database Name:", $this->database->getWpdb()->dbname);
+        $output .= $this->info("Table Prefix:", $this->getTablePrefix());
+        $output .= $this->info("lower_case_table_names:", $lowerTablesNameSettings);
+        $output .= $this->getPrimaryKeyInfo();
+
+        // PHP Environment
+        $this->currentSection = SystemInfoParser::SECTIONS['PHP_ENVIRONMENT']['id'];
         $output .= $this->info("PHP Version:", PHP_VERSION);
+        $output .= $this->info("PHP Architecture:", $this->siteInfo->getPhpArchitecture());
+        $output .= $this->info("PHP Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
+        $displayErrors = ini_get("display_errors");
+        $output .= $this->info("display_errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A");
 
         return $output;
     }
@@ -631,17 +740,14 @@ class SystemInfo
      */
     public function php(): string
     {
-        $output = $this->info("PHP memory_limit:", ini_get("memory_limit"));
-        $output .= $this->info("PHP memory_limit in Bytes:", (string)wp_convert_hr_to_bytes(ini_get("memory_limit")));
-        $output .= $this->info("PHP max_execution_time:", ini_get("max_execution_time"));
-        $output .= $this->info("PHP Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
-        $output .= $this->info("PHP Upload Max File Size:", ini_get("upload_max_filesize"));
-        $output .= $this->info("PHP Post Max Size:", ini_get("post_max_size"));
-        $output .= $this->info("PHP Upload Max Filesize:", ini_get("upload_max_filesize"));
-        $output .= $this->info("PHP Max Input Vars:", ini_get("max_input_vars"));
-        $displayErrors = ini_get("display_errors");
-        $output .= $this->info("PHP display_errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A");
-        $output .= $this->info("PHP User:", $this->getPHPUser());
+        // PHP Limits
+        $this->currentSection = SystemInfoParser::SECTIONS['PHP_LIMITS']['id'];
+        $memoryLimit = ini_get("memory_limit");
+        $output = $this->info("memory_limit:", $memoryLimit . ' (' . number_format(wp_convert_hr_to_bytes($memoryLimit)) . ' bytes)');
+        $output .= $this->info("max_execution_time:", ini_get("max_execution_time"));
+        $output .= $this->info("max_input_vars:", ini_get("max_input_vars"));
+        $output .= $this->info("upload_max_filesize:", ini_get("upload_max_filesize"));
+        $output .= $this->info("post_max_size:", ini_get("post_max_size"));
 
         return $output;
     }
@@ -705,7 +811,7 @@ class SystemInfo
         }
     }
 
-    /**
+     /**
      * Gets Installed Important PHP Extensions
      * @return string
      */
@@ -721,23 +827,45 @@ class SystemInfo
             'CURL_VERSION_LIBZ',
         ];
 
-        $output = $this->header("PHP Extensions");
+        $this->currentSection = SystemInfoParser::SECTIONS['CURL_ENVIRONMENT']['id'];
+        $output = $this->header("cURL Environment");
 
-        $output .= $this->info("cURL:", $this->isSupported("curl_init"));
-        $output .= $this->info("cURL version:", $version['version']);
-        $output .= $this->info("cURL ssl version number:", $version['ssl_version']);
-        $output .= $this->info("cURL host:", $version['host']);
-
-        foreach ($version['protocols'] as $protocols) {
-            $output .= $this->info("cURL protocols:", $protocols);
-        }
-
+        $output .= $this->info("cURL Support:", $this->isSupported("curl_init") ? 'Yes' : 'No');
+        $output .= $this->info("cURL Version:", $version['version']);
+        $output .= $this->info("cURL Host:", $version['host']);
+        $output .= $this->info("SSL Library:", $version['ssl_version']);
+        $this->currentSection = SystemInfoParser::SECTIONS['CURL_FEATURES']['id'];
         foreach ($bitfields as $feature) {
-            $output .= $this->info($feature . ":", (defined($feature) && $version['features'] & constant($feature) ? 'yes' : 'no'));
+            $output .= $this->info($feature . ":", (defined($feature) && $version['features'] & constant($feature) ? 'Supported' : 'Not Supported'));
         }
 
+        $httpProtocols  = ['http', 'https', 'ftp', 'ftps', 'file', 'dict', 'gopher'];
+        $emailProtocols = ['imap', 'imaps', 'pop3', 'pop3s', 'smtp', 'smtps'];
+        $allProtocols = $version['protocols'];
 
-        $output .= $this->info("fsockopen:", $this->isSupported("fsockopen"));
+        $httpProtocolsFound  = array_values(array_intersect($allProtocols, $httpProtocols));
+        $emailProtocolsFound = array_values(array_intersect($allProtocols, $emailProtocols));
+
+        $otherProtocols = array_values(array_diff(
+            $allProtocols,
+            $httpProtocols,
+            $emailProtocols
+        ));
+        $this->currentSection = SystemInfoParser::SECTIONS['SUPPORTED_PROTOCOLS']['id'];
+        if (!empty($httpProtocolsFound)) {
+            $output .= $this->info('HTTP Protocols:', implode(', ', $httpProtocolsFound));
+        }
+
+        if (!empty($emailProtocolsFound)) {
+            $output .= $this->info('Email Protocols:', implode(', ', $emailProtocolsFound));
+        }
+
+        if (!empty($otherProtocols)) {
+            $output .= $this->info('Other Protocols:', implode(', ', $otherProtocols));
+        }
+
+        $this->currentSection = SystemInfoParser::SECTIONS['PHP_NETWORK_EXTENSIONS']['id'];
+        $output .= $this->info("fsockopen:", $this->isSupported("fsockopen") ? 'Supported' : 'Not Supported');
         $output .= $this->info("SOAP Client:", $this->isInstalled("SoapClient"));
         $output .= $this->info("Suhosin:", $this->isInstalled("suhosin", false));
 
@@ -842,26 +970,18 @@ class SystemInfo
     /**
      * @return string
      */
-    private function getScheduleInfo(): string
+    private function getQueueInfo(): string
     {
-        $output          = '';
-        $backupSchedules = get_option('wpstg_backup_schedules', []);
-        if (!empty($backupSchedules)) {
-            foreach ($backupSchedules as $key => $value) {
-                $output .= $this->info('Schedule ' . !empty($key) ? $key : '', empty($value) ? self::NOT_SET_LABEL : print_r($value, true));
-            }
-        } else {
-            $output .= $this->info('wpstg_backup_schedules ', self::NOT_SET_LABEL);
-        }
+        $output = '';
 
         /** @var Queue */
         $queue = WPStaging::make(Queue::class);
 
         $output .= $this->info("Backup All Actions in DB:", (string)$queue->count());
-        $output .= $this->info("Backup Pending Actions (ready):", (string)$queue->count(Queue::STATUS_READY));
-        $output .= $this->info("Backup Processing Actions (processing):", (string)$queue->count(Queue::STATUS_PROCESSING));
-        $output .= $this->info("Backup Completed Actions (completed):", (string)$queue->count(Queue::STATUS_COMPLETED));
-        $output .= $this->info("Backup Failed Actions (failed):", (string)$queue->count(Queue::STATUS_FAILED));
+        $output .= $this->info("Pending Actions:", (string)$queue->count(Queue::STATUS_READY));
+        $output .= $this->info("Processing Actions:", (string)$queue->count(Queue::STATUS_PROCESSING));
+        $output .= $this->info("Completed Actions:", (string)$queue->count(Queue::STATUS_COMPLETED));
+        $output .= $this->info("Failed Actions:", (string)$queue->count(Queue::STATUS_FAILED));
 
         return $output;
     }
@@ -871,11 +991,10 @@ class SystemInfo
      */
     private function getTablePrefix(): string
     {
-        $tablePrefix = "DB Prefix: " . $this->database->getPrefix() . ' ';
-        $tablePrefix .= "Length: " . strlen($this->database->getPrefix()) . "   Status: ";
-        $tablePrefix .= (strlen($this->database->getPrefix()) > 16) ? " ERROR: Too long" : " Acceptable";
-
-        return $tablePrefix;
+        $prefix = $this->database->getPrefix();
+        $length = strlen($prefix);
+        $status = ($length > 16) ? "ERROR: Too long" : "Acceptable";
+        return $prefix . ' (Length: ' . $length . ' — ' . $status . ')';
     }
 
     /**
@@ -892,7 +1011,7 @@ class SystemInfo
             $totalBackupSize += (float)$backup->size;
         }
 
-        $output .= $this->info("Backup Total File Size:", esc_html((string)$totalBackupSize) . 'M');
+        $output .= $this->info("Total Backups Size:", esc_html((string)size_format($totalBackupSize, 2)));
 
         return $output;
     }
@@ -916,35 +1035,75 @@ class SystemInfo
     }
 
     /**
-     * @return string
+     * Get setting value with NOT_SET_LABEL fallback
+     *
+     * @param object $settings Settings object
+     * @param string $property Property name
+     * @param bool $format Whether to number_format the value
+     * @return string|int
      */
+    protected function getSettingValue($settings, string $property, bool $format = false)
+    {
+        if (!isset($settings->$property)) {
+            return self::NOT_SET_LABEL;
+        }
+
+        return $format ? number_format($settings->$property) : $settings->$property;
+    }
+
+    /**
+     * Format boolean option value for display
+     *
+     * @param mixed $option Option value
+     * @return string 'true' or 'false'
+     */
+    protected function formatBooleanOption($option): string
+    {
+        return !empty($option) && $option === 'true' ? 'true' : 'false';
+    }
+
+    /**
+     * Sanitize passwords in staging site data
+     *
+     * @param array $sites Array of staging sites
+     * @return array Sanitized sites with passwords replaced
+     */
+    protected function sanitizeSitePasswords(array $sites): array
+    {
+        foreach ($sites as $key => $clone) {
+            if (!empty($clone['databasePassword'])) {
+                $sites[$key]['databasePassword'] = self::REMOVED_LABEL;
+            }
+
+            if (!empty($clone['adminPassword'])) {
+                $sites[$key]['adminPassword'] = self::REMOVED_LABEL;
+            }
+        }
+
+        return $sites;
+    }
+
     private function getPrimaryKeyInfo(): string
     {
         $tableName           = $this->database->getPrefix() . 'options';
         $isPrimaryKeyMissing = $this->wpOptionsInfo->isOptionTablePrimaryKeyMissing($tableName);
         if ($isPrimaryKeyMissing) {
-            return $this->info("{$tableName} primary key:", self::NOT_SET_LABEL);
+            return $this->info("Primary Key in {$tableName} :", self::NOT_SET_LABEL);
         }
 
         $isPrimaryKeyIsOptionName = $this->wpOptionsInfo->isPrimaryKeyIsOptionName($tableName);
         if ($isPrimaryKeyIsOptionName) {
-            return $this->info("{$tableName} primary key:", 'option_name');
+            return $this->info("Primary Key in {$tableName}:", 'option_name');
         }
 
-        return $this->info("{$tableName} primary key:", 'option_id');
+        return $this->info("Primary Key in {$tableName}:", 'option_id');
     }
 
-    /**
-     * @return void
-     */
     public function setEncodeProLicense(bool $isEncodeProLicense = false)
     {
         $this->isEncodeProLicense = $isEncodeProLicense;
     }
 
-    /**
-     * @return bool
-     */
     public function getEncodeProLicense(): bool
     {
         return $this->isEncodeProLicense;
@@ -983,6 +1142,11 @@ class SystemInfo
 
         $settings = (array) get_option($optionName, []);
         if (!empty($settings)) {
+            // Add provider header as info item for structured output
+            if ($this->enableStructuredOutput) {
+                $this->info($title, '');
+            }
+
             foreach ($settings as $key => $value) {
                 $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
             }
@@ -996,6 +1160,7 @@ class SystemInfo
      */
     protected function muPlugins(): string
     {
+        $this->currentSection = SystemInfoParser::SECTIONS['PLUGINS_OVERVIEW']['id'];
         $output    = $this->header("Must-Use Plugins");
         $muPlugins = get_mu_plugins();
         foreach ($muPlugins as $pluginData) {
@@ -1010,6 +1175,7 @@ class SystemInfo
      */
     protected function dropIns(): string
     {
+        $this->currentSection = SystemInfoParser::SECTIONS['PLUGINS_OVERVIEW']['id'];
         $output  = $this->header("Drop-Ins");
         $dropIns = get_dropins();
         foreach ($dropIns as $dropIn) {

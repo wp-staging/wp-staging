@@ -13,6 +13,18 @@ use WPStaging\Staging\Dto\StagingSiteDto;
  */
 abstract class AbstractStagingSetup
 {
+    /** @var string */
+    const JOB_NEW_STAGING_SITE = 'new';
+
+    /** @var string */
+    const JOB_UPDATE = 'update';
+
+    /** @var string */
+    const JOB_RESET = 'reset';
+
+    /** @var string */
+    const JOB_PUSH = 'push';
+
     /**
      * @var StagingSiteDto
      */
@@ -31,12 +43,12 @@ abstract class AbstractStagingSetup
     /**
      * @var string
      */
-    private $infoIcon;
+    protected $stagingJob;
 
     /**
      * @var string
      */
-    private $stagingJob;
+    private $infoIcon;
 
     /**
      * @var WpDefaultDirectories
@@ -92,6 +104,11 @@ abstract class AbstractStagingSetup
     public function isResetJob(): bool
     {
         return $this->stagingJob === StagingSetup::JOB_RESET;
+    }
+
+    public function isPushJob(): bool
+    {
+        return $this->stagingJob === StagingSetup::JOB_PUSH;
     }
 
     public function isUpdateOrResetJob(): bool
@@ -167,7 +184,7 @@ abstract class AbstractStagingSetup
 
     abstract public function renderCustomDirectorySettings();
 
-    abstract public function renderDisableWooSchedulerSettings();
+    abstract public function renderEnableWooSchedulerSettings();
 
     protected function renderSettingsFields(array $fields)
     {

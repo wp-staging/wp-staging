@@ -61,7 +61,7 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $currentFileStartOffset = 0;
 
     /** @var int */
-    private $totalRowsBackup;
+    private $totalRowsBackup = 0;
 
     /** @var int */
     private $tableRowsOffset = 0;
@@ -70,7 +70,7 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $totalRowsOfTableBeingBackup = 0;
 
     /** @var int reset to PHP_INT_MIN for each table */
-    private $lastInsertId;
+    private $lastInsertId = PHP_INT_MIN;
 
     /** @var array */
     private $tablesToBackup = [];
@@ -88,28 +88,28 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $discoveringFilesRequests = 0;
 
     /** @var string The cron to repeat this backup, if scheduled. */
-    private $scheduleRecurrence;
+    private $scheduleRecurrence = '';
 
     /** @var array The hour and minute to repeat this backup, if scheduled. */
     private $scheduleTime = [];
 
     /** @var int How many backups to keep, if scheduled. */
-    private $scheduleRotation;
+    private $scheduleRotation = 0;
 
     /** @var string The absolute path to this .wpstg file */
-    private $backupFilePath;
+    private $backupFilePath = '';
 
     /** @var string If set, this backup was created as part of this schedule ID. */
-    private $scheduleId;
+    private $scheduleId = '';
 
     /** @var bool Should the backup be validated for each file once the backup is created. */
     private $isValidateBackupFiles = false;
 
     /** @var bool Should this scheduled backup be created right now. Matters only if this backup is repeated on schedule */
-    private $isCreateScheduleBackupNow;
+    private $isCreateScheduleBackupNow = false;
 
     /** @var bool Should the backup be created in background? */
-    private $isCreateBackupInBackground;
+    private $isCreateBackupInBackground = false;
 
     /** @var array Site selected to backup */
     private $sitesToBackup = [];
@@ -141,10 +141,10 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $categorySizes = [];
 
     /** @var string */
-    private $backupType;
+    private $backupType = '';
 
     /** @var int */
-    private $subsiteBlogId;
+    private $subsiteBlogId = 0;
 
     /** @var int */
     private $filePartIndex = 0;

@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 use WPStaging\Staging\CloneOptions;
 use WPStaging\Staging\Sites;
+use WPStaging\Backend\Modules\Jobs\Job as MainJob;
 
 /**
  * Preserve staging sites in wpstg_staging_sites in staging database while updating a site
@@ -83,8 +84,10 @@ class PreserveDataFirstStep extends JobExecutable
         // Get wpstg_staging_sites from staging database
         $stagingSites = $this->getStagingSiteOption(Sites::STAGING_SITES_OPTION);
 
-        // Get wpstg_settings from staging database
-        $settings = $this->getStagingSiteOption("wpstg_settings");
+        // Get wpstg_settings from staging database (preserved during update only, not during reset)
+        if ($this->options->mainJob === MainJob::UPDATE) {
+            $settings = $this->getStagingSiteOption("wpstg_settings");
+        }
 
         $loginLinkSettings = $this->getStagingSiteOption("wpstg_login_link_settings");
 
@@ -104,11 +107,15 @@ class PreserveDataFirstStep extends JobExecutable
 
         $options = [
             'stagingSites'      => $stagingSites,
-            'settings'          => $settings,
             'cloneOptions'      => $cloneOptions,
             'backupSchedules'   => $backupSchedules,
             'loginLinkSettings' => $loginLinkSettings,
         ];
+
+        // Only include settings if it is update operation
+        if ($this->options->mainJob === MainJob::UPDATE) {
+            $options['settings'] = $settings;
+        }
 
         $options = array_merge($options, $remoteStorages);
         $tmpData = serialize((object) $options);

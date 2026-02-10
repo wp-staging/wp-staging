@@ -73,11 +73,6 @@ class Settings
     /**
      * @var bool
      */
-    protected $checkDirectorySize;
-
-    /**
-     * @var bool
-     */
     protected $debugMode;
 
 
@@ -280,23 +275,6 @@ class Settings
     public function setDisableAdminLogin($disableAdminLogin)
     {
         $this->disableAdminLogin = $disableAdminLogin;
-    }
-
-
-    /**
-     * @return bool
-     */
-    public function isCheckDirectorySize()
-    {
-        return ($this->checkDirectorySize == '1');
-    }
-
-    /**
-     * @param bool $checkDirectorySize
-     */
-    public function setCheckDirectorySize($checkDirectorySize)
-    {
-        $this->checkDirectorySize = $checkDirectorySize;
     }
 
     /**

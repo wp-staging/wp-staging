@@ -25,7 +25,6 @@ class NewsfeedValidator
             return false;
         }
 
-        // Required fields
         $required = ['version', 'date'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
@@ -34,27 +33,19 @@ class NewsfeedValidator
             }
         }
 
-        // Validate highlights array if present
-        if (isset($data['highlights']) && !is_array($data['highlights'])) {
-            debug_log('Newsfeed validation failed: highlights must be an array');
-            return false;
+        $arrayFields = ['highlights', 'fixes', 'tips', 'intro'];
+        foreach ($arrayFields as $field) {
+            if (isset($data[$field]) && !is_array($data[$field])) {
+                debug_log(sprintf('Newsfeed validation failed: %s must be an array', $field));
+                return false;
+            }
         }
 
-        // Validate fixes array if present
-        if (isset($data['fixes']) && !is_array($data['fixes'])) {
-            debug_log('Newsfeed validation failed: fixes must be an array');
-            return false;
-        }
-
-        // Validate tips array if present
-        if (isset($data['tips']) && !is_array($data['tips'])) {
-            debug_log('Newsfeed validation failed: tips must be an array');
-            return false;
-        }
-
-        // Validate intro object if present
-        if (isset($data['intro']) && !is_array($data['intro'])) {
-            debug_log('Newsfeed validation failed: intro must be an object');
+        // Validate video object if present and populated
+        if (isset($data['video']) && is_array($data['video']) && !empty($data['video']['vimeo_id'])) {
+            // Video is populated — no further validation needed, vimeo_id exists
+        } elseif (isset($data['video']) && !is_array($data['video'])) {
+            debug_log('Newsfeed validation failed: video must be an array');
             return false;
         }
 

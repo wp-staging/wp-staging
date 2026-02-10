@@ -46,7 +46,7 @@ abstract class FileCopierTask extends StagingTask
             return $this->generateResponse(true);
         }
 
-        $this->prepareFileBackupTask();
+        $this->prepareFileCopyingTask();
         // If no file let's skip this task
         if ($this->stepsDto->getTotal() === 0) {
             return $this->generateResponse(true);
@@ -85,7 +85,7 @@ abstract class FileCopierTask extends StagingTask
     /**
      * @return void
      */
-    private function prepareFileBackupTask()
+    private function prepareFileCopyingTask()
     {
         $this->fileCopier->inject($this->taskQueue, $this->logger, $this->stepsDto);
         $this->fileCopier->setupBigFileBeingCopied($this->currentTaskDto->getBigFileDto());

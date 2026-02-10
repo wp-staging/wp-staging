@@ -16,14 +16,14 @@ use WPStaging\Framework\Facades\UI\Checkbox;
 
 $settingsEnabled = true;
 // New staging site. Mails Sending is checked by default.
-$emailsAllowed   = true;
-$emailsReminderAllowed = false;
+$isEmailsAllowed         = true;
+$isEmailsReminderEnabled = false;
 // If plugin is not pro disable this Option
 if (!$isPro) {
     $settingsEnabled = false;
 }
 
-// Only change default check status when clone options exists plugin is PRO
+// Only change default check status when clone options exists and plugin is PRO
 if ($isPro && !empty($options->current)) {
     /**
      * Existing staging site.
@@ -33,17 +33,30 @@ if ($isPro && !empty($options->current)) {
     // To support staging site created with older version of this feature,
     // Invert it's value if it is present
     // Can be removed when we are sure that all staging sites have been updated.
+    /**
+     * @todo Seems it can be removed, not sure it is even still used?
+     */
     $defaultEmailsSending = true;
     if (isset($options->existingClones[$options->current]['emailsDisabled'])) {
         $defaultEmailsSending = !((bool)$options->existingClones[$options->current]['emailsDisabled']);
     }
 
-    $emailsAllowed         = empty($options->existingClones[$options->current]['emailsAllowed']) ? false : true;
-    $emailsReminderAllowed = empty($options->existingClones[$options->current]['emailsReminderAllowed']) ? false : true;
-} ?>
+    $isEmailsAllowed         = empty($options->existingClones[$options->current]['isEmailsAllowed']) ? false : true;
+    // fallback for older clones where this option did not exist and 'emailsAllowed' was used
+    if (!isset($options->existingClones[$options->current]['isEmailsAllowed']) && isset($options->existingClones[$options->current]['emailsAllowed'])) {
+        $isEmailsAllowed = (bool)$options->existingClones[$options->current]['emailsAllowed'];
+    }
+
+    $isEmailsReminderEnabled = empty($options->existingClones[$options->current]['isEmailsReminderEnabled']) ? false : true;
+    // Fallback for older clones where this option did not exist and 'emailsReminderAllowed' was used
+    if (!isset($options->existingClones[$options->current]['isEmailsReminderEnabled']) && isset($options->existingClones[$options->current]['emailsReminderAllowed'])) {
+        $isEmailsReminderEnabled = (bool)$options->existingClones[$options->current]['emailsReminderAllowed'];
+    }
+}
+?>
 <div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg_allow_emails"><?php esc_html_e('Allow Emails Sending', 'wp-staging'); ?></label>
-    <?php Checkbox::render('wpstg_allow_emails', 'wpstg_allow_emails', 'true', $emailsAllowed, ['isDisabled' => !$settingsEnabled]); ?>
+    <?php Checkbox::render('wpstg_allow_emails', 'wpstg_allow_emails', 'true', $isEmailsAllowed, ['isDisabled' => !$settingsEnabled]); ?>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
@@ -55,7 +68,7 @@ if ($isPro && !empty($options->current)) {
 </div>
 <div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg_reminder_emails"><?php esc_html_e('Get Reminder Email', 'wp-staging'); ?></label>
-    <?php Checkbox::render('wpstg_reminder_emails', 'wpstg_reminder_emails', 'false', $emailsReminderAllowed, ['isDisabled' => !$settingsEnabled]); ?>
+    <?php Checkbox::render('wpstg_reminder_emails', 'wpstg_reminder_emails', 'false', $isEmailsReminderEnabled, ['isDisabled' => !$settingsEnabled]); ?>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">

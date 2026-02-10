@@ -72,11 +72,9 @@ trait WithAnalyticsSiteInfo
             // WP STAGING Settings that are null by default, if they are not present, they are evaluated as FALSY/EMPTY:
             'keep_permalinks'               => !empty($wpstgSettings['keepPermalinks']) ? $wpstgSettings['keepPermalinks'] : false,
             'disable_admin_login'           => !empty($wpstgSettings['disableAdminLogin']) ? $wpstgSettings['disableAdminLogin'] : false,
-            //'delay_between_requests' => !empty($wpstgSettings['delayRequests']) ? $wpstgSettings['delayRequests'] : 0,
             'delay_between_requests'        => 0,
             'debug_mode'                    => !empty($wpstgSettings['debugMode']) ? $wpstgSettings['debugMode'] : false,
             'remove_data_on_uninstall'      => !empty($wpstgSettings['unInstallOnDelete']) ? $wpstgSettings['unInstallOnDelete'] : false,
-            'check_directory_size'          => !empty($wpstgSettings['checkDirectorySize']) ? $wpstgSettings['checkDirectorySize'] : false,
             'access_permission'             => !empty($wpstgSettings['userRoles']) ? $wpstgSettings['userRoles'] : [],
             'users_with_staging_access'     => !empty($wpstgSettings['usersWithStagingAccess']) ? $wpstgSettings['usersWithStagingAccess'] : '',
             'enable_compression'            => !empty($wpstgSettings['enableCompression']) ? $wpstgSettings['enableCompression'] : false,

@@ -33,7 +33,7 @@ class AnalyticsStagingCreate extends AnalyticsEventDto
             "databaseDatabase" => $this->options->databaseDatabase,
             "databaseServer" => $this->options->databaseServer,
             "databasePrefix" => $this->options->databasePrefix,
-            "emailsAllowed"   => ,
+            "isEmailsAllowed"   => ,
             "uploadsSymlinked" => ,
             "ownerId" => $this->options->ownerId,
             "includedTables"        => $this->options->tables,
@@ -43,7 +43,7 @@ class AnalyticsStagingCreate extends AnalyticsEventDto
             "extraDirectories"      => $this->options->extraDirectories,
          */
 
-        $this->is_allowing_email = (bool)$eventData->emailsAllowed;
+        $this->is_allowing_email = (bool)$eventData->isEmailsAllowed;
         $this->is_symlinking_uploads_folder = (bool)$eventData->uploadsSymlinked;
         $this->is_external_database = !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
         $this->number_of_tables = count($eventData->tables);

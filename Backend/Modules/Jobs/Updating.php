@@ -128,31 +128,31 @@ class Updating extends Job
         $this->options->job = new stdClass();
 
         // Make sure it is always enabled for free version
-        $this->options->emailsAllowed = true;
+        $this->options->isEmailsAllowed = true;
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
-            $currentStagingSite                   = $this->options->existingClones[$this->options->clone];
-            $this->options->cloneName             = $this->getValueFromArray('cloneName', $currentStagingSite);
-            $this->options->cloneDirectoryName    = $this->getValueFromArray('directoryName', $currentStagingSite);
-            $this->options->cloneNumber           = $this->getValueFromArray('number', $currentStagingSite);
-            $this->options->databaseUser          = $this->getValueFromArray('databaseUser', $currentStagingSite);
-            $this->options->databasePassword      = $this->getValueFromArray('databasePassword', $currentStagingSite);
-            $this->options->databaseDatabase      = $this->getValueFromArray('databaseDatabase', $currentStagingSite);
-            $this->options->databaseServer        = $this->getValueFromArray('databaseServer', $currentStagingSite);
-            $this->options->databasePrefix        = $this->getValueFromArray('databasePrefix', $currentStagingSite);
-            $this->options->databaseSsl           = $this->getValueFromArray('databaseSsl', $currentStagingSite);
-            $this->options->destinationHostname   = $this->getValueFromArray('url', $currentStagingSite);
-            $this->options->uploadsSymlinked      = $this->getValueFromArray('uploadsSymlinked', $currentStagingSite);
-            $this->options->prefix                = $this->getValueFromArray('prefix', $currentStagingSite);
-            $this->options->emailsAllowed         = $this->getValueFromArray('emailsAllowed', $currentStagingSite);
-            $this->options->networkClone          = filter_var($this->getValueFromArray('networkClone', $currentStagingSite), FILTER_VALIDATE_BOOLEAN);
-            $this->options->homeHostname          = $this->urls->getHomeUrlWithoutScheme();
-            $this->options->useNewAdminAccount    = $this->getValueFromArray('useNewAdminAccount', $currentStagingSite);
-            $this->options->adminEmail            = $this->getValueFromArray('adminEmail', $currentStagingSite);
-            $this->options->adminPassword         = $this->getValueFromArray('adminPassword', $currentStagingSite);
-            $this->options->wooSchedulerDisabled  = $this->getValueFromArray('wooSchedulerDisabled', $currentStagingSite);
-            $this->options->emailsReminderAllowed = $this->getValueFromArray('emailsReminderAllowed', $currentStagingSite);
-            $this->options->isAutoUpdatePlugins   = $this->getValueFromArray('isAutoUpdatePlugins', $currentStagingSite);
+            $currentStagingSite                     = $this->options->existingClones[$this->options->clone];
+            $this->options->cloneName               = $this->getValueFromArray('cloneName', $currentStagingSite);
+            $this->options->cloneDirectoryName      = $this->getValueFromArray('directoryName', $currentStagingSite);
+            $this->options->cloneNumber             = $this->getValueFromArray('number', $currentStagingSite);
+            $this->options->databaseUser            = $this->getValueFromArray('databaseUser', $currentStagingSite);
+            $this->options->databasePassword        = $this->getValueFromArray('databasePassword', $currentStagingSite);
+            $this->options->databaseDatabase        = $this->getValueFromArray('databaseDatabase', $currentStagingSite);
+            $this->options->databaseServer          = $this->getValueFromArray('databaseServer', $currentStagingSite);
+            $this->options->databasePrefix          = $this->getValueFromArray('databasePrefix', $currentStagingSite);
+            $this->options->databaseSsl             = $this->getValueFromArray('databaseSsl', $currentStagingSite);
+            $this->options->destinationHostname     = $this->getValueFromArray('url', $currentStagingSite);
+            $this->options->uploadsSymlinked        = $this->getValueFromArray('uploadsSymlinked', $currentStagingSite);
+            $this->options->prefix                  = $this->getValueFromArray('prefix', $currentStagingSite);
+            $this->options->isEmailsAllowed         = $this->getValueFromArray('isEmailsAllowed', $currentStagingSite);
+            $this->options->networkClone            = filter_var($this->getValueFromArray('networkClone', $currentStagingSite), FILTER_VALIDATE_BOOLEAN);
+            $this->options->homeHostname            = $this->urls->getHomeUrlWithoutScheme();
+            $this->options->useNewAdminAccount      = $this->getValueFromArray('useNewAdminAccount', $currentStagingSite);
+            $this->options->adminEmail              = $this->getValueFromArray('adminEmail', $currentStagingSite);
+            $this->options->adminPassword           = $this->getValueFromArray('adminPassword', $currentStagingSite);
+            $this->options->isWooSchedulerEnabled   = $this->getValueFromArray('isWooSchedulerEnabled', $currentStagingSite);
+            $this->options->isEmailsReminderEnabled = $this->getValueFromArray('isEmailsReminderEnabled', $currentStagingSite);
+            $this->options->isAutoUpdatePlugins     = $this->getValueFromArray('isAutoUpdatePlugins', $currentStagingSite);
         } else {
             $job = 'update';
             if ($this->mainJob === Job::RESET) {
@@ -183,10 +183,10 @@ class Updating extends Job
         $this->setDirectoriesForUpdateJob();
 
         if (defined('WPSTGPRO_VERSION') && $this->mainJob !== Job::RESET) {
-            $this->options->emailsAllowed         = isset($_POST['emailsAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsAllowed']);
-            $this->options->wooSchedulerDisabled  = isset($_POST['wooSchedulerDisabled']) && $this->sanitize->sanitizeBool($_POST['wooSchedulerDisabled']);
-            $this->options->emailsReminderAllowed = isset($_POST['emailsReminderAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsReminderAllowed']);
-            $this->options->isAutoUpdatePlugins   = isset($_POST['isAutoUpdatePlugins']) && $this->sanitize->sanitizeBool($_POST['isAutoUpdatePlugins']);
+            $this->options->isEmailsAllowed         = isset($_POST['isEmailsAllowed']) && $this->sanitize->sanitizeBool($_POST['isEmailsAllowed']);
+            $this->options->isWooSchedulerEnabled   = isset($_POST['isWooSchedulerEnabled']) && $this->sanitize->sanitizeBool($_POST['isWooSchedulerEnabled']);
+            $this->options->isEmailsReminderEnabled = isset($_POST['isEmailsReminderEnabled']) && $this->sanitize->sanitizeBool($_POST['isEmailsReminderEnabled']);
+            $this->options->isAutoUpdatePlugins     = isset($_POST['isAutoUpdatePlugins']) && $this->sanitize->sanitizeBool($_POST['isAutoUpdatePlugins']);
         }
 
         $this->options->cloneDir       = $this->options->existingClones[$this->options->clone]['path'];

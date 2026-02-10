@@ -17,6 +17,12 @@ class RemoteDownloader
     const DEFAULT_TIMEOUT = 60;
 
     /**
+     * Extension added to files while they are being downloaded.
+     * @var string
+     */
+    const UPLOADING_EXTENSION = 'uploading';
+
+    /**
      * Default chunk size in bytes.
      * @var int
      */
@@ -67,6 +73,14 @@ class RemoteDownloader
     public function __construct(Sanitize $sanitize)
     {
         $this->sanitize = $sanitize;
+    }
+
+    /**
+     * Ensure file handle is closed when object is destroyed
+     */
+    public function __destruct()
+    {
+        $this->closeFileHandle();
     }
 
     /**
@@ -175,7 +189,7 @@ class RemoteDownloader
 
     public function getUploadPath(): string
     {
-        return $this->localPath . '.uploading';
+        return $this->localPath . '.' . self::UPLOADING_EXTENSION;
     }
 
     /**
@@ -211,6 +225,7 @@ class RemoteDownloader
 
         $response = $this->makeRemoteRequest($args);
         if (is_wp_error($response)) {
+            $this->lastDownloadedBytes = 0;
             $this->message  = $response->get_error_message();
             $this->success  = false;
             $this->completed = true;
@@ -289,28 +304,58 @@ class RemoteDownloader
 
     /**
      * Get the remote file size.
+     * @param bool $sslVerify
      * @return int
      */
-    public function fetchRemoteFileSize()
+    public function fetchRemoteFileSize(bool $sslVerify = true): int
     {
-        $args = [
-            'method'    => 'HEAD',
-            'timeout'   => Hooks::applyFilters('wpstg.downloader_timeout', $this->timeout),
-            'sslverify' => false,
-        ];
+        $response = wp_remote_head($this->remoteUrl, [
+            'sslverify' => $sslVerify,
+        ]);
 
-        $response = $this->makeRemoteRequest($args);
         if (is_wp_error($response)) {
             $this->message = $response->get_error_message();
             return 0;
         }
 
-        $contentLength = wp_remote_retrieve_header($response, 'content-length');
-        if (empty($contentLength)) {
+        $headers = wp_remote_retrieve_headers($response);
+        if (empty($headers['content-length'])) {
             return 0;
         }
 
-        return intval($contentLength);
+        return intval($headers['content-length']);
+    }
+
+    /**
+     * Get the remote file size.
+     * @param bool $sslVerify
+     * @return int
+     */
+    public function fetchRemoteFileSizeByGet(bool $sslVerify = true): int
+    {
+        $args = [
+            'headers'   => [
+                'Range' => 'bytes=0-0', // Ask for the first byte only
+            ],
+            'sslverify' => $sslVerify,
+        ];
+
+        $response = wp_remote_get($this->remoteUrl, $args);
+        if (is_wp_error($response)) {
+            $this->message = $response->get_error_message();
+            return 0;
+        }
+
+        $headers = wp_remote_retrieve_headers($response);
+        if (empty($headers['content-range'])) {
+            return 0;
+        }
+
+        if (preg_match('/\/(\d+)$/', $headers['content-range'], $matches)) {
+            return (int) $matches[1];
+        }
+
+        return 0;
     }
 
     /**
@@ -334,7 +379,7 @@ class RemoteDownloader
             $this->localPath = $info['dirname'] . '/' . $info['filename'] . '.wpstg';
         }
 
-        $uploadPath = $originalPath . '.uploading';
+        $uploadPath = $originalPath . '.' . self::UPLOADING_EXTENSION;
         if (!file_exists($uploadPath)) {
             $this->message = 'Upload file does not exist';
             $this->success = false;

@@ -7,7 +7,6 @@ use Exception;
 use RuntimeException;
 use UnexpectedValueException;
 use WPStaging\Backend\Optimizer\Optimizer;
-use WPStaging\Core\Utils\Directories as DirectoriesUtil;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
@@ -23,8 +22,7 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 
 /**
- * Class Scan
- * @package WPStaging\Backend\Modules\Jobs
+ * Builds the directory tree and related metadata for clone jobs before the staging run starts.
  */
 class Scan extends Job
 {
@@ -46,9 +44,6 @@ class Scan extends Job
 
     /** @var array */
     private $directories = [];
-
-    /** @var DirectoriesUtil */
-    private $objDirectories;
 
     /** @var string|null */
     private $directoryToScanOnly;
@@ -203,8 +198,6 @@ class Scan extends Job
      */
     public function initialize()
     {
-        $this->objDirectories = new DirectoriesUtil();
-
         $this->options->existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         $this->options->existingClones = is_array($this->options->existingClones) ? $this->options->existingClones : [];
 
@@ -249,14 +242,14 @@ class Scan extends Job
             $this->options->currentClone['useNewAdminAccount'] = $this->options->currentClone['useNewAdminAccount'] ?? false;
             $this->options->currentClone['adminEmail']         = $this->options->currentClone['adminEmail'] ?? '';
             $this->options->currentClone['adminPassword']      = $this->options->currentClone['adminPassword'] ?? '';
-            // Make sure no warning is shown when updating/resetting an old clone without databaseSsl, uploadsSymlinked, emailsAllowed and networkClone options
-            $this->options->currentClone['emailsAllowed']         = $this->options->currentClone['emailsAllowed'] ?? true;
-            $this->options->currentClone['databaseSsl']           = $this->options->currentClone['databaseSsl'] ?? false;
-            $this->options->currentClone['uploadsSymlinked']      = $this->options->currentClone['uploadsSymlinked'] ?? false;
-            $this->options->currentClone['networkClone']          = $this->options->currentClone['networkClone'] ?? false;
-            $this->options->currentClone['wooSchedulerDisabled']  = empty($this->options->currentClone['wooSchedulerDisabled']) ? false : true;
-            $this->options->currentClone['emailsReminderAllowed'] = empty($this->options->currentClone['emailsReminderAllowed']) ? false : true;
-            $this->options->currentClone['isAutoUpdatePlugins']   = empty($this->options->currentClone['isAutoUpdatePlugins']) ? false : true;
+            // Make sure no warning is shown when updating/resetting an old clone without databaseSsl, uploadsSymlinked, isEmailsAllowed and networkClone options
+            $this->options->currentClone['isEmailsAllowed']         = $this->options->currentClone['isEmailsAllowed'] ?? true;
+            $this->options->currentClone['databaseSsl']             = $this->options->currentClone['databaseSsl'] ?? false;
+            $this->options->currentClone['uploadsSymlinked']        = $this->options->currentClone['uploadsSymlinked'] ?? false;
+            $this->options->currentClone['networkClone']            = $this->options->currentClone['networkClone'] ?? false;
+            $this->options->currentClone['isWooSchedulerEnabled']   = empty($this->options->currentClone['isWooSchedulerEnabled']) ? false : true;
+            $this->options->currentClone['isEmailsReminderEnabled'] = empty($this->options->currentClone['isEmailsReminderEnabled']) ? false : true;
+            $this->options->currentClone['isAutoUpdatePlugins']     = empty($this->options->currentClone['isAutoUpdatePlugins']) ? false : true;
         }
 
         // Tables
@@ -507,11 +500,9 @@ class Scan extends Job
                 continue;
             }
 
-            $size = $this->getDirectorySize($fullPath);
             // If filename is int, then it is treated as a numeric index in key and start with 0
             $result[$directory->getFilename()]['metaData'] = [
                 'dirName'  => $directory->getFilename(),
-                "size"     => $size,
                 "path"     => $fullPath,
                 "basePath" => $this->getBasePath(),
                 "prefix"   => $this->getPathIdentifier(),
@@ -568,7 +559,6 @@ class Scan extends Job
     {
         $data     = $dirInfo;
         $dataPath = isset($data["path"]) ? $data["path"] : '';
-        $dataSize = isset($data["size"]) ? $data["size"] : '';
         $path     = wp_normalize_path($dataPath);
         $basePath = isset($data["basePath"]) ? $data["basePath"] : wp_normalize_path($this->absPath);
         $prefix   = isset($data["prefix"]) ? $data["prefix"] : PathIdentifier::IDENTIFIER_ABSPATH;
@@ -647,28 +637,13 @@ class Scan extends Job
             'isDisabled'        => $isDisabled,
             'dirName'           => $dirName,
             'gifLoaderPath'     => $this->gifLoaderPath,
-            'formattedSize'     => $this->utilsMath->formatSize($dataSize),
-            'isDebugMode'       => $this->utilsMath->formatSize($dataSize),
+            'isDebugMode'       => false,
             'dataPath'          => $dataPath,
             'basePath'          => $basePath,
             'forceDefault'      => $forceDefault,
             'dirPath'           => $path,
             'isLink'            => $isLink,
         ]);
-    }
-
-    /**
-     * Gets size of given directory
-     * @param string $path
-     * @return int|null
-     */
-    protected function getDirectorySize($path)
-    {
-        if (!isset($this->settings->checkDirectorySize) || $this->settings->checkDirectorySize !== '1') {
-            return null;
-        }
-
-        return $this->objDirectories->size($path);
     }
 
     /**

@@ -12,10 +12,10 @@ use WPStaging\Staging\Dto\StagingSiteDto;
 trait WithStagingDatabase
 {
     /** @var Database */
-    private $stagingDb = null;
+    protected $stagingDb = null;
 
     /** @var TableService */
-    private $tableService = null;
+    protected $tableService = null;
 
     public function initStagingDatabase(StagingSiteDto $stagingSiteDto)
     {

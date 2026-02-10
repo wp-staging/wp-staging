@@ -37,6 +37,10 @@ trait ResourceTrait
     /** @var bool If it is a unit test, whether to allow resource checks. */
     protected $allowResourceCheckOnUnitTests;
 
+
+    /** @var int|null Cached extraction limit */
+    protected $extractionLimit;
+
     /**
      * @return bool
      */
@@ -239,6 +243,44 @@ trait ResourceTrait
         return $this->executionTimeLimit;
     }
 
+    public function isWithinMemoryExtractionLimit(int $fileSize): bool
+    {
+        return $fileSize <= $this->getInMemoryExtractionLimit();
+    }
+
+    /**
+     * The limit is determined by the available PHP memory. This can be customized
+     * using the 'wpstg.backup.inmemory_extraction.limit' filter.
+     *
+     * Memory-based extraction limits (adaptive based on PHP memory_limit):
+     * - Memory < 255MB: 1MB limit
+     * - 255-510MB: 2MB limit
+     * - 511-1022MB: 4MB limit
+     * - 1023MB+: 8MB limit
+     */
+    public function getInMemoryExtractionLimit(): int
+    {
+        // Early bail if already calculated
+        if ($this->extractionLimit !== null) {
+            return $this->extractionLimit;
+        }
+
+        $memoryLimit = $this->getMaxMemoryLimit();
+        $limit       = $this->calculateInMemoryExtractionLimit($memoryLimit);
+
+        /**
+         * @param int $limit
+         * @param int $memoryLimit
+         * @return int
+         */
+        $this->extractionLimit = (int)Hooks::applyFilters(JobDataDto::FILTER_BACKUP_INMEMORY_EXTRACTION_LIMIT, $limit, $memoryLimit);
+
+        // Ensure the limit is at least 512KB and at most 16MB for safety
+        $this->extractionLimit = max(524288, min($this->extractionLimit, (16 * MB_IN_BYTES)));
+
+        return $this->extractionLimit;
+    }
+
     /**
      * @param bool $realUsage
      *
@@ -391,5 +433,22 @@ trait ResourceTrait
     private function getPhpMaxExecutionTime()
     {
         return (int)ini_get('max_execution_time');
+    }
+
+    private function calculateInMemoryExtractionLimit(int $memoryLimit): int
+    {
+        if ($memoryLimit <= (256 * MB_IN_BYTES)) {
+            return MB_IN_BYTES;
+        }
+
+        if ($memoryLimit <= (512 * MB_IN_BYTES)) {
+            return 2 * MB_IN_BYTES;
+        }
+
+        if ($memoryLimit <= (1024 * MB_IN_BYTES)) {
+            return 4 * MB_IN_BYTES;
+        }
+
+        return 8 * MB_IN_BYTES;
     }
 }

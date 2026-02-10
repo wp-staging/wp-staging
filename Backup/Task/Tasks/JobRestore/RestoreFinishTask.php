@@ -56,13 +56,15 @@ class RestoreFinishTask extends RestoreTask
             }
 
             $this->performRestoreFinishAction();
-            $this->logger->info("################## FINISH ##################");
+            $this->logger->info("✓ Backup successfully restored");
 
             $this->logBackupRestoreCompleted($this->jobDataDto->getBackupMetadata());
             $this->clearCacheOnWpCom();
 
             // Let call logout only at the end of the restore process
-            wp_logout();
+            if ($this->jobDataDto->getBackupMetadata()->getIsExportingDatabase() && !$this->jobDataDto->getIsDatabaseRestoreSkipped()) {
+                wp_logout();
+            }
         } catch (RuntimeException $e) {
             $this->logger->critical($e->getMessage());
 

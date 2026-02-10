@@ -16,32 +16,32 @@ class Sanitize
     protected $config = [];
 
     /**
-     * Sanitize string and array. Automatically urldecode.
+     * Sanitize a string value.
      *
-     * @param array|string $value
-     * @param bool $shouldUrlDecode
-     * @return array|string
+     * Applies URL decoding (optional), HTML special characters encoding, and trimming.
+     * For arrays or objects, returns empty string to prevent security issues.
+     *
+     * Examples:
+     *   sanitizeString('<script>')   // Returns: '&lt;script&gt;'
+     *   sanitizeString(123)          // Returns: '123'
+     *   sanitizeString(['text'])     // Returns: '' (empty string)
+     *   sanitizeString($obj)         // Returns: '' (empty string)
+     *
+     * @param mixed $value The value to sanitize (should be string or scalar)
+     * @param bool $shouldUrlDecode Whether to apply URL decoding first
+     * @return string The sanitized string, or empty string for non-scalar values
      */
     public function sanitizeString($value, $shouldUrlDecode = true)
     {
-        if (is_object($value)) {
-            return $value;
+        if (is_array($value) || is_object($value)) {
+            return '';
         }
 
         if ($shouldUrlDecode) {
             $value = wpstg_urldecode($value);
         }
 
-        if (!is_array($value)) {
-            return htmlspecialchars($value);
-        }
-
-        $sanitized = [];
-        foreach ($value as $string) {
-            $sanitized[] = is_string($string) ? htmlspecialchars($string) : $string;
-        }
-
-        return $sanitized;
+        return trim(htmlspecialchars($value));
     }
 
     /**
@@ -116,8 +116,10 @@ class Sanitize
             return $path;
         }
 
-        // Remove whitespace and spaces.
-        $path = preg_replace('/\s+/', '', $path);
+        // Remove whitespace and spaces but not for macos
+        if (!WPStaging::isMacOs()) {
+            $path = preg_replace('/\s+/', '', $path);
+        }
 
         // Convert all invalid slashes to one single forward slash
         $replacements = [
@@ -201,6 +203,37 @@ class Sanitize
     }
 
     /**
+     * Sanitize an array of strings, with support for multidimensional arrays.
+     *
+     * Applies sanitizeString to each element of the array. For nested arrays,
+     * recursively sanitizes while preserving the array structure.
+     *
+     * Examples:
+     *   sanitizeArrayString(['text', '<script>'])  // Returns: ['text', '&lt;script&gt;']
+     *   sanitizeArrayString([['a', 'b'], ['c']])   // Returns: [['a', 'b'], ['c']]
+     *
+     * @param array<mixed> $items
+     * @return array<int|string, mixed>
+     */
+    public function sanitizeArrayString($items)
+    {
+        if (!is_array($items) || empty($items)) {
+            return [];
+        }
+
+        $sanitized = [];
+        foreach ($items as $key => $item) {
+            if (is_array($item)) {
+                $sanitized[$key] = $this->sanitizeArrayString($item);
+            } else {
+                $sanitized[$key] = $this->sanitizeString($item);
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
      * @param array $items
      * @param array $config An array that defines the expected type of a key,e.g. ['thisIsAbooleanValue' => true, 'thisShouldBeAnInteger' => int]
      * @return array
@@ -220,7 +253,9 @@ class Sanitize
         }
 
         foreach ($items as $key => $value) {
-            $sanitized[$key] = isset($config[$key]) ? $this->sanitizeCall($value, $config[$key]) : $this->sanitizeString($value);
+            $sanitized[$key] = isset($config[$key]) ?
+                $this->sanitizeCall($value, $config[$key]) :
+                (is_array($value) ? $this->sanitizeArrayString($value) : $this->sanitizeString($value));
         }
 
         return $sanitized;

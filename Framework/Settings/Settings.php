@@ -10,6 +10,9 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Notifications\Notifications;
 
+/**
+ * This class provides functionality for managing application settings.
+ */
 class Settings
 {
     /** @var string */
@@ -20,19 +23,18 @@ class Settings
      * Sanitize the options to escape from XSS
      */
     private $optionsToSanitize = [
-        'queryLimit'         => 'sanitizeInt',
-        'querySRLimit'       => 'sanitizeInt',
-        'fileLimit'          => 'sanitizeInt',
-        'maxFileSize'        => 'sanitizeInt',
-        'batchSize'          => 'sanitizeInt',
-        'delayRequest'       => 'sanitizeInt',
-        'cpuLoad'            => 'sanitizeString',
-        'unInstallOnDelete'  => 'sanitizeBool',
-        'optimizer'          => 'sanitizeBool',
-        'disableAdminLogin'  => 'sanitizeBool',
-        'keepPermalinks'     => 'sanitizeBool',
-        'checkDirectorySize' => 'sanitizeBool',
-        'debugMode'          => 'sanitizeBool',
+        'queryLimit'        => 'sanitizeInt',
+        'querySRLimit'      => 'sanitizeInt',
+        'fileLimit'         => 'sanitizeInt',
+        'maxFileSize'       => 'sanitizeInt',
+        'batchSize'         => 'sanitizeInt',
+        'delayRequest'      => 'sanitizeInt',
+        'cpuLoad'           => 'sanitizeString',
+        'unInstallOnDelete' => 'sanitizeBool',
+        'optimizer'         => 'sanitizeBool',
+        'disableAdminLogin' => 'sanitizeBool',
+        'keepPermalinks'    => 'sanitizeBool',
+        'debugMode'         => 'sanitizeBool',
     ];
 
     /**

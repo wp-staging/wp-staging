@@ -21,7 +21,6 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
-use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Traits\BenchmarkTrait;
 use WPStaging\Framework\Utils\Cache\Cache;

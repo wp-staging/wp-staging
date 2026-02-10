@@ -8,7 +8,6 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\JobTransientCache;
-use WPStaging\Pro\Backup\Job\JobRemoteUploadProvider;
 use WPStaging\Staging\Jobs\StagingJobsProvider;
 
 class Status extends AbstractTemplateComponent
@@ -40,11 +39,35 @@ class Status extends AbstractTemplateComponent
     }
 
     /**
+     * Override in PRO
+     *
+     * @return AbstractJob
+     */
+    protected function getPushJob(): AbstractJob
+    {
+        throw new \Exception('Push is available only in PRO version!');
+    }
+
+    /**
+     * Override in PRO
+     *
+     * @return AbstractJob
+     */
+    protected function getRemoteUploadJob(): AbstractJob
+    {
+        throw new \Exception('Remote Upload is available only in PRO version!');
+    }
+
+    /**
      * @return AbstractJob
      */
     private function getJobInstance(): AbstractJob
     {
         $jobType = trim($this->getJobType());
+        if ($jobType === JobTransientCache::JOB_TYPE_STAGING_PUSH) {
+            return $this->getPushJob();
+        }
+
         if (strpos($jobType, 'Staging_') === 0) {
             return WPStaging::make(StagingJobsProvider::class)->getJob($jobType);
         }
@@ -58,7 +81,7 @@ class Status extends AbstractTemplateComponent
         }
 
         if ($jobType === JobTransientCache::JOB_TYPE_REMOTE_UPLOAD) {
-            return WPStaging::make(JobRemoteUploadProvider::class)->getJob();
+            return $this->getRemoteUploadJob();
         }
 
         throw new \Exception('Not a valid job type!');

@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Service\Compression;
 
 use WPStaging\Backup\Entity\FileBeingExtracted;
+use WPStaging\Backup\Exceptions\EmptyChunkException;
 use WPStaging\Framework\Filesystem\FileObject;
 
 class NonCompressionService implements CompressionInterface
@@ -37,6 +38,12 @@ class NonCompressionService implements CompressionInterface
      */
     public function readChunk(FileObject $wpstgFile, FileBeingExtracted $fileBeingExtracted, $callable = null): string
     {
-        return $wpstgFile->fread($fileBeingExtracted->findReadTo());
+        $length = $fileBeingExtracted->findReadTo();
+        if ($length <= 0) {
+            $fileBeingExtracted->setWrittenBytes($fileBeingExtracted->getTotalBytes());
+            throw new EmptyChunkException();
+        }
+
+        return $wpstgFile->fread($length);
     }
 }

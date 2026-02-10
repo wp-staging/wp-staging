@@ -69,7 +69,7 @@ class PrepareStagingSiteTablesTask extends StagingTask
                 $this->jobDataDto->addPreserveTable($destTable, $backupTable);
             }
 
-            $this->tableCreateService->createStagingSiteTable($srcTable, $destTable);
+            $this->tableCreateService->createDestinationTable($srcTable, $destTable);
             $this->jobDataDto->addStagingTable($srcTable, $destTable);
 
             $this->stepsDto->incrementCurrentStep();

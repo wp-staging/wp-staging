@@ -67,9 +67,7 @@ abstract class QueryInserter
             }
             $limitedMaxAllowedPacket = max(16 * KB_IN_BYTES, 0.9 * $realMaxAllowedPacket);
             $limitedMaxAllowedPacket = min(2 * MB_IN_BYTES, $limitedMaxAllowedPacket);
-        } catch (\Exception $e) {
-            $limitedMaxAllowedPacket = (1 * MB_IN_BYTES) * 0.9;
-        } catch (\Error $ex) {
+        } catch (\Throwable $e) {
             $limitedMaxAllowedPacket = (1 * MB_IN_BYTES) * 0.9;
         }
         $limitedMaxAllowedPacket = $this->applyFilters(self::FILTER_RESTORE_DATABASE_MAX_ALLOWED_PACKET, $limitedMaxAllowedPacket);
@@ -89,9 +87,7 @@ abstract class QueryInserter
             $innoDbLogSize = $innoDbLogFileSize * $innoDbLogFileGroups;
             $innoDbLogSize = max(1 * MB_IN_BYTES, $innoDbLogSize * 0.9);
             $innoDbLogSize = min(64 * MB_IN_BYTES, $innoDbLogSize);
-        } catch (\Exception $e) {
-            $innoDbLogSize = 9 * MB_IN_BYTES;
-        } catch (\Error $ex) {
+        } catch (\Throwable $e) {
             $innoDbLogSize = 9 * MB_IN_BYTES;
         }
         $innoDbLogSize = $this->applyFilters(self::FILTER_RESTORE_DATABASE_INNODB_LOG_SIZE, $innoDbLogSize);

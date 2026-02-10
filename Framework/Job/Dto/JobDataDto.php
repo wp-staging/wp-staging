@@ -40,6 +40,12 @@ class JobDataDto extends AbstractDto
     /** @var string */
     const FILTER_RESOURCES_IGNORE_MEMORY_LIMIT = 'wpstg.resources.ignoreMemoryLimit';
 
+    /** @var string Filter hook for customizing extraction memory limit */
+    const FILTER_BACKUP_INMEMORY_EXTRACTION_LIMIT = 'wpstg.backup.inmemory_extraction.limit';
+
+    /** @var string Filter hook for using in memory extraction */
+    const FILTER_BACKUP_USE_INMEMORY_EXTRACTION = 'wpstg.backup.use_inmemory_extraction';
+
     /**
      * @var string
      */

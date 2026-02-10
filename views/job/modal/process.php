@@ -8,6 +8,12 @@
         <span class="wpstg--process-modal--percent">0</span>% - <?php esc_html_e('Elapsed time', 'wp-staging');?>
         <span class="wpstg--process-modal--elapsed-time">0:00</span>
     </div>
+    <div class="wpstg--process-modal--info-strip" style="display: none;">
+        <?php esc_html_e('You can close this window. Remote Sync will continue in the background.', 'wp-staging'); ?>
+    </div>
+    <div class="wpstg--process-modal--no-update-message" style="display: none; color: red; margin-top: 10px; margin-bottom: 10px;">
+        <?php esc_html_e('No updates from the server. Please cancel the process if it does not stop automatically and contact support.', 'wp-staging'); ?>
+    </div>
     <button class="wpstg--process-modal--logs-button" data-txt-bad="<?php echo sprintf(
         esc_attr__('(%s) Critical, (%s) Errors, (%s) Warnings. Show Logs', 'wp-staging'),
         '<span class=\'wpstg--modal--logs--critical-count\'>0</span>',

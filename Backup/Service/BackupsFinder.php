@@ -14,6 +14,7 @@ use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Network\RemoteDownloader;
 
 use function WPStaging\functions\debug_log;
 
@@ -96,14 +97,34 @@ class BackupsFinder extends AbstractBackupsFinder
     }
 
     /**
+     * Delete temp backup files associated with a job ID.
+     * This includes the temp backup file, any in-progress upload file,
+     * and the renamed .wpstg file from remote sync downloads.
+     *
      * @param string $jobId
      * @return void
      */
     public function deleteTempBackupByJobId(string $jobId)
     {
-        $tempBackupPath = $this->getBackupsDirectory() . $jobId . '.' . Archiver::TMP_BACKUP_EXTENSION;
+        $backupsDir = $this->getBackupsDirectory();
+
+        // Delete the temp backup file (e.g., {jobId}.wpstgtmp)
+        $tempBackupPath = $backupsDir . $jobId . '.' . Archiver::TMP_BACKUP_EXTENSION;
         if (file_exists($tempBackupPath)) {
             $this->filesystem->delete($tempBackupPath);
+        }
+
+        // Delete the in-progress upload file (e.g., {jobId}.wpstgtmp.uploading)
+        $uploadingPath = $tempBackupPath . '.' . RemoteDownloader::UPLOADING_EXTENSION;
+        if (file_exists($uploadingPath)) {
+            $this->filesystem->delete($uploadingPath);
+        }
+
+        // Delete the renamed backup file from remote sync (e.g., {jobId}.wpstg)
+        // This happens when a download "completes" but may be corrupt/incomplete
+        $renamedBackupPath = $backupsDir . $jobId . '.' . Archiver::BACKUP_EXTENSION;
+        if (file_exists($renamedBackupPath)) {
+            $this->filesystem->delete($renamedBackupPath);
         }
     }
 

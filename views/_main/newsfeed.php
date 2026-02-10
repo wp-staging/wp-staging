@@ -45,7 +45,7 @@ $renderTipText = function (array $tip): string {
 };
 ?>
 
-    <div class="wpstg-newsfeed-container wpstg-block" id="wpstg-newsfeed-container">
+    <div class="wpstg-newsfeed-container wpstg-u-block" id="wpstg-newsfeed-container">
         <!-- Unified Header (Always Visible, Clickable) -->
         <div class="wpstg-newsfeed-collapsed-header" data-version="<?php echo esc_attr($data['version']); ?>" role="button" aria-expanded="true">
             <div class="wpstg-newsfeed-collapsed-left">

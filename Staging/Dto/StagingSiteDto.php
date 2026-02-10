@@ -73,7 +73,7 @@ class StagingSiteDto implements \JsonSerializable
     protected $databaseSsl = false;
 
     /** @var bool */
-    protected $emailsAllowed = true;
+    protected $isEmailsAllowed = true;
 
     /** @var bool */
     protected $uploadsSymlinked = false;
@@ -97,13 +97,13 @@ class StagingSiteDto implements \JsonSerializable
     protected $networkClone = false;
 
     /** @var bool */
-    protected $cronDisabled = false;
+    protected $isCronEnabled = true;
 
     /** @var bool */
-    protected $wooSchedulerDisabled = false;
+    protected $isWooSchedulerEnabled = true;
 
     /** @var bool */
-    protected $emailsReminderAllowed = false;
+    protected $isEmailsReminderEnabled = false;
 
     /** @var int */
     protected $ownerId = 0;
@@ -120,8 +120,8 @@ class StagingSiteDto implements \JsonSerializable
     /** @var array */
     protected $excludedDirs = [];
 
-    /** @var array */
-    protected $tablePushSelection = [];
+    /** @var array|false */
+    protected $tablePushSelection = false;
 
     /** @var bool */
     protected $isAutoUpdatePlugins = false;
@@ -378,18 +378,18 @@ class StagingSiteDto implements \JsonSerializable
         $this->databaseSsl = $databaseSsl;
     }
 
-    public function getEmailsAllowed(): bool
+    public function getIsEmailsAllowed(): bool
     {
-        return $this->emailsAllowed;
+        return $this->isEmailsAllowed;
     }
 
     /**
-     * @param bool $emailsAllowed
+     * @param bool $isEmailsAllowed
      * @return void
      */
-    public function setEmailsAllowed(bool $emailsAllowed)
+    public function setIsEmailsAllowed(bool $isEmailsAllowed)
     {
-        $this->emailsAllowed = $emailsAllowed;
+        $this->isEmailsAllowed = $isEmailsAllowed;
     }
 
     public function getUploadsSymlinked(): bool
@@ -490,46 +490,46 @@ class StagingSiteDto implements \JsonSerializable
         $this->networkClone = $networkClone;
     }
 
-    public function getCronDisabled(): bool
+    public function getIsCronEnabled(): bool
     {
-        return $this->cronDisabled;
+        return $this->isCronEnabled;
     }
 
     /**
-     * @param bool $cronDisabled
+     * @param bool $isCronEnabled
      * @return void
      */
-    public function setCronDisabled(bool $cronDisabled)
+    public function setIsCronEnabled(bool $isCronEnabled)
     {
-        $this->cronDisabled = $cronDisabled;
+        $this->isCronEnabled = $isCronEnabled;
     }
 
-    public function getWooSchedulerDisabled(): bool
+    public function getIsWooSchedulerEnabled(): bool
     {
-        return $this->wooSchedulerDisabled;
+        return $this->isWooSchedulerEnabled;
     }
 
     /**
-     * @param bool $wooSchedulerDisabled
+     * @param bool $isWooSchedulerEnabled
      * @return void
      */
-    public function setWooSchedulerDisabled(bool $wooSchedulerDisabled)
+    public function setIsWooSchedulerEnabled(bool $isWooSchedulerEnabled)
     {
-        $this->wooSchedulerDisabled = $wooSchedulerDisabled;
+        $this->isWooSchedulerEnabled = $isWooSchedulerEnabled;
     }
 
-    public function getEmailsReminderAllowed(): bool
+    public function getIsEmailsReminderEnabled(): bool
     {
-        return $this->emailsReminderAllowed;
+        return $this->isEmailsReminderEnabled;
     }
 
     /**
-     * @param bool $emailsReminderAllowed
+     * @param bool $isEmailsReminderEnabled
      * @return void
      */
-    public function setEmailsReminderAllowed(bool $emailsReminderAllowed)
+    public function setIsEmailsReminderEnabled(bool $isEmailsReminderEnabled)
     {
-        $this->emailsReminderAllowed = $emailsReminderAllowed;
+        $this->isEmailsReminderEnabled = $isEmailsReminderEnabled;
     }
 
     public function getOwnerId(): int
@@ -602,16 +602,19 @@ class StagingSiteDto implements \JsonSerializable
         $this->excludedDirs = $excludedDirs;
     }
 
-    public function getTablePushSelection(): array
+    /**
+     * @return array|false
+     */
+    public function getTablePushSelection()
     {
         return $this->tablePushSelection;
     }
 
     /**
-     * @param array $tablePushSelection
+     * @param array|false $tablePushSelection
      * @return void
      */
-    public function setTablePushSelection(array $tablePushSelection)
+    public function setTablePushSelection($tablePushSelection)
     {
         $this->tablePushSelection = $tablePushSelection;
     }
@@ -684,5 +687,12 @@ class StagingSiteDto implements \JsonSerializable
     public function getIsAutoUpdatePlugins(): bool
     {
         return $this->isAutoUpdatePlugins;
+    }
+
+    public function getIsUploadsSymlink(): bool
+    {
+        $uploadsDirectory = $this->getPath() . '/wp-content/uploads';
+
+        return is_link($uploadsDirectory);
     }
 }

@@ -13,9 +13,12 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $isPro = WPStaging::isPro();
+/** @var CliIntegrationNotice $cliNotice */
+$cliNotice = WPStaging::make(CliIntegrationNotice::class);
 include WPSTG_VIEWS_DIR . 'job/modal/success.php';
 include WPSTG_VIEWS_DIR . 'job/modal/process.php';
 
@@ -25,15 +28,35 @@ $assets = WPStaging::make(Assets::class);
 $newStagingFeatureEnabled = (defined('WPSTG_NEW_STAGING') && WPSTG_NEW_STAGING);
 ?>
 <div id="wpstg-step-1">
-    <?php if ($newStagingFeatureEnabled) : ?>
-        <button id="wpstg-new-staging" class="wpstg-blue-primary wpstg-button wpstg-mr-10px" <?php echo $error ? 'disabled' : '' ?>>
-            <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
-        </button>
-    <?php else : ?>
-        <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning" <?php echo $error ? 'disabled' : ''; ?>>
-            <?php echo esc_html__("Create Staging Site", "wp-staging"); ?>
-        </button>
-    <?php endif; ?>
+    <div class="wpstg-staging-actions">
+        <?php if ($newStagingFeatureEnabled) : ?>
+            <button
+                id="wpstg-new-staging"
+                class="wpstg-btn wpstg-btn-md wpstg-btn-primary wpstg-px-3"
+                <?php echo $error ? 'disabled' : '' ?>
+            >
+                <svg class="wpstg-btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
+            </button>
+        <?php else : ?>
+            <button
+                id="wpstg-new-clone"
+                class="wpstg-next-step-link wpstg-btn wpstg-btn-md wpstg-btn-primary wpstg-px-3"
+                data-action="wpstg_scanning"
+                <?php echo $error ? 'disabled' : ''; ?>
+            >
+                <svg class="wpstg-btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                <?php echo esc_html__("Create Staging Site", "wp-staging"); ?>
+            </button>
+        <?php endif; ?>
+
+        <!-- CLI Dock Slot - populated after banner collapse or server-side when banner was dismissed -->
+        <div id="wpstg-cli-dock-slot" class="wpstg-cli-dock-slot"><?php $cliNotice->maybeRenderDockCta(); ?></div>
+    </div>
 </div>
 
 <?php if (WPStaging::isOnWordPressPlayground()) : ?>

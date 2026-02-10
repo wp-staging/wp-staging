@@ -15,10 +15,8 @@ use WPStaging\Framework\Facades\Sanitize;
         <div class="wpstg-loading-bar"></div>
     </div>
     <div class="wpstg-tabs-container" id="wpstg-tools">
-        <div class="wpstg-metabox-holder">
+        <div class="wpstg-metabox-holder wpstg-settings-container">
             <?php
-            $numberOfLoadingBars = 100;
-            include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
             require_once(WPSTG_VIEWS_DIR . "tools/tabs/system-info.php");
             ?>
         </div>

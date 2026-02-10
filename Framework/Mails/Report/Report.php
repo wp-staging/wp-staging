@@ -224,7 +224,7 @@ class Report
         $forceSend = false;
         $debugCode = '';
         if (!empty($postData['debugCode'])) {
-            $debugCode = trim($this->sanitize->sanitizeString($postData['debugCode']));
+            $debugCode = $this->sanitize->sanitizeString($postData['debugCode']);
         }
 
         if (!empty($postData['forceSend'])) {
@@ -234,7 +234,7 @@ class Report
         $loggedInUser      = wp_get_current_user();
         $loggedInUserEmail = '';
         if (!empty($loggedInUser->user_email)) {
-            $loggedInUserEmail = trim($this->sanitize->sanitizeString($loggedInUser->user_email));
+            $loggedInUserEmail = $this->sanitize->sanitizeString($loggedInUser->user_email);
         }
 
         $response = $this->sendDebugLog($loggedInUserEmail, $debugCode, $forceSend);

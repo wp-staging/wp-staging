@@ -31,18 +31,12 @@ class DismissNotice
      */
     private $objectCacheNotice;
 
-    /**
-     * @var FreeBackupUpdateNotice
-     */
-    private $freeBackupUpdateNotice;
-
-    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence, ObjectCacheNotice $objectCacheNotice, FreeBackupUpdateNotice $freeBackupUpdateNotice)
+    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence, ObjectCacheNotice $objectCacheNotice)
     {
         $this->disabledItemsNotice = $disabledItemsNotice;
         $this->warningsNotice      = $warningsNotice;
         $this->wordFence           = $wordFence;
         $this->objectCacheNotice   = $objectCacheNotice;
-        $this->freeBackupUpdateNotice   = $freeBackupUpdateNotice;
     }
 
     public function dismiss($noticeToDismiss)
@@ -64,11 +58,6 @@ class DismissNotice
         }
 
         if ($noticeToDismiss === ObjectCacheNotice::ACTION_NOTICE_DISMISS && $this->objectCacheNotice->disable() !== false) {
-            wp_send_json(true);
-            return;
-        }
-
-        if ($noticeToDismiss === FreeBackupUpdateNotice::OPTION_NAME_FREE_BACKUP_NOTICE_DISMISSED && $this->freeBackupUpdateNotice->disable() !== false) {
             wp_send_json(true);
             return;
         }

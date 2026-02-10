@@ -28,11 +28,9 @@ WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();
 $backupScheduler = WPStaging::make(BackupScheduler::class);
 $cronStatus      = $backupScheduler->checkCronStatus();
 $cronMessage     = $backupScheduler->getCronMessage();
-if ($cronMessage !== '') { ?>
-    <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
-        <p><?php echo Escape::escapeHtml($cronMessage); ?></p>
-    </div>
-<?php }
+
+// Render cron warning notice using modern callout design
+require WPSTG_VIEWS_DIR . 'notices/cron-warning-notice.php';
 
 // Will show a locked message if the process is locked
 require WPSTG_VIEWS_DIR . 'job/locked.php';
@@ -57,33 +55,80 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
     ?>
 </div>
 
-<div id="wpstg-step-1">
-    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledPropertyCreateBackup); ?>>
-        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/update.svg" alt="create" />
+<!-- Navigation Bar -->
+<div id="wpstg-step-1" class="wpstg-flex wpstg-flex-wrap wpstg-items-center wpstg-gap-3 wpstg-mb-6">
+    <!-- Primary: Create Backup -->
+    <button
+        id="wpstg-new-backup"
+        class="wpstg-btn wpstg-btn-lg wpstg-btn-primary wpstg-next-step-link"
+        <?php echo esc_attr($disabledPropertyCreateBackup); ?>
+    >
+        <svg class="wpstg-btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
         <?php esc_html_e('Create Backup', 'wp-staging'); ?>
     </button>
-    <button type="button" id="wpstg-upload-backup" class="wpstg-button wpstg-border-thin-button">
-        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/upload-cloud.svg" alt="upload" />
+
+    <!-- Secondary: Upload Backup -->
+    <button
+        type="button"
+        id="wpstg-upload-backup"
+        class="wpstg-btn wpstg-btn-lg wpstg-btn-secondary"
+    >
+        <svg class="wpstg-btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
         <?php esc_html_e('Upload Backup', 'wp-staging'); ?>
     </button>
-    <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button">
-        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/edit.svg" alt="edit" />
-        <?php esc_html_e('Edit Backup Plans', 'wp-staging'); ?>
+
+    <!-- Secondary: Manage Plans -->
+    <button
+        id="wpstg-manage-backup-schedules"
+        class="wpstg-btn wpstg-btn-lg wpstg-btn-secondary"
+    >
+        <svg class="wpstg-btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+        <?php esc_html_e('Manage Plans', 'wp-staging'); ?>
     </button>
-    <?php if (defined('WPSTG_REMOTE_SYNC_ENABLED') && WPSTG_REMOTE_SYNC_ENABLED) : ?>
-    <button id="wpstg-remote-sync" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-15px wpstg--tooltip" disabled>
-        <img class="wpstg--dashicons wpstg-mr-10px" src="<?php echo esc_url($urlAssets); ?>svg/push.svg" alt="remote sync" />
-        <?php echo esc_html__("Remote Sync (See Demo)", "wp-staging"); ?>
-        <span class="wpstg--tooltiptext" style="width: 350px;line-height: 1.5;margin-top: -1px;white-space: normal;">
-                    <?php esc_html_e('Connect this site to any other WordPress site to pull and sync its data remotely with one click.', 'wp-staging'); ?>
-                    <br>
-                    <?php esc_html_e('(Requires WP Staging Pro version.)', 'wp-staging'); ?>
-                    <br>
-                    <br>
-                    <a href="https://wp-staging.com" target="_blank" rel="noopener noreferrer" class="wpstg-link-btn wpstg-blue-primary" style="transition:none"><?php echo esc_html__('Watch a demo', 'wp-staging'); ?></a>
+
+    <!-- Remote Sync: Sync from Remote Site (Pro Upsell) -->
+    <div class="wpstg-relative wpstg--tooltip">
+        <button
+            id="wpstg-remote-sync"
+            class="wpstg-btn wpstg-btn-lg wpstg-btn-tint wpstg-opacity-60 wpstg-cursor-not-allowed"
+            disabled
+        >
+            <svg class="wpstg-btn-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" x2="12" y1="15" y2="3"/>
+            </svg>
+            <?php esc_html_e('Sync from Remote Site', 'wp-staging'); ?>
+            <span class="wpstg-badge wpstg-badge-blue">
+                <?php esc_html_e('Pro', 'wp-staging'); ?>
+            </span>
+        </button>
+        <span class="wpstg--tooltiptext wpstg-remote-sync-tooltip" style="width: 350px; line-height: 1.5; margin-top: -1px; white-space: normal;">
+            <span class="wpstg-remote-sync-tooltip-thumb"
+                  role="button" tabindex="0"
+                  aria-label="<?php echo esc_attr__('Play demo video', 'wp-staging'); ?>"
+                  data-vimeo-id="1162852843"
+                  data-img="<?php echo esc_url($urlAssets); ?>img/thumbnail-small-dark.webp">
+                <img class="wpstg-remote-sync-tooltip-thumb-img"
+                     src="<?php echo esc_url($urlAssets); ?>img/thumbnail-small-dark.webp"
+                     alt="<?php echo esc_attr__('Remote Sync demo', 'wp-staging'); ?>"
+                     width="320" height="180" loading="lazy" />
+                <span class="wpstg-remote-sync-tooltip-duration">46s</span>
+            </span>
+            <span class="wpstg-remote-sync-tooltip-cta">
+                <?php esc_html_e('Watch Remote Sync demo', 'wp-staging'); ?>
+            </span>
+            <span class="wpstg-remote-sync-tooltip-privacy">
+                <?php esc_html_e('Video hosted on Vimeo. Loaded only after click.', 'wp-staging'); ?>
+            </span>
         </span>
-    </button>
-    <?php endif; ?>
+    </div>
 </div>
 
 <div id="wpstg-backup-runs-info">

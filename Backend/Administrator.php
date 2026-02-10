@@ -1070,19 +1070,19 @@ class Administrator
         // Set e-mail
         $emailRecipient = '';
         if (isset($args['wpstg_email'])) {
-            $emailRecipient = trim($this->sanitize->sanitizeString($args['wpstg_email']));
+            $emailRecipient = $this->sanitize->sanitizeString($args['wpstg_email']);
         }
 
         // Set hosting provider
         $providerName = '';
         if (!empty($args['wpstg_provider'])) {
-            $providerName = trim($this->sanitize->sanitizeString($args['wpstg_provider']));
+            $providerName = $this->sanitize->sanitizeString($args['wpstg_provider']);
         }
 
         // Set message
         $messageBody = '';
         if (!empty($args['wpstg_message'])) {
-            $messageBody = trim($this->sanitize->sanitizeString($args['wpstg_message']));
+            $messageBody = $this->sanitize->sanitizeString($args['wpstg_message']);
         }
 
         // Set syslog

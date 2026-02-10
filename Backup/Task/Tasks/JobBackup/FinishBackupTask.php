@@ -19,8 +19,6 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\TransientCache;
 
-use function WPStaging\functions\debug_log;
-
 class FinishBackupTask extends BackupTask
 {
     use EventLoggerTrait;
@@ -64,7 +62,7 @@ class FinishBackupTask extends BackupTask
         $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
 
         if (!$this->jobDataDto->getIsSyncRequest()) {
-            $this->logger->info("################## FINISH ##################");
+            $this->logger->info("✓ Backup successfully created");
         }
 
         // This condition prevents duplicate log entries for a single backup process.
@@ -123,8 +121,6 @@ class FinishBackupTask extends BackupTask
                 $response->setIsMultipartBackup($this->jobDataDto->getIsMultipartBackup());
                 $response->setIsGlitchInBackup($this->jobDataDto->getIsGlitchInBackup());
                 $response->setGlitchReason($this->jobDataDto->getGlitchReason());
-            } else {
-                debug_log('Fail to finalize response for backup process! Response content: ' . print_r($response, true));
             }
 
             return $response;

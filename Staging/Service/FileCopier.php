@@ -20,6 +20,9 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 use function WPStaging\functions\debug_log;
 
+/**
+ * This class is responsible for copying files from the current site to the staging site in batches.
+ */
 class FileCopier
 {
     use ResourceTrait;
@@ -177,7 +180,6 @@ class FileCopier
         $path = $this->replacePlaceholdersWithEOLs($path);
 
         if (is_null($path)) {
-            debug_log("Copy error: no task to dequeue");
             throw new FinishedQueueException();
         }
 
@@ -191,9 +193,7 @@ class FileCopier
         }
 
         // When wp-content is inside of ABSPATH, we need to prepend ABSPATH to the file path, as it was removed while scanning
-        if ($this->shouldPrependAbsPath()) {
-            $path = trailingslashit(ABSPATH) . $path;
-        }
+        $path = $this->maybePrependSitePath($path);
 
         try {
             $isFileWrittenCompletely = $this->processFile($path, $indexPath);
@@ -215,6 +215,15 @@ class FileCopier
 
         // Processing a file that could not be finished in this request
         $this->taskQueue->retry(false);
+    }
+
+    protected function maybePrependSitePath(string $filePath): string
+    {
+        if ($this->shouldPrependAbsPath()) {
+            return $this->absPath . $filePath;
+        }
+
+        return $filePath;
     }
 
     protected function shouldPrependAbsPath(): bool

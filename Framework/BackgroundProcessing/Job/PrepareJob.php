@@ -73,6 +73,11 @@ abstract class PrepareJob
     private $times;
 
     /**
+     * @var bool
+     */
+    private $handlingError = false;
+
+    /**
      * @param AjaxPrepareJob $ajaxPrepareJob A reference to the object currently handling
      *                                          AJAX job preparation requests.
      * @param Queue          $queue          A reference to the instance of the Queue manager the class
@@ -183,12 +188,18 @@ abstract class PrepareJob
             } catch (Exception $e) {
                 error_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
                 debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
+                $this->handlingError = true;
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
                 $this->processLock->unlockProcess();
 
                 $this->handleError($e->getMessage(), $args);
 
                 return new WP_Error(400, $e->getMessage());
+            }
+
+            if ($this->isJobCancelled($args)) {
+                $this->processLock->unlockProcess();
+                return new WP_Error(499, 'Job cancelled by user.'); // 499 Client Closed Request: This unofficial but widely used Nginx-specific status code
             }
 
             $errorMessage = $this->getLastErrorMessage();
@@ -213,10 +224,13 @@ abstract class PrepareJob
             $this->job->commitLogs();
         } while (!$this->isThreshold());
 
-        // We're not done, queue a new Action to keep processing this job if it is not cancelled.
-        if (!$this->isJobCancelled($args)) {
-            $this->queueAction($args);
+        // Check if canceled in the meantime
+        if ($this->isJobCancelled($args)) {
+            return new WP_Error(499, 'Job cancelled by user.'); // 499 Client Closed Request: This unofficial but widely used Nginx-specific status code
         }
+
+        // We're not done, queue a new Action to keep processing this job if it is not cancelled.
+        $this->queueAction($args);
 
         return $taskResponseDto;
     }
@@ -354,9 +368,17 @@ abstract class PrepareJob
      */
     private function getLastErrorMessage()
     {
-        $error = $this->job->getCurrentTask()->getLogger()->getLastErrorMsg();
+        $currentTask = $this->job === null ? null : $this->job->getCurrentTask();
+        if (empty($currentTask) && $this->handlingError) {
+            return 'Current task is not available';
+        }
 
-        if ($error === false) {
+        if (empty($currentTask)) {
+            return false;
+        }
+
+        $error = $currentTask->getLogger()->getLastErrorMsg();
+        if (empty($error)) {
             return false;
         }
 
