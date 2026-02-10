@@ -10,7 +10,7 @@
 use WPStaging\Core\WPStaging;
 
 ?>
-<div id="wpstg-faq" class="wpstg-faq-container wpstg-block">
+<div id="wpstg-faq" class="wpstg-faq-container wpstg-u-block">
     <div class="wpstg-faq-header" role="button" aria-expanded="false">
         <h3 class="wpstg-faq-title">📚 <?php esc_html_e('Knowledgebase', 'wp-staging'); ?></h3>
         <span class="wpstg-faq-toggle-link">

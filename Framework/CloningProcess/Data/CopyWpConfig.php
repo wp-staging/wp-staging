@@ -128,7 +128,7 @@ define( 'DB_HOST', '" . DB_HOST . "' );\r\n
 /** Database Charset to use in creating database tables. */\r\n
 define( 'DB_CHARSET', '" . DB_CHARSET . "' );\r\n
 /** The Database Collate type. Don't change this if in doubt. */\r\n
-define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
+define( 'DB_COLLATE', '" . (defined('DB_COLLATE') ? DB_COLLATE : '') . "' );\r\n";
 
         $content = $this->normalizeFileContent($content);
         $content = str_replace($search, $replace, $content);

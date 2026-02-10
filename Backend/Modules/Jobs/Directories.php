@@ -74,7 +74,6 @@ class Directories extends JobExecutable
     public function initialize()
     {
         $this->filesystem      = WPStaging::make(Filesystem::class);
-        /** @var Directory */
         $this->directory       = WPStaging::make(Directory::class);
         $this->pathAdapter     = WPStaging::make(PathIdentifier::class);
         $this->pathChecker     = WPStaging::make(PathChecker::class);

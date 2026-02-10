@@ -64,9 +64,9 @@ if ($isDatabaseConnected) { ?>
 
 if (!$isDatabaseConnected) { ?>
     <div id="wpstg-delete-confirm-error-container" class="wpstg-failed">
-        <h4 class="wpstg-mb-0"><?php esc_html_e('Error: Can not connect to database! ', 'wp-staging');
+        <h4 class="wpstg-u-mb-0"><?php esc_html_e('Error: Can not connect to database! ', 'wp-staging');
             echo esc_html($stagingSite->getDatabaseDatabase()); ?></h4>
-        <ul class="wpstg-mb-0">
+        <ul class="wpstg-u-mb-0">
             <li><?php esc_html_e('This can happen if the password of the database changed or if the staging site database or tables were deleted', 'wp-staging') ?></li>
             <li><?php esc_html_e('You can still delete this staging site but deleting will not delete any database table. You will have to delete them manually if they exist.', 'wp-staging') ?></li>
         </ul>

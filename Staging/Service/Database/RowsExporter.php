@@ -2,8 +2,10 @@
 
 namespace WPStaging\Staging\Service\Database;
 
+use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\Exporter\AbstractRowsExporter;
 use WPStaging\Framework\Database\SearchReplace;
+use WPStaging\Framework\Database\TableService;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 
 /**
@@ -24,6 +26,13 @@ class RowsExporter extends AbstractRowsExporter
 
     /** @var string */
     protected $stagingPrefix;
+
+    public function setupDatabase(Database $database)
+    {
+        $this->setDatabase($database);
+        $this->tableService = new TableService($database);
+        $this->databaseName = $this->database->getWpdba()->getClient()->__get('dbname');
+    }
 
     public function setStagingPrefix(string $stagingPrefix)
     {

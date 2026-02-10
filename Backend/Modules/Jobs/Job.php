@@ -526,12 +526,16 @@ abstract class Job implements ShutdownableInterface
             $this->logger->add(sprintf('- Auto Update Plugins : %s', ($this->options->isAutoUpdatePlugins ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
         }
 
-        if (isset($this->options->cronDisabled)) {
-            $this->logger->add(sprintf('- Disable WP_CRON : %s', ($this->options->cronDisabled ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        if (isset($this->options->isCronEnabled)) {
+            $this->logger->add(sprintf('- Enable WP_CRON : %s', ($this->options->isCronEnabled ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
         }
 
-        if (isset($this->options->emailsAllowed)) {
-            $this->logger->add(sprintf('- Allow Emails Sending : %s', ($this->options->emailsAllowed ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        if (isset($this->options->isWooSchedulerEnabled)) {
+            $this->logger->add(sprintf('- Enable WooCommerce Scheduler : %s', ($this->options->isWooSchedulerEnabled ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        }
+
+        if (isset($this->options->isEmailsAllowed)) {
+            $this->logger->add(sprintf('- Allow Emails Sending : %s', ($this->options->isEmailsAllowed ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
         }
 
         if (isset($this->options->deletePluginsAndThemes)) {

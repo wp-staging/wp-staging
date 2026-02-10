@@ -1,8 +1,5 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-
 namespace WPStaging\Backup\Ajax;
 
 use Exception;
@@ -20,6 +17,7 @@ use function WPStaging\functions\debug_log;
 
 class Delete extends AbstractTemplateComponent
 {
+    /** @var BackupsFinder */
     private $backupsFinder;
 
     public function __construct(BackupsFinder $backupsFinder, TemplateEngine $templateEngine)
@@ -28,9 +26,6 @@ class Delete extends AbstractTemplateComponent
         $this->backupsFinder = $backupsFinder;
     }
 
-    /**
-     * @throws BackupRuntimeException
-     */
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -93,7 +88,6 @@ class Delete extends AbstractTemplateComponent
 
     /**
      * @param SplFileInfo $backup
-     *
      * @return bool
      * @throws BackupRuntimeException
      */

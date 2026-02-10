@@ -23,7 +23,6 @@ class Url
      */
     public function getCurrentRoute()
     {
-
         if (empty($_SERVER['HTTP_HOST']) || empty($_SERVER['REQUEST_URI'])) {
             return '';
         }

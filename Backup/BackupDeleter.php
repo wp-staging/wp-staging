@@ -8,11 +8,16 @@ use WPStaging\Backup\Service\BackupsFinder;
 
 class BackupDeleter
 {
+    /** @var BackupsFinder */
     protected $backupsFinder;
+
+    /** @var BackupMetadata */
     protected $backupMetadata;
 
+    /** @var array */
     protected $errors = [];
 
+    /** @var bool */
     protected $deletingAutomatedDatabaseOnlyBackup = false;
 
     public function __construct(BackupsFinder $backupsFinder, BackupMetadata $backupMetadata)

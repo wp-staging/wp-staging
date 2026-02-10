@@ -29,4 +29,13 @@ class RenameDatabaseTaskDto extends AbstractTaskDto
 
     /** @var int */
     public $customTablesRenamed;
+
+    /** @var int */
+    public $totalTablesToRename;
+
+    /** @var int */
+    public $totalTablesRenamed;
+
+    /** @var array<string,mixed> */
+    public $dataToPreserve;
 }

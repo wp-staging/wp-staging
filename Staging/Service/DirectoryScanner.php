@@ -13,11 +13,12 @@ use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Staging\Dto\DirectoryNodeDto;
-use WPStaging\Staging\Dto\StagingSiteDto;
 
+/**
+ * Scans filesystem roots and prepares directory data for the staging selection UI.
+ */
 class DirectoryScanner
 {
     /**
@@ -52,11 +53,6 @@ class DirectoryScanner
     protected $strUtils;
 
     /**
-     * @var Math
-     */
-    protected $mathUtils;
-
-    /**
      * @var PathChecker
      */
     protected $pathChecker;
@@ -77,9 +73,19 @@ class DirectoryScanner
     protected $loaderIcon = '';
 
     /**
+     * @var string
+     */
+    protected $infoIcon = '';
+
+    /**
      * @var bool
      */
     protected $isAllowVfsPath = false;
+
+    /**
+     * @var bool
+     */
+    protected $scanSubWpContentByDefault = false;
 
     /**
      * @var array
@@ -100,12 +106,11 @@ class DirectoryScanner
     /** @var bool */
     protected $useDefaultSelection = false;
 
-    public function __construct(TemplateEngine $templateEngine, Assets $assets, Directory $directory, Strings $strUtils, Math $mathUtils, PathChecker $pathChecker, SiteInfo $siteInfo)
+    public function __construct(TemplateEngine $templateEngine, Assets $assets, Directory $directory, Strings $strUtils, PathChecker $pathChecker, SiteInfo $siteInfo)
     {
         $this->templateEngine = $templateEngine;
         $this->directory      = $directory;
         $this->strUtils       = $strUtils;
-        $this->mathUtils      = $mathUtils;
         $this->pathChecker    = $pathChecker;
         $this->siteInfo       = $siteInfo;
         $this->loaderIcon     = $assets->getAssetsUrl('img/spinner.gif');
@@ -201,7 +206,6 @@ class DirectoryScanner
                 $directoryNode->setPath(trailingslashit($basePath) . ltrim($path, '/'));
             }
 
-            $directoryNode->setSize($this->getDirectorySize($directoryNode->getPath()));
             $directoryNode->setIdentifier($identifier);
             $directoryNode->setBasePath($basePath);
 
@@ -264,20 +268,6 @@ class DirectoryScanner
     }
 
     /**
-     * Gets size of given directory
-     * @param string $path
-     * @return float
-     */
-    protected function getDirectorySize($path): float
-    {
-        if (!$this->isCheckDirectorySize()) {
-            return 0;
-        }
-
-        return $this->directory->getSize($path);
-    }
-
-    /**
      * @param DirectoryNodeDto $directory
      * @param bool $parentChecked
      * @param bool $preserveSelection
@@ -292,24 +282,22 @@ class DirectoryScanner
         // Check if directory name or directory path is not WP core folder
         $isNotWPCoreDir = $this->isNonWpCoreDirectory($directory->getName(), $path);
 
-        $class   = $isNotWPCoreDir ? self::WP_NON_CORE_DIR : self::WP_CORE_DIR;
-        $dirType = 'other';
-
-        if ($this->strUtils->startsWith($path, $this->directory->getPluginsDirectory()) !== false) {
-            $pluginPath = $this->strUtils->strReplaceFirst($this->directory->getPluginsDirectory(), '', $path);
-            $dirType    = strpos($pluginPath, '/') === false ? 'plugin' : 'other';
-        } elseif ($this->strUtils->startsWith($path, $this->directory->getActiveThemeParentDirectory()) !== false) {
-            $themePath = $this->strUtils->strReplaceFirst($this->directory->getActiveThemeParentDirectory(), '', $path);
-            $dirType   = strpos($themePath, '/') === false ? 'theme' : 'other';
-        }
-
+        $class     = $isNotWPCoreDir ? self::WP_NON_CORE_DIR : self::WP_CORE_DIR;
+        $dirType   = $this->getDirectoryType($path);
         $isScanned = 'false';
+        $normalizedPath = trailingslashit($path);
         if (
-            trailingslashit($path) === $this->directory->getWpContentDirectory()
-            || trailingslashit($path) === $this->directory->getPluginsDirectory()
-            || trailingslashit($path) === $this->directory->getActiveThemeParentDirectory()
+            $normalizedPath === $this->directory->getWpContentDirectory()
+            || $normalizedPath === $this->directory->getPluginsDirectory()
+            || $normalizedPath === $this->directory->getActiveThemeParentDirectory()
         ) {
             $isScanned = 'true';
+        }
+
+        $showChildByDefault = false;
+        if ($this->scanSubWpContentByDefault && ($normalizedPath === $this->wpContentPath . 'plugins/' || $normalizedPath === $this->wpContentPath . 'themes/' || $normalizedPath === $this->wpContentPath . 'uploads/')) {
+            $isScanned          = 'true';
+            $showChildByDefault = true;
         }
 
         // Make wp-includes and wp-admin directory items not expandable
@@ -330,6 +318,7 @@ class DirectoryScanner
             $shouldBeChecked = false;
         }
 
+        $shouldBeChecked = $this->getShouldBeChecked($shouldBeChecked, $directory);
         $isDisabledDir = $directory->getName() === 'wp-admin' || $directory->getName() === 'wp-includes';
 
         $isDisabled = false;
@@ -361,13 +350,14 @@ class DirectoryScanner
             'isDisabled'        => $isDisabled,
             'dirName'           => $directory->getName(),
             'gifLoaderPath'     => $this->loaderIcon,
-            'formattedSize'     => $this->mathUtils->formatSize($directory->getSize()),
+            'infoIconPath'      => $this->infoIcon,
             'isDebugMode'       => false,
             'dataPath'          => $directory->getPath(),
             'basePath'          => $directory->getBasePath(),
             'forceDefault'      => $preserveSelection,
             'dirPath'           => $path,
             'isLink'            => $isLink,
+            'showChild'         => $showChildByDefault,
         ]);
     }
 
@@ -428,5 +418,30 @@ class DirectoryScanner
     protected function isCheckDirectorySize(): bool
     {
         return false;
+    }
+
+    /**
+     * Used during push
+     */
+    protected function getShouldBeChecked(bool $shouldBeChecked, DirectoryNodeDto $directory): bool
+    {
+        return $shouldBeChecked;
+    }
+
+    /**
+     * Overriden during push
+     */
+    protected function getDirectoryType(string $path): string
+    {
+        $dirType = 'other';
+        if ($this->strUtils->startsWith($path, $this->directory->getPluginsDirectory()) !== false) {
+            $pluginPath = $this->strUtils->strReplaceFirst($this->directory->getPluginsDirectory(), '', $path);
+            $dirType    = strpos($pluginPath, '/') === false ? 'plugin' : 'other';
+        } elseif ($this->strUtils->startsWith($path, $this->directory->getActiveThemeParentDirectory()) !== false) {
+            $themePath = $this->strUtils->strReplaceFirst($this->directory->getActiveThemeParentDirectory(), '', $path);
+            $dirType   = strpos($themePath, '/') === false ? 'theme' : 'other';
+        }
+
+        return $dirType;
     }
 }

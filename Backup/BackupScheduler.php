@@ -643,6 +643,24 @@ class BackupScheduler
         return $this->cronMessage;
     }
 
+    /** @return int */
+    public function getOverdueCronJobsCount(): int
+    {
+        return $this->numberOverdueCronjobs;
+    }
+
+    /** @return bool */
+    public function isWpCronDisabled(): bool
+    {
+        return defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
+    }
+
+    /** @return bool */
+    public function hasOverdueCronJobs(): bool
+    {
+        return $this->isCronjobsOverdue();
+    }
+
     /**
      * @return array An array where the first item is the timestamp, and the second is the backup callback.
      * @throws \Exception When there is no backup scheduled or one could not be found.

@@ -104,12 +104,7 @@ class Setup extends AbstractTemplateComponent
             return '';
         }
 
-        $cloneId = Sanitize::sanitizeString($_POST['cloneId']);
-        if ($cloneId === null || $cloneId === false) {
-            return '';
-        }
-
-        return trim($cloneId);
+        return Sanitize::sanitizeString($_POST['cloneId']);
     }
 
     private function getIsReset(): bool
@@ -118,12 +113,7 @@ class Setup extends AbstractTemplateComponent
             return false;
         }
 
-        $reset = Sanitize::sanitizeString($_POST['reset']);
-        if ($reset === null || $reset === false) {
-            return false;
-        }
-
-        return $reset === 'true';
+        return Sanitize::sanitizeString($_POST['reset']) === 'true';
     }
 
     /**

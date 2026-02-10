@@ -129,15 +129,15 @@
                 padding-top:20px;
             }
 
-            .wpstg-text-center {
+            .wpstg-u-text-center {
                 text-align: center;
             }
 
-            .wpstg-text-justify {
+            .wpstg-u-text-justify {
                 text-align: justify;
             }
 
-            .wpstg-text-center img {
+            .wpstg-u-text-center img {
                 margin-top:30px;
             }
 

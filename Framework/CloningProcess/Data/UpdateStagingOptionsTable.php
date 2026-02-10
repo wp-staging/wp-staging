@@ -75,9 +75,9 @@ class UpdateStagingOptionsTable extends DBCloningService
         ];
 
         $cloneOptions = [
-            FirstRun::MAILS_DISABLED_KEY          => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
+            FirstRun::MAILS_DISABLED_KEY          => !((bool) $this->dto->getJob()->getOptions()->isEmailsAllowed),
             ExcludedPlugins::EXCLUDED_PLUGINS_KEY => (new ExcludedPlugins())->getFilteredPluginsToExclude(),
-            FirstRun::WOO_SCHEDULER_DISABLED_KEY  => (bool) $this->dto->getJob()->getOptions()->wooSchedulerDisabled,
+            FirstRun::WOO_SCHEDULER_ENABLED_KEY   => (bool) $this->dto->getJob()->getOptions()->isWooSchedulerEnabled,
         ];
 
         // Add the base directory path and is network clone when cloning into network

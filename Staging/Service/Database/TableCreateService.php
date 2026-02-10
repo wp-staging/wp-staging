@@ -20,10 +20,10 @@ class TableCreateService
     protected $logger;
 
     /** @var Database */
-    protected $productionDb;
+    protected $sourceDb;
 
     /** @var Database */
-    protected $stagingDb;
+    protected $destinationDb;
 
     /** @var TableService */
     protected $tableService;
@@ -32,10 +32,10 @@ class TableCreateService
     protected $databaseName;
 
     /** @var string */
-    protected $productionPrefix;
+    protected $sourcePrefix;
 
     /** @var string */
-    protected $stagingPrefix;
+    protected $destinationPrefix;
 
     /** @var bool */
     protected $isResetExistingTables = false;
@@ -43,37 +43,37 @@ class TableCreateService
     /**
      * @param Database $database
      */
-    public function __construct(Database $productionDb, TableService $tableService)
+    public function __construct(Database $sourceDb, TableService $tableService)
     {
-        $this->productionDb = $productionDb;
+        $this->sourceDb     = $sourceDb;
         $this->tableService = $tableService;
     }
 
-    public function setup(LoggerInterface $logger, Database $stagingDb)
+    public function setup(LoggerInterface $logger, Database $destinationDb)
     {
-        $this->logger           = $logger;
-        $this->stagingDb        = $stagingDb;
-        $this->databaseName     = $this->productionDb->getWpdba()->getClient()->__get('dbname');
-        $this->productionPrefix = $this->productionDb->getPrefix();
-        $this->stagingPrefix    = $this->stagingDb->getPrefix();
+        $this->logger            = $logger;
+        $this->destinationDb     = $destinationDb;
+        $this->databaseName      = $this->sourceDb->getWpdba()->getClient()->__get('dbname');
+        $this->sourcePrefix      = $this->sourceDb->getPrefix();
+        $this->destinationPrefix = $this->destinationDb->getPrefix();
     }
 
     public function getTableWithoutPrefix(string $srcTableName): string
     {
-        if (strpos($srcTableName, $this->productionPrefix) !== 0) {
+        if (strpos($srcTableName, $this->sourcePrefix) !== 0) {
             return $srcTableName;
         }
 
-        return substr($srcTableName, strlen($this->productionPrefix));
+        return substr($srcTableName, strlen($this->sourcePrefix));
     }
 
     public function getDestinationTable(string $srcTableName): string
     {
-        if (strpos($srcTableName, $this->productionPrefix) !== 0) {
-            return $this->stagingPrefix . $srcTableName;
+        if (strpos($srcTableName, $this->sourcePrefix) !== 0) {
+            return $this->destinationPrefix . $srcTableName;
         }
 
-        return $this->stagingPrefix . substr($srcTableName, strlen($this->productionPrefix));
+        return $this->destinationPrefix . substr($srcTableName, strlen($this->sourcePrefix));
     }
 
     /**
@@ -106,7 +106,7 @@ class TableCreateService
      * @param string $srcTableName
      * @return void
      */
-    public function createStagingSiteTable(string $srcTableName, string $destTableName)
+    public function createDestinationTable(string $srcTableName, string $destTableName)
     {
         $this->logger->info(sprintf("Creating table %s", esc_html($destTableName)));
         $this->dropDestinationTableIfExists($destTableName);
@@ -123,9 +123,9 @@ class TableCreateService
             throw new RuntimeException("Create Table - Cannot clone table $srcTableName to $destTableName. Error: Unable to replace contraints");
         }
 
-        $result = $this->stagingDb->getClient()->query($createTableQuery);
+        $result = $this->destinationDb->getClient()->query($createTableQuery);
         if ($result === false) {
-            $error = $this->stagingDb->getWpdb()->last_error;
+            $error = $this->destinationDb->getWpdb()->last_error;
             throw new RuntimeException("Create Table - Cannot clone table $srcTableName to $destTableName. Error: $error");
         }
     }

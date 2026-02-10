@@ -78,12 +78,12 @@ include WPSTG_VIEWS_DIR . 'job/modal/process.php';
         }
 
         if ($stagingSetup->isNewStagingSite()) {
-            $stagingSetup->renderAdvanceSettings('wpstg_disable_cron', esc_html__('Disable Cron Jobs', 'wp-staging'), esc_html__('Will disable WordPress cron on the staging site.', 'wp-staging'));
+            $stagingSetup->renderAdvanceSettings('wpstg_enable_cron', esc_html__('Enable Cron Jobs', 'wp-staging'), esc_html__('Will enable WordPress cron on the staging site.', 'wp-staging'));
         }
 
         $stagingSetup->renderAdvanceSettings('wpstg_allow_emails', esc_html__('Allow Emails Sending', 'wp-staging'), esc_html__('Allow emails sending for this staging site.', 'wp-staging') . '<br /> <br /> <b>' . esc_html__('Note', 'wp-staging') . ': </b>' . sprintf(esc_html__('Even if email sending is disabled, some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'), true);
         $stagingSetup->renderAdvanceSettings('wpstg_reminder_emails', esc_html__('Get Reminder Email', 'wp-staging'), esc_html__('You will receive an email reminder every two weeks about your active staging site. This helps you manage and delete unused staging sites, ensuring safety and preventing multiple unnecessary test environments.', 'wp-staging'));
-        $stagingSetup->renderDisableWooSchedulerSettings();
+        $stagingSetup->renderEnableWooSchedulerSettings();
         ?>
     </div>
 </div>

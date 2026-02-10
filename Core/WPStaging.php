@@ -44,9 +44,6 @@ final class WPStaging
      */
     const HOOK_BOOTSTRAP_SERVICES = 'wpstg.bootstrap.services';
 
-    /** @var string */
-    const ACTION_PUSHING_COMPLETE = 'wpstg_pushing_complete';
-
     /**
      * Singleton instance
      * @var WPStaging
@@ -389,6 +386,16 @@ final class WPStaging
     }
 
     /**
+     * Is the current PHP OS Mac?
+     *
+     * @return bool
+     */
+    public static function isMacOs()
+    {
+        return strpos(strtolower(PHP_OS), 'darwin') !== false;
+    }
+
+    /**
      * Load Dependencies
      */
     private function loadDependencies()
@@ -602,7 +609,6 @@ final class WPStaging
     private function handleCacheIssues()
     {
         $permalinksPurge = new PermalinksPurge();
-        add_action(self::ACTION_PUSHING_COMPLETE, [$permalinksPurge, 'executeAfterPushing']); // phpcs:ignore WPStaging.Security.FirstArgNotAString
         add_action('wp_loaded', [$permalinksPurge, 'purgePermalinks'], $permalinksPurge::PLUGINS_LOADED_PRIORITY);
     }
 

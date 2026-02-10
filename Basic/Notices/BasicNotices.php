@@ -6,7 +6,6 @@ use Exception;
 use WPStaging\Basic\Ajax\ProCronsCleaner;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Assets\Assets;
-use WPStaging\Framework\Notices\FreeBackupUpdateNotice;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Traits\NoticesTrait;
 
@@ -26,19 +25,13 @@ class BasicNotices
     /** @var Assets */
     private $assets;
 
-    /**
-     * @var FreeBackupUpdateNotice
-     */
-    private $freeBackupUpdateNotice;
-
-    public function __construct(Assets $assets, RatingNotice $ratingNotice, ProCronsCleaner $proCronsCleaner, FreeBackupUpdateNotice $freeBackupUpdateNotice)
+    public function __construct(Assets $assets, RatingNotice $ratingNotice, ProCronsCleaner $proCronsCleaner)
     {
         $this->showAllNotices  = Notices::SHOW_ALL_NOTICES;
         $this->noticesViewPath = WPSTG_VIEWS_DIR . "notices/";
         $this->assets          = $assets;
         $this->ratingNotice    = $ratingNotice;
         $this->proCronsCleaner = $proCronsCleaner;
-        $this->freeBackupUpdateNotice = $freeBackupUpdateNotice;
     }
 
     /**
@@ -69,10 +62,6 @@ class BasicNotices
         // Show notice WP STAGING is not tested with current WordPress version
         if ($this->showAllNotices || version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<")) {
             require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
-        }
-
-        if ($this->showAllNotices || $this->freeBackupUpdateNotice->isEnabled()) {
-            require_once "{$viewsNoticesPath}free-backup-update-notice.php";
         }
     }
 }

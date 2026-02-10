@@ -355,7 +355,10 @@ class Delete extends Job
             return $tables;
         }
 
-        return array_diff($tables, $this->sanitize->sanitizeString($_POST["excludedTables"]));
+        // Sanitize array of table names
+        $sanitizedExcludedTables = $this->sanitize->sanitizeArrayString($_POST["excludedTables"]);
+
+        return array_diff($tables, $sanitizedExcludedTables);
     }
 
     /**

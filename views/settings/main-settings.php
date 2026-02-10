@@ -26,6 +26,10 @@ $siteInfo = WPStaging::make(SiteInfo::class);
                 $tabs['temporary-login'] = esc_html__("Temporary Logins", "wp-staging");
             }
 
+            if (empty($tabs['remote-sync-settings'])) {
+                $tabs['remote-sync-settings'] = esc_html__("Connection Keys", "wp-staging");
+            }
+
             $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? Sanitize::sanitizeString($_GET["tab"]) : "general";
 
             $currentUrl = remove_query_arg('sub-tab');
@@ -66,11 +70,6 @@ $siteInfo = WPStaging::make(SiteInfo::class);
 
         <div class="wpstg-metabox-holder <?php echo esc_html($containerClass); ?>">
             <?php
-            if ($activeTab === 'general') {
-                $numberOfLoadingBars = 57;
-                include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
-            }
-
             if (file_exists(WPSTG_VIEWS_DIR . "pro/settings/tabs/" . $activeTab . ".php")) {
                 require_once WPSTG_VIEWS_DIR . "pro/settings/tabs/" . $activeTab . ".php";
             } else {

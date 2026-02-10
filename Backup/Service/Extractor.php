@@ -28,6 +28,7 @@ use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Permissions;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Traits\RestoreFileExclusionTrait;
@@ -262,21 +263,25 @@ class Extractor extends AbstractExtractor
             $this->logger->debug(sprintf('Resuming extraction of file %s from byte %d. Total size: %d...', $this->extractingFile->getRelativePath(), $this->extractingFile->getWrittenBytes(), $this->extractingFile->getTotalBytes()));
         }
 
+        $uncompressedSize      = $this->indexLineDto->getUncompressedSize();
+        $shouldExtractToMemory = $this->isValidateOnly
+            && !$this->isBackupFormatV1
+            && $this->extractingFile->getWrittenBytes() === 0
+            && $this->extractingFile->getReadBytes() === 0
+            && $this->isWithinMemoryExtractionLimit($uncompressedSize)
+            && Hooks::applyFilters(JobDataDto::FILTER_BACKUP_USE_INMEMORY_EXTRACTION, true);
         try {
             if ($this->isThreshold()) {
                 // Prevent considering a file as big just because we start extracting at the threshold
                 return;
             }
 
-            $this->fileBatchWrite();
-
-            $isFileExtracted = $this->isExtractingFileExtracted(function ($message) {
-                $this->logger->info($message);
-            });
-
-            if (!$isFileExtracted) {
+            if ($shouldExtractToMemory) {
+                $this->extractAndValidateInMemory();
                 return;
             }
+
+            $this->extractFileToDisk();
         } catch (DiskNotWritableException $e) {
             // Re-throw
             throw $e;
@@ -292,7 +297,6 @@ class Extractor extends AbstractExtractor
             }
         }
 
-        $this->validateExtractedFileAndMoveNext();
         if ($this->isFastPerformanceMode) {
             return;
         }
@@ -313,6 +317,7 @@ class Extractor extends AbstractExtractor
             $this->logger->debug(sprintf('DEBUG: Extracting SQL file %s', $destinationFilePath));
         }
 
+        $this->maybeResetFilePointerAfterInMemoryFallback();
         wp_mkdir_p(dirname($destinationFilePath));
 
         /**
@@ -347,43 +352,25 @@ class Extractor extends AbstractExtractor
         }
 
         $lastDebugMessage = '';
+        $processedChunks  = 0;
         while (!$this->extractingFile->isFinished() && !$this->isThreshold()) {
             $readBytesBefore = $this->wpstgFile->ftell();
-
-            $chunk = null;
             try {
-                $chunk = $this->zlibCompressor->getService()->readChunk($this->wpstgFile, $this->extractingFile, function ($currentChunkNumber) use (&$lastDebugMessage) {
-                    // Log every 200 chunks to provide progress updates without overwhelming the logs.
-                    if ($currentChunkNumber % 200 === 0 || $currentChunkNumber === $this->extractorDto->getTotalChunks()) {
-                        $lastDebugMessage = sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->extractorDto->getTotalChunks());
-                    }
-                });
+                $chunk = $this->readAndPrepareChunk();
             } catch (DiskNotWritableException $ex) {
                 $this->diskWriteCheck->testDiskIsWriteable();
-                // If empty chunk, it is an empty file, so we can skip it
                 throw new Exception("Unable to extract file to $destinationFilePath. Please check if there is enough disk space available.");
-            } catch (EmptyChunkException $ex) {
-                // If empty chunk, it is an empty file, so we can skip it
+            }
+
+            if ($chunk === null) {
                 continue;
             }
 
-            if ($this->isRepairMultipleHeadersIssue) {
-                $chunk = $this->maybeRepairMultipleHeadersIssue($chunk);
-            }
+            $processedChunks++;
+            $this->updateProgressTracking($processedChunks, $lastDebugMessage);
+            $writtenBytes = $this->writeChunkToFile($destinationFileResource, $chunk);
 
-            $writtenBytes = fwrite($destinationFileResource, $chunk, (int)$this->getScriptMemoryLimit());
-
-            if ($writtenBytes === false || $writtenBytes <= 0) {
-                fclose($destinationFileResource);
-                $destinationFileResource = null;
-                throw DiskNotWritableException::diskNotWritable();
-            }
-
-            $readBytesAfter = $this->wpstgFile->ftell() - $readBytesBefore;
-
-            $this->extractingFile->addReadBytes($readBytesAfter);
-            $this->extractingFile->addWrittenBytes($writtenBytes);
-
+            $this->trackChunkProgress($readBytesBefore, $writtenBytes);
             $this->persistDto();
         }
 
@@ -403,5 +390,193 @@ class Extractor extends AbstractExtractor
 
         $this->updateExtractorDto();
         $this->extractorTask->persistDto($this->extractorDto);
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    private function extractFileToDisk()
+    {
+        $this->fileBatchWrite();
+        $isFileExtracted = $this->isExtractingFileExtracted(function ($message) {
+            $this->logger->info($message);
+        });
+
+        if (!$isFileExtracted) {
+            return;
+        }
+
+        $this->validateExtractedFileAndMoveNext();
+    }
+
+    /**
+     * @return string|null
+     * @throws DiskNotWritableException
+     * @throws Exception
+     */
+    private function readAndPrepareChunk()
+    {
+        try {
+            $chunk = $this->zlibCompressor->getService()->readChunk($this->wpstgFile, $this->extractingFile);
+        } catch (EmptyChunkException $ex) {
+            return null;
+        }
+
+        if ($this->isRepairMultipleHeadersIssue) {
+            $chunk = $this->maybeRepairMultipleHeadersIssue($chunk);
+        }
+
+        return $chunk;
+    }
+
+    /**
+     * @return void
+     */
+    private function updateProgressTracking(int $processedChunks, string &$lastDebugMessage)
+    {
+        if ($processedChunks % 200 === 0 || $processedChunks === $this->extractorDto->getTotalChunks()) {
+            $lastDebugMessage = sprintf('DEBUG: Extracting chunk %d/%d', $processedChunks, $this->extractorDto->getTotalChunks());
+        }
+    }
+
+    /**
+     * @param resource $fileResource
+     * @param string $chunk
+     * @return int
+     * @throws DiskNotWritableException
+     */
+    private function writeChunkToFile($fileResource, string $chunk): int
+    {
+        $writtenBytes = fwrite($fileResource, $chunk, (int)$this->getScriptMemoryLimit());
+
+        if ($writtenBytes === false || $writtenBytes <= 0) {
+            fclose($fileResource);
+            throw DiskNotWritableException::diskNotWritable();
+        }
+
+        return $writtenBytes;
+    }
+
+    /**
+     * @return void
+     */
+    private function trackChunkProgress(int $readBytesBefore, int $chunkSize)
+    {
+        $readBytesAfter = $this->wpstgFile->ftell() - $readBytesBefore;
+        $this->extractingFile->addReadBytes($readBytesAfter);
+        $this->extractingFile->addWrittenBytes($chunkSize);
+    }
+
+    /**
+     * @return void
+     * @throws FileValidationException
+     */
+    private function validateFileContent(string $fileContent, string $pathForErrorLogging)
+    {
+        $actualSize   = strlen($fileContent);
+        $expectedSize = $this->indexLineDto->getUncompressedSize();
+        if ($expectedSize !== $actualSize) {
+            throw new FileValidationException(
+                sprintf(
+                    'Filesize validation failed for file %s. Expected: %s. Actual: %s',
+                    $pathForErrorLogging,
+                    $this->formatSize($expectedSize, 2),
+                    $this->formatSize($actualSize, 2)
+                )
+            );
+        }
+
+        if (!$this->extractingFile->areHeaderBytesRemoved()) {
+            $crc32Checksum = hash(FileHeader::CRC32_CHECKSUM_ALGO, $fileContent);
+            /** @var FileHeader $fileHeader */
+            $fileHeader       = $this->indexLineDto;
+            $expectedChecksum = $fileHeader->getCrc32Checksum();
+            if ($expectedChecksum !== $crc32Checksum) {
+                throw new FileValidationException(
+                    sprintf(
+                        'CRC32 Checksum validation failed for file %s. Expected: %s. Actual: %s',
+                        $pathForErrorLogging,
+                        $expectedChecksum,
+                        $crc32Checksum
+                    )
+                );
+            }
+        } else {
+            $this->debugLog('Skipping validation for file because duplicate file headers were removed: ' . $pathForErrorLogging);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function switchFromInMemoryToDiskExtraction(string $pathForErrorLogging)
+    {
+        $this->logger->debug(sprintf(
+            'Threshold reached during in-memory extraction of %s. Switching to disk-based extraction on next request.',
+            $pathForErrorLogging
+        ));
+
+        $this->extractingFile->setWrittenBytes(0);
+    }
+
+    /**
+     * @return void
+     * @throws FileValidationException
+     * @throws Exception
+     */
+    private function extractAndValidateInMemory()
+    {
+        $pathForErrorLogging = $this->pathIdentifier->transformIdentifiableToPath($this->indexLineDto->getIdentifiablePath());
+        $chunks              = [];
+        while (!$this->extractingFile->isFinished() && !$this->isThreshold()) {
+            $readBytesBefore = $this->wpstgFile->ftell();
+            $chunk           = $this->readAndPrepareChunk();
+            if ($chunk === null) {
+                continue;
+            }
+
+            $chunks[] = $chunk;
+            $this->trackChunkProgress($readBytesBefore, strlen($chunk));
+        }
+
+        if (!$this->extractingFile->isFinished()) {
+            $this->switchFromInMemoryToDiskExtraction($pathForErrorLogging);
+            $this->persistDto();
+            return;
+        }
+
+        $fileContent = implode('', $chunks);
+        $this->validateFileContent($fileContent, $pathForErrorLogging);
+        $this->moveToNextFile();
+    }
+
+    /**
+     * @return void
+     * @throws RuntimeException
+     */
+    private function maybeResetFilePointerAfterInMemoryFallback()
+    {
+        if ($this->extractingFile->getWrittenBytes() !== 0 || $this->extractingFile->getReadBytes() === 0) {
+            return;
+        }
+
+        $this->logger->debug(sprintf(
+            'Starting disk extraction for %s after in-memory fallback (resetting state)',
+            $this->extractingFile->getRelativePath()
+        ));
+
+        $this->extractingFile->setReadBytes(0);
+        $seekResult = $this->wpstgFile->fseek($this->extractingFile->getStart());
+        if ($seekResult !== 0) {
+            $message = sprintf(
+                'Failed to seek backup file to start offset %d for %s during disk extraction fallback.',
+                $this->extractingFile->getStart(),
+                $this->extractingFile->getRelativePath()
+            );
+
+            $this->logger->warning($message);
+            throw new RuntimeException($message);
+        }
     }
 }

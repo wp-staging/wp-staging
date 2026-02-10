@@ -53,7 +53,7 @@ class RecalibrateFilesCountTask extends BackupTask
 
     public static function getTaskTitle(): string
     {
-        return 'Checking if files count';
+        return 'Validating file count';
     }
 
     public function execute(): TaskResponseDto

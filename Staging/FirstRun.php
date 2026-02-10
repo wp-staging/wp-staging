@@ -31,7 +31,7 @@ class FirstRun
     const MAILS_DISABLED_KEY = 'wpstg_emails_disabled';
 
     /** @var string */
-    const WOO_SCHEDULER_DISABLED_KEY = 'wpstg_woo_scheduler_disabled';
+    const WOO_SCHEDULER_ENABLED_KEY = 'wpstg_woo_scheduler_enabled';
 
     public function init()
     {

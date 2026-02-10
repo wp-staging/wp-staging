@@ -93,6 +93,11 @@ class JobTransientCache
     /**
      * @var string
      */
+    const JOB_TYPE_STAGING_PUSH = 'Staging_Push';
+
+    /**
+     * @var string
+     */
     const JOB_TYPE_STAGING_DELETE = 'Staging_Delete';
 
     /**

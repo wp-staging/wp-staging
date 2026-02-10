@@ -556,22 +556,6 @@ $directory = WPStaging::make(Directory::class);
                             <div class="wpstg-settings-field wpstg-settings-has-toggle">
                                 <div>
                                     <div class="wpstg-settings-field-header">
-                                        <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[checkDirectorySize]"); ?></span>
-                                        <span class="wpstg-settings-field-badge wpstg-caution"><?php echo esc_html__('Caution', 'wp-staging');?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php
-                                            echo sprintf(esc_html__("Activate this to check sizes of each directory on scanning process. %s Warning this may cause timeout problems in large directory / file structures.", "wp-staging"), "<br>");
-                                        ?>
-                                    </div>
-                                </div>
-                                <div class="wpstg-settings-field-input">
-                                    <?php $form->renderInput("wpstg_settings[checkDirectorySize]"); ?>
-                                </div>
-                            </div>
-                            <div class="wpstg-settings-field wpstg-settings-has-toggle">
-                                <div>
-                                    <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[unInstallOnDelete]"); ?></span>
                                         <span class="wpstg-settings-field-badge wpstg-caution"><?php echo esc_html__('Caution', 'wp-staging');?></span>
                                     </div>
@@ -642,15 +626,15 @@ $directory = WPStaging::make(Directory::class);
         endforeach;
         ?>
             <div class="wpstg-settings-actions">
-                <button type="button" class="wpstg-settings-btn wpstg-settings-btn-secondary" id="wpstg-reset-settings-to-defaults">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button type="button" class="wpstg-btn wpstg-btn-md wpstg-btn-secondary" id="wpstg-reset-settings-to-defaults">
+                    <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 6h18l-2 13H5L3 6z"></path>
                         <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                     <?php echo esc_html__('Reset to Defaults', 'wp-staging');?>
                 </button>
-                <button type="submit" class="wpstg-settings-btn wpstg-settings-btn-primary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button type="submit" class="wpstg-btn wpstg-btn-md wpstg-btn-primary">
+                    <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                         <polyline points="17,21 17,13 7,13 7,21"></polyline>
                         <polyline points="7,3 7,8 15,8"></polyline>

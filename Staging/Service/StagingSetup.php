@@ -7,12 +7,6 @@ namespace WPStaging\Staging\Service;
  */
 class StagingSetup extends AbstractStagingSetup
 {
-    const JOB_NEW_STAGING_SITE = 'new';
-
-    const JOB_UPDATE = 'update';
-
-    const JOB_RESET = 'reset';
-
     /**
      * @return void
      */
@@ -170,7 +164,7 @@ class StagingSetup extends AbstractStagingSetup
     /**
      * @return void
      */
-    public function renderDisableWooSchedulerSettings()
+    public function renderEnableWooSchedulerSettings()
     {
         // no-op for free version
     }

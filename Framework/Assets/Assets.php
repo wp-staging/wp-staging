@@ -16,8 +16,11 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Notices\Notices;
+use WPStaging\Framework\Notices\CliIntegrationNotice;
+use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Backup\Storage\Providers;
+use WPStaging\Framework\Settings\DarkMode;
 
 class Assets
 {
@@ -306,30 +309,38 @@ class Assets
         );
 
         $wpstgConfig = [
-            "delayReq"               => 0,
+            "delayReq"                          => 0,
             // The interval in milliseconds between each request of backup status
-            'backupStatusInterval'   => Hooks::applyFilters(self::FILTER_BACKUP_STATUS_REQUEST_INTERVAL, 8000),
-            "settings"               => (object)[
+            'backupStatusInterval'              => Hooks::applyFilters(self::FILTER_BACKUP_STATUS_REQUEST_INTERVAL, 8000),
+            "settings"                          => (object)[
                 "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR,
             ],
-            "tblprefix"              => WPStaging::getTablePrefix(),
-            "isMultisite"            => is_multisite(),
-            AccessToken::REQUEST_KEY => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
-            'nonce'                  => wp_create_nonce(Nonce::WPSTG_NONCE),
-            'assetsUrl'              => $this->getAssetsUrl(),
-            'ajaxUrl'                => admin_url('admin-ajax.php'),
-            'restUrl'                => $this->getRestUrl(),
-            'wpstgIcon'              => $this->getAssetsUrl('img/wpstg-loader.gif'),
-            'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
-            'backupDBExtension'      => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
-            'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
-            'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
-            'analyticsConsentLater'  => esc_url($this->analyticsConsent->getRemindMeLaterConsentLink()),
-            'isPro'                  => WPStaging::isPro(),
-            'maxFailedRetries'       => apply_filters(self::FILTER_TESTS_MAXIMUM_RETRIES, 10),
-            'i18n'                   => $this->i18n->getTranslations(),
-            'isCloneable'            => (new SiteInfo())->isCloneable(),
-            'isTestMode'             => defined('WPSTG_TEST') && WPSTG_TEST,
+            "tblprefix"                         => WPStaging::getTablePrefix(),
+            "isMultisite"                       => is_multisite(),
+            AccessToken::REQUEST_KEY            => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
+            'nonce'                             => wp_create_nonce(Nonce::WPSTG_NONCE),
+            'assetsUrl'                         => $this->getAssetsUrl(),
+            'ajaxUrl'                           => admin_url('admin-ajax.php'),
+            'restUrl'                           => $this->getRestUrl(),
+            'wpstgIcon'                         => $this->getAssetsUrl('img/wpstg-loader.gif'),
+            'maxUploadChunkSize'                => $this->getMaxUploadChunkSize(),
+            'backupDBExtension'                 => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
+            'analyticsConsentAllow'             => esc_url($this->analyticsConsent->getConsentLink(true)),
+            'analyticsConsentDeny'              => esc_url($this->analyticsConsent->getConsentLink(false)),
+            'analyticsConsentLater'             => esc_url($this->analyticsConsent->getRemindMeLaterConsentLink()),
+            'pluginVersion'                     => WPStaging::getVersion(),
+            'isPro'                             => WPStaging::isPro(),
+            'isDeveloperOrHigherLicense'        => WPStaging::make(CliIntegrationNotice::class)->isDeveloperOrHigherLicense(),
+            'isExpiredDeveloperOrHigherLicense' => WPStaging::make(CliIntegrationNotice::class)->isExpiredDeveloperOrHigherLicense(),
+            'licensePlanName'                   => WPStaging::make(CliIntegrationNotice::class)->getLicensePlanName(),
+            'licenseUpgradeUrl'                 => $this->getLicenseUpgradeUrl(),
+            'newsfeedData'                      => $this->getNewsfeedDataForJs(),
+            'maxFailedRetries'                  => apply_filters(self::FILTER_TESTS_MAXIMUM_RETRIES, 10),
+            'i18n'                              => $this->i18n->getTranslations(),
+            'isCloneable'                       => (new SiteInfo())->isCloneable(),
+            'isTestMode'                        => defined('WPSTG_TEST') && WPSTG_TEST,
+            'defaultColorMode'                  => get_option(DarkMode::OPTION_DEFAULT_COLOR_MODE, ''),
+            'siteUrl'                           => site_url(),
         ];
 
         // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well
@@ -404,6 +415,38 @@ class Assets
         $limit = max($lowerLimit, $limit);
 
         return (int)$limit;
+    }
+
+    /**
+     * @return array|null
+     */
+    private function getNewsfeedDataForJs()
+    {
+        try {
+            /** @var NewsfeedProvider $provider */
+            $provider = WPStaging::make(NewsfeedProvider::class);
+            return $provider->getNewsfeedData();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    private function getLicenseUpgradeUrl(): string
+    {
+        if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
+            return '';
+        }
+
+        try {
+            /** @var \WPStaging\Pro\License\Licensing $licensing */
+            $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
+            return $licensing->getUpgradeToDevUrl();
+        } catch (\Exception $e) {
+            return '';
+        }
     }
 
     /**

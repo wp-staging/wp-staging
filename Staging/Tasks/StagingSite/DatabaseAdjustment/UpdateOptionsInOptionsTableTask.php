@@ -96,7 +96,7 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         $cloneOptions = [
             FirstRun::MAILS_DISABLED_KEY          => !((bool) $this->jobDataDto->getIsEmailsAllowed()),
             ExcludedPlugins::EXCLUDED_PLUGINS_KEY => $this->excludedPlugins->getFilteredPluginsToExclude(),
-            FirstRun::WOO_SCHEDULER_DISABLED_KEY  => !(bool) $this->jobDataDto->getIsWooSchedulerEnabled(),
+            FirstRun::WOO_SCHEDULER_ENABLED_KEY   => (bool) $this->jobDataDto->getIsWooSchedulerEnabled(),
         ];
 
         $this->adjustCloneOptions($cloneOptions);

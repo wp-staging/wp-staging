@@ -113,7 +113,7 @@ $storagesPrefix = 'storage-';
                     </div>
 
                     <?php if (!$isProVersion) : ?>
-                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
+                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-u-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
                     <?php else : ?>
                         <fieldset class="wpstg-wproot-files-selection-section wpstg-wproot-files-selection" id="wpstg-wproot-scanning-files">
                             <?php require(WPSTG_VIEWS_DIR . 'pro/backup/backup-files.php'); ?>
@@ -182,7 +182,7 @@ $storagesPrefix = 'storage-';
                 </span>
             </div>
             <div class="wpstg-backup-options-section hidden wpstg-sub-options-details" id="wpstg-backup-advance-section">
-                <div class="wpstg-container">
+                <div class="wpstg-u-container">
                     <label class="wpstg-backup-option wpstg-with-tooltip" id="wpstg-add-exclusions-label">
                         <div class="wpstg--add-exclusions-expand-folder">
                             <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--add-exclusions-expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info" />
@@ -214,14 +214,14 @@ $storagesPrefix = 'storage-';
                             <span class="wpstgExcludeDeactivatedPlugins wpstg-badge-pill hidden">Deactivated plugins</span>
                         </span>
                         <?php if (!$isProVersion) : ?>
-                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
+                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-u-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
                         <?php endif; ?>
                     </label>
 
                     <?php require_once WPSTG_VIEWS_DIR . 'backup/modal/advanced-exclude-options.php'; ?>
                 </div>
 
-                <div class="wpstg-container wpstg-mt-5px">
+                <div class="wpstg-u-container wpstg-mt-5px">
                     <label class="wpstg-backup-option wpstg-with-tooltip">
                         <?php Checkbox::render('wpstg-run-in-background', 'runInBackground'); ?>
                         <span><?php esc_html_e('Run In Background', 'wp-staging'); ?></span>
@@ -246,7 +246,7 @@ $storagesPrefix = 'storage-';
                 </span>
             </div>
             <div class="wpstg-backup-options-section hidden wpstg-sub-options-details" id="wpstg-backup-times-section">
-                <div class="wpstg-backup-scheduling-options wpstg-container <?php echo esc_attr($classPropertyHasScheduleAndIsFree); ?>">
+                <div class="wpstg-backup-scheduling-options wpstg-u-container <?php echo esc_attr($classPropertyHasScheduleAndIsFree); ?>">
 
                     <label>
                         <?php

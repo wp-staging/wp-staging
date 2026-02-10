@@ -49,11 +49,11 @@ abstract class AbstractTask
     const ACTION_TASK_RESPONSE = 'wpstg_task_response';
 
     /**
-     * Time threshold in seconds to stop a wait task to avoid resource holding in shared hosting.
-     * currently set to 0.5 seconds
+     * Max threshold in seconds to stop a wait task to avoid resource holding in shared hosting.
+     * We start with 1 seconds and once the max threshold is reached we stop the task.
      * @var int
      */
-    const WAIT_TASK_THRESHOLD_IN_MICROSECONDS = 500000;
+    const MAX_WAIT_TASK_THRESHOLD_SECONDS = 15;
 
     /** @var Logger */
     protected $logger;

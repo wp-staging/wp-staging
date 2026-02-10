@@ -1,8 +1,5 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-
 namespace WPStaging\Backup\Ajax;
 
 use WPStaging\Backup\Entity\BackupMetadata;
@@ -16,14 +13,21 @@ use WPStaging\Framework\Utils\Sanitize;
 
 class Edit extends AbstractTemplateComponent
 {
+    /** @var BackupMetadataEditor */
     private $backupMetadataEditor;
+
+    /** @var BackupsFinder */
     private $backupsFinder;
 
     /** @var Sanitize */
     private $sanitize;
 
-    public function __construct(BackupsFinder $backupsFinder, BackupMetadataEditor $backupMetadataEditor, Sanitize $sanitize, TemplateEngine $templateEngine)
-    {
+    public function __construct(
+        BackupsFinder $backupsFinder,
+        BackupMetadataEditor $backupMetadataEditor,
+        Sanitize $sanitize,
+        TemplateEngine $templateEngine
+    ) {
         parent::__construct($templateEngine);
         $this->backupsFinder        = $backupsFinder;
         $this->backupMetadataEditor = $backupMetadataEditor;

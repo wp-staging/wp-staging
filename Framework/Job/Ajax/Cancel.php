@@ -7,6 +7,7 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\Jobs\JobCancel;
 
 class Cancel extends AbstractTemplateComponent
@@ -30,6 +31,12 @@ class Cancel extends AbstractTemplateComponent
         try {
             $this->processLock->checkProcessLocked();
         } catch (ProcessLockedException $e) {
+            if ($this->shouldContinuePollingWhileLocked()) {
+                wp_send_json([
+                    'isRunning' => true,
+                ]);
+            }
+
             wp_send_json_error($e->getMessage(), $e->getCode());
         }
 
@@ -37,5 +44,17 @@ class Cancel extends AbstractTemplateComponent
         $job = WPStaging::getInstance()->get(JobCancel::class);
 
         wp_send_json($job->prepareAndExecute());
+    }
+
+    /**
+     * When cancellation is already requested, continue polling instead of treating lock errors as fatal.
+     *
+     * @return bool
+     */
+    protected function shouldContinuePollingWhileLocked(): bool
+    {
+        /** @var JobTransientCache $jobTransientCache */
+        $jobTransientCache = WPStaging::make(JobTransientCache::class);
+        return $jobTransientCache->getJobStatus() === JobTransientCache::STATUS_CANCELLED;
     }
 }

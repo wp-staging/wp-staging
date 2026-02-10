@@ -44,6 +44,7 @@ class CommonServiceProvider extends ServiceProvider
         add_action('wp_ajax_wpstg_backup_plugin_notice_close', $this->container->callback(BackupPluginsNotice::class, 'ajaxBackupPluginNoticeClose')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_backup_plugin_notice_remind_me', $this->container->callback(BackupPluginsNotice::class, 'ajaxBackupPluginNoticeRemindMe')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_cli_notice_close', $this->container->callback(CliIntegrationNotice::class, 'ajaxCliNoticeClose')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg_cli_notice_hide_forever', $this->container->callback(CliIntegrationNotice::class, 'ajaxCliNoticeHideForever')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_cli_get_backup_list', $this->container->callback(CliIntegrationNotice::class, 'ajaxGetCliBackupList')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('admin_init', $this->container->callback(DarkMode::class, 'mayBeShowDarkMode'), 10, 1);
         add_action('wp_ajax_wpstg_set_dark_mode', $this->container->callback(DarkMode::class, 'ajaxEnableDefaultColorMode')); // phpcs:ignore WPStaging.Security.AuthorizationChecked

@@ -10,8 +10,6 @@ use WPStaging\Backup\Entity\ListableBackup;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Framework\Adapter\DateTimeAdapter;
-use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\Urls;
 
@@ -25,29 +23,31 @@ use WPStaging\Framework\Utils\Urls;
  * - Converting backup files into ListableBackup entities for UI rendering
  * - Handling legacy .sql backup files
  * - Preventing duplicate listings when files exist in multiple locations
- *
- * The class works with BackupsFinder to locate files and BackupValidator to ensure
- * backup integrity before presenting them to users.
  */
 class ListableBackupsCollection
 {
     use WithBackupIdentifier;
 
-    private $directory;
+    /** @var DateTimeAdapter */
     private $dateTimeAdapter;
+
+    /** @var BackupsFinder */
     private $backupsFinder;
-    private $filesystem;
+
+    /** @var Urls */
     private $urls;
 
     /** @var BackupValidator */
     private $backupValidator;
 
-    public function __construct(DateTimeAdapter $dateTimeAdapter, BackupsFinder $backupsFinder, Directory $directory, Filesystem $filesystem, Urls $urls, BackupValidator $backupValidator)
-    {
+    public function __construct(
+        DateTimeAdapter $dateTimeAdapter,
+        BackupsFinder $backupsFinder,
+        Urls $urls,
+        BackupValidator $backupValidator
+    ) {
         $this->dateTimeAdapter = $dateTimeAdapter;
-        $this->directory       = $directory;
         $this->backupsFinder   = $backupsFinder;
-        $this->filesystem      = $filesystem;
         $this->urls            = $urls;
         $this->backupValidator = $backupValidator;
     }
@@ -59,7 +59,6 @@ class ListableBackupsCollection
     {
         $backupFiles = $this->backupsFinder->findBackups();
 
-        // Early bail: No backup files found.
         if (empty($backupFiles)) {
             return [];
         }
@@ -72,16 +71,11 @@ class ListableBackupsCollection
         foreach ($backupFiles as $file) {
             $md5Basename = md5($file->getBasename());
 
-            /*
-             * Prevent listing the same file twice if it's generated and also uploaded.
-             * Uploaded files takes precedence as their iterator is appended first.
-             */
             if (array_key_exists($md5Basename, $backups)) {
                 continue;
             }
 
-            $downloadUrl = $this->urls->getBackupUrl() . $file->getFilename();
-
+            $downloadUrl  = $this->urls->getBackupUrl() . $file->getFilename();
             $relativePath = $file->getBasename();
 
             if ($this->isBackupPart($relativePath) && $this->isListedMultipartBackup($file->getFilename())) {
@@ -89,39 +83,9 @@ class ListableBackupsCollection
             }
 
             if ($file->getExtension() === 'wpstg' || $this->isBackupPart($relativePath)) {
-                try {
-                    $backupMetadata = new BackupMetadata();
-                    $backupMetadata = $backupMetadata->hydrateByFilePath($file->getRealPath());
-                } catch (Throwable $e) {
-                    $listableBackup                        = new ListableBackup();
-                    $listableBackup->dateCreatedTimestamp  = $file->getMTime();
-                    $listableBackup->dateCreatedFormatted  = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getMTime()));
-                    $listableBackup->dateUploadedTimestamp = $file->getCTime();
-                    $listableBackup->dateUploadedFormatted = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
-                    $listableBackup->downloadUrl           = $downloadUrl;
-                    $listableBackup->relativePath          = $relativePath;
-                    $listableBackup->backupName            = $relativePath;
-                    $listableBackup->name                  = $file->getFilename();
-                    $listableBackup->size                  = (int)$file->getSize();
-                    $listableBackup->id                    = $md5Basename;
-                    $listableBackup->md5BaseName           = $md5Basename;
-                    $listableBackup->isCorrupt             = true;
-                    $listableBackup->isMultipartBackup     = false;
-                    $backups[$md5Basename]                 = $listableBackup;
-
-                    continue;
-                }
-
-                $listableBackup = $this->populateListableBackup($file, $backupMetadata, $downloadUrl, $relativePath, $md5Basename);
+                $listableBackup = $this->getWpstgBackup($file, $md5Basename, $downloadUrl, $relativePath);
             } elseif ($file->getExtension() === 'sql') {
-                $listableBackup                      = new ListableBackup();
-                $listableBackup->isLegacy            = true;
-                $listableBackup->isExportingDatabase = true;
-                $listableBackup->backupName          = $file->getBasename();
-                $listableBackup->downloadUrl         = $downloadUrl;
-                $listableBackup->name                = $file->getFilename();
-                $listableBackup->size                = (int)$file->getSize();
-                $listableBackup->md5BaseName         = $md5Basename;
+                $listableBackup = $this->getSqlBackup($file, $md5Basename, $downloadUrl);
             } else {
                 continue;
             }
@@ -130,6 +94,75 @@ class ListableBackupsCollection
         }
 
         return $backups;
+    }
+
+    /**
+     * Get backups sorted by most recent date (newest first)
+     *
+     * Uses the maximum of upload and creation timestamps to handle both
+     * locally created and uploaded backups correctly.
+     *
+     * @return array<ListableBackup>
+     */
+    public function getSortedListableBackups(): array
+    {
+        $backups = $this->getListableBackups();
+
+        usort($backups, function ($a, $b) {
+            /** @var ListableBackup $a */
+            /** @var ListableBackup $b */
+            $timestampA = max($a->dateUploadedTimestamp, $a->dateCreatedTimestamp);
+            $timestampB = max($b->dateUploadedTimestamp, $b->dateCreatedTimestamp);
+            return $timestampB - $timestampA;
+        });
+
+        return $backups;
+    }
+
+    private function getWpstgBackup(SplFileInfo $file, string $md5Basename, string $downloadUrl, string $relativePath): ListableBackup
+    {
+        try {
+            $backupMetadata = new BackupMetadata();
+            $backupMetadata = $backupMetadata->hydrateByFilePath($file->getRealPath());
+        } catch (Throwable $e) {
+            return $this->createCorruptBackup($file, $md5Basename, $downloadUrl, $relativePath);
+        }
+
+        return $this->populateListableBackup($file, $backupMetadata, $downloadUrl, $relativePath, $md5Basename);
+    }
+
+    private function createCorruptBackup(SplFileInfo $file, string $md5Basename, string $downloadUrl, string $relativePath): ListableBackup
+    {
+        $listableBackup                        = new ListableBackup();
+        $listableBackup->dateCreatedTimestamp  = $file->getMTime();
+        $listableBackup->dateCreatedFormatted  = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getMTime()));
+        $listableBackup->dateUploadedTimestamp = $file->getCTime();
+        $listableBackup->dateUploadedFormatted = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
+        $listableBackup->downloadUrl           = $downloadUrl;
+        $listableBackup->relativePath          = $relativePath;
+        $listableBackup->backupName            = $relativePath;
+        $listableBackup->name                  = $file->getFilename();
+        $listableBackup->size                  = (int)$file->getSize();
+        $listableBackup->id                    = $md5Basename;
+        $listableBackup->md5BaseName           = $md5Basename;
+        $listableBackup->isCorrupt             = true;
+        $listableBackup->isMultipartBackup     = false;
+
+        return $listableBackup;
+    }
+
+    private function getSqlBackup(SplFileInfo $file, string $md5Basename, string $downloadUrl): ListableBackup
+    {
+        $listableBackup                      = new ListableBackup();
+        $listableBackup->isLegacy            = true;
+        $listableBackup->isExportingDatabase = true;
+        $listableBackup->backupName          = $file->getBasename();
+        $listableBackup->downloadUrl         = $downloadUrl;
+        $listableBackup->name                = $file->getFilename();
+        $listableBackup->size                = (int)$file->getSize();
+        $listableBackup->md5BaseName         = $md5Basename;
+
+        return $listableBackup;
     }
 
     protected function populateListableBackup(SplFileInfo $file, BackupMetadata $backupMetadata, string $downloadUrl, string $relativePath, string $md5Basename): ListableBackup
@@ -182,20 +215,7 @@ class ListableBackupsCollection
 
             return $listableBackup;
         } catch (Throwable $exception) {
-            $listableBackup                        = new ListableBackup();
-            $listableBackup->dateCreatedTimestamp  = $file->getMTime();
-            $listableBackup->dateCreatedFormatted  = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getMTime()));
-            $listableBackup->dateUploadedTimestamp = $file->getCTime();
-            $listableBackup->dateUploadedFormatted = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
-            $listableBackup->downloadUrl           = $downloadUrl;
-            $listableBackup->relativePath          = $relativePath;
-            $listableBackup->backupName            = $relativePath;
-            $listableBackup->name                  = $file->getFilename();
-            $listableBackup->size                  = (int)$file->getSize();
-            $listableBackup->id                    = $md5Basename;
-            $listableBackup->md5BaseName           = $md5Basename;
-            $listableBackup->isCorrupt             = true;
-            $listableBackup->isMultipartBackup     = false;
+            $listableBackup = $this->createCorruptBackup($file, $md5Basename, $downloadUrl, $relativePath);
             if (empty($backupMetadata->getBackupSize())) {
                 $listableBackup->isUnsignedBackup = true;
             }

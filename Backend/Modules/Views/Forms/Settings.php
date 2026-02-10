@@ -255,18 +255,6 @@ class Settings
             'wpstg-settings-uninstall-on-delete'
         );
 
-       // Check Directory Sizes
-        $element = new Toggle(
-            "wpstg_settings[checkDirectorySize]",
-            ['1' => '']
-        );
-
-        $this->form["general"]->add(
-            $element->setLabel(__("Check Directory Size", "wp-staging"))
-            ->setDefault((isset($settings->checkDirectorySize)) ? $settings->checkDirectorySize : null),
-            'wpstg-settings-check-directory-size'
-        );
-
         // Get user roles
         if (defined('WPSTGPRO_VERSION')) {
             $element = new SelectMultiple('wpstg_settings[userRoles][]', $this->getUserRoles());

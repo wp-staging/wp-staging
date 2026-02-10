@@ -5,8 +5,9 @@ namespace WPStaging\Framework\Facades;
 use WPStaging\Framework\Utils\Sanitize as UtilsSanitize;
 
 /**
- * @method static array|string sanitizeString(array|string $value)
- * @method static array|string sanitizePassword(string $value)
+ * @method static string sanitizeString(mixed $value, bool $shouldUrlDecode = true)
+ * @method static string[] sanitizeArrayString(array $items)
+ * @method static string sanitizePassword(string $value)
  * @method static int sanitizeInt(string $value)
  * @method static bool sanitizeBool(int|bool|string $value)
  * @method static string sanitizeEmail(string $value)

@@ -6,6 +6,7 @@ use WPStaging\Basic\Language\Language;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\DI\ServiceProvider;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Job\Ajax\Status;
 use WPStaging\Framework\Language\Language as FrameworkLanguage;
 use WPStaging\Frontend\FrontendServiceProvider;
 
@@ -26,6 +27,9 @@ class BasicServiceProvider extends ServiceProvider
     {
         $this->container->register(BootstrapServiceProvider::class);
         $this->container->register(FrontendServiceProvider::class);
+
+        add_action('wp_ajax_wpstg--job--status', $this->container->callback(Status::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_nopriv_wpstg--job--status', $this->container->callback(Status::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     /**
