@@ -24,6 +24,12 @@ class BackgroundLogger
     private $jobTransientCache;
 
     /**
+     * If a pre-initialized job hasn't been picked up by the background queue
+     * within this many seconds, consider it stale and report an error.
+     */
+    const STALE_JOB_THRESHOLD_SECONDS = 60;
+
+    /**
      * @var int
      */
     private $lastPercentage = 0;
@@ -205,6 +211,18 @@ class BackgroundLogger
         $status  = $this->jobTransientCache->getJobStatus();
         $jobData = $this->jobTransientCache->getJob();
         if ($status === JobTransientCache::STATUS_RUNNING) {
+            // Detect stale pre-initialized jobs where the background queue never started.
+            // preInitAt is set during pre-initialization and removed when the queue calls startJob().
+            if (!empty($jobData['preInitAt']) && (time() - $jobData['preInitAt']) > self::STALE_JOB_THRESHOLD_SECONDS) {
+                $message = esc_html__('The background process could not start. This usually means the server cannot send HTTP requests to itself (loopback). Please check your server configuration, firewall rules, and DNS settings.', 'wp-staging');
+                $this->jobTransientCache->failJob(
+                    esc_html__('Background process failed to start', 'wp-staging'),
+                    $message
+                );
+                $this->output($jobData['jobId'], SseEventCache::EVENT_TYPE_FATAL_ERROR, json_encode(['message' => $message]));
+                return false;
+            }
+
             return true;
         }
 
@@ -217,7 +235,7 @@ class BackgroundLogger
             ]));
             $data['title'] = $jobData['title'];
         } elseif ($status === JobTransientCache::STATUS_FAILED) {
-            $data['message'] = esc_html__('Job failed', 'wp-staging');
+            $data['message'] = !empty($jobData['message']) ? esc_html((string) $jobData['message']) : esc_html__('Job failed', 'wp-staging');
         } elseif ($status === JobTransientCache::STATUS_SUCCESS) {
             $data['message'] = esc_html__('Job completed successfully', 'wp-staging');
         }

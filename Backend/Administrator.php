@@ -63,6 +63,21 @@ class Administrator
      */
     const FILTER_MAIN_SETTING_TABS = 'wpstg.main_settings_tabs';
 
+    /**
+     * All registered WP Staging admin page slugs.
+     * @var string[]
+     */
+    const ADMIN_PAGE_SLUGS = [
+        'wpstg_clone',
+        'wpstg_backup',
+        'wpstg-settings',
+        'wpstg-tools',
+        'wpstg-welcome',
+        'wpstg-restorer',
+        'wpstg-license',
+        'wpstg-install',
+    ];
+
     /** @var string */
     private $viewsPath;
 
@@ -261,7 +276,7 @@ class Administrator
         // Main WP Staging Menu
         add_menu_page(
             "WP STAGING",
-            esc_html__("WP Staging " . $proSlug, "wp-staging"),
+            esc_html("WP Staging " . $proSlug),
             "manage_options",
             $defaultPageSlug,
             [$this, $defaultPageCallback],
@@ -1070,7 +1085,7 @@ class Administrator
         // Set e-mail
         $emailRecipient = '';
         if (isset($args['wpstg_email'])) {
-            $emailRecipient = $this->sanitize->sanitizeString($args['wpstg_email']);
+            $emailRecipient = $this->sanitize->sanitizeEmail($args['wpstg_email']);
         }
 
         // Set hosting provider

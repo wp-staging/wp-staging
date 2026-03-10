@@ -3,11 +3,14 @@
 namespace WPStaging\Framework\Settings;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Framework\Network\HttpBasicAuth;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Security\Auth;
+use WPStaging\Framework\Security\DataEncryption;
 use WPStaging\Notifications\Notifications;
 
 /**
@@ -15,6 +18,8 @@ use WPStaging\Notifications\Notifications;
  */
 class Settings
 {
+    use HttpBasicAuth;
+
     /** @var string */
     const ACTION_WPSTG_PRO_SETTINGS = 'wpstg.views.pro.settings';
 
@@ -53,18 +58,23 @@ class Settings
     /** @var Auth */
     private $auth;
 
+    /** @var DataEncryption */
+    private $dataEncryption;
+
     /**
      * @param SiteInfo $siteInfo
      * @param Sanitize $sanitize
      * @param Queue $queue
      * @param Auth $auth
+     * @param DataEncryption $dataEncryption
      */
-    public function __construct(SiteInfo $siteInfo, Sanitize $sanitize, Queue $queue, Auth $auth)
+    public function __construct(SiteInfo $siteInfo, Sanitize $sanitize, Queue $queue, Auth $auth, DataEncryption $dataEncryption)
     {
-        $this->siteInfo = $siteInfo;
-        $this->sanitize = $sanitize;
-        $this->queue    = $queue;
-        $this->auth     = $auth;
+        $this->siteInfo       = $siteInfo;
+        $this->sanitize       = $sanitize;
+        $this->queue          = $queue;
+        $this->auth           = $auth;
+        $this->dataEncryption = $dataEncryption;
     }
 
     /**
@@ -121,6 +131,9 @@ class Settings
                 $optionBackupScheduleReportSlackWebhook,
                 $optionSendEmailAsHTML
             );
+
+            $this->saveHttpAuthCredentials($data);
+            unset($data['httpAuthUsername'], $data['httpAuthPassword']);
         }
 
         $sanitized = $this->sanitizeData($data);
@@ -168,6 +181,86 @@ class Settings
         ]);
 
         return null;
+    }
+
+    /**
+     * Lightweight AJAX action that serves as the loopback target for HTTP Basic Auth testing.
+     * Returns a simple success response so the caller can verify the request went through.
+     *
+     * No auth check: this endpoint is intentionally public (wp_ajax_nopriv_) so the
+     * server-side loopback in ajaxTestHttpAuth() can reach it without a WP session.
+     *
+     * @return void
+     */
+    public function ajaxHttpAuthPing()
+    {
+        wp_send_json_success(['ping' => true]);
+    }
+
+    /**
+     * Tests that the saved HTTP Basic Auth credentials allow loopback requests to admin-ajax.php.
+     * Performs a wp_remote_post() to the ping action using the stored credentials.
+     *
+     * @return void
+     */
+    public function ajaxTestHttpAuth()
+    {
+        if ($this->auth->isAuthenticatedRequest() === false) {
+            wp_send_json_error(['message' => esc_html__('Error 403: Unauthorized Request', 'wp-staging')]);
+            return;
+        }
+
+        $headers = $this->getHttpAuthHeaders();
+        if (empty($headers)) {
+            wp_send_json_error(['message' => esc_html__('No HTTP Basic Auth credentials are saved yet. Save your settings first, then test the connection.', 'wp-staging')]);
+            return;
+        }
+
+        $url = admin_url('admin-ajax.php');
+
+        $response = wp_remote_post($url, [
+            'timeout'   => 15,
+            'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
+            'headers'   => $headers,
+            'body'      => [
+                'action' => 'wpstg_http_auth_ping',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            wp_send_json_error([
+                'message' => sprintf(
+                    esc_html__('Connection failed: %s', 'wp-staging'),
+                    esc_html($response->get_error_message())
+                ),
+            ]);
+            return;
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        $body       = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($statusCode === 401) {
+            wp_send_json_error(['message' => esc_html__('Authentication failed (401). The username or password is incorrect.', 'wp-staging')]);
+            return;
+        }
+
+        if ($statusCode === 403) {
+            wp_send_json_error(['message' => esc_html__('Access denied (403). The request was blocked, possibly by a firewall or security plugin.', 'wp-staging')]);
+            return;
+        }
+
+        if ($statusCode !== 200 || empty($body['success'])) {
+            wp_send_json_error([
+                'message' => sprintf(
+                    esc_html__('Unexpected response (HTTP %s). The loopback request did not succeed.', 'wp-staging'),
+                    esc_html((string)$statusCode)
+                ),
+            ]);
+            return;
+        }
+
+        wp_send_json_success(['message' => esc_html__('Connection successful! Background tasks will be able to reach wp-admin.', 'wp-staging')]);
     }
 
     /**
@@ -248,5 +341,41 @@ class Settings
         update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT, $optionBackupScheduleSlackErrorReport, false);
         update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK, $optionBackupScheduleReportSlackWebhook, false);
         update_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, $optionSendEmailAsHTML);
+    }
+
+    /**
+     * Save HTTP Basic Auth credentials for loopback requests.
+     * If username is empty, both username and password are cleared.
+     * If password is blank and username is provided, existing password is preserved.
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function saveHttpAuthCredentials(array $data)
+    {
+        $username = isset($data['httpAuthUsername'])
+            ? $this->sanitize->sanitizeString($data['httpAuthUsername'], false)
+            : '';
+
+        if (empty($username)) {
+            update_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, ['username' => '', 'password' => ''], false);
+            return;
+        }
+
+        $submittedPassword = isset($data['httpAuthPassword'])
+            ? $this->sanitize->sanitizePassword($data['httpAuthPassword'])
+            : '';
+
+        if (!empty($submittedPassword)) {
+            $password = $this->dataEncryption->encrypt($submittedPassword);
+        } else {
+            $existing = get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []);
+            $password = !empty($existing['password']) ? $existing['password'] : '';
+        }
+
+        update_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, [
+            'username' => $username,
+            'password' => $password,
+        ], false);
     }
 }

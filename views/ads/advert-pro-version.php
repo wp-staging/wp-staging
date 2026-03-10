@@ -37,8 +37,8 @@
             <li><a href="https://wp-staging.com/docs/synchronization-of-user-account-credentials-with-staging-site/" target="_blank" rel="noopener"><?php esc_html_e('Synchronize admin user account between production and staging site.', 'wp-staging'); ?></a></li>
             <li><a href="https://wp-staging.com/docs/how-to-create-a-scheduled-backup/" target="_blank" rel="noopener"><?php esc_html_e('Unlimited number of scheduled backup plans.', 'wp-staging'); ?></a></li>
             <li><a href="https://wp-staging.com/docs/how-to-backup-and-restore-your-wordpress-website/#Restore_the_Backup_on_the_Same_or_Another_Server_Migration" target="_blank" rel="noopener"><?php esc_html_e('Restore backups on other websites.', 'wp-staging'); ?></a></li>
-            <li><a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/#How_to_Migrate_WordPress_to_a_New_Host" target="_blank" rel="noopener"><?php esc_html_e('Migrate websites to other hosting providers.', 'wp-staging'); ?></a></li>
-            <li><a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank" rel="noopener"><?php esc_html_e('Move websites from one domain to another.', 'wp-staging'); ?></a></li>
+            <li><a href="<?php echo esc_url(\WPStaging\Framework\Language\Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/#How_to_Migrate_WordPress_to_a_New_Host')); ?>" target="_blank" rel="noopener"><?php esc_html_e('Migrate websites to other hosting providers.', 'wp-staging'); ?></a></li>
+            <li><a href="<?php echo esc_url(\WPStaging\Framework\Language\Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/')); ?>" target="_blank" rel="noopener"><?php esc_html_e('Move websites from one domain to another.', 'wp-staging'); ?></a></li>
             <li><a href="https://wp-staging.com/docs/backup-restore-of-an-entire-multisite-network-to-another-multisite-network/" target="_blank" rel="noopener"><?php esc_html_e('Backup and clone entire WordPress Multisites.', 'wp-staging'); ?></a></li>
             <li class="wpstg-sub-ads">
                 <?php
@@ -51,6 +51,8 @@
                 ?>
             </li>
             <li><a href="https://wp-staging.com/docs/how-to-backup-and-restore-your-wordpress-website/" target="_blank" rel="noopener"><?php esc_html_e('Backup & migration for wordpress.com hosted sites.', 'wp-staging'); ?></a></li>
+            <li><a href="https://wp-staging.com/docs/remote-website-sync/" target="_blank" rel="noopener"><?php esc_html_e('Remote sync: Push and pull databases and files between sites.', 'wp-staging'); ?></a></li>
+            <li><a href="https://wp-staging.com/docs/set-up-wp-staging-cli/" target="_blank" rel="noopener"><?php esc_html_e('Create local Docker staging sites with the WP Staging CLI.', 'wp-staging'); ?></a></li>
             <li><a href="https://wp-staging.com/quality-assurance-for-wp-staging/" target="_blank" rel="noopener"><?php esc_html_e('100% code coverage through extensive unit and end-to-end testing.', 'wp-staging'); ?></a></li>
         </ul>
         <a href="https://wp-staging.com/#pricing" target="_blank" id="wpstg-button-backup-upgrade" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet" rel="noopener"><?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?></a>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CLI Integration Notice - Banner promoting WP Staging CLI tool
  *
@@ -10,7 +11,13 @@
  * @var string $planName            The name of the user's license plan
  * @var array  $backups             List of available backups
  * @var string $urlAssets           URL to the assets directory
+ * @var bool   $hasActiveLicense    Whether user has a valid/expired pro license
+ * @var string $licenseType         License type slug (e.g. 'free', 'personal', 'business')
+ * @var string $licenseId           License ID or empty
  */
+
+use WPStaging\Core\WPStaging;
+
 ?>
 
 <div class="wpstg-banner wpstg-banner-cli" id="wpstg-cli-integration-banner" data-is-developer="<?php echo $isDeveloperOrHigher ? '1' : '0'; ?>">
@@ -96,11 +103,39 @@
                         <?php esc_html_e('Create Local Site', 'wp-staging'); ?>
                     </button>
                 <?php else : ?>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>" class="wpstg-btn wpstg-btn-sm wpstg-btn-primary">
+                    <?php
+                    if ($hasActiveLicense) {
+                        $upgradeUrl    = admin_url('admin.php?page=wpstg-license');
+                        $isExternalUrl = false;
+                    } else {
+                        $upgradeUrl    = \WPStaging\Framework\Language\Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?edd_action=add_to_cart&download_id=11&edd_options[price_id]=13');
+                        $isExternalUrl = true;
+                    }
+                    ?>
+                    <a href="<?php echo esc_url($upgradeUrl); ?>" <?php echo $isExternalUrl ? 'target="_blank" rel="noreferrer noopener"' : ''; ?> class="wpstg-btn wpstg-btn-sm wpstg-btn-primary">
                         <?php esc_html_e('Upgrade Plan', 'wp-staging'); ?>
                     </a>
                 <?php endif; ?>
-                <a href="https://wp-staging.com/docs/set-up-wp-staging-cli/" target="_blank" rel="noreferrer noopener" class="wpstg-btn wpstg-btn-sm wpstg-btn-ghost wpstg-banner-learn-more">
+                <?php
+                $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
+                $learnMoreUrl = strpos($locale, 'de_') === 0
+                    ? 'https://wp-staging.com/de/cli/upgrade/'
+                    : 'https://wp-staging.com/cli/upgrade/';
+
+                $learnMoreParams = [];
+                if (!empty($licenseType)) {
+                    $learnMoreParams['plan'] = $licenseType;
+                }
+
+                if (!empty($licenseId)) {
+                    $learnMoreParams['license_id'] = $licenseId;
+                }
+
+                if (!empty($learnMoreParams)) {
+                    $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
+                }
+                ?>
+                <a href="<?php echo esc_url($learnMoreUrl); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-btn wpstg-btn-sm wpstg-btn-ghost wpstg-banner-learn-more">
                     <?php esc_html_e('Learn More', 'wp-staging'); ?>
                     <svg class="wpstg-btn-icon-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>

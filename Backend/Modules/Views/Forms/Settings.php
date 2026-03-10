@@ -4,6 +4,7 @@ namespace WPStaging\Backend\Modules\Views\Forms;
 
 use WPStaging\Core\Forms\Elements\Color;
 use WPStaging\Core\Forms\Elements\Numerical;
+use WPStaging\Core\Forms\Elements\Password;
 use WPStaging\Core\Forms\Elements\Select;
 use WPStaging\Core\Forms\Elements\SelectMultiple;
 use WPStaging\Core\Forms\Elements\Text;
@@ -11,7 +12,9 @@ use WPStaging\Core\Forms\Elements\Toggle;
 use WPStaging\Core\Forms\Form;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Framework\Assets\Assets;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Facades\DataEncryption;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
 /**
@@ -307,6 +310,25 @@ class Settings
                 );
             }
         }
+
+        // HTTP Basic Auth
+        $httpAuthCredentials = get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []);
+
+        $element = new Text('wpstg_settings[httpAuthUsername]', []);
+        $this->form['general']->add(
+            $element->setLabel(__('Username', 'wp-staging'))
+                ->setDefault(!empty($httpAuthCredentials['username']) ? $httpAuthCredentials['username'] : ''),
+            'wpstg-settings-http-auth-username'
+        );
+
+        $password = !empty($httpAuthCredentials['password']) ? DataEncryption::decrypt($httpAuthCredentials['password']) : '';
+
+        $element = new Password('wpstg_settings[httpAuthPassword]', []);
+        $this->form['general']->add(
+            $element->setLabel(__('Password', 'wp-staging'))
+                ->setDefault($password),
+            'wpstg-settings-http-auth-password'
+        );
     }
 
     /**

@@ -6,6 +6,7 @@ use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
@@ -233,13 +234,26 @@ class Assets
             false
         );
 
+        // Load SolidJS bundle if it exists
+        $solidAsset = $this->getJsAssetsFileName('wpstg-solid');
+        $solidAssetPath = $this->getAssetsPath($solidAsset);
+        if (file_exists($solidAssetPath)) {
+            wp_enqueue_script(
+                "wpstg-solid",
+                $this->getAssetsUrl($solidAsset),
+                ["wpstg-admin-script"],
+                $this->getAssetsVersion($solidAsset),
+                true
+            );
+        }
+
         // Load settings page js file
         if (is_admin() && isset($_GET['page']) && $_GET['page'] === 'wpstg-settings') {
             $asset = $this->getJsAssetsFileName('wpstg-admin-settings');
             wp_enqueue_script(
                 'wpstg-admin-settings-script',
                 $this->getAssetsUrl($asset),
-                [],
+                ['wpstg-common'],
                 $this->getAssetsVersion($asset),
                 true
             );
@@ -332,8 +346,12 @@ class Assets
             'isPro'                             => WPStaging::isPro(),
             'isDeveloperOrHigherLicense'        => WPStaging::make(CliIntegrationNotice::class)->isDeveloperOrHigherLicense(),
             'isExpiredDeveloperOrHigherLicense' => WPStaging::make(CliIntegrationNotice::class)->isExpiredDeveloperOrHigherLicense(),
+            'canExtractSingleFile'              => WPStaging::isPro() && $this->isValidProLicense(),
             'licensePlanName'                   => WPStaging::make(CliIntegrationNotice::class)->getLicensePlanName(),
             'licenseUpgradeUrl'                 => $this->getLicenseUpgradeUrl(),
+            'licenseRenewalUrl'                 => $this->getLicenseRenewalUrl(),
+            'pricingUrl'                        => Language::localizePricingUrl('https://wp-staging.com/#pricing'),
+            'checkoutFallbackUrl'               => Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?nocache=true&download_id=11'),
             'newsfeedData'                      => $this->getNewsfeedDataForJs(),
             'maxFailedRetries'                  => apply_filters(self::FILTER_TESTS_MAXIMUM_RETRIES, 10),
             'i18n'                              => $this->i18n->getTranslations(),
@@ -432,6 +450,22 @@ class Assets
     }
 
     /**
+     * @return bool
+     */
+    private function isValidProLicense(): bool
+    {
+        if (!class_exists('\WPStaging\Pro\License\Licensing')) {
+            return false;
+        }
+
+        try {
+            return WPStaging::make(\WPStaging\Pro\License\Licensing::class)->isRegisteredLicense();
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
      * @return string
      */
     private function getLicenseUpgradeUrl(): string
@@ -444,6 +478,28 @@ class Assets
             /** @var \WPStaging\Pro\License\Licensing $licensing */
             $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
             return $licensing->getUpgradeToDevUrl();
+        } catch (\Exception $e) {
+            return '';
+        }
+    }
+
+    /**
+     * @return string
+     */
+    private function getLicenseRenewalUrl(): string
+    {
+        if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
+            return '';
+        }
+
+        try {
+            $isExpired = WPStaging::make(CliIntegrationNotice::class)->isExpiredDeveloperOrHigherLicense();
+            if (!$isExpired) {
+                return '';
+            }
+
+            $licenseKey = trim(get_option(\WPStaging\Pro\License\Licensing::WPSTG_LICENSE_KEY, ''));
+            return Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?nocache=true&edd_license_key=' . urlencode($licenseKey) . '&download_id=11');
         } catch (\Exception $e) {
             return '';
         }
@@ -468,6 +524,12 @@ class Assets
                 "wp-staging-pro_page_wpstg-tools",
                 "wp-staging-pro_page_wpstg-license",
                 "wp-staging-pro_page_wpstg-restorer",
+                // DevBasic mode uses the basic dist plugin (wp-staging/) with WPSTG_DEV_BASIC constant,
+                // so WordPress generates wp-staging_page_* slugs instead of wp-staging-pro_page_*
+                "wp-staging_page_wpstg_clone",
+                "wp-staging_page_wpstg_backup",
+                "wp-staging_page_wpstg-settings",
+                "wp-staging_page_wpstg-tools",
             ];
         } else {
             $availableSlugs = [

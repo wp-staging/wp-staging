@@ -234,7 +234,7 @@ class Report
         $loggedInUser      = wp_get_current_user();
         $loggedInUserEmail = '';
         if (!empty($loggedInUser->user_email)) {
-            $loggedInUserEmail = $this->sanitize->sanitizeString($loggedInUser->user_email);
+            $loggedInUserEmail = $this->sanitize->sanitizeEmail($loggedInUser->user_email);
         }
 
         $response = $this->sendDebugLog($loggedInUserEmail, $debugCode, $forceSend);

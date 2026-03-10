@@ -74,7 +74,7 @@ class BackupDownloader
         if (!$this->auth->isAuthenticatedRequest()) {
             return;
         }
-        $remoteFileUrl = $this->sanitize->sanitizeString($_POST['backupUrl'] ?? '');
+        $remoteFileUrl = $this->sanitize->sanitizeUrl($_POST['backupUrl'] ?? '');
         if (empty($remoteFileUrl)) {
             $this->setFailResponse(__('Backup file URL is empty', 'wp-staging'));
             $this->remoteDownloader->writeResponse();

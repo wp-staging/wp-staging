@@ -22,6 +22,12 @@ trait RestRequestTrait
      */
     private $isBlockingRequest = true;
 
+    /** @var string */
+    private $httpAuthUsername = '';
+
+    /** @var string */
+    private $httpAuthPassword = '';
+
     /**
      * @param string $url
      * @param string $endpoint
@@ -33,8 +39,17 @@ trait RestRequestTrait
     {
         $headers = $this->headers;
         $headers['Content-Type'] = 'application/json';
+
         if (!empty($accessToken)) {
-            $headers['Authorization'] = 'Bearer ' . $accessToken;
+            $headers = array_merge($headers, $this->getAuthorizationHeader($accessToken));
+        }
+
+        // Basic Auth overwrites the Authorization header when configured.
+        // The Bearer token is still available via the X-WPSTG-Request fallback header
+        // (see BearerTokenTrait::getAuthTokenFromPluginHeader), which the remote site
+        // uses when the Authorization header is consumed by .htpasswd.
+        if (!empty($this->httpAuthUsername) && !empty($this->httpAuthPassword)) {
+            $headers['Authorization'] = 'Basic ' . base64_encode($this->httpAuthUsername . ':' . $this->httpAuthPassword);
         }
 
         $timeout = Rest::REQUEST_TIMEOUT;
@@ -79,6 +94,24 @@ trait RestRequestTrait
     protected function resetHeaders()
     {
         $this->headers = [];
+    }
+
+    /**
+     * @param string $username
+     * @param string $password
+     * @return void
+     */
+    protected function setHttpAuth(string $username, string $password)
+    {
+        if (empty($username) || empty($password)) {
+            $this->httpAuthUsername = '';
+            $this->httpAuthPassword = '';
+
+            return;
+        }
+
+        $this->httpAuthUsername = $username;
+        $this->httpAuthPassword = $password;
     }
 
     /**

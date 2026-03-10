@@ -31,14 +31,7 @@ $hasDeveloperLicense = $cliNotice->isDeveloperOrHigherLicense();
     <button type="button"
         id="wpstg-cli-dock-cta-button"
         class="wpstg-btn wpstg-btn-md wpstg-btn-outline wpstg-cli-dock-cta wpstg-cli-dock-cta--visible wpstg-w-fit"
-        <?php if ($hasDeveloperLicense) : ?>
         aria-label="<?php esc_attr_e('Create Local Site', 'wp-staging'); ?>"
-        <?php else : ?>
-        aria-label="<?php esc_attr_e('Create Local Site - Requires Developer license (opens upgrade dialog)', 'wp-staging'); ?>"
-        aria-haspopup="dialog"
-        aria-disabled="true"
-        data-pro-feature="cli-local-site"
-        <?php endif; ?>
     >
         <svg class="wpstg-btn-icon-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 10v6"></path>

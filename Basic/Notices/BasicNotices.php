@@ -4,7 +4,6 @@ namespace WPStaging\Basic\Notices;
 
 use Exception;
 use WPStaging\Basic\Ajax\ProCronsCleaner;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Traits\NoticesTrait;
@@ -57,11 +56,6 @@ class BasicNotices
 
         if ($this->showAllNotices || $this->proCronsCleaner->haveProCrons()) {
             require_once "{$viewsNoticesPath}pro-crons-notice.php";
-        }
-
-        // Show notice WP STAGING is not tested with current WordPress version
-        if ($this->showAllNotices || version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<")) {
-            require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
         }
     }
 }

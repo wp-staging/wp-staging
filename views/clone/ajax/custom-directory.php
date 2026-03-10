@@ -51,9 +51,9 @@ if ($isPro) {
 
 if ($isPro && !empty($options->current)) {
     $cloneDir            = isset($options->existingClones[$options->current]['cloneDir']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['cloneDir']) : '';
-    $hostname            = isset($options->existingClones[$options->current]['url']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['url']) : '';
+    $hostname            = isset($options->existingClones[$options->current]['url']) ? Sanitize::sanitizeUrl($options->existingClones[$options->current]['url']) : '';
     $customHostname      = $hostname;
-    $directory           = isset($options->existingClones[$options->current]['path']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['path']) : '';
+    $directory           = isset($options->existingClones[$options->current]['path']) ? Sanitize::sanitizePath($options->existingClones[$options->current]['path']) : '';
     $customDir           = $directory;
     $uploadsSymlinked    = isset($options->existingClones[$options->current]['uploadsSymlinked']) && $options->existingClones[$options->current]['uploadsSymlinked'];
 }

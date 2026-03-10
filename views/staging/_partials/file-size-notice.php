@@ -11,9 +11,10 @@ $description  = sprintf(
 
 $description .= '<br>';
 $description .= sprintf(
-    esc_html__('You can ', 'wp-staging') . '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
-    esc_url(admin_url('admin.php?page=wpstg-settings')),
-    esc_html__('change this limit in the settings', 'wp-staging')
+    /* translators: %1$s is the opening link tag, %2$s is the closing link tag */
+    __('You can %1$schange this limit in the settings%2$s.', 'wp-staging'),
+    '<a href="' . esc_url(admin_url('admin.php?page=wpstg-settings')) . '" target="_blank" rel="noopener noreferrer">',
+    '</a>'
 );
 $attr = [
     'class' => 'wpstg-banner-warning',

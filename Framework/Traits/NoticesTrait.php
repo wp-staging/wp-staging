@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Traits;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
+use WPStaging\Backend\Administrator;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Notices\Notices;
@@ -15,34 +16,43 @@ trait NoticesTrait
 
     /**
      * Check whether the page is WP Staging admin page or not
+     * it also checks if it is WP Staging AJAX action
      * @return bool
      */
     public function isWPStagingAdminPage()
     {
-        // Early bail if it's neither admin nor AJAX
-        if (!is_admin() && !wp_doing_ajax()) {
+        return $this->isWPStagingAdminScreen() || $this->isWPStagingAjaxAction();
+    }
+
+    /**
+     * Exact match for page slugs to avoid false positives from third-party plugins
+     * whose slugs happen to start with "wpstg-" or "wpstg_"
+     *
+     * @return bool
+     */
+    protected function isWPStagingAdminScreen(): bool
+    {
+        if (!is_admin()) {
             return false;
         }
 
-        $allowedPrefixes = ["wpstg-", "wpstg_"];
-        $currentPage     = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
-        $ajaxAction      = isset($_POST['action']) ? Sanitize::sanitizeString($_POST['action']) : null;
-        if (empty($currentPage) && empty($ajaxAction)) {
+        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+        return !empty($currentPage) && in_array($currentPage, Administrator::ADMIN_PAGE_SLUGS, true);
+    }
+
+    /**
+     * Prefix match for AJAX actions is safe because WP Staging controls all its own AJAX handlers
+     *
+     * @return bool
+     */
+    protected function isWPStagingAjaxAction(): bool
+    {
+        if (!wp_doing_ajax()) {
             return false;
         }
 
-        foreach ($allowedPrefixes as $prefix) {
-            if (!empty($currentPage) && strpos($currentPage, $prefix) === 0) {
-                return true;
-            }
-
-
-            if (!empty($ajaxAction) && strpos($ajaxAction, $prefix) === 0) {
-                return true;
-            }
-        }
-
-        return false;
+        $ajaxAction = isset($_POST['action']) ? Sanitize::sanitizeString($_POST['action']) : null;
+        return !empty($ajaxAction) && (strpos($ajaxAction, 'wpstg-') === 0 || strpos($ajaxAction, 'wpstg_') === 0);
     }
 
     /** @return string */

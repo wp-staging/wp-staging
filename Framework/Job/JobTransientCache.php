@@ -68,6 +68,11 @@ class JobTransientCache
     /**
      * @var string
      */
+    const JOB_TYPE_EXTRACT = 'Extract';
+
+    /**
+     * @var string
+     */
     const JOB_TYPE_CANCEL = 'Cancel';
 
     /**
@@ -121,6 +126,7 @@ class JobTransientCache
     const CANCELABLE_JOBS = [
         self::JOB_TYPE_BACKUP,
         self::JOB_TYPE_RESTORE,
+        self::JOB_TYPE_EXTRACT,
         self::JOB_TYPE_PULL_PREPARE,
         self::JOB_TYPE_PULL_RESTORE,
         self::JOB_TYPE_STAGING_CREATE,
@@ -149,6 +155,24 @@ class JobTransientCache
             'message'   => '',
         ];
 
+        delete_transient(self::TRANSIENT_CURRENT_JOB);
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
+    }
+
+    /**
+     * Mark the current job as pre-initialized so the SSE endpoint can detect
+     * if the background queue never started processing.
+     * When the background queue picks up the job and calls startJob() again,
+     * the preInitAt field is automatically removed (startJob creates fresh data).
+     */
+    public function markAsPreInitialized()
+    {
+        $jobData = $this->getJob();
+        if ($jobData === null) {
+            return;
+        }
+
+        $jobData['preInitAt'] = time();
         delete_transient(self::TRANSIENT_CURRENT_JOB);
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
     }

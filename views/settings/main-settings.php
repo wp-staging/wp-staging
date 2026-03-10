@@ -10,7 +10,8 @@ $siteInfo = WPStaging::make(SiteInfo::class);
     <?php
     require_once(WPSTG_VIEWS_DIR . (defined('WPSTGPRO_VERSION') ? 'pro/_main/header.php' : '_main/header.php'));
 
-    $isActiveSettingsPage = true;
+    $isActiveSettingsPage   = true;
+    $wpstgDeferCompatNotice = true;
     require_once(WPSTG_VIEWS_DIR . '_main/main-navigation.php');
     ?>
     <div class="wpstg-loading-bar-container">
@@ -27,7 +28,7 @@ $siteInfo = WPStaging::make(SiteInfo::class);
             }
 
             if (empty($tabs['remote-sync-settings'])) {
-                $tabs['remote-sync-settings'] = esc_html__("Connection Keys", "wp-staging");
+                $tabs['remote-sync-settings'] = esc_html__("Remote Sync Connection Key", "wp-staging");
             }
 
             $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? Sanitize::sanitizeString($_GET["tab"]) : "general";

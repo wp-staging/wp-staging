@@ -5,11 +5,12 @@
  */
 
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Language\Language;
 
 ?>
 
 <div id="wpstg-did-you-know" style="margin-bottom:12px">
-    <strong><?php echo sprintf(Escape::escapeHtml(__('Get <a href="%s" target="_blank">WP Staging Pro</a> to upload and restore backups to another server to migrate this website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')), 'https://wp-staging.com', 'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'); ?></strong>
+    <strong><?php echo sprintf(Escape::escapeHtml(__('Get <a href="%s" target="_blank">WP Staging Pro</a> to upload and restore backups to another server to migrate this website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')), 'https://wp-staging.com', Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/')); ?></strong>
 </div>
 
 <div id="wpstg-step-1">

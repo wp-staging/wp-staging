@@ -8,12 +8,23 @@ use WPStaging\Framework\Settings\Settings;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Notifications\Notifications;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 
 $directory = WPStaging::make(Directory::class);
 ?>
 
 <!-- General Settings -->
 <div class="wpstg-general-settings-wrapper">
+    <?php if (isset($_GET['settings-updated']) && $_GET['settings-updated'] === 'true') : ?>
+    <div class="wpstg-callout wpstg-callout-success wpstg-mb-6">
+        <svg class="wpstg-h-5 wpstg-w-5 wpstg-flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span class="wpstg-text-sm wpstg-font-medium">
+            <?php esc_html_e('Settings updated.', 'wp-staging'); ?>
+        </span>
+    </div>
+    <?php endif; ?>
     <div class="wpstg-settings-header">
         <div class="wpstg-settings-header-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
@@ -471,11 +482,7 @@ $directory = WPStaging::make(Directory::class);
                                             <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[disableAdminLogin]"); ?></span>
                                         </div>
                                         <div class="wpstg-settings-field-description">
-                                            <?php
-                                            echo sprintf(esc_html__(
-                                                "Remove the requirement to login to the staging site. %s The staging site always discourages search engines from indexing the site by setting the 'noindex' tag into header of the staging site.",
-                                                "wp-staging"
-                                            ), "<strong>Note:</strong>"); ?>
+                                            <?php esc_html_e("Disable the additional login form on the staging site. Search engine indexing is always blocked via the 'noindex' tag, regardless of this setting.", "wp-staging"); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -586,6 +593,81 @@ $directory = WPStaging::make(Directory::class);
                         </div>
                     </div>
                     <!-- Debug & System Settings -->
+                    <!-- Network Settings -->
+                    <?php $httpAuthCredentials = get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []); ?>
+                    <?php $hasHttpAuthCredentials = !empty($httpAuthCredentials['username']); ?>
+                    <div class="wpstg-settings-card">
+                        <div class="wpstg-settings-card-header">
+                            <h3 class="wpstg-settings-card-title !wpstg-me-2"><?php esc_html_e("WP Admin HTTP Basic Auth", "wp-staging"); ?></h3>
+                            <p class="wpstg-settings-card-description"><?php esc_html_e("Only fill this in if your /wp-admin is protected with HTTP Basic Authentication (browser login prompt). Background tasks (scans, updates, scheduled jobs) can't access wp-admin without these credentials and may fail. If you don't use HTTP Basic Auth for wp-admin, leave both fields blank.", "wp-staging"); ?></p>
+                        </div>
+                        <div class="wpstg-settings-card-body">
+                            <div class="wpstg-settings-field wpstg-settings-has-toggle">
+                                <div>
+                                    <div class="wpstg-settings-field-header">
+                                        <label class="wpstg-settings-field-label"><?php esc_html_e('My wp-admin is protected with HTTP Basic Auth', 'wp-staging'); ?></label>
+                                    </div>
+                                </div>
+                                <div class="wpstg-settings-field-input">
+                                    <?php Toggle::render('wpstg-http-basic-auth-active', '', '', $hasHttpAuthCredentials, ['classes' => 'wpstg-settings-field']); ?>
+                                </div>
+                            </div>
+                            <div id="wpstg-http-basic-auth-fields" <?php echo $hasHttpAuthCredentials ? '' : 'class="hidden"'; ?>>
+                                <div class="wpstg-settings-field wpstg-settings-has-toggle">
+                                    <div>
+                                        <div class="wpstg-settings-field-header">
+                                            <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[httpAuthUsername]"); ?></span>
+                                            <span class="wpstg-settings-field-badge wpstg-badge-gray wpstg-icon-person"><?php echo esc_html__('Username', 'wp-staging'); ?></span>
+                                        </div>
+                                        <div class="wpstg-settings-field-description">
+                                            <?php esc_html_e('The HTTP Basic Auth username required to access /wp-admin.', 'wp-staging'); ?>
+                                        </div>
+                                    </div>
+                                    <div class="wpstg-settings-field-input">
+                                        <div class="wpstg-settings-field-input-with-icon wpstg-icon-person">
+                                            <?php $form->renderInput("wpstg_settings[httpAuthUsername]"); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="wpstg-settings-field wpstg-settings-has-toggle">
+                                    <div>
+                                        <div class="wpstg-settings-field-header">
+                                            <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[httpAuthPassword]"); ?></span>
+                                            <span class="wpstg-settings-field-badge wpstg-badge-gray wpstg-icon-lock"><?php echo esc_html__('Password', 'wp-staging'); ?></span>
+                                        </div>
+                                        <div class="wpstg-settings-field-description">
+                                            <?php esc_html_e('The HTTP Basic Auth password for the username above.', 'wp-staging'); ?>
+                                        </div>
+                                    </div>
+                                    <div class="wpstg-settings-field-input">
+                                        <div class="wpstg-password-toggle-wrapper wpstg-settings-field-input-with-icon wpstg-icon-lock">
+                                            <?php $form->renderInput("wpstg_settings[httpAuthPassword]"); ?>
+                                            <?php require WPSTG_VIEWS_DIR . '_main/partials/password-toggle-button.php'; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="wpstg-callout wpstg-callout-warning wpstg-mt-4">
+                                    <svg class="wpstg-h-5 wpstg-w-5 wpstg-flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.168 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="wpstg-text-sm wpstg-font-medium">
+                                        <?php esc_html_e('Without these credentials, background processing may not run on sites with protected wp-admin.', 'wp-staging'); ?>
+                                    </span>
+                                </div>
+                                <div class="wpstg-mt-4">
+                                    <button type="button" class="wpstg-btn wpstg-btn-sm wpstg-btn-secondary" id="wpstg-test-http-auth">
+                                        <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                        </svg>
+                                        <?php esc_html_e('Test Connection', 'wp-staging'); ?>
+                                    </button>
+                                    <div id="wpstg-http-auth-test-result" class="wpstg-mt-3 hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Network Settings -->
                 </div>
             </div>
             <?php if (defined('WPSTGPRO_VERSION')) : ?>

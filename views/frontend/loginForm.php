@@ -81,7 +81,7 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
                 <?php
                     printf(
                         esc_html__('Automatic login for staging sites. Try %s', 'wp-staging'),
-                        '<a href="https://wp-staging.com/#pricing" target="_blank">' . esc_html__('WP Staging Pro', 'wp-staging') . '</a>'
+                        '<a href="https://wp-staging.com/#pricing" target="_blank">' . esc_html('WP Staging Pro') . '</a>'
                     );
                 ?>
             </div>

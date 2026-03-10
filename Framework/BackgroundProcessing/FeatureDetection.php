@@ -10,6 +10,7 @@ namespace WPStaging\Framework\BackgroundProcessing;
 
 use WP_Error;
 use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\Network\HttpBasicAuth;
 use WPStaging\Framework\Notices\Notices;
 
 use function WPStaging\functions\debug_log;
@@ -21,6 +22,8 @@ use function WPStaging\functions\debug_log;
  */
 class FeatureDetection
 {
+    use HttpBasicAuth;
+
     /** @var string */
     const ACTION_AJAX_TEST = 'wpstg_ajax_test_action';
 
@@ -126,9 +129,10 @@ class FeatureDetection
         debug_log('Sending request to: ' . $ajaxUrl, 'info', false);
 
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
-            'headers'   => [
-                'X-WPSTG-Request' => self::ACTION_AJAX_TEST,
-            ],
+            'headers'   => array_merge(
+                ['X-WPSTG-Request' => self::ACTION_AJAX_TEST],
+                $this->getHttpAuthHeaders()
+            ),
             'blocking'  => false,
             'timeout'   => 0.01,
             'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],

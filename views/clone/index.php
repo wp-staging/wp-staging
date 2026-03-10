@@ -9,8 +9,10 @@
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
+use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
@@ -82,19 +84,27 @@ $isCalledFromIndex = true;
             ?>
             </div>
             <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo esc_attr($classBackupPageActive); ?>">
-                <div class="wpstg-backup-listing-skeleton wpstg-animate-pulse wpstg-py-4">
-                    <div class="wpstg-space-y-3">
-                        <div class="wpstg-h-4 wpstg-bg-gray-200 wpstg-rounded wpstg-w-1/4 dark:wpstg-bg-gray-700"></div>
-                        <div class="wpstg-h-3 wpstg-bg-gray-200 wpstg-rounded wpstg-w-full dark:wpstg-bg-gray-700"></div>
-                        <div class="wpstg-h-3 wpstg-bg-gray-200 wpstg-rounded wpstg-w-5/6 dark:wpstg-bg-gray-700"></div>
-                        <div class="wpstg-h-3 wpstg-bg-gray-200 wpstg-rounded wpstg-w-4/5 dark:wpstg-bg-gray-700"></div>
+                <?php
+                $cliNotice = WPStaging::make(CliIntegrationNotice::class);
+                $cliNotice->maybeShowCliNotice();
+                // When banner is dismissed but dock CTA should be shown, render modal separately
+                $cliNotice->maybeRenderCliModalForDockCta();
+                ?>
+                <div id="wpstg-backup-content">
+                    <div class="wpstg-backup-listing-skeleton wpstg-animate-pulse wpstg-py-4">
+                        <div class="wpstg-space-y-3">
+                            <div class="wpstg-h-4 wpstg-bg-gray-200 wpstg-rounded wpstg-w-1/4 dark:wpstg-bg-gray-700"></div>
+                            <div class="wpstg-h-3 wpstg-bg-gray-200 wpstg-rounded wpstg-w-full dark:wpstg-bg-gray-700"></div>
+                            <div class="wpstg-h-3 wpstg-bg-gray-200 wpstg-rounded wpstg-w-5/6 dark:wpstg-bg-gray-700"></div>
+                            <div class="wpstg-h-3 wpstg-bg-gray-200 wpstg-rounded wpstg-w-4/5 dark:wpstg-bg-gray-700"></div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="wpstg-did-you-know-footer">
                 <?php echo sprintf(
                     Escape::escapeHtml(__('Note: You can upload backup files to another site to transfer a website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
-                    'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'
+                    Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/')
                 ); ?>
             </div>
         </div>

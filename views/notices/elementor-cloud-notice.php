@@ -12,7 +12,7 @@
         <?php
         echo sprintf(
             esc_html__('Read %s on how to create a staging site on another server.', 'wp-staging'),
-            '<a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank" rel="noopener">' . esc_html__('this article', 'wp-staging') . '</a>'
+            '<a href="' . esc_url(\WPStaging\Framework\Language\Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/')) . '" target="_blank" rel="noopener">' . esc_html__('this article', 'wp-staging') . '</a>'
         );
         ?>
     </p>

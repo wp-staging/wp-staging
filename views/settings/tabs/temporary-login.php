@@ -11,7 +11,7 @@
         <br>
         <?php esc_html_e('These links can be used to give developers or clients access to your website, ensuring the link becomes invalid after the given period.', 'wp-staging') ?>
         <br>
-        <?php echo sprintf(esc_html__('That is a %s feature.', 'wp-staging'), '<a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener">WP Staging Pro</a>') ?>
+        <?php echo sprintf(esc_html__('This is a %s feature.', 'wp-staging'), '<a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener">WP Staging Pro</a>') ?>
     </p>
     <div id="wpstg-temporary-logins-wrapper"></div>
 </div>

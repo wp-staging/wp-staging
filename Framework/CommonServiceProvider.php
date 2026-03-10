@@ -11,6 +11,7 @@ use WPStaging\Framework\Filesystem\LogCleanup;
 use WPStaging\Framework\Mails\MailSender;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
+use WPStaging\Framework\Notices\WpVersionCompatNotice;
 use WPStaging\Framework\Performance\MemoryExhaust;
 use WPStaging\Framework\Security\Otp\Otp;
 use WPStaging\Framework\Settings\DarkMode;
@@ -56,6 +57,7 @@ class CommonServiceProvider extends ServiceProvider
         add_action("wp_ajax_nopriv_wpstg_log_event_success", [$this, "ajaxLogEventSuccess"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_send_mail_notification', $this->container->callback(MailSender::class, 'ajaxSendEmailNotification')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_nopriv_wpstg_send_mail_notification', $this->container->callback(MailSender::class, 'ajaxSendEmailNotification')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg_dismiss_compat_notice', $this->container->callback(WpVersionCompatNotice::class, 'ajaxDismissCompatNotice')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     /**
