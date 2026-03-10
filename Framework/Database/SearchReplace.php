@@ -126,6 +126,24 @@ class SearchReplace
         return $this;
     }
 
+    /**
+     * Append a single search-replace pair to the existing lists
+     *
+     * Resets the smallerReplacement cache so that the new pair
+     * is taken into account during subsequent replace operations.
+     *
+     * @param string $search  The string to search for
+     * @param string $replace The replacement string
+     * @return $this
+     */
+    public function appendSearchReplacePair(string $search, string $replace)
+    {
+        $this->search[] = $search;
+        $this->replace[] = $replace;
+        $this->smallerReplacement = PHP_INT_MAX;
+        return $this;
+    }
+
     public function setCaseSensitive($caseSensitive)
     {
         $this->caseSensitive = $caseSensitive;

@@ -8,6 +8,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Backup\Job\JobExtractProvider;
 use WPStaging\Staging\Jobs\StagingJobsProvider;
 
 class Status extends AbstractTemplateComponent
@@ -82,6 +83,10 @@ class Status extends AbstractTemplateComponent
 
         if ($jobType === JobTransientCache::JOB_TYPE_REMOTE_UPLOAD) {
             return $this->getRemoteUploadJob();
+        }
+
+        if ($jobType === JobTransientCache::JOB_TYPE_EXTRACT) {
+            return WPStaging::make(JobExtractProvider::class)->getJob();
         }
 
         throw new \Exception('Not a valid job type!');

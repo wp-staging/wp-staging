@@ -8,6 +8,7 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
+use WPStaging\Framework\Traits\TablePrefixValidator;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
@@ -29,6 +30,8 @@ use function WPStaging\functions\debug_log;
  */
 class Cloning extends Job
 {
+    use TablePrefixValidator;
+
     /**
      * @var string
      */
@@ -479,6 +482,10 @@ class Cloning extends Job
 
         if (in_array($this->options->databasePrefix, $tmpPrefixes)) {
             $this->returnException('Prefix wpstgtmp_ and wpstgbak_ are preserved by WP Staging and cannot be used for CLONING purpose! Please start over and change the table prefix.');
+        }
+
+        if ($this->isWpStagingReservedPrefix($this->options->databasePrefix)) {
+            $this->returnException($this->getReservedPrefixErrorMessage($this->options->databasePrefix));
         }
 
         // Call the job

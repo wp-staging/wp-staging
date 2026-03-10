@@ -53,6 +53,9 @@ class Queue
     const STATUS_ANY        = 'any';
     const STATUS_CANCELED   = 'canceled';
 
+    /** @var string */
+    const OPTION_HTTP_AUTH_CREDENTIALS = 'wpstg_background_http_auth_credentials';
+
     /**
      * @var string
      */

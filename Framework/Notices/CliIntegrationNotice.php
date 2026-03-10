@@ -9,23 +9,14 @@ use WPStaging\Framework\Traits\NoticesTrait;
 /**
  * Displays a dismissible banner promoting the WP Staging CLI tool
  *
- * The banner appears on both Staging and Backup tabs for Pro version users.
- * When dismissed, it stays hidden for 24 hours using WordPress transients.
+ * The banner appears on both Staging and Backup tabs for both free and Pro version users.
+ * "Later" dismissal uses client-side localStorage (24 hours). Permanent dismissal uses a wp_option.
  */
 class CliIntegrationNotice
 {
     use NoticesTrait;
 
-    /**
-     * @var bool Set to true to enable the CLI integration banner
-     * @todo Enable this in next version when the feature is ready
-     */
     const IS_ENABLED = true;
-
-    /**
-     * @var string Transient key for 24-hour dismissal
-     */
-    const TRANSIENT_CLI_NOTICE_DISMISSED = 'wpstg_cli_notice_dismissed';
 
     /**
      * @var string Option key for permanent dismissal
@@ -57,32 +48,18 @@ class CliIntegrationNotice
      */
     public function maybeShowCliNotice()
     {
-        // Feature is temporarily disabled
         if (!self::IS_ENABLED) {
             return;
         }
 
-        // Only show on WP Staging admin pages
         if (!$this->isWPStagingAdminPage()) {
             return;
         }
 
-        // Only show in Pro version
-        if (WPStaging::isBasic()) {
-            return;
-        }
-
-        // Don't show if user cannot manage options
         if (!current_user_can('manage_options')) {
             return;
         }
 
-        // Check if notice was dismissed in last 24 hours
-        if (get_transient(self::TRANSIENT_CLI_NOTICE_DISMISSED)) {
-            return;
-        }
-
-        // Check if notice was dismissed forever
         if (get_option(self::OPTION_CLI_NOTICE_HIDDEN_FOREVER)) {
             return;
         }
@@ -93,29 +70,21 @@ class CliIntegrationNotice
             return;
         }
 
-        // Prepare variables for the view
         $isDeveloperOrHigher = $this->isDeveloperOrHigherLicense();
+        $hasActiveLicense    = $this->hasActiveLicense();
         $planName            = $this->getLicensePlanName();
-
-        // Get backup list for modal step 3 (sorted by newest first)
-        $backups = [];
-        if ($isDeveloperOrHigher && class_exists('\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection')) {
-            try {
-                /** @var \WPStaging\Backup\Ajax\FileList\ListableBackupsCollection $listableBackupsCollection */
-                $listableBackupsCollection = WPStaging::make(\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection::class);
-                $backups                   = $listableBackupsCollection->getSortedListableBackups();
-            } catch (\Exception $e) {
-                $backups = [];
-            }
-        }
-
-        $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
+        $backups             = $this->fetchSortedBackups($isDeveloperOrHigher);
+        $urlAssets           = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
+        $licenseType         = $this->getLicenseTypeSlug();
+        $licenseId           = $this->getLicenseId();
 
         include $notice;
     }
 
     /**
-     * AJAX handler to dismiss the CLI notice for 24 hours
+     * AJAX handler to dismiss the CLI notice temporarily.
+     * The 24-hour hiding is handled client-side via localStorage.
+     * This endpoint persists the dock CTA flag.
      *
      * @return void
      */
@@ -125,7 +94,6 @@ class CliIntegrationNotice
             wp_send_json_error();
         }
 
-        set_transient(self::TRANSIENT_CLI_NOTICE_DISMISSED, true, DAY_IN_SECONDS);
         update_option(self::OPTION_CLI_DOCK_CTA_SHOWN, true, false);
         wp_send_json_success();
     }
@@ -147,7 +115,9 @@ class CliIntegrationNotice
     }
 
     /**
-     * Check if the dock CTA should be shown (banner dismissed but user has developer license)
+     * Check if the dock CTA should be shown (banner was dismissed).
+     * Shows for all users after banner dismissal. Non-developer users see a "Pro" badge
+     * and an upgrade notice inside the modal.
      *
      * @return bool
      */
@@ -161,45 +131,26 @@ class CliIntegrationNotice
             return false;
         }
 
-        if (WPStaging::isBasic()) {
-            return false;
-        }
-
         if (!current_user_can('manage_options')) {
             return false;
         }
 
-        // Only show if the dock CTA option is set (banner was dismissed)
         if (!get_option(self::OPTION_CLI_DOCK_CTA_SHOWN)) {
             return false;
         }
 
-        // Check if user has developer or higher license
-        return $this->isDeveloperOrHigherLicense();
+        return true;
     }
 
     /**
-     * Check if the user has a Developer or higher license plan
-     *
-     * Uses Licensing::isActiveAgencyOrDeveloperPlan() when available (Pro version).
+     * Check if the user has a Developer or higher license plan.
      * For Basic version, always returns false.
      *
      * @return bool
      */
     public function isDeveloperOrHigherLicense(): bool
     {
-        // In basic version, Licensing class is not available
-        if (WPStaging::isBasic()) {
-            return false;
-        }
-
-        // Use the Licensing class method
-        if (class_exists('\WPStaging\Pro\License\Licensing')) {
-            $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
-            return $licensing->isActiveAgencyOrDeveloperPlan();
-        }
-
-        return false;
+        return $this->checkLicensingCondition('isActiveAgencyOrDeveloperPlan');
     }
 
     /**
@@ -209,41 +160,36 @@ class CliIntegrationNotice
      */
     public function isExpiredDeveloperOrHigherLicense(): bool
     {
-        if (WPStaging::isBasic()) {
-            return false;
-        }
-
-        if (class_exists('\WPStaging\Pro\License\Licensing')) {
-            $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
-            return $licensing->isExpiredDeveloperOrAgencyPlan();
-        }
-
-        return false;
+        return $this->checkLicensingCondition('isExpiredDeveloperOrAgencyPlan');
     }
 
     /**
-     * Get the license plan name for the current license
-     *
-     * Uses Licensing::getAvailableLicensePlansByPriceId() when available (Pro version).
+     * Whether the user has a valid, active pro license (not free, not expired, not unregistered).
+     * Used to decide if the upgrade button should link to the internal license page or external checkout.
+     */
+    private function hasActiveLicense(): bool
+    {
+        return $this->checkLicensingCondition('isValidOrExpiredLicenseKey');
+    }
+
+    /**
+     * Get the license plan name for the current license.
      * For Basic version or invalid licenses, returns "Unregistered".
      *
      * @return string
      */
     public function getLicensePlanName(): string
     {
-        // In basic version, Licensing class is not available
         if (WPStaging::isBasic()) {
-            return __('Unregistered', 'wp-staging');
+            return __('Free', 'wp-staging');
         }
 
-        // Use the Licensing class method
         if (!class_exists('\WPStaging\Pro\License\Licensing')) {
             return __('Unregistered', 'wp-staging');
         }
 
         $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
 
-        // Check if license is valid or expired before getting plan name
         if (!$licensing->isValidOrExpiredLicenseKey()) {
             return __('Unregistered', 'wp-staging');
         }
@@ -298,7 +244,6 @@ class CliIntegrationNotice
             return;
         }
 
-        // Prepare the same variables used by cli-integration-notice.php
         $this->renderCliModalContent();
     }
 
@@ -309,26 +254,95 @@ class CliIntegrationNotice
      */
     private function renderCliModalContent()
     {
-        // Check Developer plan status
         $isDeveloperOrHigher = $this->isDeveloperOrHigherLicense();
-
-        // Get backup list for modal step 3 (sorted by newest first)
-        $backups = [];
-        if ($isDeveloperOrHigher && class_exists('\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection')) {
-            try {
-                /** @var \WPStaging\Backup\Ajax\FileList\ListableBackupsCollection $listableBackupsCollection */
-                $listableBackupsCollection = WPStaging::make(\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection::class);
-                $backups                   = $listableBackupsCollection->getSortedListableBackups();
-            } catch (\Exception $e) {
-                $backups = [];
-            }
-        }
-
-        $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
+        $backups             = $this->fetchSortedBackups($isDeveloperOrHigher);
+        $urlAssets           = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
+        $licenseType         = $this->getLicenseTypeSlug();
+        $licenseId           = $this->getLicenseId();
 
         $modalView = WPSTG_VIEWS_DIR . 'cli/cli-integration-modal.php';
         if (file_exists($modalView)) {
             include $modalView;
+        }
+    }
+
+    /**
+     * Get the license type slug (e.g. 'free', 'personal', 'business', 'developer', 'agency')
+     *
+     * @return string
+     */
+    private function getLicenseTypeSlug(): string
+    {
+        if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
+            return 'free';
+        }
+
+        $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
+        $type      = $licensing->getLicenseType();
+
+        return $type === 'basic' ? 'free' : $type;
+    }
+
+    /**
+     * Get the license ID from stored license status
+     * Returns empty string when unavailable.
+     *
+     * @return string
+     */
+    private function getLicenseId(): string
+    {
+        if (!WPStaging::isPro()) {
+            return '';
+        }
+
+        $license = get_option('wpstg_license_status', false);
+        if (!$license) {
+            return '';
+        }
+
+        $licenseData = (object)$license;
+
+        return !empty($licenseData->license_id) ? (string)$licenseData->license_id : '';
+    }
+
+    /**
+     * Check a condition on the Licensing class, returning false for Basic version
+     *
+     * @param string $method The Licensing method name to call
+     * @return bool
+     */
+    private function checkLicensingCondition(string $method): bool
+    {
+        if (WPStaging::isBasic()) {
+            return false;
+        }
+
+        if (!class_exists('\WPStaging\Pro\License\Licensing')) {
+            return false;
+        }
+
+        $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
+        return $licensing->$method();
+    }
+
+    /**
+     * Fetch sorted listable backups, returning an empty array on failure
+     *
+     * @param bool $isDeveloperOrHigher Whether the user has a Developer+ license
+     * @return array
+     */
+    private function fetchSortedBackups(bool $isDeveloperOrHigher): array
+    {
+        if (!$isDeveloperOrHigher || !class_exists('\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection')) {
+            return [];
+        }
+
+        try {
+            /** @var \WPStaging\Backup\Ajax\FileList\ListableBackupsCollection $listableBackupsCollection */
+            $listableBackupsCollection = WPStaging::make(\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection::class);
+            return $listableBackupsCollection->getSortedListableBackups();
+        } catch (\Exception $e) {
+            return [];
         }
     }
 

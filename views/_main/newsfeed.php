@@ -153,7 +153,7 @@ $renderTipText = function (array $tip): string {
             <?php endif; ?>
             <div class="wpstg-newsfeed-history-link">
                 <a href="<?php echo esc_url($data['changelog_url'] ?? 'https://wp-staging.com/wp-staging-pro-changelog/'); ?>" target="_blank">
-                    <?php esc_html_e('View full changelog history', 'wp-staging'); ?> &rarr;
+                    <?php esc_html_e('View changelog', 'wp-staging'); ?> &rarr;
                 </a>
             </div>
         </div>

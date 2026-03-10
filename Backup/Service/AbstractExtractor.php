@@ -307,6 +307,7 @@ abstract class AbstractExtractor
         if ($this->isFileExtracted($backupFileIndex, $this->extractingFile->getBackupPath())) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->debugLog('Skipping already extracted file: ' . rtrim($identifiablePath, "\n"));
             throw new \Exception('File already extracted: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
         }
 

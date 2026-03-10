@@ -10,6 +10,7 @@ namespace WPStaging\Framework\BackgroundProcessing;
 
 use WP_Error;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Network\HttpBasicAuth;
 
 use function WPStaging\functions\debug_log;
 
@@ -20,6 +21,8 @@ use function WPStaging\functions\debug_log;
  */
 trait WithQueueAwareness
 {
+    use HttpBasicAuth;
+
     /**
      * Whether this Queue instance did fire the AJAX action request or not.
      *
@@ -90,9 +93,10 @@ trait WithQueueAwareness
         $useGetMethod = Hooks::applyFilters(QueueProcessor::FILTER_REQUEST_FORCE_GET_METHOD, $useGetMethod);
 
         $response = wp_remote_request(esc_url_raw($ajaxUrl), [
-            'headers'   => [
-                'X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS,
-            ],
+            'headers'   => array_merge(
+                ['X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS],
+                $this->getHttpAuthHeaders()
+            ),
             'method'    => $useGetMethod ? 'GET' : 'POST',
             'blocking'  => $this->useBlockingRequest(),
             'timeout'   => $this->useBlockingRequest() ? 30 : 0.01, // 0.01 for a non-blocking request
@@ -162,9 +166,10 @@ trait WithQueueAwareness
     {
         // Let send a blocking request to check if POST method works
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
-            'headers'   => [
-                'X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS,
-            ],
+            'headers'   => array_merge(
+                ['X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS],
+                $this->getHttpAuthHeaders()
+            ),
             'blocking'  => true,
             'timeout'   => 10,
             'cookies'   => $this->getLoginRelatedCookies(),

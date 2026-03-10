@@ -98,109 +98,108 @@ $wpstgRestorePageUrl = add_query_arg([
                     <?php esc_html_e("Actions", "wp-staging"); ?>
                     <span class="wpstg-caret"></span>
                 </a>
-                <div class="wpstg-dropdown-menu">
+                <div class="wpstg-dropdown-menu wpstg-backup-actions-menu wpstg-w-64 wpstg-rounded-md wpstg-border wpstg-border-solid wpstg-bg-popover wpstg-p-1 wpstg-text-popover-foreground wpstg-shadow-md">
                     <?php if (!$isLegacy && !$isCorrupt && !$requires64Bit) : ?>
-                        <a href="javascript:void(0)" class="wpstg-clone-action wpstg--backup--restore"
+                        <div class="wpstg-px-2 wpstg-py-1.5 wpstg-text-[11px] wpstg-uppercase wpstg-tracking-wider wpstg-text-dim-foreground wpstg-font-medium"><?php esc_html_e('Restore', 'wp-staging'); ?></div>
+                        <a href="javascript:void(0)" class="wpstg-clone-action wpstg--backup--restore wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
                            data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
                            data-title="<?php esc_attr_e('Restore and overwrite current website according to the contents of this backup.', 'wp-staging'); ?>"
                            title="<?php esc_attr_e('Restore and overwrite current website according to the contents of this backup.', 'wp-staging'); ?>">
-                            <div class="wpstg-dropdown-item-icon">
-                                <?php $this->getAssets()->renderSvg('restore'); ?>
-                            </div>
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('restore'); ?></span>
                             <?php esc_html_e('Restore', 'wp-staging'); ?>
                         </a>
-                    <?php endif; ?>
-                    <?php if (!$isProVersion) :?>
-                        <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Upload Backup to Cloud", "wp-staging"); ?>">
-                            <div class="wpstg-dropdown-item-icon">
-                                <?php $this->getAssets()->renderSvg('upload-cloud'); ?>
-                            </div>
-                            <?php esc_html_e("Upload Backup to Cloud", "wp-staging"); ?>
-                            <span>(Pro)</span>
-                        </a>
-                    <?php endif;?>
-                    <?php if (!$isLegacy && !$isCorrupt && $isProVersion) : ?>
-                        <a href="javascript:void(0)" class="wpstg--backup--remote-upload wpstg-clone-action"
-                           data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
-                           title="<?php esc_attr_e('Upload to remote storage', 'wp-staging'); ?>">
-                            <div class="wpstg-dropdown-item-icon">
-                                <?php $this->getAssets()->renderSvg('upload-cloud'); ?>
-                            </div>
-                            <?php esc_html_e('Upload Backup to Cloud', 'wp-staging'); ?>
-                        </a>
+                        <div class="wpstg--mx-1 wpstg-my-1 wpstg-h-px wpstg-bg-dim"></div>
                     <?php endif; ?>
 
-                    <?php if ($isMultipartBackup) : ?>
-                        <a href="javascript:void(0)" class="wpstg--backup--download wpstg--backup--download-modal wpstg-merge-clone wpstg-clone-action"
+                    <div class="wpstg-px-2 wpstg-py-1.5 wpstg-text-[11px] wpstg-uppercase wpstg-tracking-wider wpstg-text-dim-foreground wpstg-font-medium"><?php esc_html_e('Manage Backup', 'wp-staging'); ?></div>
+                    <?php if (!$isLegacy && !$isCorrupt && !$requires64Bit && $isValidFileIndex) : ?>
+                        <a href="javascript:void(0)" class="wpstg--backup--explore wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
                            data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
-                           title="<?php esc_attr_e('Download backup file to local system', 'wp-staging'); ?>">
-                            <div class="wpstg-dropdown-item-icon">
-                                <?php $this->getAssets()->renderSvg('download'); ?>
-                            </div>
-                            <?php esc_html_e('Download Backup File', 'wp-staging'); ?>
-                        </a>
-                    <?php else : ?>
-                        <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($downloadUrl ?: ''); ?>" class="wpstg--backup--download wpstg-clone-action"
-                           title="<?php esc_attr_e('Download backup file to local system', 'wp-staging'); ?>">
-                            <div class="wpstg-dropdown-item-icon">
-                                <?php $this->getAssets()->renderSvg('download'); ?>
-                            </div>
-                            <?php esc_html_e('Download Backup File', 'wp-staging'); ?>
+                           data-name="<?php echo esc_attr($backupName); ?>"
+                           title="<?php esc_attr_e('Browse the contents of this backup.', 'wp-staging'); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('folder-new'); ?></span>
+                            <?php esc_html_e('Browse Backup', 'wp-staging'); ?>
                         </a>
                     <?php endif; ?>
-                    <a href="javascript:void(0)" id="wpstg-copy-backup-url" class="wpstg-clone-action"
+                    <?php if ($isMultipartBackup) : ?>
+                        <a href="javascript:void(0)" class="wpstg--backup--download wpstg--backup--download-modal wpstg-merge-clone wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                           data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
+                           title="<?php esc_attr_e('Download backup to local system', 'wp-staging'); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('download'); ?></span>
+                            <?php esc_html_e('Download Backup', 'wp-staging'); ?>
+                        </a>
+                    <?php else : ?>
+                        <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($downloadUrl ?: ''); ?>" class="wpstg--backup--download wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                           title="<?php esc_attr_e('Download backup to local system', 'wp-staging'); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('download'); ?></span>
+                            <?php esc_html_e('Download Backup', 'wp-staging'); ?>
+                        </a>
+                    <?php endif; ?>
+                    <a href="javascript:void(0)" id="wpstg-copy-backup-url" class="wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
                        data-copy-content="<?php echo esc_attr($downloadFileUrl); ?>"
-                       title="<?php esc_attr_e('Copy url to backup file to restore it quickly on another website.', 'wp-staging'); ?>">
-                        <div class="wpstg-dropdown-item-icon">
-                            <?php $this->getAssets()->renderSvg('copy-link'); ?>
-                        </div>
-                        <?php esc_html_e('Copy Link to Backup', 'wp-staging'); ?>
-                    </a>
-                    <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($logUrl ?: ''); ?>" class="wpstg-clone-action" title="<?php esc_attr_e('Download Log File', 'wp-staging'); ?>">
-                        <div class="wpstg-dropdown-item-icon">
-                            <?php $this->getAssets()->renderSvg('file'); ?>
-                        </div>
-                        <?php esc_html_e('Download Log File', 'wp-staging'); ?>
+                       title="<?php esc_attr_e('Copy backup link to restore it quickly on another website.', 'wp-staging'); ?>">
+                        <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('copy-link'); ?></span>
+                        <?php esc_html_e('Copy Backup Link', 'wp-staging'); ?>
                     </a>
                     <?php if (!$isLegacy && !$isCorrupt && !$requires64Bit) : ?>
-                        <a href="javascript:void(0)" class="wpstg--backup--edit wpstg-clone-action"
+                        <a href="javascript:void(0)" class="wpstg--backup--edit wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
                            data-md5="<?php echo esc_attr($backup->md5BaseName); ?>"
                            data-name="<?php echo esc_attr($backupName); ?>"
                            data-notes="<?php echo esc_attr($notes); ?>"
-                           title="<?php esc_attr_e('Edit backup name and / or notes', 'wp-staging'); ?>">
-                            <div class="wpstg-dropdown-item-icon">
-                                <?php $this->getAssets()->renderSvg('edit'); ?>
-                            </div>
-                            <?php esc_html_e('Edit', 'wp-staging'); ?>
+                           title="<?php esc_attr_e('Edit backup name and notes', 'wp-staging'); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('edit'); ?></span>
+                            <?php esc_html_e('Edit Backup Name', 'wp-staging'); ?>
                         </a>
                     <?php endif; ?>
-                    <?php if (!$isMultipartBackup) : ?>
-                        <?php if ($isProVersion) :?>
-                            <a href="<?php echo esc_url($wpstgRestorePageUrl); ?>" class="wpstg-clone-action"
-                               title="<?php esc_attr_e('Download restore tool', 'wp-staging'); ?>">
-                                <div class="wpstg-dropdown-item-icon">
-                                    <?php $this->getAssets()->renderSvg('restore-tool'); ?>
-                                </div>
-                                <?php esc_html_e('Get Restore Tool', 'wp-staging'); ?>
-                            </a>
-                        <?php else : ?>
-                            <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action"
-                               title="<?php esc_attr_e('Download restore tool', 'wp-staging'); ?>">
-                                <div class="wpstg-dropdown-item-icon">
-                                    <?php $this->getAssets()->renderSvg('restore-tool'); ?>
-                                </div>
-                                <?php esc_html_e('Get Restore Tool', 'wp-staging'); ?>
-                                <span>(Pro)</span>
+                    <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($logUrl ?: ''); ?>" class="wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground" title="<?php esc_attr_e('Download Log', 'wp-staging'); ?>">
+                        <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('file'); ?></span>
+                        <?php esc_html_e('Download Log', 'wp-staging'); ?>
+                    </a>
+
+                    <div class="wpstg--mx-1 wpstg-my-1 wpstg-h-px wpstg-bg-dim"></div>
+
+                    <div class="wpstg-px-2 wpstg-py-1.5 wpstg-text-[11px] wpstg-uppercase wpstg-tracking-wider wpstg-text-dim-foreground wpstg-font-medium">Pro</div>
+                    <?php if (!$isProVersion) :?>
+                        <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action wpstg-relative wpstg-flex wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none wpstg-opacity-60 wpstg-pointer-events-none"
+                           title="<?php echo esc_html__("Upload Backup to Cloud", "wp-staging"); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-primary wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('upload-cloud'); ?></span>
+                            <?php esc_html_e("Upload Backup to Cloud", "wp-staging"); ?>
+                            <span class="wpstg-ml-auto wpstg-text-[10px] wpstg-font-semibold wpstg-text-primary">(Pro)</span>
+                        </a>
+                    <?php else : ?>
+                        <?php if (!$isLegacy && !$isCorrupt) : ?>
+                            <a href="javascript:void(0)" class="wpstg--backup--remote-upload wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                               data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
+                               title="<?php esc_attr_e('Upload to remote storage', 'wp-staging'); ?>">
+                                <span class="wpstg-h-4 wpstg-w-4 wpstg-text-primary wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('upload-cloud'); ?></span>
+                                <?php esc_html_e('Upload Backup to Cloud', 'wp-staging'); ?>
                             </a>
                         <?php endif; ?>
                     <?php endif;?>
-                    <a href="javascript:void(0)" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-backup"
+                    <?php if (!$isMultipartBackup) : ?>
+                        <?php if ($isProVersion) :?>
+                            <a href="<?php echo esc_url($wpstgRestorePageUrl); ?>" class="wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                               title="<?php esc_attr_e('Download restore tool', 'wp-staging'); ?>">
+                                <span class="wpstg-h-4 wpstg-w-4 wpstg-text-primary wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('restore-tool'); ?></span>
+                                <?php esc_html_e('Download Restore Tool', 'wp-staging'); ?>
+                            </a>
+                        <?php else : ?>
+                            <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action wpstg-relative wpstg-flex wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none wpstg-opacity-60 wpstg-pointer-events-none"
+                               title="<?php esc_attr_e('Download restore tool', 'wp-staging'); ?>">
+                                <span class="wpstg-h-4 wpstg-w-4 wpstg-text-primary wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('restore-tool'); ?></span>
+                                <?php esc_html_e('Download Restore Tool', 'wp-staging'); ?>
+                                <span class="wpstg-ml-auto wpstg-text-[10px] wpstg-font-semibold wpstg-text-primary">(Pro)</span>
+                            </a>
+                        <?php endif; ?>
+                    <?php endif;?>
+
+                    <div class="wpstg--mx-1 wpstg-my-1 wpstg-h-px wpstg-bg-dim"></div>
+
+                    <a href="javascript:void(0)" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-backup wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none wpstg-text-destructive hover:wpstg-bg-destructive/10 hover:wpstg-text-destructive"
                        data-name="<?php echo esc_attr($backupName); ?>"
                        data-md5="<?php echo esc_attr($backup->md5BaseName); ?>"
                        title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging'); ?>">
-                        <div class="wpstg-dropdown-item-icon">
-                            <?php $this->getAssets()->renderSvg('trash'); ?>
-                        </div>
+                        <span class="wpstg-h-4 wpstg-w-4 wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('trash'); ?></span>
                         <?php esc_html_e('Delete', 'wp-staging'); ?>
                     </a>
                     <?php

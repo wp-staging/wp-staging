@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Ajax;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DirectoryListing;
@@ -58,7 +59,7 @@ class StagingSiteDataChecker
                     );
                 }
 
-                $supportLink = '<a href="https://wp-staging.com/support/" target="_blank" rel="noopener noreferrer">' . esc_html__('open a support ticket', 'wp-staging') . '</a>';
+                $supportLink = '<a href="' . esc_url(Language::localizeSupportUrl('https://wp-staging.com/support/')) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('open a support ticket', 'wp-staging') . '</a>';
                 $message = sprintf(
                     __('The directory <strong>%s</strong> is not writable due to %s.<br/>
                     <p class="wpstg-mb-10px wpstg-mt-10px"><strong>How to fix this:</strong></p>

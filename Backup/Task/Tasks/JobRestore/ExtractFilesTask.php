@@ -236,17 +236,25 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
      */
     private function extractionFinishedLog()
     {
-        if ($this->currentTaskDto->totalFilesExtracted === $this->stepsDto->getTotal()) {
+        $totalFilesProcessed = $this->currentTaskDto->totalFilesExtracted + $this->currentTaskDto->totalFilesSkipped;
+        if ($totalFilesProcessed === $this->stepsDto->getTotal()) {
+            if ($this->currentTaskDto->totalFilesSkipped > 0) {
+                $this->logger->info(sprintf(
+                    'Extraction complete: %d files extracted, %d files skipped.',
+                    $this->currentTaskDto->totalFilesExtracted,
+                    $this->currentTaskDto->totalFilesSkipped
+                ));
+            }
+
             return;
         }
 
-        // No-filter Unexpected finish. Log the difference and continue.
-        if (empty($this->getExcludedIdentifiers())) {
-            $this->logger->warning(sprintf('Expected to find %d files in Backup, but found %d files instead.', $this->stepsDto->getTotal(), $this->currentTaskDto->totalFilesExtracted));
-            return;
-        }
-
-        // Filter involved
-        $this->logger->warning(sprintf('Total %d files in Backup, extracted %d files, skipped %d files', $this->stepsDto->getTotal(), $this->currentTaskDto->totalFilesExtracted, $this->currentTaskDto->totalFilesSkipped));
+        $this->logger->warning(sprintf(
+            'Expected to process %d files in Backup, but processed %d instead (extracted: %d, skipped: %d).',
+            $this->stepsDto->getTotal(),
+            $totalFilesProcessed,
+            $this->currentTaskDto->totalFilesExtracted,
+            $this->currentTaskDto->totalFilesSkipped
+        ));
     }
 }

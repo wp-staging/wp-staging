@@ -8,6 +8,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 
 ?>
 <div id="wpstg-faq" class="wpstg-faq-container wpstg-u-block">
@@ -21,7 +22,7 @@ use WPStaging\Core\WPStaging;
 
     <div class="wpstg-faq-content" style="display: none;">
         <ul class="wpstg-faq-list">
-            <li class="wpstg-faq-item"><a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank" rel="external"><?php esc_html_e('Migrate Website to Another Server or Domain', 'wp-staging'); ?></a></li>
+            <li class="wpstg-faq-item"><a href="<?php echo esc_url(Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/')); ?>" target="_blank" rel="external"><?php esc_html_e('Migrate Website to Another Server or Domain', 'wp-staging'); ?></a></li>
             <li class="wpstg-faq-item"><a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php esc_html_e('Can not login to staging site', 'wp-staging'); ?></a></li>
             <li class="wpstg-faq-item"><a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php esc_html_e('Staging site redirects to production site', 'wp-staging'); ?></a></li>
             <li class="wpstg-faq-item"><a href="https://wp-staging.com/docs/fix-white-or-blank-page-after-pushing-fatal-error-500/" target="_blank" rel="external"><?php esc_html_e('Staging site returns blank white page', 'wp-staging'); ?></a></li>
@@ -41,10 +42,10 @@ use WPStaging\Core\WPStaging;
     <div class="wpstg-faq-footer">
         <div class="wpstg-faq-contact">
             <?php esc_html_e('Still questions?', 'wp-staging'); ?>
-            <a href="https://wp-staging.com/support" target="_blank" rel="external nofollow"><?php esc_html_e('Contact us', 'wp-staging'); ?></a>
+            <a href="<?php echo esc_url(Language::localizeSupportUrl('https://wp-staging.com/support/')); ?>" target="_blank" rel="external nofollow"><?php esc_html_e('Contact us', 'wp-staging'); ?></a>
         </div>
         <div class="wpstg-faq-links">
-            <a href="https://wp-staging.com/docs/documentation/" target="_blank" class="wpstg-faq-all-articles">
+            <a href="<?php echo esc_url(Language::localizeDocsUrl('https://wp-staging.com/docs/documentation/')); ?>" target="_blank" class="wpstg-faq-all-articles">
                 <?php esc_html_e('View documentation', 'wp-staging'); ?> &rarr;
             </a>
             <div class="wpstg-faq-social">

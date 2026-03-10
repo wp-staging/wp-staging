@@ -11,6 +11,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Network\HttpBasicAuth;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Capabilities;
@@ -35,6 +36,8 @@ use function WPStaging\functions\debug_log;
  */
 class BackupScheduler
 {
+    use HttpBasicAuth;
+
     /** @var string */
     const OPTION_BACKUP_SCHEDULE_ERROR_REPORT = 'wpstg_backup_schedules_send_error_report';
 
@@ -588,6 +591,15 @@ class BackupScheduler
         ]);
 
         $cronRequest['args']['blocking'] = true;
+
+        $authHeader = $this->getHttpAuthHeaders();
+        if (!empty($authHeader)) {
+            $cronRequest['args']['headers'] = array_merge(
+                isset($cronRequest['args']['headers']) ? $cronRequest['args']['headers'] : [],
+                $authHeader
+            );
+        }
+
         $result = wp_remote_post($cronRequest['url'], $cronRequest['args']);
 
         // Action hook for internal use only: used during cron failure test

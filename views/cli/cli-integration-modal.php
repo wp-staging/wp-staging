@@ -11,6 +11,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Utils\Sanitize;
 
 /**
@@ -42,6 +43,18 @@ $licenseFlag      = !empty($licenseKeySanitized) ? ' -l ' . $licenseKeySanitized
 $maskedLicenseKey = !empty($licenseKeySanitized) ? substr($licenseKeySanitized, 0, 4) . '...' . substr($licenseKeySanitized, -4) : '';
 $licenseFlagMasked = !empty($licenseKeySanitized) ? ' -l ' . $maskedLicenseKey : '';
 $hasLicense       = !empty($licenseKeySanitized);
+
+$licensingState = 'active';
+if (!$isDeveloperOrHigher) {
+    if (WPStaging::isBasic()) {
+        $licensingState = 'free';
+    } elseif (class_exists('\WPStaging\Pro\License\Licensing')) {
+        $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
+        $licensingState = $licensing->isValidOrExpiredLicenseKey() ? 'upgrade_needed' : 'not_activated';
+    } else {
+        $licensingState = 'not_activated';
+    }
+}
 ?>
 <div id="wpstg-cli-install-modal-content" style="display: none;" data-copied-text="<?php echo esc_attr__('Copied to clipboard!', 'wp-staging'); ?>">
     <div class="wpstg-cli-modal-layout">
@@ -123,14 +136,16 @@ $hasLicense       = !empty($licenseKeySanitized);
                         <?php echo esc_html__('One time install that works with Docker Desktop and Docker Engine.', 'wp-staging'); ?>
                     </p>
 
+                    <?php
+                    // Mac and Linux share the same bash install command
+                    $cmdBashFull   = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlag : '');
+                    $cmdBashMasked = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlagMasked : '');
+                    ?>
+
                     <!-- Mac Tab Content -->
                     <div class="wpstg-cli-tab-content" data-tab-content="mac" role="tabpanel" style="display: none;">
-                        <?php
-                        $cmdMacFull = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlag : '');
-                        $cmdMacMasked = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlagMasked : '');
-                        ?>
-                        <input id="wpstg-cli-cmd-mac-full" type="hidden" value="<?php echo esc_attr($cmdMacFull); ?>" />
-                        <input id="wpstg-cli-cmd-mac-masked" type="hidden" value="<?php echo esc_attr($cmdMacMasked); ?>" />
+                        <input id="wpstg-cli-cmd-mac-full" type="hidden" value="<?php echo esc_attr($cmdBashFull); ?>" />
+                        <input id="wpstg-cli-cmd-mac-masked" type="hidden" value="<?php echo esc_attr($cmdBashMasked); ?>" />
                         <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
                             <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
                                 <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
@@ -165,7 +180,7 @@ $hasLicense       = !empty($licenseKeySanitized);
                             <div class="wpstg-cli-terminal-body wpstg-px-4 wpstg-py-3">
                                 <code class="wpstg-flex wpstg-items-center wpstg-text-sm wpstg-leading-relaxed wpstg-break-all wpstg-font-mono wpstg-text-terminal-text">
                                     <span class="wpstg-mr-3 wpstg-font-semibold wpstg-text-terminal-prompt">$</span>
-                                    <span id="wpstg-cli-cmd-mac-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdMacMasked : $cmdMacFull); ?></span>
+                                    <span id="wpstg-cli-cmd-mac-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdBashMasked : $cmdBashFull); ?></span>
                                 </code>
                             </div>
                         </div>
@@ -173,12 +188,8 @@ $hasLicense       = !empty($licenseKeySanitized);
 
                     <!-- Linux Tab Content -->
                     <div class="wpstg-cli-tab-content" data-tab-content="linux" role="tabpanel" style="display: none;">
-                        <?php
-                        $cmdLinuxFull = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlag : '');
-                        $cmdLinuxMasked = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlagMasked : '');
-                        ?>
-                        <input id="wpstg-cli-cmd-linux-full" type="hidden" value="<?php echo esc_attr($cmdLinuxFull); ?>" />
-                        <input id="wpstg-cli-cmd-linux-masked" type="hidden" value="<?php echo esc_attr($cmdLinuxMasked); ?>" />
+                        <input id="wpstg-cli-cmd-linux-full" type="hidden" value="<?php echo esc_attr($cmdBashFull); ?>" />
+                        <input id="wpstg-cli-cmd-linux-masked" type="hidden" value="<?php echo esc_attr($cmdBashMasked); ?>" />
                         <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
                             <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
                                 <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
@@ -213,7 +224,7 @@ $hasLicense       = !empty($licenseKeySanitized);
                             <div class="wpstg-cli-terminal-body wpstg-px-4 wpstg-py-3">
                                 <code class="wpstg-flex wpstg-items-center wpstg-text-sm wpstg-leading-relaxed wpstg-break-all wpstg-font-mono wpstg-text-terminal-text">
                                     <span class="wpstg-mr-3 wpstg-font-semibold wpstg-text-terminal-prompt">$</span>
-                                    <span id="wpstg-cli-cmd-linux-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdLinuxMasked : $cmdLinuxFull); ?></span>
+                                    <span id="wpstg-cli-cmd-linux-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdBashMasked : $cmdBashFull); ?></span>
                                 </code>
                             </div>
                         </div>
@@ -224,8 +235,8 @@ $hasLicense       = !empty($licenseKeySanitized);
                     <div class="wpstg-cli-tab-content" data-tab-content="windows" role="tabpanel" style="display: none;">
                         <p class="wpstg-cli-windows-label"><?php echo esc_html__('Windows PowerShell:', 'wp-staging'); ?></p>
                         <?php
-                        $licenseFlagPs = !empty($licenseKey) ? ' -l ' . $licenseKey : '';
-                        $licenseFlagPsMasked = !empty($licenseKey) ? ' -l ' . $maskedLicenseKey : '';
+                        $licenseFlagPs = !empty($licenseKeySanitized) ? ' -l ' . $licenseKeySanitized : '';
+                        $licenseFlagPsMasked = !empty($licenseKeySanitized) ? ' -l ' . $maskedLicenseKey : '';
                         $cmdPsFull = '& ([scriptblock]::Create((irm https://wp-staging.com/install.ps1)))' . $licenseFlagPs;
                         $cmdPsMasked = '& ([scriptblock]::Create((irm https://wp-staging.com/install.ps1)))' . $licenseFlagPsMasked;
                         ?>
@@ -272,8 +283,8 @@ $hasLicense       = !empty($licenseKeySanitized);
 
                         <p class="wpstg-cli-windows-label"><?php echo esc_html__('Windows CMD:', 'wp-staging'); ?></p>
                         <?php
-                        $licenseFlagCmd = !empty($licenseKey) ? ' -l ' . $licenseKey : '';
-                        $licenseFlagCmdMasked = !empty($licenseKey) ? ' -l ' . $maskedLicenseKey : '';
+                        $licenseFlagCmd = !empty($licenseKeySanitized) ? ' -l ' . $licenseKeySanitized : '';
+                        $licenseFlagCmdMasked = !empty($licenseKeySanitized) ? ' -l ' . $maskedLicenseKey : '';
                         $cmdCmdFull = 'curl -fsSL https://wp-staging.com/install.cmd -o install.cmd && install.cmd' . $licenseFlagCmd . ' && del install.cmd';
                         $cmdCmdMasked = 'curl -fsSL https://wp-staging.com/install.cmd -o install.cmd && install.cmd' . $licenseFlagCmdMasked . ' && del install.cmd';
                         ?>
@@ -318,6 +329,24 @@ $hasLicense       = !empty($licenseKeySanitized);
                             </div>
                         </div>
                     </div>
+                    <?php if ($licensingState !== 'active') : ?>
+                        <p class="wpstg-cli-license-note">
+                            <?php echo esc_html__('You can install now.', 'wp-staging'); ?>
+                            <?php echo wp_kses(
+                                sprintf(
+                                    __('Step 2 requires a %1$s or %2$s license.', 'wp-staging'),
+                                    '<a href="' . esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')) . '" target="_blank">Developer</a>',
+                                    '<a href="' . esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')) . '" target="_blank">Agency</a>'
+                                ),
+                                [
+                                    'a' => [
+                                        'href'   => [],
+                                        'target' => [],
+                                    ],
+                                ]
+                            ); ?>
+                        </p>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Step 2: Create Local WordPress Site -->
@@ -328,6 +357,28 @@ $hasLicense       = !empty($licenseKeySanitized);
                     <p class="wpstg-cli-step-note">
                         <?php echo esc_html__('Launch a fresh WordPress instance with the same PHP and WordPress versions as this site uses.', 'wp-staging'); ?>
                     </p>
+                    <?php if ($licensingState === 'free') : ?>
+                        <div class="wpstg-cli-gating-notice">
+                            <span><?php echo esc_html__('Running this command requires a Developer or Agency license.', 'wp-staging'); ?></span>
+                            <a href="<?php echo esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')); ?>" target="_blank" rel="noreferrer noopener">
+                                <?php echo esc_html__('View pricing', 'wp-staging'); ?>
+                            </a>
+                        </div>
+                    <?php elseif ($licensingState === 'upgrade_needed') : ?>
+                        <div class="wpstg-cli-gating-notice">
+                            <span><?php echo esc_html__('Running this command requires a Developer or Agency license.', 'wp-staging'); ?></span>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+                                <?php echo esc_html__('Upgrade', 'wp-staging'); ?>
+                            </a>
+                        </div>
+                    <?php elseif ($licensingState === 'not_activated') : ?>
+                        <div class="wpstg-cli-gating-notice">
+                            <span><?php echo esc_html__('Activate your license to run this command.', 'wp-staging'); ?></span>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+                                <?php echo esc_html__('Enter license key', 'wp-staging'); ?>
+                            </a>
+                        </div>
+                    <?php endif; ?>
                     <?php $cmdAdd = sprintf('wpstaging add %s --wp=%s --php=%s --db-prefix=%s', $localDomain, $wpVersion, $phpVersion, $tablePrefix);?>
                     <input id="wpstg-cli-cmd-add" type="hidden" value="<?php echo esc_attr($cmdAdd); ?>" />
                     <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
@@ -470,7 +521,7 @@ $hasLicense       = !empty($licenseKeySanitized);
 
             <!-- Modal Footer -->
             <div class="wpstg-cli-modal-footer">
-                <a href="https://wp-staging.com/docs/set-up-wp-staging-cli/" target="_blank" rel="noreferrer noopener" class="wpstg-cli-docs-link">
+                <a href="<?php echo esc_url(Language::localizeDocsUrl('https://wp-staging.com/docs/set-up-wp-staging-cli/')); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-cli-docs-link">
                     <?php echo esc_html__('Documentation', 'wp-staging'); ?>
                     <svg class="wpstg-cli-external-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                 </a>
@@ -493,6 +544,29 @@ $hasLicense       = !empty($licenseKeySanitized);
                 <div class="wpstg-cli-sidebar-card">
                     <p class="wpstg-cli-sidebar-card-title"><?php echo esc_html__('Requires Docker', 'wp-staging'); ?></p>
                     <p class="wpstg-cli-sidebar-card-text"><?php echo esc_html__('WP Staging CLI uses Docker to run an isolated local copy of this site. Install and start Docker Desktop (or Docker Engine) before continuing.', 'wp-staging'); ?></p>
+                    <?php
+                    $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
+                    $learnMoreUrl = strpos($locale, 'de_') === 0
+                        ? 'https://wp-staging.com/de/cli/upgrade/'
+                        : 'https://wp-staging.com/cli/upgrade/';
+
+                    $learnMoreParams = [];
+                    if (!empty($licenseType)) {
+                        $learnMoreParams['plan'] = $licenseType;
+                    }
+
+                    if (!empty($licenseId)) {
+                        $learnMoreParams['license_id'] = $licenseId;
+                    }
+
+                    if (!empty($learnMoreParams)) {
+                        $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
+                    }
+                    ?>
+                    <a href="<?php echo esc_url($learnMoreUrl); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-link">
+                        <?php echo esc_html__('Learn more', 'wp-staging'); ?>
+                        <svg class="wpstg-cli-external-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
                     <a href="https://wp-staging.com/launch-docker" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-link">
                         <?php echo esc_html__('Docker setup guide', 'wp-staging'); ?>
                         <svg class="wpstg-cli-external-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
@@ -538,7 +612,7 @@ $hasLicense       = !empty($licenseKeySanitized);
 
             <div class="wpstg-cli-sidebar-footer">
                 <p class="wpstg-cli-sidebar-footer-label"><?php echo esc_html__('Need Help?', 'wp-staging'); ?></p>
-                <a href="https://wp-staging.com/support/" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-support-btn">
+                <a href="<?php echo esc_url(Language::localizeSupportUrl('https://wp-staging.com/support/')); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-support-btn">
                     <?php echo esc_html__('Contact Support', 'wp-staging'); ?>
                 </a>
             </div>

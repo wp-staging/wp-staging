@@ -319,6 +319,8 @@ class Uninstall
             'wpstg_access_token',
             'wpstg_disabled_notice',
             'wpstg_send_email_as_html',
+            'wpstg_cli_notice_hidden_forever',
+            'wpstg_cli_dock_cta_shown',
         ];
     }
 

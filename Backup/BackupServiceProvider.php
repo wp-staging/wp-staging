@@ -21,6 +21,7 @@ use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Ajax\BackupSpeedIndex;
+use WPStaging\Backup\Ajax\Explore;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\DirectoryInterface;
@@ -94,6 +95,10 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backups--prepare-url-upload', $this->container->callback(BackupDownloader::class, 'ajaxPrepareUpload')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--url-file-upload', $this->container->callback(BackupDownloader::class, 'ajaxDownloadBackupFromRemoteServer'), 10, 0); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--uploads-delete-unfinished', $this->container->callback(Upload::class, 'ajaxDeleteIncompleteUploads')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--explore-list', $this->container->callback(Explore::class, 'listFiles')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--explore-tree', $this->container->callback(Explore::class, 'listTree')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--explore-browse', $this->container->callback(Explore::class, 'browse')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--explore-select-directory', $this->container->callback(Explore::class, 'listDirectoryFiles')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_calculate_backup_speed_index', $this->container->callback(BackupSpeedIndex::class, 'ajaxMaybeShowModal')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // TODO: move this to JobServiceProvider once the Staging PR: https://github.com/wp-staging/wp-staging-pro/pull/3738 is merged

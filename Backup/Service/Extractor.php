@@ -256,6 +256,7 @@ class Extractor extends AbstractExtractor
         if ($this->currentIdentifier === PathIdentifier::IDENTIFIER_UPLOADS && $this->isExcludedFile($destinationFilePath)) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->debugLog('Skipping excluded upload file: ' . rtrim($destinationFilePath, "\n"));
             return;
         }
 

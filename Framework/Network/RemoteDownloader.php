@@ -67,6 +67,9 @@ class RemoteDownloader
     /** @var resource|null */
     private $fileHandle = null;
 
+    /** @var array<string, string> */
+    private $customHeaders = [];
+
     /**
      * @param Sanitize $sanitize
      */
@@ -193,6 +196,15 @@ class RemoteDownloader
     }
 
     /**
+     * @param array<string, string> $headers
+     * @return void
+     */
+    public function setCustomHeaders(array $headers)
+    {
+        $this->customHeaders = $headers;
+    }
+
+    /**
      * @param string $message
      * @param bool $success
      * @param bool $completed
@@ -229,6 +241,15 @@ class RemoteDownloader
             $this->message  = $response->get_error_message();
             $this->success  = false;
             $this->completed = true;
+            return;
+        }
+
+        if ($this->isAuthenticationFailure($response)) {
+            $this->lastDownloadedBytes = 0;
+            $this->setAuthenticationFailureMessage($response);
+            $this->success = false;
+            $this->completed = true;
+
             return;
         }
 
@@ -309,12 +330,24 @@ class RemoteDownloader
      */
     public function fetchRemoteFileSize(bool $sslVerify = true): int
     {
-        $response = wp_remote_head($this->remoteUrl, [
+        $args = [
             'sslverify' => $sslVerify,
-        ]);
+        ];
+
+        if (!empty($this->customHeaders)) {
+            $args['headers'] = $this->customHeaders;
+        }
+
+        $response = wp_remote_head($this->remoteUrl, $args);
 
         if (is_wp_error($response)) {
             $this->message = $response->get_error_message();
+            return 0;
+        }
+
+        if ($this->isAuthenticationFailure($response)) {
+            $this->setAuthenticationFailureMessage($response);
+
             return 0;
         }
 
@@ -334,15 +367,22 @@ class RemoteDownloader
     public function fetchRemoteFileSizeByGet(bool $sslVerify = true): int
     {
         $args = [
-            'headers'   => [
-                'Range' => 'bytes=0-0', // Ask for the first byte only
-            ],
+            'headers'   => array_merge(
+                ['Range' => 'bytes=0-0'],
+                $this->customHeaders
+            ),
             'sslverify' => $sslVerify,
         ];
 
         $response = wp_remote_get($this->remoteUrl, $args);
         if (is_wp_error($response)) {
             $this->message = $response->get_error_message();
+            return 0;
+        }
+
+        if ($this->isAuthenticationFailure($response)) {
+            $this->setAuthenticationFailureMessage($response);
+
             return 0;
         }
 
@@ -435,6 +475,15 @@ class RemoteDownloader
         ];
 
         $response     = $this->makeRemoteRequest($args);
+
+        if ($this->isAuthenticationFailure($response)) {
+            $this->setAuthenticationFailureMessage($response);
+            $this->success = false;
+            $this->completed = true;
+
+            return false;
+        }
+
         $responseCode = wp_remote_retrieve_response_code($response);
         if (is_array($response) && !is_wp_error($response) && (int)$responseCode === 200) {
             return true;
@@ -466,6 +515,13 @@ class RemoteDownloader
         ];
 
         $response = $this->makeRemoteRequest($args);
+
+        if ($this->isAuthenticationFailure($response)) {
+            $this->setAuthenticationFailureMessage($response);
+
+            return '';
+        }
+
         $responseCode = wp_remote_retrieve_response_code($response);
         if (is_array($response) && !is_wp_error($response) && in_array((int)$responseCode, [200, 206])) {
             return wp_remote_retrieve_body($response);
@@ -486,6 +542,42 @@ class RemoteDownloader
             $args['method'] = 'POST';
         }
 
+        if (!empty($this->customHeaders)) {
+            $args['headers'] = array_merge(
+                isset($args['headers']) ? $args['headers'] : [],
+                $this->customHeaders
+            );
+        }
+
         return wp_remote_request($this->remoteUrl, $args);
+    }
+
+    /**
+     * @param array|\WP_Error $response
+     * @return bool
+     */
+    private function isAuthenticationFailure($response): bool
+    {
+        if (is_wp_error($response) || !is_array($response)) {
+            return false;
+        }
+
+        $responseCode = (int) wp_remote_retrieve_response_code($response);
+
+        return in_array($responseCode, [401, 403], true);
+    }
+
+    /**
+     * @param array|\WP_Error $response
+     * @return void
+     */
+    private function setAuthenticationFailureMessage($response)
+    {
+        $responseCode = (int) wp_remote_retrieve_response_code($response);
+
+        $this->message = sprintf(
+            esc_html__('Authentication failed (%d). Please check your HTTP authentication credentials.', 'wp-staging'),
+            $responseCode
+        );
     }
 }

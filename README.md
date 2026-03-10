@@ -1,17 +1,7 @@
-[![Fast tests: Lint JS, PHPCS/XSS, PHPStan, PHPUnit](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml)
-[![All Pro e2e](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml)
-[![Pro Test Suite (Sequential & Restartable)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_test_suite_sequential.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_test_suite_sequential.yml)
-[![Basic Playwright](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml)
-[![Pro Multisite Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml)
-[![Pro Multisite Cloning](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_cloning.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_cloning.yml)
-[![Pro Flywheel/WordPressCom Single Site Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml)
-[![Pro Flywheel/WordPressCom Single Site Backup Compression Enabled](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup_compression.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup_compression.yml)
-[![Pro Single Site Backup Compression Enabled](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_backup_compression.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_backup_compression.yml)
-[![Pro Single Site Cloud Storage](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_cloud_storage.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_cloud_storage.yml)
-[![Basic Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![Pro Integration](https://github.com/wp-staging/wp-staging-pro/actions/workflows/integration.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/integration.yml)
-[![Basic Cloning](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_cloning.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_cloning.yml)
-[![Unit tests on Windows](https://github.com/wp-staging/wp-staging-pro/actions/workflows/windows_wpunit.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/windows_wpunit.yml)
+![Tests](https://img.shields.io/badge/tests-PHPUnit%20%7C%20Playwright%20%7C%20Selenium-blue)
+![PHP](https://img.shields.io/badge/php-7.4%20%7C%208.0--8.4-8892BF)
+![WordPress](https://img.shields.io/badge/WordPress-tested%20up%20to%206.9-21759b)
+![License](https://img.shields.io/badge/license-GPLv2%2B-green)
 
 ### Welcome to the WP Staging repository
 
@@ -29,7 +19,7 @@ In the real repository, we run thousands of quality tests using GitHub actions d
 If you find an issue, let us know [here](https://github.com/WP-Staging/wp-staging/issues?state=open)!
 
 ## Support ##
-This is a public mirror of WP STAGING BASIC version. No official support is given here but we check this repository regularely for feedback and PR's
+This is a public mirror of WP STAGING BASIC version. No official support is given here but we check this repository regularly for feedback and PRs
 
 ## Contributions ##
 Anyone is welcome to contribute to WP STAGING. Please read the [guidelines for contributing](https://github.com/wp-staging/wp-staging/blob/master/CONTRIBUTING.md) to this repository.

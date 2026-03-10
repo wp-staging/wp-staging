@@ -10,6 +10,7 @@ use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Traits\TablePrefixValidator;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Staging\Service\Database\RowsExporter;
@@ -21,6 +22,7 @@ use WPStaging\Staging\Service\Database\RowsExporter;
 class Database extends CloningProcess
 {
     use TotalStepsAreNumberOfTables;
+    use TablePrefixValidator;
 
     /**
      * @var DatabaseCloningService
@@ -499,6 +501,11 @@ class Database extends CloningProcess
         // same condition as in WordPress wpdb::set_prefix() method
         if (preg_match('|[^a-z0-9_]|i', $this->options->databasePrefix)) {
             $this->returnException(__("Table prefix contains invalid character(s). Use different prefix with valid characters.", 'wp-staging'));
+            return true;
+        }
+
+        if ($this->isWpStagingReservedPrefix($this->options->databasePrefix)) {
+            $this->returnException($this->getReservedPrefixErrorMessage($this->options->databasePrefix));
             return true;
         }
 

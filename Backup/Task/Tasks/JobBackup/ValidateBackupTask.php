@@ -97,15 +97,31 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
             throw $e;
         } catch (FinishedQueueException $e) {
             $this->currentTaskDto->fromExtractorDto($this->backupExtractor->getExtractorDto());
-            if ($this->currentTaskDto->totalFilesExtracted !== $this->stepsDto->getTotal()) {
+            $totalFilesProcessed = $this->currentTaskDto->totalFilesExtracted + $this->currentTaskDto->totalFilesSkipped;
+            if ($totalFilesProcessed !== $this->stepsDto->getTotal()) {
                 // Unexpected finish.
-                $this->logger->error(sprintf('Expected to find %d files in Backup, but found %d files instead.', $this->stepsDto->getTotal(), $this->currentTaskDto->totalFilesExtracted));
+                $this->logger->error(sprintf(
+                    'Expected to validate %d files in Backup, but processed %d instead (extracted: %d, skipped: %d).',
+                    $this->stepsDto->getTotal(),
+                    $totalFilesProcessed,
+                    $this->currentTaskDto->totalFilesExtracted,
+                    $this->currentTaskDto->totalFilesSkipped
+                ));
                 $this->setCurrentTaskDto($this->currentTaskDto);
                 return $this->generateResponse(false);
             }
+
+            if ($this->currentTaskDto->totalFilesSkipped > 0) {
+                $this->logger->info(sprintf(
+                    'Backup validation complete: %d files extracted, %d files skipped.',
+                    $this->currentTaskDto->totalFilesExtracted,
+                    $this->currentTaskDto->totalFilesSkipped
+                ));
+            }
         }
 
-        $this->stepsDto->setCurrent($this->currentTaskDto->totalFilesExtracted);
+        $totalFilesProcessed = $this->currentTaskDto->totalFilesExtracted + $this->currentTaskDto->totalFilesSkipped;
+        $this->stepsDto->setCurrent($totalFilesProcessed);
 
         $this->logger->info(sprintf('Validated %d/%d files...', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal()));
 

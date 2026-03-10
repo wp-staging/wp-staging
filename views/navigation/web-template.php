@@ -142,3 +142,8 @@ if (defined('WPSTGPRO_VERSION') && ((!empty($license->license) && $license->lice
         </li>
     </ul>
 </div>
+<?php
+if (empty($wpstgDeferCompatNotice)) {
+    WPStaging::make(\WPStaging\Framework\Notices\WpVersionCompatNotice::class)->maybeShow();
+}
+?>

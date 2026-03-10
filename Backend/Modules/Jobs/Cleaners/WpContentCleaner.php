@@ -74,8 +74,9 @@ class WpContentCleaner
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeThemePath());
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativePluginPath());
             foreach (PartIdentifier::DROP_IN_FILES as $file) {
-                if (file_exists($directory . $file)) {
-                    $paths[] = $directory . $file;
+                $dropInPath = $directory . $wpDirectories->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . $file;
+                if (file_exists($dropInPath)) {
+                    $paths[] = $dropInPath;
                 }
             }
         }
