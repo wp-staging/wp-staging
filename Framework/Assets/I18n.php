@@ -342,6 +342,8 @@ class I18n
             'resetKeyWarningTitle'                                => esc_html__('This action cannot be undone', 'wp-staging'),
             'resetKeyWarningText'                                 => esc_html__('The current key will be permanently invalidated. Any site using this key will no longer be able to import data from this site.', 'wp-staging'),
             'resetKey'                                            => esc_html__('Reset Key', 'wp-staging'),
+            'enabled'                                             => esc_html__('Enabled', 'wp-staging'),
+            'disabled'                                            => esc_html__('Disabled', 'wp-staging'),
             'remote_storage'                                      => [
                 'host_required'                            => esc_html__('Host field is required.', 'wp-staging'),
                 'port_required'                            => esc_html__('Port field is required.', 'wp-staging'),
