@@ -4,19 +4,19 @@ Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, lucasbustamante,
 Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, restore, migration, staging, wordpress backup, cloning
+Tags: backup, restore, migration, staging, wordpress backup
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.7.0
+Stable tag: 4.7.1
 Requires PHP: 7.0
 
-Backup, restore, staging, and migration for WordPress. Create full-site backups and test updates safely.
+Backup, restore, staging, and migration for WordPress. Create full-site backups and test updates safely. 100% Unit Tested.
 
 == Description ==
 
 <h3>Backup, Restore, Staging, Cloning & Migration for WordPress</h3>
 
-WP STAGING is an all-in-one backup, restore, staging, and migration plugin for WordPress, built for professional workflows with 100% unit-tested code coverage, thousands of automated tests, and extensive end-to-end testing across supported PHP versions.
+WP STAGING is an all-in-one backup & restore, duplicator, staging, and migration plugin for WordPress, built for professional workflows with 100% unit-tested code coverage, thousands of automated tests, and extensive end-to-end testing across supported PHP versions.
 
 Create a full backup or an exact clone of your website in minutes. Use it to test plugin and theme updates safely, restore your site when needed, migrate WordPress to another server, or build a staging copy before making changes.
 
@@ -271,6 +271,21 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
+= 4.7.1 =
+* Enh: Secure Remote Sync feature by adding a toggle to enable or disable incoming connections. Also mask the connection key by default with a show/hide toggle. #4935
+* Fix: Improve broken UX on backup page for free version on multisite. #4970
+* Fix: Properly handle case when remote sync with database is too fast to trigger re-authentication. #4864
+* Fix: Show error directly during authentication when syncing single site <-> multisite and subsite. #4835
+* Fix: Show missing remote sync info in logs. #4836
+* UX: Improve button readability in the "Want to Improve WP STAGING?" banner in dark mode. #4960
+* Dev: Add automated CI release pipeline with secure deploy API endpoint. #5000
+* Dev: Clean up CLAUDE.md by extracting detailed sections to dev/docs files. #4967
+* Dev: Move all backup e2e codeception tests to playwright. #4761
+* Dev: Move remote storage cleanup methods out of production plugin code into test-only classes to reduce attack surface. #4783
+* Dev: Update Kanban GitHub action to set status "Done" when PR is merged. #4963
+* Dev: Add label-triggered E2E tests for PRs. #4973
+* Dev: Move CI test results from PR comments to PR description for cleaner test reporting. #4976
+
 = 4.7.0 =
 * New: Browse and inspect the contents of any backup — view included files, folders, and database tables. In Pro, extract specific items from a backup to another folder without restoring the entire website. #2523
 * New: Add support for sites protected with HTTP Basic Authentication. Scheduled backups and external crons now work on password-protected sites. Remote Sync can also connect to remote sites with HTTP auth protection. (Pro) #4884
@@ -351,5 +366,5 @@ WP STAGING Backup & Cloning | Full changelog:
 
 == Upgrade Notice ==
 
-Compatible up to WordPress 6.9.1.
+Compatible up to WordPress 7.0.
 Many improvements for reliability and bug fixes. Please update to the latest version!

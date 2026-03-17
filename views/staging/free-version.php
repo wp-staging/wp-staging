@@ -5,15 +5,18 @@
  * @see src/views/clone/index.php
  */
 
-?>
+use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Language\Language;
 
-<button id="wpstg-new-clone" class="wpstg-button wpstg-mb-20px" disabled>
-    <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
-</button>
+?>
 
 <span class="wpstg-notice-alert">
     <?php echo sprintf(
-        esc_html__('WordPress Multisite is not supported in the WP Staging free version! Please upgrade to %s', 'wp-staging'),
-        '<a href="https://wp-staging.com/" target="_blank">WP Staging Pro</a>'
-    )?>
+        Escape::escapeHtml(__('The free version of WP Staging does not support WordPress Multisite. You can consider upgrading to the <a href="%s" target="_blank">pro version</a> as needed.', 'wp-staging')),
+        esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing'))
+    ); ?>
 </span>
+
+<button id="wpstg-new-clone" class="wpstg-btn wpstg-btn-lg wpstg-btn-primary" disabled>
+    <?php esc_html_e('Create Staging Site', 'wp-staging'); ?>
+</button>
