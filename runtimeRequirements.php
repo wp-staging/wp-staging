@@ -9,7 +9,14 @@ $pluginFilePath = $pluginFilePath ?? '';
 require_once(trailingslashit(ABSPATH) . 'wp-admin/includes/plugin.php');
 
 if (!defined('WPSTGPRO_MINIMUM_FREE_VERSION')) {
-    /** Expected version number of the free plugin in order to activate it at the same time with pro */
+    /**
+     * Expected version number of the free plugin in order to activate it at the same time with pro.
+     *
+     * ⚠️  DO NOT bump this value in CI or automated deploys!
+     * If set too high and a user updates Pro before Free, the dependency check
+     * blocks the Free auto-updater and the user gets stuck. Only change manually
+     * after careful consideration. The CI pipeline intentionally skips this value.
+     */
     define('WPSTGPRO_MINIMUM_FREE_VERSION', '3.8.0');
 }
 
