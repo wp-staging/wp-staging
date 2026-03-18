@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, restore, migration, staging, wordpress backup
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.7.1
+Stable tag: 4.7.2
 Requires PHP: 7.0
 
 Backup, restore, staging, and migration for WordPress. Create full-site backups and test updates safely. 100% Unit Tested.
@@ -271,7 +271,7 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.7.1 =
+= 4.7.2 =
 * Enh: Secure Remote Sync feature by adding a toggle to enable or disable incoming connections. Also mask the connection key by default with a show/hide toggle. #4935
 * Fix: Improve broken UX on backup page for free version on multisite. #4970
 * Fix: Properly handle case when remote sync with database is too fast to trigger re-authentication. #4864
@@ -285,81 +285,6 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 * Dev: Update Kanban GitHub action to set status "Done" when PR is merged. #4963
 * Dev: Add label-triggered E2E tests for PRs. #4973
 * Dev: Move CI test results from PR comments to PR description for cleaner test reporting. #4976
-
-= 4.7.0 =
-* New: Browse and inspect the contents of any backup — view included files, folders, and database tables. In Pro, extract specific items from a backup to another folder without restoring the entire website. #2523
-* New: Add support for sites protected with HTTP Basic Authentication. Scheduled backups and external crons now work on password-protected sites. Remote Sync can also connect to remote sites with HTTP auth protection. (Pro) #4884
-* New: Automatically create missing directories on the remote server during SFTP/FTP backup uploads. Previously, the destination path had to exist on the server beforehand. (Pro) #4654
-* Enh: Add Test Connection button for HTTP Basic Auth settings to verify credentials before saving. #4939
-* Enh: Add option to change the database table prefix when extracting a backup with the WP Staging Restore Tool, allowing SQL imports into any database. (Pro) #4677
-* Enh: Move CLI banner outside AJAX container on backup page. #4819
-* Enh: Replace alarming WordPress version warning banner with a calm, neutral compatibility status notice inside the plugin UI. #4917
-* Enh: Show CLI integration banner in free version as upsell for Docker environments feature. #4910
-* Enh: Simplify Pro activation banner with one-click AJAX activation and standardize border-radius across all notices and banners. #4949
-* Enh: Add validation to prevent staging prefix conflicts. Blocks using wpstg_ as a staging-site table prefix. Prefixes like wpstg0_, wpstg1_, etc. are still allowed. (Pro) #4799
-* Fix: Allow deletion of orphaned staging sites that no longer exist in the file system but are still listed in the WP STAGING interface. #4610
-* Fix: Drop-in files like object-cache.php and advanced-cache.php are now properly removed during push when “uninstall plugins and themes” is selected. Previously, an incorrect file path could leave these files behind, potentially causing fatal errors. (Pro) #4799
-* Fix: WP STAGING options no longer get corrupted during Push. A prefix-replacement bug could accidentally rewrite wpstg_* option names to wp_*, breaking configuration and stored staging data. (Pro) #4799
-* Fix: During full network restore, subsites’ URLs are not replaced in the options table. #4752
-* Fix: Ensure WP STAGING admin notices display correctly in dark mode on WordPress 7.0. #4929
-* Fix: Fixed an error that could cause the Backup page to crash. #4906
-* Fix: Fixed an error that could prevent the Backup page from loading. #4901
-* Fix: Prefix not replaced inside serialized option and meta values during database normalization. (Pro) #4676
-* Fix: Prevent WP STAGING admin notices from appearing on third-party plugin pages with similar slug prefixes. #4823
-* Fix: Prevent backup modal from jumping when expanding collapsible sections beyond viewport height. #4787
-* Fix: Creating a temporary login link no longer invalidates the creator’s own user session. (Pro) #4806
-* Fix: Remote Sync pull gets stuck at “Initializing” when the SSE connection is not established due to a race condition in job detection. (Pro) #4895
-* Fix: Resolve false-positive backup validation error caused by skipped files not being counted in the total. #4933
-* Fix: Restore the General Settings UI by removing duplicate CSS that overrode page styling. #4926
-* Fix: Show detailed log entries when filtering logs by “all” or “info” during backup and staging operations. #4876
-* UX: Add Close button on success modal of remote storage backup delete option. #4772
-* UX: Improve sticky sidebar position on System Info page to stay at the top while scrolling. #4903
-* Dev: Add support for skip-tests label in CI workflows to skip test execution. #4900
-* Dev: Fix playwright tests failing for thirdparty site structure. #4890
-* Dev: Integrate SolidJS in our dev environment to build reactive components. #4798
-* Dev: Optimize make dev_dist build time and skip unit tests on macOS. #4879
-
-= 4.6.0 =
-* New: Introduce Remote Sync to pull data from a remote site. (Pro) #4596
-* New: Compatible up to WordPress 6.9.1
-* New: Add UI component system for more consistent and polished styling. #4837
-* New: Add confetti celebration when creating a staging site or backup for the first time. #4803
-* New: Add smooth shrink-to-dock animation when dismissing the CLI banner. #4840
-* New: Redesign the license page with a modern look and updated feature descriptions. #4774
-* Enh: Allow staging site creation in wp-content/wp-staging-sites when root folder is not writable. #4785
-* Enh: Improve backup file validation performance by processing smaller files in memory. #4695
-* Enh: Remove the "Check Directory Size" setting to simplify the settings page. #4715
-* Enh: Simplify CLI integration Step 3 to use a single restore command with the --from flag. #4829
-* Fix: Allow saving cloud storage settings even when the connection has not been tested yet, with a clear warning. (Pro) #4575
-* Fix: Resolve CI cache conflict between Pro and Basic builds. #4868
-* Fix: Resolve backup restore failure caused by empty chunk size. #4672
-* Fix: License text in CLI banner was unreadable in dark mode due to incorrect text color. #4791
-* Fix: Fully remove cloud storage settings on logout/revoke and clearly inform users before deletion. (Pro) #4758
-* Fix: Preserve plugin settings during staging site updates, creation, and reset. #4744
-* Fix: Sort backups by creation date in CLI integration Step 3. #4859
-* Fix: Clean up stale CSS files during asset build process. #4853
-* Fix: Correct broken footer layout on the FAQ card. #4831
-* UX: Fix typo in the staging site update warning dialog. #4792
-* UX: Improve backup page loading speed with parallel requests and better error handling. #4817
-* UX: Improve loading states with skeleton placeholders, less blank space on the backup page, and shorter loading bar timeout. #4815
-* UX: Redesign the System Info page with a cleaner layout and improved usability. #4746
-* Dev: Add PHPCS rule to detect accidental double dollar signs ($$) as potential typos. #4645
-* Dev: Add critical warning in CLAUDE.md to never push directly to master. #4857
-* Dev: Add Tailwind CSS to streamline UI development. #4775
-* Dev: Auto-copy built CSS/JS assets to dist folders after running make assets. #4847
-* Dev: Consolidate duplicate license-checking logic in CLI integration notice. #4844
-* Dev: Fix Playwright UI command (make e2e_playwright_ui) not working on macOS. #4760
-* Dev: Fix Playwright UI command (make e2e_playwright_ui) not working on macOS. #4765
-* Dev: Fix incremental asset builds skipping rebuild after a failed build. #4851
-* Dev: Fix missing sanitizeArrayString call and resolve "Staging page container not found" error on non-staging pages. #4809
-* Dev: Improve sanitizeArrayString to handle multidimensional arrays recursively. #4802
-* Dev: Fix missing semicolons in nginx Docker config files. #4757
-* Dev: Prepare PUSH for refactoring. #4701
-* Dev: Remove flaky email notification test in backup Playwright suite. #4750
-* Dev: Update Dropbox Refresh Token. #4793
-* Dev: Update ESLint configuration to automatically fix linting issues. #4731
-* Dev: Update ESLint config for improved JavaScript formatting. #4708
-* Dev: Improve code readability by using positive variable names. #3675
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
