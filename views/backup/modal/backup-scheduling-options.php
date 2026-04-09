@@ -25,7 +25,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
         <label for="backupScheduleRecurrence">
             <?php esc_html_e('How often:', 'wp-staging'); ?>
         </label>
-        <select name="backupScheduleRecurrence" id="backupScheduleRecurrence">
+        <select name="backupScheduleRecurrence" id="backupScheduleRecurrence" class="wpstg-input wpstg-input-md">
             <option value="<?php echo esc_attr(Cron::HOURLY); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::HOURLY)) . esc_html($proFeature); ?></option>
             <option value="<?php echo esc_attr(Cron::SIX_HOURS); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::SIX_HOURS)) . esc_html($proFeature); ?></option>
             <option value="<?php echo esc_attr(Cron::TWELVE_HOURS); ?>" <?php echo esc_attr($disabledProAttribute); ?>><?php echo esc_html(Cron::getCronDisplayName(Cron::TWELVE_HOURS)) . esc_html($proFeature); ?></option>
@@ -46,7 +46,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
             <label for="backupScheduleTime">
                 <?php esc_html_e('Start Time:', 'wp-staging'); ?>
             </label>
-            <select name="backupScheduleTime" id="backupScheduleTime">
+            <select name="backupScheduleTime" id="backupScheduleTime" class="wpstg-input wpstg-input-md">
                 <?php $currentTime = (new DateTime('now', $time->getSiteTimezoneObject()))->format($timeFormatOption); ?>
                 <?php foreach ($recurrenceTimes as $recurTime) : ?>
                     <option value="<?php echo esc_attr($recurTime->format('H:i')) ?>" <?php echo $isProVersion ? (esc_html($recurTime->format($timeFormatOption)) === esc_html($currentTime) ? 'selected' : '') : ($recurTime->format('H:i') === "00:00" ? 'selected' : 'disabled') ?>>
@@ -54,9 +54,8 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
                     </option>
                 <?php endforeach; ?>
             </select>
-            <div id="backup-schedule-current-time">
+            <div id="backup-schedule-current-time" style="white-space: nowrap; margin-left: 12px;">
                 <span><?php echo esc_html__('Current Time', 'wp-staging'); ?></span>
-                <br/>
                 <span><?php echo esc_html($currentTime); ?></span>
             </div>
         </div>
@@ -88,7 +87,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
             <label for="backupScheduleRotation">
                 <?php esc_html_e('Retention:', 'wp-staging'); ?>
             </label>
-            <select name="backupScheduleRotation" id="backupScheduleRotation">
+            <select name="backupScheduleRotation" id="backupScheduleRotation" class="wpstg-input wpstg-input-md">
                 <?php for ($i = 1; $i <= 10; $i++) : ?>
                     <option value="<?php echo esc_attr((string)$i) ?>" <?php echo $isProVersion ? "" : ($i === 1 ? 'selected' : 'disabled') ?>>
                         <?php echo sprintf(esc_html__('Keep last %d backup%s', 'wp-staging'), (int)$i, (int)$i > 1 ? 's' : ''); ?>

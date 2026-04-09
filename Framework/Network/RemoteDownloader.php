@@ -70,6 +70,9 @@ class RemoteDownloader
     /** @var array<string, string> */
     private $customHeaders = [];
 
+    /** @var bool */
+    private $followRedirects = true;
+
     /**
      * @param Sanitize $sanitize
      */
@@ -205,6 +208,15 @@ class RemoteDownloader
     }
 
     /**
+     * @param bool $follow
+     * @return void
+     */
+    public function setFollowRedirects(bool $follow)
+    {
+        $this->followRedirects = $follow;
+    }
+
+    /**
      * @param string $message
      * @param bool $success
      * @param bool $completed
@@ -238,16 +250,16 @@ class RemoteDownloader
         $response = $this->makeRemoteRequest($args);
         if (is_wp_error($response)) {
             $this->lastDownloadedBytes = 0;
-            $this->message  = $response->get_error_message();
-            $this->success  = false;
-            $this->completed = true;
+            $this->message             = $response->get_error_message();
+            $this->success             = false;
+            $this->completed           = true;
             return;
         }
 
         if ($this->isAuthenticationFailure($response)) {
             $this->lastDownloadedBytes = 0;
             $this->setAuthenticationFailureMessage($response);
-            $this->success = false;
+            $this->success   = false;
             $this->completed = true;
 
             return;
@@ -255,13 +267,13 @@ class RemoteDownloader
 
         $fileContent = wp_remote_retrieve_body($response);
         if (!empty($fileContent)) {
-            $this->success = $this->writeToLocalFile($fileContent);
-            $contentLength = strlen($fileContent);
+            $this->success             = $this->writeToLocalFile($fileContent);
+            $contentLength             = strlen($fileContent);
             $this->lastDownloadedBytes = $contentLength;
             $this->maybeFinishDownload($contentLength);
         } else {
             // Handle empty response - might be at end of file
-            $this->success = true;
+            $this->success             = true;
             $this->lastDownloadedBytes = 0;
             $this->maybeFinishDownload(0);
         }
@@ -415,21 +427,21 @@ class RemoteDownloader
 
         $originalPath = $this->localPath;
         if (file_exists($this->localPath)) {
-            $info = pathinfo($originalPath);
+            $info            = pathinfo($originalPath);
             $this->localPath = $info['dirname'] . '/' . $info['filename'] . '.wpstg';
         }
 
         $uploadPath = $originalPath . '.' . self::UPLOADING_EXTENSION;
         if (!file_exists($uploadPath)) {
-            $this->message = 'Upload file does not exist';
-            $this->success = false;
+            $this->message   = 'Upload file does not exist';
+            $this->success   = false;
             $this->completed = true;
             return;
         }
 
         if (!rename($uploadPath, $this->localPath)) {
-            $this->message = 'Failed to rename upload file';
-            $this->success = false;
+            $this->message   = 'Failed to rename upload file';
+            $this->success   = false;
             $this->completed = true;
             return;
         }
@@ -474,11 +486,11 @@ class RemoteDownloader
             ],
         ];
 
-        $response     = $this->makeRemoteRequest($args);
+        $response = $this->makeRemoteRequest($args);
 
         if ($this->isAuthenticationFailure($response)) {
             $this->setAuthenticationFailureMessage($response);
-            $this->success = false;
+            $this->success   = false;
             $this->completed = true;
 
             return false;
@@ -538,6 +550,11 @@ class RemoteDownloader
     protected function makeRemoteRequest(array $args)
     {
         $args['user-agent'] = 'Mozilla/5.0 (compatible; wp-staging/' . WPStaging::getVersion() . '; +https://wp-staging.com)';
+
+        if (!$this->followRedirects) {
+            $args['redirection'] = 0;
+        }
+
         if (!isset($args['method'])) {
             $args['method'] = 'POST';
         }

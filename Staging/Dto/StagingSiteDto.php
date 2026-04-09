@@ -96,6 +96,13 @@ class StagingSiteDto implements \JsonSerializable
     /** @var bool */
     protected $networkClone = false;
 
+    /**
+     * The blog ID from which this staging site was created (for multisite subsite cloning)
+     * 0 or 1 = main site, 2+ = subsite
+     * @var int
+     */
+    protected $sourceBlogId = 0;
+
     /** @var bool */
     protected $isCronEnabled = true;
 
@@ -490,6 +497,20 @@ class StagingSiteDto implements \JsonSerializable
         $this->networkClone = $networkClone;
     }
 
+    public function getSourceBlogId(): int
+    {
+        return $this->sourceBlogId;
+    }
+
+    /**
+     * @param int $sourceBlogId
+     * @return void
+     */
+    public function setSourceBlogId(int $sourceBlogId)
+    {
+        $this->sourceBlogId = $sourceBlogId;
+    }
+
     public function getIsCronEnabled(): bool
     {
         return $this->isCronEnabled;
@@ -694,5 +715,24 @@ class StagingSiteDto implements \JsonSerializable
         $uploadsDirectory = $this->getPath() . '/wp-content/uploads';
 
         return is_link($uploadsDirectory);
+    }
+
+    /**
+     * Set whether uploads should be symlinked (used during staging creation)
+     * @param bool $isUploadsSymlink
+     * @return void
+     */
+    public function setIsUploadsSymlink(bool $isUploadsSymlink)
+    {
+        $this->uploadsSymlinked = $isUploadsSymlink;
+    }
+
+    /**
+     * Check if this staging site was created from a multisite subsite
+     * @return bool
+     */
+    public function isFromSubsite(): bool
+    {
+        return $this->sourceBlogId > 1;
     }
 }

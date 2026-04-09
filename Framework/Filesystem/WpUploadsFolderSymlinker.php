@@ -32,14 +32,18 @@ class WpUploadsFolderSymlinker
      */
     protected $error;
 
+    public function __construct(WpDefaultDirectories $wpDirectories)
+    {
+        $this->wpDirectories = $wpDirectories;
+    }
+
     /**
      * @param string $stagingWpPath
+     * @return void
      */
-    public function __construct($stagingWpPath)
+    public function setStagingPath(string $stagingWpPath)
     {
-        $this->stagingWpPath = $stagingWpPath;
-        // todo inject using dependency injection if possible
-        $this->wpDirectories = new WpDefaultDirectories();
+        $this->stagingWpPath     = trailingslashit($stagingWpPath);
         $this->stagingUploadPath = rtrim($this->stagingWpPath . $this->wpDirectories->getRelativeUploadPath(), '/');
     }
 

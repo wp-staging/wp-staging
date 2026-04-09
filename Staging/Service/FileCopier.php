@@ -41,6 +41,12 @@ class FileCopier
     /** @var Filesystem */
     protected $filesystem;
 
+    /** @var Directory */
+    protected $directory;
+
+    /** @var SiteInfo */
+    protected $siteInfo;
+
     /** @var Permissions */
     protected $permissions;
 
@@ -87,10 +93,12 @@ class FileCopier
         $this->filesystem  = $filesystem;
         $this->permissions = $permissions;
         $this->strings     = $strings;
+        $this->siteInfo    = $siteInfo;
+        $this->directory   = $directory;
 
-        $this->isWpContentOutsideAbspath = $siteInfo->isWpContentOutsideAbspath();
-        $this->absPath                   = $this->filesystem->normalizePath($directory->getAbsPath(), true);
-        $this->wpContentDir              = $this->filesystem->normalizePath($directory->getWpContentDirectory(), true);
+        $this->isWpContentOutsideAbspath = $this->siteInfo->isWpContentOutsideAbspath();
+        $this->absPath                   = $this->filesystem->normalizePath($this->directory->getAbsPath(), true);
+        $this->wpContentDir              = $this->filesystem->normalizePath($this->directory->getWpContentDirectory(), true);
     }
 
     /**
@@ -149,7 +157,7 @@ class FileCopier
                 $this->copy();
             } catch (FinishedQueueException $exception) {
                 $this->stepsDto->finish();
-                $this->logger->info(sprintf('Copied %d/%d %s files to staging site', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->fileIdentifier));
+                $this->logger->info(sprintf('Copied %d/%d %s files', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->fileIdentifier));
 
                 return;
             } catch (DiskNotWritableException $exception) {
@@ -165,7 +173,7 @@ class FileCopier
             $percentProcessed       = ceil(($this->bigFileDto->getWrittenBytesTotal() / $this->bigFileDto->getFileSize()) * 100);
             $this->logger->info(sprintf('Copying big %s file: %s - %s/%s (%s%%)', $this->fileIdentifier, $relativePathForLogging, size_format($this->bigFileDto->getWrittenBytesTotal(), 2), size_format($this->bigFileDto->getFileSize(), 2), $percentProcessed));
         } else {
-            $this->logger->info(sprintf('Copied %d/%d %s files to the staging site', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->fileIdentifier));
+            $this->logger->info(sprintf('Copied %d/%d %s files', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->fileIdentifier));
         }
     }
 
@@ -235,7 +243,7 @@ class FileCopier
     {
         // Invalid file
         if (!is_file($filePath)) {
-            throw new \RuntimeException("Invalid file. Could not copy file to staging site: $filePath");
+            throw new \RuntimeException("Invalid file. Could not copy file: $filePath");
         }
 
         // If file is unreadable, skip it as if succeeded

@@ -24,9 +24,10 @@ trait WithStagingDatabase
         }
 
         if (!$stagingSiteDto->getIsExternalDatabase()) {
-            $stagingWpdb = new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
-            $stagingWpdb->set_prefix($stagingSiteDto->getDatabasePrefix());
-            $this->stagingDb = new Database($stagingWpdb);
+            $stagingWpdb              = new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
+            $stagingWpdb->prefix      = $stagingSiteDto->getPrefix();
+            $stagingWpdb->base_prefix = $stagingSiteDto->getPrefix();
+            $this->stagingDb          = new Database($stagingWpdb);
             return;
         }
 
@@ -37,9 +38,9 @@ trait WithStagingDatabase
             $stagingSiteDto->getDatabaseServer()
         );
 
-        $wpdb->prefix = $stagingSiteDto->getDatabasePrefix();
-
-        $this->stagingDb = new Database($wpdb);
+        $wpdb->prefix      = $stagingSiteDto->getDatabasePrefix();
+        $wpdb->base_prefix = $stagingSiteDto->getDatabasePrefix();
+        $this->stagingDb   = new Database($wpdb);
     }
 
     /**

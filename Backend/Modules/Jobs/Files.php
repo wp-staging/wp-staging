@@ -369,7 +369,8 @@ class Files extends JobExecutable
             return true;
         }
 
-        $symlinker = new WpUploadsFolderSymlinker($this->options->destinationDir);
+        $symlinker = WPStaging::make(WpUploadsFolderSymlinker::class);
+        $symlinker->setStagingPath($this->options->destinationDir);
         if ($symlinker->trySymlink()) {
             $this->log(__("Uploads Folder symlinked with the production site", 'wp-staging'));
             return true;

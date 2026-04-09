@@ -179,6 +179,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
      */
     private $totalFilesCompressed = 0;
 
+    /** @var array */
+    private $pushPrepareData = [];
+
     /**
      * @return string|null
      */
@@ -195,6 +198,23 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setName($name)
     {
         $this->name = $name;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPushPrepareData(): array
+    {
+        return $this->pushPrepareData;
+    }
+
+    /**
+     * @param array $pushPrepareData
+     * @return void
+     */
+    public function setPushPrepareData(array $pushPrepareData)
+    {
+        $this->pushPrepareData = $pushPrepareData;
     }
 
     /**

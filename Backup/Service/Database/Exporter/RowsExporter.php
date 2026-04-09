@@ -326,7 +326,7 @@ class RowsExporter extends AbstractExporter
                 }
                 if ($this->isRowNeedSpecialSearchReplace($prefixedTableName, $column)) {
                     if (substr($value, 0, 1) === '_') {
-                        foreach (['_transient_', '_site_transient_', '_wc_session_'] as $excludedOption) {
+                        foreach (['_transient_', '_site_transient_', '_wc_session_', '_wpforms_transient_'] as $excludedOption) {
                             if (strpos($value, $excludedOption) === 0) {
                                 throw new \OutOfBoundsException();
                             }

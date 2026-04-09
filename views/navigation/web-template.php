@@ -87,7 +87,7 @@ if (defined('WPSTGPRO_VERSION') && ((!empty($license->license) && $license->lice
     $licenseMessage =  __('(Expired)', 'wp-staging');
 }
 ?>
-<div class="wpstg--tab--header">
+<div class="wpstg--tab--header wpstg-border-t wpstg-border-solid wpstg-border-gray-200 dark:wpstg-border-slate-800">
     <ul class="wpstg-navigation-menu">
         <li class="wpstg-tab-navigation wpstg_admin">
             <?php require_once(WPSTG_VIEWS_DIR . 'navigation/mobile-template.php'); ?>

@@ -14,13 +14,13 @@
     <div class="wpstg--process-modal--no-update-message" style="display: none; color: red; margin-top: 10px; margin-bottom: 10px;">
         <?php esc_html_e('No updates from the server. Please cancel the process if it does not stop automatically and contact support.', 'wp-staging'); ?>
     </div>
-    <button class="wpstg--process-modal--logs-button" data-txt-bad="<?php echo sprintf(
+    <button class="wpstg--process-modal--logs-button wpstg-btn wpstg-btn-ghost" data-txt-bad="<?php echo sprintf(
         esc_attr__('(%s) Critical, (%s) Errors, (%s) Warnings. Show Logs', 'wp-staging'),
         '<span class=\'wpstg--modal--logs--critical-count\'>0</span>',
         '<span class=\'wpstg--modal--logs--error-count\'>0</span>',
         '<span class=\'wpstg--modal--logs--warning-count\'>0</span>'
     ) ?>">
-        <span style="text-decoration: underline"><?php esc_html_e('Show Logs', 'wp-staging') ?></span>
+        <?php esc_html_e('Show Logs', 'wp-staging') ?>
     </button>
     <div class="wpstg--process-modal--generic-problem"></div>
     <div class="wpstg--process-modal--logs wpstg--logs--container">

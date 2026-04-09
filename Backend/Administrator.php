@@ -647,6 +647,22 @@ class Administrator
         }
 
         $path = trailingslashit($basePath) . $path;
+
+        // Prevent path traversal outside the base path
+        $resolvedPath = realpath($path);
+        $resolvedBase = realpath($basePath);
+        if ($resolvedPath === false || $resolvedBase === false) {
+            wp_send_json(['success' => false]);
+            return;
+        }
+
+        // Use trailing slash to enforce directory boundary (prevents matching sibling dirs like wp-content-old)
+        if ($resolvedPath !== $resolvedBase && strpos(trailingslashit($resolvedPath), trailingslashit($resolvedBase)) !== 0) {
+            wp_send_json(['success' => false]);
+            return;
+        }
+
+        $path = $resolvedPath;
         $scan = new Scan($path);
         $scan->setBasePath($basePath);
         $scan->setPathIdentifier($prefix);

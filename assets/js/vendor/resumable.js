@@ -488,13 +488,14 @@
       var _error = uniqueIdentifier !== undefined;
 
       // Callback when something happens within the chunk
-      var chunkEvent = function(event, message){
+      var chunkEvent = function(event, message, httpStatus){
         // event can be 'progress', 'success', 'error' or 'retry'
         switch(event){
         case 'progress':
           $.resumableObj.fire('fileProgress', $, message);
           break;
         case 'error':
+          $.lastHttpStatus = httpStatus;
           $.abort();
           _error = true;
           $.chunks = [];
@@ -789,7 +790,7 @@
         var doneHandler = function(e){
           var status = $.status();
           if(status=='success'||status=='error') {
-            $.callback(status, $.message());
+            $.callback(status, $.message(), $.xhr ? $.xhr.status : null);
             $.resumableObj.uploadNextChunk();
           } else {
             $.callback('retry', $.message());

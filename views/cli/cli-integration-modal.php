@@ -543,7 +543,7 @@ if (!$isDeveloperOrHigher) {
                 <h3 class="wpstg-cli-sidebar-title"><?php echo esc_html__('Prerequisites', 'wp-staging'); ?></h3>
                 <div class="wpstg-cli-sidebar-card">
                     <p class="wpstg-cli-sidebar-card-title"><?php echo esc_html__('Requires Docker', 'wp-staging'); ?></p>
-                    <p class="wpstg-cli-sidebar-card-text"><?php echo esc_html__('WP Staging CLI uses Docker to run an isolated local copy of this site. Install and start Docker Desktop (or Docker Engine) before continuing.', 'wp-staging'); ?></p>
+                    <p class="wpstg-cli-sidebar-card-text"><?php echo esc_html__('WP Staging CLI uses Docker to create an isolated local copy of this site.', 'wp-staging'); ?></p>
                     <?php
                     $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
                     $learnMoreUrl = strpos($locale, 'de_') === 0

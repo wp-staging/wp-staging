@@ -9,6 +9,9 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\ErrorHandler;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Staging\Ajax\Create as StagingSiteCreate;
+use WPStaging\Staging\Ajax\Reset as StagingSiteReset;
+use WPStaging\Staging\Ajax\Update as StagingSiteUpdate;
 
 use function WPStaging\functions\debug_log;
 
@@ -37,7 +40,14 @@ class MemoryExhaust extends AbstractTemplateComponent
             Backup::WPSTG_REQUEST,
             Restore::WPSTG_REQUEST,
             Cloning::WPSTG_REQUEST,
+            StagingSiteCreate::WPSTG_REQUEST,
+            StagingSiteUpdate::WPSTG_REQUEST,
+            StagingSiteReset::WPSTG_REQUEST,
         ];
+
+        if (class_exists('\WPStaging\Pro\Push\Ajax\Push')) {
+            $validWpstgRequests[] = \WPStaging\Pro\Push\Ajax\Push::WPSTG_REQUEST;
+        }
 
         if ($wpstgRequest === '') {
             wp_send_json([
