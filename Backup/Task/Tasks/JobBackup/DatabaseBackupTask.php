@@ -56,6 +56,7 @@ class DatabaseBackupTask extends BackupTask
         // Tables to exclude without prefix
         $tablesToExclude = [
             'wpstg_queue',
+            'wpstg_settings',
             'wpr_rucss_used_css',
         ];
 

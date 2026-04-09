@@ -3,6 +3,7 @@
 namespace WPStaging\Framework;
 
 use WPStaging\Framework\Settings\Settings;
+use WPStaging\Framework\Settings\SettingsTable;
 use WPStaging\Framework\DI\ServiceProvider;
 
 class SettingsServiceProvider extends ServiceProvider
@@ -10,6 +11,7 @@ class SettingsServiceProvider extends ServiceProvider
     protected function registerClasses()
     {
         $this->container->singleton(Settings::class);
+        $this->container->singleton(SettingsTable::class);
     }
 
     protected function addHooks()

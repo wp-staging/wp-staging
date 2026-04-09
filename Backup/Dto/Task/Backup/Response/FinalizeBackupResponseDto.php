@@ -17,8 +17,8 @@ class FinalizeBackupResponseDto extends TaskResponseDto
      */
     private $backupMd5;
 
-    /** @var int|null */
-    private $backupSize;
+    /** @var int */
+    private $backupSize = 0;
 
     /** @var bool */
     private $isLocalBackup = true;
@@ -32,20 +32,15 @@ class FinalizeBackupResponseDto extends TaskResponseDto
     /** @var string */
     private $glitchReason = '';
 
+    /** @var bool */
+    private $isBeforePush = false;
+
     /**
      * @param array|string|null $backupMd5
      */
     public function setBackupMd5($backupMd5)
     {
         $this->backupMd5 = $backupMd5;
-    }
-
-    /**
-     * @param int|null $backupSize
-     */
-    public function setBackupSize($backupSize)
-    {
-        $this->backupSize = $backupSize;
     }
 
     /**
@@ -56,6 +51,19 @@ class FinalizeBackupResponseDto extends TaskResponseDto
     public function getBackupMd5()
     {
         return $this->backupMd5;
+    }
+
+    /**
+     * @param int|null $backupSize
+     */
+    public function setBackupSize($backupSize)
+    {
+        $this->backupSize = $backupSize;
+    }
+
+    public function getBackupSize(): int
+    {
+        return $this->backupSize;
     }
 
     /**
@@ -116,5 +124,19 @@ class FinalizeBackupResponseDto extends TaskResponseDto
     public function getGlitchReason(): string
     {
         return $this->glitchReason;
+    }
+
+    /**
+     * @param bool $isBeforePush
+     * @return void
+     */
+    public function setIsBeforePush(bool $isBeforePush)
+    {
+        $this->isBeforePush = $isBeforePush;
+    }
+
+    public function getIsBeforePush(): bool
+    {
+        return $this->isBeforePush;
     }
 }

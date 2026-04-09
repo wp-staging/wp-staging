@@ -15,4 +15,8 @@ interface StagingNetworkDtoInterface
     public function setStagingNetworkPath(string $stagingNetworkPath);
 
     public function getStagingNetworkPath(): string;
+
+    public function setSourceBlogId(int $sourceBlogId);
+
+    public function getSourceBlogId(): int;
 }

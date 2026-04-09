@@ -12,6 +12,7 @@ use WPStaging\Framework\Security\Otp\OtpDisabledException;
 use WPStaging\Framework\Security\Otp\OtpException;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Security\Auth;
+use WPStaging\Framework\Network\SsrfProtection;
 use function WPStaging\functions\debug_log;
 class BackupDownloader
 {
@@ -27,8 +28,9 @@ class BackupDownloader
     private $remoteDownloader;
     private $auth;
     private $sanitize;
+    private $ssrfProtection;
 
-    public function __construct(BackupsFinder $backupsFinder, Filesystem $filesystem, Otp $otpService, RemoteDownloader $remoteDownloader, Auth $auth, Sanitize $sanitize)
+    public function __construct(BackupsFinder $backupsFinder, Filesystem $filesystem, Otp $otpService, RemoteDownloader $remoteDownloader, Auth $auth, Sanitize $sanitize, SsrfProtection $ssrfProtection)
     {
         $this->backupsFinder    = $backupsFinder;
         $this->filesystem       = $filesystem;
@@ -36,6 +38,7 @@ class BackupDownloader
         $this->remoteDownloader = $remoteDownloader;
         $this->auth             = $auth;
         $this->sanitize         = $sanitize;
+        $this->ssrfProtection   = $ssrfProtection;
     }
 
     public function ajaxPrepareUpload()
@@ -58,7 +61,12 @@ class BackupDownloader
         $remoteFileUrl = strtok($backupUrl, '?#');
         if (!$this->filesystem->isWpstgBackupFile($remoteFileUrl)) {
             wp_send_json_error([
-                'message' => esc_html__('Not a valid wpstg backup file', 'wp-staging') . $ex->getMessage(),
+                'message' => esc_html__('Not a valid wpstg backup file', 'wp-staging'),
+            ], 403);
+        }
+        if ($this->ssrfProtection->isBlockedUrl($remoteFileUrl)) {
+            wp_send_json_error([
+                'message' => esc_html__('The URL resolves to a blocked IP address.', 'wp-staging'),
             ], 403);
         }
         if ($this->prepareUploadFromUrl($remoteFileUrl)) {
@@ -83,6 +91,11 @@ class BackupDownloader
         $remoteFileUrl = strtok($remoteFileUrl, '?#');
         if (!$this->filesystem->isWpstgBackupFile($remoteFileUrl)) {
             $this->setFailResponse(sprintf(__('Invalid backup file extension: %s', 'wp-staging'), basename($remoteFileUrl)));
+            $this->remoteDownloader->writeResponse();
+            return;
+        }
+        if ($this->ssrfProtection->isBlockedUrl($remoteFileUrl)) {
+            $this->setFailResponse(__('The URL resolves to a blocked IP address.', 'wp-staging'));
             $this->remoteDownloader->writeResponse();
             return;
         }
@@ -117,6 +130,7 @@ class BackupDownloader
 
     protected function setDownloadParameters(string $remoteFileUrl, int $startByte, int $fileSize)
     {
+        $this->remoteDownloader->setFollowRedirects(false);
         $this->remoteDownloader->setRemoteUrl($remoteFileUrl);
         $fileName = basename($remoteFileUrl);
         $this->remoteDownloader->setFileName($fileName);
@@ -149,7 +163,7 @@ class BackupDownloader
         } catch (\Throwable $e) {
             debug_log('Error applying filter ' . self::FILTER_REMOTE_DOWNLOAD_CHUNK_SIZE . ': ' . $e->getMessage());
         }
-        $memoryLimit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
+        $memoryLimit     = wp_convert_hr_to_bytes(ini_get('memory_limit'));
         $availableMemory = absint(($memoryLimit * 20 ) / 100);
         if ($newChunkSizeInBytes > $availableMemory) {
             $newChunkSizeInBytes = $availableMemory;

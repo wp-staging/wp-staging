@@ -447,6 +447,26 @@ class Directory implements DirectoryInterface
     }
 
     /**
+     * Get the relative path to the plugins directory (relative to ABSPATH)
+     *
+     * @return string
+     */
+    public function getRelativePluginsDirectory(): string
+    {
+        return str_replace($this->getAbsPath(), '', $this->getPluginsDirectory());
+    }
+
+    /**
+     * Get the relative path to the mu-plugins directory (relative to ABSPATH)
+     *
+     * @return string
+     */
+    public function getRelativeMuPluginsDirectory(): string
+    {
+        return str_replace($this->getAbsPath(), '', $this->getMuPluginsDirectory());
+    }
+
+    /**
      * @return string
      */
     public function getPluginsTmpDirectory(): string

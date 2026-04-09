@@ -710,6 +710,10 @@ class TablesRenamer
         $activePluginsToPreserve = $this->getOptionValue($tmpOptionsTable, self::OPTION_ACTIVE_PLUGINS);
         $currentActivePlugins    = $this->getOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS);
 
+        if (empty($activePluginsToPreserve)) {
+            return $activePluginsToPreserve;
+        }
+
         // keep only active plugins that are wp staging plugins
         $currentActivePlugins = maybe_unserialize($currentActivePlugins);
         // in case the active plugins is not an array, we set it to empty array to avoid warnings, type errors

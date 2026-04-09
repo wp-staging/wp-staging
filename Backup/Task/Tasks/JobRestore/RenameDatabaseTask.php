@@ -309,13 +309,18 @@ class RenameDatabaseTask extends RestoreTask
         $this->jobDataDto->setTotalTablesToRename($totalTablesToRename);
         $this->jobDataDto->setTotalTablesRenamed(0);
 
+        $activePluginsToPreserve = $this->tablesRenamer->getActivePluginsToPreserve();
+        if (empty($activePluginsToPreserve)) {
+            throw new Exception("Could not find any active plugin to preserve. Database not restored properly.");
+        }
+
         $this->tablesRenamer->resetErrors();
         $dataToPreserve = [
             'accessToken'              => $accessToken,
             'isNetworkActivatedPlugin' => $isNetworkActivatedPlugin,
             'optionsToKeep'            => $this->optionsToKeep,
             'optionsToRemove'          => $this->optionsToRemove,
-            'activePlugins'            => $this->tablesRenamer->getActivePluginsToPreserve(),
+            'activePlugins'            => $activePluginsToPreserve,
         ];
 
         if (is_multisite() && !$this->isSubsiteRestore()) {

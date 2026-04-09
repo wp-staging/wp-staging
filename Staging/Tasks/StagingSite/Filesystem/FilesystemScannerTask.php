@@ -17,6 +17,7 @@ use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
+use WPStaging\Staging\Interfaces\AdvanceStagingOptionsInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\FileCopierTask;
@@ -53,7 +54,7 @@ class FilesystemScannerTask extends StagingTask
     const STEP_SCAN_OTHER_WP_CONTENT_DIRECTORIES = 7;
 
     /** @var int */
-    const STEP_SCAN_OTHER_WP_ROOT_DIRECTORIES = 8;
+    const STEP_SCAN_EXTRA_DIRECTORIES = 8;
 
     /** @var string */
     const FILTER_IGNORE_FILE_EXTENSION = 'wpstg.cloning.files.ignore.file_extension';
@@ -179,8 +180,8 @@ class FilesystemScannerTask extends StagingTask
             return $this->scanWpContentDirectory();
         }
 
-        if ($this->stepsDto->getCurrent() === self::STEP_SCAN_OTHER_WP_ROOT_DIRECTORIES) {
-            return $this->scanWpRootDirectory();
+        if ($this->stepsDto->getCurrent() === self::STEP_SCAN_EXTRA_DIRECTORIES) {
+            return $this->scanExtraDirectories();
         }
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
@@ -392,6 +393,13 @@ class FilesystemScannerTask extends StagingTask
 
     protected function scanUploadsDirectory(): TaskResponseDto
     {
+        // Early bail: Uploads will be symlinked instead of copied
+        if ($this->jobDataDto instanceof AdvanceStagingOptionsInterface && $this->jobDataDto->getIsUploadsSymlinked()) {
+            $this->logger->info('Skipping scanning of uploads directory because uploads will be symlinked.');
+            $this->jobDataDto->setIsUploadsExcluded(true);
+            return $this->generateResponse();
+        }
+
         // Early bail: Uploads directory doesn't exist
         if (!is_dir($this->getUploadsDirectory())) {
             $this->jobDataDto->setIsUploadsExcluded(true);
@@ -434,12 +442,10 @@ class FilesystemScannerTask extends StagingTask
     }
 
     /**
-     * Scan WP root (ABSPATH) for directories but doesn't scan wp-admin,wp-content,wp-includes.
+     * Scan Extra Directories in WP Root (ABSPATH) except wp-admin, wp-includes, wp-content.
      */
-    protected function scanWpRootDirectory(): TaskResponseDto
+    protected function scanExtraDirectories(): TaskResponseDto
     {
-        $dirToScan = $this->directory->getAbsPath();
-
         /** @var Sites */
         $stagingSites     = WPStaging::make(Sites::class);
         $stagingSitesDirs = $stagingSites->getStagingDirectories();
@@ -452,8 +458,26 @@ class FilesystemScannerTask extends StagingTask
             return rtrim($path, '/');
         }, $dirsToSkip);
 
-        $this->filesystemScanner->setOnlyDirectories();
-        $this->preScanPath($dirToScan, PartIdentifier::WP_ROOT_PART_IDENTIFIER, $excludeRules);
+        $this->filesystemScanner->setCurrentPathScanning(PartIdentifier::WP_ROOT_PART_IDENTIFIER);
+        $this->filesystemScanner->setupFilesystemQueue();
+        $this->filesystemScanner->setRootPath($this->getRootPath());
+        $this->filesystemScanner->setExcludeRules($excludeRules);
+
+        $isExtraDirectoriesExcluded = true;
+        foreach ($this->jobDataDto->getExtraDirectories() as $extraDirectory) {
+            if ($this->isExcluded($extraDirectory)) {
+                continue;
+            }
+
+            $isExtraDirectoriesExcluded = false;
+            $this->filesystemScanner->preScanPath($extraDirectory);
+        }
+
+        $this->filesystemScanner->unlockQueue();
+        $this->updateJobDataDto();
+        if ($isExtraDirectoriesExcluded) {
+            $this->logger->info('No extra directories to scan.');
+        }
 
         return $this->generateResponse();
     }

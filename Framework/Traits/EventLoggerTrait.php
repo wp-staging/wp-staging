@@ -3,39 +3,35 @@ namespace WPStaging\Framework\Traits;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Logger\EventLoggerConst;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Security\Auth;
 trait EventLoggerTrait
 {
     protected $processStatusFailed = false;
     protected $wpstgMaintenanceFile = 'maintenance';
-    protected $backupProcessPrefixIdentifier = 'B';
-    protected $restoreProcessPrefixIdentifier = 'R';
-    protected $cloneProcessPrefixIdentifier = 'C';
-    protected $pushProcessPrefixIdentifier = 'P';
     private $filePath;
     private $filesystem;
     protected $backupSettingsIdentifiers = [
-        'isExportingUploads'             => 'U',
-        'isExportingThemes'              => 'T',
-        'isExportingMuPlugins'           => 'MU',
-        'isExportingPlugins'             => 'P',
-        'isExportingOtherWpContentFiles' => 'OW',
-        'isExportingOtherWpRootFiles'    => 'OR',
-        'isExportingDatabase'            => 'D',
+        'isExportingUploads'             => EventLoggerConst::BACKUP_SETTING_UPLOADS,
+        'isExportingThemes'              => EventLoggerConst::BACKUP_SETTING_THEMES,
+        'isExportingMuPlugins'           => EventLoggerConst::BACKUP_SETTING_MU_PLUGINS,
+        'isExportingPlugins'             => EventLoggerConst::BACKUP_SETTING_PLUGINS,
+        'isExportingOtherWpContentFiles' => EventLoggerConst::BACKUP_SETTING_OTHER_WP_CONTENT,
+        'isExportingOtherWpRootFiles'    => EventLoggerConst::BACKUP_SETTING_OTHER_ROOT,
+        'isExportingDatabase'            => EventLoggerConst::BACKUP_SETTING_DATABASE,
     ];
     protected $backupStoragesIdentifiers = [
-        'googleDrive'         => 'GD',
-        'amazonS3'            => 'AS3',
-        'dropbox'             => 'DB',
-        'sftp'                => 'S',
-        'digitalocean-spaces' => 'DOS',
-        'wasabi-s3'           => 'WS3',
-        'generic-s3'          => 'GS3',
-        'one-drive'           => 'OD',
-        'pcloud'              => 'PC',
+        'googleDrive'         => EventLoggerConst::BACKUP_STORAGE_GOOGLE_DRIVE,
+        'amazonS3'            => EventLoggerConst::BACKUP_STORAGE_AMAZON_S3,
+        'dropbox'             => EventLoggerConst::BACKUP_STORAGE_DROPBOX,
+        'sftp'                => EventLoggerConst::BACKUP_STORAGE_SFTP,
+        'digitalocean-spaces' => EventLoggerConst::BACKUP_STORAGE_DIGITALOCEAN_SPACES,
+        'wasabi-s3'           => EventLoggerConst::BACKUP_STORAGE_WASABI_S3,
+        'generic-s3'          => EventLoggerConst::BACKUP_STORAGE_GENERIC_S3,
+        'one-drive'           => EventLoggerConst::BACKUP_STORAGE_ONE_DRIVE,
+        'pcloud'              => EventLoggerConst::BACKUP_STORAGE_PCLOUD,
     ];
-    protected $backupUploadPrefixIdentifier = 'BU';
     private $sanitize;
     private $process;
     private $processPrefixes;
@@ -52,7 +48,7 @@ trait EventLoggerTrait
         if (empty($this->process)) {
             wp_send_json_error();
         }
-        if ($this->process === $this->pushProcessPrefixIdentifier) {
+        if ($this->process === EventLoggerConst::PROCESS_PREFIX_PUSH) {
             $this->logPushCompleted(true);
             wp_send_json_success();
         }
@@ -81,48 +77,43 @@ trait EventLoggerTrait
     public function logBackupUploadCompleted(array $storages = [])
     {
         $storages      = array_fill_keys($storages, true);
-        $processPrefix = $this->backupUploadPrefixIdentifier . '|' . $this->prepareJobSettings($this->backupStoragesIdentifiers, $storages);
+        $processPrefix = EventLoggerConst::PROCESS_PREFIX_BACKUP_UPLOAD . '|' . $this->prepareJobSettings($this->backupStoragesIdentifiers, $storages);
         $this->writeEventStatus($processPrefix);
     }
 
-    public function logBackupProcessCompleted(array $processSettings = [])
+    public function logBackupProcessCompleted($backupMeta)
     {
-        $processPrefix = $this->backupProcessPrefixIdentifier . '|' . $this->prepareJobSettings($this->backupSettingsIdentifiers, $processSettings);
-        $this->writeEventStatus($processPrefix);
+        $this->logProcessFromBackupSettings(EventLoggerConst::PROCESS_PREFIX_BACKUP, $backupMeta);
     }
 
-    public function logBackupRestoreCompleted($jobBackupMetadata)
+    public function logBackupRestoreCompleted($backupMeta)
     {
-        $processSettings = [
-            'isExportingPlugins'             => $jobBackupMetadata->getIsExportingPlugins(),
-            'isExportingMuPlugins'           => $jobBackupMetadata->getIsExportingMuPlugins(),
-            'isExportingThemes'              => $jobBackupMetadata->getIsExportingThemes(),
-            'isExportingUploads'             => $jobBackupMetadata->getIsExportingUploads(),
-            'isExportingOtherWpContentFiles' => $jobBackupMetadata->getIsExportingOtherWpContentFiles(),
-            'isExportingDatabase'            => $jobBackupMetadata->getIsExportingDatabase(),
-            'isExportingOtherWpRootFiles'    => $jobBackupMetadata->getIsExportingOtherWpRootFiles(),
-        ];
-        $processPrefix = $this->restoreProcessPrefixIdentifier . '|' . $this->prepareJobSettings($this->backupSettingsIdentifiers, $processSettings);
-        $this->writeEventStatus($processPrefix);
+        $this->logProcessFromBackupSettings(EventLoggerConst::PROCESS_PREFIX_RESTORE, $backupMeta);
     }
 
-    public function logCloneCompleted()
+    public function logRemoteSyncCompleted($backupMeta)
     {
-        $this->writeEventStatus($this->cloneProcessPrefixIdentifier);
+        $this->logProcessFromBackupSettings(EventLoggerConst::PROCESS_PREFIX_REMOTE_SYNC, $backupMeta);
+    }
+
+    public function logCloneCompleted(string $processType = EventLoggerConst::PROCESS_PREFIX_CLONE)
+    {
+        $processType = empty($processType) ? EventLoggerConst::PROCESS_PREFIX_CLONE : $processType;
+        $this->writeEventStatus($processType);
     }
 
     public function logPushCompleted(bool $afterReload = false)
     {
-        $processPrefix = $this->pushProcessPrefixIdentifier;
+        $processPrefix = EventLoggerConst::PROCESS_PREFIX_PUSH;
         if ($afterReload) {
-            $processPrefix .= 'R';
+            $processPrefix = EventLoggerConst::PROCESS_PREFIX_PUSH_RELOAD;
         }
         $this->writeEventStatus($processPrefix);
     }
 
     public function logPushCancelled()
     {
-        $this->writeEventStatus($this->pushProcessPrefixIdentifier, $this->processStatusFailed);
+        $this->writeEventStatus(EventLoggerConst::PROCESS_PREFIX_PUSH, $this->processStatusFailed);
     }
 
     public function updateFailedProcess(string $processPrefix = ''): bool
@@ -131,6 +122,11 @@ trait EventLoggerTrait
             return false;
         }
         return $this->writeEventStatus($processPrefix, $this->processStatusFailed);
+    }
+
+    public function logBackupExtractionCompleted()
+    {
+        $this->writeEventStatus(EventLoggerConst::PROCESS_PREFIX_BACKUP_EXTRACTION);
     }
 
     private function initializeObjects()
@@ -161,6 +157,37 @@ trait EventLoggerTrait
         return $backupProcessPrefix;
     }
 
+    private function logProcessFromBackupSettings(string $processPrefixIdentifier, $backupMeta)
+    {
+        $processSettings = $this->extractBackupProcessSettings($backupMeta);
+        $processPrefix   = $processPrefixIdentifier . '|' . $this->prepareJobSettings($this->backupSettingsIdentifiers, $processSettings);
+        $this->writeEventStatus($processPrefix);
+    }
+
+    private function extractBackupProcessSettings($backupMeta): array
+    {
+        if (!is_object($backupMeta)) {
+            return [];
+        }
+        $getterMap = [
+            'isExportingPlugins'             => 'getIsExportingPlugins',
+            'isExportingMuPlugins'           => 'getIsExportingMuPlugins',
+            'isExportingThemes'              => 'getIsExportingThemes',
+            'isExportingUploads'             => 'getIsExportingUploads',
+            'isExportingOtherWpContentFiles' => 'getIsExportingOtherWpContentFiles',
+            'isExportingDatabase'            => 'getIsExportingDatabase',
+            'isExportingOtherWpRootFiles'    => 'getIsExportingOtherWpRootFiles',
+        ];
+        $settings = [];
+        foreach ($getterMap as $settingKey => $getter) {
+            if (!is_callable([$backupMeta, $getter])) {
+                continue;
+            }
+            $settings[$settingKey] = $backupMeta->{$getter}();
+        }
+        return $settings;
+    }
+
     protected function getProcessPrefix(string $processName): string
     {
         return empty($this->processPrefixes[$processName]) ? '' : $this->processPrefixes[$processName];
@@ -171,10 +198,10 @@ trait EventLoggerTrait
         $this->sanitize        = WPStaging::make(Sanitize::class);
         $this->auth            = WPStaging::make(Auth::class);
         $this->processPrefixes = [
-            'backup'  => $this->backupProcessPrefixIdentifier,
-            'restore' => $this->restoreProcessPrefixIdentifier,
-            'clone'   => $this->cloneProcessPrefixIdentifier,
-            'push'    => $this->pushProcessPrefixIdentifier,
+            'backup'  => EventLoggerConst::PROCESS_PREFIX_BACKUP,
+            'restore' => EventLoggerConst::PROCESS_PREFIX_RESTORE,
+            'clone'   => EventLoggerConst::PROCESS_PREFIX_CLONE,
+            'push'    => EventLoggerConst::PROCESS_PREFIX_PUSH,
         ];
     }
 }

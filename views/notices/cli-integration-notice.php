@@ -149,6 +149,9 @@ use WPStaging\Core\WPStaging;
 </div>
 
 <?php
-// Include the modal content (hidden until triggered by JS)
-include __DIR__ . '/../cli/cli-integration-modal.php';
+// Include the modal content (hidden until triggered by JS) — only once per page
+if (empty($GLOBALS['wpstg_cli_modal_rendered'])) {
+    include __DIR__ . '/../cli/cli-integration-modal.php';
+    $GLOBALS['wpstg_cli_modal_rendered'] = true;
+}
 ?>
