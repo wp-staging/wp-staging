@@ -25,18 +25,13 @@ $directory = WPStaging::make(Directory::class);
         </span>
     </div>
     <?php endif; ?>
-    <div class="wpstg-settings-header">
-        <div class="wpstg-settings-header-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-        <div class="wpstg-settings-header-content">
-            <h1 class="wpstg-settings-title"><?php esc_html_e('WP Staging Settings', 'wp-staging'); ?></h1>
-            <p class="wpstg-settings-subtitle"><?php esc_html_e('Configure your staging and backup preferences', 'wp-staging'); ?></p>
-        </div>
+    <div class="wpstg-provider-page-header">
+        <h1 class="wpstg-text-2xl wpstg-font-semibold wpstg-text-slate-900 dark:wpstg-text-slate-100"><?php esc_html_e('General Settings', 'wp-staging'); ?></h1>
+        <p class="wpstg-mt-1 wpstg-text-sm wpstg-text-slate-600 dark:wpstg-text-slate-400"><?php esc_html_e('Configure your staging and backup preferences', 'wp-staging'); ?></p>
     </div>
     <div class="wpstg-settings-container">
         <div class="wpstg-quick-access">
-            <div class="wpstg-quick-card">
+            <div class="wpstg-quick-card wpstg-card">
                 <div class="wpstg-quick-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
                 </div>
@@ -46,7 +41,7 @@ $directory = WPStaging::make(Directory::class);
                 </div>
             </div>
 
-            <div class="wpstg-quick-card">
+            <div class="wpstg-quick-card wpstg-card">
                 <div class="wpstg-quick-icon">
                     <svg class="wpstg-icon-green" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -58,7 +53,7 @@ $directory = WPStaging::make(Directory::class);
                 </div>
             </div>
 
-            <div class="wpstg-quick-card">
+            <div class="wpstg-quick-card wpstg-card">
                 <div class="wpstg-quick-icon">
                     <svg class="wpstg-icon-blue" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -89,7 +84,7 @@ $directory = WPStaging::make(Directory::class);
             ?>
             <div class="wpstg-settings-grid" id="<?php echo esc_attr($id) ?>__wpstg_header">
                 <div class="wpstg-settings-column">
-                    <div class="wpstg-settings-card wpstg-settings-card-first">
+                    <div class="wpstg-settings-card wpstg-card wpstg-settings-card-first">
                         <div class="wpstg-settings-card-header">
                             <h3 class="wpstg-settings-card-title"><?php echo esc_html__("Staging: Database & performance", "wp-staging");?></h3>
                             <p class="wpstg-settings-card-description">
@@ -219,7 +214,7 @@ $directory = WPStaging::make(Directory::class);
                         </div>
                     </div>
                     <!-- Backup & Notifications Settings -->
-                    <div class="wpstg-settings-card wpstg-settings-card-first">
+                    <div class="wpstg-settings-card wpstg-card wpstg-settings-card-first">
                         <div class="wpstg-settings-card-header">
                             <h3 class="wpstg-settings-card-title"><?php esc_html_e("Backup & Notifications", "wp-staging");?></h3>
                             <p class="wpstg-settings-card-description"><?php esc_html_e("Configure backup compression and notification preferences", "wp-staging");?></p>
@@ -310,7 +305,7 @@ $directory = WPStaging::make(Directory::class);
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
-                                        <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL)) ?>"/>
+                                        <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" value="<?php echo esc_attr(get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL)) ?>"/>
                                     </div>
                                     <div>
                                         <div class="wpstg-settings-field-header">
@@ -323,7 +318,7 @@ $directory = WPStaging::make(Directory::class);
                                     <div class="wpstg-settings-field-input">
                                         <?php
                                         $isCheckboxChecked = get_option(\WPStaging\Notifications\Notifications::OPTION_SEND_EMAIL_AS_HTML) === 'true';
-                                        Toggle::render('wpstg-send-email-as-html', 'wpstg_settings[emailAsHTML]', 'true', $isCheckboxChecked, ['classes' => 'wpstg-settings-field']);
+                                        Toggle::render('wpstg-send-email-as-html', 'wpstg_settings[emailAsHTML]', 'true', $isCheckboxChecked);
                                         ?>
                                     </div>
                                 </div>
@@ -378,7 +373,7 @@ $directory = WPStaging::make(Directory::class);
                 </div>
                 <div class="wpstg-settings-column">
                     <!-- Access Control Settings -->
-                    <div class="wpstg-settings-card wpstg-settings-card-fixed">
+                    <div class="wpstg-settings-card wpstg-card wpstg-settings-card-fixed">
                         <div class="wpstg-settings-card-header">
                             <h3 class="wpstg-settings-card-title"><?php esc_html_e("Access Control", "wp-staging");?></h3>
                             <p class="wpstg-settings-card-description"><?php esc_html_e("Manage user permissions and access control for staging operations", "wp-staging");?></p>
@@ -512,7 +507,7 @@ $directory = WPStaging::make(Directory::class);
                     </div>
                     <!-- Access Control Settings -->
                     <!-- Debug & System Settings -->
-                    <div class="wpstg-settings-card">
+                    <div class="wpstg-settings-card wpstg-card">
                         <div class="wpstg-settings-card-header">
                             <h3 class="wpstg-settings-card-title"><?php esc_html_e("System & Debugging", "wp-staging");?></h3>
                             <p class="wpstg-settings-card-description"><?php esc_html_e("Advanced system settings and debugging options", "wp-staging");?></p>
@@ -596,7 +591,7 @@ $directory = WPStaging::make(Directory::class);
                     <!-- Network Settings -->
                     <?php $httpAuthCredentials = get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []); ?>
                     <?php $hasHttpAuthCredentials = !empty($httpAuthCredentials['username']); ?>
-                    <div class="wpstg-settings-card">
+                    <div class="wpstg-settings-card wpstg-card">
                         <div class="wpstg-settings-card-header">
                             <h3 class="wpstg-settings-card-title !wpstg-me-2"><?php esc_html_e("WP Admin HTTP Basic Auth", "wp-staging"); ?></h3>
                             <p class="wpstg-settings-card-description"><?php esc_html_e("Only fill this in if your /wp-admin is protected with HTTP Basic Authentication (browser login prompt). Background tasks (scans, updates, scheduled jobs) can't access wp-admin without these credentials and may fail. If you don't use HTTP Basic Auth for wp-admin, leave both fields blank.", "wp-staging"); ?></p>
@@ -671,7 +666,7 @@ $directory = WPStaging::make(Directory::class);
                 </div>
             </div>
             <?php if (defined('WPSTGPRO_VERSION')) : ?>
-            <div class="wpstg-settings-card wpstg-full-width">
+            <div class="wpstg-settings-card wpstg-card wpstg-full-width">
                 <div class="wpstg-settings-card-header">
                     <h3 class="wpstg-settings-card-title"><?php esc_html_e("Usage Information", "wp-staging");?></h3>
                     <p class="wpstg-settings-card-description"><?php esc_html_e("Help improve this plugin by sharing anonymous usage data.", "wp-staging");?></p>
@@ -707,7 +702,7 @@ $directory = WPStaging::make(Directory::class);
             <?php
         endforeach;
         ?>
-            <div class="wpstg-settings-actions">
+            <div class="wpstg-settings-actions wpstg-card">
                 <button type="button" class="wpstg-btn wpstg-btn-md wpstg-btn-secondary" id="wpstg-reset-settings-to-defaults">
                     <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 6h18l-2 13H5L3 6z"></path>
@@ -728,4 +723,5 @@ $directory = WPStaging::make(Directory::class);
         unset($tabs);
         ?>
     </form>
+</div>
 </div>

@@ -10,6 +10,7 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Interfaces\StagingDatabaseDtoInterface;
+use WPStaging\Staging\Interfaces\StagingNetworkDtoInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
 use WPStaging\Staging\Service\Database\TableCreateService;
@@ -32,7 +33,7 @@ class CreateDatabaseTablesTask extends StagingTask
     /** @var array */
     protected $tables = [];
 
-    /** @var JobDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface $jobDataDto */
+    /** @var JobDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface|StagingNetworkDtoInterface $jobDataDto */
     protected $jobDataDto; // @phpstan-ignore-line
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, TableCreateService $tableCreateService)
@@ -91,7 +92,7 @@ class CreateDatabaseTablesTask extends StagingTask
             $selectedTables->setExcludedTables($this->jobDataDto->getExcludedTables());
             $selectedTables->setSelectedTablesWithoutPrefix($this->jobDataDto->getNonSiteTables());
             $selectedTables->setAllTablesExcluded($this->jobDataDto->getAllTablesExcluded());
-            $this->tables = $selectedTables->getSelectedTables();
+            $this->tables = $selectedTables->getSelectedTables($this->jobDataDto->getIsStagingNetwork());
             $this->stepsDto->setTotal(count($this->tables));
             $this->jobDataDto->setSelectedTables($this->tables);
         }

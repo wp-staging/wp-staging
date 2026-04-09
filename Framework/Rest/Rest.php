@@ -49,13 +49,8 @@ class Rest
         // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.
         // To work around this, we manually add index.php to the URL, avoiding the redirect.
         if ('index.php/' !== substr($originalUrl, -10)) {
-            $urlWithIndex = $originalUrl . 'index.php';
-        }
-
-        if (!empty($urlWithIndex)) {
-            $urlWithIndex      = add_query_arg('rest_route', '/', $urlWithIndex);
+            $urlWithIndex      = add_query_arg('rest_route', '/', $originalUrl . 'index.php');
             $restPathWithIndex = $this->getApiRequestURI($urlWithIndex);
-            $requestPathApiURI = $this->getApiRequestURI($requestPath);
             if (!empty($restPathWithIndex) && strpos($requestPathApiURI, $restPathWithIndex) === 0) {
                 return true;
             }

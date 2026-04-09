@@ -238,6 +238,7 @@ class PrepareBackup extends PrepareJob
             'isRestRequest'                  => false,
             'isSyncRequest'                  => false,
             'backupExcludedDirectories'      => '',
+            'pushPrepareData'                => [],
         ];
 
         $data = wp_parse_args($data, $defaults);
@@ -290,6 +291,10 @@ class PrepareBackup extends PrepareJob
 
         // Run Backup Creation in Background?
         $data['isCreateBackupInBackground'] = $this->jsBoolean($data['isCreateBackupInBackground']);
+
+        if (!is_array($data['pushPrepareData'])) {
+            $data['pushPrepareData'] = [];
+        }
 
         return $data;
     }

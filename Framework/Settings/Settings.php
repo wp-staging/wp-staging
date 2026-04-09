@@ -354,7 +354,7 @@ class Settings
     protected function saveHttpAuthCredentials(array $data)
     {
         $username = isset($data['httpAuthUsername'])
-            ? $this->sanitize->sanitizeString($data['httpAuthUsername'], false)
+            ? $this->sanitize->sanitizeString($data['httpAuthUsername'])
             : '';
 
         if (empty($username)) {

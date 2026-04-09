@@ -79,7 +79,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     </div>
     <div class="wpstg--advanced-settings--checkbox">
         <label for="wpstg-db-ssl"><?php esc_html_e('Enable SSL: ', 'wp-staging'); ?></label>
-        <?php Checkbox::render('wpstg-db-ssl', 'wpstg-db-ssl', 'true', $useSsl); ?>
+        <?php Checkbox::render('wpstg-db-ssl', 'wpstg-db-ssl', 'true', $useSsl, ['isDisabled' => $isDisabled]); ?>
     </div>
     <div class="wpstg-form-group wpstg-text-field wpstg-mt-10px">
         <a href="#" id="wpstg-db-connect"><?php esc_html_e("Test Database Connection", "wp-staging"); ?></a>

@@ -49,6 +49,24 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
     private $isCleanUploads = false;
 
     /**
+     * Tracks if plugins cleanup is done during update
+     * @var bool
+     */
+    private $isPluginsCleanupDone = false;
+
+    /**
+     * Tracks if themes cleanup is done during update
+     * @var bool
+     */
+    private $isThemesCleanupDone = false;
+
+    /**
+     * Tracks if uploads cleanup is done during update
+     * @var bool
+     */
+    private $isUploadsCleanupDone = false;
+
+    /**
      * @param string $cloneId
      * @return void
      */
@@ -114,5 +132,56 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
     public function getIsCleanUploads(): bool
     {
         return $this->isCleanUploads;
+    }
+
+    /**
+     * @param bool $isPluginsCleanupDone
+     * @return void
+     */
+    public function setIsPluginsCleanupDone(bool $isPluginsCleanupDone)
+    {
+        $this->isPluginsCleanupDone = $isPluginsCleanupDone;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsPluginsCleanupDone(): bool
+    {
+        return $this->isPluginsCleanupDone;
+    }
+
+    /**
+     * @param bool $isThemesCleanupDone
+     * @return void
+     */
+    public function setIsThemesCleanupDone(bool $isThemesCleanupDone)
+    {
+        $this->isThemesCleanupDone = $isThemesCleanupDone;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsThemesCleanupDone(): bool
+    {
+        return $this->isThemesCleanupDone;
+    }
+
+    /**
+     * @param bool $isUploadsCleanupDone
+     * @return void
+     */
+    public function setIsUploadsCleanupDone(bool $isUploadsCleanupDone)
+    {
+        $this->isUploadsCleanupDone = $isUploadsCleanupDone;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsUploadsCleanupDone(): bool
+    {
+        return $this->isUploadsCleanupDone;
     }
 }

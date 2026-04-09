@@ -209,10 +209,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         }
 
         // Lazy-build relative path
-        $relativePath = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $normalizedPath);
+        $relativePath = str_replace($this->filesystem->normalizePath($this->rootPath, true), '', $normalizedPath);
 
         // Exclude wp-content/debug.log to prevent checksum failures caused by new log entries during backup
-        $normalizedDebugPath = $this->filesystem->normalizePath(WP_CONTENT_DIR . '/debug.log');
+        $normalizedDebugPath = $this->filesystem->normalizePath($this->contentPath . '/debug.log');
         if ($normalizedPath === $normalizedDebugPath) {
             $this->logger->notice(sprintf(
                 '%s: Skipped file "%s". Excluded by rule.',
@@ -318,7 +318,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $normalizedPath = $this->filesystem->normalizePath($path, true);
 
         if (in_array($normalizedPath, $this->scannerDto->getExcludedDirectories())) {
-            $relativePathForLogging = str_replace($this->filesystem->normalizePath(WP_CONTENT_DIR, true), '', $normalizedPath);
+            $relativePathForLogging = str_replace($this->filesystem->normalizePath($this->contentPath, true), '', $normalizedPath);
 
             $this->logger->notice(sprintf(
                 '%s: Skipped directory "%s". Excluded by rule',

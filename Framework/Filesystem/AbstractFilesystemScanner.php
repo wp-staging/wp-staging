@@ -43,6 +43,12 @@ abstract class AbstractFilesystemScanner
      */
     protected $rootPath = '';
 
+    /**
+     * The content path of the site
+     * @var string
+     */
+    protected $contentPath = '';
+
     /** @var bool */
     protected $skipFiles = false;
 
@@ -69,6 +75,7 @@ abstract class AbstractFilesystemScanner
         $this->pathIdentifier = $pathIdentifier;
         $this->pluginInfo     = $pluginInfo;
         $this->rootPath       = ABSPATH;
+        $this->contentPath    = WP_CONTENT_DIR;
     }
 
     /**
@@ -87,6 +94,15 @@ abstract class AbstractFilesystemScanner
     public function setRootPath(string $rootPath)
     {
         $this->rootPath = $rootPath;
+    }
+
+    /**
+     * @param string $contentPath
+     * @return void
+     */
+    public function setContentPath(string $contentPath)
+    {
+        $this->contentPath = $contentPath;
     }
 
     /**

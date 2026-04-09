@@ -5,7 +5,7 @@ namespace WPStaging\Framework\Facades;
 use WPStaging\Framework\Utils\Sanitize as UtilsSanitize;
 
 /**
- * @method static string sanitizeString(mixed $value, bool $shouldUrlDecode = true)
+ * @method static string sanitizeString(mixed $value)
  * @method static string[] sanitizeArrayString(array $items)
  * @method static string sanitizePassword(string $value)
  * @method static int sanitizeInt(string $value)
@@ -19,6 +19,8 @@ use WPStaging\Framework\Utils\Sanitize as UtilsSanitize;
  * @method static array sanitizeArrayInt(array $value)
  * @method static array sanitizeArray(array $value, array $config)
  * @method static string decodeBase64AndSanitize(string $value)
+ * @method static string sanitizeCredentialContent(mixed $value)
+ * @method static string sanitizeRemotePath(string $path)
  */
 class Sanitize extends Facade
 {

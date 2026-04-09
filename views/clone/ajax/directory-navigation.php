@@ -18,7 +18,6 @@ use WPStaging\Framework\Facades\UI\Checkbox;
  * @var bool   $parentChecked
  * @var string $directoryDisabled
  * @var string $dirName
- * @var string $gifLoaderPath
  * @var bool   $isDebugMode
  * @var string $dataPath
  * @var string $basePath
@@ -57,8 +56,8 @@ $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
             </span>
         </span>
     <?php endif; ?>
-    <?php if ($isNavigatable === 'true' && !empty($gifLoaderPath)) : ?>
-    <img src='<?php echo esc_url($gifLoaderPath); ?>' class='wpstg-is-dir-loading' alt='loading' />
+    <?php if ($isNavigatable === 'true') : ?>
+    <span class='wpstg-is-dir-loading wpstg-configure-spinner'></span>
     <?php endif; ?>
     <?php if ($isDebugMode) : ?>
     <span class='wpstg-size-info'><?php echo esc_html($dataPath); ?></span>

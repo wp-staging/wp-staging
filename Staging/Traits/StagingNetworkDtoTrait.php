@@ -22,6 +22,13 @@ trait StagingNetworkDtoTrait
     private $stagingNetworkPath = '';
 
     /**
+     * The blog ID from which the staging site is cloned (for multisite subsite cloning)
+     * 0 or 1 = main site, 2+ = subsite
+     * @var int
+     */
+    private $sourceBlogId = 0;
+
+    /**
      * @param bool $isStagingNetwork
      * @return void
      */
@@ -70,5 +77,22 @@ trait StagingNetworkDtoTrait
     public function getStagingNetworkPath(): string
     {
         return $this->stagingNetworkPath;
+    }
+
+    /**
+     * @param int $sourceBlogId
+     * @return void
+     */
+    public function setSourceBlogId(int $sourceBlogId)
+    {
+        $this->sourceBlogId = $sourceBlogId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSourceBlogId(): int
+    {
+        return $this->sourceBlogId;
     }
 }

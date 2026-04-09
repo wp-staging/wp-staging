@@ -18,7 +18,7 @@ class Sanitize
     /**
      * Sanitize a string value.
      *
-     * Applies URL decoding (optional), HTML special characters encoding, and trimming.
+     * Applies HTML special characters encoding and trimming.
      * For arrays or objects, returns empty string to prevent security issues.
      *
      * Examples:
@@ -28,17 +28,12 @@ class Sanitize
      *   sanitizeString($obj)         // Returns: '' (empty string)
      *
      * @param mixed $value The value to sanitize (should be string or scalar)
-     * @param bool $shouldUrlDecode Whether to apply URL decoding first
      * @return string The sanitized string, or empty string for non-scalar values
      */
-    public function sanitizeString($value, $shouldUrlDecode = true)
+    public function sanitizeString($value)
     {
         if (is_array($value) || is_object($value)) {
             return '';
-        }
-
-        if ($shouldUrlDecode) {
-            $value = wpstg_urldecode($value);
         }
 
         return trim(htmlspecialchars($value));
@@ -55,6 +50,73 @@ class Sanitize
         }
 
         return trim(stripslashes($password));
+    }
+
+    /**
+     * Sanitize PEM-encoded credential content (SSH keys, certificates).
+     * Strips NUL bytes, control characters (except newlines/carriage returns),
+     * and normalises line endings while preserving the PEM structure.
+     *
+     * @param mixed $value
+     * @return string
+     */
+    public function sanitizeCredentialContent($value)
+    {
+        if (!is_string($value) || $value === '') {
+            return '';
+        }
+
+        // Strip NUL bytes
+        $value = str_replace("\0", '', $value);
+
+        // Strip control characters except \n, \r, \t
+        $value = preg_replace('/[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value);
+
+        // Normalise line endings to LF
+        $value = str_replace(["\r\n", "\r"], "\n", $value);
+
+        return trim($value);
+    }
+
+    /**
+     * Sanitize a remote file path to prevent directory traversal.
+     * Collapses ".." and "." segments to prevent escaping the intended base directory.
+     *
+     * @param string $path
+     * @return string
+     */
+    public function sanitizeRemotePath($path)
+    {
+        if (!is_string($path)) {
+            return '';
+        }
+
+        // Normalise separators
+        $path = str_replace('\\', '/', $path);
+
+        $isAbsolute = strpos($path, '/') === 0;
+
+        $parts    = explode('/', $path);
+        $resolved = [];
+
+        foreach ($parts as $part) {
+            if ($part === '' || $part === '.') {
+                continue;
+            }
+
+            if ($part === '..') {
+                if (!empty($resolved)) {
+                    array_pop($resolved);
+                }
+
+                continue;
+            }
+
+            $resolved[] = $part;
+        }
+
+        $sanitized = implode('/', $resolved);
+        return $isAbsolute ? '/' . $sanitized : $sanitized;
     }
 
     /**

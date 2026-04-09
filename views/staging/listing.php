@@ -60,11 +60,12 @@ $newStagingFeatureEnabled = (defined('WPSTG_NEW_STAGING') && WPSTG_NEW_STAGING);
 </div>
 
 <?php if (WPStaging::isOnWordPressPlayground()) : ?>
-<span class="wpstg-error-msg" id="wpstg-clone-id-error">
-    <?php
-    esc_html_e("A staging site may not work properly due to limitations in WordPress Playground. However, creating one can still be valuable for demonstrating the functionality.", "wp-staging");
-    ?>
-</span>
+<div class="wpstg-callout wpstg-callout-warning">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <p class="wpstg-m-0 wpstg-text-sm">
+        <?php esc_html_e("A staging site may not work properly due to limitations in WordPress Playground. However, creating one can still be valuable for demonstrating the functionality.", "wp-staging"); ?>
+    </p>
+</div>
 <?php endif; ?>
 
 <?php if (!empty($stagingSites)) : ?>

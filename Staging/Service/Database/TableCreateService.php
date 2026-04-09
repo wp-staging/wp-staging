@@ -69,11 +69,29 @@ class TableCreateService
 
     public function getDestinationTable(string $srcTableName): string
     {
-        if (strpos($srcTableName, $this->sourcePrefix) !== 0) {
-            return $this->destinationPrefix . $srcTableName;
+        if (empty($srcTableName)) {
+            throw new RuntimeException("Get Destination Table - Source table name is empty");
         }
 
-        return $this->destinationPrefix . substr($srcTableName, strlen($this->sourcePrefix));
+        if (empty($this->destinationPrefix)) {
+            throw new RuntimeException("Get Destination Table - Destination table prefix is empty");
+        }
+
+        if (strpos($srcTableName, $this->sourcePrefix) === 0) {
+            return $this->destinationPrefix . substr($srcTableName, strlen($this->sourcePrefix));
+        }
+
+        $basePrefix = $this->sourceDb->getBasePrefix();
+        if (
+            in_array($srcTableName, [
+                $basePrefix . 'users',
+                $basePrefix . 'usermeta',
+            ], true)
+        ) {
+            return $this->destinationPrefix . substr($srcTableName, strlen($basePrefix));
+        }
+
+        return $this->destinationPrefix . $srcTableName;
     }
 
     /**

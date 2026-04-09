@@ -32,12 +32,24 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
             $this->extendedQuery = '';
             $this->databaseImporterDto->setTableToRestore('');
             return true;
-        } else {
-            $this->showError();
+        }
+        if ($this->client->errno() === 1062 && $this->applyFilters(self::FILTER_INSERT_IGNORE_DUPLICATE_KEY, false)) {
+            $retryQuery   = preg_replace('/^INSERT INTO/', 'INSERT IGNORE INTO', $this->extendedQuery, 1);
+            $retrySuccess = $this->exec($retryQuery);
+            $this->addWarning(sprintf(
+                'Duplicate entry in table %s was skipped using INSERT IGNORE. '
+                . 'Some rows may have been skipped. MySQL error: %s',
+                $this->databaseImporterDto->getTableToRestore(),
+                $this->client->error()
+            ));
             $this->extendedQuery = '';
             $this->databaseImporterDto->setTableToRestore('');
-            return false;
+            return $retrySuccess;
         }
+        $this->showError();
+        $this->extendedQuery = '';
+        $this->databaseImporterDto->setTableToRestore('');
+        return false;
     }
 
     protected function showError()
@@ -70,6 +82,18 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
                 break;
             case 1813:
                 $this->addWarning($this->translate('Could not restore the database. MySQL returned the error code 1813, which is related to a tablespace error that WP STAGING can\'t handle. Please contact your hosting company.', 'wp-staging'));
+                break;
+            case 1062:
+                $this->extendedQuery = '';
+                $this->databaseImporterDto->setTableToRestore('');
+                throw new \RuntimeException(sprintf(
+                    'Database restore stopped: Duplicate entry detected in table %s. '
+                    . 'This usually happens during cross-site restore when search-replace '
+                    . 'creates duplicate unique keys. Error code: %s. MySQL error: %s',
+                    $this->databaseImporterDto->getTableToRestore(),
+                    $this->client->errno(),
+                    $this->client->error()
+                ));
         }
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             $this->addWarning(sprintf($this->translate('ExtendedInserterWithoutTransaction Failed Query: %s', 'wp-staging'), substr($this->extendedQuery, 0, 1000)));

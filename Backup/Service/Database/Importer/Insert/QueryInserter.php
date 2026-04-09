@@ -13,6 +13,7 @@ abstract class QueryInserter
     use ApplyFiltersTrait;
     const FILTER_RESTORE_DATABASE_MAX_ALLOWED_PACKET = 'wpstg.restore.database.maxAllowedPacket';
     const FILTER_RESTORE_DATABASE_INNODB_LOG_SIZE = 'wpstg.restore.database.innoDbLogSize';
+    const FILTER_INSERT_IGNORE_DUPLICATE_KEY = 'wpstg.restore.database.insertIgnoreDuplicateKey';
     protected $client;
     protected $databaseImporterDto;
     protected $limitedMaxAllowedPacket;

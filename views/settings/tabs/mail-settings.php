@@ -3,13 +3,12 @@
 use WPStaging\Framework\Facades\UI\Checkbox;
 
 ?>
+<div class="wpstg-provider-page-header">
+    <h1 class="wpstg-text-2xl wpstg-font-semibold wpstg-text-slate-900 dark:wpstg-text-slate-100"><?php esc_html_e('Mail Settings', 'wp-staging'); ?></h1>
+    <p class="wpstg-mt-1 wpstg-text-sm wpstg-text-slate-600 dark:wpstg-text-slate-400"><?php esc_html_e('Control email delivery on this staging site.', 'wp-staging'); ?></p>
+</div>
 <form class="wpstg-mail-settings-form" method="post">
     <?php $isEmailsAllowed = !((bool)(new \WPStaging\Staging\CloneOptions())->get((\WPStaging\Staging\FirstRun::MAILS_DISABLED_KEY))); ?>
-    <p>
-        <strong class="wpstg-fs-14"> <?php esc_html_e('Mail Delivery Setting', 'wp-staging'); ?></strong>
-        <br/>
-        <?php esc_html_e('Toggle mails sending for this staging site', 'wp-staging'); ?>
-    </p>
     <div class="wpstg-form-group">
         <label for="wpstg_allow_emails">
             <?php esc_html_e('Allow Mails Sending:', 'wp-staging'); ?>

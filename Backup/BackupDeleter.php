@@ -74,6 +74,56 @@ class BackupDeleter
     }
 
     /**
+     * Delete all automated uploads-only backups
+     * @return void
+     */
+    public function deleteAllAutomatedUploadsOnlyBackups()
+    {
+        $this->clearErrors();
+
+        foreach ($this->backupsFinder->findBackups() as $backup) {
+            $metadata = $this->backupMetadata->hydrateByFilePath($backup->getRealPath());
+            if (
+                $metadata->getIsAutomatedBackup() &&
+                $metadata->getIsExportingUploads() &&
+                !$metadata->getIsExportingDatabase() &&
+                !$metadata->getIsExportingMuPlugins() &&
+                !$metadata->getIsExportingPlugins() &&
+                !$metadata->getIsExportingThemes() &&
+                !$metadata->getIsExportingOtherWpContentFiles() &&
+                !$metadata->getIsExportingOtherWpRootFiles()
+            ) {
+                $this->deleteBackup($backup, $metadata);
+            }
+        }
+    }
+
+    /**
+     * Delete all automated push backups (database + uploads only)
+     * @return void
+     */
+    public function deleteAllAutomatedPushBackups()
+    {
+        $this->clearErrors();
+
+        foreach ($this->backupsFinder->findBackups() as $backup) {
+            $metadata = $this->backupMetadata->hydrateByFilePath($backup->getRealPath());
+            if (
+                $metadata->getIsAutomatedBackup() &&
+                $metadata->getIsExportingDatabase() &&
+                $metadata->getIsExportingUploads() &&
+                !$metadata->getIsExportingMuPlugins() &&
+                !$metadata->getIsExportingPlugins() &&
+                !$metadata->getIsExportingThemes() &&
+                !$metadata->getIsExportingOtherWpContentFiles() &&
+                !$metadata->getIsExportingOtherWpRootFiles()
+            ) {
+                $this->deleteBackup($backup, $metadata);
+            }
+        }
+    }
+
+    /**
      * @param SplFileInfo $backup
      * @param BackupMetadata $metadata
      */

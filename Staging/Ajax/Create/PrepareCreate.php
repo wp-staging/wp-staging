@@ -4,116 +4,53 @@ namespace WPStaging\Staging\Ajax\Create;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
-use WPStaging\Framework\Filesystem\Scanning\ScanConst;
-use WPStaging\Framework\Job\Ajax\PrepareJob;
-use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Staging\Ajax\AbstractAjaxPrepare;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteCreate;
 use WPStaging\Staging\Service\StagingSetup;
 
-class PrepareCreate extends PrepareJob
+class PrepareCreate extends AbstractAjaxPrepare
 {
+    /** @var string */
+    protected $postDataKey = 'wpstgCreateData';
+
     /** @var StagingSiteJobsDataDto */
     protected $jobDataDto;
 
     /** @var StagingSiteCreate */
     protected $jobCreate;
 
-    /**
-     * @param array|null $data
-     * @return void
-     */
-    public function ajaxPrepare($data)
+    protected function postDataSanitization(): array
     {
-        if (!$this->auth->isAuthenticatedRequest()) {
-            wp_send_json_error(null, 401);
+        if (empty($_POST['wpstgCreateData'])) {
+            throw new \UnexpectedValueException("Invalid request. Missing 'wpstgCreateData'. Should never happen.");
         }
 
-        try {
-            $this->processLock->checkProcessLocked();
-        } catch (ProcessLockedException $e) {
-            wp_send_json_error($e->getMessage(), $e->getCode());
-        }
+        $data = Sanitize::sanitizeArray($_POST['wpstgCreateData'], [
+            'cloneId'                => 'string',
+            'allTablesExcluded'      => 'bool',
+            'excludeSizeGreaterThan' => 'string',
+        ]);
 
-        $response = $this->prepare($data);
+        $data['name']                = isset($_POST['wpstgCreateData']['name']) ? Sanitize::sanitizeString($_POST['wpstgCreateData']['name']) : '';
+        $data['excludedTables']      = isset($_POST['wpstgCreateData']['excludedTables']) ? $this->parseAndSanitizeTables($_POST['wpstgCreateData']['excludedTables']) : []; // phpcs:ignore
+        $data['includedTables']      = isset($_POST['wpstgCreateData']['includedTables']) ? $this->parseAndSanitizeTables($_POST['wpstgCreateData']['includedTables']) : []; // phpcs:ignore
+        $data['nonSiteTables']       = isset($_POST['wpstgCreateData']['nonSiteTables']) ? $this->parseAndSanitizeTables($_POST['wpstgCreateData']['nonSiteTables']) : []; // phpcs:ignore
+        $data['excludedDirectories'] = isset($_POST['wpstgCreateData']['excludedDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludedDirectories']) : []; // phpcs:ignore
+        $data['extraDirectories']    = isset($_POST['wpstgCreateData']['extraDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['extraDirectories']) : []; // phpcs:ignore
+        // Exclude rules
+        $data['excludeFileRules']      = isset($_POST['wpstgCreateData']['excludeFileRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeFileRules']) : []; // phpcs:ignore
+        $data['excludeFolderRules']    = isset($_POST['wpstgCreateData']['excludeFolderRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeFolderRules']) : []; // phpcs:ignore
+        $data['excludeExtensionRules'] = isset($_POST['wpstgCreateData']['excludeExtensionRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeExtensionRules']) : []; // phpcs:ignore
+        $data = array_merge($data, $this->getAdvanceSettings());
 
-        if ($response instanceof \WP_Error) {
-            wp_send_json_error($response->get_error_message(), $response->get_error_code());
-        }
-
-        wp_send_json_success();
+        return $data;
     }
 
-    /**
-     * @param array|null $data
-     * @return array|\WP_Error
-     */
-    public function prepare($data = null)
+    protected function additionalSanitization(array $data): array
     {
-        if (empty($data) && array_key_exists('wpstgCreateData', $_POST)) {
-            $data = Sanitize::sanitizeArray($_POST['wpstgCreateData'], [
-                'cloneId'                => 'string',
-                'allTablesExcluded'      => 'bool',
-                'excludeSizeGreaterThan' => 'string',
-            ]);
-
-            $data['name']                = isset($_POST['wpstgCreateData']['name']) ? Sanitize::sanitizeString($_POST['wpstgCreateData']['name']) : '';
-            $data['excludedTables']      = isset($_POST['wpstgCreateData']['excludedTables']) ? $this->parseAndSanitizeTables($_POST['wpstgCreateData']['excludedTables']) : []; // phpcs:ignore
-            $data['includedTables']      = isset($_POST['wpstgCreateData']['includedTables']) ? $this->parseAndSanitizeTables($_POST['wpstgCreateData']['includedTables']) : []; // phpcs:ignore
-            $data['nonSiteTables']       = isset($_POST['wpstgCreateData']['nonSiteTables']) ? $this->parseAndSanitizeTables($_POST['wpstgCreateData']['nonSiteTables']) : []; // phpcs:ignore
-            $data['excludedDirectories'] = isset($_POST['wpstgCreateData']['excludedDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludedDirectories']) : []; // phpcs:ignore
-            $data['extraDirectories']    = isset($_POST['wpstgCreateData']['extraDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['extraDirectories']) : []; // phpcs:ignore
-            // Exclude rules
-            $data['excludeFileRules']      = isset($_POST['wpstgCreateData']['excludeFileRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeFileRules']) : []; // phpcs:ignore
-            $data['excludeFolderRules']    = isset($_POST['wpstgCreateData']['excludeFolderRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeFolderRules']) : []; // phpcs:ignore
-            $data['excludeExtensionRules'] = isset($_POST['wpstgCreateData']['excludeExtensionRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeExtensionRules']) : []; // phpcs:ignore
-            $data = array_merge($data, $this->getAdvanceSettings());
-        }
-
-        try {
-            $sanitizedData = $this->setupInitialData($data);
-        } catch (\Exception $e) {
-            return new \WP_Error(400, $e->getMessage());
-        }
-
-        $this->deleteSseCacheFiles();
-
-        return $sanitizedData;
-    }
-
-    /**
-     * @param array|null $data
-     * @return array
-     */
-    public function validateAndSanitizeData($data): array
-    {
-        if (empty($data)) {
-            $data = [];
-        }
-
-        // Unset any empty value so that we replace them with the defaults.
-        foreach ($data as $key => $value) {
-            if (empty($value)) {
-                unset($data[$key]);
-            }
-        }
-
-        $defaults = $this->getDefaults();
-
-        $data = wp_parse_args($data, $defaults);
-
-        // Make sure data has no keys other than the expected ones.
-        $data = array_intersect_key($data, $defaults);
-
-        // Make sure data has all expected keys.
-        foreach ($defaults as $expectedKey => $value) {
-            if (!array_key_exists($expectedKey, $data)) {
-                throw new \UnexpectedValueException("Invalid request. Missing '$expectedKey'.");
-            }
-        }
-
         // Clone ID
         $data['cloneId'] = sanitize_text_field($data['cloneId']);
 
@@ -202,10 +139,10 @@ class PrepareCreate extends PrepareJob
     }
 
     /**
-     * @param $sanitizedData
+     * @param array|null $sanitizedData
      * @return array
      */
-    private function setupInitialData($sanitizedData): array
+    protected function setupInitialData($sanitizedData): array
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
         $this->clearCacheFolder();
@@ -267,20 +204,6 @@ class PrepareCreate extends PrepareJob
         $this->jobCreate->persist();
 
         return true;
-    }
-
-    protected function parseAndSanitizeTables(string $tables): array
-    {
-        $tables = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
-
-        return array_map('sanitize_text_field', $tables);
-    }
-
-    protected function parseAndSanitizeDirectories(string $directories): array
-    {
-        $directories = $directories === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $directories);
-
-        return array_map('sanitize_text_field', $directories);
     }
 
     protected function findDatabasePrefix()
@@ -349,18 +272,6 @@ class PrepareCreate extends PrepareJob
         return $cloneId;
     }
 
-    protected function getDestinationPath(array $data): string
-    {
-        $absPath = trailingslashit($this->filesystem->normalizePath($this->directory->getAbsPath()));
-
-        return $absPath . $data['name'];
-    }
-
-    protected function getDestinationUrl(array $data): string
-    {
-        return trailingslashit(home_url()) . $data['name'];
-    }
-
     protected function prepareStagingSiteDto()
     {
         $this->jobDataDto->setIsExternalDatabase(false);
@@ -378,5 +289,17 @@ class PrepareCreate extends PrepareJob
         $stagingSite->setOwnerId(get_current_user_id());
 
         $this->jobDataDto->setStagingSite($stagingSite);
+    }
+
+    protected function getDestinationPath(array $data): string
+    {
+        $absPath = trailingslashit($this->filesystem->normalizePath($this->directory->getAbsPath()));
+
+        return $absPath . $data['name'];
+    }
+
+    protected function getDestinationUrl(array $data): string
+    {
+        return trailingslashit(home_url()) . $data['name'];
     }
 }

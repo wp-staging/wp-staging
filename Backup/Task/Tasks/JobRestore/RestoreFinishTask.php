@@ -56,9 +56,6 @@ class RestoreFinishTask extends RestoreTask
             }
 
             $this->performRestoreFinishAction();
-            $this->logger->info("✓ Backup successfully restored");
-
-            $this->logBackupRestoreCompleted($this->jobDataDto->getBackupMetadata());
             $this->clearCacheOnWpCom();
 
             // Let call logout only at the end of the restore process
@@ -125,5 +122,7 @@ class RestoreFinishTask extends RestoreTask
                 'type'    => 'restore',
             ],
         ]);
+        $this->logger->info("✓ Backup successfully restored");
+        $this->logBackupRestoreCompleted($this->jobDataDto->getBackupMetadata());
     }
 }
