@@ -194,8 +194,7 @@ class CliIntegrationNotice
             return __('Unregistered', 'wp-staging');
         }
 
-        $license     = get_option('wpstg_license_status', false);
-        $licenseData = $license ? (object)$license : null;
+        $licenseData = $this->getLicenseData();
 
         if (!$licenseData || empty($licenseData->price_id)) {
             return __('Unregistered', 'wp-staging');
@@ -254,6 +253,10 @@ class CliIntegrationNotice
      */
     private function renderCliModalContent()
     {
+        if (!empty($GLOBALS['wpstg_cli_modal_rendered'])) {
+            return;
+        }
+
         $isDeveloperOrHigher = $this->isDeveloperOrHigherLicense();
         $backups             = $this->fetchSortedBackups($isDeveloperOrHigher);
         $urlAssets           = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
@@ -263,6 +266,7 @@ class CliIntegrationNotice
         $modalView = WPSTG_VIEWS_DIR . 'cli/cli-integration-modal.php';
         if (file_exists($modalView)) {
             include $modalView;
+            $GLOBALS['wpstg_cli_modal_rendered'] = true;
         }
     }
 
@@ -291,18 +295,25 @@ class CliIntegrationNotice
      */
     private function getLicenseId(): string
     {
-        if (!WPStaging::isPro()) {
+        $licenseData = $this->getLicenseData();
+        if (!$licenseData) {
             return '';
+        }
+
+        return !empty($licenseData->license_id) ? (string)$licenseData->license_id : '';
+    }
+
+    /**
+     * @return object|null
+     */
+    private function getLicenseData()
+    {
+        if (!WPStaging::isPro()) {
+            return null;
         }
 
         $license = get_option('wpstg_license_status', false);
-        if (!$license) {
-            return '';
-        }
-
-        $licenseData = (object)$license;
-
-        return !empty($licenseData->license_id) ? (string)$licenseData->license_id : '';
+        return $license ? (object)$license : null;
     }
 
     /**
@@ -331,7 +342,7 @@ class CliIntegrationNotice
      * @param bool $isDeveloperOrHigher Whether the user has a Developer+ license
      * @return array
      */
-    private function fetchSortedBackups(bool $isDeveloperOrHigher): array
+    private function fetchSortedBackups(bool $isDeveloperOrHigher = true): array
     {
         if (!$isDeveloperOrHigher || !class_exists('\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection')) {
             return [];
@@ -357,18 +368,8 @@ class CliIntegrationNotice
             wp_send_json_error();
         }
 
-        $backups   = [];
+        $backups   = $this->fetchSortedBackups();
         $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
-
-        if (class_exists('\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection')) {
-            try {
-                /** @var \WPStaging\Backup\Ajax\FileList\ListableBackupsCollection $listableBackupsCollection */
-                $listableBackupsCollection = \WPStaging\Core\WPStaging::make(\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection::class);
-                $backups                   = $listableBackupsCollection->getSortedListableBackups();
-            } catch (\Exception $e) {
-                $backups = [];
-            }
-        }
 
         // Check if there are valid (non-corrupt, non-legacy) backups
         $hasBackups = false;

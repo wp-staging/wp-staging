@@ -63,18 +63,7 @@ class Hooks
      */
     public function doAction(string $hookName, ...$args)
     {
-        // Early bail if do_action function is not available
-        if (!function_exists('do_action')) {
-            return;
-        }
-
-        // Early bail if it is not a wpstg hook
-        if (strpos($hookName, 'wpstg.') !== 0) {
-            return;
-        }
-
-        // Early bail if it is a wpstg test hook but not a test
-        if (strpos($hookName, 'wpstg.tests.') === 0  && !$this->isTest()) {
+        if (!function_exists('do_action') || !$this->isHookAllowed($hookName)) {
             return;
         }
 
@@ -89,22 +78,38 @@ class Hooks
      */
     public function applyFilters(string $hookName, $value, ...$args)
     {
-        // Early bail if apply_filters function is not available
-        if (!function_exists('apply_filters')) {
-            return $value;
-        }
-
-        // Early bail if it is not a wpstg hook
-        if (strpos($hookName, 'wpstg.') !== 0) {
-            return $value;
-        }
-
-        // Early bail if it is a wpstg test hook but not a test
-        if (strpos($hookName, 'wpstg.tests.') === 0 && !$this->isTest()) {
+        if (!function_exists('apply_filters') || !$this->isHookAllowed($hookName)) {
             return $value;
         }
 
         return apply_filters($hookName, $value, ...$args);
+    }
+
+    /**
+     * @param string $hookName
+     * @return bool
+     */
+    private function isHookAllowed(string $hookName): bool
+    {
+        if (!$this->isWpstgHook($hookName)) {
+            return false;
+        }
+
+        // Block test hooks outside of test context
+        if (strpos($hookName, 'wpstg.tests.') === 0 && !$this->isTest()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $hookName
+     * @return bool
+     */
+    private function isWpstgHook(string $hookName): bool
+    {
+        return strpos($hookName, 'wpstg.') === 0 || strpos($hookName, 'wpstg_') === 0;
     }
 
     /**

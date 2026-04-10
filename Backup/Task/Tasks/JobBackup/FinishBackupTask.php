@@ -65,10 +65,9 @@ class FinishBackupTask extends BackupTask
             $this->logger->info("✓ Backup successfully created");
         }
 
-        // This condition prevents duplicate log entries for a single backup process.
-        // For example, in background (BG) backups, this task run twice, so we log it only once after the process completes.
+        // Background-backup bootstrap requests should not write final completion entries.
         if (!$this->jobDataDto->getIsCreateBackupInBackground()) {
-            $this->logBackupProcessCompleted($this->getBackupCreationPrepareData());
+            $this->maybeLogBackupProcess();
             $this->saveCloudStorageOptions();
         }
 
@@ -121,6 +120,7 @@ class FinishBackupTask extends BackupTask
                 $response->setIsMultipartBackup($this->jobDataDto->getIsMultipartBackup());
                 $response->setIsGlitchInBackup($this->jobDataDto->getIsGlitchInBackup());
                 $response->setGlitchReason($this->jobDataDto->getGlitchReason());
+                $response->setIsBeforePush(!empty($this->jobDataDto->getPushPrepareData()));
             }
 
             return $response;
@@ -203,6 +203,21 @@ class FinishBackupTask extends BackupTask
         } else {
             $this->logger->info('Backup creation triggered in background with job ID: ' . $jobId . '.');
         }
+    }
+
+    /**
+     * Scheduled backups are intentionally skipped because they can run frequently
+     * and would otherwise flood the maintenance history with automated entries.
+     *
+     * @return void
+     */
+    private function maybeLogBackupProcess()
+    {
+        if ($this->jobDataDto->getRepeatBackupOnSchedule() || !empty($this->jobDataDto->getScheduleId())) {
+            return;
+        }
+
+        $this->logBackupProcessCompleted($this->jobDataDto);
     }
 
     /**

@@ -21,7 +21,8 @@ class RowsExporter extends AbstractRowsExporter
      * @var string[]
      */
     const TABLES_EXCLUDED_FROM_DATA_COPYING = [
-        'wpstg_queue'
+        'wpstg_queue',
+        'wpstg_settings',
     ];
 
     /** @var string */

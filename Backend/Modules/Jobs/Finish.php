@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
+use WPStaging\Framework\Logger\EventLoggerConst;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Urls;
@@ -62,22 +63,28 @@ class Finish extends Job
             "percentage"    => 100,
         ];
 
+        $processType    = EventLoggerConst::PROCESS_PREFIX_CLONE;
+        $successMessage = "Staging site successfully created";
         switch ($this->options->mainJob) {
             case Job::STAGING:
                 WPStaging::make(AnalyticsStagingCreate::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
                 break;
             case Job::UPDATE:
+                $processType    = EventLoggerConst::PROCESS_PREFIX_CLONE_UPDATE;
+                $successMessage = 'Staging site successfully updated';
                 WPStaging::make(AnalyticsStagingUpdate::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
                 break;
             case Job::RESET:
+                $processType    = EventLoggerConst::PROCESS_PREFIX_CLONE_RESET;
+                $successMessage = 'Staging site successfully reset';
                 WPStaging::make(AnalyticsStagingReset::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
                 break;
         }
 
         do_action(StagingSiteCreate::ACTION_CLONING_COMPLETE, $this->options);
 
-        $this->logger->info("✓ Staging site successfully created");
-        $this->logCloneCompleted();
+        $this->logger->info("✓ " . $successMessage);
+        $this->logCloneCompleted($processType);
         return (object) $return;
     }
 

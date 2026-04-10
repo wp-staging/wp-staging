@@ -43,7 +43,7 @@ $storagesPrefix = 'storage-';
 ?>
 <div id="wpstg--modal--backup--new" data-confirmButtonText="<?php esc_attr_e('Start Backup', 'wp-staging'); ?>" style="display: none">
     <h3 class="wpstg--swal2-title wpstg-w-100" for="wpstg-backup-name-input"><?php esc_html_e('Create Site Backup', 'wp-staging'); ?></h3>
-    <input id="wpstg-backup-name-input" name="backup_name" class="wpstg--swal2-input" placeholder="<?php esc_attr_e('Backup Name (Optional)', 'wp-staging'); ?>">
+    <input id="wpstg-backup-name-input" name="backup_name" class="wpstg-input wpstg-input-md wpstg-my-4" style="max-width: 400px;" placeholder="<?php esc_attr_e('Backup Name (Optional)', 'wp-staging'); ?>">
 
     <div class="wpstg-advanced-options" style="text-align: left;">
 

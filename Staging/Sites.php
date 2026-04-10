@@ -292,6 +292,32 @@ class Sites
     }
 
     /**
+     * @param string $cloneName
+     * @return StagingSiteDto
+     *
+     * @throws Exception
+     */
+    public function getStagingSiteDtoByCloneName(string $cloneName): StagingSiteDto
+    {
+        $stagingSites = $this->tryGettingStagingSites();
+        if (empty($stagingSites)) {
+            throw new Exception('No staging sites found.');
+        }
+
+        foreach ($stagingSites as $cloneId => $stagingSiteArray) {
+            if ($stagingSiteArray['cloneName'] === $cloneName) {
+                $stagingSiteDto = new StagingSiteDto();
+                $stagingSiteDto->hydrate($stagingSiteArray);
+                $stagingSiteDto->setCloneId($cloneId);
+
+                return $stagingSiteDto;
+            }
+        }
+
+        throw new Exception('Staging site not found.');
+    }
+
+    /**
      * @param string $clone
      * @return bool
      */

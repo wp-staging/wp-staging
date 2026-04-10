@@ -66,12 +66,6 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
                         <?php esc_html_e("Reset", "wp-staging"); ?>
                     </a>
                     <?php endif; ?>
-                    <a href="#" class="wpstg--delete--staging-site wpstg-clone-action" data-cloneId="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" title="<?php echo esc_html__("Delete the selected staging site. Select specific folders and database tables in the next step.", "wp-staging"); ?>" data-name="<?php echo esc_attr($stagingSiteItem->cloneName); ?>">
-                        <div class="wpstg-dropdown-item-icon">
-                            <?php $assets->renderSvg('trash'); ?>
-                        </div>
-                        <?php esc_html_e("Delete", "wp-staging"); ?>
-                    </a>
                     <?php
                     do_action(TemplateEngine::ACTION_AFTER_EXISTING_CLONES, $stagingSiteItem->cloneId, $stagingSite->toArray(), $license);
 
@@ -105,6 +99,13 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
                         <span>(Pro)</span>
                     </a>
                     <?php endif; ?>
+                    <div class="wpstg--mx-1 wpstg-my-1 wpstg-h-px wpstg-bg-dim"></div>
+                    <a href="#" class="wpstg--delete--staging-site wpstg-clone-action wpstg-dropdown-delete" data-cloneId="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" title="<?php echo esc_html__("Delete the selected staging site. Select specific folders and database tables in the next step.", "wp-staging"); ?>" data-name="<?php echo esc_attr($stagingSiteItem->cloneName); ?>">
+                        <div class="wpstg-dropdown-item-icon">
+                            <?php $assets->renderSvg('trash'); ?>
+                        </div>
+                        <?php esc_html_e("Delete", "wp-staging"); ?>
+                    </a>
                 </div>
             </div>
         </div>

@@ -114,10 +114,26 @@ class Uninstall
             $this->deleteOptions($this->getProOptions());
         }
 
+        $this->dropWpStagingSettingsTable();
         $this->deleteTransients();
         $this->cleanupEmptyPreserveOptions();
         $this->clearCronEvents();
         $this->cleanupWpStagingDirectories();
+    }
+
+    /**
+     * @return void
+     */
+    private function dropWpStagingSettingsTable()
+    {
+        global $wpdb;
+
+        if (!($wpdb instanceof \wpdb)) {
+            return;
+        }
+
+        $tableName = str_replace('`', '', $wpdb->prefix . 'wpstg_settings');
+        $wpdb->query("DROP TABLE IF EXISTS `{$tableName}`");
     }
 
     /**
@@ -306,6 +322,7 @@ class Uninstall
             'wpstg_clone_excluded_gd_files_list',
             'wpstg_freemius_notice',
             'wpstg_queue_table_structure_version',
+            'wpstg_settings_table_version',
             'wpstg_q_feature_detection_ajax_available',
             'wpstg_analytics_has_consent',
             'wpstg_analytics_modal_dismissed',
