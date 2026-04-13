@@ -1,6 +1,6 @@
 ![Tests](https://img.shields.io/badge/tests-PHPUnit%20%7C%20Playwright%20%7C%20Selenium-blue)
 ![PHP](https://img.shields.io/badge/php-7.0%20%7C%208.0--8.5-8892BF)
-![WordPress](https://img.shields.io/badge/WordPress-tested%20up%20to%206.9-21759b)
+![WordPress](https://img.shields.io/badge/WordPress-tested%20up%20to%207.0-21759b)
 ![License](https://img.shields.io/badge/license-GPLv2%2B-green)
 
 ### Welcome to the WP Staging repository
