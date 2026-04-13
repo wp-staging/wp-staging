@@ -27,6 +27,13 @@ abstract class AbstractFileObject extends \SplFileObject
     /** @var bool */
     protected $fseekUsed = false;
 
+    /**
+     * Whether current PHP has the native SplFileObject iterator fix from php/php-src#21679.
+     * Null means not yet detected.
+     * @var bool|null
+     */
+    private static $hasNativeSeekFix = null;
+
     public function __construct(string $fullPath, string $openMode = self::MODE_READ)
     {
         try {
@@ -64,7 +71,7 @@ abstract class AbstractFileObject extends \SplFileObject
             $this->seek($currentKey);
         }
 
-        if ($this->totalLines > 0) {
+        if ($this->totalLines > 0 && !self::hasNativeSeekFix()) {
             if (PHP_VERSION === '8.2.0RC3' || version_compare(PHP_VERSION, '8.2.0', '>=')) {
                 $this->totalLines += 1;
             }
@@ -99,6 +106,11 @@ abstract class AbstractFileObject extends \SplFileObject
     {
         if ($offset < 0) {
             throw new \Exception("Can't seek file: " . $this->getPathname() . " to negative offset: $offset");
+        }
+
+        if (self::hasNativeSeekFix()) {
+            parent::seek($offset);
+            return;
         }
 
         $this->fseekUsed       = false;
@@ -145,6 +157,10 @@ abstract class AbstractFileObject extends \SplFileObject
      */
     public function fgets(): string
     {
+        if (self::hasNativeSeekFix()) {
+            return parent::fgets();
+        }
+
         if ($this->key() === 0 || version_compare(PHP_VERSION, '8.0.1', '<')) {
             $this->fgetsUsedOnKey0 = true;
             return parent::fgets();
@@ -177,6 +193,10 @@ abstract class AbstractFileObject extends \SplFileObject
     #[\ReturnTypeWillChange]
     public function key(): int
     {
+        if (self::hasNativeSeekFix()) {
+            return parent::key();
+        }
+
         if (!$this->fgetsUsedOnKey0 || version_compare(PHP_VERSION, '8.0.19', '<')) {
             return parent::key();
         }
@@ -201,6 +221,10 @@ abstract class AbstractFileObject extends \SplFileObject
     #[\ReturnTypeWillChange]
     public function fseek($offset, $whence = SEEK_SET): int
     {
+        if (self::hasNativeSeekFix()) {
+            return parent::fseek($offset, $whence);
+        }
+
         if (version_compare(PHP_VERSION, '8.0.19', '<')) {
             return parent::fseek($offset, $whence);
         }
@@ -231,6 +255,10 @@ abstract class AbstractFileObject extends \SplFileObject
      */
     public function readAndMoveNext(bool $useFgets = false): string
     {
+        if (self::hasNativeSeekFix()) {
+            return parent::fgets();
+        }
+
         if ($useFgets && version_compare(PHP_VERSION, '8.0.1', '<')) {
             return parent::fgets();
         }
@@ -244,6 +272,35 @@ abstract class AbstractFileObject extends \SplFileObject
 
         $this->setFlags($originalFlags);
         return $line;
+    }
+
+    /**
+     * Detect if current PHP has the SplFileObject iterator fix from php/php-src#21679.
+     * Uses a runtime behavior probe instead of version_compare() because the fix
+     * could land in any patch release via backport.
+     *
+     * Fixed in PHP 8.6+ but may be backported to 8.5.x or 8.4.x.
+     * @see https://github.com/php/php-src/pull/21679
+     *
+     * @return bool
+     */
+    private static function hasNativeSeekFix(): bool
+    {
+        if (self::$hasNativeSeekFix !== null) {
+            return self::$hasNativeSeekFix;
+        }
+
+        $tmp = new \SplTempFileObject();
+        $tmp->fwrite("A\nB\nC\n");
+        $tmp->rewind();
+        // GH-8562: next() without preceding current() should advance the stream.
+        // Broken PHP (8.0.1 through 8.5.x): next() is a no-op, current() returns "A"
+        // Fixed PHP (8.6+ or backported): next() advances, current() returns "B"
+        $tmp->next();
+        $line = trim($tmp->current());
+        $key = $tmp->key();
+        self::$hasNativeSeekFix = ($line === 'B' && $key === 1);
+        return self::$hasNativeSeekFix;
     }
 
     /** @return bool */
