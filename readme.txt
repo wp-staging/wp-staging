@@ -272,8 +272,43 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 == Changelog ==
 
 = 4.8.0 =
+* New: Add analytic events logging for Backup Explorer. #4954
+* New: Add filter configuration support for the standalone restore tool via JSON config file. #5051
+* New: Add option to create remote sync profiles which allow one click remote sync process. #4668
+* New: Add option to receive remote sync success notifications via emails and slack. #4668
+* Enh: Add Remote Sync promo video composition (EN + DE) under promo-video/. #5088
+* Enh: Add filter for custom search/replace in encoded database values (e.g. base64 JSON). #4931
+* Enh: Added a notification on backup download to verify the downloaded file size. #1786
+* Enh: Redesign remote sync flow to be smoother. #4668
+* Enh: Remove deprecated wpstg.backup.restore.exclude_plugins filter. Use wpstg.backup.restore.exclude_paths instead. #4892
+* Enh: Show "Not enough disk space" error when backup file archiving fails due to a disk-full condition, instead of a generic write-failure message. #3034
+* Fix: Add per-request cron integrity check that self-heals missing, orphaned, or wrong-recurrence WP Staging cron events (backup schedules, daily/weekly maintenance, queue processing) so scheduled backups keep running even when WP-Cron itself is broken. #5090
+* Fix: Cron warning shows only when scheduled backups are actually failing. #5058
+* Fix: Fixed edge cases that could cause some settings or backup information to load incorrectly, and improved validation and error handling in backup and staging workflows. #5070
+* Fix: Improved backup reliability on some hosts by ensuring backup progress continues correctly between requests. #5112
+* Fix: Preserve WP Staging Free plugin during backup restore when using Pro version. #4892
+* Fix: Prevent background backups from processing the database twice. #5009
+* Fix: Prevent fatal error and full-site crash when plugin files are missing or corrupted. #5074
+* Fix: Reject empty token on /wpstg/v1/sse-logs REST route to prevent unauthenticated log-stream connections when no job is active. #5097
+* Fix: SFTP connection test fails when run more than once. (Pro) #5029
+* Fix: Show actual Remote Sync error in UI instead of generic failure message and identify which server caused it. #5011
+* Fix: Skip optimizer copy when the destination (mu-plugins directory) is not writable. #4545
+* Fix: Staging delete modal overflows viewport when staging site has many database tables. #5071
+* Fix: Stored SFTP credentials, including SSH private keys, are now saved securely by default. #5048
+* Fix: Undefined variable notice of jobId from AnalyticsServiceProvider. #1503
+* Dev: Add logic to log generic analytic events. #4954
+* Dev: Add translation-audit helper script to find orphaned msgids and missing translations across .po files. #5106
+* Dev: Bump phpunit/phpunit, symfony/process, phpseclib/phpseclib, eslint, @typescript-eslint, and flatted dependencies. #5017
 * Dev: CI release prepare seeds dist/newsfeed-{en,de}.json from dev/releases-history/<version>/ when present, and skips newsfeed:generate-json regeneration in that case so manual edits to the EN newsfeed and translated DE newsfeed survive across re-runs and reach the deploy artifact. #5138
+* Dev: Decouple general/ Playwright tests from staging GitHub workflows into dedicated basic_general, pro_general, and pro_thirdparty_general workflows. #5125
+* Dev: Fix failing "Pro Integration" test on CI for PHP 8.3+. #5082
 * Dev: Fix syntax error in CI release prepare workflow that caused the post-commit "mark required checks" step to crash. #5137
+* Dev: Keep `fast-tests-passed` / `fast-tests-failed` labels across commits; let next test run swap them. #5087
+* Dev: Refactor Staging Site e2e tests to be more robust and stable. #5077
+* Dev: Remove binary .mo translation files from git to prevent merge conflicts. #5072
+* Dev: Revert PHP 8.6 SplFileObject runtime detection until PHP 8.6 is officially released. #5115
+* Dev: Skip AuthTempCertFileTest file permission check on Windows as it does not support Unix permissions. #5069
+* Dev: Update dependencies related to building assets to reduce time taken to build assets. #4880
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
