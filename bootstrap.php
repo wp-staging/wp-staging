@@ -12,8 +12,28 @@ if (file_exists(__DIR__ . '/autoloader_dev.php')) {
     include_once __DIR__ . '/autoloader.php';
 }
 
-// Early bail: Unexpected behavior from the autoloader.
-if (!class_exists('\WPStaging\Core\WPStaging')) {
+// Early bail: vendor_wpstg files missing/corrupted (issue #5074), or any other
+// autoloader malfunction. Verifying a vendor class catches the case where src.php
+// loads fine but vendor.php is broken — \WPStaging\Core\WPStaging alone is not
+// enough because it lives in the src map. Both checks together cover src/vendor
+// corruption symmetrically. The vendor class also resolves under autoloader_dev.php
+// via class_alias, so this works in dev as well as dist.
+if (
+    !class_exists('\WPStaging\Vendor\lucatume\DI52\Container')
+    || !class_exists('\WPStaging\Core\WPStaging')
+) {
+    add_action('admin_notices', function () {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        // Hard-coded English: at this point we cannot trust that the plugin's
+        // text-domain bootstrap loaded, so __() may misbehave.
+        echo '<div class="notice notice-error"><p><strong>WP STAGING:</strong> '
+            . esc_html('Plugin files appear to be missing or corrupted. Please reinstall the plugin or contact support@wp-staging.com for help.')
+            . '</p></div>';
+    });
+
     return;
 }
 

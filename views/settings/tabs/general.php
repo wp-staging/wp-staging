@@ -4,6 +4,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\UI\Toggle;
+use WPStaging\Framework\Security\EncryptionNoticeService;
 use WPStaging\Framework\Settings\Settings;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Notifications\Notifications;
@@ -213,11 +214,11 @@ $directory = WPStaging::make(Directory::class);
                             </div>
                         </div>
                     </div>
-                    <!-- Backup & Notifications Settings -->
-                    <div class="wpstg-settings-card wpstg-card wpstg-settings-card-first">
+                    <!-- Backups Settings -->
+                    <div id="wpstg-backups" class="wpstg-settings-card wpstg-card wpstg-settings-card-first">
                         <div class="wpstg-settings-card-header">
-                            <h3 class="wpstg-settings-card-title"><?php esc_html_e("Backup & Notifications", "wp-staging");?></h3>
-                            <p class="wpstg-settings-card-description"><?php esc_html_e("Configure backup compression and notification preferences", "wp-staging");?></p>
+                            <h3 class="wpstg-settings-card-title"><?php esc_html_e("Backups", "wp-staging");?></h3>
+                            <p class="wpstg-settings-card-description"><?php esc_html_e("Configure how backups are created and stored.", "wp-staging");?></p>
                         </div>
                         <div class="wpstg-settings-card-body">
                             <?php if (!defined('WPSTGPRO_VERSION')) : ?>
@@ -253,7 +254,17 @@ $directory = WPStaging::make(Directory::class);
                                     </div>
                                 </div>
                             <?php endif; ?>
-                            <hr class="wpstg-settings-separator"/>
+                        </div>
+                    </div>
+                    <!-- /Backups Settings -->
+
+                    <!-- Notifications Settings -->
+                    <div id="wpstg-notifications" class="wpstg-settings-card wpstg-card">
+                        <div class="wpstg-settings-card-header">
+                            <h3 class="wpstg-settings-card-title"><?php esc_html_e("Notifications", "wp-staging");?></h3>
+                            <p class="wpstg-settings-card-description"><?php esc_html_e("Configure email and Slack alerts for backup and remote sync events.", "wp-staging");?></p>
+                        </div>
+                        <div class="wpstg-settings-card-body">
                             <div class="wpstg-settings-field wpstg-settings-has-toggle wpstg-notification-toggles">
                                 <div class="wpstg-notification-toggles-header">
                                     <span class="wpstg-settings-field-label"><?php esc_html_e('Email Notifications', 'wp-staging'); ?></span>
@@ -369,7 +380,7 @@ $directory = WPStaging::make(Directory::class);
                             </div>
                         </div>
                     </div>
-                    <!-- Backup & Notifications Settings -->
+                    <!-- /Notifications Settings -->
                 </div>
                 <div class="wpstg-settings-column">
                     <!-- Access Control Settings -->
@@ -608,6 +619,13 @@ $directory = WPStaging::make(Directory::class);
                                 </div>
                             </div>
                             <div id="wpstg-http-basic-auth-fields" <?php echo $hasHttpAuthCredentials ? '' : 'class="hidden"'; ?>>
+                                <div class="wpstg-mb-4">
+                                    <?php
+                                        /** @var EncryptionNoticeService */
+                                        $encryptionNoticeService = WPStaging::make(EncryptionNoticeService::class);
+                                        $encryptionNoticeService->renderEncryptedNotice(Queue::OPTION_HTTP_AUTH_CREDENTIALS, 'password', 'HTTP Basic Auth');
+                                    ?>
+                                </div>
                                 <div class="wpstg-settings-field wpstg-settings-has-toggle">
                                     <div>
                                         <div class="wpstg-settings-field-header">

@@ -3,6 +3,7 @@
 declare (strict_types=1);
 namespace WPStaging\Vendor\ParagonIE\ConstantTime;
 
+use WPStaging\Vendor\SensitiveParameter;
 use TypeError;
 /**
  *  Copyright (c) 2016 - 2022 Paragon Initiative Enterprises.

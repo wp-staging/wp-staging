@@ -44,6 +44,32 @@ abstract class PrepareJob
 
     abstract public function validateAndSanitizeData($data): array;
 
+    /**
+     * Template method that runs the subclass-defined `setupInitialData` and
+     * then persists the resulting job state.
+     *
+     * Persist synchronously instead of relying on the WP `shutdown` hook. On
+     * some hosts (aggressive request termination, Object Cache Pro drop-in
+     * ordering, plugins that die() earlier in shutdown) the hook never fires
+     * and the init=true DTO never reaches disk, so the next processing
+     * request sees an empty DTO. An explicit persist here guarantees the
+     * freshly-hydrated state is written before we respond.
+     *
+     * @param mixed ...$args Forwarded verbatim to `setupInitialData` so
+     *                       subclasses with extra parameters (e.g. PreparePush)
+     *                       keep working unchanged.
+     * @return array
+     * @throws \Exception Propagated from `setupInitialData`; persist does not
+     *                    run when setup throws.
+     */
+    protected function setupInitialJob(...$args): array
+    {
+        $sanitizedData = $this->setupInitialData(...$args);
+        $this->persist();
+
+        return $sanitizedData;
+    }
+
     protected function clearCacheFolder()
     {
         $this->filesystem->setExcludePaths(['*.*', '!*.cache.php', '!*.cache', '!*.wpstg']);
@@ -76,4 +102,10 @@ abstract class PrepareJob
     {
         return $value === 'true' || $value === true;
     }
+
+    /**
+     * @param array|null $sanitizedData
+     * @return array
+     */
+    abstract protected function setupInitialData($sanitizedData): array;
 }

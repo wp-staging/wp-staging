@@ -286,6 +286,10 @@ class DataEncryption
             return WPSTG_ENCRYPTION_KEY;
         }
 
+        if (defined('AUTH_KEY') && !empty(AUTH_KEY) && is_string(AUTH_KEY)) {
+            return AUTH_KEY;
+        }
+
         return false;
     }
 
@@ -294,6 +298,10 @@ class DataEncryption
     {
         if (defined('WPSTG_ENCRYPTION_SALT') && !empty(WPSTG_ENCRYPTION_SALT) && is_string(WPSTG_ENCRYPTION_SALT)) {
             return WPSTG_ENCRYPTION_SALT;
+        }
+
+        if (defined('AUTH_SALT') && !empty(AUTH_SALT) && is_string(AUTH_SALT)) {
+            return AUTH_SALT;
         }
 
         return false;

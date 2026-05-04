@@ -50,7 +50,7 @@ class PrepareCancel extends PrepareJob
     {
         try {
             $this->cancelCurrentRunningJob();
-            $sanitizedData = $this->setupInitialData($data);
+            $sanitizedData = $this->setupInitialJob($data);
         } catch (\Exception $e) {
             return new \WP_Error(400, $e->getMessage());
         }
@@ -64,7 +64,7 @@ class PrepareCancel extends PrepareJob
      * @param array|null $data
      * @return array
      */
-    private function setupInitialData($data): array
+    protected function setupInitialData($data): array
     {
         $sanitizedData = $this->validateAndSanitizeData($data);
         $this->clearCacheFolder();

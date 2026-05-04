@@ -3,6 +3,7 @@
 declare (strict_types=1);
 namespace WPStaging\Vendor\ParagonIE\ConstantTime;
 
+use function pack;
 /**
  *  Copyright (c) 2016 - 2022 Paragon Initiative Enterprises.
  *  Copyright (c) 2014 Steve "Sc00bz" Thomas (steve at tobtu dot com)
@@ -69,6 +70,6 @@ abstract class Base64DotSlashOrdered extends Base64
         $src += 0x39 - $src >> 8 & 7;
         // if ($src > 0x5a) $src += 0x61 - 0x5b; // 6
         $src += 0x5a - $src >> 8 & 6;
-        return \pack('C', $src);
+        return pack('C', $src);
     }
 }

@@ -100,8 +100,10 @@ class SsrfProtection
      * Note: IPv6 addresses pass through unblocked because ip2long() only
      * handles IPv4. Since dns_get_record(DNS_A) and gethostbyname() never
      * return IPv6 addresses, the only way an IPv6 IP reaches this method
-     * is when the user explicitly provides one in the URL. We allow it
-     * rather than silently blocking legitimate IPv6-only servers.
+     * is when the user explicitly provides an IPv6 literal in the URL —
+     * that case is allowed through. IPv6-only hostnames (AAAA-only, no A
+     * record) cannot be resolved here and are treated as blocked by
+     * isBlockedHostname().
      *
      * @param string $ip
      * @return bool

@@ -24,7 +24,7 @@ if ($isDatabaseConnected) { ?>
             <div class="wpstg-flex wpstg-mt-2.5">
                 <span class="wpstg-text-left"><?php echo esc_html__("Selected database tables will be deleted:", "wp-staging") ?></span>
             </div>
-            <div class="wpstg-text-left wpstg-mt-2.5">
+            <div class="wpstg-text-left wpstg-mt-2.5 wpstg-delete-db-tables-list">
                 <label>
                     <?php Checkbox::render('wpstg-unselect-all-tables', 'wpstg-unselect-all-tables', '1', true, ['classes' => 'wpstg-button-unselect wpstg-unselect-all-tables']); ?>
                     <span id="wpstg-unselect-all-tables-id"><?php echo esc_html__("Unselect All", "wp-staging"); ?></span>

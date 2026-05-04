@@ -207,11 +207,17 @@ class JobTransientCache
     }
 
     /**
+     * @param string $title
+     * @param string $message
+     * @param string $severity 'error' (default, red-X modal) or 'notice'
+     *                         (info-style modal for expected no-ops such as
+     *                         a Remote Sync selection that resolves to zero
+     *                         files on the source).
      * @return void
      */
-    public function failJob(string $title = '', string $message = '')
+    public function failJob(string $title = '', string $message = '', string $severity = '')
     {
-        $this->stopJob(self::STATUS_FAILED, $title, $message);
+        $this->stopJob(self::STATUS_FAILED, $title, $message, $severity);
     }
 
     /**
@@ -265,7 +271,7 @@ class JobTransientCache
      * @param string $message
      * @return void
      */
-    private function stopJob(string $status, string $title = '', string $message = '')
+    private function stopJob(string $status, string $title = '', string $message = '', string $severity = '')
     {
         $jobData = $this->getJob();
         $jobData['status']    = $status;
@@ -276,6 +282,14 @@ class JobTransientCache
 
         if (!empty($message)) {
             $jobData['message'] = $message;
+        }
+
+        // Severity is only used for failed jobs. Empty string means "don't
+        // overwrite" — lets a caller that ran earlier (e.g. the Remote Sync
+        // hook) preserve its classification when the generic PrepareJob
+        // finalisation later calls failJob() without a severity.
+        if ($severity !== '') {
+            $jobData['severity'] = $severity;
         }
 
         // This will make sure to update the expiry as well if the status was already the same!

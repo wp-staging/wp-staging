@@ -368,8 +368,9 @@ class CliIntegrationNotice
             wp_send_json_error();
         }
 
-        $backups   = $this->fetchSortedBackups();
-        $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
+        $isDeveloperOrHigher = $this->isDeveloperOrHigherLicense();
+        $backups             = $this->fetchSortedBackups($isDeveloperOrHigher);
+        $urlAssets           = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 
         // Check if there are valid (non-corrupt, non-legacy) backups
         $hasBackups = false;

@@ -39,9 +39,16 @@ class IncludeDatabaseTask extends BackupTask
 
     public function execute()
     {
+        // A new task may report finished when total/current are both zero.
+        // Only bail out after steps were initialized and truly completed.
+        if ($this->stepsDto->getTotal() > 0 && $this->stepsDto->isFinished()) {
+            return $this->generateResponse();
+        }
+
         $this->prepareDatabaseTask();
 
-        if (!$this->jobDataDto->getDatabaseFile() && !$this->stepsDto->isFinished()) {
+        $databaseFile = $this->jobDataDto->getDatabaseFile();
+        if (!$databaseFile || !file_exists($databaseFile)) {
             return $this->generateResponse();
         }
 
@@ -97,6 +104,7 @@ class IncludeDatabaseTask extends BackupTask
         if (!$filePath || !file_exists($filePath)) {
             $this->logger->warning(sprintf('Database Backup file not found: %s.', $filePath));
             $this->stepsDto->finish();
+            return;
         }
 
         if ($this->jobDataDto->getDatabaseOnlyBackup()) {

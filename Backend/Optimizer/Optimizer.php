@@ -53,11 +53,20 @@ class Optimizer
             return false;
         }
 
-        if ((new Filesystem())->mkdir($this->mudir)) {
-            return @copy($this->source, $this->dest);
+        if (file_exists($this->dest) && !is_writable($this->dest)) {
+            return false;
         }
 
-        return false;
+        if (!(new Filesystem())->mkdir($this->mudir)) {
+            return false;
+        }
+
+        // Avoid emitting E_WARNING from copy() when destination is not writable.
+        if (!is_writable($this->mudir)) {
+            return false;
+        }
+
+        return @copy($this->source, $this->dest);
     }
 
     /**

@@ -32,6 +32,8 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Queue\FileSeekableQueue;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\BackgroundProcessing\Job\PrepareJob;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Security\Otp\OtpSender;
 
 class BackupServiceProvider extends FeatureServiceProvider
@@ -75,6 +77,8 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action(Cron::ACTION_WEEKLY_EVENT, [$this, 'createBackupsDirectory'], 25, 0);
 
         add_action('wp_login', $this->container->callback(AfterRestore::class, 'loginAfterRestore'), 10, 0);
+
+        Hooks::registerInternalHook(PrepareJob::ACTION_JOB_FAILURE, $this->container->callback(BackupScheduler::class, 'onBackgroundJobFailure'));
     }
 
     protected function enqueueAjaxListeners()

@@ -108,7 +108,7 @@ abstract class OpenSSH
             self::checkType($type);
             return \compact('type', 'publicKey', 'paddedKey');
         }
-        $parts = \explode(' ', $key, 3);
+        $parts = \preg_split("#[\t ]+#", $key);
         if (!isset($parts[1])) {
             $key = \base64_decode($parts[0]);
             $comment = \false;

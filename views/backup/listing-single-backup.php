@@ -3,7 +3,6 @@
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\UI\Alert;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Core\Cron\Cron;
@@ -255,7 +254,7 @@ $wpstgRestorePageUrl = add_query_arg([
                 </li>
                 <?php if ($automatedBackup) : ?>
                     <li class="wpstg-automated-backup">
-                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/update.svg"/> 
+                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/update.svg"/>
                         <?php
                         $message = 'Backup created automatically.';
                         if (!empty($backup->scheduleRecurrence)) {
@@ -336,5 +335,15 @@ $wpstgRestorePageUrl = add_query_arg([
             }
             ?>
         </ul>
+    </div>
+    <div class="wpstg-download-notice" style="display:none;">
+        <?php Alert::render(
+            '',
+            esc_html__('After downloading, verify the file size matches the expected size. If it differs significantly, download the backup again or use FTP.', 'wp-staging'),
+            '',
+            '',
+            true,
+            ['variant' => 'info', 'class' => 'wpstg-my-3']
+        ); ?>
     </div>
 </li>

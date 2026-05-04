@@ -70,7 +70,13 @@ class BackgroundLogger
     public function verifyRestRequest()
     {
         $token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
-        if ($token !== $this->jobTransientCache->getJobId()) {
+        $jobId = $this->jobTransientCache->getJobId();
+
+        // Fail-closed when either side is empty — otherwise an attacker sending
+        // no token can open an SSE stream whenever no job is running (both
+        // strings compare equal to '').  hash_equals keeps the compare
+        // timing-safe once an active job ID is known.
+        if ($token === '' || $jobId === '' || !hash_equals((string)$jobId, $token)) {
             return new \WP_Error('rest_forbidden', __('You are not allowed to access this resource.', 'wp-staging'), ['status' => 403]);
         }
 
@@ -236,6 +242,10 @@ class BackgroundLogger
             $data['title'] = $jobData['title'];
         } elseif ($status === JobTransientCache::STATUS_FAILED) {
             $data['message'] = !empty($jobData['message']) ? esc_html((string) $jobData['message']) : esc_html__('Job failed', 'wp-staging');
+            // Optional UX classification; JS defaults to 'error' when absent.
+            if (!empty($jobData['severity'])) {
+                $data['severity'] = $jobData['severity'];
+            }
         } elseif ($status === JobTransientCache::STATUS_SUCCESS) {
             $data['message'] = esc_html__('Job completed successfully', 'wp-staging');
         }

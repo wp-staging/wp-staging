@@ -5,24 +5,27 @@
  *
  * Uses UI primitives for buttons and badges, with minimal custom layout styles.
  *
- * @var \WPStaging\Backup\BackupScheduler $backupScheduler
+ * @var BackupScheduler $backupScheduler
  * @var bool $cronStatus
  * @var string $cronMessage
  */
 
+use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\ServerVars;
 
 // Don't show if no cron issues
-if ($cronMessage === '') {
+if ($cronMessage === '' && $backupScheduler->getWarningType() === '') {
     return;
 }
 
-$overdueCount = $backupScheduler->getOverdueCronJobsCount();
-$hasOverdue = $backupScheduler->hasOverdueCronJobs();
+$overdueCount   = $backupScheduler->getOverdueCronJobsCount();
+$hasOverdue     = $backupScheduler->hasOverdueCronJobs();
 $isWpCronDisabled = $backupScheduler->isWpCronDisabled();
-$isLitespeed = WPStaging::make(ServerVars::class)->isLitespeed();
-$isPro = WPStaging::isPro();
+$isLitespeed    = WPStaging::make(ServerVars::class)->isLitespeed();
+$isPro          = WPStaging::isPro();
+$warningType    = $backupScheduler->getWarningType();
+$failureMessage = $backupScheduler->getLastBackupFailureMessage();
 
 // Help article URL
 $helpUrl = $isPro
@@ -34,7 +37,7 @@ $helpUrl = $isPro
     <!-- Collapsed row: icon + message + badge + buttons -->
     <div class="wpstg-cron-banner-row">
         <!-- Icon Box - uses UI primitive -->
-        <div class="wpstg-icon-box wpstg-icon-box-amber wpstg-cron-banner-icon-size">
+        <div class="wpstg-icon-box wpstg-icon-box-amber wpstg-cron-banner-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -44,8 +47,16 @@ $helpUrl = $isPro
 
         <!-- Message + Badge -->
         <div class="wpstg-cron-banner-message">
-            <span class="wpstg-cron-banner-text"><?php esc_html_e('Scheduled backups may not run.', 'wp-staging'); ?></span>
-            <?php if ($hasOverdue && $overdueCount > 0) : ?>
+            <span class="wpstg-cron-banner-text">
+                <?php if ($warningType === BackupScheduler::CRON_WARNING_TYPE_FAILURE) : ?>
+                    <?php esc_html_e('Last scheduled backup failed.', 'wp-staging'); ?>
+                <?php elseif ($warningType === BackupScheduler::CRON_WARNING_TYPE_OVERDUE) : ?>
+                    <?php esc_html_e('Scheduled backup is overdue.', 'wp-staging'); ?>
+                <?php else : ?>
+                    <?php esc_html_e('Scheduled backups may not run.', 'wp-staging'); ?>
+                <?php endif; ?>
+            </span>
+            <?php if ($hasOverdue) : ?>
                 <span class="wpstg-badge wpstg-cron-banner-badge"><?php echo esc_html((string)$overdueCount); ?> <?php esc_html_e('overdue', 'wp-staging'); ?></span>
             <?php endif; ?>
         </div>
@@ -53,7 +64,11 @@ $helpUrl = $isPro
         <!-- Actions - uses UI primitive buttons -->
         <div class="wpstg-cron-banner-actions">
             <a href="<?php echo esc_url($helpUrl); ?>" target="_blank" rel="noopener" class="wpstg-btn wpstg-btn-sm wpstg-btn-warning">
-                <?php esc_html_e('Fix WP-Cron', 'wp-staging'); ?>
+                <?php if ($warningType === BackupScheduler::CRON_WARNING_TYPE_FAILURE || $warningType === BackupScheduler::CRON_WARNING_TYPE_OVERDUE) : ?>
+                    <?php esc_html_e('Get Help', 'wp-staging'); ?>
+                <?php else : ?>
+                    <?php esc_html_e('Fix WP-Cron', 'wp-staging'); ?>
+                <?php endif; ?>
                 <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>
@@ -77,6 +92,12 @@ $helpUrl = $isPro
     <!-- Expandable details panel -->
     <div id="wpstg-cron-banner-details" class="wpstg-cron-banner-details" hidden>
         <div class="wpstg-cron-banner-details-content">
+            <?php if ($warningType === BackupScheduler::CRON_WARNING_TYPE_FAILURE && $failureMessage !== '') : ?>
+                <p class="wpstg-cron-banner-cause">
+                    <?php esc_html_e('Error:', 'wp-staging'); ?>
+                    <code class="wpstg-code-chip"><?php echo esc_html($failureMessage); ?></code>
+                </p>
+            <?php endif; ?>
             <?php if ($isWpCronDisabled) : ?>
                 <p class="wpstg-cron-banner-cause">
                     <?php esc_html_e('Detected', 'wp-staging'); ?>

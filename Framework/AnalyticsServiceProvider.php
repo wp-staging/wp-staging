@@ -5,6 +5,7 @@ namespace WPStaging\Framework;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
+use WPStaging\Framework\Analytics\AnalyticsGenericEventHandler;
 use WPStaging\Framework\Analytics\AnalyticsSender;
 use WPStaging\Framework\DI\FeatureServiceProvider;
 use WPStaging\Framework\Notices\Notices;
@@ -96,6 +97,7 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
 
             $options = $cache->get("clone_options");
 
+            $jobId = '';
             if (is_object($options) && property_exists($options, 'jobIdentifier')) {
                 $jobId = $options->jobIdentifier;
             }
@@ -106,6 +108,8 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
 
             AnalyticsEventDto::enqueueErrorEvent($jobId, $errorMessage);
         });
+
+        add_action('wp_ajax_wpstg_event_generic', $this->container->callback(AnalyticsGenericEventHandler::class, 'ajaxHandleGenericEvent')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         $this->container->make(AnalyticsSender::class)->maybeSend();
     }

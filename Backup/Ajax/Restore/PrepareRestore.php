@@ -93,7 +93,7 @@ class PrepareRestore extends PrepareJob
         }
 
         try {
-            $sanitizedData = $this->setupInitialData($data);
+            $sanitizedData = $this->setupInitialJob($data);
         } catch (\Exception $e) {
             return new \WP_Error(400, $e->getMessage());
         }
@@ -141,7 +141,7 @@ class PrepareRestore extends PrepareJob
         return true;
     }
 
-    private function setupInitialData($sanitizedData)
+    protected function setupInitialData($sanitizedData): array
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
         $this->clearCacheFolder();
