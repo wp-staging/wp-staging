@@ -23,6 +23,7 @@ use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Database\TablesRenamer;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Framework\Settings\SettingsTable;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -145,16 +146,11 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setRenameViews(true);
         $this->tablesRenamer->setThresholdCallable([$this, 'isMaxExecutionThreshold']);
         // Tables to not restore in the site
-        $excludedTables = [Queue::QUEUE_TABLE_NAME];
+        $excludedTables = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME];
         $excludedTables = array_merge($excludedTables, Hooks::applyFilters(self::FILTER_EXCLUDE_TABLES_DURING_RESTORE, []));
         $this->tablesRenamer->setExcludedTables($excludedTables);
 
-        $tablesToPreserve = [];
-        if ($this->jobDataDto->getIsSyncRequest()) {
-            $tablesToPreserve = [
-                Queue::QUEUE_TABLE_NAME,
-            ];
-        }
+        $tablesToPreserve = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME];
 
         if ($this->isSubsiteRestore()) {
             $this->tablesRenamer->setProductionTableBasePrefix($this->tableService->getDatabase()->getBasePrefix());
@@ -222,6 +218,19 @@ class RenameDatabaseTask extends RestoreTask
             'name'     => 'wpstg_settings',
             'value'    => get_option('wpstg_settings'),
             'autoload' => in_array('wpstg_settings', $allOptions),
+        ];
+
+        // Keep the current license data to avoid replacing or removing it from imported backups.
+        $this->optionsToKeep[] = [
+            'name'     => 'wpstg_license_key',
+            'value'    => get_option('wpstg_license_key'),
+            'autoload' => in_array('wpstg_license_key', $allOptions),
+        ];
+
+        $this->optionsToKeep[] = [
+            'name'     => 'wpstg_license_status',
+            'value'    => get_option('wpstg_license_status'),
+            'autoload' => in_array('wpstg_license_status', $allOptions),
         ];
 
         // If this is a staging site, keep the staging site status after restore.

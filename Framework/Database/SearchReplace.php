@@ -2,15 +2,30 @@
 
 namespace WPStaging\Framework\Database;
 
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Framework\Traits\UrlTrait;
 
+/**
+ * Handles search and replace operations on database values,
+ * including serialized data and WP Bakery base64-encoded content.
+ */
 class SearchReplace
 {
     use DebugLogTrait;
     use SerializeTrait;
     use UrlTrait;
+
+    /**
+     * Filter applied after standard search/replace in replaceExtended().
+     * Allows custom decode/replace/encode logic for encoded database values (e.g. base64 JSON).
+     *
+     * @param string $data    The column value after standard search/replace
+     * @param array  $search  The search strings
+     * @param array  $replace The replacement strings
+     */
+    const FILTER_REPLACE_EXTENDED_DATA = 'wpstg.database.searchreplace.replace_extended_data';
 
     /** @var array */
     private $search;
@@ -97,14 +112,30 @@ class SearchReplace
         return $data;
     }
 
-    // This is extended replace job which support search replace for WP Bakery
+    /**
+     * Extended replace that also handles WP Bakery base64 content
+     * and fires a filter for custom encoded-value replacement.
+     *
+     * @param string $data
+     * @return string
+     */
     public function replaceExtended($data)
     {
+        if (defined('DISABLE_WPSTG_SEARCH_REPLACE') && (bool)DISABLE_WPSTG_SEARCH_REPLACE) {
+            return $data;
+        }
+
         if ($this->isWpBakeryActive) {
             $data = preg_replace_callback('/\[vc_raw_html\](.+?)\[\/vc_raw_html\]/S', [$this, 'replaceWpBakeryValues'], $data);
         }
 
-        return $this->replace($data);
+        $data = $this->replace($data);
+
+        if (!function_exists('has_filter') || has_filter(self::FILTER_REPLACE_EXTENDED_DATA) === false) {
+            return $data;
+        }
+
+        return Hooks::applyFilters(self::FILTER_REPLACE_EXTENDED_DATA, $data, $this->search, $this->replace);
     }
 
     public function replaceWpBakeryValues($matched)

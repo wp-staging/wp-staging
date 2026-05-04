@@ -46,7 +46,6 @@ class StartRestoreTask extends RestoreTask
     const ARRAY_FILTERS = [
         RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS                                    => 'Exclude Backup Parts',
         CleanExistingMediaTask::FILTER_EXCLUDE_MEDIA_DURING_CLEANUP                 => 'Exclude Media During Cleanup',
-        RestorePluginsTask::FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS                   => 'Exclude Plugins (Deprecated)',
         RestoreOtherFilesInWpContentTask::FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE => 'Exclude Other Files (Deprecated)',
         FileRestoreTask::FILTER_EXCLUDE_FILES_DURING_RESTORE                        => 'Exclude Files',
     ];

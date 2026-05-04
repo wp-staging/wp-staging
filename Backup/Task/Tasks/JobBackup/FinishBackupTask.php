@@ -14,6 +14,7 @@ use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\ListableBackup;
+use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -82,6 +83,12 @@ class FinishBackupTask extends BackupTask
             'duration'         => $this->jobDataDto->getDuration(),
             'JobBackupDataDto' => $this->jobDataDto,
         ], false);
+
+        // Only clear the failure signal when a *scheduled* backup succeeds.
+        // A manual backup completing should not hide a broken cron schedule.
+        if ($this->jobDataDto->getRepeatBackupOnSchedule() || !empty($this->jobDataDto->getScheduleId())) {
+            delete_option(BackupScheduler::OPTION_LAST_BACKUP_FAILURE);
+        }
 
         // Delete the transient cache for the backup file index to make sure it is checked again now
         $this->transientCache->delete(TransientCache::KEY_INVALID_BACKUP_FILE_INDEX);

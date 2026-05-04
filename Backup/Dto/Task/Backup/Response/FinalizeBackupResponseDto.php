@@ -58,7 +58,7 @@ class FinalizeBackupResponseDto extends TaskResponseDto
      */
     public function setBackupSize($backupSize)
     {
-        $this->backupSize = $backupSize;
+        $this->backupSize = (int)$backupSize;
     }
 
     public function getBackupSize(): int

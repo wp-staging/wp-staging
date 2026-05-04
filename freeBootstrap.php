@@ -53,7 +53,10 @@ add_action('plugins_loaded', function () use ($pluginFilePath) {
                 wpstgHandleMissingRequiredFile($file);
             }
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
+        // Catch \Throwable (not just Exception) so PHP 7+ Errors like
+        // "Class not found" cannot escape this safety net and crash WordPress.
+        // Issue #5074.
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             error_log('WP STAGING: ' . $e->getMessage());
         }
@@ -77,7 +80,10 @@ register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
                 wpstgHandleMissingRequiredFile($file);
             }
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
+        // Catch \Throwable (not just Exception) so PHP 7+ Errors like
+        // "Class not found" cannot escape this safety net and crash WordPress.
+        // Issue #5074.
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             error_log('WP STAGING: ' . $e->getMessage());
         }
@@ -94,5 +100,13 @@ register_deactivation_hook($pluginFilePath, function () use ($pluginFilePath) {
         }
     }
 
-    new WPStaging\Deactivate($pluginFilePath);
+    try {
+        new WPStaging\Deactivate($pluginFilePath);
+    } catch (\Throwable $e) {
+        // Swallow: deactivation must succeed even if internal cleanup fails (corrupted vendor state).
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+            error_log('WP STAGING: Deactivation cleanup failed: ' . $e->getMessage());
+            error_log($e->getTraceAsString());
+        }
+    }
 });

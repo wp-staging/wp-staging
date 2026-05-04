@@ -6,6 +6,7 @@ use DateTime;
 use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
@@ -57,6 +58,15 @@ class BackupScheduler
     const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
 
     /** @var string */
+    const OPTION_LAST_BACKUP_FAILURE = 'wpstg_last_backup_failure';
+
+    /** @var string */
+    const CRON_WARNING_TYPE_FAILURE = 'failure';
+
+    /** @var string */
+    const CRON_WARNING_TYPE_OVERDUE = 'overdue';
+
+    /** @var string */
     const TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT = 'wpstg.backup.schedules.error_report_sent';
 
     /** @var string */
@@ -105,6 +115,18 @@ class BackupScheduler
 
     /** @var int */
     protected $numberOverdueCronjobs = 0;
+
+    /**
+     * Determines the banner text in the cron-warning-notice view.
+     * @var string
+     */
+    protected $cronWarningType = '';
+
+    /**
+     * The failure message from the last cron backup failure, if unresolved.
+     * @var string
+     */
+    protected $lastBackupFailureMessage = '';
 
     /**
      * @param BackupsFinder $backupsFinder
@@ -298,12 +320,14 @@ class BackupScheduler
             $jobId = WPStaging::make(PrepareBackup::class)->prepare($backupData);
             if ($jobId instanceof \WP_Error) {
                 debug_log(sprintf("[Schedule Backup Cron - %s] Failed to create backup: %s", $logId, $jobId->get_error_message()));
+                $this->saveBackupFailure($jobId->get_error_message());
                 return;
             }
 
             debug_log(sprintf("[Schedule Backup Cron - %s] Successfully received a Job ID: %s", $logId, $jobId), 'info', false);
         } catch (\Exception $e) {
             debug_log("[Schedule Backup Cron - $logId] Exception thrown while preparing the Backup: " . $e->getMessage());
+            $this->saveBackupFailure($e->getMessage());
         }
     }
 
@@ -350,6 +374,13 @@ class BackupScheduler
         if (!update_option(static::OPTION_BACKUP_SCHEDULES, $newSchedules, false)) {
             debug_log('[Schedule Backup Cron] Could not update BackupSchedules DB option after removing schedule.');
             throw new \RuntimeException('Could not unschedule event from Db.');
+        }
+
+        // When the last schedule is removed there is nothing left to fail, so a
+        // stale failure signal from the deleted schedule must not surface if the
+        // user later creates a new one.
+        if (empty($newSchedules)) {
+            delete_option(static::OPTION_LAST_BACKUP_FAILURE);
         }
 
         if ($reCreateCron === false) {
@@ -470,12 +501,42 @@ class BackupScheduler
     {
         global $wp_version;
 
-        $this->cronMessage = '';
+        $this->cronMessage              = '';
+        $this->cronWarningType          = '';
+        $this->lastBackupFailureMessage = '';
         // Add arrays to collect warnings and general messages
         $warningMessages = [];
         $generalMessages = [];
         // Track the overall result
         $cronStatusResult = true;
+
+        // Gate 1: No schedules — nothing to warn about.
+        if ($this->isSchedulesEmpty()) {
+            return true;
+        }
+
+        // Gate 2: Unresolved backup failure (no successful backup since the last failure).
+        $lastFailure = get_option(self::OPTION_LAST_BACKUP_FAILURE);
+        if (is_array($lastFailure) && !empty($lastFailure['time'])) {
+            $lastBackupInfo  = get_option(FinishBackupTask::OPTION_LAST_BACKUP, []);
+            $lastSuccessTime = is_array($lastBackupInfo) ? (int)($lastBackupInfo['endTime'] ?? 0) : 0;
+            if ((int)$lastFailure['time'] > $lastSuccessTime) {
+                $this->cronWarningType          = self::CRON_WARNING_TYPE_FAILURE;
+                $this->lastBackupFailureMessage = $lastFailure['message'] ?? '';
+            }
+        }
+
+        // Gate 3: Backup cron event is overdue (30-minute grace period).
+        if ($this->cronWarningType === '' && $this->hasOverdueBackupCronJob()) {
+            $this->cronWarningType = self::CRON_WARNING_TYPE_OVERDUE;
+        }
+
+        // Gate 4: No outcome signal + DISABLE_WP_CRON set — server cron is intentional, suppress.
+        if ($this->cronWarningType === '' && defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) {
+            return true;
+        }
+
+        // Fall through to infrastructure checks (HTTP test, overdue count) for the Details section.
 
         if ($this->isCronjobsOverdue()) {
             if (WPStaging::isPro()) {
@@ -571,10 +632,6 @@ class BackupScheduler
             $cronStatusResult = true;
         }
 
-        // Don't do the next time expensive checking if no schedules are set
-        if ($this->isSchedulesEmpty()) {
-            return true;
-        }
 
         $sslverify   = version_compare($wp_version, '4.0', '<');
         $doingWpCron = sprintf('%.22F', microtime(true));
@@ -671,6 +728,22 @@ class BackupScheduler
     public function hasOverdueCronJobs(): bool
     {
         return $this->isCronjobsOverdue();
+    }
+
+    /**
+     * @return string One of CRON_WARNING_TYPE_FAILURE, CRON_WARNING_TYPE_OVERDUE, or '' (no warning).
+     */
+    public function getWarningType(): string
+    {
+        return $this->cronWarningType;
+    }
+
+    /**
+     * @return string The error message from the last unresolved cron backup failure, or empty string.
+     */
+    public function getLastBackupFailureMessage(): string
+    {
+        return $this->lastBackupFailureMessage;
     }
 
     /**
@@ -1053,7 +1126,16 @@ class BackupScheduler
             return [];
         }
 
-        return $cron;
+        $cronJobs = [];
+        foreach ($cron as $timestamp => $hooks) {
+            if (!is_numeric($timestamp) || !is_array($hooks)) {
+                continue;
+            }
+
+            $cronJobs[(int)$timestamp] = $hooks;
+        }
+
+        return $cronJobs;
     }
 
     /**
@@ -1068,5 +1150,65 @@ class BackupScheduler
                 $this->numberOverdueCronjobs++;
             }
         }
+    }
+
+    /**
+     * Listener for the background-job failure hook.
+     * Persists the failure so the cron-warning banner can surface it.
+     * Only acts when the failing job was a scheduled backup.
+     *
+     * @param array $args Keys: jobDataDto, errorMessage
+     * @return void
+     */
+    public function onBackgroundJobFailure(array $args)
+    {
+        $jobDataDto = isset($args['jobDataDto']) ? $args['jobDataDto'] : null;
+        if (!($jobDataDto instanceof JobBackupDataDto)) {
+            return;
+        }
+
+        if (!($jobDataDto->getRepeatBackupOnSchedule() || !empty($jobDataDto->getScheduleId()))) {
+            return;
+        }
+
+        $errorMessage = isset($args['errorMessage']) ? (string)$args['errorMessage'] : '';
+        $this->saveBackupFailure($errorMessage);
+    }
+
+    /**
+     * @param string $message
+     * @return void
+     */
+    private function saveBackupFailure(string $message)
+    {
+        update_option(self::OPTION_LAST_BACKUP_FAILURE, [
+            'time'    => time(),
+            'message' => $message,
+        ], false);
+    }
+
+    /**
+     * Returns true if the wpstg_create_cron_backup event is scheduled but has not
+     * fired for more than 30 minutes past its due time.
+     *
+     * Unlike countOverdueCronjobs(), this checks only our own hook — not all WP
+     * cron jobs — so it stays accurate even when DISABLE_WP_CRON=true causes
+     * unrelated core/plugin jobs to pile up in the queue.
+     *
+     * @return bool
+     */
+    private function hasOverdueBackupCronJob(): bool
+    {
+        $cronJobs   = $this->getCronJobs();
+        $grace      = 30 * MINUTE_IN_SECONDS;
+        $now        = time();
+
+        foreach ($cronJobs as $timestamp => $hooks) {
+            if (isset($hooks[Cron::ACTION_CREATE_CRON_BACKUP]) && ($timestamp + $grace) < $now) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

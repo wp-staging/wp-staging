@@ -43,6 +43,7 @@ class I18n
             'unselect_all'                                        => esc_html__('Unselect All', 'wp-staging'),
             'select_all'                                          => esc_html__('Select All', 'wp-staging'),
             'something_went_wrong'                                => esc_html__('Something went wrong', 'wp-staging'),
+            'session_expired_error'                               => esc_html__('Your session has expired or you are not logged in. Please login and try again.', 'wp-staging'),
             'submit_error_report'                                 => esc_html__('Please submit an error report by using the CONTACT US button.', 'wp-staging'),
             'cancel_modal_title'                                  => esc_html__('Cancelling & Cleaning up', 'wp-staging'),
             'cancel_modal_text'                                   => esc_html__('This modal will close automatically when done...', 'wp-staging'),
@@ -53,8 +54,15 @@ class I18n
             'elapsed_time'                                        => esc_html__('Elapsed time', 'wp-staging'),
             'failed_response'                                     => esc_html__('Failed response', 'wp-staging'),
             'unknown_error'                                       => esc_html__('Unknown error', 'wp-staging'),
-            'something_went_wrong_use_low_setting_error_text'     => sprintf(esc_html__('Something went wrong! No response. Go to WP Staging > Settings and lower \'File Copy Limit\' and \'DB Query Limit\'. Also set \'CPU Load Priority to low \' and try again. If that does not help, %s', 'wp-staging'), '<a href=\'' . Language::localizeSupportUrl('https://wp-staging.com/support/') . '\' target=\'_blank\'>open a support ticket</a>'),
-            'something_went_wrong_open_ticket_error_text'         => sprintf(esc_html__('Something went wrong! No response. Please try again. If that does not help, %s', 'wp-staging'), '<a href=\'' . Language::localizeSupportUrl('https://wp-staging.com/support/') . '\' target=\'_blank\'>open a support ticket</a>'),
+            // These strings contain HTML (the `<a>` anchor injected via sprintf)
+            // and are rendered as HTML by their JS consumers (`BackgroundLogger
+            // .showErrorModal` and `WPStaging.showError`). Using `esc_html__()`
+            // here would HTML-encode `>` / `'` in the translatable text, which
+            // then display as literal entities once the combined string is
+            // embedded into `innerHTML`. Use `__()` so the translatable part
+            // stays verbatim and the whole string is ready-to-render HTML.
+            'something_went_wrong_use_low_setting_error_text'     => sprintf(__('Something went wrong! No response. Go to WP Staging > Settings and lower \'File Copy Limit\' and \'DB Query Limit\'. Also set \'CPU Load Priority to low \' and try again. If that does not help, %s', 'wp-staging'), '<a href=\'' . Language::localizeSupportUrl('https://wp-staging.com/support/') . '\' target=\'_blank\'>open a support ticket</a>'),
+            'something_went_wrong_open_ticket_error_text'         => sprintf(__('Something went wrong! No response. Please try again. If that does not help, %s', 'wp-staging'), '<a href=\'' . Language::localizeSupportUrl('https://wp-staging.com/support/') . '\' target=\'_blank\'>open a support ticket</a>'),
             'contact_us_to_solve'                                 => sprintf(esc_html__('Please get in contact with us to solve it %s', 'wp-staging'), 'support@wp-staging.com'),
             'clone_data_save_success'                             => esc_html__('Clone data saved successfully.', 'wp-staging'),
             'clone_data_save_error'                               => sprintf(esc_html__('Could not save clone data %s Error: ', 'wp-staging'), '<br/>'),
@@ -370,9 +378,16 @@ class I18n
             'sync_connection_one_way'                             => esc_html__('Successfully established one way connection to %s.', 'wp-staging'),
             'sync_connection_two_way'                             => esc_html__('Successfully established two way connection to %s.', 'wp-staging'),
             'sync_connection_expired'                             => esc_html__('Connection has expired. Please connect again.', 'wp-staging'),
-            'sync_connection_expires_in'                          => esc_html__('Sync connection expires in %s.', 'wp-staging'),
+            'sync_connection_expires_in'                          => esc_html__('Expires in %s', 'wp-staging'),
             'remote_sync_already_synced'                          => esc_html__('Site is already synced.', 'wp-staging'),
             'remote_site'                                         => esc_html__('remote site.', 'wp-staging'),
+            /* translators: %s is the remote source site URL; placement is flexible so non-SVO languages can reorder. */
+            'pull_from_template'                                  => esc_html__('Pull from %s', 'wp-staging'),
+            'http_auth_badge'                                     => esc_html__('HTTP Auth', 'wp-staging'),
+            'nothing_to_sync_title'                               => esc_html__('Nothing to sync', 'wp-staging'),
+            'nothing_to_sync_body'                                => esc_html__('The source site has no content to sync for the items you selected. Try adjusting your selection or adding content on the remote site first.', 'wp-staging'),
+            /* translators: %s is the original server-side reason, kept verbatim under a small "Details" line for support diagnostics. */
+            'details_label'                                       => esc_html__('Details: %s', 'wp-staging'),
             'reset_settings_confirmation'                         => esc_html__('Are you sure you want to reset all settings to default values?', 'wp-staging'),
             'directory_not_writable'                              => esc_html__('The directory isn\'t writable. This might be caused by incorrect folder permissions or server configuration restrictions (such as open_basedir).', 'wp-staging'),
             'install_wp_staging_cli'                              => esc_html__('Install WP Staging CLI', 'wp-staging'),
@@ -393,6 +408,19 @@ class I18n
             'keep_running'                                        => esc_html__('Keep running', 'wp-staging'),
             'remote_sync_completed'                               => esc_html__('Remote Sync completed', 'wp-staging'),
             'remote_sync_pulled_successfully'                     => esc_html__('The site was pulled successfully.', 'wp-staging'),
+            // Remote Sync sync item labels
+            'mediaLibrary'                                        => esc_html__('Media Library', 'wp-staging'),
+            'themes'                                              => esc_html__('Themes', 'wp-staging'),
+            'plugins'                                             => esc_html__('Plugins', 'wp-staging'),
+            'muPlugins'                                           => esc_html__('MU-Plugins', 'wp-staging'),
+            'database'                                            => esc_html__('Database', 'wp-staging'),
+            'otherFiles'                                          => esc_html__('Other Files', 'wp-staging'),
+            // Remote Sync password prompt
+            'passwordRequiredTitle'                               => esc_html__('Password Required', 'wp-staging'),
+            'passwordRequiredText'                                => esc_html__('The remote site requires a password to connect.', 'wp-staging'),
+            'passwordInvalidText'                                 => esc_html__('The password you entered is incorrect. Please try again.', 'wp-staging'),
+            'passwordMaxAttempts'                                 => esc_html__('Too many failed password attempts. Please verify the password on the remote site and try again.', 'wp-staging'),
+            'enterPassword'                                       => esc_html__('Enter password', 'wp-staging'),
             // Remote Sync overwrite terminology
             'confirm_overwrite_title'                             => esc_html__('Confirm overwrite', 'wp-staging'),
             'confirm_overwrite_btn'                               => esc_html__('Confirm overwrite', 'wp-staging'),

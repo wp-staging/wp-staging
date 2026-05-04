@@ -377,6 +377,7 @@ return array(
     'WPStaging\\Vendor\\phpseclib3\\Math\\Common\\FiniteField\\Integer' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Math/Common/FiniteField/Integer.php',
     'WPStaging\\Vendor\\phpseclib3\\Math\\PrimeField' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Math/PrimeField.php',
     'WPStaging\\Vendor\\phpseclib3\\Math\\PrimeField\\Integer' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Math/PrimeField/Integer.php',
+    'WPStaging\\Vendor\\phpseclib3\\Net\\SCP' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Net/SCP.php',
     'WPStaging\\Vendor\\phpseclib3\\Net\\SFTP' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Net/SFTP.php',
     'WPStaging\\Vendor\\phpseclib3\\Net\\SFTP\\Stream' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Net/SFTP/Stream.php',
     'WPStaging\\Vendor\\phpseclib3\\Net\\SSH2' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Net/SSH2.php',

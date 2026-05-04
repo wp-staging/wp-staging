@@ -131,7 +131,7 @@ class BCMath extends Engine
         }
         while (\bccomp($current, '0', 0) > 0) {
             $temp = self::BCMOD_THREE_PARAMS ? \bcmod($current, '16777216', 0) : \bcmod($current, '16777216');
-            $value = \chr($temp >> 16) . \chr($temp >> 8) . \chr($temp) . $value;
+            $value = \chr($temp >> 16) . \chr($temp >> 8 & 0xff) . \chr($temp & 0xff) . $value;
             $current = \bcdiv($current, '16777216', 0);
         }
         return $this->precision > 0 ? \substr(\str_pad($value, $this->precision >> 3, \chr(0), \STR_PAD_LEFT), -($this->precision >> 3)) : \ltrim($value, \chr(0));

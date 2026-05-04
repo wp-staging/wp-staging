@@ -15,6 +15,7 @@ namespace WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Keys;
 use WPStaging\Vendor\phpseclib3\Common\Functions\Strings;
 use WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base as BaseCurve;
 use WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Binary as BinaryCurve;
+use WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Montgomery;
 use WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Prime as PrimeCurve;
 use WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\TwistedEdwards as TwistedEdwardsCurve;
 use WPStaging\Vendor\phpseclib3\Exception\UnsupportedCurveException;
@@ -277,6 +278,9 @@ trait Common
      */
     public static function extractPoint($str, BaseCurve $curve)
     {
+        if ($curve instanceof Montgomery) {
+            return [new BigInteger($str, 256)];
+        }
         if ($curve instanceof TwistedEdwardsCurve) {
             // first step of point deciding as discussed at the following URL's:
             // https://tools.ietf.org/html/rfc8032#section-5.1.3

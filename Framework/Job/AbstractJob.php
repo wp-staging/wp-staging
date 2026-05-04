@@ -457,9 +457,15 @@ abstract class AbstractJob implements ShutdownableInterface
         try {
             if (!$response->isRunning()) {
                 $this->jobDataDto->moveToNextTask();
+                // Persist the updated task index immediately while the process lock is still held.
+                // This prevents a race condition where a concurrent background process could read
+                // the stale currentTaskIndex from cache and re-execute the just-completed task.
+                $this->persistJobDataDto();
             }
         } catch (FinishedQueueException $e) {
             $this->jobDataDto->setFinished(true);
+            // Persist completion state immediately to prevent stale task index reads by concurrent requests.
+            $this->persistJobDataDto();
 
             return $response;
         }

@@ -18,6 +18,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
@@ -630,9 +631,35 @@ class Archiver
             );
         } catch (DiskNotWritableException $e) {
             debug_log('Failed to write to file: ' . $filePath);
-            // Re-throw for readability
-            throw $e;
+            throw $this->reclassifyDiskFailure($e);
         }
+    }
+
+    /**
+     * Upgrade a generic write-failure exception to the disk-full variant when
+     * disk_free_space() can confirm the cause. Falls back to the original
+     * exception when the check is disabled, errors, or reports enough space —
+     * so unreliable disk_free_space() results never produce a false disk-full
+     * message.
+     */
+    protected function reclassifyDiskFailure(DiskNotWritableException $original): DiskNotWritableException
+    {
+        try {
+            $remainingBytes = max(
+                0,
+                $this->archiverDto->getFileSize() - $this->archiverDto->getWrittenBytesTotal()
+            );
+            WPStaging::make(DiskWriteCheck::class)->checkPathCanStoreEnoughBytes(
+                dirname($this->tempBackup->getFilePath()),
+                $remainingBytes
+            );
+        } catch (DiskNotWritableException $diskFull) {
+            return $diskFull;
+        } catch (RuntimeException $cannotDetermine) {
+            // Disk space could not be determined — keep original error.
+        }
+
+        return $original;
     }
 
     /**

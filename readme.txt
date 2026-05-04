@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, restore, migration, staging, wordpress backup
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.7.3
+Stable tag: 4.8.0
 Requires PHP: 7.0
 
 Backup, restore, staging, and migration for WordPress. Create full-site backups and test updates safely. 100% Unit Tested.
@@ -271,48 +271,9 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.7.3 =
-* Enh: Add new UI components: custom dropdown select, input groups with inline prefix, callout notifications, and card primitives. #4830
-* Enh: Add responsive settings layout with auto-collapsing grid for general settings cards and email notification fields. #4830
-* Enh: Add storage provider tab navigation with gradient hover effects matching the main menu. #4830
-* Enh: Add two-column sidebar navigation layout for the settings page replacing horizontal tab navigation. #4830
-* Enh: Improve maintenance process logging with dedicated entries for clone update/reset, backup extraction and remote sync, and skip scheduled backup completion entries. #4877
-* Enh: Redesign FTP/SFTP settings with SSH key file upload, FTPS certificate support, and server host key fingerprint verification. #4830
-* Enh: Redesign all storage provider settings with card-based layouts and consistent dark mode styling. #4830
-* Enh: Redesign dark mode with cohesive bluish palette, updated header gradient colors, and CSS custom properties. #4830
-* Enh: Redesign staging, backup modal, license, restorer, system info, and temporary login pages with new design system. #4830
-* Enh: Replace .checksum-dist CI cache key with GitHub Actions hashFiles() on source files for more reliable cache invalidation. #4830
-* Enh: Show more precise error messages when user account synchronization fails. (Pro) #3334
-* Enh: Standardize page headers across all settings tabs with consistent typography and spacing. #4830
-* Fix: Apply filters and actions for hooks starting with "wpstg_" as well as "wpstg.". #4982
-* Fix: Disallow spaces in remote storage backup location field for all providers. (Pro) #5019
-* Fix: Fix broken privacy policy links in storage provider settings where translators embedded HTML in placeholder strings. #4830
-* Fix: Fix duplicate HTML IDs from CLI integration modal being rendered multiple times per page. #4830
-* Fix: Fix empty changelog in GitHub release descriptions created by release tag workflow. #4986
-* Fix: Fix main navigation header bottom border not visible due to zero-width border declaration. #4830
-* Fix: Fix temporary login actions dropdown clipped by overflow hidden on settings content area. #4830
-* Fix: Fix wrong translations for "Email as HTML", "Remove Google Drive Settings", "Customize these settings", and "Restore in Progress" across all 11 languages. #4830
-* Fix: Improved input handling in `Google Drive` settings to prevent empty submissions and enhance validation. (Pro) #5019
-* Fix: Issue where the apostrophe in the Backup Browser upsell modal title was displayed incorrectly. #5047
-* Fix: Prevent PHP 8.1+ undefined variable warnings when detecting REST requests. #5036
-* Fix: Prevent backup restore issues caused by temporary WPForms data by skipping this cache data in database backups. #4956
-* Fix: Prevent importing or downloading backups from unsafe internal addresses. #4277
-* Fix: Prevent path traversal in directory listing endpoint. #5032
-* Fix: Resolved incorrect display of SSH private key UI after switching connection types and reloading saved settings. (Pro) #5042
-* Fix: Show HTTP status code and error response when uploading a backup via form fails. #4619
-* Fix: Show Logs link layout in backup restore success modal. #5050
-* Fix: Show validation error when backup folder path is empty in remote storage settings. (Pro) #5019
-* Fix: Simplify sanitizeString by removing the redundant shouldUrlDecode parameter. #4936
-* Fix: Skip float memory_limit test on PHP 8.3+ to prevent CI failure from invalid INI value warning. #4994
-* UX: Improve button alignment and spacing consistency in advanced settings. #5043
-* Dev: Add cleanup folder support for pCloud, OneDrive, Google Drive, and Dropbox integration tests. #4978
-* Dev: Add custom wpstg_settings database table with CRUD operations, WordPress object cache integration, reusable CustomTable base class, and SettingsTable facade for static access. #5027
-* Dev: Add unit tests for backup schedule email and Slack notification methods. #4778
-* Dev: Make fast tests label-triggered instead of auto-run on every push. #4989
-* Dev: Migrate all Linux CI workflows to Blacksmith runners. #4991
-* Dev: Remove Playwright keyword from Make targets and workflow commands, add run-mode support to pro workflows, restructure release test suite for parallel execution, remove Selenium dependencies, and upgrade primary CI PHP version to 8.3. #5004
-* Dev: Remove obsolete dist checksum step from CI release pipeline. #5056
-* Dev: UI options and CLI support for Refactored Staging and Push feature. #4825
+= 4.8.0 =
+* Dev: CI release prepare seeds dist/newsfeed-{en,de}.json from dev/releases-history/<version>/ when present, and skips newsfeed:generate-json regeneration in that case so manual edits to the EN newsfeed and translated DE newsfeed survive across re-runs and reach the deploy artifact. #5138
+* Dev: Fix syntax error in CI release prepare workflow that caused the post-commit "mark required checks" step to crash. #5137
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

@@ -339,7 +339,14 @@ abstract class PrepareJob
             $date->setTimestamp($jobDataDto->getStartTime());
         }
 
-        $jobDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
+        // Defensive: `_n()` inside getHumanReadableDuration can trigger JIT textdomain
+        // loading, which may re-crash on the same third-party autoload that caused
+        // the error. Fall back to a raw-seconds label so error reporting always completes.
+        try {
+            $jobDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
+        } catch (\Throwable $e) {
+            $jobDuration = $jobDataDto->getDuration() . 's';
+        }
 
         $body .= 'Started at: ' .  $date->format('H:i:s') . PHP_EOL ;
         $body .= 'Duration: ' . $jobDuration . PHP_EOL;
@@ -355,12 +362,14 @@ abstract class PrepareJob
         $backupScheduler->sendErrorReport($body, $title);
 
         $jobTransientCache = $this->job->getTransientCache();
-        $jobTransientCache->failJob();
 
         Hooks::callInternalHook(self::ACTION_JOB_FAILURE, [
             'jobTransientCache' => $jobTransientCache,
             'errorMessage'      => $errorMessage,
+            'jobDataDto'        => $this->job->getJobDataDto(),
         ]);
+
+        $jobTransientCache->failJob('', $errorMessage);
     }
 
     /**

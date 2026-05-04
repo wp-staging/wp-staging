@@ -18,18 +18,17 @@ class SettingsTable extends CustomTable
     const CACHE_EXISTS_KEY_SUFFIX = '__exists';
 
     /**
-     * Sentinel value stored in cache to indicate that the key does not exist in the table.
-     *
+     * Table name without prefix
      * @var string
      */
-    const CACHE_NOT_FOUND = '__wpstg_not_found__';
+    const TABLE_NAME = 'wpstg_settings';
 
     /**
      * @return string
      */
     protected function getTableName()
     {
-        return 'wpstg_settings';
+        return self::TABLE_NAME;
     }
 
     /**
@@ -83,21 +82,16 @@ class SettingsTable extends CustomTable
      */
     public function get($name, $default = null)
     {
+        $existsFound  = false;
+        $existsCached = wp_cache_get($this->getExistsCacheKey($name), self::CACHE_GROUP, false, $existsFound);
+        if ($existsFound && !$existsCached) {
+            return $default;
+        }
+
         $found  = false;
         $cached = wp_cache_get($name, self::CACHE_GROUP, false, $found);
-
         if ($found) {
-            if ($cached !== self::CACHE_NOT_FOUND) {
-                return $cached;
-            }
-
-            $existsFound  = false;
-            $existsCached = wp_cache_get($this->getExistsCacheKey($name), self::CACHE_GROUP, false, $existsFound);
-            if ($existsFound && $existsCached) {
-                return $cached;
-            }
-
-            return $default;
+            return $cached;
         }
 
         $this->ensureTable();
@@ -113,7 +107,6 @@ class SettingsTable extends CustomTable
         $row = $this->database->fetchAssoc($result);
 
         if (!$row) {
-            wp_cache_set($name, self::CACHE_NOT_FOUND, self::CACHE_GROUP);
             wp_cache_set($this->getExistsCacheKey($name), false, self::CACHE_GROUP);
             return $default;
         }

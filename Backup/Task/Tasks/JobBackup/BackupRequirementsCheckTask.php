@@ -18,6 +18,7 @@ use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Backup\Task\BackupTask;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Traits\RenameTmpDirectoryTrait;
 
@@ -94,6 +95,11 @@ class BackupRequirementsCheckTask extends BackupTask
         if (!$this->stepsDto->getTotal()) {
             $this->stepsDto->setTotal(1);
         }
+
+        // Action hook for internal use only: used during error propagation tests.
+        // Must fire AFTER setTotal(1) so that generateResponse(false) sees total=1
+        // and correctly marks the task as "not finished" when an exception is thrown.
+        Hooks::doAction('wpstg.tests.backup.requirements_check.before');
 
         try {
             if ($this->jobDataDto->getIsSyncRequest()) {

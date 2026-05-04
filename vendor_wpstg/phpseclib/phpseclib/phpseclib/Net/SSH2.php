@@ -620,7 +620,7 @@ class SSH2
      * @see self::send_channel_packet()
      * @var array
      */
-    private $packet_size_client_to_server = [];
+    protected $packet_size_client_to_server = [];
     /**
      * Message Number Log
      *
@@ -2480,6 +2480,9 @@ class SSH2
             $this->channel_id_last_interactive = self::CHANNEL_EXEC;
             return \true;
         }
+        if ($callback === \false) {
+            return \true;
+        }
         $output = '';
         while (\true) {
             $temp = $this->get_channel_packet(self::CHANNEL_EXEC);
@@ -3169,12 +3172,12 @@ class SSH2
             $reconstructed = !$this->hmac_check_etm ? \pack('Na*', $packet->packet_length, $packet->plain) : \substr($packet->raw, 0, -$this->hmac_size);
             if (($this->hmac_check->getHash() & "\xff\xff\xff\xff") == 'umac') {
                 $this->hmac_check->setNonce("\x00\x00\x00\x00" . \pack('N', $this->get_seq_no));
-                if ($hmac != $this->hmac_check->hash($reconstructed)) {
+                if (!\hash_equals($hmac, $this->hmac_check->hash($reconstructed))) {
                     $this->disconnect_helper(NET_SSH2_DISCONNECT_MAC_ERROR);
                     throw new ConnectionClosedException('Invalid UMAC');
                 }
             } else {
-                if ($hmac != $this->hmac_check->hash(\pack('Na*', $this->get_seq_no, $reconstructed))) {
+                if (!\hash_equals($hmac, $this->hmac_check->hash(\pack('Na*', $this->get_seq_no, $reconstructed)))) {
                     $this->disconnect_helper(NET_SSH2_DISCONNECT_MAC_ERROR);
                     throw new ConnectionClosedException('Invalid HMAC');
                 }
@@ -3417,9 +3420,11 @@ class SSH2
                 case NET_SSH2_MSG_GLOBAL_REQUEST:
                     // see http://tools.ietf.org/html/rfc4254#section-4
                     Strings::shift($payload, 1);
-                    list($request_name) = Strings::unpackSSH2('s', $payload);
+                    list($request_name, $want_reply) = Strings::unpackSSH2('sb', $payload);
                     $this->errors[] = "SSH_MSG_GLOBAL_REQUEST: {$request_name}";
-                    $this->send_binary_packet(\pack('C', NET_SSH2_MSG_REQUEST_FAILURE));
+                    if ($want_reply) {
+                        $this->send_binary_packet(\pack('C', NET_SSH2_MSG_REQUEST_FAILURE));
+                    }
                     $payload = $this->get_binary_packet();
                     break;
                 case NET_SSH2_MSG_CHANNEL_OPEN:
@@ -3636,8 +3641,13 @@ class SSH2
                                 // -- http://tools.ietf.org/html/rfc4254#section-6.10
                                 continue 3;
                             default:
-                                // "Some systems may not implement signals, in which case they SHOULD ignore this message."
-                                //  -- http://tools.ietf.org/html/rfc4254#section-6.9
+                                list($want_reply) = Strings::unpackSSH2('b', $response);
+                                if ($want_reply) {
+                                    // "If the request is not recognized or is not supported for the channel,
+                                    //  SSH_MSG_CHANNEL_FAILURE is returned."
+                                    // -- https://datatracker.ietf.org/doc/html/rfc4254#page-10
+                                    $this->send_binary_packet(\pack('CN', NET_SSH2_MSG_CHANNEL_FAILURE, $this->server_channels[$channel]));
+                                }
                                 continue 3;
                         }
                 }
@@ -4022,7 +4032,7 @@ class SSH2
      * @param bool $want_reply
      * @return void
      */
-    private function close_channel($client_channel)
+    protected function close_channel($client_channel)
     {
         // see http://tools.ietf.org/html/rfc4254#section-5.3
         if ($this->channel_status[$client_channel] != NET_SSH2_MSG_CHANNEL_EOF) {

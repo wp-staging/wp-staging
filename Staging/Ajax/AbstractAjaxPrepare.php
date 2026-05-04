@@ -52,7 +52,7 @@ abstract class AbstractAjaxPrepare extends PrepareJob
         }
 
         try {
-            $sanitizedData = $this->setupInitialData($data);
+            $sanitizedData = $this->setupInitialJob($data);
         } catch (\Exception $e) {
             return new \WP_Error(400, $e->getMessage());
         }

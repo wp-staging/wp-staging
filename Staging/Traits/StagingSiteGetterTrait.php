@@ -29,9 +29,10 @@ trait StagingSiteGetterTrait
             $cloneId = sanitize_text_field($options['id']);
             /** @var Sites $stagingSites */
             $stagingSites = WPStaging::make(Sites::class);
-            $stagingSite = $stagingSites->getStagingSiteDtoByCloneId($cloneId);
 
-            if ($stagingSite === null) {
+            try {
+                $stagingSites->getStagingSiteDtoByCloneId($cloneId);
+            } catch (Exception $e) {
                 throw new Exception("Staging site with ID '{$cloneId}' does not exist.");
             }
 
@@ -42,9 +43,10 @@ trait StagingSiteGetterTrait
             $cloneName = sanitize_text_field($options['name']);
             /** @var Sites $stagingSites */
             $stagingSites = WPStaging::make(Sites::class);
-            $stagingSite = $stagingSites->getStagingSiteDtoByCloneName($cloneName);
 
-            if ($stagingSite === null) {
+            try {
+                $stagingSite = $stagingSites->getStagingSiteDtoByCloneName($cloneName);
+            } catch (Exception $e) {
                 throw new Exception("Staging site with name '{$cloneName}' does not exist.");
             }
 

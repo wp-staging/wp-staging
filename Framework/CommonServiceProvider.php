@@ -3,6 +3,7 @@
 namespace WPStaging\Framework;
 
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Core\Cron\CronIntegrity;
 use WPStaging\Framework\Analytics\AnalyticsCleanup;
 use WPStaging\Framework\DI\ServiceProvider;
 use WPStaging\Framework\Filesystem\DebugLogReader;
@@ -38,6 +39,32 @@ class CommonServiceProvider extends ServiceProvider
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupLogs'], 25, 0);
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupAnalytics'], 25, 0);
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupExpiredOtps'], 25, 0);
+
+        // Per-request cron integrity check (throttled): re-creates missing cron events (e.g. for
+        // backup schedules) even when WP-Cron itself is broken so the daily event above never fires.
+        // Priority 20 so custom recurrences registered on `init` (default priority 10) are present
+        // when wp_next_scheduled / wp_get_schedules are queried.
+        // Wrapped in try/catch: when an outdated free version is active, the DI container may
+        // resolve BackupScheduler from the free autoloader (which prepends), hitting missing
+        // classes (e.g. BackupProcessLock renamed in newer versions) and causing a fatal error.
+        $container = $this->container;
+        add_action('init', function () use ($container) {
+            // Skip during WP install (DB schema may not yet exist) and inside the WP-Cron runner
+            // itself (re-entry from within a cron tick would just do a no-op transient read).
+            if (defined('WP_INSTALLING') && WP_INSTALLING) {
+                return;
+            }
+
+            if (defined('DOING_CRON') && DOING_CRON) {
+                return;
+            }
+
+            try {
+                $container->make(CronIntegrity::class)->checkAndRepair();
+            } catch (\Throwable $e) {
+                // Silently skip — dependency resolution failed (e.g. incompatible free version).
+            }
+        }, 20, 0);
         add_action("wp_ajax_wpstg_is_writable_clone_destination_dir", $this->container->callback(StagingSiteDataChecker::class, "ajaxIsWritableCloneDestinationDir")); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_check_user_permissions", $this->container->callback(DBPermissions::class, 'ajaxCheckDBPermissions')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_check_user_is_authenticated", [$this, "ajaxIsUserAuthenticated"]);// phpcs:ignore WPStaging.Security.AuthorizationChecked

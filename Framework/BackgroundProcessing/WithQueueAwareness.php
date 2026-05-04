@@ -76,6 +76,7 @@ trait WithQueueAwareness
             $requestSent  = !$useGetMethod;
             // Let set the transient for 24 hours
             set_site_transient(QueueProcessor::TRANSIENT_REQUEST_GET_METHOD, $useGetMethod ? 'Yes' : 'No', 60 * 60 * 24);
+            debug_log('[WPSTG Fire Ajax] GET method is ' . ($useGetMethod ? 'needed' : 'not needed') . ' for Queue AJAX request.', 'info', false);
         } else {
             $useGetMethod = $useGetMethod === 'Yes';
         }
@@ -92,6 +93,8 @@ trait WithQueueAwareness
         // If filter is present lets override it!
         $useGetMethod = Hooks::applyFilters(QueueProcessor::FILTER_REQUEST_FORCE_GET_METHOD, $useGetMethod);
 
+        debug_log('[WPSTG Fire Ajax] Firing AJAX request to process Queue actions. GET method: ' . ($useGetMethod ? 'Yes' : 'No'), 'debug', false);
+
         $response = wp_remote_request(esc_url_raw($ajaxUrl), [
             'headers'   => array_merge(
                 ['X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS],
@@ -104,8 +107,6 @@ trait WithQueueAwareness
             'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
-
-        //debug_log('fireAjaxAction: ' . wp_json_encode($response, JSON_PRETTY_PRINT));
 
         /*
          * A non-blocking request will either return a WP_Error instance, or
@@ -177,7 +178,11 @@ trait WithQueueAwareness
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
 
-        debug_log('checkGetRequestNeededForQueue: ' . wp_json_encode($response, JSON_PRETTY_PRINT), 'info', false);
+        if ($response instanceof WP_Error) {
+            debug_log('[WPSTG Fire Ajax] checkGetRequestNeededForQueue POST failed: code=' . $response->get_error_code() . ' message=' . $response->get_error_message(), 'debug', false);
+        } elseif (is_array($response) && isset($response['response']['code'])) {
+            debug_log('[WPSTG Fire Ajax] checkGetRequestNeededForQueue POST response code=' . $response['response']['code'], 'debug', false);
+        }
 
         // If we get WP_Error, then we can assume that POST method doesn't work
         if ($response instanceof WP_Error) {

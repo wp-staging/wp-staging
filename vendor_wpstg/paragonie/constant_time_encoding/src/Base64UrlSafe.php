@@ -3,6 +3,7 @@
 declare (strict_types=1);
 namespace WPStaging\Vendor\ParagonIE\ConstantTime;
 
+use function pack;
 /**
  *  Copyright (c) 2016 - 2022 Paragon Initiative Enterprises.
  *  Copyright (c) 2014 Steve "Sc00bz" Thomas (steve at tobtu dot com)
@@ -77,6 +78,6 @@ abstract class Base64UrlSafe extends Base64
         $diff -= 61 - $src >> 8 & 13;
         // if ($src > 62) $diff += 0x5f - 0x2b - 1; // 3
         $diff += 62 - $src >> 8 & 49;
-        return \pack('C', $src + $diff);
+        return pack('C', $src + $diff);
     }
 }

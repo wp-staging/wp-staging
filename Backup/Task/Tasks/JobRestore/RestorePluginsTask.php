@@ -9,9 +9,6 @@ use WPStaging\Framework\Facades\Hooks;
 
 class RestorePluginsTask extends FileRestoreTask
 {
-    /** @var string */
-    const FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS = 'wpstg.backup.restore.exclude_plugins';
-
     /**
      * Old filter, cannot be renamed to new pattern
      * @var string
@@ -127,6 +124,10 @@ class RestorePluginsTask extends FileRestoreTask
 
         // Remove plugins which are not in the backup
         foreach ($existingPlugins as $pluginSlug => $pluginPath) {
+            if ($this->isExcludedFile($pluginPath, $defaultExcluded)) {
+                continue;
+            }
+
             if ($pluginSlug === self::SLUG_W3_TOTAL_CACHE && !array_key_exists(self::SLUG_W3_TOTAL_CACHE, $pluginsToRestore)) {
                 $this->mayBeDeleteDropInFiles();
             }
@@ -176,12 +177,6 @@ class RestorePluginsTask extends FileRestoreTask
 
         $plugins = [];
 
-        $pluginsToExclude = apply_filters(self::FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS, [
-            WPSTG_PLUGIN_SLUG, // Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
-            'wp-staging',
-            'wp-staging-pro',
-        ]);
-
         /** @var \DirectoryIterator $fileInfo */
         foreach ($it as $fileInfo) {
             if ($fileInfo->isDot()) {
@@ -192,19 +187,7 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
-            $pluginsToExclude = apply_filters_deprecated(
-                self::FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS, // filter name
-                [
-                    [
-                        WPSTG_PLUGIN_SLUG, // Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
-                    ],
-                ], // old args that used to be passed to apply_filters().
-                '5.9.1', // version from which it is deprecated.
-                self::FILTER_EXCLUDE_FILES_DURING_RESTORE, // new filter to use
-                sprintf('This filter will be removed in the upcoming version, use %s filter instead.', self::FILTER_EXCLUDE_FILES_DURING_RESTORE)
-            );
-
-            if ($fileInfo->isDir() && !in_array($fileInfo->getFilename(), $pluginsToExclude)) {
+            if ($fileInfo->isDir() && strpos($fileInfo->getFilename(), WPSTG_PLUGIN_DOMAIN) !== 0) {
                 $plugins[$fileInfo->getBasename()] = $fileInfo->getPathname();
 
                 continue;
