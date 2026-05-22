@@ -197,11 +197,12 @@ class Queue
         }
 
         $assignments = [
-            'action'   => $actionObject->action,
-            'jobId'    => (string)$actionObject->jobId,
-            'status'   => self::STATUS_READY,
-            'priority' => (int)$actionObject->priority,
-            'args'     => $actionObject->args,
+            'action'     => $actionObject->action,
+            'jobId'      => (string)$actionObject->jobId,
+            'status'     => self::STATUS_READY,
+            'priority'   => (int)$actionObject->priority,
+            'args'       => $actionObject->args,
+            'updated_at' => current_time('mysql'),
         ];
 
         $assignmentsList = $this->buildAssignmentsList($assignments);
@@ -237,6 +238,12 @@ class Queue
 
         $actionObject            = $actionObject->alter(['id' => $id, 'status' => self::STATUS_READY]);
         $this->actionCaches[$id] = $actionObject->toArray();
+
+        set_site_transient(
+            BackgroundProcessingServiceProvider::TRANSIENT_QUEUE_HAS_WORK,
+            1,
+            BackgroundProcessingServiceProvider::QUEUE_HAS_WORK_TTL
+        );
 
         if (!has_action('shutdown', [$this, 'maybeFireAjaxAction'])) {
             add_action('shutdown', [$this, 'maybeFireAjaxAction']);
@@ -661,6 +668,47 @@ class Queue
         $count = $this->database->fetchRow($countResult);
 
         return (array_sum((array)$count));
+    }
+
+    /**
+     * @return int Unix timestamp of the most recent updated_at across READY/PROCESSING rows, or 0 if none.
+     */
+    public function getLastUpdatedAtTimestamp()
+    {
+        if (!$this->tableExists()) {
+            return 0;
+        }
+
+        $tableName = self::getTableName();
+        $ready     = self::STATUS_READY;
+        $proc      = self::STATUS_PROCESSING;
+
+        $query  = "SELECT MAX(updated_at) FROM {$tableName} WHERE status IN ('{$ready}','{$proc}')";
+        $result = $this->database->query($query);
+
+        if ($result === false) {
+            return 0;
+        }
+
+        $row = $this->database->fetchRow($result);
+        if (empty($row)) {
+            return 0;
+        }
+
+        $value = is_array($row) ? reset($row) : $row;
+        if (empty($value)) {
+            return 0;
+        }
+
+        // updated_at is written via current_time('mysql') in the site timezone; parse against
+        // wp_timezone() so the unix timestamp is comparable to time().
+        $timezone = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone('UTC');
+        try {
+            $parsed = new \DateTimeImmutable((string)$value, $timezone);
+            return $parsed->getTimestamp();
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     /**

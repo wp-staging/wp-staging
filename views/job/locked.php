@@ -20,7 +20,13 @@ if ($isLocked) {
     $isDataAvailable = !empty($jobData);
     $isCancelable    = $jobData['status'] === JobTransientCache::STATUS_RUNNING;
     ?>
-    <div id="wpstg--locked-process" class="wpstg--locked-process wpstg-flex wpstg-items-center wpstg-justify-between wpstg-gap-4 wpstg-rounded-lg wpstg-border wpstg-border-slate-200/70 dark:wpstg-border-white/10 wpstg-bg-white dark:wpstg-bg-dark-boxes wpstg-shadow-sm wpstg-px-5 wpstg-py-4">
+    <div id="wpstg--locked-process" class="wpstg--locked-process wpstg-flex wpstg-items-center wpstg-justify-between wpstg-gap-4 wpstg-rounded-lg wpstg-border wpstg-border-slate-200/70 dark:wpstg-border-white/10 wpstg-bg-white dark:wpstg-bg-dark-boxes wpstg-shadow-sm wpstg-px-5 wpstg-py-4"
+        <?php if ($isDataAvailable) : ?>
+        data-wpstg-started-at="<?php echo esc_attr($jobData['startedAt']); ?>"
+        data-wpstg-job-type="<?php echo esc_attr($jobData['type']); ?>"
+        data-wpstg-job-id="<?php echo esc_attr($jobData['jobId']); ?>"
+        <?php endif; ?>
+    >
         <div class="wpstg--locked-process--body wpstg-flex wpstg-flex-1 wpstg-items-center wpstg-gap-4 wpstg-min-w-0">
             <div class="wpstg--locked-process--loader wpstg-shrink-0"></div>
             <div class="wpstg--locked-process--content wpstg-flex-1 wpstg-min-w-0">
@@ -62,11 +68,6 @@ if ($isLocked) {
         </div>
         <?php endif; ?>
     </div>
-    <?php if ($isDataAvailable) : ?>
-    <script>
-        WPStaging.initBackgroundLogger(<?php echo esc_js($jobData['startedAt']); ?>, '<?php echo esc_js($jobData['type']); ?>', '<?php echo esc_js($jobData['jobId']); ?>');
-    </script>
-    <?php endif; ?>
     <?php
     // as explained above, we only show the cancel modal if the job is cancellable
     if ($isCancelable) :

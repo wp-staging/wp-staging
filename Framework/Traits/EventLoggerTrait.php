@@ -1,5 +1,7 @@
 <?php
 namespace WPStaging\Framework\Traits;
+use WPStaging\Backup\Storage\Providers;
+use WPStaging\Backup\Storage\Traits\StorageIdNormalizerTrait;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
@@ -8,6 +10,7 @@ use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Security\Auth;
 trait EventLoggerTrait
 {
+    use StorageIdNormalizerTrait;
     protected $processStatusFailed = false;
     protected $wpstgMaintenanceFile = 'maintenance';
     private $filePath;
@@ -22,15 +25,15 @@ trait EventLoggerTrait
         'isExportingDatabase'            => EventLoggerConst::BACKUP_SETTING_DATABASE,
     ];
     protected $backupStoragesIdentifiers = [
-        'googleDrive'         => EventLoggerConst::BACKUP_STORAGE_GOOGLE_DRIVE,
-        'amazonS3'            => EventLoggerConst::BACKUP_STORAGE_AMAZON_S3,
-        'dropbox'             => EventLoggerConst::BACKUP_STORAGE_DROPBOX,
-        'sftp'                => EventLoggerConst::BACKUP_STORAGE_SFTP,
-        'digitalocean-spaces' => EventLoggerConst::BACKUP_STORAGE_DIGITALOCEAN_SPACES,
-        'wasabi-s3'           => EventLoggerConst::BACKUP_STORAGE_WASABI_S3,
-        'generic-s3'          => EventLoggerConst::BACKUP_STORAGE_GENERIC_S3,
-        'one-drive'           => EventLoggerConst::BACKUP_STORAGE_ONE_DRIVE,
-        'pcloud'              => EventLoggerConst::BACKUP_STORAGE_PCLOUD,
+        Providers::IDENTIFIER_GOOGLE_DRIVE        => EventLoggerConst::BACKUP_STORAGE_GOOGLE_DRIVE,
+        Providers::IDENTIFIER_AMAZON_S3           => EventLoggerConst::BACKUP_STORAGE_AMAZON_S3,
+        Providers::IDENTIFIER_DROPBOX             => EventLoggerConst::BACKUP_STORAGE_DROPBOX,
+        Providers::IDENTIFIER_SFTP                => EventLoggerConst::BACKUP_STORAGE_SFTP,
+        Providers::IDENTIFIER_DIGITALOCEAN_SPACES => EventLoggerConst::BACKUP_STORAGE_DIGITALOCEAN_SPACES,
+        Providers::IDENTIFIER_WASABI_S3           => EventLoggerConst::BACKUP_STORAGE_WASABI_S3,
+        Providers::IDENTIFIER_GENERIC_S3          => EventLoggerConst::BACKUP_STORAGE_GENERIC_S3,
+        Providers::IDENTIFIER_ONE_DRIVE           => EventLoggerConst::BACKUP_STORAGE_ONE_DRIVE,
+        Providers::IDENTIFIER_PCLOUD              => EventLoggerConst::BACKUP_STORAGE_PCLOUD,
     ];
     private $sanitize;
     private $process;
@@ -76,6 +79,7 @@ trait EventLoggerTrait
 
     public function logBackupUploadCompleted(array $storages = [])
     {
+        $storages      = array_map([$this, 'normalizeStorageId'], $storages);
         $storages      = array_fill_keys($storages, true);
         $processPrefix = EventLoggerConst::PROCESS_PREFIX_BACKUP_UPLOAD . '|' . $this->prepareJobSettings($this->backupStoragesIdentifiers, $storages);
         $this->writeEventStatus($processPrefix);

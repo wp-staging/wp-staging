@@ -35,6 +35,21 @@ class QueueProcessor
     /** @var string */
     const TRANSIENT_REQUEST_GET_METHOD = 'wpstg.queue.request.get_method';
 
+    /** @var string */
+    const TRANSIENT_LAST_FIRE_TIMESTAMP = 'wpstg_queue_last_fire_ts';
+
+    /** @var string */
+    const TRANSIENT_FIRE_FAILURE_COUNT = 'wpstg_queue_fire_failure_count';
+
+    /** @var int */
+    const TRANSIENT_FIRE_STATE_TTL = HOUR_IN_SECONDS;
+
+    /** @var int Consecutive non-acknowledged fires that trigger blocking-mode escalation. */
+    const ADAPTIVE_BLOCKING_THRESHOLD = 2;
+
+    /** @var int */
+    const FIRE_ACK_WINDOW_SECONDS = 90;
+
     /**
      * A flag property indicating whether the Queue Processor
      * should actually process Actions or not.
@@ -53,6 +68,12 @@ class QueueProcessor
 
     /** @var PhpAdapter */
     private $phpAdapter;
+
+    /** @var int */
+    private $inlineRetryDepth = 0;
+
+    /** @var int */
+    const INLINE_RETRY_MAX = 1;
 
     /**
      * QueueProcessor constructor.
@@ -76,12 +97,23 @@ class QueueProcessor
      */
     public function process()
     {
-        debug_log('[Background Processing] QueueProcessor::process 1', 'debug', false);
+        $lastFireTs  = (int)get_site_transient(self::TRANSIENT_LAST_FIRE_TIMESTAMP);
+        $lastFireAge = $lastFireTs > 0 ? (time() - $lastFireTs) : -1;
+
         if (!$this->doProcess) {
             return 0;
         }
 
-        debug_log('[Background Processing] QueueProcessor::process 2', 'debug', false);
+        if ($lastFireTs > 0 && $lastFireAge >= 0 && $lastFireAge <= self::FIRE_ACK_WINDOW_SECONDS) {
+            if ((int)get_site_transient(self::TRANSIENT_FIRE_FAILURE_COUNT) !== 0) {
+                delete_site_transient(self::TRANSIENT_FIRE_FAILURE_COUNT);
+            }
+        } elseif ($lastFireTs > 0 && $lastFireAge > self::FIRE_ACK_WINDOW_SECONDS && (int)$this->queue->count(Queue::STATUS_READY) > 0) {
+            // Silent-drop: a prior fire was never acknowledged inside the window while READY work
+            // remains. Escalate so the next non-AJAX fire surfaces the real HTTP response.
+            $this->recordFireFailure();
+            delete_site_transient(self::TRANSIENT_LAST_FIRE_TIMESTAMP);
+        }
 
         $processed = 0;
 
@@ -91,11 +123,8 @@ class QueueProcessor
         while (!$this->isThreshold()) {
             $action = $this->queue->getNextAvailable();
 
-            debug_log('[Background Processing] QueueProcessor::process Action: ' . wp_json_encode($action), 'debug', false);
-
             if (!$action instanceof Action) {
                 // No READY Actions, no lock or no table.
-                debug_log('[Background Processing] QueueProcessor::process No READY actions', 'debug', false);
                 break;
             }
 
@@ -109,8 +138,6 @@ class QueueProcessor
 
             $this->dispatch($action);
 
-            debug_log('[Background Processing] QueueProcessor::process After dispatch', 'debug', false);
-
             $previousAction = $action;
         }
 
@@ -119,10 +146,27 @@ class QueueProcessor
          * at least ONE action. Otherwise, if a MySQL error happens during
          * the processing of the Queue, this would cause a processing loop.
          */
-        if ($processed > 0 && $this->queue->count(Queue::STATUS_READY)) {
-            // If there are more Actions to process, then keep processing.
-            $this->fireAjaxAction();
-            debug_log('[Background Processing] QueueProcessor::process After fireAjaxAction', 'debug', false);
+        $fired          = false;
+        $remainingReady = (int)$this->queue->count(Queue::STATUS_READY);
+        if ($processed > 0 && $remainingReady > 0) {
+            $fired = $this->fireAjaxAction();
+
+            // Inline fallback: when the fire fails and we still have resources, drain one more
+            // pass in this request rather than waiting for an external trigger that may never come.
+            if (!$fired && !$this->isThreshold() && $this->inlineRetryDepth < self::INLINE_RETRY_MAX) {
+                $this->inlineRetryDepth++;
+                $this->didFireAjaxAction = false;
+                debug_log('[BG Queue] inline retry (depth=' . $this->inlineRetryDepth . ')', 'info', false);
+                $processed += $this->process();
+            }
+        }
+
+        if ($this->inlineRetryDepth === 0 && $processed > 0) {
+            debug_log('[BG Queue] process done: dispatched=' . $processed . ' remaining=' . $remainingReady . ' fired=' . ($fired ? 'yes' : 'no'), 'info', false);
+        }
+
+        if ($this->inlineRetryDepth > 0) {
+            $this->inlineRetryDepth--;
         }
 
         debug_log('[Background Processing] QueueProcessor::process Processed: ' . $processed, 'debug', false);
@@ -149,6 +193,8 @@ class QueueProcessor
      */
     public function dispatch(Action $action)
     {
+        debug_log('[BG Queue] dispatch id=' . (int)$action->id . ' job=' . (string)$action->jobId . ' action=' . (string)$action->action, 'info', false);
+
         /*
          * What is this?
          * It's a Closure that will mark this Action as failed.

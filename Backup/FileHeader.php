@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backup;
 
+use WPStaging\Backup\FileHeader\ExtraFieldCodec;
+use WPStaging\Backup\FileHeader\ExtraFieldType;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
 use WPStaging\Backup\Traits\EncodingErrorHandler;
 use WPStaging\Framework\Filesystem\PathIdentifier;
@@ -275,7 +277,7 @@ class FileHeader implements IndexLineInterface
      */
     public function decodeFileHeader(string $index)
     {
-        $index         = rtrim($index);
+        $index         = $this->trimTrailingLineBreak($index);
         $fixedHeader   = substr($index, 0, self::FILE_HEADER_FIXED_SIZE);
         $dynamicHeader = substr($index, self::FILE_HEADER_FIXED_SIZE);
         if (strpos($fixedHeader, self::START_SIGNATURE) !== 0) {
@@ -293,7 +295,7 @@ class FileHeader implements IndexLineInterface
         $this->extraFieldLength = $header[7];
         $this->setFilePath(substr($dynamicHeader, 0, $this->filePathLength));
         $this->setFileName(substr($dynamicHeader, $this->filePathLength, $this->fileNameLength));
-        $this->setExtraField(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength));
+        $this->setExtraField($this->replacePlaceholdersWithEOLs(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
     }
 
     /**
@@ -302,7 +304,7 @@ class FileHeader implements IndexLineInterface
      */
     public function decodeIndexHeader(string $index)
     {
-        $index         = rtrim($index);
+        $index         = $this->trimTrailingLineBreak($index);
         $fixedHeader   = substr($index, 0, self::INDEX_HEADER_FIXED_SIZE);
         $dynamicHeader = substr($index, self::INDEX_HEADER_FIXED_SIZE);
         $header        = $this->encoder->hexToIntArray(self::INDEX_HEADER_FORMAT, $fixedHeader);
@@ -318,7 +320,26 @@ class FileHeader implements IndexLineInterface
         $this->extraFieldLength = $header[8];
         $this->setFilePath(substr($dynamicHeader, 0, $this->filePathLength));
         $this->setFileName(substr($dynamicHeader, $this->filePathLength, $this->fileNameLength));
-        $this->setExtraField(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength));
+        $this->setExtraField($this->replacePlaceholdersWithEOLs(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
+    }
+
+    /**
+     * Remove only line delimiters that may be appended when reading headers line-by-line.
+     *
+     * Binary header data can legally end with bytes that rtrim() would treat as whitespace
+     * (notably "\0"), so we only strip "\n" and an optional preceding "\r".
+     */
+    private function trimTrailingLineBreak(string $line): string
+    {
+        if (substr($line, -2) === "\r\n") {
+            return substr($line, 0, -2);
+        }
+
+        if (substr($line, -1) === "\n") {
+            return substr($line, 0, -1);
+        }
+
+        return $line;
     }
 
     /**
@@ -641,8 +662,55 @@ class FileHeader implements IndexLineInterface
      */
     public function setExtraField(string $extraField)
     {
-        $this->extraField = $extraField;
-        $this->extraFieldLength = strlen($extraField);
+        $this->extraField       = $extraField;
+        // Length stored on the wire reflects the EOL-placeholder-encoded form, since
+        // getFileHeader/getIndexHeader run replaceEOLsWithPlaceholders over the whole
+        // concatenated header. Mirroring filePathLength/fileNameLength keeps decoders
+        // able to slice the on-disk bytes correctly when extraField contains a newline
+        // byte (e.g. random TLV value bytes).
+        $this->extraFieldLength = strlen($this->replaceEOLsWithPlaceholders($extraField));
+    }
+
+    /**
+     * Set or replace a single TLV entry inside extraField, preserving any other
+     * entries already encoded there.
+     *
+     * @param int    $type  One of the ExtraFieldType constants. Must not be
+     *                      LEGACY_RAW, which is a parser-only sentinel.
+     * @param string $value Raw bytes for this entry.
+     * @return void
+     * @throws \UnexpectedValueException When $type is LEGACY_RAW, when the
+     *                                   current extraField holds opaque
+     *                                   pre-TLV bytes (which a TLV write would
+     *                                   destroy), or when the codec rejects
+     *                                   the new entry.
+     */
+    public function setExtraFieldEntry(int $type, string $value)
+    {
+        if ($type === ExtraFieldType::LEGACY_RAW) {
+            throw new \UnexpectedValueException(sprintf('FileHeader::setExtraFieldEntry: type 0x%02X (LEGACY_RAW) is a parser-only sentinel and cannot be written.', ExtraFieldType::LEGACY_RAW));
+        }
+
+        $codec   = new ExtraFieldCodec();
+        $entries = $codec->decode($this->extraField);
+        if (isset($entries[ExtraFieldType::LEGACY_RAW])) {
+            throw new \UnexpectedValueException('FileHeader::setExtraFieldEntry: refusing to add a TLV entry to a non-TLV extraField; opaque legacy bytes would be destroyed. Reset the field with setExtraField("") first if this is intentional.');
+        }
+
+        $entries[$type] = $value;
+        $this->setExtraField($codec->encode($entries));
+    }
+
+    /**
+     * Read a single TLV entry from extraField.
+     *
+     * @param int $type One of the ExtraFieldType constants.
+     * @return string|null Raw bytes, or null if the entry is not present.
+     */
+    public function getExtraFieldEntry(int $type)
+    {
+        $entries = (new ExtraFieldCodec())->decode($this->extraField);
+        return isset($entries[$type]) ? $entries[$type] : null;
     }
 
     public function getIdentifiablePath(): string

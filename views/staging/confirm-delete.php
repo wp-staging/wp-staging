@@ -63,7 +63,7 @@ if ($isDatabaseConnected) { ?>
 <?php }
 
 if (!$isDatabaseConnected) { ?>
-<div id="wpstg-delete-confirm-error-container" class="wpstg-callout wpstg-callout-danger wpstg-block wpstg-mb-5">
+<div id="wpstg-delete-confirm-error-container" class="wpstg-callout wpstg-callout-danger !wpstg-block wpstg-mb-5">
     <h4 class="wpstg-m-0"><?php esc_html_e('Error: Can not connect to database! ', 'wp-staging');
         echo esc_html($stagingSite->getDatabaseDatabase()); ?>
     </h4>
