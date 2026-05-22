@@ -177,7 +177,7 @@ class Assets
                 $this->getAssetsUrl($asset),
                 ["jquery"],
                 $this->getAssetsVersion($asset),
-                false
+                $this->getScriptLoadingStrategy()
             );
 
             $asset = $this->getCssAssetsFileName('wpstg-admin-feedback');
@@ -197,7 +197,7 @@ class Assets
                 $this->getAssetsUrl($asset),
                 ["jquery"],
                 $this->getAssetsVersion($asset),
-                false
+                $this->getScriptLoadingStrategy()
             );
 
             $asset = $this->getCssAssetsFileName('wpstg-admin-all-pages');
@@ -221,7 +221,7 @@ class Assets
             $this->getAssetsUrl($asset),
             ["jquery"],
             $this->getAssetsVersion($asset),
-            false
+            $this->getScriptLoadingStrategy()
         );
 
         // Load admin js files
@@ -231,7 +231,7 @@ class Assets
             $this->getAssetsUrl($asset),
             ["wpstg-common", "wpstg-admin-notyf", "wpstg-admin-sweetalerts"],
             $this->getAssetsVersion($asset),
-            false
+            $this->getScriptLoadingStrategy()
         );
 
         // Load SolidJS bundle if it exists
@@ -243,7 +243,7 @@ class Assets
                 $this->getAssetsUrl($solidAsset),
                 ["wpstg-admin-script"],
                 $this->getAssetsVersion($solidAsset),
-                true
+                $this->getScriptLoadingStrategy()
             );
         }
 
@@ -255,7 +255,7 @@ class Assets
                 $this->getAssetsUrl($asset),
                 ['wpstg-common'],
                 $this->getAssetsVersion($asset),
-                true
+                $this->getScriptLoadingStrategy()
             );
         }
 
@@ -266,7 +266,7 @@ class Assets
             $this->getAssetsUrl($asset),
             [],
             $this->getAssetsVersion($asset),
-            true
+            $this->getScriptLoadingStrategy()
         );
 
         $asset = $this->getCssAssetsFileName('wpstg-sweetalert2');
@@ -284,7 +284,7 @@ class Assets
             $this->getAssetsUrl($asset),
             [],
             $this->getAssetsVersion($asset),
-            true
+            $this->getScriptLoadingStrategy()
         );
 
         $asset = 'css/vendor/notyf.min.css';
@@ -307,9 +307,9 @@ class Assets
             wp_enqueue_script(
                 "wpstg-admin-pro-script",
                 $this->getAssetsUrl($asset),
-                ["jquery", "wpstg-admin-notyf", "wpstg-admin-sweetalerts"],
+                ["jquery", "wpstg-common", "wpstg-admin-script", "wpstg-admin-notyf", "wpstg-admin-sweetalerts"],
                 $this->getAssetsVersion($asset),
-                false
+                $this->getScriptLoadingStrategy()
             );
         }
 
@@ -378,7 +378,8 @@ class Assets
             "wpstg-show-analytics-modal",
             $this->getAssetsUrl($asset),
             [],
-            $this->getAssetsVersion($asset)
+            $this->getAssetsVersion($asset),
+            $this->getScriptLoadingStrategy()
         );
 
         $asset = $this->getCssAssetsFileName('analytics-consent-modal');
@@ -403,7 +404,7 @@ class Assets
         }
 
         $asset = $this->getJsAssetsFileName('wpstg-blank-loader');
-        wp_enqueue_script('wpstg-global', $this->getAssetsUrl($asset), [], false, false);
+        wp_enqueue_script('wpstg-global', $this->getAssetsUrl($asset), [], false, $this->getScriptLoadingStrategy());
 
         $vars = [
             'nonce' => wp_create_nonce(Nonce::WPSTG_NONCE),
@@ -503,6 +504,22 @@ class Assets
         } catch (\Exception $e) {
             return '';
         }
+    }
+
+    /**
+     * Get the script loading args for wp_enqueue_script's 5th parameter.
+     * On WP 6.5+: uses defer strategy (loads in head, downloads in parallel, executes after parsing).
+     * On older WP: loads in footer as fallback to avoid render-blocking.
+     *
+     * @return array|bool
+     */
+    public function getScriptLoadingStrategy()
+    {
+        if (function_exists('wp_register_script_module')) {
+            return ['strategy' => 'defer', 'in_footer' => false];
+        }
+
+        return true;
     }
 
     /**

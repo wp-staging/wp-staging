@@ -5,6 +5,7 @@ namespace WPStaging\Core;
 use Exception;
 use RuntimeException;
 use WPStaging\Backend\Administrator;
+use WPStaging\Backend\DashboardWidget\DashboardWidgetServiceProvider;
 use WPStaging\Framework\Job\JobServiceProvider;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Basic\BasicServiceProvider;
@@ -112,10 +113,14 @@ final class WPStaging
         $this->container->boot();
 
         $this->container->register(CommonServiceProvider::class);
-        $this->container->register(AssetServiceProvider::class);
 
         /** @var WpAdapter */
         $wpAdapter = $this->container->get(WpAdapter::class);
+
+        // UI assets are only needed when WordPress is rendering an HTML page
+        if (!$wpAdapter->doingAjax() && !$wpAdapter->isWpCliRequest() && !wp_doing_cron()) {
+            $this->container->register(AssetServiceProvider::class);
+        }
 
         $currentUrlPath = $this->container->get(Url::class)->getCurrentRoute();
 
@@ -123,6 +128,9 @@ final class WPStaging
         // to keep the plugins page alive and allow deactivation of the plugin in case of failure in one of the notices.
         if (!$wpAdapter->doingAjax() && !$wpAdapter->isWpCliRequest() && is_admin() && strpos($currentUrlPath, 'plugins.php') === false) {
             $this->container->register(NoticeServiceProvider::class);
+            if (isset($GLOBALS['pagenow']) && $GLOBALS['pagenow'] === 'index.php') {
+                $this->container->register(DashboardWidgetServiceProvider::class);
+            }
         }
 
         $this->initCron();

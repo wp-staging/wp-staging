@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 use WPStaging\Staging\CloneOptions;
@@ -115,58 +116,14 @@ class PreserveDataSecondStep extends JobExecutable
         // Preserve backup schedules
         $this->preserveStagingOption($backupSchedulesOption, $this->preservedData->backupSchedules, 'backup schedules');
 
-        if ($this->propertyExists('googleDrive')) {
-            $this->preserveStagingOption('wpstg_googledrive', $this->preservedData->googleDrive, 'Google Drive settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_googledrive');
-        }
-
-        if ($this->propertyExists('amazonS3')) {
-            $this->preserveStagingOption('wpstg_amazons3', $this->preservedData->amazonS3, 'Amazon S3 settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_amazons3');
-        }
-
-        if ($this->propertyExists('sftp')) {
-            $this->preserveStagingOption('wpstg_sftp', $this->preservedData->sftp, 'sFTP/FTP settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_sftp');
-        }
-
-        if ($this->propertyExists('digitalOceanSpaces')) {
-            $this->preserveStagingOption('wpstg_digitalocean-spaces', $this->preservedData->digitalOceanSpaces, 'Digital Ocean Spaces settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_digitalocean-spaces');
-        }
-
-        if ($this->propertyExists('wasabiS3')) {
-            $this->preserveStagingOption('wpstg_wasabi', $this->preservedData->wasabiS3, 'Wasabi S3 settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_wasabi');
-        }
-
-        if ($this->propertyExists('genericS3')) {
-            $this->preserveStagingOption('wpstg_generic-s3', $this->preservedData->genericS3, 'S3 Compat settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_generic-s3');
-        }
-
-        if ($this->propertyExists('dropbox')) {
-            $this->preserveStagingOption('wpstg_dropbox', $this->preservedData->dropbox, 'Dropbox settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_dropbox');
-        }
-
-        if ($this->propertyExists('oneDrive')) {
-            $this->preserveStagingOption('wpstg_one-drive', $this->preservedData->oneDrive, 'Microsoft OneDrive settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_one-drive');
-        }
-
-        if ($this->propertyExists('pCloud')) {
-            $this->preserveStagingOption('wpstg_pcloud', $this->preservedData->pCloud, 'pCloud settings');
-        } else {
-            $this->deleteStagingSiteOption('wpstg_pcloud');
+        foreach (Providers::STORAGE_LABELS as $identifier => $label) {
+            $optionName = 'wpstg_' . $identifier;
+            $value      = $this->getPreservedStorageValue($identifier);
+            if ($value !== null) {
+                $this->preserveStagingOption($optionName, $value, $label . ' settings');
+            } else {
+                $this->deleteStagingSiteOption($optionName);
+            }
         }
 
         return true;
@@ -226,13 +183,34 @@ class PreserveDataSecondStep extends JobExecutable
     }
 
     /**
+     * Get the preserved storage value, checking both the new hyphenated and legacy camelCase property names.
+     * This ensures backward compatibility if wpstg_tmp_data was created by an older plugin version.
+     *
+     * @param string $identifier The new hyphenated storage identifier
+     * @return string|null The preserved value, or null if not found
+     */
+    protected function getPreservedStorageValue(string $identifier)
+    {
+        if ($this->propertyExists($identifier)) {
+            return $this->preservedData->{$identifier};
+        }
+
+        $legacyProperty = isset(Providers::LEGACY_PROPERTY_MAP[$identifier]) ? Providers::LEGACY_PROPERTY_MAP[$identifier] : $identifier;
+        if ($legacyProperty !== $identifier && $this->propertyExists($legacyProperty)) {
+            return $this->preservedData->{$legacyProperty};
+        }
+
+        return null;
+    }
+
+    /**
      * @param string $property
      *
      * @return bool
      */
     protected function propertyExists($property)
     {
-        if (!is_object($this->preservedData) && !is_string($property)) {
+        if (!is_object($this->preservedData)) {
             return false;
         }
 

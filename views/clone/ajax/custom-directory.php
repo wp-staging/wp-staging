@@ -98,11 +98,11 @@ if ($isPro && !empty($options->current)) {
         <input type="text" class="wpstg-textbox" name="wpstg_clone_hostname" id="wpstg_clone_hostname" value="<?php echo esc_attr($customHostname); ?>" title="wpstg_clone_hostname" placeholder="<?php echo esc_attr($hostname); ?>" autocapitalize="off" <?php echo $isPro ? '' : 'disabled' ?> />
         <?php if ($isPro) { ?>
             <span class="wpstg-code-segment">
-        <a id="wpstg-use-target-hostname" data-base-uri="<?php echo esc_attr($hostname) ?>" data-uri="<?php echo esc_attr($hostname) ?>" class="wpstg-pointer">
-            <?php esc_html_e('Set Default: ', 'wp-staging') ?>
-        </a>
-        <span class="wpstg-use-target-hostname--value"><?php echo esc_url(get_site_url()); ?></span>
-    </span>
+                <a id="wpstg-use-target-hostname" data-base-uri="<?php echo esc_attr($hostname) ?>" data-uri="<?php echo esc_attr($hostname) ?>" class="wpstg-pointer">
+                    <?php esc_html_e('Set Default: ', 'wp-staging') ?>
+                </a>
+                <span class="wpstg-use-target-hostname--value"><?php echo esc_url(get_site_url()); ?></span>
+            </span>
         <?php } ?>
     </div>
     <hr/>

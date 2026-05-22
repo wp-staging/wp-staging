@@ -77,7 +77,7 @@ $assets            = WPStaging::make(Assets::class);
                         <div class="wpstg-system-info-staging-sites-grid">
                             <?php foreach ($section['stagingSites'] as $index => $siteData) : ?>
                                 <?php $toggleId = 'staging-site-' . $index; ?>
-                                <div class="wpstg-system-info-staging-site-card">
+                                <div class="wpstg-system-info-staging-site-card wpstg-card wpstg-system-info-card-body wpstg-w-[unset]">
                                     <div class="wpstg-system-info-staging-site-header wpstg-toggle-header" data-toggle-target="<?php echo esc_attr($toggleId); ?>">
                                         <h4 class="wpstg-system-info-staging-site-title"><?php echo esc_html($siteData['cloneName']); ?></h4>
                                         <svg class="wpstg-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -112,7 +112,7 @@ $assets            = WPStaging::make(Assets::class);
                 <?php endif; ?>
 
                 <?php if (!empty($section['storageProviders'])) : ?>
-                    <div class="wpstg-system-info-staging-sites-wrapper">
+                    <div class="wpstg-system-info-staging-sites-wrapper wpstg-card">
                         <h3 class="wpstg-system-info-card-title">
                             <?php echo esc_html(sprintf('%s (%d)', $section['sectionName'], count($section['storageProviders']))); ?>
                         </h3>
@@ -120,7 +120,7 @@ $assets            = WPStaging::make(Assets::class);
                         <div class="wpstg-system-info-staging-sites-grid">
                             <?php foreach ($section['storageProviders'] as $index => $provider) : ?>
                                 <?php $toggleId = 'storage-provider-' . $index; ?>
-                                <div class="wpstg-system-info-staging-site-card">
+                                <div class="wpstg-system-info-staging-site-card wpstg-card wpstg-system-info-card-body wpstg-w-[unset]">
                                     <div class="wpstg-system-info-staging-site-header wpstg-toggle-header" data-toggle-target="<?php echo esc_attr($toggleId); ?>">
                                         <h4 class="wpstg-system-info-staging-site-title">
                                             <?php $assets->renderSvg($provider['id'], 'wpstg-storages-icon'); ?>
@@ -175,7 +175,7 @@ $assets            = WPStaging::make(Assets::class);
                     <div class="wpstg-system-info-header wpstg-logs-header">
                         <h3 class="wpstg-system-info-card-title"><?php esc_html_e('WP Staging Logs', 'wp-staging'); ?></h3>
                         <div class="wpstg-logs-action-container">
-                            <a class="wpstg-button wpstg-blue-primary" href="javascript:void(0)" title="<?php esc_attr_e('Copy WP Staging Logs', 'wp-staging'); ?>" onclick="WPStaging.copyTextToClipboard(this)" data-wpstg-source="#wpstg-debug-logs-textarea">
+                            <a class="wpstg-button wpstg-blue-primary" href="javascript:void(0)" title="<?php esc_attr_e('Copy WP Staging Logs', 'wp-staging'); ?>" data-wpstg-action="copy-text" data-wpstg-source="#wpstg-debug-logs-textarea">
                                 <?php $assets->renderSvg('file', 'wpstg--dashicons'); ?>
                                 <?php esc_html_e('Copy', 'wp-staging'); ?>
                             </a>
@@ -193,7 +193,7 @@ $assets            = WPStaging::make(Assets::class);
                     <div class="wpstg-system-info-header wpstg-logs-header">
                         <h3 class="wpstg-system-info-card-title"><?php esc_html_e('PHP debug.log', 'wp-staging'); ?></h3>
                         <div class="wpstg-logs-action-container">
-                            <a class="wpstg-button wpstg-blue-primary" href="javascript:void(0)" title="<?php esc_attr_e('Copy PHP debug.log', 'wp-staging'); ?>" onclick="WPStaging.copyTextToClipboard(this)" data-wpstg-source="#wpstg-php-debug-logs-textarea">
+                            <a class="wpstg-button wpstg-blue-primary" href="javascript:void(0)" title="<?php esc_attr_e('Copy PHP debug.log', 'wp-staging'); ?>" data-wpstg-action="copy-text" data-wpstg-source="#wpstg-php-debug-logs-textarea">
                                 <?php $assets->renderSvg('file', 'wpstg--dashicons'); ?>
                                 <?php esc_html_e('Copy', 'wp-staging'); ?>
                             </a>

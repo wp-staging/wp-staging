@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Dto\Traits;
 
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\JobDataDto;
@@ -196,55 +197,55 @@ trait RemoteUploadTrait
     /** @return bool */
     public function isUploadToGoogleDrive(): bool
     {
-        return in_array('googleDrive', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_GOOGLE_DRIVE, $this->getStorages()) || in_array('googleDrive', $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToAmazonS3(): bool
     {
-        return in_array('amazonS3', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_AMAZON_S3, $this->getStorages()) || in_array('amazonS3', $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToSftp(): bool
     {
-        return in_array('sftp', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_SFTP, $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToWasabi(): bool
     {
-        return in_array('wasabi-s3', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_WASABI_S3, $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToDigitalOceanSpaces(): bool
     {
-        return in_array('digitalocean-spaces', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_DIGITALOCEAN_SPACES, $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToGenericS3(): bool
     {
-        return in_array('generic-s3', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_GENERIC_S3, $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToDropbox(): bool
     {
-        return in_array('dropbox', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_DROPBOX, $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToOneDrive(): bool
     {
-        return in_array('one-drive', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_ONE_DRIVE, $this->getStorages());
     }
 
     /** @return bool */
     public function isUploadToPCloud(): bool
     {
-        return in_array('pcloud', $this->getStorages());
+        return in_array(Providers::IDENTIFIER_PCLOUD, $this->getStorages());
     }
 
     /**

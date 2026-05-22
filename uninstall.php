@@ -338,6 +338,7 @@ class Uninstall
             'wpstg_send_email_as_html',
             'wpstg_cli_notice_hidden_forever',
             'wpstg_cli_dock_cta_shown',
+            'wpstg_completed_upgrades',
         ];
     }
 
@@ -354,14 +355,18 @@ class Uninstall
             'wpstg_license_key',
             'wpstg_license_status',
             'wpstg_pro_latest_version',
-            'wpstg_googledrive',
+            'wpstg_googledrive', //Legacy
+            'wpstg_google-drive',
             'wpstg_dropbox',
             'wpstg_one-drive',
             'wpstg_pcloud',
-            'wpstg_amazons3',
+            'wpstg_amazons3', //Legacy
+            'wpstg_amazon-s3',
             'wpstg_sftp',
+            'wpstg_digitalocean', //Legacy
             'wpstg_digitalocean-spaces',
-            'wpstg_wasabi',
+            'wpstg_wasabi', //Legacy
+            'wpstg_wasabi-s3',
             'wpstg_generic-s3',
             'wpstg_backup_schedules',
             'wpstg_backup_schedules_send_error_report',

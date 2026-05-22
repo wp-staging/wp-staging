@@ -51,6 +51,9 @@
         <?php if (!empty($isDataNavigatable)) : ?>
             data-navigatable='<?php echo esc_attr($isDataNavigatable); ?>'
         <?php endif; ?>
+        <?php if (!empty($displayDependency)) : ?>
+            data-wpstg-display-dependency="true"
+        <?php endif; ?>
         <?php if (!empty($onChange)) : ?>
             onchange='<?php echo esc_attr($onChange); ?>'
         <?php endif; ?>

@@ -189,9 +189,9 @@ $storagesPrefix = 'storage-';
                         </div>
                         <?php
                         $attributes = [
-                            'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
-                            'onChange'   => 'WPStaging.handleDisplayDependencies(this)',
-                            'isDisabled' => !$isProVersion,
+                            'classes'           => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
+                            'displayDependency' => true,
+                            'isDisabled'        => !$isProVersion,
                         ];
                         Checkbox::render('wpstgSmartExclusion', 'smartExclusion', '', false, $attributes);
                         ?>
@@ -251,9 +251,9 @@ $storagesPrefix = 'storage-';
                     <label>
                         <?php
                         $attributes = [
-                            'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
-                            'onChange'   => 'WPStaging.handleDisplayDependencies(this)',
-                            'isDisabled' => ($hasSchedule && !$isProVersion),
+                            'classes'           => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
+                            'displayDependency' => true,
+                            'isDisabled'        => ($hasSchedule && !$isProVersion),
                         ];
                         Checkbox::render('repeatBackupOnSchedule', 'repeatBackupOnSchedule', '1', true, $attributes);
                         ?>
