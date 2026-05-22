@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 use WPStaging\Staging\CloneOptions;
@@ -166,115 +167,43 @@ class PreserveDataFirstStep extends JobExecutable
     {
         $storages = [];
 
-        /**
-         * Google Drive Options
-         * @see WPStaging\Pro\Backup\Storage\GoogleDrive\Auth::getOptionName for option name
-         */
-        $googleDrive = $this->getStagingSiteOption('wpstg_googledrive');
-
-        /**
-         * Amazon S3 Options
-         * @see WPStaging\Pro\Backup\Storage\Amazon\S3::getOptionName for option name
-         */
-        $amazonS3 = $this->getStagingSiteOption('wpstg_amazons3');
-
-        /**
-         * sFTP/FTP Options
-         * @see WPStaging\Pro\Backup\Storage\SFTP\Auth::getOptionName for option name
-         */
-        $sftp = $this->getStagingSiteOption('wpstg_sftp');
-
-        /**
-         * Digital Ocean Spaces Options
-         * @see WPStaging\Pro\Backup\Storage\DigitalOceanSpaces\Auth::getOptionName for option name
-         */
-        $digitalOceanSpaces = $this->getStagingSiteOption('wpstg_digitalocean-spaces');
-
-        /**
-         * Wasabi S3 Options
-         * @see WPStaging\Pro\Backup\Storage\Wasabi\Auth::getOptionName for option name
-         */
-        $wasabiS3 = $this->getStagingSiteOption('wpstg_wasabi');
-
-        /**
-         * Generic S3 / Other S3 Compat Options.
-         * @see WPStaging\Pro\Backup\Storage\GenericS3\Auth::getOptionName for option name
-         */
-        $genericS3 = $this->getStagingSiteOption('wpstg_generic-s3');
-
-        /**
-         * Dropbox Options.
-         * @see WPStaging\Pro\Backup\Storage\Dropbox\Auth::getOptionName for option name
-         */
-        $dropbox = $this->getStagingSiteOption('wpstg_dropbox');
-
-        /**
-         * Microsoft OneDrive Options.
-         * @see WPStaging\Pro\Backup\Storage\OneDrive\Auth::getOptionName for option name
-         */
-        $oneDrive = $this->getStagingSiteOption('wpstg_one-drive');
-
-        /**
-         * pCloud Options.
-         * @see WPStaging\Pro\Backup\Storage\PCloud\Auth::getOptionName for option name
-         */
-        $pCloudOption = $this->getStagingSiteOption('wpstg_pcloud');
-
-        if ($googleDrive === false) {
-            $this->log("Preserve Data: Failed to get Google Drive Settings");
-        } else {
-            $storages['googleDrive'] = $googleDrive;
-        }
-
-        if ($amazonS3 === false) {
-            $this->log("Preserve Data: Failed to get Amazon S3 Settings");
-        } else {
-            $storages['amazonS3'] = $amazonS3;
-        }
-
-        if ($sftp === false) {
-            $this->log("Preserve Data: Failed to get sFTP/FTP Settings");
-        } else {
-            $storages['sftp'] = $sftp;
-        }
-
-        if ($digitalOceanSpaces === false) {
-            $this->log("Preserve Data: Failed to get Digital Ocean Spaces Settings");
-        } else {
-            $storages['digitalOceanSpaces'] = $digitalOceanSpaces;
-        }
-
-        if ($wasabiS3 === false) {
-            $this->log("Preserve Data: Failed to get Wasabi S3 Settings");
-        } else {
-            $storages['wasabiS3'] = $wasabiS3;
-        }
-
-        if ($genericS3 === false) {
-            $this->log("Preserve Data: Failed to get Generic S3 Settings");
-        } else {
-            $storages['genericS3'] = $genericS3;
-        }
-
-        if ($dropbox === false) {
-            $this->log("Preserve Data: Failed to get Dropbox Settings");
-        } else {
-            $storages['dropbox'] = $dropbox;
-        }
-
-        if ($oneDrive === false) {
-            $this->log("Preserve Data: Failed to get Microsoft OneDrive Settings");
-        } else {
-            $storages['oneDrive'] = $oneDrive;
-        }
-
-        if ($pCloudOption === false) {
-            $this->log("Preserve Data: Failed to get pCloud Settings");
-        } else {
-            $storages['pCloud'] = $pCloudOption;
+        foreach (Providers::STORAGE_LABELS as $identifier => $label) {
+            $value = $this->getStagingSiteStorageOption($identifier);
+            if ($value === false) {
+                $this->log("Preserve Data: Failed to get {$label} Settings");
+            } else {
+                $storages[$identifier] = $value;
+            }
         }
 
         return $storages;
+    }
+
+    /**
+     * Get a storage option from the staging database, checking both the new hyphenated
+     * and legacy option names for backward compatibility with older staging sites.
+     *
+     * @param string $identifier The storage identifier (e.g. 'google-drive')
+     * @return string|null|false The option value, null if not found, false on error
+     */
+    protected function getStagingSiteStorageOption($identifier)
+    {
+        $value = $this->getStagingSiteOption('wpstg_' . $identifier);
+
+        // Fall back to legacy names only when the new-format option is absent (null), not empty —
+        // empty means the user cleared credentials intentionally.
+        if ($value !== null) {
+            return $value;
+        }
+
+        if (isset(Providers::LEGACY_OPTION_MAP[$identifier])) {
+            $legacyValue = $this->getStagingSiteOption(Providers::LEGACY_OPTION_MAP[$identifier]);
+            if ($legacyValue !== null) {
+                return $legacyValue;
+            }
+        }
+
+        return $value;
     }
 
     /**

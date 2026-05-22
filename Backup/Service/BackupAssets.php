@@ -32,7 +32,7 @@ class BackupAssets
             $this->assets->getAssetsUrl($asset),
             ["wpstg-common"],
             $this->assets->getAssetsVersion($asset),
-            false
+            $this->assets->getScriptLoadingStrategy()
         );
 
         $asset = $this->assets->getJsAssetsFileName('backup/wpstg-backup');
@@ -41,7 +41,7 @@ class BackupAssets
             $this->assets->getAssetsUrl($asset),
             ["wpstg-resumable"],
             $this->assets->getAssetsVersion($asset),
-            false
+            $this->assets->getScriptLoadingStrategy()
         );
     }
 }

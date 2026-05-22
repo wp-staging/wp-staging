@@ -67,7 +67,7 @@ abstract class QueryInserter
                 $realMaxAllowedPacket = $this->getNumberFromResult($row);
             }
             $limitedMaxAllowedPacket = max(16 * KB_IN_BYTES, 0.9 * $realMaxAllowedPacket);
-            $limitedMaxAllowedPacket = min(2 * MB_IN_BYTES, $limitedMaxAllowedPacket);
+            $limitedMaxAllowedPacket = min(256 * KB_IN_BYTES, $limitedMaxAllowedPacket);
         } catch (\Throwable $e) {
             $limitedMaxAllowedPacket = (1 * MB_IN_BYTES) * 0.9;
         }
@@ -122,7 +122,7 @@ abstract class QueryInserter
                 'Query: "%s" was skipped because it exceeded the mySQL maximum allowed packet size. Query size: %s | max_allowed_packet: %s. Follow this link: %s for details ',
                 substr($query, 0, 1000) . '...',
                 size_format(strlen($query)),
-                size_format($this->limitedMaxAllowedPacket),
+                size_format($this->realMaxAllowedPacket),
                 'https://wp-staging.com/docs/increase-max_allowed_packet-size-in-mysql/'
             );
             return true;

@@ -6,6 +6,7 @@ use WP_REST_Request;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Rest\Rest;
+use WPStaging\Framework\Traits\SetTimeLimitTrait;
 
 /**
  * This class is used to push the stored sse events for the background jobs.
@@ -13,6 +14,8 @@ use WPStaging\Framework\Rest\Rest;
  */
 class BackgroundLogger
 {
+    use SetTimeLimitTrait;
+
     /**
      * @var SseEventCache
      */
@@ -89,8 +92,18 @@ class BackgroundLogger
      */
     public function restEventStream(WP_REST_Request $request)
     {
+        // Origin-side compression buffers the whole response and prevents Cloudflare from
+        // streaming any bytes before the connection closes.
         @ini_set('zlib.output_compression', '0');
         @ini_set('output_buffering', 'off');
+        @ini_set('implicit_flush', '1');
+        $this->setTimeLimit(0);
+        @ignore_user_abort(true);
+        if (function_exists('apache_setenv')) {
+            @apache_setenv('no-gzip', '1');
+            @apache_setenv('dont-vary', '1');
+        }
+
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -107,6 +120,9 @@ class BackgroundLogger
 
         $this->setHeaders();
 
+        // 2 KiB padding flushes past Cloudflare's response-buffer threshold for first bytes.
+        echo ":" . str_repeat(' ', 2048) . "\n\n"; // phpcs:ignore
+        echo "retry: 3000\n\n"; // phpcs:ignore
         echo ": connected\n\n"; // phpcs:ignore
         flush();
 
@@ -138,7 +154,12 @@ class BackgroundLogger
             $this->closeStream();
         }
 
+        $lastHeartbeat = microtime(true);
         while (microtime(true) < $end) {
+            if (connection_aborted()) {
+                $this->closeStream();
+            }
+
             if (!$this->isJobRunning()) {
                 $this->closeStream();
             }
@@ -179,6 +200,14 @@ class BackgroundLogger
                 }
 
                 $this->output($jobId, '', json_encode($event));
+            }
+
+            // 1 s heartbeat to keep proxies/CDNs from dropping the connection during idle phases.
+            $now = microtime(true);
+            if ($now - $lastHeartbeat >= 1.0) {
+                echo ": ping " . $now . "\n\n"; // phpcs:ignore
+                flush();
+                $lastHeartbeat = $now;
             }
 
             $offset = $total;
@@ -283,9 +312,19 @@ class BackgroundLogger
             return;
         }
 
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
+        header('Content-Type: text/event-stream; charset=UTF-8');
+
+        // no-store + no-transform are load-bearing for Cloudflare (no-cache alone won't disable
+        // Auto Minify / Polish / Brotli rewriting on the edge).
+        header('Cache-Control: private, no-cache, no-store, no-transform, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('CDN-Cache-Control: no-store');
+        header('Cloudflare-CDN-Cache-Control: no-store');
+        header('Surrogate-Control: no-store');
+        header('X-LiteSpeed-Cache-Control: no-cache');
+        header('X-Accel-Buffering: no');
         header('Connection: keep-alive');
-        header('X-Accel-Buffering: no'); // For nginx
+        header('Keep-Alive: timeout=300');
     }
 }

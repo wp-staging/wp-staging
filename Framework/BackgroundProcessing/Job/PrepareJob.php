@@ -164,11 +164,15 @@ abstract class PrepareJob
      */
     public function act($args)
     {
+        $jobIdForLog = isset($args['jobId']) ? (string)$args['jobId'] : 'unknown';
+        debug_log('[BG Queue] act() start: jobId=' . $jobIdForLog . ' class=' . static::class, 'info', false);
+
         try {
             $this->processLock->checkProcessLocked();
         } catch (ProcessLockedException $e) {
             $this->queueAction($args);
 
+            debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=process-locked (re-queued)', 'info', false);
             return new WP_Error(400, $e->getMessage());
         }
 
@@ -186,7 +190,6 @@ abstract class PrepareJob
                 $this->job->persist();
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
             } catch (Exception $e) {
-                error_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
                 debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
                 $this->handlingError = true;
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
@@ -208,6 +211,7 @@ abstract class PrepareJob
 
                 $this->handleError($errorMessage, $args);
 
+                debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=error', 'info', false);
                 return new WP_Error(400, $errorMessage);
             }
 
@@ -232,6 +236,7 @@ abstract class PrepareJob
         // We're not done, queue a new Action to keep processing this job if it is not cancelled.
         $this->queueAction($args);
 
+        debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=chunk-done (re-queued)', 'info', false);
         return $taskResponseDto;
     }
 

@@ -9,7 +9,7 @@
 ?>
 
 <div class="wpstg-navbar-wrapper wpstg-navigation-menu-mobile">
-    <button class="wpstg-navbar-toggler wpstg-mr-10px" type="button" onclick="WPStaging.handleToggleElement(this)" data-wpstg-target="#wpstg-navbar-menu">
+    <button class="wpstg-navbar-toggler wpstg-mr-10px" type="button" data-wpstg-action="toggle" data-wpstg-target="#wpstg-navbar-menu">
         <span class="wpstg-hamburger-icon"></span>
     </button>
     <div id="wpstg-navbar-menu" class="wpstg-navbar-menu hidden">

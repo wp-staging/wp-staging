@@ -2,8 +2,12 @@
 
 namespace WPStaging\Backup;
 
+use WPStaging\Backup\Storage\Traits\StorageIdNormalizerTrait;
+
 class BackupRetentionHandler
 {
+    use StorageIdNormalizerTrait;
+
     /**
      * @var string
      */
@@ -20,6 +24,7 @@ class BackupRetentionHandler
      */
     public function updateBackupsRetentionOptions(array $backups): bool
     {
+        $backups = $this->normalizeStorageIds($backups);
         return update_option(self::OPTION_BACKUPS_RETENTION, $backups);
     }
 
@@ -42,6 +47,16 @@ class BackupRetentionHandler
         }
 
         $backups = (array) get_option(self::OPTION_BACKUPS_RETENTION, []);
+        $originalBackups = $backups;
+        $backups = $this->normalizeStorageIds($backups);
+
+        // Persist normalized storage IDs for future lookups
+        if ($backups !== $originalBackups) {
+            update_option(self::OPTION_BACKUPS_RETENTION, $backups);
+        }
+
+        // Normalize the storage parameter as well
+        $storage = $this->normalizeStorageId($storage);
 
         if ($storage) {
             $backups = array_filter($backups, function ($backup) use ($storage) {
@@ -60,6 +75,9 @@ class BackupRetentionHandler
     public function unsetStorageFromBackupsRetention(string $backupId, string $storageToRemove): bool
     {
         $this->backupsRetention = $this->getBackupsRetention();
+
+        // Normalize the storage to remove
+        $storageToRemove = $this->normalizeStorageId($storageToRemove);
 
         if (!isset($this->backupsRetention[$backupId])) {
             $backupId = $this->getBackupId($backupId);
@@ -91,6 +109,30 @@ class BackupRetentionHandler
         $this->updateBackupsRetentionOptions($this->backupsRetention);
 
         return true;
+    }
+
+    /**
+     * Normalize storage IDs in backups array for backward compatibility
+     * Converts legacy storage IDs to new hyphenated identifiers (e.g. googleDrive -> google-drive)
+     *
+     * @param array $backups
+     * @return array
+     */
+    private function normalizeStorageIds(array $backups): array
+    {
+        foreach ($backups as $backupId => &$backup) {
+            if (!isset($backup['storages']) || !is_array($backup['storages'])) {
+                continue;
+            }
+
+            $backup['storages'] = array_unique(
+                array_map([$this, 'normalizeStorageId'], $backup['storages'])
+            );
+        }
+
+        unset($backup);
+
+        return $backups;
     }
 
     private function getBackupId(string $backupName): string

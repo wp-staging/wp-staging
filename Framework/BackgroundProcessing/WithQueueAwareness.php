@@ -74,8 +74,8 @@ trait WithQueueAwareness
             $useGetMethod = $this->checkGetRequestNeededForQueue($ajaxUrl, $bodyData);
             // We already sent the POST method request. Let not double sent request if we continue use POST method
             $requestSent  = !$useGetMethod;
-            // Let set the transient for 24 hours
-            set_site_transient(QueueProcessor::TRANSIENT_REQUEST_GET_METHOD, $useGetMethod ? 'Yes' : 'No', 60 * 60 * 24);
+
+            set_site_transient(QueueProcessor::TRANSIENT_REQUEST_GET_METHOD, $useGetMethod ? 'Yes' : 'No', HOUR_IN_SECONDS);
             debug_log('[WPSTG Fire Ajax] GET method is ' . ($useGetMethod ? 'needed' : 'not needed') . ' for Queue AJAX request.', 'info', false);
         } else {
             $useGetMethod = $useGetMethod === 'Yes';
@@ -93,6 +93,7 @@ trait WithQueueAwareness
         // If filter is present lets override it!
         $useGetMethod = Hooks::applyFilters(QueueProcessor::FILTER_REQUEST_FORCE_GET_METHOD, $useGetMethod);
 
+        $blocking = $this->useBlockingRequest();
         debug_log('[WPSTG Fire Ajax] Firing AJAX request to process Queue actions. GET method: ' . ($useGetMethod ? 'Yes' : 'No'), 'debug', false);
 
         $response = wp_remote_request(esc_url_raw($ajaxUrl), [
@@ -101,8 +102,8 @@ trait WithQueueAwareness
                 $this->getHttpAuthHeaders()
             ),
             'method'    => $useGetMethod ? 'GET' : 'POST',
-            'blocking'  => $this->useBlockingRequest(),
-            'timeout'   => $this->useBlockingRequest() ? 30 : 0.01, // 0.01 for a non-blocking request
+            'blocking'  => $blocking,
+            'timeout'   => $blocking ? 30 : 0.01, // 0.01 for a non-blocking request
             'cookies'   => $this->getLoginRelatedCookies(),
             'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
@@ -115,15 +116,39 @@ trait WithQueueAwareness
          */
         if ($response instanceof WP_Error) {
             \WPStaging\functions\debug_log(json_encode([
-                'root'    => 'Queue processing admin-ajax request failed.',
-                'class'   => get_class($this),
-                'code'    => $response->get_error_code(),
-                'message' => $response->get_error_message(),
-                'data'    => $response->get_error_data(),
+                'root'     => 'Queue processing admin-ajax request failed.',
+                'class'    => get_class($this),
+                'code'     => $response->get_error_code(),
+                'message'  => $response->get_error_message(),
+                'data'     => $response->get_error_data(),
+                'blocking' => $blocking,
+                'method'   => $useGetMethod ? 'GET' : 'POST',
             ], JSON_PRETTY_PRINT));
+
+            delete_site_transient(QueueProcessor::TRANSIENT_REQUEST_GET_METHOD);
+            $this->recordFireFailure();
 
             return false;
         }
+
+        if ($blocking && is_array($response)) {
+            $code = isset($response['response']['code']) ? (int)$response['response']['code'] : 0;
+            if ($code < 200 || $code >= 300) {
+                $failures = (int)get_site_transient(QueueProcessor::TRANSIENT_FIRE_FAILURE_COUNT) + 1;
+                debug_log('[BG Queue] fire failed: HTTP code=' . $code . ' (failure ' . $failures . ')', 'info', false);
+                delete_site_transient(QueueProcessor::TRANSIENT_REQUEST_GET_METHOD);
+                $this->recordFireFailure();
+                return false;
+            }
+
+            if ((int)get_site_transient(QueueProcessor::TRANSIENT_FIRE_FAILURE_COUNT) > 0) {
+                debug_log('[BG Queue] fire mode -> non-blocking (loopback healthy, code=' . $code . ')', 'info', false);
+                delete_site_transient(QueueProcessor::TRANSIENT_FIRE_FAILURE_COUNT);
+            }
+        }
+
+        // Stamped only after error checks so a failed fire cannot spoof itself as acknowledged.
+        set_site_transient(QueueProcessor::TRANSIENT_LAST_FIRE_TIMESTAMP, time(), QueueProcessor::TRANSIENT_FIRE_STATE_TTL);
 
         $this->didFireAjaxAction = true;
 
@@ -165,14 +190,14 @@ trait WithQueueAwareness
      */
     private function checkGetRequestNeededForQueue(string $ajaxUrl, $bodyData = null): bool
     {
-        // Let send a blocking request to check if POST method works
+        // 5s keeps admin UI responsive on broken loopbacks; the stall detector picks up the slack.
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
             'headers'   => array_merge(
                 ['X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS],
                 $this->getHttpAuthHeaders()
             ),
             'blocking'  => true,
-            'timeout'   => 10,
+            'timeout'   => 5,
             'cookies'   => $this->getLoginRelatedCookies(),
             'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
@@ -207,13 +232,33 @@ trait WithQueueAwareness
 
     private function useBlockingRequest(): bool
     {
-        // Early bail if we are doing ajax request
         if (defined('DOING_AJAX') && DOING_AJAX) {
             return false;
         }
 
-        // Only use blocking request if we are in a local environment
-        return function_exists('wp_get_environment_type') && wp_get_environment_type() === 'local';
+        if (function_exists('wp_get_environment_type') && wp_get_environment_type() === 'local') {
+            return true;
+        }
+
+        return (int)get_site_transient(QueueProcessor::TRANSIENT_FIRE_FAILURE_COUNT) >= QueueProcessor::ADAPTIVE_BLOCKING_THRESHOLD;
+    }
+
+    /**
+     * @return void
+     */
+    private function recordFireFailure()
+    {
+        $failures = (int)get_site_transient(QueueProcessor::TRANSIENT_FIRE_FAILURE_COUNT);
+        if ($failures >= 10) {
+            return;
+        }
+
+        $newFailures = $failures + 1;
+        set_site_transient(QueueProcessor::TRANSIENT_FIRE_FAILURE_COUNT, $newFailures, QueueProcessor::TRANSIENT_FIRE_STATE_TTL);
+
+        if ($failures < QueueProcessor::ADAPTIVE_BLOCKING_THRESHOLD && $newFailures >= QueueProcessor::ADAPTIVE_BLOCKING_THRESHOLD) {
+            debug_log('[BG Queue] fire mode -> blocking (consecutive silent failures=' . $newFailures . ')', 'info', false);
+        }
     }
 
     /**

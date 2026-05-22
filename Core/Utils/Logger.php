@@ -14,6 +14,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\FormatTrait;
@@ -81,6 +82,9 @@ class Logger implements LoggerInterface, ShutdownableInterface
      */
     private $sseEventCache = null;
 
+    /** @var bool */
+    private $sseSetupAttempted = false;
+
     /**
      * Logger constructor.
      *
@@ -129,6 +133,35 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
         $this->sseEventCache->setJobId($jobId);
         $this->sseEventCache->load();
+        $this->sseSetupAttempted = true;
+    }
+
+    /**
+     * Backstop for Logger instances that were not wired up via setupSseLogger() (alt DI keys,
+     * direct `new Logger()`, stale OPcache). SSE is best-effort, must not break disk logging.
+     *
+     * @return void
+     */
+    private function lazyAttachSseEventCache()
+    {
+        if ($this->sseSetupAttempted || $this->sseEventCache !== null) {
+            return;
+        }
+
+        $this->sseSetupAttempted = true;
+
+        try {
+            $jobId = WPStaging::make(JobTransientCache::class)->getJobId();
+            if (empty($jobId)) {
+                return;
+            }
+
+            $this->sseEventCache = WPStaging::make(SseEventCache::class);
+            $this->sseEventCache->setJobId($jobId);
+            $this->sseEventCache->load();
+        } catch (\Throwable $e) {
+            // best-effort
+        }
     }
 
     /**
@@ -198,6 +231,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
         $this->messages[] = $log;
 
+        $this->lazyAttachSseEventCache();
+
         if ($this->sseEventCache !== null) {
             $this->sseEventCache->push($log);
         }
@@ -210,6 +245,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
      */
     public function pushSseEvent(string $type, array $data)
     {
+        $this->lazyAttachSseEventCache();
+
         if ($this->sseEventCache !== null) {
             $this->sseEventCache->push([
                 "type" => $type,

@@ -3,6 +3,9 @@
 /**
  * Manages the registration and hooking of the Background Processing support feature.
  *
+ * @see dev/docs/background-processing/self-healing.md for the layered
+ *      queue recovery architecture.
+ *
  * @package WPStaging\Framework\BackgroundProcessing
  */
 
@@ -23,10 +26,26 @@ use function WPStaging\functions\debug_log;
  */
 class BackgroundProcessingServiceProvider extends FeatureServiceProvider
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     const ACTION_QUEUE_MAINTAIN = 'wpstg_queue_maintain';
+
+    /** @var string */
+    const TRANSIENT_STALL_PROBE_LOCK = 'wpstg_queue_stall_probe_lock';
+
+    /** @var string */
+    const TRANSIENT_QUEUE_HAS_WORK = 'wpstg_queue_has_work';
+
+    /** @var int */
+    const QUEUE_HAS_WORK_TTL = DAY_IN_SECONDS;
+
+    /** @var int */
+    const STALL_PROBE_THROTTLE_SECONDS = 15;
+
+    /** @var int */
+    const STALL_IDLE_SECONDS = 20;
+
+    /** @var int Age in seconds after which a STATUS_PROCESSING row is considered abandoned. Must exceed the longest expected dispatch window. */
+    const STUCK_PROCESSING_SECONDS = 60;
 
     /**
      * {@inheritdoc}
@@ -63,6 +82,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
         $this->registerFeatureDetection();
         $this->scheduleQueueMaintenance();
         $this->setupQueueProcessingEntrypoints();
+        $this->setupStallDetector();
 
         return true;
     }
@@ -158,6 +178,120 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
             }
         }
         */
+    }
+
+    /**
+     * Throttled init-time recovery for environments where the non-blocking loopback
+     * is silently dropped (WAF, hairpin DNS, proxy) and WP-Cron is unavailable.
+     */
+    private function setupStallDetector()
+    {
+        add_action('init', [$this, 'detectAndRecoverStall'], 100);
+    }
+
+    /**
+     * @return void
+     */
+    public function detectAndRecoverStall()
+    {
+        if (!get_site_transient(self::TRANSIENT_QUEUE_HAS_WORK)) {
+            return;
+        }
+
+        if (function_exists('wp_doing_cron') && wp_doing_cron()) {
+            return;
+        }
+
+        if (defined('DOING_AJAX') && DOING_AJAX) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            $requestAction = isset($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';
+            if ($requestAction === QueueProcessor::ACTION_QUEUE_PROCESS || $requestAction === FeatureDetection::ACTION_AJAX_TEST) {
+                return;
+            }
+        }
+
+        if (get_site_transient(self::TRANSIENT_STALL_PROBE_LOCK)) {
+            return;
+        }
+
+        set_site_transient(self::TRANSIENT_STALL_PROBE_LOCK, 1, self::STALL_PROBE_THROTTLE_SECONDS);
+
+        try {
+            /** @var Queue $queue */
+            $queue = $this->container->make(Queue::class);
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        $revived = 0;
+        try {
+            $breakpoint = $this->getStuckProcessingBreakpoint();
+            if ($breakpoint !== null) {
+                $revived = (int)$queue->markDanglingAs(Queue::STATUS_READY, $breakpoint, true);
+                if ($revived > 0) {
+                    debug_log('[Background Processing] Revived ' . $revived . ' stuck-in-processing action(s). Claim age threshold: ' . self::STUCK_PROCESSING_SECONDS . 's.', 'info', true);
+                }
+            }
+        } catch (\Throwable $e) {
+            // best-effort
+        }
+
+        if ((int)$queue->count(Queue::STATUS_READY) === 0) {
+            if ((int)$queue->count(Queue::STATUS_PROCESSING) === 0) {
+                delete_site_transient(self::TRANSIENT_QUEUE_HAS_WORK);
+            }
+
+            return;
+        }
+
+        if ($revived > 0) {
+            $this->recoverStalledQueue($queue, 0, $revived);
+            return;
+        }
+
+        $lastUpdate = $queue->getLastUpdatedAtTimestamp();
+        if ($lastUpdate === 0) {
+            // Legacy row predating insert-time updated_at stamping; treat as stalled.
+            $this->recoverStalledQueue($queue, 0, 0);
+            return;
+        }
+
+        $idleSeconds = time() - $lastUpdate;
+        if ($idleSeconds < self::STALL_IDLE_SECONDS) {
+            return;
+        }
+
+        $this->recoverStalledQueue($queue, $idleSeconds, 0);
+    }
+
+    /**
+     * @return void
+     */
+    private function recoverStalledQueue(Queue $queue, $idleSeconds, $revivedCount)
+    {
+        debug_log('[Background Processing] Stall detected: ready=' . $queue->count(Queue::STATUS_READY) . ' idle_seconds=' . (int)$idleSeconds . ' revived=' . (int)$revivedCount . '. Recovering via inline process().', 'info', true);
+
+        try {
+            /** @var QueueProcessor $processor */
+            $processor = $this->container->make(QueueProcessor::class);
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        $processor->process();
+    }
+
+    /**
+     * @return \DateTimeImmutable|null Null when caller should skip the revive pass this cycle.
+     */
+    private function getStuckProcessingBreakpoint()
+    {
+        try {
+            $breakpoint = new \DateTimeImmutable(current_time('mysql'));
+            return $breakpoint->setTimestamp($breakpoint->getTimestamp() - self::STUCK_PROCESSING_SECONDS);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
