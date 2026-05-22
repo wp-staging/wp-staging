@@ -72,10 +72,7 @@ class SystemInfoParser
         $storages          = [];
 
         foreach ($providersInstance->getStorages() as $storage) {
-            // Map storage ID to WordPress option name
-            // Pattern: googleDrive -> wpstg_googledrive, amazonS3 -> wpstg_amazons3
-            $identifier = strtolower(str_replace(['-'], [''], $storage['id']));
-            $optionName = 'wpstg_' . $identifier;
+            $optionName = 'wpstg_' . strtolower($storage['id']);
 
             $storages[] = [
                 'id'         => $storage['id'],

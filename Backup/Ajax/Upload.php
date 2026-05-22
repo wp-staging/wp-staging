@@ -117,19 +117,37 @@ class Upload extends AbstractTemplateComponent
         $resumableCurrentChunkSize = isset($_GET['resumableCurrentChunkSize']) ? $this->sanitize->sanitizeInt($_GET['resumableCurrentChunkSize'], true) : 0;
         $resumableTotalSize        = isset($_GET['resumableTotalSize']) ? $this->sanitize->sanitizeInt($_GET['resumableTotalSize'], true) : 0;
         $resumableTotalChunks      = isset($_GET['resumableTotalChunks']) ? $this->sanitize->sanitizeInt($_GET['resumableTotalChunks'], true) : 0;
-        $uniqueIdentifierSuffix    = isset($_GET['uniqueIdentifierSuffix']) ? $this->sanitize->sanitizeString($_GET['uniqueIdentifierSuffix']) : '';
+        $rawSuffix                 = isset($_GET['uniqueIdentifierSuffix']) ? $this->sanitize->sanitizeString($_GET['uniqueIdentifierSuffix']) : '';
+        $uniqueIdentifierSuffix    = ctype_digit($rawSuffix) ? $rawSuffix : '';
         $resumableIdentifier       = isset($_GET['resumableIdentifier']) ? sanitize_file_name($_GET['resumableIdentifier']) : '';
         $resumableFilename         = isset($_GET['resumableFilename']) ? sanitize_file_name($_GET['resumableFilename']) : '';
         $resumableRelativePath     = isset($_GET['resumableRelativePath']) ? sanitize_file_name($_GET['resumableRelativePath']) : '';
 
-        $originalPath = $this->backupsFinder->getBackupsDirectory() . $resumableFilename;
+        if (!$this->filesystem->isWpstgBackupFile($resumableFilename) && !$this->isBackupPart($resumableFilename)) {
+            wp_send_json_error([
+                'message' => esc_html__('Invalid backup filename.', 'wp-staging'),
+            ], 400);
+        }
+
+        $backupsDirectory = $this->backupsFinder->getBackupsDirectory();
+
+        $originalPath = $backupsDirectory . $resumableFilename;
         if ($this->isBackupPart($originalPath) && file_exists($originalPath)) {
             wp_send_json_error([
                 'message' => __('This backup part exists already', 'wp-staging'),
             ], 409); // 409 status code for conflict
         }
 
-        $fullPath = $this->backupsFinder->getBackupsDirectory() . $uniqueIdentifierSuffix . $resumableFilename . '.uploading';
+        $fullPath = $backupsDirectory . $uniqueIdentifierSuffix . $resumableFilename . '.uploading';
+
+        $resolvedDir  = realpath(dirname($fullPath));
+        $resolvedBase = realpath(rtrim($backupsDirectory, '/\\'));
+        if ($resolvedDir === false || $resolvedBase === false || $resolvedDir !== $resolvedBase) {
+            wp_send_json_error([
+                'message' => esc_html__('Invalid upload path.', 'wp-staging'),
+            ], 400);
+        }
+
         // If neither uploading file or the upload prepared option that mean that the upload is not prepared and didn't pass through the OTP process!
         if (!file_exists($fullPath) && get_option(self::OPTION_UPLOAD_PREPARED) !== 'true') {
             wp_send_json_error([

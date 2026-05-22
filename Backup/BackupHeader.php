@@ -61,7 +61,7 @@ class BackupHeader
      *
      * @var string
      */
-    const BACKUP_VERSION = '2.0.0';
+    const BACKUP_VERSION = '2.1.0';
 
     /**
      * Original string should not exceed 64 characters for consistency

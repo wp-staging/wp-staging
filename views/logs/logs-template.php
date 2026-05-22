@@ -9,7 +9,7 @@ $selectorUniqueId = $logType ?? uniqid();
 
 ?>
 <div class="wpstg--logs--header">
-    <div>
+    <div class="wpstg-w-24">
         <label for="wpstg--logs--selector--<?php echo esc_attr($selectorUniqueId); ?>"></label>
         <select class="wpstg-input wpstg-input-sm wpstg--logs--selector" id="wpstg--logs--selector--<?php echo esc_attr($selectorUniqueId); ?>">
             <option value="all"><?php esc_html_e('All', 'wp-staging') ?></option>

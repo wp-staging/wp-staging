@@ -38,8 +38,14 @@ if (!function_exists('wpstgHandleMissingRequiredFile')) {
  */
 $pluginFilePath = empty($pluginFilePath) ? '' : $pluginFilePath;
 
+require_once __DIR__ . '/commonBootstrap.php';
+
 add_action('plugins_loaded', function () use ($pluginFilePath) {
     // Unused $pluginFilePath: Other code will fail if removed it
+    if (wpstgShouldSkipBootstrap()) {
+        return;
+    }
+
     try {
         $files = [
             __DIR__ . '/runtimeRequirements.php',

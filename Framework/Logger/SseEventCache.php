@@ -88,6 +88,9 @@ class SseEventCache
 
     public function push(array $log)
     {
+        // Reload to absorb concurrent appends from sibling Logger instances in the same request.
+        $this->load();
+
         $this->events[] = $log;
 
         $this->count++;
@@ -96,6 +99,12 @@ class SseEventCache
 
     public function load()
     {
+        // PHP's stat cache otherwise hides cross-process writes from the SSE polling loop.
+        $filePath = $this->cache->getFilePath();
+        if ($filePath !== '') {
+            clearstatcache(true, $filePath);
+        }
+
         if (!$this->cache->isValid()) {
             return;
         }

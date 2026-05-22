@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, restore, migration, staging, wordpress backup
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.8.0
+Stable tag: 4.8.1
 Requires PHP: 7.0
 
 Backup, restore, staging, and migration for WordPress. Create full-site backups and test updates safely. 100% Unit Tested.
@@ -271,44 +271,40 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.8.0 =
-* New: Add analytic events logging for Backup Explorer. #4954
-* New: Add filter configuration support for the standalone restore tool via JSON config file. #5051
-* New: Add option to create remote sync profiles which allow one click remote sync process. #4668
-* New: Add option to receive remote sync success notifications via emails and slack. #4668
-* Enh: Add Remote Sync promo video composition (EN + DE) under promo-video/. #5088
-* Enh: Add filter for custom search/replace in encoded database values (e.g. base64 JSON). #4931
-* Enh: Added a notification on backup download to verify the downloaded file size. #1786
-* Enh: Redesign remote sync flow to be smoother. #4668
-* Enh: Remove deprecated wpstg.backup.restore.exclude_plugins filter. Use wpstg.backup.restore.exclude_paths instead. #4892
-* Enh: Show "Not enough disk space" error when backup file archiving fails due to a disk-full condition, instead of a generic write-failure message. #3034
-* Fix: Add per-request cron integrity check that self-heals missing, orphaned, or wrong-recurrence WP Staging cron events (backup schedules, daily/weekly maintenance, queue processing) so scheduled backups keep running even when WP-Cron itself is broken. #5090
-* Fix: Cron warning shows only when scheduled backups are actually failing. #5058
-* Fix: Fixed edge cases that could cause some settings or backup information to load incorrectly, and improved validation and error handling in backup and staging workflows. #5070
-* Fix: Improved backup reliability on some hosts by ensuring backup progress continues correctly between requests. #5112
-* Fix: Preserve WP Staging Free plugin during backup restore when using Pro version. #4892
-* Fix: Prevent background backups from processing the database twice. #5009
-* Fix: Prevent fatal error and full-site crash when plugin files are missing or corrupted. #5074
-* Fix: Reject empty token on /wpstg/v1/sse-logs REST route to prevent unauthenticated log-stream connections when no job is active. #5097
-* Fix: SFTP connection test fails when run more than once. (Pro) #5029
-* Fix: Show actual Remote Sync error in UI instead of generic failure message and identify which server caused it. #5011
-* Fix: Skip optimizer copy when the destination (mu-plugins directory) is not writable. #4545
-* Fix: Staging delete modal overflows viewport when staging site has many database tables. #5071
-* Fix: Stored SFTP credentials, including SSH private keys, are now saved securely by default. #5048
-* Fix: Undefined variable notice of jobId from AnalyticsServiceProvider. #1503
-* Dev: Add logic to log generic analytic events. #4954
-* Dev: Add translation-audit helper script to find orphaned msgids and missing translations across .po files. #5106
-* Dev: Bump phpunit/phpunit, symfony/process, phpseclib/phpseclib, eslint, @typescript-eslint, and flatted dependencies. #5017
-* Dev: CI release prepare seeds dist/newsfeed-{en,de}.json from dev/releases-history/<version>/ when present, and skips newsfeed:generate-json regeneration in that case so manual edits to the EN newsfeed and translated DE newsfeed survive across re-runs and reach the deploy artifact. #5138
-* Dev: Decouple general/ Playwright tests from staging GitHub workflows into dedicated basic_general, pro_general, and pro_thirdparty_general workflows. #5125
-* Dev: Fix failing "Pro Integration" test on CI for PHP 8.3+. #5082
-* Dev: Fix syntax error in CI release prepare workflow that caused the post-commit "mark required checks" step to crash. #5137
-* Dev: Keep `fast-tests-passed` / `fast-tests-failed` labels across commits; let next test run swap them. #5087
-* Dev: Refactor Staging Site e2e tests to be more robust and stable. #5077
-* Dev: Remove binary .mo translation files from git to prevent merge conflicts. #5072
-* Dev: Revert PHP 8.6 SplFileObject runtime detection until PHP 8.6 is officially released. #5115
-* Dev: Skip AuthTempCertFileTest file permission check on Windows as it does not support Unix permissions. #5069
-* Dev: Update dependencies related to building assets to reduce time taken to build assets. #4880
+= 4.8.1 =
+* New: Add a "WP Staging — Tips & Guides" widget to the WordPress admin dashboard with curated documentation links. #5162
+* Enh: Better frontend performance with zero impact from WP Staging. #602
+* Enh: Decouple Remote Sync compatibility from the plugin version by introducing a Remote Sync API version. #5132
+* Enh: Reduce render-blocking JS by moving admin scripts to footer and use event delegation. #5024
+* Enh: Update backup file format to 2.1.0 to prepare for upcoming per-file encryption and split-backup features. Existing backups remain fully restorable. #5134
+* Fix: Add missing top margin to WordPress Playground warning callout on staging listing page. #5149
+* Fix: Background restore and backup failures now show a clearer error message with better guidance instead of a generic failure notice. #4606
+* Fix: Backup queue now recovers when the worker's loopback HTTP self-trigger is silently dropped by Cloudflare, restrictive firewalls, or cURL-blocked hosts, so jobs no longer stall indefinitely after the first task. #5118
+* Fix: Backup restore now respects server retry timing for temporary limits and improves handling of other server errors. #5002
+* Fix: Backup restore now retries temporary server errors and shows a clear error instead of appearing stuck. #4909
+* Fix: Cancel and clean up Remote Sync pull on the source site when the initiator becomes unresponsive. #4870
+* Fix: Fix analytics consent modal styling in dark mode and replace raster logo with scalable SVG. #5068
+* Fix: Fix system info card layout when content exceeds the max allowed width. #5055
+* Fix: Improve logs selector dropdown styling in dark mode. #5055
+* Fix: Live backup logs stream end-to-end on the same hosts. Previously the live log UI froze around 100 events while the backup itself completed normally and wrote the full log to disk. #5118
+* Fix: Live log UI no longer drops legitimate repeat lines (e.g. retried steps with refreshed progress numbers). #5118
+* Fix: Make "Unselect All" button visually consistent with other database table action buttons in dark mode. #5143
+* Fix: Restoren `Set Default` links for Destination Path and Target Hostname in Advanced Settings. #5055
+* Fix: Strengthen security checks when uploading a backup file. #5160
+* Fix: Throttle failed Remote Sync authentication attempts. (Pro) #5171
+* Fix: Unlock Remote Sync button now links to the correct checkout URL when the license is expired. (Pro) #5067
+* UX: Make sure staging site delete modal look good. #5055
+*  Tweak: Improve database restore speed for large backups. #3020
+* Dev: Add separate CI workflow for remote sync tests covering single-site and multisite. #5155
+* Dev: Derive Playwright PHP version checks from the selected test environment. #5192
+* Dev: Extend /release slash command with operator-critical pre-flight checks and cross-references to rollback, branch naming, and publish-permission rules. #5186
+* Dev: Fixed an issue where the release pipeline could fail to run when triggered for a release branch. #5141
+* Dev: Fixed inconsistencies in storage identifier handling; remote storage option-name migration now runs via a persistent feature flag instead of version_compare so it executes exactly once even when the stored plugin version is missing or corrupt. #3081
+* Dev: Make new releases land in the correct spot on the refreshed wp-staging.com changelog pages. #5184
+* Dev: Make the release pipeline detect when the deploy API on the release server is outdated. #5188
+* Dev: Move network-dependent tests from the unit suite to the integration suite to improve test reliability. #5165
+* Dev: Replace amd64-only FTP Docker image with multi-arch alternative to fix FTPS test failures on Apple Silicon. #5034
+* Dev: Update db version in database seed files for e2e testing. #5182
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

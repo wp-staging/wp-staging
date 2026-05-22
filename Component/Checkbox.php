@@ -41,9 +41,10 @@ class Checkbox
      */
     public function render(string $id, string $name, string $value = '', bool $isChecked = false, array $attributes = [], array $dataAttributes = [], bool $returnAsString = false)
     {
-        $classes    = isset($attributes['classes']) ? $attributes['classes'] : '';
-        $onChange   = isset($attributes['onChange']) ? $attributes['onChange'] : '';
-        $isDisabled = isset($attributes['isDisabled']) ? $attributes['isDisabled'] : false;
+        $classes            = isset($attributes['classes']) ? $attributes['classes'] : '';
+        $onChange           = isset($attributes['onChange']) ? $attributes['onChange'] : '';
+        $isDisabled         = isset($attributes['isDisabled']) ? $attributes['isDisabled'] : false;
+        $displayDependency  = isset($attributes['displayDependency']) ? $attributes['displayDependency'] : false;
 
         $dataId      = isset($dataAttributes['id']) ? $dataAttributes['id'] : '';
         $dataDirType = isset($dataAttributes['dirType']) ? $dataAttributes['dirType'] : '';

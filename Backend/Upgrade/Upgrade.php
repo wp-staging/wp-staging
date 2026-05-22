@@ -15,6 +15,8 @@ use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Notifications\Notifications;
 use WPStaging\Staging\Sites;
 use WPStaging\Backup\BackupScheduler;
+use WPStaging\Backup\Storage\Providers;
+use WPStaging\Framework\Upgrade\UpgradeFlags;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -56,6 +58,11 @@ class Upgrade
      */
     private $stagingSitesHelper;
 
+    /**
+     * @var UpgradeFlags
+     */
+    private $upgradeFlags;
+
     public function __construct()
     {
         // Previous version
@@ -68,6 +75,7 @@ class Upgrade
 
         /** @var Sites */
         $this->stagingSitesHelper = WPStaging::make(Sites::class);
+        $this->upgradeFlags       = WPStaging::make(UpgradeFlags::class);
     }
 
     /**
@@ -83,6 +91,7 @@ class Upgrade
         $this->upgrade2_8_7();
         $this->upgrade3_0_7();
         $this->upgrade3_8_1();
+        $this->migrateRemoteStorageOptionNames();
 
         $this->setVersion();
     }
@@ -122,6 +131,25 @@ class Upgrade
         if (get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) === false && !empty($optionBackupScheduleReportEmail)) {
             update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, 'true');
         }
+    }
+
+    /**
+     * Rename remote storage options from legacy lowercase to new hyphenated format
+     * (e.g. wpstg_googledrive -> wpstg_google-drive).
+     *
+     * Guarded by a persistent feature flag instead of version_compare so the
+     * migration runs exactly once, independent of how wpstg_version is set.
+     *
+     * @return void
+     */
+    private function migrateRemoteStorageOptionNames()
+    {
+        if ($this->upgradeFlags->has('remote_storage_option_names_migrated')) {
+            return;
+        }
+
+        (new Providers())->migrateRemoteStorageOptions();
+        $this->upgradeFlags->mark('remote_storage_option_names_migrated');
     }
 
     /**
