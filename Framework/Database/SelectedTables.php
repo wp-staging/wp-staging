@@ -104,12 +104,16 @@ class SelectedTables
      */
     public function getSelectedTables(bool $isNetworkClone = false)
     {
+        // A subsite table (e.g. wpstg0_2_options) can appear in BOTH the prefixed
+        // set and selectedTablesWithoutPrefix during a multisite network-clone
+        // update, which would export and restore it twice and trip the
+        // duplicate-key guard. Deduplicate so each table is operated on once.
         if (!empty($this->includedTables)) {
-            return array_merge($this->includedTables, $this->selectedTablesWithoutPrefix);
+            return array_values(array_unique(array_merge($this->includedTables, $this->selectedTablesWithoutPrefix)));
         }
 
         $selectedTables = $this->getPrefixedTables($isNetworkClone);
-        return array_merge($selectedTables, $this->selectedTablesWithoutPrefix);
+        return array_values(array_unique(array_merge($selectedTables, $this->selectedTablesWithoutPrefix)));
     }
 
     /**

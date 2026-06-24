@@ -13,7 +13,6 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
-use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Network\RemoteDownloader;
 
 use function WPStaging\functions\debug_log;
@@ -39,11 +38,15 @@ class BackupsFinder extends AbstractBackupsFinder
     /** @var DirectoryListing */
     private $directoryListing;
 
-    public function __construct(Directory $directory, Filesystem $filesystem, DirectoryListing $directoryListing)
+    /** @var BackupsDirectoryResolver */
+    private $backupsDirectoryResolver;
+
+    public function __construct(Directory $directory, Filesystem $filesystem, DirectoryListing $directoryListing, BackupsDirectoryResolver $backupsDirectoryResolver)
     {
-        $this->directory = $directory;
-        $this->filesystem = $filesystem;
-        $this->directoryListing = $directoryListing;
+        $this->directory                = $directory;
+        $this->filesystem               = $filesystem;
+        $this->directoryListing         = $directoryListing;
+        $this->backupsDirectoryResolver = $backupsDirectoryResolver;
     }
 
     /**
@@ -54,27 +57,8 @@ class BackupsFinder extends AbstractBackupsFinder
     public function getBackupsDirectory(bool $refresh = false): string
     {
         if ($refresh || $this->backupsDirectory === null) {
-            $defaultBackupUploadsDirectory = $this->directory->getPluginUploadsDirectory($refresh = true) . Archiver::BACKUP_DIR_NAME;
-
-            /**
-             * Allows filtering the path to the directory Backups will be written to and read from.
-             *
-             * Note: changing this directory while there are backups in the previous location will, in
-             * fact, hide those Backups from the plugin. The task of moving the Backups left in the previous
-             * location(s) is left to the user.
-             *
-             * By default it uses the folder ABSPATH/wp-content/uploads/wp-staging/backups
-             * You can overwrite the path with the filter wpstg.backup.directory.
-             * The filtered provided path needs to be an absolute path that is inside the WordPress root (ABSPATH)
-             * E.g. If ABSPATH: '/var/www/example.com' then filtered path can be '/var/www/example.com/backups'. It can not be '/var/www/backups'
-
-             *
-             * @param string $defaultBackupUploadsDirectory The default path to the directory Backups will be read from and
-             *                                              written to.
-             */
-            $directory = Hooks::applyFilters(self::FILTER_BACKUP_DIRECTORY, $defaultBackupUploadsDirectory);
-
-            $directory = trailingslashit(wp_normalize_path($directory));
+            $pluginUploadsDirectory = $this->directory->getPluginUploadsDirectory($refresh = true);
+            $directory              = $this->backupsDirectoryResolver->resolveFromPluginUploadsDirectory($pluginUploadsDirectory);
 
             if (!$this->filesystem->mkdir($directory, true)) {
                 throw BackupRuntimeException::cannotCreateBackupsDirectory($directory);

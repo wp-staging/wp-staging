@@ -25,6 +25,9 @@ class FilesystemScannerDto
     /** @var array */
     private $excludedDirectories = [];
 
+    /** @var array */
+    private $filesExcludedInRequest = [];
+
     /**
      * @param int $totalDirectories
      * @return void
@@ -170,5 +173,28 @@ class FilesystemScannerDto
     public function addFilesystemSize(int $size)
     {
         $this->filesystemSize += $size;
+    }
+
+    public function getFilesExcludedInRequest(): array
+    {
+        return $this->filesExcludedInRequest;
+    }
+
+    /**
+     * @param array $filesExcludedInRequest
+     * @return void
+     */
+    public function setFilesExcludedInRequest(array $filesExcludedInRequest)
+    {
+        $this->filesExcludedInRequest = $filesExcludedInRequest;
+    }
+
+    /**
+    * @param string $filePath
+    * @return void
+    */
+    public function addFileExcludedInRequest(string $filePath)
+    {
+        $this->filesExcludedInRequest[] = $filePath;
     }
 }

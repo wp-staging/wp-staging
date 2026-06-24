@@ -9,6 +9,7 @@ use WPStaging\Staging\Ajax\AbstractAjaxPrepare;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteUpdate;
+use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Service\StagingSetup;
 use WPStaging\Staging\Sites;
 
@@ -31,6 +32,7 @@ class PrepareUpdate extends AbstractAjaxPrepare
 
         $data = Sanitize::sanitizeArray($_POST['wpstgUpdateData'], [
             'cloneId'                => 'string',
+            'stagingEngine'          => 'string',
             'allTablesExcluded'      => 'bool',
             'excludeSizeGreaterThan' => 'string',
             'isCleanPluginsThemes'   => 'bool',
@@ -55,6 +57,7 @@ class PrepareUpdate extends AbstractAjaxPrepare
     {
         // Clone ID
         $data['cloneId'] = sanitize_text_field($data['cloneId']);
+        $data['stagingEngine'] = StagingEngine::ENGINE_NEXT_GEN;
 
         if (empty($data['cloneId'])) {
             throw new \UnexpectedValueException("Invalid request. Missing 'cloneId'.");
@@ -88,6 +91,7 @@ class PrepareUpdate extends AbstractAjaxPrepare
     {
         return [
             'cloneId'                => '',
+            'stagingEngine'          => StagingEngine::ENGINE_NEXT_GEN,
             'allTablesExcluded'      => false,
             'excludedTables'         => [],
             'includedTables'         => [],
@@ -212,7 +216,7 @@ class PrepareUpdate extends AbstractAjaxPrepare
         $this->jobDataDto->setCloneId($cloneId);
         $this->jobDataDto->setStagingSiteUrl($stagingSite->getUrl());
         $this->jobDataDto->setStagingSitePath($stagingSite->getPath());
-        $this->jobDataDto->setDatabasePrefix($stagingSite->getPrefix());
+        $this->jobDataDto->setDatabasePrefix($stagingSite->getUsedPrefix());
         $this->jobDataDto->setIsExternalDatabase($stagingSite->getIsExternalDatabase());
     }
 }

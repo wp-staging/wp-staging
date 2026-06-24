@@ -21,13 +21,13 @@ use WPStaging\Staging\Traits\WithStagingSiteDto;
  */
 class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingSiteDtoInterface, StagingOperationDtoInterface, AdvanceStagingOptionsInterface, FilesystemScannerDtoInterface, StagingNetworkDtoInterface
 {
-    use FilesystemScannerDtoTrait;
-
-    use WithAdvanceStagingOptions, WithStagingSiteDto, StagingOperationDtoTrait, StagingDatabaseDtoTrait, StagingNetworkDtoTrait {
+    use FilesystemScannerDtoTrait, WithAdvanceStagingOptions, WithStagingSiteDto, StagingOperationDtoTrait, StagingDatabaseDtoTrait, StagingNetworkDtoTrait {
         StagingOperationDtoTrait::setExcludedTables insteadof StagingDatabaseDtoTrait;
         StagingOperationDtoTrait::getExcludedTables insteadof StagingDatabaseDtoTrait;
         WithAdvanceStagingOptions::getDatabasePrefix insteadof StagingDatabaseDtoTrait;
         WithAdvanceStagingOptions::setDatabasePrefix insteadof StagingDatabaseDtoTrait;
+        WithAdvanceStagingOptions::setTmpExcludedFullPaths insteadof FilesystemScannerDtoTrait;
+        WithAdvanceStagingOptions::getTmpExcludedFullPaths insteadof FilesystemScannerDtoTrait;
     }
 
     /** @var string */
@@ -35,6 +35,9 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
 
     /** @var string */
     private $name = '';
+
+    /** @var string */
+    private $stagingEngine = 'next_gen';
 
     /**
      * Used in update job
@@ -98,6 +101,23 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @param string $stagingEngine
+     * @return void
+     */
+    public function setStagingEngine(string $stagingEngine)
+    {
+        $this->stagingEngine = $stagingEngine;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStagingEngine(): string
+    {
+        return $this->stagingEngine;
     }
 
     /**

@@ -11,7 +11,7 @@ $schedules = WPStaging\Core\WPStaging::make(\WPStaging\Backup\BackupScheduler::c
     data-cancelButtonText="<?php esc_attr_e('CANCEL', 'wp-staging'); ?>"
     style="display: none"
 >
-    <h2 class="wpstg--modal--edit--backup--schedules--title wpstg--grey">
+    <h2 class="wpstg--modal--edit--backup--schedules--title wpstg-modal-title">
         <?php esc_html_e('Edit Backup Schedule', 'wp-staging') ?>
     </h2>
     <div id="wpstg--modal--edit--backup--schedules--content" class=""></div>

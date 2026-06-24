@@ -41,6 +41,7 @@ use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Newsfeed\NewsfeedProvider;
+use WPStaging\Pro\License\Licensing;
 
 /**
  * Class Administrator
@@ -258,19 +259,23 @@ class Administrator
 
         $defaultPageSlug       = "wpstg_clone";
         $defaultPageCallback   = "getClonePage";
-        $defaultPageTitle      = esc_html__("Staging Sites", "wp-staging");
+        // Brand term — intentionally NOT translatable. Community/wp.org packs must never rename the menu. See #5267.
+        $defaultPageTitle      = "Staging Sites";
         $secondaryPageSlug     = "wpstg_backup";
         $secondaryPageCallback = "getBackupPage";
-        $secondaryPageTitle    = esc_html__("Backup & Migration", "wp-staging");
+        // Brand term — intentionally NOT translatable. The German wp.org pack wrongly renders this as "Sicherung". See #5267.
+        $secondaryPageTitle    = "Backup &amp; Migration";
         /** @var SiteInfo */
         $siteInfo = WPStaging::make(SiteInfo::class);
         if ($siteInfo->isHostedOnWordPressCom()) {
             $defaultPageSlug       = "wpstg_backup";
             $defaultPageCallback   = "getBackupPage";
-            $defaultPageTitle      = esc_html__("Backup & Migration", "wp-staging");
+            // Brand term — intentionally NOT translatable. The German wp.org pack wrongly renders this as "Sicherung". See #5267.
+            $defaultPageTitle      = "Backup &amp; Migration";
             $secondaryPageSlug     = "wpstg_clone";
             $secondaryPageCallback = "getClonePage";
-            $secondaryPageTitle    = esc_html__("Staging Sites", "wp-staging");
+            // Brand term — intentionally NOT translatable. Community/wp.org packs must never rename the menu. See #5267.
+            $secondaryPageTitle    = "Staging Sites";
         }
 
         // Main WP Staging Menu
@@ -287,7 +292,8 @@ class Administrator
         // Clone page normally but backup page on WordPress.com
         add_submenu_page(
             $defaultPageSlug,
-            esc_html__("WP Staging - Staging", "wp-staging"),
+            // Brand term in the browser tab title — intentionally NOT translatable. See #5267.
+            "WP Staging - Staging",
             $defaultPageTitle,
             "manage_options",
             $defaultPageSlug,
@@ -297,7 +303,8 @@ class Administrator
         // Backup page normally but clone page on WordPress.com
         add_submenu_page(
             $defaultPageSlug,
-            esc_html__("WP Staging - Backup & Migration", "wp-staging"),
+            // Brand term in the browser tab title — intentionally NOT translatable; wp.org de pack wrongly renders "Sicherung". See #5267.
+            "WP Staging - Backup &amp; Migration",
             $secondaryPageTitle,
             "manage_options",
             $secondaryPageSlug,
@@ -888,9 +895,14 @@ class Administrator
     }
 
     /**
-     * Ajax Hide Rating and show it again after one week
+     * Ajax Hide Rating and snooze it with a progressive interval.
      *
-     * Runs when the user chooses to rate the plugin later.
+     * Runs when the user chooses "Maybe Later" on the review prompt. Each
+     * deferral pushes the next prompt further out so we ask less often the
+     * longer the user keeps postponing: 1st -> 14 days, 2nd -> 30 days,
+     * 3rd and beyond -> 180 days. The snooze counter is shared by every review
+     * surface (staging listing strip and backup/clone success modal) via the
+     * single wpstg_rating option, so deferring once defers everywhere.
      */
     public function ajaxHideLaterRating()
     {
@@ -898,7 +910,17 @@ class Administrator
             return;
         }
 
-        $date = date('Y-m-d', strtotime(date('Y-m-d') . ' + 7 days'));
+        $snoozeCount = (int)get_option('wpstg_rating_snooze_count', 0) + 1;
+        update_option('wpstg_rating_snooze_count', $snoozeCount);
+
+        $days = 180;
+        if ($snoozeCount <= 1) {
+            $days = 14;
+        } elseif ($snoozeCount === 2) {
+            $days = 30;
+        }
+
+        $date = date('Y-m-d', strtotime(date('Y-m-d') . ' + ' . $days . ' days'));
         if (update_option('wpstg_rating', $date) !== false) {
             wp_send_json(true);
         }
@@ -1069,6 +1091,12 @@ class Administrator
     {
         // Get license data
         $license = get_option('wpstg_license_status');
+
+        $licensing                = WPStaging::make(Licensing::class);
+        $manualActivationUrl      = $licensing->buildManualActivationBaseUrl();
+        $manualActivationNonce    = $licensing->generateActivationNonce();
+        $manualActivationSiteUrl  = home_url();
+        $manualActivationItemName = Licensing::WPSTG_ITEM_NAME;
 
         require_once "{$this->viewsPath}pro/licensing.php";
     }

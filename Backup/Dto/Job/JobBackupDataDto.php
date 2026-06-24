@@ -128,6 +128,21 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var int */
     private $maxDbPartIndex = 0;
 
+    /**
+     * Persisted cross-AJAX state for the multipart big-file segmenter.
+     * Tracks how many bytes of the source file have already been written across previous
+     * segments / parts so an interrupted backup can resume mid-file.
+     * @var int
+     */
+    private $bigFileSourceBytesWritten = 0;
+
+    /**
+     * Persisted cross-AJAX state for the multipart big-file segmenter.
+     * True when the next segment to write must carry REQUIRE_PREVIOUS_PART.
+     * @var bool
+     */
+    private $bigFileIsContinuation = false;
+
     /** @var int */
     private $currentMultipartFileInfoIndex = 0;
 
@@ -725,6 +740,26 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setMaxDbPartIndex($maxDbPartIndex)
     {
         $this->maxDbPartIndex = $maxDbPartIndex;
+    }
+
+    public function getBigFileSourceBytesWritten(): int
+    {
+        return (int) $this->bigFileSourceBytesWritten;
+    }
+
+    public function setBigFileSourceBytesWritten(int $bigFileSourceBytesWritten)
+    {
+        $this->bigFileSourceBytesWritten = $bigFileSourceBytesWritten;
+    }
+
+    public function getBigFileIsContinuation(): bool
+    {
+        return (bool) $this->bigFileIsContinuation;
+    }
+
+    public function setBigFileIsContinuation(bool $bigFileIsContinuation)
+    {
+        $this->bigFileIsContinuation = $bigFileIsContinuation;
     }
 
     /**

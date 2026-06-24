@@ -14,7 +14,9 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Core\WPStaging;
 use WPStaging\Staging\Dto\DirectoryNodeDto;
+use WPStaging\Staging\Sites;
 
 /**
  * Scans filesystem roots and prepares directory data for the staging selection UI.
@@ -68,6 +70,13 @@ class DirectoryScanner
     protected $stagingSetup;
 
     /**
+     * Normalized absolute paths of existing staging sites, lazily loaded.
+     *
+     * @var array|null
+     */
+    private $stagingSiteDirectories = null;
+
+    /**
      * @var string
      */
     protected $loaderIcon = '';
@@ -106,6 +115,11 @@ class DirectoryScanner
     /** @var bool */
     protected $useDefaultSelection = false;
 
+    /**
+     * @var bool
+     */
+    protected $showFileDestination = true;
+
     public function __construct(TemplateEngine $templateEngine, Assets $assets, Directory $directory, Strings $strUtils, PathChecker $pathChecker, SiteInfo $siteInfo)
     {
         $this->templateEngine = $templateEngine;
@@ -133,6 +147,15 @@ class DirectoryScanner
         $this->stagingSetup = $stagingSetup;
     }
 
+    /**
+     * @param bool $showFileDestination
+     * @return void
+     */
+    public function setShowFileDestination(bool $showFileDestination)
+    {
+        $this->showFileDestination = $showFileDestination;
+    }
+
     public function isUpdateOrResetJob(): bool
     {
         return $this->stagingSetup->isUpdateOrResetJob();
@@ -152,11 +175,12 @@ class DirectoryScanner
         $this->useDefaultSelection = true;
 
         $result = $this->templateEngine->render('staging/_partials/files-selection.php', [
-            'scanner'        => $this,
-            'stagingSetup'   => $this->stagingSetup,
-            'stagingSiteDto' => $this->stagingSetup->getStagingSiteDto(),
-            'directories'    => $directories,
-            'excludeFilters' => new ExcludeFilter(),
+            'scanner'             => $this,
+            'stagingSetup'        => $this->stagingSetup,
+            'stagingSiteDto'      => $this->stagingSetup->getStagingSiteDto(),
+            'directories'         => $directories,
+            'excludeFilters'      => new ExcludeFilter(),
+            'showFileDestination' => $this->showFileDestination,
         ]);
 
         echo $result; // phpcs:ignore
@@ -191,16 +215,17 @@ class DirectoryScanner
                 continue;
             }
 
-            // Not a valid directory
-            $path = $this->getPath($directory, $basePath, $identifier);
-            if (strpos($directory, 'wp-content') !== false && is_link($directory) && $path === false) {
+            $directoryPath = $directory->getPathname();
+            try {
+                $path = $this->getPath($directory, $basePath, $identifier);
+            } catch (UnexpectedValueException $e) {
                 continue;
             }
 
             $directoryNode = new DirectoryNodeDto();
             $directoryNode->setName($directory->getFilename());
 
-            if (strpos($directory, 'wp-content') !== false && is_link($directory)) {
+            if (strpos($directoryPath, 'wp-content') !== false && is_link($directoryPath)) {
                 $directoryNode->setPath(realpath($directory->getPathname()));
             } else {
                 $directoryNode->setPath(trailingslashit($basePath) . ltrim($path, '/'));
@@ -300,9 +325,13 @@ class DirectoryScanner
             $showChildByDefault = true;
         }
 
-        // Make wp-includes and wp-admin directory items not expandable
-        $isNavigatable = 'true';
-        if ($this->strUtils->startsWith($path, $directory->getBasePath() . "/wp-admin") !== false || $this->strUtils->startsWith($path, $directory->getBasePath() . "/wp-includes") !== false) {
+        // Make wp-includes and wp-admin directory items not expandable. The base
+        // path keeps ABSPATH's trailing slash, so strip it before composing the
+        // core paths — otherwise the double slash never matches and both folders
+        // stay wrongly expandable.
+        $normalizedBasePath = untrailingslashit($directory->getBasePath());
+        $isNavigatable      = 'true';
+        if ($this->strUtils->startsWith($path, $normalizedBasePath . "/wp-admin") !== false || $this->strUtils->startsWith($path, $normalizedBasePath . "/wp-includes") !== false) {
             $isNavigatable = 'false';
         }
 
@@ -336,6 +365,19 @@ class DirectoryScanner
             $relPath         = 'wp-content';
         }
 
+        // A still-navigatable folder with no subdirectories is a leaf: there is
+        // nothing to fetch, so mark it non-navigatable and let the view render
+        // it as non-expandable instead of firing a request that returns nothing.
+        $isLeaf = false;
+        if ($isNavigatable === 'true' && !$this->directoryHasSubdirectories($path)) {
+            $isLeaf        = true;
+            $isNavigatable = 'false';
+        }
+
+        // Flag folders that are themselves an existing staging site so the tree
+        // can explain why they are excluded by default.
+        $isStagingSite = in_array(rtrim($path, '/\\'), $this->getStagingSiteDirectories(), true);
+
         return $this->templateEngine->render('staging/_partials/directory-navigation.php', [
             'scanner'           => $this,
             'prefix'            => $directory->getIdentifier(),
@@ -344,6 +386,8 @@ class DirectoryScanner
             'dirType'           => $dirType,
             'isScanned'         => $isScanned,
             'isNavigatable'     => $isNavigatable,
+            'isLeaf'            => $isLeaf,
+            'isStagingSite'     => $isStagingSite,
             'shouldBeChecked'   => $shouldBeChecked,
             'parentChecked'     => $parentChecked,
             'directoryDisabled' => $isNotWPCoreDir || $isDisabledDir,
@@ -359,6 +403,63 @@ class DirectoryScanner
             'isLink'            => $isLink,
             'showChild'         => $showChildByDefault,
         ]);
+    }
+
+    /**
+     * Cheaply checks whether a directory contains at least one subdirectory.
+     * Returns on the first one found so it stays light even on large folders.
+     *
+     * @param string $path
+     * @return bool
+     */
+    private function directoryHasSubdirectories(string $path): bool
+    {
+        if (!is_dir($path)) {
+            return false;
+        }
+
+        try {
+            $iterator = new DirectoryIterator($path);
+            foreach ($iterator as $item) {
+                if ($item->isDot()) {
+                    continue;
+                }
+
+                if ($item->isDir()) {
+                    return true;
+                }
+            }
+        } catch (\Exception $e) {
+            // On any error assume it may have children so a legitimately
+            // expandable folder is never hidden.
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns the normalized absolute paths of existing staging sites so their
+     * folders can be flagged in the tree.
+     *
+     * @return array
+     */
+    private function getStagingSiteDirectories(): array
+    {
+        if ($this->stagingSiteDirectories !== null) {
+            return $this->stagingSiteDirectories;
+        }
+
+        $this->stagingSiteDirectories = [];
+        try {
+            foreach (WPStaging::make(Sites::class)->getStagingDirectories() as $directory) {
+                $this->stagingSiteDirectories[] = wp_normalize_path(rtrim((string)$directory, '/\\'));
+            }
+        } catch (\Throwable $e) {
+            $this->stagingSiteDirectories = [];
+        }
+
+        return $this->stagingSiteDirectories;
     }
 
     /**

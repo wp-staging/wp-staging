@@ -16,6 +16,10 @@ class RowsExporter extends AbstractExporter
 {
     use MySQLRowsGeneratorTrait;
     use DatabaseSearchReplaceTrait;
+    const WRITE_RESULT_WRITTEN = 0;
+    const WRITE_RESULT_PART_FULL = 1;
+    const WRITE_RESULT_SKIPPED_OVERSIZE = 2;
+    const EMPTY_PART_HEADER_BYTES = 512;
     protected $tableIndex = 0;
     protected $tableRowsOffset = 0;
     protected $totalRowsExported;
@@ -190,7 +194,7 @@ class RowsExporter extends AbstractExporter
         } catch (Exception $e) {
             $numericPrimaryKey = null;
             if ($this->jobDataDto->getTableRowsOffset() === 0 && $this->jobDataDto->getTotalRowsOfTableBeingBackup() > 300000) {
-                $logger->warning("The table $this->tableName does not have a compatible primary key, so it will get slower the more rows it backup...");
+                $logger->notice("The table $this->tableName has no compatible primary key and is large, so backing it up may take longer. No action is required.");
             }
         }
         $this->setupBackupSearchReplace();
@@ -199,25 +203,34 @@ class RowsExporter extends AbstractExporter
                 $this->tableRowsOffset     = $this->jobDataDto->getTableRowsOffset();
                 $this->lastNumericInsertId = (int)$this->jobDataDto->getLastInsertId();
             }
-            $data = $this->rowsGenerator($this->databaseName, $this->tableName, $numericPrimaryKey, $this->tableRowsOffset, "rowsExporter_$jobId", $this->client, $this->jobDataDto);
+            $resumeFromLastInsertId = !empty($numericPrimaryKey) && $this->useMemoryExhaustFix;
+            $generatorOffset        = $resumeFromLastInsertId ? $this->lastNumericInsertId : $this->tableRowsOffset;
+            $data = $this->rowsGenerator($this->databaseName, $this->tableName, $numericPrimaryKey, $generatorOffset, "rowsExporter_$jobId", $this->client, $this->jobDataDto);
             foreach ($data as $row) {
+                $priorLastNumericInsertId = $this->lastNumericInsertId;
                 if ($this->updateLastNumericInsertId($numericPrimaryKey ?? '', $row)) {
                     continue;
                 }
-                $this->writeQueryInsert($row, $prefixedTableName, $tableColumns);
-                if ($this->useMemoryExhaustFix) {
-                    $this->writeToFileCount++;
-                }
-                if ($this->exceedSplitSize) {
-                    if (!empty($this->queriesToInsert)) {
+                $writeResult = $this->writeQueryInsert($row, $prefixedTableName, $tableColumns);
+                if ($writeResult === self::WRITE_RESULT_PART_FULL) {
+                    $this->lastNumericInsertId = $priorLastNumericInsertId;
+                    if ($this->writeToFileCount > 0) {
+                        if (!empty($this->queriesToInsert)) {
+                            $this->file->fwrite($this->queriesToInsert);
+                            $this->queriesToInsert = '';
+                        }
+                        $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
+                    } elseif (!empty($this->queriesToInsert)) {
                         $this->file->fwrite($this->queriesToInsert);
-                        $this->queriesToInsert   = '';
-                        $this->writeToFileCount  = 0;
-                        $this->unInsertedSqlSize = 0;
+                        $this->queriesToInsert = '';
                     }
+                    $this->writeToFileCount  = 0;
+                    $this->unInsertedSqlSize = 0;
                     return max($this->totalRowsInCurrentTable - $this->totalRowsExported, 0);
                 }
-                if (!$this->useMemoryExhaustFix) {
+                if ($this->useMemoryExhaustFix) {
+                    $this->writeToFileCount++;
+                } else {
                     $this->writeToFileCount++;
                     $this->totalRowsExported++;
                     if (!empty($numericPrimaryKey)) {
@@ -226,12 +239,19 @@ class RowsExporter extends AbstractExporter
                         $this->tableRowsOffset++;
                     }
                 }
-                if ($this->writeToFileCount >= 10) {
-                    $this->file->fwrite($this->queriesToInsert);
-                    $this->queriesToInsert = '';
+                if ($writeResult === self::WRITE_RESULT_SKIPPED_OVERSIZE && empty($this->queriesToInsert)) {
                     $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
                     $this->writeToFileCount = 0;
+                    continue;
                 }
+                if ($this->writeToFileCount >= 10) {
+                    if (!empty($this->queriesToInsert)) {
+                        $this->file->fwrite($this->queriesToInsert);
+                        $this->queriesToInsert = '';
+                    }
+                    $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
+                    $this->writeToFileCount = 0;
+                    }
             }
             if (!empty($this->queriesToInsert) && $this->useMemoryExhaustFix) {
                 $this->file->fwrite($this->queriesToInsert);
@@ -244,6 +264,8 @@ class RowsExporter extends AbstractExporter
         if (!empty($this->queriesToInsert)) {
             $this->file->fwrite($this->queriesToInsert);
             $this->queriesToInsert = '';
+            $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
+        } elseif ($this->writeToFileCount > 0) {
             $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
         }
         return $rowsLeftToProcess;
@@ -304,7 +326,7 @@ class RowsExporter extends AbstractExporter
         return false;
     }
 
-    protected function writeQueryInsert(array $row, string $prefixedTableName, array $tableColumns)
+    protected function writeQueryInsert(array $row, string $prefixedTableName, array $tableColumns): int
     {
         try {
             foreach ($row as $column => &$value) {
@@ -359,16 +381,33 @@ class RowsExporter extends AbstractExporter
             $insertQuery = "{$insertSeparator}INSERT INTO `{$prefixedTableName}` VALUES (" . implode(',', $row) . ");\n";
             if (!$this->isBackupSplit) {
                 $this->queriesToInsert .= $insertQuery;
-                return;
+                return self::WRITE_RESULT_WRITTEN;
             }
-            $this->unInsertedSqlSize += strlen($insertQuery);
-            if (($this->unInsertedSqlSize + $this->file->getSize()) > $this->maxSplitSize) {
+            $insertQueryLength = strlen($insertQuery);
+            if (($this->unInsertedSqlSize + $insertQueryLength + $this->file->getSize()) > $this->maxSplitSize) {
+                $partIsEmpty = $this->unInsertedSqlSize === 0
+                    && $this->queriesToInsert === ''
+                    && $this->file->getSize() <= self::EMPTY_PART_HEADER_BYTES;
+                if ($partIsEmpty) {
+                    if ($this->logger) {
+                        $this->logger->warning(sprintf(
+                            'Row in %s (~%s) exceeds the multipart split size (%s) and was SKIPPED; the restored database will be missing this row.',
+                            $prefixedTableName,
+                            size_format($insertQueryLength),
+                            size_format($this->maxSplitSize)
+                        ));
+                    }
+                    return self::WRITE_RESULT_SKIPPED_OVERSIZE;
+                }
                 $this->exceedSplitSize = true;
-                return;
+                return self::WRITE_RESULT_PART_FULL;
             }
-            $this->queriesToInsert .= $insertQuery;
+            $this->queriesToInsert   .= $insertQuery;
+            $this->unInsertedSqlSize += $insertQueryLength;
+            return self::WRITE_RESULT_WRITTEN;
         } catch (Exception $e) {
-            }
+            return self::WRITE_RESULT_WRITTEN;
+        }
     }
 
     protected function isRowNeedSpecialSearchReplace(string $prefixedTableName, string $column): bool

@@ -72,10 +72,6 @@ class StagingServiceProvider extends FeatureServiceProvider
 
     protected function enqueueStagingAjaxListeners()
     {
-        if (!defined('WPSTG_NEW_STAGING') || !WPSTG_NEW_STAGING) {
-            return;
-        }
-
         add_action('wp_ajax_wpstg--staging-site--setup', $this->container->callback(Setup::class, 'ajaxSetup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         if (!WPStaging::isBasic()) {

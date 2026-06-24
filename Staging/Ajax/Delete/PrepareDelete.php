@@ -138,6 +138,10 @@ class PrepareDelete extends PrepareJob
         $data['isDeletingFiles']  = $this->jsBoolean($data['isDeletingFiles']);
         $data['isDeletingTables'] = $this->jsBoolean($data['isDeletingTables']);
 
+        if (!$data['isDeletingFiles'] && !$data['isDeletingTables']) {
+            throw new \UnexpectedValueException('Invalid request. Select at least one item to delete.');
+        }
+
         // Excluded tables
         $data['excludedTables'] = array_map('sanitize_text_field', $data['excludedTables']);
 

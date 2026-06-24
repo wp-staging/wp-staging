@@ -48,6 +48,15 @@ class WpUploadsFolderSymlinker
     }
 
     /**
+     * @param string $stagingUploadPath
+     * @return void
+     */
+    public function setStagingSiteUploadPath(string $stagingUploadPath)
+    {
+        $this->stagingUploadPath = rtrim($stagingUploadPath, '/');
+    }
+
+    /**
      * @return bool
      */
     public function trySymlink()
@@ -110,8 +119,7 @@ class WpUploadsFolderSymlinker
     private function link($source, $destination)
     {
         try {
-            symlink($source, $destination);
-            return true;
+            return symlink($source, $destination);
         } catch (FatalException $ex) {
             $this->error = sprintf(__("Can not symlink %s. Error: ", 'wp-staging'), $destination, $ex->getMessage());
             return false;

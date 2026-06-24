@@ -3,73 +3,61 @@
 namespace WPStaging\Basic\Notices;
 
 use DateTime;
-use Exception;
 
 class RatingNotice
 {
     /** @var string */
     const OPTION_NAME = 'wpstg_rating';
 
-    /** @var int */
-    const DAYS_TO_SHOW_RATING_NOTICE_AFTER = 7;
-
-    public function shouldShowRatingNotice()
+    /**
+     * Shared eligibility gate for the success-based review prompt, used by both
+     * the staging and backup completion modals (views/notices/review-prompt-modal.php).
+     *
+     * It only answers "is the user currently allowed to be asked?", i.e. the
+     * review prompt has not been permanently dismissed and is not inside a snooze
+     * window. The "value delivered" trigger (a staging site or backup was just
+     * created) is the caller's responsibility — the prompt is rendered into the
+     * success modal, never as loose dashboard text.
+     *
+     * Because every surface reads and writes the same wpstg_rating state, a
+     * "Maybe Later" or "Don't Ask Again" in one place silences the prompt
+     * everywhere, so the user is never asked twice across workflows.
+     *
+     * @return bool
+     */
+    public function isReviewPromptEligible(): bool
     {
-        return $this->canShow(self::OPTION_NAME, self::DAYS_TO_SHOW_RATING_NOTICE_AFTER) && $this->getCurrentPage() !== 'page' && $this->getCurrentPage() !== 'post';
+        return $this->canShow(self::OPTION_NAME);
     }
 
     /**
-     * Check if notice should be shown after certain days of installation or if it is dismissed
-     * @param int $days default 10
+     * Check whether the prompt is currently dismissed or snoozed.
+     *
+     * @param string $option
      * @return bool
      */
-    private function canShow($option, $days = 10)
+    private function canShow($option)
     {
-        // Do not show notice
         if (empty($option)) {
             return false;
         }
 
         $dbOption = get_option($option);
 
-        // Do not show notice
+        // Permanently dismissed via "Don't Ask Again" / "Leave a Review".
         if ($dbOption === "no") {
             return false;
         }
 
-        $now = new DateTime("now");
-
-        // Check if user clicked on "rate later" button and if there is a valid 'later' date
+        // Snoozed via "Maybe Later": a valid date means "do not show before then".
         if (wpstg_is_valid_date($dbOption)) {
-            // Do not show before this date
+            $now  = new DateTime("now");
             $show = new DateTime($dbOption);
             if ($now < $show) {
                 return false;
             }
         }
 
-        // Show X days after installation
-        $installDate = new DateTime(get_option("wpstg_installDate"));
-
-        // get number of days between installation date and today
-        $difference = $now->diff($installDate)->days;
-
-        return $days <= $difference;
-    }
-
-    /**
-     * Get current page.
-     * Note: This can not be moved to wpAdapter class as it is only available very late
-     * at add admin_init and not available most of the time.
-     *
-     * @return string post, page
-     */
-    private function getCurrentPage()
-    {
-        if (function_exists('\get_current_screen')) {
-            return \get_current_screen()->post_type;
-        }
-
-        throw new Exception('Function get_current_screen does not exist. WP < 3.0.1.');
+        return true;
     }
 }

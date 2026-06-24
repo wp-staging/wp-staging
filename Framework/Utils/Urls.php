@@ -2,12 +2,12 @@
 
 namespace WPStaging\Framework\Utils;
 
-use WPStaging\Backup\Exceptions\BackupRuntimeException;
+use WPStaging\Backup\Service\BackupsDirectoryResolver;
 use WPStaging\Core\WPStaging;
-use WPStaging\Backup\Service\Archiver;
-use WPStaging\Backup\Service\BackupsFinder;
-use WPStaging\Framework\Adapter\Directory;
 
+/**
+ * Resolves public URLs for WordPress and WP STAGING resources
+ */
 class Urls
 {
     /**
@@ -129,28 +129,37 @@ class Urls
     }
 
     /**
-     * Get url of the backup directory, e.g. http://example.com/*
+     * Get url of the backup directory, e.g. http://example.com/wp-content/uploads/wp-staging/backups/
+     *
      * @return string
-     * @throws BackupRuntimeException
      */
     public function getBackupUrl(): string
     {
-        if (!WPStaging::make(Directory::class)->isBackupPathOutsideAbspath()) {
-            return $this->getUploadsUrl() . WPSTG_PLUGIN_DOMAIN . '/' . Archiver::BACKUP_DIR_NAME . '/';
-        }
-
-        $backupDirAbsPath     = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
-        $normalizedBackupPath = wp_normalize_path($backupDirAbsPath);
-        $normalizedAbspath    = wp_normalize_path(ABSPATH);
         $uploads              = wp_upload_dir(null, false);
-        if (strpos($normalizedBackupPath, wp_normalize_path($uploads['basedir'])) === 0) {
-            $relativePath = str_replace(wp_normalize_path($uploads['basedir']), "", $normalizedBackupPath);
-            return trailingslashit($uploads['baseurl']) . ltrim($relativePath, '/');
+        $backupsDirResolver   = WPStaging::make(BackupsDirectoryResolver::class);
+        $normalizedBackupPath = $backupsDirResolver->resolveFromUploadsDirectory($uploads['basedir']);
+        $normalizedUploadsDir = trailingslashit(wp_normalize_path($uploads['basedir']));
+
+        if (strpos($normalizedBackupPath, $normalizedUploadsDir) === 0) {
+            $relativePath = substr($normalizedBackupPath, strlen($normalizedUploadsDir));
+            return trailingslashit($this->maybeUseProtocolRelative($uploads['baseurl'])) . ltrim($relativePath, '/');
         }
 
-        $relativePathToBackupDir = str_replace($normalizedAbspath, "", $normalizedBackupPath);
-        $siteurl                 = $this->maybeUseProtocolRelative(get_option('siteurl'));
-        return trailingslashit($siteurl) . ltrim($relativePathToBackupDir, '/');
+        $normalizedWpContentDir = trailingslashit(wp_normalize_path(WP_CONTENT_DIR));
+        if (strpos($normalizedBackupPath, $normalizedWpContentDir) === 0) {
+            $relativePath = substr($normalizedBackupPath, strlen($normalizedWpContentDir));
+            return trailingslashit($this->maybeUseProtocolRelative(content_url())) . ltrim($relativePath, '/');
+        }
+
+        $normalizedAbspath = trailingslashit(wp_normalize_path(ABSPATH));
+        $relativePath      = $normalizedBackupPath;
+        if (strpos($normalizedBackupPath, $normalizedAbspath) === 0) {
+            $relativePath = substr($normalizedBackupPath, strlen($normalizedAbspath));
+        }
+
+        $siteurl = $this->maybeUseProtocolRelative(get_option('siteurl'));
+
+        return trailingslashit($siteurl) . ltrim($relativePath, '/');
     }
 
     /** @return bool */

@@ -207,4 +207,45 @@ abstract class AnalyticsEventDto implements \JsonSerializable
             throw new \UnexpectedValueException();
         }
     }
+
+    /**
+     * @param mixed  $eventData
+     * @param string $key
+     * @param mixed  $default
+     * @return mixed
+     */
+    protected function getEventDataValue($eventData, string $key, $default = null)
+    {
+        if (is_array($eventData) && array_key_exists($key, $eventData)) {
+            return $eventData[$key];
+        }
+
+        if (!is_object($eventData)) {
+            return $default;
+        }
+
+        $publicProperties = get_object_vars($eventData);
+        if (array_key_exists($key, $publicProperties)) {
+            return $publicProperties[$key];
+        }
+
+        $getter = 'get' . ucfirst($key);
+        if (method_exists($eventData, $getter)) {
+            return $eventData->{$getter}();
+        }
+
+        $isser = 'is' . ucfirst($key);
+        if (method_exists($eventData, $isser)) {
+            return $eventData->{$isser}();
+        }
+
+        return $default;
+    }
+
+    protected function getStagingEngine($eventData): string
+    {
+        $engine = $this->getEventDataValue($eventData, 'stagingEngine', 'legacy');
+
+        return in_array($engine, ['legacy', 'next_gen'], true) ? $engine : 'legacy';
+    }
 }

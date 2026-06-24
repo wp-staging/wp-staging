@@ -22,6 +22,9 @@ trait FilesystemScannerDtoTrait
     /** @var string[] */
     private $excludedDirectoriesForScanner = [];
 
+    /** @var string[] */
+    private $tmpExcludedFullPaths = [];
+
     /**
      * @return int
      */
@@ -146,5 +149,31 @@ trait FilesystemScannerDtoTrait
     public function setExcludedDirectoriesForScanner(array $excludedDirectoriesForScanner)
     {
         $this->excludedDirectoriesForScanner = $excludedDirectoriesForScanner;
+    }
+
+    /**
+     * @param string[] $tmpExcludedFullPaths
+     * @return void
+     */
+    public function setTmpExcludedFullPaths(array $tmpExcludedFullPaths)
+    {
+        $this->tmpExcludedFullPaths = $tmpExcludedFullPaths;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getTmpExcludedFullPaths(): array
+    {
+        return $this->tmpExcludedFullPaths;
+    }
+
+    /**
+     * @param string[] $tmpExcludedFullPaths
+     * @return void
+     */
+    public function mergeTmpExcludedFullPaths(array $tmpExcludedFullPaths)
+    {
+        $this->tmpExcludedFullPaths = array_merge($this->tmpExcludedFullPaths, $tmpExcludedFullPaths);
     }
 }

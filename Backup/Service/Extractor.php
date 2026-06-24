@@ -208,6 +208,12 @@ class Extractor extends AbstractExtractor
             return;
         }
 
+        // Continuation segment of a multipart-split upload file — the existing bytes on disk
+        // are the previous parts' segments and must be preserved so the file can be stitched.
+        if ($this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsPreviousPartRequired()) {
+            return;
+        }
+
         if (file_exists($this->extractingFile->getBackupPath())) {
             // Delete the original upload file
             if (!unlink($this->extractingFile->getBackupPath())) {
@@ -267,6 +273,7 @@ class Extractor extends AbstractExtractor
         $uncompressedSize      = $this->indexLineDto->getUncompressedSize();
         $shouldExtractToMemory = $this->isValidateOnly
             && !$this->isBackupFormatV1
+            && !$this->isCurrentSegmentedFileHeader()
             && $this->extractingFile->getWrittenBytes() === 0
             && $this->extractingFile->getReadBytes() === 0
             && $this->isWithinMemoryExtractionLimit($uncompressedSize)
@@ -345,7 +352,7 @@ class Extractor extends AbstractExtractor
          * But this solution only works for non-compressed backups
          */
         if (!$this->isLastRequestGracefulShutdown && !$this->isFastPerformanceMode && !$this->extractingFile->getIsCompressed()) {
-            $fileSize = filesize($destinationFilePath);
+            $fileSize = $this->getRecoverableCurrentSegmentBytes($destinationFilePath);
             $this->wpstgFile->fseek($this->extractingFile->getStart() + $fileSize);
             $this->extractingFile->setReadBytes($fileSize);
             $this->extractingFile->setWrittenBytes($fileSize);
@@ -457,6 +464,22 @@ class Extractor extends AbstractExtractor
         }
 
         return $writtenBytes;
+    }
+
+    private function getRecoverableCurrentSegmentBytes(string $destinationFilePath): int
+    {
+        clearstatcache();
+        $diskSize = filesize($destinationFilePath);
+        if ($diskSize === false) {
+            return 0;
+        }
+
+        $writtenBytes = (int) $diskSize;
+        if ($this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsPreviousPartRequired()) {
+            $writtenBytes -= $this->extractorDto->getExtractorFileBaseBytes();
+        }
+
+        return max(0, min($this->extractingFile->getTotalBytes(), $writtenBytes));
     }
 
     /**

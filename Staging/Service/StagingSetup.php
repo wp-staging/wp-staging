@@ -28,10 +28,10 @@ class StagingSetup extends AbstractStagingSetup
         echo $this->templateEngine->render('staging/_partials/advance-settings-header.php'); // phpcs:ignore
     }
 
-    public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '')
+    public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', string $tooltip = null)
     {
         // We disable the settings by default on FREE version.
-        $this->renderSettings($name, $label, $description, $checked, true, $additionalClasses, $dataId);
+        $this->renderSettings($name, $label, $description, $checked, true, $additionalClasses, $dataId, $summary, $content, $tooltip);
     }
 
     /**

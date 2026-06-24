@@ -22,6 +22,7 @@ use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Framework\Settings\DarkMode;
+use WPStaging\Staging\Service\StagingEngine;
 
 class Assets
 {
@@ -353,12 +354,14 @@ class Assets
             'pricingUrl'                        => Language::localizePricingUrl('https://wp-staging.com/#pricing'),
             'checkoutFallbackUrl'               => Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?nocache=true&download_id=11'),
             'newsfeedData'                      => $this->getNewsfeedDataForJs(),
+            'isNewUser'                         => $this->isNewUser(),
             'maxFailedRetries'                  => apply_filters(self::FILTER_TESTS_MAXIMUM_RETRIES, 10),
             'i18n'                              => $this->i18n->getTranslations(),
             'isCloneable'                       => (new SiteInfo())->isCloneable(),
             'isTestMode'                        => defined('WPSTG_TEST') && WPSTG_TEST,
             'defaultColorMode'                  => get_option(DarkMode::OPTION_DEFAULT_COLOR_MODE, ''),
             'siteUrl'                           => site_url(),
+            'stagingEnginePreference'           => WPStaging::make(StagingEngine::class)->getEngine(),
         ];
 
         // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well
@@ -448,6 +451,23 @@ class Assets
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * Whether this is a brand-new install that has never been upgraded from a
+     * previous version. The "what's new" modal is meant to inform existing users
+     * what an update brings, so it must not greet new users on their first visit.
+     *
+     * The "upgraded from" option is empty on a fresh install and holds the prior
+     * version once a real upgrade has happened, which cleanly tells the two apart.
+     *
+     * @return bool
+     */
+    private function isNewUser(): bool
+    {
+        $upgradedFromOption = WPStaging::isPro() ? 'wpstgpro_version_upgraded_from' : 'wpstg_version_upgraded_from';
+
+        return empty(get_option($upgradedFromOption, ''));
     }
 
     /**

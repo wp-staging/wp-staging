@@ -4,7 +4,6 @@ namespace WPStaging\Staging\Tasks\StagingSiteCreate;
 
 use RuntimeException;
 use WPStaging\Backend\Modules\SystemInfo;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
@@ -15,13 +14,21 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
-use WPStaging\Staging\Dto\StagingSiteDto;
+use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
+use WPStaging\Staging\Traits\WithStagingEnginePreference;
+use WPStaging\Staging\Traits\WithStagingRequirementLogs;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
+/**
+ * Validates prerequisites before a staging site create job starts.
+ */
 class CreateRequirementsCheckTask extends StagingTask
 {
+    use WithStagingEnginePreference;
+    use WithStagingRequirementLogs;
+
     /** @var Directory */
     protected $directory;
 
@@ -56,6 +63,7 @@ class CreateRequirementsCheckTask extends StagingTask
         SeekableQueueInterface $taskQueue,
         DiskWriteCheck $diskWriteCheck,
         AnalyticsStagingCreate $analyticsStagingCreate,
+        StagingEngine $stagingEngine,
         SystemInfo $systemInfo,
         Sites $sites
     ) {
@@ -64,6 +72,7 @@ class CreateRequirementsCheckTask extends StagingTask
         $this->filesystem             = $filesystem;
         $this->diskWriteCheck         = $diskWriteCheck;
         $this->analyticsStagingCreate = $analyticsStagingCreate;
+        $this->stagingEngine          = $stagingEngine;
         $this->systemInfo             = $systemInfo;
         $this->database               = $database;
         $this->sites                  = $sites;
@@ -85,11 +94,15 @@ class CreateRequirementsCheckTask extends StagingTask
             $this->stepsDto->setTotal(1);
         }
 
+        $this->persistStagingEnginePreference();
+        $this->analyticsStagingCreate->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
+
         try {
             $this->logger->info('#################### Start Staging Site Create Job ####################');
             $this->logger->writeLogHeader();
             $this->logger->writeInstalledPluginsAndThemes();
             $this->writeStagingSettingsLogs();
+            $this->writeAdvancedSettingsToLogs();
             $this->cannotCreateStagingSiteOnMultisite();
             $this->cannotCreateIfCantWriteToDisk();
             $this->cannotCreateStagingDirectory();

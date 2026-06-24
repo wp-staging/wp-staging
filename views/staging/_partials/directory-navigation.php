@@ -29,7 +29,7 @@ use WPStaging\Staging\Service\DirectoryScanner as Scanner;
 
 ?>
 
-<div class="wpstg-dir">
+<div class="wpstg-dir<?php echo $isNavigatable === 'true' ? ' wpstg-dir--expandable' : ''; ?>">
     <?php
         $dataAttributes = [
             'dirType'       => $dirType,
@@ -39,12 +39,16 @@ use WPStaging\Staging\Service\DirectoryScanner as Scanner;
             'isNavigatable' => $isNavigatable,
         ];
         $attributes = [
-            'classes'    => 'wpstg-check-dir ' . $class,
-            'isDisabled' => $isDisabled,
+            'classes'      => 'wpstg-check-dir ' . $class,
+            'isDisabled'   => $isDisabled,
+            'usePrimitive' => true,
         ];
         Checkbox::render('', 'selectedDirectories[]', $prefix . $relPath, ($shouldBeChecked && ($parentChecked !== false)), $attributes, $dataAttributes);
         ?>
-    <a href="#" class='wpstg-expand-dirs <?php echo ($isDisabled) ? 'wpstg-storage-settings-disabled' : ''; ?> <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
+    <a href="#" class='wpstg-expand-dirs <?php echo !empty($isLeaf) ? 'wpstg-dir-leaf' : ''; ?> <?php echo ($isDisabled) ? 'wpstg-storage-settings-disabled' : ''; ?> <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
+    <?php if (!empty($isStagingSite)) : ?>
+        <span class="wpstg-dir-staging-badge"><?php esc_html_e('Staging site', 'wp-staging'); ?></span>
+    <?php endif; ?>
     <?php if ($isLink) : ?>
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons wpstg-u--mb-4" src="<?php echo esc_url($infoIconPath); ?>" alt="info" />
@@ -57,7 +61,9 @@ use WPStaging\Staging\Service\DirectoryScanner as Scanner;
         </span>
     <?php endif; ?>
     <?php if ($isNavigatable === 'true') : ?>
-    <span class='wpstg-is-dir-loading wpstg-configure-spinner'></span>
+    <span class="wpstg-is-dir-loading" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity="0.2"></circle><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>
+    </span>
     <?php endif; ?>
     <?php if ($isDebugMode) : ?>
     <span class='wpstg-size-info'><?php echo esc_html($dataPath); ?></span>

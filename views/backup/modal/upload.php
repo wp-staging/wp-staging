@@ -24,7 +24,7 @@ try {
     data-uploadSuccessMessage="<?php esc_attr_e('The backup file has been successfully uploaded. You can restore your website with this backup.', 'wp-staging'); ?>"
     style="display: none"
 >
-    <h2 class="wpstg--modal--backup--upload--title">
+    <h2 class="wpstg--modal--backup--upload--title wpstg-modal-title">
         <?php esc_html_e('Upload Backup', 'wp-staging') ?>
         <div class="wpstg--tooltip">
             <img class="wpstg--dashicons wpstg-dashicons-19" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg"></img>

@@ -87,7 +87,7 @@ $areFilesExcluded = $excluded['plugins']
 ?>
 <div id="wpstg-confirm-backup-restore-wrapper">
     <div class="wpstg-confirm-backup-restore-header">
-        <h3 class="wpstg--swal2-title" style="text-align: center;"><?php echo wp_kses_post(__('This will restore your website! </br> Are you sure?', 'wp-staging')); ?></h3>
+        <h3 class="wpstg--swal2-title wpstg-modal-title" style="text-align: center;"><?php echo wp_kses_post(__('This will restore your website! </br> Are you sure?', 'wp-staging')); ?></h3>
     </div>
     <div id="wpstg-confirm-backup-restore-data">
         <ul>

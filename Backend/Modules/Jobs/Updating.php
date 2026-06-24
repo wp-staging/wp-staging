@@ -126,12 +126,15 @@ class Updating extends Job
 
         // Job
         $this->options->job = new stdClass();
+        $this->loadLegacyExistingClones();
 
         // Make sure it is always enabled for free version
         $this->options->isEmailsAllowed = true;
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
             $currentStagingSite                     = $this->options->existingClones[$this->options->clone];
+            $this->options->current                 = $this->options->clone;
+            $this->options->currentClone            = $currentStagingSite;
             $this->options->cloneName               = $this->getValueFromArray('cloneName', $currentStagingSite);
             $this->options->cloneDirectoryName      = $this->getValueFromArray('directoryName', $currentStagingSite);
             $this->options->cloneNumber             = $this->getValueFromArray('number', $currentStagingSite);
@@ -195,6 +198,7 @@ class Updating extends Job
 
         // Process lock state
         $this->options->isRunning = true;
+        $this->initializeLegacyStagingRun($this->mainJob);
 
         return $this->saveOptions();
     }

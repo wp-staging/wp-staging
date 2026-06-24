@@ -118,6 +118,10 @@ class Cloning extends Job
         $this->filesIndexCache->delete();
 
         // Generate Options
+        $this->options->root         = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, ABSPATH);
+        $this->options->current      = null;
+        $this->options->currentClone = null;
+
         // Clone ID -> timestamp (time at which this clone creation initiated)
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
 
@@ -177,11 +181,13 @@ class Cloning extends Job
 
         // Job
         $this->options->job = new \stdClass();
+        $this->loadLegacyExistingClones();
 
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
-            $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
-            $this->options->prefix      = isset($this->options->existingClones[$this->options->clone]->prefix) ? $this->options->existingClones[$this->options->clone]->prefix : $this->setStagingPrefix();
+            $existingClone              = (array)$this->options->existingClones[$this->options->clone];
+            $this->options->cloneNumber = isset($existingClone['number']) ? (int)$existingClone['number'] : 1;
+            $this->options->prefix      = !empty($existingClone['prefix']) && is_string($existingClone['prefix']) ? $existingClone['prefix'] : $this->setStagingPrefix();
 
         // Clone does not exist but there are other clones in db
         // Get data and increment it
@@ -286,16 +292,20 @@ class Cloning extends Job
 
         // Process lock state
         $this->options->isRunning = true;
+        $this->initializeLegacyStagingRun(Job::STAGING);
 
         // id of the user creating the clone
         $this->options->ownerId = get_current_user_id();
         // Save Clone data
         $this->saveClone();
 
-        WPStaging::make(AnalyticsStagingCreate::class)->enqueueStartEvent($this->options->jobIdentifier, $this->options);
+        if (!$this->saveOptions()) {
+            return false;
+        }
 
+        WPStaging::make(AnalyticsStagingCreate::class)->enqueueStartEvent($this->options->jobIdentifier, $this->options);
         $this->errorMessage = "";
-        return $this->saveOptions();
+        return true;
     }
 
     /**

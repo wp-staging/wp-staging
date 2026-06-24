@@ -28,6 +28,9 @@ class ExtractorDto
     /** @var int */
     protected $headerBytesRemoved;
 
+    /** @var int */
+    protected $extractorFileBaseBytes;
+
     public function __construct()
     {
         $this->indexStartOffset          = 0;
@@ -38,6 +41,7 @@ class ExtractorDto
         $this->extractorFileWrittenBytes = 0;
         $this->extractorFileReadBytes    = 0;
         $this->headerBytesRemoved        = 0;
+        $this->extractorFileBaseBytes    = 0;
     }
 
     public function getIndexStartOffset(): int
@@ -150,6 +154,20 @@ class ExtractorDto
     public function setHeaderBytesRemoved(int $headerBytesRemoved)
     {
         $this->headerBytesRemoved = $headerBytesRemoved;
+    }
+
+    public function getExtractorFileBaseBytes(): int
+    {
+        return $this->extractorFileBaseBytes;
+    }
+
+    /**
+     * @param int $extractorFileBaseBytes
+     * @return void
+     */
+    public function setExtractorFileBaseBytes(int $extractorFileBaseBytes)
+    {
+        $this->extractorFileBaseBytes = $extractorFileBaseBytes;
     }
 
     /**

@@ -239,6 +239,9 @@ class FilesystemScannerTask extends BackupTask
         }
 
         $this->filesystemScanner->setFilters($this->ignoreFileBiggerThan, $this->ignoreFileExtensions, $this->ignoreFileExtensionFilesBiggerThan);
+        $this->filesystemScanner->setRecursiveExcludeRules([
+            '**/wp-staging*/**/node_modules', // skip WP Staging plugins' node_modules during the deep scan
+        ]);
         $this->filesystemScanner->setLogTitle(static::getTaskTitle());
         $this->filesystemScanner->setQueueCacheName(FileBackupTask::getTaskName());
         $this->filesystemScanner->inject($this->logger, $this->taskQueue, $this->getScannerDto());

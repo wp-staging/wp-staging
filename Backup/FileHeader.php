@@ -250,9 +250,13 @@ class FileHeader implements IndexLineInterface
     /**
      * @param string $filePath
      * @param string $identifiablePath
+     * @param bool   $skipChecksum When true, the whole-file CRC32 is not computed. Callers that
+     *                             override the checksum (e.g. multipart segmenters writing a
+     *                             segment-scoped CRC) can skip the expensive hash_file() step,
+     *                             which otherwise scans the entire source for every segment.
      * @return void
      */
-    public function readFile(string $filePath, string $identifiablePath)
+    public function readFile(string $filePath, string $identifiablePath, bool $skipChecksum = false)
     {
         $fileInfo = new \SplFileInfo($filePath);
         $this->setFileName($fileInfo->getFilename());
@@ -267,6 +271,13 @@ class FileHeader implements IndexLineInterface
         $this->setCompressedSize($fileInfo->getSize());
         $this->setModifiedTime($fileInfo->getMTime());
         $this->setAttributes(0);
+
+        if ($skipChecksum) {
+            // Caller will overwrite the checksum with a domain-specific value (e.g. a
+            // segment-scoped CRC); leave the default 0/'' assigned by resetHeader() in place.
+            return;
+        }
+
         $this->setCrc32Checksum(hash_file(self::CRC32_CHECKSUM_ALGO, $filePath));
     }
 
@@ -612,6 +623,44 @@ class FileHeader implements IndexLineInterface
     public function getStartOffset(): int
     {
         return $this->startOffset;
+    }
+
+    /**
+     * Stamp this FileHeader's extraField with the metadata needed to verify the reassembled
+     * file at restore time. Only meant for the terminal segment of a multipart-split file.
+     *
+     * @param int    $wholeFileSize Bytes in the original (un-split) source file.
+     * @param string $wholeFileCrc  hex CRC32 of the whole source file.
+     * @return void
+     */
+    public function setMultipartTailMetadata(int $wholeFileSize, string $wholeFileCrc)
+    {
+        $this->setExtraFieldEntry(ExtraFieldType::TAIL, sprintf('%d:%s', $wholeFileSize, $wholeFileCrc));
+    }
+
+    /**
+     * Decode the extraField as multipart-tail metadata. Returns null when the extraField does
+     * not carry the marker (e.g. non-terminal segments, regular non-segmented entries, or
+     * older backup formats predating this PR).
+     *
+     * @return array|null ['wholeFileSize' => int, 'wholeFileCRC' => string] or null
+     */
+    public function getMultipartTailMetadata()
+    {
+        $payload = $this->getExtraFieldEntry(ExtraFieldType::TAIL);
+        if ($payload === null) {
+            return null;
+        }
+
+        $parts   = explode(':', $payload, 2);
+        if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
+            return null;
+        }
+
+        return [
+            'wholeFileSize' => (int) $parts[0],
+            'wholeFileCRC'  => $parts[1],
+        ];
     }
 
     /**

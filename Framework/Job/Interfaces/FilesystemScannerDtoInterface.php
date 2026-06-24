@@ -70,4 +70,19 @@ interface FilesystemScannerDtoInterface
      * @return void
      */
     public function setExcludedDirectoriesForScanner(array $excludedDirectories);
+
+    /** @return string[] */
+    public function getTmpExcludedFullPaths(): array;
+
+    /**
+     * @param string[] $tmpExcludedFullPaths
+     * @return void
+     */
+    public function setTmpExcludedFullPaths(array $tmpExcludedFullPaths);
+
+    /**
+     * @param string[] $tmpExcludedFullPaths
+     * @return void
+     */
+    public function mergeTmpExcludedFullPaths(array $tmpExcludedFullPaths);
 }

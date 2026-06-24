@@ -9,7 +9,9 @@ use WPStaging\Staging\Ajax\AbstractAjaxPrepare;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteCreate;
+use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Service\StagingSetup;
+use WPStaging\Staging\Sites;
 
 class PrepareCreate extends AbstractAjaxPrepare
 {
@@ -30,6 +32,7 @@ class PrepareCreate extends AbstractAjaxPrepare
 
         $data = Sanitize::sanitizeArray($_POST['wpstgCreateData'], [
             'cloneId'                => 'string',
+            'stagingEngine'          => 'string',
             'allTablesExcluded'      => 'bool',
             'excludeSizeGreaterThan' => 'string',
         ]);
@@ -53,6 +56,7 @@ class PrepareCreate extends AbstractAjaxPrepare
     {
         // Clone ID
         $data['cloneId'] = sanitize_text_field($data['cloneId']);
+        $data['stagingEngine'] = StagingEngine::ENGINE_NEXT_GEN;
 
         if (empty($data['cloneId'])) {
             throw new \UnexpectedValueException("Invalid request. Missing 'cloneId'.");
@@ -87,6 +91,7 @@ class PrepareCreate extends AbstractAjaxPrepare
     {
         return [
             'cloneId'                => time(),
+            'stagingEngine'          => StagingEngine::ENGINE_NEXT_GEN,
             'name'                   => '',
             'allTablesExcluded'      => false,
             'excludedTables'         => [],
@@ -227,49 +232,7 @@ class PrepareCreate extends AbstractAjaxPrepare
 
     protected function generateStagingSiteName(string $cloneId): string
     {
-        // List of predefined names to choose from
-        $nameList = [
-            "enterprise",
-            "voyager",
-            "defiant",
-            "discovery",
-            "excelsior",
-            "intrepid",
-            "constitution",
-            "reliant",
-            "grissom",
-            "yamato",
-            "excelsior",
-            "venture",
-            "cerritos",
-            "prometheus",
-            "bellerophon",
-            "sanpablo",
-            "sutherland",
-            "shenzhou",
-            "titan",
-            "reliant",
-            "stargazer",
-            "franklin",
-            "protostar",
-        ];
-
-        // Randomly shuffle the list of names
-        shuffle($nameList);
-
-        foreach ($nameList as $name) {
-            // Sanitize the name to ensure it is safe for use
-            $name    = sanitize_text_field($name);
-            $dirPath = ABSPATH . $name;
-
-            // If it doesn't exist, return this name as the friendly name
-            if (!file_exists($dirPath)) {
-                return $name;
-            }
-        }
-
-        // If all predefined names are taken, return a clone Id
-        return $cloneId;
+        return WPStaging::make(Sites::class)->generateStagingSiteName($cloneId);
     }
 
     protected function prepareStagingSiteDto()

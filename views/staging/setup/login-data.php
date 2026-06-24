@@ -7,18 +7,24 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
  * @var AbstractStagingSetup $stagingSetup
  */
 
+ob_start();
+?>
+<div id="wpstg-new-admin-user-section" class="wpstg-advanced-settings-expanded-section" <?php echo $stagingSetup->getIsOpenDisabledSettingsSectionByDefault() ? '' : 'style="display: none;"' ?>>
+    <div class="wpstg-advanced-settings-expanded-fields wpstg-py-1">
+        <?php $stagingSetup->renderNewAdminSettings() ?>
+    </div>
+</div>
+<?php
+$content = ob_get_clean();
+
 $stagingSetup->renderAdvanceSettings(
     'wpstg-new-admin-user',
     esc_html__('New Admin Account', 'wp-staging'),
-    esc_html__('Create a new admin user account for this staging site!', 'wp-staging') . '<br/><br/><span class="wpstg--red wpstg-mt-10px">' . esc_html__('If the account already exists, the password will be updated.', 'wp-staging') . '</span>',
+    esc_html__('Add a new admin user account for this staging site!', 'wp-staging') . '<br/><br/><span class="wpstg--red wpstg-mt-10px">' . esc_html__('If the account already exists, the password will be updated.', 'wp-staging') . '</span>',
     false,
     'wpstg-toggle-advance-settings-section',
-    'wpstg-new-admin-user-section'
+    'wpstg-new-admin-user-section',
+    esc_html__('Add a separate admin user on the staging site.', 'wp-staging'),
+    $content,
+    ''
 );
-
-?>
-
-<div id="wpstg-new-admin-user-section" <?php echo $stagingSetup->getIsOpenDisabledSettingsSectionByDefault() ? '' : 'style="display: none;"' ?>>
-    <?php $stagingSetup->renderNewAdminSettings() ?>
-    <hr />
-</div>

@@ -75,12 +75,13 @@ class StagingSiteReset extends AbstractJob
 
     protected function addDatabaseTasks()
     {
-        // Early return if all tables are excluded
+        // Always drop the existing staging tables on a reset — that is the definition of a reset.
+        $this->tasks[] = CleanupStagingTablesTask::class;
+
         if ($this->jobDataDto->getAllTablesExcluded() && empty($this->jobDataDto->getNonSiteTables())) {
             return;
         }
 
-        $this->tasks[] = CleanupStagingTablesTask::class;
         $this->tasks[] = CreateDatabaseTablesTask::class;
         $this->tasks[] = PrepareDatabaseRowsTask::class;
         $this->tasks[] = ImportDatabaseRowsTask::class;

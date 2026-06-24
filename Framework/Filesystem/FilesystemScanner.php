@@ -8,6 +8,7 @@ use SplFileInfo;
 use Throwable;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Filesystem\Filters\PathFilterHelper;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
@@ -54,6 +55,24 @@ class FilesystemScanner extends AbstractFilesystemScanner
     protected $fileNameRules = [];
 
     /**
+     * Glob path rules that must prune directories during the deferred recursive walk.
+     * Per-part exclude rules only apply to the non-recursive top-level pre-scan, so nested
+     * patterns (e.g. WP Staging's own node_modules) need this persistent channel to be honored.
+     *
+     * @var PathFilterHelper|null
+     */
+    protected $recursiveExcludeFilter = null;
+
+    /**
+     * When true, recursivePathScanning enqueues a directory entry for any subtree with no discovered files.
+     * Staging needs this so empty folders are recreated on the clone; backup callers typically don't want it
+     * because the archive format pairs a dir header with its files.
+     *
+     * @var bool
+     */
+    protected $enqueueEmptyDirectories = false;
+
+    /**
      * @param Directory $directory
      * @param PathIdentifier $pathIdentifier
      * @param Filesystem $filesystem
@@ -97,6 +116,48 @@ class FilesystemScanner extends AbstractFilesystemScanner
     {
         $this->folderNameRules = $folderNameRules;
         $this->fileNameRules   = $fileNameRules;
+    }
+
+    /**
+     * Set glob path rules that prune matching directories during the recursive walk.
+     * Unlike per-part exclude rules, these survive into the deferred queue processing so nested
+     * patterns are actually honored.
+     *
+     * @param array $rules
+     * @return void
+     */
+    public function setRecursiveExcludeRules(array $rules)
+    {
+        if (empty($rules)) {
+            $this->recursiveExcludeFilter = null;
+            return;
+        }
+
+        $filter = new PathFilterHelper();
+        $filter->setWpRootPath($this->rootPath);
+        $filter->categorizeRules($rules);
+        $this->recursiveExcludeFilter = $filter;
+    }
+
+    /**
+     * @param string $rootPath
+     * @return void
+     */
+    public function setRootPath(string $rootPath)
+    {
+        parent::setRootPath($rootPath);
+        if ($this->recursiveExcludeFilter !== null) {
+            $this->recursiveExcludeFilter->setWpRootPath($rootPath);
+        }
+    }
+
+    /**
+     * @param bool $enqueueEmptyDirectories
+     * @return void
+     */
+    public function setEnqueueEmptyDirectories(bool $enqueueEmptyDirectories)
+    {
+        $this->enqueueEmptyDirectories = $enqueueEmptyDirectories;
     }
 
     /**
@@ -204,16 +265,17 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $fileSize       = $file->getSize();
         $fileExtension  = $file->getExtension();
 
+        $relativePath = $this->computeRelativePathFromRoot($normalizedPath);
+
         if ($this->isExcludeByFileNameRule($file->getFilename())) {
+            $this->scannerDto->addFileExcludedInRequest($relativePath);
             return;
         }
-
-        // Lazy-build relative path
-        $relativePath = str_replace($this->filesystem->normalizePath($this->rootPath, true), '', $normalizedPath);
 
         // Exclude wp-content/debug.log to prevent checksum failures caused by new log entries during backup
         $normalizedDebugPath = $this->filesystem->normalizePath($this->contentPath . '/debug.log');
         if ($normalizedPath === $normalizedDebugPath) {
+            $this->scannerDto->addFileExcludedInRequest($relativePath);
             $this->logger->notice(sprintf(
                 '%s: Skipped file "%s". Excluded by rule.',
                 esc_html($this->logTitle),
@@ -223,7 +285,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
         }
 
         if ($this->canExcludeLogFile($fileExtension) || $this->canExcludeCacheFile($fileExtension) || isset($this->ignoreFileExtensions[$fileExtension])) {
-            // Early bail: File has an ignored extension
+            $this->scannerDto->addFileExcludedInRequest($relativePath);
             $this->logger->notice(sprintf(
                 '%s: Skipped file: "%s". Extension: "%s" is excluded by rule.',
                 esc_html($this->logTitle),
@@ -236,7 +298,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
 
         if (isset($this->ignoreFileExtensionFilesBiggerThan[$fileExtension])) {
             if ($fileSize > $this->ignoreFileExtensionFilesBiggerThan[$fileExtension]) {
-                // Early bail: File bigger than expected for given extension
+                $this->scannerDto->addFileExcludedInRequest($relativePath);
                 $this->logger->notice(sprintf(
                     '%s: Skipped file "%s" (%s). It exceeds the maximum allowed file size for files with the extension "%s" (%s).',
                     esc_html($this->logTitle),
@@ -249,7 +311,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
                 return;
             }
         } elseif ($fileSize > $this->ignoreFileBiggerThan) {
-            // Early bail: File is larger than max allowed size.
+            $this->scannerDto->addFileExcludedInRequest($relativePath);
             $this->logger->notice(sprintf(
                 '%s: Skipped file "%s" (%s). It exceeds the maximum file size (%s).',
                 esc_html($this->logTitle),
@@ -278,6 +340,15 @@ class FilesystemScanner extends AbstractFilesystemScanner
     }
 
     /**
+     * @param string $normalizedPath
+     * @return string
+     */
+    private function computeRelativePathFromRoot(string $normalizedPath): string
+    {
+        return str_replace($this->filesystem->normalizePath($this->rootPath, true), '', $normalizedPath);
+    }
+
+    /**
      * @param SplFileInfo $dir
      * @param SplFileInfo|null $link
      * @return void
@@ -299,6 +370,11 @@ class FilesystemScanner extends AbstractFilesystemScanner
             return;
         }
 
+        $folderName = $link !== null ? $link->getFilename() : $dir->getFilename();
+        if ($this->isExcludeByFolderNameRule($folderName)) {
+            return;
+        }
+
         if ($link !== null) {
             $linkPath = $this->filesystem->normalizePath($link->getPathname(), true);
             $this->taskQueue->enqueue($this->currentPathScanning . self::PATH_SEPARATOR . $normalizedPath . self::PATH_SEPARATOR . $linkPath);
@@ -307,6 +383,21 @@ class FilesystemScanner extends AbstractFilesystemScanner
 
         // we need to know
         $this->taskQueue->enqueue($this->currentPathScanning . self::PATH_SEPARATOR . $normalizedPath);
+    }
+
+    /**
+     * Prune a directory during the recursive walk when it matches a persistent recursive exclude rule.
+     *
+     * @param string $path
+     * @return bool
+     */
+    protected function isExcludedByRecursiveRule(string $path): bool
+    {
+        if ($this->recursiveExcludeFilter === null) {
+            return false;
+        }
+
+        return $this->recursiveExcludeFilter->isMatched(new SplFileInfo($path));
     }
 
     /**
@@ -338,13 +429,54 @@ class FilesystemScanner extends AbstractFilesystemScanner
      */
     protected function recursivePathScanning(string $path, string $link = '')
     {
-        if ($this->isExcludedDirectory($path)) {
+        if ($this->isExcludedDirectory($path) || $this->isExcludedByRecursiveRule($path)) {
             return;
         }
 
         $this->scannerDto->incrementTotalDirectories();
 
+        if (!$this->enqueueEmptyDirectories) {
+            parent::recursivePathScanning($path, $link);
+            return;
+        }
+
+        // Enqueue subtrees that yielded no files so the copier preserves empty directories on the
+        // staging site instead of silently dropping them.
+        $discoveredFilesBefore = $this->scannerDto->getDiscoveredFiles();
+
         parent::recursivePathScanning($path, $link);
+
+        if ($this->scannerDto->getDiscoveredFiles() === $discoveredFilesBefore) {
+            $this->enqueueEmptyDirectory($path, $link);
+        }
+    }
+
+    /**
+     * Enqueue an empty directory using the same root-relative queue format as files.
+     * Increment discovered counters so the copier total includes this queue item.
+     *
+     * @param string $path
+     * @param string $link
+     * @return void
+     */
+    protected function enqueueEmptyDirectory(string $path, string $link = '')
+    {
+        $normalizedPath = $this->filesystem->normalizePath($path, true);
+        $rootPath       = $this->filesystem->normalizePath($this->rootPath, true);
+        $relativePath   = str_replace($rootPath, '', $normalizedPath);
+        $relativePath   = $this->replaceEOLsWithPlaceholders($relativePath);
+
+        $this->scannerDto->incrementDiscoveredFiles();
+        $this->scannerDto->incrementDiscoveredFilesByCategory($this->currentPathScanning);
+
+        if (!empty($link)) {
+            $linkPath  = $this->filesystem->normalizePath($link, true);
+            $queueItem = rtrim($relativePath, '/') . self::PATH_SEPARATOR . rtrim($linkPath, '/');
+            $this->filesystemQueue->enqueue($queueItem);
+            return;
+        }
+
+        $this->filesystemQueue->enqueue(rtrim($relativePath, '/'));
     }
 
     /**

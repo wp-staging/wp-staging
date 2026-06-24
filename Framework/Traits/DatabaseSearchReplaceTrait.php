@@ -37,6 +37,11 @@ trait DatabaseSearchReplaceTrait
         'wpstg_tmp_data',
         'siteurl',
         'home',
+        // Literal option names that start with `wp_` but are not per-blog prefixed. Their names must
+        // survive clone/push unchanged, otherwise a later export collides on the option_name UNIQUE
+        // key (error 1062). Do NOT add `wp_user_roles` — that one IS per-blog and must be renamed.
+        'wp_force_deactivated_plugins',
+        'wp_page_for_privacy_policy',
     ];
 
     public function excludedStrings()

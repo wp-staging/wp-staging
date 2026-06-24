@@ -53,7 +53,7 @@
         <?php endif; ?>
         <?php if (!empty($buttonText)) : ?>
             <?php $url = !empty($buttonUrl) ? esc_url($buttonUrl) : '#'; ?>
-            <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button wpstg-mt-2">
+            <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener" class="wpstg-btn wpstg-btn-sm wpstg-btn-danger wpstg-mt-2">
                 <?php echo esc_html($buttonText); ?>
             </a>
         <?php endif; ?>

@@ -22,6 +22,11 @@ class CopyWpAdminTask extends FileCopierTask
         return PartIdentifier::WP_ADMIN_PART_IDENTIFIER;
     }
 
+    protected function getLoggerFriendlyName(): string
+    {
+        return 'wp-admin';
+    }
+
     protected function getIsExcluded(): bool
     {
         return $this->jobDataDto->getIsWpAdminExcluded();

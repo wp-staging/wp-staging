@@ -31,6 +31,20 @@ class ArchiverDto
     private $backupMetadata;
 
     /**
+     * True when the current file is being continued from a previous multipart part.
+     * The next segment's FileHeader emits REQUIRE_PREVIOUS_PART when this is set.
+     * @var bool
+     */
+    private $isContinuation = false;
+
+    /**
+     * Total bytes of the source file written across every segment of a multipart-split file.
+     * When no multipart split is in progress this stays at 0.
+     * @var int
+     */
+    private $sourceBytesWrittenTotal = 0;
+
+    /**
      * @param int $bytes
      * @return void
      */
@@ -68,6 +82,28 @@ class ArchiverDto
         $this->setIndexPositionCreated(false);
         $this->setFileHeaderSizeInBytes(0);
         $this->setStartOffset(0);
+        $this->setIsContinuation(false);
+        $this->setSourceBytesWrittenTotal(0);
+    }
+
+    public function isContinuation(): bool
+    {
+        return $this->isContinuation;
+    }
+
+    public function setIsContinuation(bool $isContinuation)
+    {
+        $this->isContinuation = $isContinuation;
+    }
+
+    public function getSourceBytesWrittenTotal(): int
+    {
+        return $this->sourceBytesWrittenTotal;
+    }
+
+    public function setSourceBytesWrittenTotal(int $sourceBytesWrittenTotal)
+    {
+        $this->sourceBytesWrittenTotal = $sourceBytesWrittenTotal;
     }
 
     /**

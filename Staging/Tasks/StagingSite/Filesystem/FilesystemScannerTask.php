@@ -12,12 +12,12 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScanner;
 use WPStaging\Framework\Filesystem\FilesystemScannerDto;
+use WPStaging\Framework\Filesystem\LegacyFileRulesTrait;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
-use WPStaging\Staging\Interfaces\AdvanceStagingOptionsInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\FileCopierTask;
@@ -29,6 +29,8 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
  */
 class FilesystemScannerTask extends StagingTask
 {
+    use LegacyFileRulesTrait;
+
     /** @var int */
     const STEP_SCAN_WP_ROOT_FILES = 0;
 
@@ -65,6 +67,15 @@ class FilesystemScannerTask extends StagingTask
     /** @var string */
     const FILTER_EXCLUDE_DIRECTORIES = 'wpstg.cloning.exclude.directories';
 
+    /** @var string */
+    const FILTER_LEGACY_EXCLUDE_FILES_FULL_PATH = 'wpstg.clone.excluded_files_full_path';
+
+    /** @var string */
+    const FILTER_LEGACY_EXCLUDE_FILES = 'wpstg_clone_excluded_files';
+
+    /** @var string */
+    const FILTER_LEGACY_EXCLUDED_FILE_SIZE = 'wpstg_clone_file_size_exclude';
+
     /**
      * 9 steps for scanning each identifier and the last step to deep scan non-scanned directories
      * @var int
@@ -91,6 +102,9 @@ class FilesystemScannerTask extends StagingTask
 
     /** @var array */
     protected $ignoreFileExtensionFilesBiggerThan = [];
+
+    /** @var array */
+    protected $legacyExcludedFileNameRules = [];
 
     /** @var JobDataDto|FilesystemScannerDtoInterface|StagingOperationDtoInterface $jobDataDto */
     protected $jobDataDto; // @phpstan-ignore-line
@@ -231,12 +245,32 @@ class FilesystemScannerTask extends StagingTask
         $this->ignoreFileExtensions = array_merge($this->jobDataDto->getExcludeExtensionRules(), [
             'log',
             'wpstg', // WP STAGING backup files
-            'svn',
             'tmp',
-            'git',
         ]);
 
         $this->ignoreFileExtensions = (array)apply_filters(self::FILTER_IGNORE_FILE_EXTENSION, $this->ignoreFileExtensions);
+
+        $legacyExcludedFiles = (array)apply_filters(self::FILTER_LEGACY_EXCLUDE_FILES, [
+            '.DS_Store',
+            '*.git',
+            '*.svn',
+            '*.tmp',
+            'desktop.ini',
+            '.gitignore',
+            '*.log',
+            'web.config',
+            '.wp-staging',
+            '.wp-staging-cloneable',
+        ]);
+
+        $legacyExcludedFilesFullPath = (array)apply_filters(self::FILTER_LEGACY_EXCLUDE_FILES_FULL_PATH, [
+            '.htaccess',
+            'db.php',
+            'object-cache.php',
+            'advanced-cache.php',
+        ]);
+
+        $this->legacyExcludedFileNameRules = $this->extractLegacyFileNameRules(array_merge($legacyExcludedFiles, $legacyExcludedFilesFullPath));
 
         $excludeSizeGreaterThanInMb = $this->jobDataDto->getExcludeSizeGreaterThan();
 
@@ -244,6 +278,13 @@ class FilesystemScannerTask extends StagingTask
          * Allow user to exclude files larger than given size from being copied.
          */
         $this->ignoreFileBiggerThan = (int)apply_filters(self::FILTER_IGNORE_FILE_BIGGER_THAN, $excludeSizeGreaterThanInMb * MB_IN_BYTES);
+        $legacyFileSizeFilterValue  = apply_filters(self::FILTER_LEGACY_EXCLUDED_FILE_SIZE, $this->ignoreFileBiggerThan);
+        if (is_numeric($legacyFileSizeFilterValue)) {
+            $this->ignoreFileBiggerThan = (int)$legacyFileSizeFilterValue;
+        }
+
+        $legacyExcludedExtensions = $this->extractFileExtensions($this->legacyExcludedFileNameRules);
+        $this->ignoreFileExtensions = array_merge($this->ignoreFileExtensions, $legacyExcludedExtensions);
 
         // Allows us to use isset for performance
         $this->ignoreFileExtensions = array_flip($this->ignoreFileExtensions);
@@ -266,12 +307,22 @@ class FilesystemScannerTask extends StagingTask
         }
 
         $this->filesystemScanner->setFilters($this->ignoreFileBiggerThan, $this->ignoreFileExtensions, $this->ignoreFileExtensionFilesBiggerThan);
-        $this->filesystemScanner->setNameExcludeRules(
+        $excludeFileRules = array_values(array_unique(array_merge($this->jobDataDto->getExcludeFileRules(), $this->legacyExcludedFileNameRules)));
+        $excludeFolderRules = array_values(array_unique(array_merge(
             $this->jobDataDto->getExcludeFolderRules(),
-            $this->jobDataDto->getExcludeFileRules()
+            $this->extractLegacyFolderNameRules($this->legacyExcludedFileNameRules)
+        )));
+
+        $this->filesystemScanner->setNameExcludeRules(
+            $excludeFolderRules,
+            $excludeFileRules
         );
+        $this->filesystemScanner->setRecursiveExcludeRules([
+            '**/wp-staging*/**/node_modules', // skip WP Staging plugins' node_modules during the deep scan
+        ]);
         $this->filesystemScanner->setLogTitle(static::getTaskTitle());
         $this->filesystemScanner->setQueueCacheName(FileCopierTask::getTaskName());
+        $this->filesystemScanner->setEnqueueEmptyDirectories(true);
         $this->filesystemScanner->inject($this->logger, $this->taskQueue, $this->getScannerDto());
     }
 
@@ -393,13 +444,6 @@ class FilesystemScannerTask extends StagingTask
 
     protected function scanUploadsDirectory(): TaskResponseDto
     {
-        // Early bail: Uploads will be symlinked instead of copied
-        if ($this->jobDataDto instanceof AdvanceStagingOptionsInterface && $this->jobDataDto->getIsUploadsSymlinked()) {
-            $this->logger->info('Skipping scanning of uploads directory because uploads will be symlinked.');
-            $this->jobDataDto->setIsUploadsExcluded(true);
-            return $this->generateResponse();
-        }
-
         // Early bail: Uploads directory doesn't exist
         if (!is_dir($this->getUploadsDirectory())) {
             $this->jobDataDto->setIsUploadsExcluded(true);
@@ -536,9 +580,20 @@ class FilesystemScannerTask extends StagingTask
          *
          * @return array An array of directories to exclude.
          */
+        if ($this->shouldUseMultisiteLegacyExcludedDirectoriesFilter()) {
+            $excludedDirs = (array)apply_filters(Directory::FILTER_CLONE_MU_EXCLUDED_FOLDERS, $excludedDirs);
+        } else {
+            $excludedDirs = (array)apply_filters(Directory::FILTER_CLONE_EXCLUDED_FOLDERS, $excludedDirs);
+        }
+
         $excludedDirs = (array)apply_filters(self::FILTER_EXCLUDE_DIRECTORIES, $excludedDirs);
 
         return $excludedDirs;
+    }
+
+    protected function shouldUseMultisiteLegacyExcludedDirectoriesFilter(): bool
+    {
+        return defined('WPSTGPRO_VERSION') && is_multisite();
     }
 
     /**
@@ -573,6 +628,7 @@ class FilesystemScannerTask extends StagingTask
         $this->jobDataDto->setDiscoveredFilesIdentifiers($scannerDto->getDiscoveredFilesArray());
         $this->jobDataDto->setFilesystemSize($scannerDto->getFilesystemSize());
         $this->jobDataDto->setTotalDirectories($scannerDto->getTotalDirectories());
+        $this->jobDataDto->mergeTmpExcludedFullPaths($scannerDto->getFilesExcludedInRequest());
     }
 
     /**

@@ -281,7 +281,8 @@ abstract class AbstractExtractor
             throw new \Exception('Skipping file: Identifier not found. Raw Index is logged', self::ITEM_SKIP_EXCEPTION_CODE);
         }
 
-        if ($identifiablePath === $this->lastIdentifiablePath) {
+        $isSegmentedEntry = $backupFileIndex instanceof FileHeader && $this->isSegmentedFileHeader($backupFileIndex);
+        if ($identifiablePath === $this->lastIdentifiablePath && !$isSegmentedEntry) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
             $this->debugLog('File already extracted: ' . rtrim($identifiablePath, "\n"));
@@ -376,6 +377,26 @@ abstract class AbstractExtractor
         // Lets only validate if the file headers are not removed
         if ($this->extractingFile->areHeaderBytesRemoved()) {
             $this->debugLog('Skipping validation for file because duplicate file headers were removed: ' . $pathForErrorLogging);
+        } elseif ($this->indexLineDto instanceof FileHeader && $this->isSegmentedFileHeader($this->indexLineDto)) {
+            $fileHeader = $this->indexLineDto;
+
+            // Per-segment validation via FileHeader::validateFile() always fails for split files
+            // because the entry's size/CRC describe only this segment's slice while the disk
+            // file is the accumulated bytes from every segment seen so far. Instead:
+            //   - validate the current segment against the slice appended for this index entry;
+            //   - on the terminal segment (no REQUIRE_NEXT_PART) verify the reassembled file
+            //     against the optional whole-file size + CRC stamped into extraField at backup time.
+            try {
+                $this->validateMultipartSegment($destinationFilePath, $pathForErrorLogging);
+                if (!$fileHeader->getIsNextPartRequired()) {
+                    $this->validateMultipartReassembledFile($destinationFilePath, $pathForErrorLogging);
+                } else {
+                    $this->debugLog('Deferring whole-file validation until terminal segment for multipart-split file: ' . $pathForErrorLogging);
+                }
+            } catch (FileValidationException $e) {
+                $isValidated = false;
+                $exception   = $e;
+            }
         } else {
             try {
                 $this->indexLineDto->validateFile($destinationFilePath, $pathForErrorLogging);
@@ -406,7 +427,9 @@ abstract class AbstractExtractor
         $this->extractorDto->setExtractorFileWrittenBytes(0);
         $this->extractorDto->setExtractorFileReadBytes(0);
 
-        if (!empty($destinationFilePath)) {
+        $this->extractorDto->setExtractorFileBaseBytes(0);
+
+        if (!empty($destinationFilePath) && $this->shouldDeleteValidationFileAfterMove()) {
             $this->deleteValidationFile($destinationFilePath);
         }
     }
@@ -456,6 +479,7 @@ abstract class AbstractExtractor
     protected function setupExtractingFile(IndexLineInterface $backupFileIndex, string $extractFolder)
     {
         $this->extractingFile = new FileBeingExtracted($backupFileIndex->getIdentifiablePath(), $extractFolder, $this->pathIdentifier, $backupFileIndex);
+        $this->maybeSetSegmentBaseBytes($backupFileIndex);
         $this->extractingFile->setWrittenBytes($this->extractorDto->getExtractorFileWrittenBytes());
         $this->extractingFile->setReadBytes($this->extractorDto->getExtractorFileReadBytes());
         $this->extractingFile->setHeaderBytesRemoved($this->extractorDto->getHeaderBytesRemoved());
@@ -471,6 +495,35 @@ abstract class AbstractExtractor
         $this->extractorDto->setHeaderBytesRemoved($this->extractingFile->getHeaderBytesRemoved());
         $this->extractorDto->setExtractorFileWrittenBytes($this->extractingFile->getWrittenBytes());
         $this->extractorDto->setExtractorFileReadBytes($this->extractingFile->getReadBytes());
+    }
+
+    /**
+     * Continuation segments append to a file that already contains earlier segments.
+     * Remember that baseline so crash recovery can distinguish previous-segment bytes
+     * from bytes written for the current segment.
+     *
+     * @param IndexLineInterface $backupFileIndex
+     * @return void
+     */
+    protected function maybeSetSegmentBaseBytes(IndexLineInterface $backupFileIndex)
+    {
+        if (!$backupFileIndex instanceof FileHeader || !$backupFileIndex->getIsPreviousPartRequired()) {
+            $this->extractorDto->setExtractorFileBaseBytes(0);
+            return;
+        }
+
+        if ($this->extractorDto->getExtractorFileBaseBytes() > 0 || $this->extractorDto->getExtractorFileWrittenBytes() > 0 || $this->extractorDto->getExtractorFileReadBytes() > 0) {
+            return;
+        }
+
+        $destinationFilePath = $this->extractingFile->getBackupPath();
+        if (!file_exists($destinationFilePath)) {
+            return;
+        }
+
+        clearstatcache();
+        $baseBytes = filesize($destinationFilePath);
+        $this->extractorDto->setExtractorFileBaseBytes($baseBytes === false ? 0 : (int) $baseBytes);
     }
 
     /**
@@ -521,6 +574,12 @@ abstract class AbstractExtractor
             return;
         }
 
+        // Continuation segment of a multipart-split file — the existing bytes on disk are the
+        // previous parts' segments. Appending is how we stitch segments back together.
+        if ($this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsPreviousPartRequired()) {
+            return;
+        }
+
         if (file_exists($this->extractingFile->getBackupPath())) {
             // Delete the original upload file
             if (!unlink($this->extractingFile->getBackupPath())) {
@@ -559,7 +618,166 @@ abstract class AbstractExtractor
             return false;
         }
 
+        // A segmented entry (either flag set) describes only this part's slice of the file, not
+        // the whole file. Never treat it as "already extracted" based on the destination size:
+        //   - First segment (NEXT only) on a partial-disk file would skip extraction and leave
+        //     subsequent segments appending to a half-written file.
+        //   - Continuation segment (PREV set) is handled the same way; size match would be a
+        //     coincidence with the previous segment's slice.
+        if ($backupFileIndex instanceof FileHeader && $this->isSegmentedFileHeader($backupFileIndex)) {
+            return false;
+        }
+
         return $backupFileIndex->getUncompressedSize() === filesize($extractPath);
+    }
+
+    /**
+     * True if the index entry is a segment of a multipart-split file (carries either of the
+     * REQUIRE_PREVIOUS_PART / REQUIRE_NEXT_PART continuation flags).
+     *
+     * @param FileHeader $fileHeader
+     * @return bool
+     */
+    protected function isSegmentedFileHeader(FileHeader $fileHeader): bool
+    {
+        return $fileHeader->getIsPreviousPartRequired() || $fileHeader->getIsNextPartRequired();
+    }
+
+    protected function isCurrentSegmentedFileHeader(): bool
+    {
+        return $this->indexLineDto instanceof FileHeader && $this->isSegmentedFileHeader($this->indexLineDto);
+    }
+
+    protected function shouldDeleteValidationFileAfterMove(): bool
+    {
+        if (!$this->isValidateOnly || !$this->isCurrentSegmentedFileHeader()) {
+            return true;
+        }
+
+        /** @var FileHeader $fileHeader */
+        $fileHeader = $this->indexLineDto;
+        return !$fileHeader->getIsNextPartRequired();
+    }
+
+    /**
+     * Validate that the reassembled multipart-split file matches the whole-file size + CRC
+     * stamped onto the terminal segment's extraField at backup time.
+     *
+     * @param string $filePath            Reassembled file on disk.
+     * @param string $pathForErrorLogging Identifiable path for error messages.
+     * @return void
+     * @throws FileValidationException
+     */
+    private function validateMultipartReassembledFile(string $filePath, string $pathForErrorLogging)
+    {
+        if (!$this->indexLineDto instanceof FileHeader) {
+            return;
+        }
+
+        $tailMeta = $this->indexLineDto->getMultipartTailMetadata();
+        if ($tailMeta === null) {
+            // Producer didn't include the metadata (older backup format predating this change,
+            // or a producer-side bug). Don't fail the restore over a missing optional check;
+            // we still know the bytes appended successfully because per-segment writes return
+            // their byte counts. Log so operators can surface the gap.
+            $this->debugLog('Multipart-split file missing whole-file integrity metadata; skipping verification: ' . $pathForErrorLogging);
+            return;
+        }
+
+        if (!file_exists($filePath)) {
+            throw new FileValidationException(sprintf('Reassembled file not found: %s.', $pathForErrorLogging));
+        }
+
+        clearstatcache();
+        $diskSize = filesize($filePath);
+        if ($tailMeta['wholeFileSize'] !== $diskSize) {
+            throw new FileValidationException(sprintf(
+                'Reassembled multipart file size mismatch for %s. Expected: %s. Actual: %s',
+                $pathForErrorLogging,
+                $this->formatSize($tailMeta['wholeFileSize'], 2),
+                $this->formatSize((int) $diskSize, 2)
+            ));
+        }
+
+        $diskCrc = hash_file(FileHeader::CRC32_CHECKSUM_ALGO, $filePath);
+        if ($diskCrc === false || $tailMeta['wholeFileCRC'] !== $diskCrc) {
+            throw new FileValidationException(sprintf(
+                'Reassembled multipart file CRC32 mismatch for %s. Expected: %s. Actual: %s',
+                $pathForErrorLogging,
+                $tailMeta['wholeFileCRC'],
+                $diskCrc === false ? '<unreadable>' : $diskCrc
+            ));
+        }
+    }
+
+    /**
+     * Validate the segment slice that was appended for the current multipart index entry.
+     * The destination file may already contain earlier segments, so regular FileHeader
+     * validation cannot be used directly.
+     *
+     * @param string $filePath
+     * @param string $pathForErrorLogging
+     * @return void
+     * @throws FileValidationException
+     */
+    private function validateMultipartSegment(string $filePath, string $pathForErrorLogging)
+    {
+        if (!$this->indexLineDto instanceof FileHeader) {
+            return;
+        }
+
+        if (!file_exists($filePath)) {
+            throw new FileValidationException(sprintf('Multipart segment destination file not found: %s.', $pathForErrorLogging));
+        }
+
+        $segmentOffset = $this->extractorDto->getExtractorFileBaseBytes();
+        $segmentSize   = $this->indexLineDto->getUncompressedSize();
+
+        clearstatcache();
+        $diskSize = filesize($filePath);
+        if ($diskSize === false || $diskSize < $segmentOffset + $segmentSize) {
+            throw new FileValidationException(sprintf(
+                'Multipart segment size mismatch for %s. Expected at least: %s. Actual: %s',
+                $pathForErrorLogging,
+                $this->formatSize($segmentOffset + $segmentSize, 2),
+                $diskSize === false ? '<unreadable>' : $this->formatSize((int) $diskSize, 2)
+            ));
+        }
+
+        $handle = fopen($filePath, 'rb');
+        if ($handle === false) {
+            throw new FileValidationException(sprintf('Could not read multipart segment for %s.', $pathForErrorLogging));
+        }
+
+        if (fseek($handle, $segmentOffset) !== 0) {
+            fclose($handle);
+            throw new FileValidationException(sprintf('Could not seek to multipart segment for %s.', $pathForErrorLogging));
+        }
+
+        $ctx       = hash_init(FileHeader::CRC32_CHECKSUM_ALGO);
+        $remaining = $segmentSize;
+        while ($remaining > 0) {
+            $chunk = fread($handle, (int) min(512 * KB_IN_BYTES, $remaining));
+            if ($chunk === false || $chunk === '') {
+                fclose($handle);
+                throw new FileValidationException(sprintf('Could not read complete multipart segment for %s.', $pathForErrorLogging));
+            }
+
+            hash_update($ctx, $chunk);
+            $remaining -= strlen($chunk);
+        }
+
+        fclose($handle);
+
+        $segmentCrc = hash_final($ctx);
+        if ($segmentCrc !== $this->indexLineDto->getCrc32Checksum()) {
+            throw new FileValidationException(sprintf(
+                'Multipart segment CRC32 mismatch for %s. Expected: %s. Actual: %s',
+                $pathForErrorLogging,
+                $this->indexLineDto->getCrc32Checksum(),
+                $segmentCrc
+            ));
+        }
     }
 
     /**

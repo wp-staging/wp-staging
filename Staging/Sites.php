@@ -233,6 +233,86 @@ class Sites
     }
 
     /**
+     * Generate an unused staging site name from the friendly default name pool.
+     *
+     * @param string $fallback
+     * @return string
+     * @throws WPStagingException
+     */
+    public function generateStagingSiteName(string $fallback): string
+    {
+        $nameList = [
+            'enterprise',
+            'voyager',
+            'defiant',
+            'discovery',
+            'excelsior',
+            'intrepid',
+            'constitution',
+            'reliant',
+            'grissom',
+            'yamato',
+            'excelsior',
+            'venture',
+            'cerritos',
+            'prometheus',
+            'bellerophon',
+            'sanpablo',
+            'sutherland',
+            'shenzhou',
+            'titan',
+            'reliant',
+            'stargazer',
+            'franklin',
+            'protostar',
+        ];
+
+        shuffle($nameList);
+
+        // Fetch the registered staging names once; the fallback loop below can run up to 10,000 times.
+        $existingDirectoryNames = wp_list_pluck($this->tryGettingStagingSites(), 'directoryName');
+
+        foreach ($nameList as $name) {
+            $name = $this->sanitizeDirectoryName(sanitize_text_field($name));
+            if (!empty($name) && $this->isNameAvailableForNewSite($name, $existingDirectoryNames)) {
+                return $name;
+            }
+        }
+
+        $fallback = $this->sanitizeDirectoryName($fallback);
+        if (!empty($fallback) && $this->isNameAvailableForNewSite($fallback, $existingDirectoryNames)) {
+            return $fallback;
+        }
+
+        for ($i = 1; $i <= 10000; $i++) {
+            $name = $this->sanitizeDirectoryName(sprintf('staging-%d', $i));
+            if ($this->isNameAvailableForNewSite($name, $existingDirectoryNames)) {
+                return $name;
+            }
+        }
+
+        return empty($fallback) ? 'staging' : $fallback;
+    }
+
+    /**
+     * Check whether a directory name is safe to use for a new staging site.
+     * Stricter than isCloneExists: rejects any pre-existing file or directory (even
+     * empty) so the name generator never suggests a name that collides on disk.
+     *
+     * @param string   $name
+     * @param string[] $existingDirectoryNames Registered staging directory names, fetched once by the caller.
+     * @return bool
+     */
+    private function isNameAvailableForNewSite(string $name, array $existingDirectoryNames): bool
+    {
+        if (file_exists(trailingslashit(get_home_path()) . $name)) {
+            return false;
+        }
+
+        return !in_array($name, $existingDirectoryNames, true);
+    }
+
+    /**
      * Return false if site not exists else return reason behind existing
      *
      * @param string $directoryName
@@ -242,6 +322,10 @@ class Sites
     public function isCloneExists($directoryName)
     {
         $cloneDirectoryPath = trailingslashit(get_home_path()) . $directoryName;
+        if (is_file($cloneDirectoryPath)) {
+            return sprintf(esc_html__("Warning: Use another site name! A file named %s already exists where the staging site would be created.", 'wp-staging'), $directoryName);
+        }
+
         if (!wpstg_is_empty_dir($cloneDirectoryPath)) {
             return sprintf(esc_html__("Warning: Use another site name! Clone destination directory %s already exists and is not empty. As default, WP STAGING uses the site name as subdirectory for the clone.", 'wp-staging'), $cloneDirectoryPath);
         }

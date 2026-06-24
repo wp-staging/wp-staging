@@ -15,12 +15,21 @@ use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
+use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
+use WPStaging\Staging\Traits\WithStagingEnginePreference;
+use WPStaging\Staging\Traits\WithStagingRequirementLogs;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
+/**
+ * Validates prerequisites before a staging site update job starts.
+ */
 class UpdateRequirementsCheckTask extends StagingTask
 {
+    use WithStagingEnginePreference;
+    use WithStagingRequirementLogs;
+
     /** @var Directory */
     protected $directory;
 
@@ -55,6 +64,7 @@ class UpdateRequirementsCheckTask extends StagingTask
         SeekableQueueInterface $taskQueue,
         DiskWriteCheck $diskWriteCheck,
         AnalyticsStagingUpdate $analyticsStagingUpdate,
+        StagingEngine $stagingEngine,
         SystemInfo $systemInfo,
         Sites $sites
     ) {
@@ -63,6 +73,7 @@ class UpdateRequirementsCheckTask extends StagingTask
         $this->filesystem             = $filesystem;
         $this->diskWriteCheck         = $diskWriteCheck;
         $this->analyticsStagingUpdate = $analyticsStagingUpdate;
+        $this->stagingEngine          = $stagingEngine;
         $this->systemInfo             = $systemInfo;
         $this->database               = $database;
         $this->sites                  = $sites;
@@ -93,18 +104,22 @@ class UpdateRequirementsCheckTask extends StagingTask
             $this->stepsDto->setTotal(1);
         }
 
+        $this->persistStagingEnginePreference();
+        $this->enqueueStartEvent();
+
         try {
             $this->logStartHeader();
             $this->logger->writeLogHeader();
             $this->logger->writeInstalledPluginsAndThemes();
             $this->writeStagingSettingsLogs();
+            $this->writeAdvancedSettingsToLogs();
             $this->cannotUpdateStagingSiteOnMultisite();
             $this->cannotUpdateIfCantWriteToDisk();
             $this->cannotUpdateIfStagingSiteNoExists();
             $this->cannotUpdateIfUsingExternalDatabase();
             $this->cannotUpdateIfStagingPrefixSameAsProductionSite();
         } catch (RuntimeException $e) {
-            $this->analyticsStagingUpdate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+            $this->enqueueRequirementFailEvent();
             $this->logger->critical($e->getMessage());
 
             return $this->generateResponse(false);
@@ -130,6 +145,22 @@ class UpdateRequirementsCheckTask extends StagingTask
     protected function logRequirementsCheckPassed()
     {
         $this->logger->info('Staging Site update requirements passed...');
+    }
+
+    /**
+     * @return void
+     */
+    protected function enqueueStartEvent()
+    {
+        $this->analyticsStagingUpdate->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
+    }
+
+    /**
+     * @return void
+     */
+    protected function enqueueRequirementFailEvent()
+    {
+        $this->analyticsStagingUpdate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
     /**

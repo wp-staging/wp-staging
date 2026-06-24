@@ -174,6 +174,7 @@ class RestoreDatabaseTask extends RestoreTask
         }
 
         $this->databaseImporter->setWarningLogCallable([$this->logger, 'warning']);
+        $this->databaseImporter->setNoticeLogCallable([$this->logger, 'notice']);
         $this->databaseImporter->setFile($databaseFile);
         $this->databaseImporter->seekLine($this->stepsDto->getCurrent());
 

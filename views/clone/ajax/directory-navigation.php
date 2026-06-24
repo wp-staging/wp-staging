@@ -39,8 +39,9 @@ $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
             'isNavigatable' => $isNavigatable,
         ];
         $attributes = [
-            'classes'    => 'wpstg-check-dir ' . $class,
-            'isDisabled' => $isDisabled,
+            'classes'      => 'wpstg-check-dir ' . $class,
+            'isDisabled'   => $isDisabled,
+            'usePrimitive' => true,
         ];
         Checkbox::render('', 'selectedDirectories[]', $prefix . $relPath, ($shouldBeChecked && ($parentChecked !== false)), $attributes, $dataAttributes);
         ?>

@@ -140,9 +140,9 @@ abstract class AbstractRowsExporter extends AbstractExporter
             $numericPrimaryKey = $this->tableService->getNumericPrimaryKey($this->databaseName, $this->tableName);
         } catch (Exception $e) {
             if ($rowsCount > 300000) {
-                $this->logger->warning("The table {$this->tableName} does not have a compatible primary key, so it will get slower the more rows from it be exported and will be locked...");
+                $this->logger->notice("The table {$this->tableName} has no compatible primary key and is large, so copying it may take a while. WP STAGING will briefly pause changes to it while copying and resume automatically when done. No action is required.");
             } else {
-                $this->logger->warning("The table {$this->tableName} does not have a compatible primary key, so it will be locked...");
+                $this->logger->notice("The table {$this->tableName} has no compatible primary key, so WP STAGING will briefly pause changes to it while copying and resume automatically when done. No action is required.");
             }
 
             $this->rowsExporterDto->setLocked(true);
@@ -260,7 +260,11 @@ abstract class AbstractRowsExporter extends AbstractExporter
             $this->tableRowsOffset                    = $this->rowsExporterDto->getRowsOffset();
             $this->lastInsertedNumericPrimaryKeyValue = (int)$this->rowsExporterDto->getLastInsertedNumericPrimaryKeyValue();
 
-            $data = $this->rowsGenerator($this->databaseName, $this->tableName, $numericPrimaryKey, $this->tableRowsOffset, $requestId, $this->client, $this->jobDataDto);
+            // Keyset offset defaults to -PHP_INT_MAX so the first fetch still includes a row with primary
+            // key 0; tableRowsOffset (0) would exclude it via `WHERE pk > 0`.
+            $generatorOffset = !empty($numericPrimaryKey) ? $this->lastInsertedNumericPrimaryKeyValue : $this->tableRowsOffset;
+
+            $data = $this->rowsGenerator($this->databaseName, $this->tableName, $numericPrimaryKey, $generatorOffset, $requestId, $this->client, $this->jobDataDto);
 
             foreach ($data as $row) {
                 if ($this->isLastInsertedNumericKeyValue($numericPrimaryKey ?? '', $row)) {
@@ -391,6 +395,10 @@ abstract class AbstractRowsExporter extends AbstractExporter
     protected function writeQueryInsert(array $row, string $prefixedTableName, array $tableColumns)
     {
         try {
+            // Excluded rows (e.g. siteurl/home) are written unchanged, not dropped — dropping them
+            // breaks WordPress core options that UpdateSiteUrlAndHomeTask updates later.
+            $skipSearchReplace = $this->isRowSearchReplaceExcluded($prefixedTableName, $row);
+
             foreach ($row as $column => &$value) {
                 if (is_null($value)) {
                     $nullFlag = DatabaseImporter::NULL_FLAG;
@@ -415,7 +423,10 @@ abstract class AbstractRowsExporter extends AbstractExporter
                     throw new \OutOfBoundsException();
                 }
 
-                $value = $this->searchReplace->replace($value);
+                if (!$skipSearchReplace) {
+                    $value = $this->searchReplace->replace($value);
+                }
+
                 $value = "'{$this->client->escape($value)}'";
             }
 
@@ -424,6 +435,19 @@ abstract class AbstractRowsExporter extends AbstractExporter
         } catch (Exception $e) {
             // Row skipped, no-op
         }
+    }
+
+    /**
+     * Hook for subclasses to flag rows that should be exported verbatim (no URL/prefix rewriting).
+     * Default is false — the base class has no reason to skip search-replace for any row.
+     *
+     * @param string $prefixedTableName
+     * @param array  $row
+     * @return bool
+     */
+    protected function isRowSearchReplaceExcluded(string $prefixedTableName, array $row): bool
+    {
+        return false;
     }
 
     /**

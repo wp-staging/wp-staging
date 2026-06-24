@@ -14,7 +14,7 @@ class Reset extends AbstractTemplateComponent
     /**
      * @var string
      */
-    const WPSTG_REQUEST = 'wpstg_reset_staging';
+    const WPSTG_REQUEST = 'wpstg_staging_reset';
 
     /**
      * @return void

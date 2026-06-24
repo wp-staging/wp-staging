@@ -114,6 +114,7 @@ class Uninstall
             $this->deleteOptions($this->getProOptions());
         }
 
+        $this->deleteUserMeta($this->getBasicUserMeta());
         $this->dropWpStagingSettingsTable();
         $this->deleteTransients();
         $this->cleanupEmptyPreserveOptions();
@@ -307,6 +308,8 @@ class Uninstall
             'wpstg_version',
             'wpstg_version_upgraded_from',
             'wpstg_free_upgrade_date',
+            'wpstg_rating',
+            'wpstg_rating_snooze_count',
             'wpstg_unique_identifier',
             'wpstg_is_staging_site',
             'wpstg_resave_permalinks_executed',
@@ -339,6 +342,18 @@ class Uninstall
             'wpstg_cli_notice_hidden_forever',
             'wpstg_cli_dock_cta_shown',
             'wpstg_completed_upgrades',
+        ];
+    }
+
+    /**
+     * Per-user meta keys written by the Free/shared code, removed for every user.
+     *
+     * @return string[]
+     */
+    private function getBasicUserMeta(): array
+    {
+        return [
+            'wpstg_user_general_pro_card_snoozed_until',
         ];
     }
 
@@ -428,6 +443,19 @@ class Uninstall
             }
 
             delete_option($optionName);
+        }
+    }
+
+    /**
+     * Delete the given user meta keys for every user on the site.
+     *
+     * @param string[] $metaKeys
+     * @return void
+     */
+    private function deleteUserMeta(array $metaKeys)
+    {
+        foreach ($metaKeys as $metaKey) {
+            delete_metadata('user', 0, $metaKey, '', true);
         }
     }
 

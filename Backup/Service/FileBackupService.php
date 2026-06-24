@@ -189,8 +189,7 @@ class FileBackupService implements ServiceInterface
         }
 
         try {
-            $this->maybeIncrementPartNo($path);
-            $isFileWrittenCompletely = $this->archiver->appendFileToBackup($path, $indexPath);
+            $isFileWrittenCompletely = $this->appendCurrentFileToBackup($path, $indexPath);
         } catch (BackupSkipItemException $e) {
             $isFileWrittenCompletely = true;
         } catch (ThresholdException $e) {
@@ -312,6 +311,28 @@ class FileBackupService implements ServiceInterface
     protected function maybeIncrementPartNo(string $path)
     {
         // Used in Pro
+    }
+
+    /**
+     * Drives the actual append of the current queue entry to the backup. The Pro subclass
+     * overrides this to route oversize files through the cross-part segmenter while keeping
+     * the existing single-shot path for files that fit inside the configured part size.
+     *
+     * Returns true when the file is finished, false when it still needs more work in the
+     * next request, and null when the caller should treat the current work as threshold-hit.
+     *
+     * @param string $path
+     * @param string $indexPath
+     * @return bool|null
+     * @throws BackupSkipItemException
+     * @throws ThresholdException
+     * @throws \RuntimeException
+     * @throws \Throwable
+     */
+    protected function appendCurrentFileToBackup(string $path, string $indexPath)
+    {
+        $this->maybeIncrementPartNo($path);
+        return $this->archiver->appendFileToBackup($path, $indexPath);
     }
 
     protected function getTranslatedFileIdentifier(): string

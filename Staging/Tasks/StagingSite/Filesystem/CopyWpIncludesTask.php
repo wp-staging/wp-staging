@@ -22,6 +22,11 @@ class CopyWpIncludesTask extends FileCopierTask
         return PartIdentifier::WP_INCLUDES_PART_IDENTIFIER;
     }
 
+    protected function getLoggerFriendlyName(): string
+    {
+        return 'wp-includes';
+    }
+
     protected function getIsExcluded(): bool
     {
         return $this->jobDataDto->getIsWpIncludesExcluded();

@@ -3,6 +3,8 @@
 namespace WPStaging\Staging\Tasks\StagingSiteReset;
 
 use RuntimeException;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Staging\Tasks\StagingSiteUpdate\UpdateRequirementsCheckTask;
 
 class ResetRequirementsCheckTask extends UpdateRequirementsCheckTask
@@ -37,6 +39,22 @@ class ResetRequirementsCheckTask extends UpdateRequirementsCheckTask
     protected function logRequirementsCheckPassed()
     {
         $this->logger->info('Staging Site reset requirements passed...');
+    }
+
+    /**
+     * @return void
+     */
+    protected function enqueueStartEvent()
+    {
+        WPStaging::make(AnalyticsStagingReset::class)->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
+    }
+
+    /**
+     * @return void
+     */
+    protected function enqueueRequirementFailEvent()
+    {
+        WPStaging::make(AnalyticsStagingReset::class)->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
     /**

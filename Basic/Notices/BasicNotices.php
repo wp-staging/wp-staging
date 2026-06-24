@@ -46,13 +46,10 @@ class BasicNotices
             return;
         }
 
-        // Show notice "rate the plugin"
-        // We used to have this message on all pages but added a new nonce based authentication check.
-        // As the nonce is not loaded on all pages we had to move this message to wp staging pages only.
-        // @todo add our nonce to all wp staging pages and move this message back to all pages
-        if ($this->showAllNotices || $this->ratingNotice->shouldShowRatingNotice()) {
-            require_once "{$viewsNoticesPath}rating.php";
-        }
+        // The "rate the plugin" prompt is no longer an admin notice or dashboard
+        // text. It is a success-based ask rendered inside the staging/backup
+        // completion modals (see views/notices/review-prompt-modal.php), gated by
+        // RatingNotice::isReviewPromptEligible().
 
         if ($this->showAllNotices || $this->proCronsCleaner->haveProCrons()) {
             require_once "{$viewsNoticesPath}pro-crons-notice.php";
