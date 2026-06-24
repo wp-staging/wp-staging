@@ -755,7 +755,7 @@ class Archiver
      *
      * @return void
      */
-    private function addIndexPartSize(string $identifiablePath, int $newBytesWritten)
+    protected function addIndexPartSize(string $identifiablePath, int $newBytesWritten)
     {
         // Early bail if jobDataDto is not instance of jobBackupDataDto
         if (!$this->jobDataDto instanceof JobBackupDataDto) {

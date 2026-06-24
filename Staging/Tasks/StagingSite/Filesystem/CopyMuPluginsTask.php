@@ -22,6 +22,11 @@ class CopyMuPluginsTask extends FileCopierTask
         return PartIdentifier::MU_PLUGIN_PART_IDENTIFIER;
     }
 
+    protected function getLoggerFriendlyName(): string
+    {
+        return 'mu-plugins';
+    }
+
     /** @return bool */
     protected function getIsWpContent(): bool
     {

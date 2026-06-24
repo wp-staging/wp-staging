@@ -22,6 +22,11 @@ class CopyWpRootDirectoriesTask extends FileCopierTask
         return PartIdentifier::WP_ROOT_PART_IDENTIFIER;
     }
 
+    protected function getLoggerFriendlyName(): string
+    {
+        return 'other root directories';
+    }
+
     protected function getIsExcluded(): bool
     {
         return $this->jobDataDto->getIsRootDirectoriesExcluded();

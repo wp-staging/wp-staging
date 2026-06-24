@@ -151,6 +151,7 @@ include(WPSTG_VIEWS_DIR . 'job/modal/process.php');
 include(WPSTG_VIEWS_DIR . 'job/modal/success.php');
 include(WPSTG_VIEWS_DIR . 'otp/overlay.php');
 include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-success.php');
+include(WPSTG_VIEWS_DIR . 'notices/review-prompt-handlers.php');
 include(__DIR__ . '/modal/backup.php');
 include(__DIR__ . '/modal/download-modal.php');
 include(__DIR__ . '/modal/upload.php');

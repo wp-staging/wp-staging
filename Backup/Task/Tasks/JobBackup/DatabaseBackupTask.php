@@ -26,9 +26,6 @@ class DatabaseBackupTask extends BackupTask
     /** @var Directory */
     protected $directory;
 
-    /** @var int */
-    private $currentPartIndex = 0;
-
     public function __construct(Directory $directory, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -226,7 +223,7 @@ class DatabaseBackupTask extends BackupTask
             }
 
             if ($rowsExporter->doExceedSplitSize()) {
-                $this->jobDataDto->setMaxDbPartIndex($this->currentPartIndex + 1);
+                $this->jobDataDto->setMaxDbPartIndex($this->jobDataDto->getMaxDbPartIndex() + 1);
                 return $this->generateResponse(false);
             }
         } while (!$this->isThreshold() && !$this->stepsDto->isFinished());

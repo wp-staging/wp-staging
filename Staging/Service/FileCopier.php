@@ -120,6 +120,11 @@ class FileCopier
      */
     public function setupBigFileBeingCopied(BigFileDto $bigFileDto)
     {
+        if (empty($bigFileDto->getFilePath()) || $bigFileDto->getFileSize() <= 0) {
+            $this->bigFileDto = null;
+            return;
+        }
+
         $this->bigFileDto = $bigFileDto;
     }
 
@@ -204,7 +209,13 @@ class FileCopier
         $path = $this->maybePrependSitePath($path);
 
         try {
-            $isFileWrittenCompletely = $this->processFile($path, $indexPath);
+            // Directory entries come from the scanner's empty-directory enqueue path; mkdir them so
+            // empty folders are preserved on the staging site instead of being dropped.
+            if (is_dir($path)) {
+                $isFileWrittenCompletely = $this->processEmptyDirectory($path, $indexPath);
+            } else {
+                $isFileWrittenCompletely = $this->processFile($path, $indexPath);
+            }
         } catch (\RuntimeException $e) {
             $this->logger->warning($e->getMessage());
             debug_log($e->getMessage());
@@ -227,16 +238,50 @@ class FileCopier
 
     protected function maybePrependSitePath(string $filePath): string
     {
-        if ($this->shouldPrependAbsPath()) {
-            return $this->absPath . $filePath;
-        }
-
-        return $filePath;
+        return $this->shouldPrependAbsPath() ? $this->absPath . $filePath : $filePath;
     }
 
+    /**
+     * Queue entries are root-relative for wp-admin/wp-includes/wp-root files (scanned with rootPath = ABSPATH)
+     * and absolute for wp-content sub-trees on Flywheel-style layouts where wp-content lives outside ABSPATH —
+     * the scanner's str_replace(rootPath, '', $path) is a no-op on those paths and the original absolute path
+     * passes through. Skip prepending only in that one case.
+     */
     protected function shouldPrependAbsPath(): bool
     {
-        return $this->isWpContentOutsideAbspath === false;
+        return !$this->isWpContentOutsideAbspath || !$this->isWpContent;
+    }
+
+    /**
+     * Create an empty directory on the staging site for a directory entry the scanner enqueued because no
+     * files were discovered beneath it. Without this, empty folders (e.g. a user-created placeholder dir
+     * inside wp-content) would be silently dropped during cloning — legacy did this via scanToCacheFile.
+     *
+     * @param string $sourcePath
+     * @param string $indexPath
+     * @return bool
+     */
+    protected function processEmptyDirectory(string $sourcePath, string $indexPath): bool
+    {
+        $staging = empty($indexPath) ? $sourcePath : $indexPath;
+        $staging = $this->filesystem->normalizePath($staging);
+
+        if ($this->isWpContentOutsideAbspath && $this->isWpContent) {
+            $relStagingPath  = $this->strings->replaceStartWith($this->wpContentDir, '', $staging);
+            $destinationPath = $this->stagingSitePath . 'wp-content/' . $relStagingPath;
+        } else {
+            $relStagingPath  = $this->strings->replaceStartWith($this->absPath, '', $staging);
+            $destinationPath = $this->stagingSitePath . $relStagingPath;
+        }
+
+        $destinationPath = $this->filesystem->normalizePath($destinationPath);
+
+        if (!is_dir($destinationPath) && !$this->filesystem->mkdir($destinationPath)) {
+            return false;
+        }
+
+        $this->chmod($destinationPath, $this->permissions->getDirectoryOctal());
+        return true;
     }
 
     protected function processFile(string $filePath, string $indexPath): bool
@@ -258,7 +303,7 @@ class FileCopier
 
         $result = false;
         // File is over batch size
-        if ($fileSize >= $this->batchSize) {
+        if ($fileSize > $this->batchSize) {
             $result = $this->copyBigFile($filePath, $destinationPath, $this->batchSize);
         } else {
             $result = $this->filesystem->copyFile($filePath, $destinationPath);
@@ -269,7 +314,7 @@ class FileCopier
         }
 
         // Set file permissions
-        @chmod($destinationPath, $this->permissions->getFilesOctal());
+        $this->chmod($destinationPath, $this->permissions->getFilesOctal());
 
         $this->setDirPermissions($destinationPath);
 
@@ -278,20 +323,14 @@ class FileCopier
 
     protected function copyBigFile(string $sourcePath, string $destinationPath, int $batchSize): bool
     {
-        if ($this->bigFileDto === null) {
-            $this->bigFileDto = new BigFileDto();
-            $this->bigFileDto->setFilePath($sourcePath);
-            $this->bigFileDto->setFileSize(filesize($sourcePath));
-
-            $this->bigFileDto->setWrittenBytesTotal(0);
-        }
+        $this->setupBigFileCopy($sourcePath, $destinationPath);
 
         if ($this->bigFileDto->isFinished()) {
             return true;
         }
 
         $srcFile  = fopen($sourcePath, 'rb');
-        $destFile = fopen($destinationPath, 'ab');
+        $destFile = fopen($destinationPath, $this->getBigFileWriteMode($destinationPath));
 
         if ($srcFile === false || $destFile === false) {
             throw new \RuntimeException('Could not open file for reading or writing');
@@ -314,6 +353,40 @@ class FileCopier
         $destFile = null;
 
         return $this->bigFileDto->getWrittenBytesTotal() === $this->bigFileDto->getFileSize();
+    }
+
+    protected function setupBigFileCopy(string $sourcePath, string $destinationPath)
+    {
+        if ($this->bigFileDto instanceof BigFileDto && $this->isSameBigFileCopy($sourcePath, $destinationPath)) {
+            return;
+        }
+
+        $this->bigFileDto = new BigFileDto();
+        $this->bigFileDto->setFilePath($sourcePath);
+        $this->bigFileDto->setDestinationPath($destinationPath);
+        $this->bigFileDto->setFileSize(filesize($sourcePath));
+        $this->bigFileDto->setWrittenBytesTotal(0);
+    }
+
+    protected function isSameBigFileCopy(string $sourcePath, string $destinationPath): bool
+    {
+        return $this->bigFileDto->getFilePath() === wp_normalize_path($sourcePath)
+            && $this->bigFileDto->getDestinationPath() === wp_normalize_path($destinationPath)
+            && $this->bigFileDto->getFileSize() === filesize($sourcePath);
+    }
+
+    protected function getBigFileWriteMode(string $destinationPath): string
+    {
+        if ($this->bigFileDto->getWrittenBytesTotal() <= 0) {
+            return 'wb';
+        }
+
+        if (!is_file($destinationPath) || filesize($destinationPath) !== $this->bigFileDto->getWrittenBytesTotal()) {
+            $this->bigFileDto->setWrittenBytesTotal(0);
+            return 'wb';
+        }
+
+        return 'ab';
     }
 
     /**
@@ -363,9 +436,39 @@ class FileCopier
     {
         $dir = dirname($file);
         if (is_dir($dir)) {
-            return @chmod($dir, $this->permissions->getDirectoryOctal());
+            return $this->chmod($dir, $this->permissions->getDirectoryOctal());
         }
 
         return false;
+    }
+
+    /**
+     * @param string $path
+     * @param int $mode
+     * @return bool
+     */
+    protected function chmod(string $path, int $mode): bool
+    {
+        $lastWarning = null;
+        set_error_handler(function ($severity, $message, $file, $line) use (&$lastWarning) {
+            if (($severity & (E_WARNING | E_NOTICE)) === 0 || $file !== __FILE__ || strpos($message, 'chmod') !== 0) {
+                return false;
+            }
+
+            $lastWarning = $message;
+            return true;
+        });
+
+        try {
+            $result = \chmod($path, $mode);
+        } finally {
+            restore_error_handler();
+        }
+
+        if ($lastWarning !== null) {
+            debug_log(sprintf('chmod warning: %s', $lastWarning));
+        }
+
+        return $result !== false;
     }
 }

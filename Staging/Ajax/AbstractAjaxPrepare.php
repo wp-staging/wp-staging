@@ -104,12 +104,6 @@ abstract class AbstractAjaxPrepare extends PrepareJob
 
     abstract protected function additionalSanitization(array $data): array;
 
-    /**
-     * @param array|null $sanitizedData
-     * @return array
-     */
-    abstract protected function setupInitialData($sanitizedData): array;
-
     protected function parseAndSanitizeTables(string $tables): array
     {
         $tables = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
@@ -119,7 +113,9 @@ abstract class AbstractAjaxPrepare extends PrepareJob
 
     protected function parseAndSanitizeDirectories(string $directories): array
     {
-        $directories = $directories === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, Sanitize::sanitizeString($directories));
+        // JS posts values encodeURIComponent-wrapped, so the separator comma arrives as %2C. Decode
+        // first, otherwise explode() never splits the list and path matching silently fails.
+        $directories = $directories === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode(Sanitize::sanitizeString($directories)));
 
         return array_map('sanitize_text_field', $directories);
     }

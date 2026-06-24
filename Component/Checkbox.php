@@ -24,7 +24,8 @@ class Checkbox
      * @param array $attributes [
      *   'classes' => string,
      *   'onChange' => string,
-     *   'isDisabled' => bool
+     *   'isDisabled' => bool,
+     *   'usePrimitive' => bool
      *  ]
      * @param array $dataAttributes [
      *   'id' => string,
@@ -44,6 +45,7 @@ class Checkbox
         $classes            = isset($attributes['classes']) ? $attributes['classes'] : '';
         $onChange           = isset($attributes['onChange']) ? $attributes['onChange'] : '';
         $isDisabled         = isset($attributes['isDisabled']) ? $attributes['isDisabled'] : false;
+        $usePrimitive       = isset($attributes['usePrimitive']) ? $attributes['usePrimitive'] : false;
         $displayDependency  = isset($attributes['displayDependency']) ? $attributes['displayDependency'] : false;
 
         $dataId      = isset($dataAttributes['id']) ? $dataAttributes['id'] : '';

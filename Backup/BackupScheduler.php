@@ -451,6 +451,23 @@ class BackupScheduler
     }
 
     /**
+     * Re-create scheduled backup cron events only when schedules exist.
+     *
+     * Activation calls this to avoid touching the cron option on installs that do
+     * not have any scheduled backups yet.
+     *
+     * @return bool
+     */
+    public function reCreateCronIfSchedulesExist(): bool
+    {
+        if (empty($this->getSchedules())) {
+            return true;
+        }
+
+        return $this->reCreateCron();
+    }
+
+    /**
      * Removes all backup schedule events from WordPress Cron array.
      *
      * This is static so that it can be called from WP STAGING deactivation hook

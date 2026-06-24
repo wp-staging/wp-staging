@@ -26,23 +26,21 @@ use WPStaging\Framework\Facades\Escape;
 </div>
 <!-- Exclusion Rules Table -->
 <div class="wpstg-excluded-filters-container" id="wpstg-exclude-filters-container">
-    <table>
-        <tbody>
-            <?php
-            $hasRules = false;
-            if ($options->mainJob === Job::UPDATE || $options->mainJob === Job::RESET) :
-                foreach ($options->currentClone['excludeSizeRules'] as $rule) :
-                    $hasRules = true;
-                    echo $excludeUtils->renderSizeExclude($rule); // phpcs:ignore
-                endforeach;
-                foreach ($options->currentClone['excludeGlobRules'] as $rule) :
-                    $hasRules = true;
-                    echo $excludeUtils->renderGlobExclude($rule); // phpcs:ignore
-                endforeach;
-            endif; ?>
-        </tbody>
-    </table>
-    <p <?php echo !$hasRules ? 'style="display: none;"' : '' ?> class="wpstg-has-exclude-rules"><b><?php esc_html_e('Note', 'wp-staging'); ?>:</b> <?php esc_html_e('These rules will not affect wp-admin and wp-includes directories!', 'wp-staging')?></p>
+    <div class="wpstg-exclude-list">
+        <?php
+        $hasRules = false;
+        if ($options->mainJob === Job::UPDATE || $options->mainJob === Job::RESET) :
+            foreach ($options->currentClone['excludeSizeRules'] as $rule) :
+                $hasRules = true;
+                echo $excludeUtils->renderSizeExclude($rule); // phpcs:ignore
+            endforeach;
+            foreach ($options->currentClone['excludeGlobRules'] as $rule) :
+                $hasRules = true;
+                echo $excludeUtils->renderGlobExclude($rule); // phpcs:ignore
+            endforeach;
+        endif; ?>
+    </div>
+    <p><b><?php esc_html_e('Note', 'wp-staging'); ?>:</b> <?php esc_html_e('These rules will not affect wp-admin and wp-includes directories!', 'wp-staging')?></p>
     <div class="wpstg-exclude-filters-foot">
         <div class="wpstg-dropdown wpstg-exclude-filter-dropdown" id="wpstg-exclude-filter-dropdown">
             <button class="wpstg-dropdown-toggler wpstg-button--secondary wpstg-button--blue">

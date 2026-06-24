@@ -31,6 +31,9 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
      */
     const FILTER_CLONING_UPDATE_ACTIVE_PLUGINS = 'wpstg.cloning.update_active_plugins';
 
+    /** @var string */
+    const FILTER_CLONING_PRESERVE_UPLOAD_PATH = 'wpstg.cloning.preserve_upload_path';
+
     /**
      * @var ExcludedPlugins
      */
@@ -137,9 +140,12 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         $this->updateOrInsertOptions($updateOrInsert);
 
         $update = [
-            'upload_path'      => '',
             'wpstg_connection' => json_encode(['prodHostname' => get_site_url()]),
         ];
+
+        if ($this->shouldResetUploadPath()) {
+            $update['upload_path'] = '';
+        }
 
         if ($jobType !== StagingSetup::JOB_UPDATE) {
             $update[Sites::STAGING_SITES_OPTION] = serialize([]);
@@ -182,6 +188,11 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         $this->deleteOptions($toDelete);
 
         return true;
+    }
+
+    protected function shouldResetUploadPath(): bool
+    {
+        return !(bool)Hooks::applyFilters(self::FILTER_CLONING_PRESERVE_UPLOAD_PATH, false);
     }
 
     /**

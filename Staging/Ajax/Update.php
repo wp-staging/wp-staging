@@ -14,7 +14,7 @@ class Update extends AbstractTemplateComponent
     /**
      * @var string
      */
-    const WPSTG_REQUEST = 'wpstg_update_staging';
+    const WPSTG_REQUEST = 'wpstg_staging_update';
 
     /**
      * @return void

@@ -52,7 +52,7 @@ abstract class FileCopierTask extends StagingTask
             return $this->generateResponse(true);
         }
 
-        $this->fileCopier->setup($this->jobDataDto->getStagingSitePath(), $this->getFileIdentifier(), $this->getIsWpContent());
+        $this->fileCopier->setup($this->jobDataDto->getStagingSitePath(), $this->getLoggerFriendlyName(), $this->getIsWpContent());
         $this->fileCopier->execute();
 
         $this->currentTaskDto->setBigFileDto($this->fileCopier->getBigFileDto());
@@ -63,6 +63,11 @@ abstract class FileCopierTask extends StagingTask
 
     /** @return string */
     abstract protected function getFileIdentifier(): string;
+
+    protected function getLoggerFriendlyName(): string
+    {
+        return $this->getFileIdentifier();
+    }
 
     /** @return bool */
     protected function getIsWpContent(): bool

@@ -4,12 +4,12 @@ namespace WPStaging\Staging\Ajax\Reset;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
-use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Ajax\AbstractAjaxPrepare;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteReset;
+use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Service\StagingSetup;
 use WPStaging\Staging\Sites;
 
@@ -32,6 +32,7 @@ class PrepareReset extends AbstractAjaxPrepare
 
         $data = Sanitize::sanitizeArray($_POST['wpstgResetData'], [
             'cloneId'                => 'string',
+            'stagingEngine'          => 'string',
             'allTablesExcluded'      => 'bool',
             'excludeSizeGreaterThan' => 'string',
         ]);
@@ -53,6 +54,7 @@ class PrepareReset extends AbstractAjaxPrepare
     {
         // Clone ID
         $data['cloneId'] = sanitize_text_field($data['cloneId']);
+        $data['stagingEngine'] = StagingEngine::ENGINE_NEXT_GEN;
 
         if (empty($data['cloneId'])) {
             throw new \UnexpectedValueException("Invalid request. Missing 'cloneId'.");
@@ -80,6 +82,7 @@ class PrepareReset extends AbstractAjaxPrepare
     {
         return [
             'cloneId'                => '',
+            'stagingEngine'          => StagingEngine::ENGINE_NEXT_GEN,
             'allTablesExcluded'      => false,
             'excludedTables'         => [],
             'includedTables'         => [],
@@ -164,20 +167,6 @@ class PrepareReset extends AbstractAjaxPrepare
         return true;
     }
 
-    protected function parseAndSanitizeTables(string $tables): array
-    {
-        $tables = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
-
-        return array_map('sanitize_text_field', $tables);
-    }
-
-    protected function parseAndSanitizeDirectories(string $directories): array
-    {
-        $directories = $directories === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $directories);
-
-        return array_map('sanitize_text_field', $directories);
-    }
-
     protected function prepareStagingSiteDto()
     {
         $stagingSite = $this->jobDataDto->getStagingSite();
@@ -200,7 +189,7 @@ class PrepareReset extends AbstractAjaxPrepare
         $this->jobDataDto->setCloneId($cloneId);
         $this->jobDataDto->setStagingSiteUrl($stagingSite->getUrl());
         $this->jobDataDto->setStagingSitePath($stagingSite->getPath());
-        $this->jobDataDto->setDatabasePrefix($stagingSite->getPrefix());
+        $this->jobDataDto->setDatabasePrefix($stagingSite->getUsedPrefix());
         $this->jobDataDto->setIsExternalDatabase($stagingSite->getIsExternalDatabase());
     }
 }

@@ -3,7 +3,6 @@
 namespace WPStaging\Backup\Entity;
 
 use WPStaging\Backup\BackupHeader;
-use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Times;
@@ -59,8 +58,6 @@ class BackupMetadata extends AbstractBackupMetadata
 
         $this->setSites(null);
         $this->setSubdomainInstall(is_multisite() && is_subdomain_install());
-
-        $this->setIsZlibCompressed(WPStaging::make(ZlibCompressor::class)->isCompressionEnabled());
 
         $uploadDir = wp_upload_dir(null, false, true);
 

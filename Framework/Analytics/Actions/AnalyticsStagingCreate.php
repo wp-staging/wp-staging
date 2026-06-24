@@ -10,6 +10,7 @@ class AnalyticsStagingCreate extends AnalyticsEventDto
     public $is_symlinking_uploads_folder;
     public $is_external_database;
     public $number_of_tables;
+    public $staging_engine;
 
     public function getEventAction()
     {
@@ -43,10 +44,24 @@ class AnalyticsStagingCreate extends AnalyticsEventDto
             "extraDirectories"      => $this->options->extraDirectories,
          */
 
-        $this->is_allowing_email = (bool)$eventData->isEmailsAllowed;
-        $this->is_symlinking_uploads_folder = (bool)$eventData->uploadsSymlinked;
-        $this->is_external_database = !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
-        $this->number_of_tables = count($eventData->tables);
+        $tables = $this->getEventDataValue(
+            $eventData,
+            'tables',
+            $this->getEventDataValue($eventData, 'includedTables', [])
+        );
+
+        $this->is_allowing_email             = (bool)$this->getEventDataValue($eventData, 'isEmailsAllowed', true);
+        $this->is_symlinking_uploads_folder = (bool)$this->getEventDataValue(
+            $eventData,
+            'uploadsSymlinked',
+            $this->getEventDataValue($eventData, 'isUploadsSymlinked', false)
+        );
+        $this->is_external_database         = !(
+            empty($this->getEventDataValue($eventData, 'databaseUser', '')) &&
+            empty($this->getEventDataValue($eventData, 'databasePassword', ''))
+        );
+        $this->number_of_tables             = is_array($tables) ? count($tables) : 0;
+        $this->staging_engine               = $this->getStagingEngine($eventData);
 
         parent::enqueueStartEvent($eventId, $eventData);
     }

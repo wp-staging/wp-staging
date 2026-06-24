@@ -9,6 +9,7 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Staging\Interfaces\StagingDatabaseDtoInterface;
 use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Staging\Traits\WithStagingDatabase;
@@ -158,8 +159,19 @@ class CleanupStagingTablesTask extends StagingTask
         $tmpTables = $this->getStagingTables($stagingPrefix);
         $toDelete  = array_merge($tmpViews, $tmpTables);
         $count     = 0;
+        $excludedTables = $jobDataDto instanceof StagingDatabaseDtoInterface ? $jobDataDto->getExcludedTables() : [];
 
         foreach ($toDelete as $tableOrViewName) {
+            if (in_array($tableOrViewName, $excludedTables, true)) {
+                $this->logger->debug(sprintf(
+                    '%s: Skipping excluded staging site table "%s".',
+                    static::getTaskTitle(),
+                    esc_html($tableOrViewName)
+                ));
+
+                continue;
+            }
+
             $count++;
             $this->taskQueue->enqueue($tableOrViewName);
         }

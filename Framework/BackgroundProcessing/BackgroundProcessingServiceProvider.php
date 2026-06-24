@@ -79,9 +79,12 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
         // For concurrency purposes, have one single instance of the Queue processor around.
         $this->container->singleton(QueueProcessor::class, QueueProcessor::class);
 
-        $this->registerFeatureDetection();
-        $this->scheduleQueueMaintenance();
-        $this->setupQueueProcessingEntrypoints();
+        /** @var Cron $cron */
+        $cron = $this->container->make(Cron::class);
+
+        $this->registerFeatureDetection($cron);
+        $this->scheduleQueueMaintenance($cron);
+        $this->setupQueueProcessingEntrypoints($cron);
         $this->setupStallDetector();
 
         return true;
@@ -114,12 +117,14 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      *
      * @since TBD
      *
+     * @param Cron $cron
+     * @return void
      */
-    private function scheduleQueueMaintenance()
+    private function scheduleQueueMaintenance(Cron $cron)
     {
         // Once a day fire an action to run the Queue maintenance routines.
         if (!wp_next_scheduled(self::ACTION_QUEUE_MAINTAIN)) {
-            wp_schedule_event(time(), Cron::DAILY, self::ACTION_QUEUE_MAINTAIN);
+            wp_schedule_event($cron->getFirstRunTimestamp(Cron::DAILY), Cron::DAILY, self::ACTION_QUEUE_MAINTAIN);
         }
 
         // When the action fires, run the maintenance routines.
@@ -136,9 +141,10 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      * This is why we rely on side-processes that we can trigger while the main PHP process
      * that is handling the user interaction with the site stays fast and snappy.
      *
+     * @param Cron $cron
      * @return void The method does not return any value.
      */
-    private function setupQueueProcessingEntrypoints()
+    private function setupQueueProcessingEntrypoints(Cron $cron)
     {
         /**
          * This is the core of how the Queue works: when the `wpstg_queue_process`, or the AJAX version of it, fires, we'll process some
@@ -165,7 +171,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
          * Once every hour (kinda, it's Cron), fire the `wpstg_queue_process` action.
          */
         if (!wp_next_scheduled(QueueProcessor::ACTION_QUEUE_PROCESS)) {
-            wp_schedule_event(time(), Cron::HOURLY, QueueProcessor::ACTION_QUEUE_PROCESS);
+            wp_schedule_event($cron->getFirstRunTimestamp(Cron::HOURLY), Cron::HOURLY, QueueProcessor::ACTION_QUEUE_PROCESS);
         }
 
         /*
@@ -299,8 +305,10 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      * feature detection.
      *
      * @since TBD
+     * @param Cron $cron
+     * @return void
      */
-    private function registerFeatureDetection()
+    private function registerFeatureDetection(Cron $cron)
     {
         // Register the method that will handle the AJAX check.
         $updateOption = $this->container->callback(FeatureDetection::class, 'updateAjaxTestOption');
@@ -310,7 +318,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
 
         // Once a week re-run the check.
         if (!wp_next_scheduled(FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION)) {
-            wp_schedule_event(time(), Cron::WEEKLY, FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION);
+            wp_schedule_event($cron->getFirstRunTimestamp(Cron::WEEKLY), Cron::WEEKLY, FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION);
         }
 
         $runAjaxFeatureTest = $this->container->callback(FeatureDetection::class, 'runAjaxFeatureTest');

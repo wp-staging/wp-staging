@@ -111,12 +111,32 @@ class TableCreateService
     public function preserveExistingTable(string $tableName, string $tableWithoutPrefix): string
     {
         $newTableName = DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP . $tableWithoutPrefix;
+        $this->dropOrphanedBackupTable($newTableName);
         $this->logger->info(sprintf("Preserving existing table %s by renaming it to %s", esc_html($tableName), esc_html($newTableName)));
         if ($this->tableService->renameTable($tableName, $newTableName)) {
             return $newTableName;
         }
 
         throw new RuntimeException("Cleanup Table - Cannot preserve existing table. Error: Unable to rename table $tableName to $newTableName");
+    }
+
+    /**
+     * An interrupted earlier job can leave a backup table behind, which would make the
+     * preserve rename collide and abort the whole clone/update. These
+     * TMP_DATABASE_PREFIX_TO_DROP tables are transient, so a stale one is always safe to
+     * drop before re-preserving.
+     *
+     * @param string $backupTableName
+     * @return void
+     */
+    protected function dropOrphanedBackupTable(string $backupTableName)
+    {
+        if (!$this->tableService->tableExists($backupTableName)) {
+            return;
+        }
+
+        $this->logger->warning(sprintf("Cleanup Table - Dropping orphaned backup table %s left by a previous job", esc_html($backupTableName)));
+        $this->tableService->dropTable($backupTableName);
     }
 
     /**

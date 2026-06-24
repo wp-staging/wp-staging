@@ -34,6 +34,7 @@ class DatabaseImporter
     private $databaseImporterDto;
     private $database;
     private $warningLogCallable;
+    private $noticeLogCallable;
     private $searchReplace;
     private $searchReplaceForPrefix;
     protected $tmpDatabasePrefix;
@@ -199,6 +200,11 @@ class DatabaseImporter
     public function setWarningLogCallable(callable $callable)
     {
         $this->warningLogCallable = $callable;
+    }
+
+    public function setNoticeLogCallable(callable $callable)
+    {
+        $this->noticeLogCallable = $callable;
     }
 
     public function execute()
@@ -402,14 +408,7 @@ class DatabaseImporter
         }
         $querySize = strlen($query);
         if ($querySize > ini_get('pcre.backtrack_limit')) {
-            $this->logWarning(
-                sprintf(
-                    'Skipped search & replace on query: "%s" Increasing pcre.backtrack_limit can fix it! Query Size: %s. pcre.backtrack_limit: %s',
-                    substr($query, 0, 1000) . '...',
-                    $querySize,
-                    ini_get('pcre.backtrack_limit')
-                )
-            );
+            $this->logSkippedSearchReplace($query, $querySize);
             return;
         }
         preg_match('#^INSERT INTO `(.+?(?=`))` VALUES (\(.+\));$#', $query, $insertIntoExploded);
@@ -642,6 +641,35 @@ class DatabaseImporter
             ], $data);
         }
         $callable($message);
+    }
+
+    protected function logNotice(string $message)
+    {
+        $callable = $this->noticeLogCallable;
+        if (!is_callable($callable)) {
+            return;
+        }
+        $callable($message);
+    }
+
+    private function logSkippedSearchReplace(string $query, int $querySize)
+    {
+        $tableName     = $this->extractTableNameFromQuery($query);
+        $humanSize     = size_format($querySize);
+        $backtrackSize = size_format((int)ini_get('pcre.backtrack_limit'));
+        if (strpos($query, self::BINARY_FLAG) !== false) {
+            $this->logNotice(sprintf(
+                'Skipped search & replace for a row in `%s` because it stores binary data (e.g. cache or serialized values), where search & replace does not apply. No action is required.',
+                $tableName
+            ));
+            return;
+        }
+        $this->logWarning(sprintf(
+            'Could not run search & replace on a large row in `%s` — its size (%s) exceeds PHP\'s pcre.backtrack_limit (%s). The row was copied unchanged; if it contains site URLs, increase pcre.backtrack_limit and re-run so they get updated.',
+            $tableName,
+            $humanSize,
+            $backtrackSize
+        ));
     }
 
     protected function isTableExcluded(string $query): bool

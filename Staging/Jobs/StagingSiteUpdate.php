@@ -3,11 +3,13 @@
 namespace WPStaging\Staging\Jobs;
 
 use WPStaging\Framework\Job\AbstractJob;
-use WPStaging\Framework\Job\Task\Tasks\CleanupBakTablesTask;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
+use WPStaging\Staging\Tasks\StagingSite\Database\CleanupExistingPreservedTablesTask;
+use WPStaging\Staging\Tasks\StagingSite\Database\CleanupPreservedTablesTask;
 use WPStaging\Staging\Tasks\StagingSite\Database\ImportDatabaseRowsTask;
 use WPStaging\Staging\Tasks\StagingSite\Database\PrepareDatabaseRowsTask;
 use WPStaging\Staging\Tasks\StagingSite\Database\PrepareStagingSiteTablesTask;
+use WPStaging\Staging\Tasks\StagingSite\DatabaseAdjustment\PreserveOptionsOnUpdateTask;
 use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyMuPluginsTask;
 use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyPluginsTask;
 use WPStaging\Staging\Tasks\StagingSite\Filesystem\CopyThemesTask;
@@ -64,6 +66,7 @@ class StagingSiteUpdate extends AbstractJob
         $this->addFilesystemTasks();
         $this->addAdvanceTasks();
         $this->addDataAdjustmentTasks();
+        $this->addPostUpdateCleanupTask();
         $this->addFinishStagingSiteUpdateTask();
     }
 
@@ -79,7 +82,7 @@ class StagingSiteUpdate extends AbstractJob
             return;
         }
 
-        $this->tasks[] = CleanupBakTablesTask::class;
+        $this->tasks[] = CleanupExistingPreservedTablesTask::class;
         $this->tasks[] = PrepareStagingSiteTablesTask::class;
         $this->tasks[] = PrepareDatabaseRowsTask::class;
         $this->tasks[] = ImportDatabaseRowsTask::class;
@@ -104,8 +107,21 @@ class StagingSiteUpdate extends AbstractJob
         $this->tasks[] = FinishStagingSiteUpdateTask::class;
     }
 
+    protected function addPostUpdateCleanupTask()
+    {
+        if ($this->jobDataDto->getAllTablesExcluded() && empty($this->jobDataDto->getNonSiteTables())) {
+            return;
+        }
+
+        $this->tasks[] = CleanupPreservedTablesTask::class;
+    }
+
     protected function addAdvanceTasks()
     {
-        // no-op, used in PRO
+        if ($this->jobDataDto->getAllTablesExcluded() && empty($this->jobDataDto->getNonSiteTables())) {
+            return;
+        }
+
+        $this->tasks[] = PreserveOptionsOnUpdateTask::class;
     }
 }

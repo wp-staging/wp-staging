@@ -17,6 +17,6 @@ use WPStaging\Framework\Language\Language;
     ); ?>
 </span>
 
-<button id="wpstg-new-clone" class="wpstg-btn wpstg-btn-lg wpstg-btn-primary" disabled>
+<button id="wpstg-new-staging" class="wpstg-btn wpstg-btn-lg wpstg-btn-primary" disabled>
     <?php esc_html_e('Create Staging Site', 'wp-staging'); ?>
 </button>

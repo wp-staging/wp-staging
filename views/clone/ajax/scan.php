@@ -37,7 +37,7 @@ use WPStaging\Framework\Facades\UI\Checkbox;
     <div class="wpstg-tabs-wrapper">
         <p class="wpstg-tables-selection-note">
             <b class="wpstg--red"><?php esc_html_e("Note: ", "wp-staging") ?></b>
-            <?php esc_html_e("The tables and folder selection will be saved and preselected for the next update or reset on this staging site.", "wp-staging") ?>
+            <?php esc_html_e("These table and folder selections will be remembered for future updates and resets of this staging site.", "wp-staging") ?>
         </p>
         <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
             <span class="wpstg-tab-triangle"></span>

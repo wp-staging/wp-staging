@@ -131,7 +131,7 @@ abstract class AbstractStagingSetup
         return wp_normalize_path(ABSPATH);
     }
 
-    public function renderSettings(string $name, string $label, string $description, bool $checked = false, bool $disabled = false, string $additionalClasses = '', string $dataId = '')
+    public function renderSettings(string $name, string $label, string $description, bool $checked = false, bool $disabled = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', string $tooltip = null)
     {
         $view = $this->templateEngine->render(
             'staging/_partials/settings.php',
@@ -139,11 +139,14 @@ abstract class AbstractStagingSetup
                 'name'        => $name,
                 'label'       => $label,
                 'description' => $description,
+                'summary'     => $summary,
                 'checked'     => $checked,
                 'disabled'    => $disabled,
                 'classes'     => $additionalClasses,
                 'dataId'      => $dataId,
                 'infoIcon'    => $this->infoIcon,
+                'content'     => $content,
+                'tooltip'     => $tooltip === null ? $description : $tooltip,
             ]
         );
 
@@ -152,7 +155,7 @@ abstract class AbstractStagingSetup
 
     public function getSymlinkUploadDescription(): string
     {
-        return sprintf(esc_html__('Activate to symlink the folder %s to the production site. %s All files including images on the production site\'s uploads folder will be linked to the staging site uploads folder. This will speed up the cloning and pushing process tremendously as no files from the uploads folder are copied between both sites. %s Warning: this can lead to mixed and shared content issues if both sites load (custom) stylesheet files from the same uploads folder. %s Using this option means changing images on the staging site will change images on the production site as well. Use this with care! %s', 'wp-staging'), '<code>' . esc_html($this->wpDefaultDirectories->getRelativeUploadPath()) . '</code>', '<br><br>', '<br><br><span class="wpstg--red">', '<br><br>', '</span>');
+        return sprintf(esc_html__('Activate to symlink the folder %s%s%s to the production site. %s All files including images on the production site\'s uploads folder will be linked to the staging site uploads folder. This will speed up the cloning and pushing process tremendously as no files from the uploads folder are copied between both sites. %s Warning: this can lead to mixed and shared content issues if both sites load (custom) stylesheet files from the same uploads folder. %s Using this option means changing images on the staging site will change images on the production site as well. Use this with care! %s', 'wp-staging'), '<code>', esc_html($this->wpDefaultDirectories->getRelativeUploadPath()), '</code>', '<br><br>', '<br><br><span class="wpstg--red">', '<br><br>', '</span>');
     }
 
     public function getCustomDirectoryDescription(): string
@@ -170,13 +173,26 @@ abstract class AbstractStagingSetup
         return $this->openDisabledSettingsSectionByDefault;
     }
 
+    /**
+     * Whether Pro advanced settings are unlocked at render time. True only on a
+     * Pro build with a valid/active (or local) license; the free build is always
+     * locked. Used to keep advanced settings disabled when a Pro install runs
+     * without a valid license.
+     *
+     * @return bool
+     */
+    public function isProLicenseActive(): bool
+    {
+        return false;
+    }
+
     abstract public function renderNetworkCloneSettings();
 
     abstract public function getAdvanceSettingsTitle(): string;
 
     abstract public function renderAdvanceSettingsHeader();
 
-    abstract public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '');
+    abstract public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', string $tooltip = null);
 
     abstract public function renderNewAdminSettings();
 

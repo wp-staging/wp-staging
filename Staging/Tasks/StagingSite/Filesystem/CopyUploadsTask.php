@@ -3,7 +3,6 @@
 namespace WPStaging\Staging\Tasks\StagingSite\Filesystem;
 
 use WPStaging\Framework\Filesystem\PartIdentifier;
-use WPStaging\Staging\Interfaces\AdvanceStagingOptionsInterface;
 use WPStaging\Staging\Tasks\FileCopierTask;
 
 class CopyUploadsTask extends FileCopierTask
@@ -32,11 +31,6 @@ class CopyUploadsTask extends FileCopierTask
     protected function getIsExcluded(): bool
     {
         if ($this->jobDataDto->getIsUploadsExcluded()) {
-            return true;
-        }
-
-        // Skip copying uploads if they will be symlinked instead
-        if ($this->jobDataDto instanceof AdvanceStagingOptionsInterface && $this->jobDataDto->getIsUploadsSymlinked()) {
             return true;
         }
 

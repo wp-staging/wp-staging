@@ -14,19 +14,22 @@ class Language
      */
     public function loadLanguage(string $locale, string $moFileLocal, array $moFilesGlobal)
     {
-        $isGlobalLoaded = false;
-        foreach ($moFilesGlobal as $moFileGlobal) {
-            if (file_exists($moFileGlobal) && load_textdomain(FrameworkLanguage::TEXT_DOMAIN, $moFileGlobal)) {
-                $isGlobalLoaded = true;
-            }
+        // Load the bundled translation first. WordPress merges translations with
+        // first-loaded-wins semantics, so the local file overrides any conflicting
+        // WordPress.org language pack while the global files below only fill gaps.
+        $isLocalLoaded = false;
+        if (file_exists($moFileLocal)) {
+            $isLocalLoaded = load_textdomain(FrameworkLanguage::TEXT_DOMAIN, $moFileLocal);
         }
 
-        if (!$isGlobalLoaded) {
+        if (!$isLocalLoaded) {
             load_plugin_textdomain(FrameworkLanguage::TEXT_DOMAIN, false, WPSTG_PLUGIN_SLUG . '/languages');
         }
 
-        if (file_exists($moFileLocal)) {
-            load_textdomain(FrameworkLanguage::TEXT_DOMAIN, $moFileLocal);
+        foreach ($moFilesGlobal as $moFileGlobal) {
+            if (file_exists($moFileGlobal)) {
+                load_textdomain(FrameworkLanguage::TEXT_DOMAIN, $moFileGlobal);
+            }
         }
     }
 }

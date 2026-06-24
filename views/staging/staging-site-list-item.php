@@ -7,15 +7,16 @@
  * @var WPStaging\Staging\Dto\StagingSiteDto      $stagingSite
  * @var WPStaging\Staging\Dto\ListableStagingSite $stagingSiteItem
  * @var mixed                                     $license
- * @var bool                                      $newStagingFeatureEnabled
  * @var WPStaging\Framework\Assets\Assets         $assets
  */
 
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
+$stagingSiteElementId = empty($stagingSiteItem->directoryName) ? $stagingSiteItem->cloneName : $stagingSiteItem->directoryName;
+
 ?>
 
-<div id="<?php echo esc_attr($stagingSiteItem->directoryName); ?>" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" class="wpstg-clone">
+<div id="<?php echo esc_attr($stagingSiteElementId); ?>" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" class="wpstg-clone">
     <div class="wpstg-clone-header">
         <a href="javascript:void(0);" class="wpstg-clone-title wpstg-open-staging-site" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>">
             <?php echo esc_html($stagingSiteItem->siteName); ?>
@@ -39,7 +40,6 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
                         </div>
                         <?php esc_html_e("Open", "wp-staging"); ?>
                     </a>
-                    <?php if ($newStagingFeatureEnabled) : ?>
                     <a href="#" class="wpstg--update--staging-site--setup wpstg-clone-action" data-cloneId="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('update-site'); ?>
@@ -52,20 +52,6 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
                         </div>
                         <?php esc_html_e("Reset", "wp-staging"); ?>
                     </a>
-                    <?php else : ?>
-                    <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging"); ?>">
-                        <div class="wpstg-dropdown-item-icon">
-                            <?php $assets->renderSvg('update-site'); ?>
-                        </div>
-                        <?php esc_html_e("Update", "wp-staging"); ?>
-                    </a>
-                    <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-network="<?php echo is_multisite() && !empty($stagingSiteItem->isNetworkClone)  ? 'yes' : 'no'; ?>" title="<?php echo esc_attr__("Replace the selected staging site with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging"); ?>">
-                        <div class="wpstg-dropdown-item-icon">
-                            <?php $assets->renderSvg('reset'); ?>
-                        </div>
-                        <?php esc_html_e("Reset", "wp-staging"); ?>
-                    </a>
-                    <?php endif; ?>
                     <?php
                     do_action(TemplateEngine::ACTION_AFTER_EXISTING_CLONES, $stagingSiteItem->cloneId, $stagingSite->toArray(), $license);
 

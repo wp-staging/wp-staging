@@ -2,10 +2,8 @@
 
 namespace WPStaging\Framework\Job\Task\Tasks;
 
-use DirectoryIterator;
-use WPStaging\Backup\Service\Archiver;
-use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Network\RemoteDownloader;
+use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Service\TmpBackupCleaner;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -13,22 +11,30 @@ use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 
+/**
+ * Cleans temporary backup files created by backup and Remote Sync jobs
+ */
 class CleanupTmpBackupsTask extends AbstractTask
 {
-    /** @var Directory */
-    private $directory;
+    /** @var BackupsFinder */
+    private $backupsFinder;
+
+    /** @var TmpBackupCleaner */
+    private $tmpBackupCleaner;
 
     /**
      * @param LoggerInterface $logger
      * @param Cache $cache
      * @param StepsDto $stepsDto
-     * @param Directory $directory
+     * @param BackupsFinder $backupsFinder
+     * @param TmpBackupCleaner $tmpBackupCleaner
      * @param SeekableQueueInterface $taskQueue
      */
-    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, Directory $directory, SeekableQueueInterface $taskQueue)
+    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, BackupsFinder $backupsFinder, TmpBackupCleaner $tmpBackupCleaner, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->directory = $directory;
+        $this->backupsFinder    = $backupsFinder;
+        $this->tmpBackupCleaner = $tmpBackupCleaner;
     }
 
     /**
@@ -52,57 +58,10 @@ class CleanupTmpBackupsTask extends AbstractTask
      */
     public function execute()
     {
-        $tmpBackupsDir = $this->directory->getBackupDirectory();
-
-        $tmpBackupsDir = untrailingslashit($tmpBackupsDir);
-
-        // Early bail: Path to Clean does not exist
-        if (!file_exists($tmpBackupsDir)) {
-            return $this->generateResponse();
-        }
-
-        $iterator = new DirectoryIterator($tmpBackupsDir);
-
-        foreach ($iterator as $fileInfo) {
-            if ($fileInfo->isDot() || !$fileInfo->isFile()) {
-                continue;
-            }
-
-            if (!$this->isTmpBackup($fileInfo->getFilename())) {
-                continue;
-            }
-
-            unlink($fileInfo->getPathname());
-        }
+        $this->tmpBackupCleaner->clean($this->backupsFinder->getBackupsDirectory());
 
         $this->logger->info('Temporary backups cleanup completed.');
 
         return $this->generateResponse();
-    }
-
-    /**
-     * Check if a file is a temporary backup that should be cleaned up.
-     * Matches both .wpstgtmp files and .wpstgtmp.uploading files.
-     *
-     * @param string $filename
-     * @return bool
-     */
-    private function isTmpBackup(string $filename): bool
-    {
-        $extension = pathinfo($filename, PATHINFO_EXTENSION);
-
-        // Match .wpstgtmp files
-        if ($extension === Archiver::TMP_BACKUP_EXTENSION) {
-            return true;
-        }
-
-        // Match .wpstgtmp.uploading files (in-progress downloads)
-        if ($extension === RemoteDownloader::UPLOADING_EXTENSION) {
-            $filenameWithoutUploading = pathinfo($filename, PATHINFO_FILENAME);
-            $innerExtension = pathinfo($filenameWithoutUploading, PATHINFO_EXTENSION);
-            return $innerExtension === Archiver::TMP_BACKUP_EXTENSION;
-        }
-
-        return false;
     }
 }

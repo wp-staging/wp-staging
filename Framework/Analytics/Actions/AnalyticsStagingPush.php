@@ -10,6 +10,7 @@ class AnalyticsStagingPush extends AnalyticsEventDto
     public $delete_plugins_and_themes;
     public $delete_uploads_folder;
     public $backup_uploads_folder;
+    public $staging_engine;
 
     public function getEventAction()
     {
@@ -18,10 +19,27 @@ class AnalyticsStagingPush extends AnalyticsEventDto
 
     public function enqueueStartEvent($eventId, $eventData)
     {
-        $this->create_backup_before_pushing = !empty($eventData->createBackupBeforePushing);
-        $this->delete_plugins_and_themes = !empty($eventData->deletePluginsAndThemes);
-        $this->delete_uploads_folder = !empty($eventData->deleteUploadsFolder);
-        $this->backup_uploads_folder = !empty($eventData->backupUploadsFolder);
+        $this->create_backup_before_pushing = !empty($this->getEventDataValue(
+            $eventData,
+            'createBackupBeforePushing',
+            $this->getEventDataValue($eventData, 'isCreateDatabaseBackup')
+        ));
+        $this->delete_plugins_and_themes    = !empty($this->getEventDataValue(
+            $eventData,
+            'deletePluginsAndThemes',
+            $this->getEventDataValue($eventData, 'isCleanPluginsThemes')
+        ));
+        $this->delete_uploads_folder        = !empty($this->getEventDataValue(
+            $eventData,
+            'deleteUploadsFolder',
+            $this->getEventDataValue($eventData, 'isCleanUploads')
+        ));
+        $this->backup_uploads_folder        = !empty($this->getEventDataValue(
+            $eventData,
+            'backupUploadsFolder',
+            $this->getEventDataValue($eventData, 'isBackupUploads')
+        ));
+        $this->staging_engine               = $this->getStagingEngine($eventData);
 
         parent::enqueueStartEvent($eventId, $eventData);
     }

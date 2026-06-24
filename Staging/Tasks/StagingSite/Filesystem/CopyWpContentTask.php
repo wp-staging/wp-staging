@@ -22,6 +22,11 @@ class CopyWpContentTask extends FileCopierTask
         return PartIdentifier::WP_CONTENT_PART_IDENTIFIER;
     }
 
+    protected function getLoggerFriendlyName(): string
+    {
+        return 'other content folders';
+    }
+
     /** @return bool */
     protected function getIsWpContent(): bool
     {

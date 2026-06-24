@@ -14,7 +14,7 @@ class Create extends AbstractTemplateComponent
     /**
      * @var string
      */
-    const WPSTG_REQUEST = 'wpstg_create_staging';
+    const WPSTG_REQUEST = 'wpstg_staging_create';
 
     /**
      * @return void

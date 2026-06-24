@@ -10,6 +10,7 @@ class AnalyticsStagingUpdate extends AnalyticsEventDto
     public $delete_plugins_and_themes;
     public $delete_uploads_folder;
     public $backup_uploads_folder;
+    public $staging_engine;
 
     public function getEventAction()
     {
@@ -18,10 +19,19 @@ class AnalyticsStagingUpdate extends AnalyticsEventDto
 
     public function enqueueStartEvent($eventId, $eventData)
     {
-        $this->emails_allowed = !empty($eventData->isEmailsAllowed);
-        $this->delete_plugins_and_themes = !empty($eventData->deletePluginsAndThemes);
-        $this->delete_uploads_folder = !empty($eventData->deleteUploadsFolder);
-        $this->backup_uploads_folder = !empty($eventData->backupUploadsFolder);
+        $this->emails_allowed             = !empty($this->getEventDataValue($eventData, 'isEmailsAllowed'));
+        $this->delete_plugins_and_themes = !empty($this->getEventDataValue(
+            $eventData,
+            'deletePluginsAndThemes',
+            $this->getEventDataValue($eventData, 'isCleanPluginsThemes')
+        ));
+        $this->delete_uploads_folder      = !empty($this->getEventDataValue(
+            $eventData,
+            'deleteUploadsFolder',
+            $this->getEventDataValue($eventData, 'isCleanUploads')
+        ));
+        $this->backup_uploads_folder      = !empty($this->getEventDataValue($eventData, 'backupUploadsFolder'));
+        $this->staging_engine             = $this->getStagingEngine($eventData);
 
         parent::enqueueStartEvent($eventId, $eventData);
     }

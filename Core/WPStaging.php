@@ -6,8 +6,9 @@ use Exception;
 use RuntimeException;
 use WPStaging\Backend\Administrator;
 use WPStaging\Backend\DashboardWidget\DashboardWidgetServiceProvider;
-use WPStaging\Framework\Job\JobServiceProvider;
 use WPStaging\Backup\BackupServiceProvider;
+use WPStaging\Backup\Service\BackupsDirectoryResolver;
+use WPStaging\Backup\Service\TmpBackupCleaner;
 use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Logger;
@@ -22,6 +23,7 @@ use WPStaging\Framework\ErrorHandler;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\JobServiceProvider;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\NoticeServiceProvider;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
@@ -44,6 +46,11 @@ final class WPStaging
      * @var string
      */
     const HOOK_BOOTSTRAP_SERVICES = 'wpstg.bootstrap.services';
+
+    /**
+     * @var string
+     */
+    const SSE_DIR_NAME = 'sse';
 
     /**
      * Singleton instance
@@ -163,9 +170,8 @@ final class WPStaging
     public function registerInitHook()
     {
         /**
-         * This hook is used to delete old SSE files
-         * This will run on all requests, to keep memory usage low, we don't use/load our whole plugin for this.
-         * So not use any of our classes, const to avoid loading the whole plugin.
+         * This hook is used to delete old SSE files and stale Remote Sync temp backups.
+         * This will run on all requests. To keep memory usage low, avoid booting the whole plugin service graph here.
          */
         add_action('init', function () {
             // Run this only after 24 hours passed
@@ -176,11 +182,17 @@ final class WPStaging
 
             set_transient('wpstg.run_daily', true, 24 * HOUR_IN_SECONDS);
 
-            $maxAge = HOUR_IN_SECONDS; // Lets delete files older than 1 hour
-            $now    = time();
+            $now = time();
 
             // Lets delete sse files older than 1 hour
-            $this->cleanupDirectory(WP_CONTENT_DIR . '/wp-staging/sse', $maxAge, $now, $scanChildren = false);
+            $sseDir = trailingslashit(WP_CONTENT_DIR) . WPSTG_PLUGIN_DOMAIN . '/' . self::SSE_DIR_NAME;
+            $this->cleanupDirectory($sseDir, HOUR_IN_SECONDS, $now, $scanChildren = false);
+
+            $uploadDir = wp_upload_dir(null, false);
+            if (!empty($uploadDir['basedir'])) {
+                $backupsDir = (new BackupsDirectoryResolver())->resolveFromUploadsDirectory($uploadDir['basedir']);
+                (new TmpBackupCleaner())->clean($backupsDir, DAY_IN_SECONDS, $now);
+            }
         }, 1);
     }
 

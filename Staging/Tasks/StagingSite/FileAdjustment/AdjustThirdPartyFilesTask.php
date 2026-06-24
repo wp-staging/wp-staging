@@ -37,7 +37,7 @@ class AdjustThirdPartyFilesTask extends FileAdjustmentTask
         }
 
         if (empty($replaceWithDummyFile)) {
-            $this->logger->info("Found no third party file to adjust.");
+            $this->logger->info("No third-party hosting files needed adjusting on this site.");
             return $this->generateResponse();
         }
 
@@ -54,7 +54,7 @@ class AdjustThirdPartyFilesTask extends FileAdjustmentTask
      */
     private function createDummyFile(string $file)
     {
-        $this->logger->info("Creating dummy file for `$file`");
+        $this->logger->info("Replacing the third-party hosting file `$file` with an empty placeholder so it does not affect the staging site.");
         $this->writeFile($file, "<?php // WP Staging dummy file");
     }
 }

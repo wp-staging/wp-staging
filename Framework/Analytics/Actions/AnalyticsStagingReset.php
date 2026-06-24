@@ -6,6 +6,8 @@ use WPStaging\Framework\Analytics\AnalyticsEventDto;
 
 class AnalyticsStagingReset extends AnalyticsEventDto
 {
+    public $staging_engine;
+
     public function getEventAction()
     {
         return 'event_staging_reset';
@@ -13,6 +15,8 @@ class AnalyticsStagingReset extends AnalyticsEventDto
 
     public function enqueueStartEvent($eventId, $eventData)
     {
+        $this->staging_engine = $this->getStagingEngine($eventData);
+
         parent::enqueueStartEvent($eventId, $eventData);
     }
 

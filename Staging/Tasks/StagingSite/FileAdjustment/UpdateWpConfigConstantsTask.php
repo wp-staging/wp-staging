@@ -104,7 +104,7 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         ];
 
         if (!$isWpContentOutsideAbspath) {
-            $replaceOrAdd["UPLOADS"]       = sprintf("'%s'", $this->escapeSingleQuotes($this->jobDataDto->getStagingSiteUploads()));
+            $replaceOrAdd["UPLOADS"]       = sprintf("'%s'", $this->escapeSingleQuotes(untrailingslashit($this->jobDataDto->getStagingSiteUploads())));
             $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . $this->getRelativePluginsDir() . '"';
             $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->jobDataDto->getStagingSiteUrl() . $this->getRelativePluginsDir()));
         }
@@ -233,7 +233,7 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         preg_match($pattern, $content, $matches);
 
         if (empty($matches[0])) {
-            $this->logger->debug("Constant " . $constant . " not defined in wp-config.php. Skipping.");
+            $this->logger->debug("Constant " . $constant . " not defined in wp-config.php.");
             return $content;
         }
 
@@ -250,6 +250,18 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         $this->logger->info("Updated: " . $constant . ".");
         return $content;
+    }
+
+    /**
+     * @param string $constant
+     * @param string $content
+     * @return bool
+     */
+    protected function hasDefinition(string $constant, string $content): bool
+    {
+        preg_match($this->getDefineRegex($constant), $content, $matches);
+
+        return !empty($matches[0]);
     }
 
     /**
@@ -322,13 +334,12 @@ EOT;
      */
     protected function replaceOrAddDefinition(string $constant, string $content, string $newDefinition)
     {
-        $newContent = $this->replaceExistingDefinition($constant, $content, $newDefinition);
-        if (!$newContent) {
+        if (!$this->hasDefinition($constant, $content)) {
             $this->logger->debug("Constant " . $constant . " not defined in wp-config.php. Creating new entry.");
-            $newContent = $this->addDefinition($constant, $content, $newDefinition);
+            return $this->addDefinition($constant, $content, $newDefinition);
         }
 
-        return $newContent;
+        return $this->replaceExistingDefinition($constant, $content, $newDefinition);
     }
 
     /**
@@ -339,13 +350,12 @@ EOT;
      */
     protected function replaceOrSkipDefinition(string $constant, string $content, string $newDefinition)
     {
-        $newContent = $this->replaceExistingDefinition($constant, $content, $newDefinition);
-        if (!$newContent) {
+        if (!$this->hasDefinition($constant, $content)) {
             $this->logger->info("Skipping: " . $constant . " not defined in wp-config.php.");
             return $content;
         }
 
-        return $newContent;
+        return $this->replaceExistingDefinition($constant, $content, $newDefinition);
     }
 
 

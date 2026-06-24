@@ -248,16 +248,64 @@ class Cron
     }
 
     /**
+     * Return a conservative first-run timestamp for plugin-owned static cron events.
+     *
+     * Scheduling at the current timestamp makes events immediately due after activation
+     * or repair, which can create avoidable CPU bursts on the next request.
+     *
+     * @param string $recurrence
+     * @return int
+     */
+    public function getFirstRunTimestamp(string $recurrence): int
+    {
+        switch ($recurrence) {
+            case self::HOURLY:
+                $delay = HOUR_IN_SECONDS;
+                break;
+            case self::SIX_HOURS:
+                $delay = 6 * HOUR_IN_SECONDS;
+                break;
+            case self::TWELVE_HOURS:
+                $delay = 12 * HOUR_IN_SECONDS;
+                break;
+            case self::DAILY:
+            case self::BASIC_DAILY:
+            case 'daily':
+                $delay = DAY_IN_SECONDS;
+                break;
+            case self::WEEKLY:
+            case 'weekly':
+                $delay = WEEK_IN_SECONDS;
+                break;
+            case self::EVERY_TWO_DAYS:
+                $delay = 2 * DAY_IN_SECONDS;
+                break;
+            case self::EVERY_TWO_WEEKS:
+                $delay = 2 * WEEK_IN_SECONDS;
+                break;
+            case self::MONTHLY:
+            case 'monthly':
+                $delay = MONTH_IN_SECONDS;
+                break;
+            default:
+                $delay = HOUR_IN_SECONDS;
+                break;
+        }
+
+        return time() + $delay;
+    }
+
+    /**
      * @return bool
      */
     public function scheduleEvent()
     {
         if (!wp_next_scheduled(self::ACTION_WEEKLY_EVENT)) {
-            wp_schedule_event(time(), 'weekly', self::ACTION_WEEKLY_EVENT);
+            wp_schedule_event($this->getFirstRunTimestamp('weekly'), 'weekly', self::ACTION_WEEKLY_EVENT);
         }
 
         if (!wp_next_scheduled(self::ACTION_DAILY_EVENT)) {
-            wp_schedule_event(time(), 'daily', self::ACTION_DAILY_EVENT);
+            wp_schedule_event($this->getFirstRunTimestamp('daily'), 'daily', self::ACTION_DAILY_EVENT);
         }
 
         return true;

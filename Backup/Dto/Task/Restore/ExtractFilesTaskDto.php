@@ -25,6 +25,9 @@ class ExtractFilesTaskDto extends AbstractTaskDto
     /** @var int */
     public $currentHeaderBytesRemoved;
 
+    /** @var int|null */
+    public $extractorFileBaseBytes;
+
     public function toExtractorDto(): ExtractorDto
     {
         $extractorDto = new ExtractorDto();
@@ -34,6 +37,7 @@ class ExtractFilesTaskDto extends AbstractTaskDto
         $extractorDto->setExtractorFileWrittenBytes($this->extractorFileWrittenBytes ?? 0);
         $extractorDto->setExtractorFileReadBytes($this->extractorFileReadBytes ?? 0);
         $extractorDto->setHeaderBytesRemoved($this->currentHeaderBytesRemoved ?? 0);
+        $extractorDto->setExtractorFileBaseBytes($this->extractorFileBaseBytes ?? 0);
 
         return $extractorDto;
     }
@@ -50,5 +54,6 @@ class ExtractFilesTaskDto extends AbstractTaskDto
         $this->extractorFileWrittenBytes = $extractorDto->getExtractorFileWrittenBytes();
         $this->extractorFileReadBytes    = $extractorDto->getExtractorFileReadBytes();
         $this->currentHeaderBytesRemoved = $extractorDto->getHeaderBytesRemoved();
+        $this->extractorFileBaseBytes    = $extractorDto->getExtractorFileBaseBytes();
     }
 }

@@ -44,10 +44,6 @@ $isCalledFromIndex = true;
     <div class="wpstg--tab--wrapper">
         <?php
         require_once(WPSTG_VIEWS_DIR . 'navigation/web-template.php');
-        // Show ad for pro version
-        if (!WPStaging::isPro()) {
-            require $this->viewsPath . 'ads/advert-pro-version.php';
-        }
         ?>
 
         <div class="wpstg-header">
@@ -103,11 +99,60 @@ $isCalledFromIndex = true;
             </div>
             <div class="wpstg-did-you-know-footer">
                 <?php echo sprintf(
-                    Escape::escapeHtml(__('Note: You can upload backup files to another site to transfer a website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
+                    Escape::escapeHtml(__('Need to move this site elsewhere? You can also use backup files for transfers. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
                     Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/')
                 ); ?>
             </div>
         </div>
     </div>
     <?php require_once($this->viewsPath . '_main/footer.php'); ?>
+    <script>
+      // Dismiss handler for the compact general "Upgrade to Pro" card. The staging
+      // listing is injected via innerHTML (scripts inside it do not execute), so
+      // this is delegated from the document to work on injected content.
+      (function () {
+        document.addEventListener('click', function (event) {
+          var trigger = event.target.closest('.wpstg-pro-card-dismiss');
+          if (!trigger) {
+            return;
+          }
+
+          event.preventDefault();
+
+          var body = new URLSearchParams();
+          body.append('action', 'wpstg_dismiss_notice');
+          body.append('nonce', wpstg.nonce);
+          body.append('wpstg_notice', 'general_pro_card');
+
+          fetch(ajaxurl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: body.toString()
+          }).then(function (response) {
+            return response.json();
+          }).then(function (success) {
+            // Only hide once the snooze was persisted; otherwise the card would
+            // vanish on a failed request and reappear on the next reload.
+            if (success !== true) {
+              return;
+            }
+
+            var card = document.querySelector('.wpstg-general-pro-card');
+            if (card) {
+              card.style.display = 'none';
+            }
+          }).catch(function () {});
+        });
+      })();
+    </script>
+    <?php
+    // Hidden host for the staging-created success modal's review block. Kept on
+    // the persistent page (not the AJAX-injected listing) so it is available when
+    // the success modal is built. Empty unless Free and review-eligible.
+    ?>
+    <div id="wpstg-staging-review-content" style="display:none;">
+        <?php include WPSTG_VIEWS_DIR . 'notices/review-prompt-modal.php'; ?>
+    </div>
+    <?php require_once(WPSTG_VIEWS_DIR . 'notices/review-prompt-handlers.php'); ?>
 </div>

@@ -2,7 +2,7 @@
 
 namespace WPStaging\Staging\Traits;
 
-use WPStaging\Pro\Staging\Service\StagingSetup;
+use WPStaging\Staging\Service\StagingSetup;
 
 /**
  * Trait StagingOperationDtoTrait

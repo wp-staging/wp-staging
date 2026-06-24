@@ -17,6 +17,8 @@ use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Security\UniqueIdentifier;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Staging\Sites;
+use WPStaging\Staging\Service\StagingEngine;
 
 /**
  * Class Job
@@ -79,7 +81,7 @@ abstract class Job implements ShutdownableInterface
     protected $logger;
 
     /**
-     * @var object|null
+     * @var stdClass|null
      */
     protected $options;
 
@@ -215,6 +217,91 @@ abstract class Job implements ShutdownableInterface
     public function getOptions()
     {
         return $this->options;
+    }
+
+    /**
+     * @return void
+     */
+    protected function markLegacyStagingEngine()
+    {
+        $this->options->stagingEngine = StagingEngine::ENGINE_LEGACY;
+        WPStaging::make(StagingEngine::class)->saveEngine(StagingEngine::ENGINE_LEGACY);
+    }
+
+    /**
+     * Loads the staging site list that the legacy scan step used to cache.
+     *
+     * Direct legacy starts from the refactored setup UI skip the scan request, so
+     * update/reset need this before they can resolve the selected staging site.
+     *
+     * @return void
+     */
+    protected function loadLegacyExistingClones()
+    {
+        $existingClones                = get_option(Sites::STAGING_SITES_OPTION, []);
+        $this->options->existingClones = is_array($existingClones) ? $existingClones : [];
+    }
+
+    /**
+     * Initializes the legacy job state that used to be prepared by the scan step.
+     *
+     * The refactored setup UI can start legacy jobs directly, so create/update/reset
+     * need these defaults before the first wpstg_processing request runs.
+     *
+     * @param string $mainJob
+     * @return void
+     */
+    protected function initializeLegacyStagingRun($mainJob)
+    {
+        $this->options->mainJob     = $mainJob;
+        $this->options->currentJob  = 'PreserveDataFirstStep';
+        $this->options->currentStep = 0;
+        $this->options->totalSteps  = 0;
+        $this->options->job         = new stdClass();
+
+        $this->options->clonedTables = [];
+
+        if (!property_exists($this->options, 'excludedTables') || !is_array($this->options->excludedTables)) {
+            $this->options->excludedTables = [];
+        }
+
+        if (!property_exists($this->options, 'totalFiles')) {
+            $this->options->totalFiles = 0;
+        }
+
+        if (!property_exists($this->options, 'totalFileSize')) {
+            $this->options->totalFileSize = 0;
+        }
+
+        if (!property_exists($this->options, 'copiedFiles')) {
+            $this->options->copiedFiles = 0;
+        }
+
+        if (!property_exists($this->options, 'includedDirectories')) {
+            $this->options->includedDirectories = [];
+        }
+
+        if (!property_exists($this->options, 'includedExtraDirectories')) {
+            $this->options->includedExtraDirectories = [];
+        }
+
+        if (!property_exists($this->options, 'excludedDirectories')) {
+            $this->options->excludedDirectories = [];
+        }
+
+        if (!property_exists($this->options, 'extraDirectories')) {
+            $this->options->extraDirectories = [];
+        }
+
+        if (!property_exists($this->options, 'scannedDirectories')) {
+            $this->options->scannedDirectories = [];
+        }
+
+        if (!property_exists($this->options, 'root')) {
+            $this->options->root = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, ABSPATH);
+        }
+
+        $this->markLegacyStagingEngine();
     }
 
     /**

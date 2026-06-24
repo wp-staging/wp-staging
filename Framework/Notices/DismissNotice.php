@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Notices;
 
+use WPStaging\Basic\Notices\GeneralProCardNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\ThirdParty\WordFence;
 use WPStaging\Pro\Notices\DismissNotice as DismissProNotice;
@@ -41,6 +42,16 @@ class DismissNotice
 
     public function dismiss($noticeToDismiss)
     {
+        // Compact general "Upgrade to Pro" card on the Staging dashboard.
+        // Snoozes only this card for 90 days (per admin); contextual Pro prompts,
+        // Pro badges and the Upgrade navigation keep working.
+        if ($noticeToDismiss === 'general_pro_card') {
+            // Report the actual outcome: snooze() returns false when there is no
+            // current user, so the client can avoid hiding a card that was not stored.
+            wp_send_json(WPStaging::make(GeneralProCardNotice::class)->snooze());
+            return;
+        }
+
         if ($noticeToDismiss === 'disabled_items' && $this->disabledItemsNotice->disable() !== false) {
             wp_send_json(true);
             return;

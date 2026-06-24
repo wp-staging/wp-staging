@@ -91,8 +91,7 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
 
     protected function isOptionsTableExcluded(): bool
     {
-        $optionsTable = $this->getOptionsTableName();
-        if ($this->isTableExcluded($optionsTable)) {
+        if ($this->isTableExcluded('options')) {
             return true;
         }
 

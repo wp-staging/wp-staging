@@ -14,18 +14,27 @@
  * @var string|null $isDataScanned
  * @var string|null $isDataNavigatable
  * @var string|null $onChange
+ * @var bool $usePrimitive
  *
  * @package WPStaging\Component
  * @see \WPStaging\Component\Checkbox::render()
  */
 
+$wrapperClasses = 'wpstg--checkbox-wrapper';
+$inputClasses   = empty($classes) ? '' : $classes;
+
+if (!empty($usePrimitive)) {
+    $wrapperClasses .= ' wpstg--checkbox-wrapper--primitive';
+    $inputClasses    = trim('wpstg-checkbox ' . $inputClasses);
+}
+
 ?>
-<span class="wpstg--checkbox-wrapper">
+<span class="<?php echo esc_attr($wrapperClasses); ?>">
     <input type="checkbox"
         name='<?php echo empty($name) ? '' : esc_attr($name); ?>'
         value='<?php echo empty($value) ? '' : esc_attr($value); ?>'
-        <?php if (!empty($classes)) : ?>
-            class='<?php echo esc_attr($classes); ?>'
+        <?php if (!empty($inputClasses)) : ?>
+            class='<?php echo esc_attr($inputClasses); ?>'
         <?php endif; ?>
         <?php if (!empty($id)) : ?>
             id='<?php echo esc_attr($id); ?>'
@@ -60,9 +69,11 @@
         <?php echo $isDisabled ? 'disabled' : '';?>
         <?php echo $isChecked ? 'checked' : '';?>
     />
+    <?php if (empty($usePrimitive)) : ?>
     <svg viewBox="0 0 20 16" width="20" height="20">
         <rect class="wpstg--checkbox-border" x="1" y="1" width="16" height="16" rx="3" ry="3"></rect>
         <rect class="wpstg--checkbox-background" x="1" y="1" width="16" height="16" rx="3" ry="3"></rect>
         <polyline class="wpstg--check-mark" points="4.5 10 7.5 13 13.5 5"></polyline>
     </svg>
+    <?php endif; ?>
 </span>

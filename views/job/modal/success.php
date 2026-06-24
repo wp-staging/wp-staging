@@ -1,8 +1,9 @@
 <div id="wpstg--success-modal" class="wpstg--success-modal">
     <div id="wpstg--success-modal--inner">
         <h2 class="wpstg--success-modal--title">{title}</h2>
+        <p class="wpstg--success-modal--text">{text}</p>
         <div class="wpstg--success-modal--header">
-            <p class="wpstg--success-modal--text">{text}<button class="wpstg--success-modal--logs-button wpstg-btn wpstg-btn-ghost">{btnTxtLog}</button></p>
+            <button class="wpstg--success-modal--logs-button wpstg-btn wpstg-btn-ghost">{btnTxtLog}</button>
         </div>
         <div class="wpstg--success-modal--logs-wrapper">
             <div class="wpstg--success-modal--logs wpstg--logs--container">
