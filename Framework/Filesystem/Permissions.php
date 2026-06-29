@@ -37,34 +37,33 @@ class Permissions
     }
 
     /**
+     * @param string $filePath Absolute path to the file, or empty string when no path is known.
+     *                         Passed as a second arg to wpstg_file_permission; callbacks that
+     *                         want per-file control must register with accepted_args = 2.
      * @return int
      */
-    public function getFilesOctal(): int
+    public function getFilePermission(string $filePath): int
     {
-        if (!defined('FS_CHMOD_FILE')) {
-            return $this->applyFilters(self::FILTER_FILE_PERMISSION, self::DEFAULT_FILE_PERMISSION);
+        $permission = self::DEFAULT_FILE_PERMISSION;
+        if (defined('FS_CHMOD_FILE') && $this->isValidPermission(FS_CHMOD_FILE)) {
+            $permission = FS_CHMOD_FILE;
         }
 
-        if ($this->isValidPermission(FS_CHMOD_FILE)) {
-            return $this->applyFilters(self::FILTER_FILE_PERMISSION, FS_CHMOD_FILE);
+        $filtered = $this->applyFilters(self::FILTER_FILE_PERMISSION, $permission, $filePath);
+
+        if (!is_int($filtered) || !$this->isValidPermission($filtered)) {
+            return $permission;
         }
 
-        return $this->applyFilters(self::FILTER_FILE_PERMISSION, self::DEFAULT_FILE_PERMISSION);
+        return $filtered;
     }
 
     /**
-     * Validates if a permission value is within valid Unix permission range.
-     *
-     * Valid Unix permissions are 0 to 0777 (511 decimal).
-     * Note: This validates the permission value itself, not its octal representation,
-     * since octal is just a way to represent the number.
-     *
-     * @param int $permission The permission value to validate
-     * @return bool True if permission is valid, false otherwise
+     * @param int $permission
+     * @return bool
      */
     private function isValidPermission(int $permission): bool
     {
-        // Valid Unix permissions are 0 to 0777 (511 decimal)
         return $permission >= 0 && $permission <= 0777;
     }
 }

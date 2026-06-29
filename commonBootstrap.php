@@ -156,6 +156,10 @@ if (!function_exists('wpstgShouldSkipBootstrap')) {
         }
 
         // Staging sites need full bootstrap: login gate, permission checks, admin bar CSS.
+        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
+            return false;
+        }
+
         if (get_option('wpstg_is_staging_site') === 'true') {
             return false;
         }

@@ -1,22 +1,22 @@
-=== WP STAGING - WordPress Backup, Migration, Clone & Duplicate ===
+=== WP STAGING - WordPress Backup, Restore, Migration & Clone ===
 
 Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, lucasbustamante, alaasalama, fayyazfayzi
 Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, move, duplicate, restore, transfer, clone
+Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.9.0
+Stable tag: 4.9.1
 Requires PHP: 7.0
 
-Backup, restore & migrate WordPress in minutes. Clone or duplicate your site and test updates safely on a staging copy. 100% unit-tested.
+WordPress backup, restore & migration in minutes. Clone or duplicate your site and test updates safely on a staging copy. 100% unit-tested.
 
 == Description ==
 
 <h3>WordPress Backup, Restore, Staging, Cloning & Migration — All in One</h3>
 
-WP STAGING is the all-in-one WordPress backup, staging, cloning, and migration plugin, built for professional workflows with 100% unit-tested code, thousands of automated tests, and extensive end-to-end testing across supported PHP versions.
+WP STAGING is the all-in-one WordPress backup, restore, staging, cloning, and migration plugin, built for professional workflows with 100% unit-tested code, thousands of automated tests, and extensive end-to-end testing across supported PHP versions.
 
 Create a full backup or an exact clone or copy of your website in minutes. Use it to duplicate your site, test plugin and theme updates safely, restore your site when needed, move or migrate WordPress to another server, transfer your site to a new host, or build a staging copy before making changes.
 
@@ -198,7 +198,7 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 * Backup retention settings.
 * Custom backup names.
 * Email notifications if a backup cannot be created.
-* Backup for WordPress multisites.
+* WordPress multisite backup and restore.
 * Cloud backup, offsite backup, and remote backups to external storage providers.
 * Backup to Google Drive.
 * Backup to Amazon S3.
@@ -279,33 +279,41 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.9.0 =
-* New: Added the Next-Gen engine for creating, updating, resetting and pushing staging sites. It is up to 80% faster and more resilient against memory and timeout errors, while running in isolation to protect the live site. #5122
-* New: Zero performance impact on your live site — WP Staging now runs invisibly to frontend visitors, even during active staging operations. #602
-* New: Database restores are dramatically faster on large backups — multi-gigabyte sites restore in a fraction of the time previously needed. #3020
-* New: Major redesign of the staging workflows. The Create, Update, Reset, Push and Delete screens now use a cleaner, more consistent interface with live summaries, clearer table and folder selection, safer confirmation steps, improved advanced options and a unified two-column layout across all staging actions. #5122
+= 4.9.1 =
+* New: A "WP Staging — Tips & Guides" widget on your WordPress dashboard with hand-picked links to docs and tutorials, so you can get more out of the plugin without leaving wp-admin. #5162
 * New: Add offline asynchronous license registration for firewall-restricted sites. (Pro) #5146
 * New: Add option to preserve current user during remote sync pull job. #4934
-* New: Remote Sync now has its own independent API version, so sites running different plugin releases stay compatible during pulls and pushes. #5132
+* New: Added the Next-Gen engine for creating, updating, resetting and pushing staging sites. It is up to 80% faster and more resilient against memory and timeout errors, while running in isolation to protect the live site. #5122
 * New: Backup file format upgraded to 2.1.0, laying the groundwork for per-file encryption and split backups in upcoming releases. All existing backups remain fully restorable — no migration needed. #5134
+* New: Database restores are dramatically faster on large backups — multi-gigabyte sites restore in a fraction of the time previously needed. #3020
+* New: Major redesign of the staging workflows. The Create, Update, Reset, Push and Delete screens now use a cleaner, more consistent interface with live summaries, clearer table and folder selection, safer confirmation steps, improved advanced options and a unified two-column layout across all staging actions. #5122
+* New: Remote Sync now has its own independent API version, so sites running different plugin releases stay compatible during pulls and pushes. #5132
 * New: Snappier WordPress admin — admin scripts moved out of the critical render path with event delegation for noticeably faster page loads. #5024
-* New: A "WP Staging — Tips & Guides" widget on your WordPress dashboard with hand-picked links to docs and tutorials, so you can get more out of the plugin without leaving wp-admin. #5162
+* New: Zero performance impact on your live site — WP Staging now runs invisibly to frontend visitors, even during active staging operations. #602
+* Enh: Extend wpstg_file_permission filter with an optional file path argument for granular per-file permission control. #5237
+* Enh: Hide tables from other staging sites when selecting what to copy. #5251
+* Enh: Improve the plugin description and wording in the readme. #5262
 * Enh: Improved the staging creation experience in both Free and Pro by making default behavior clearer, showing what will be copied or skipped, grouping advanced settings more logically and removing wording that could make the free version feel unsafe. #5122
 * Enh: Log the missing-compatible-primary-key table message as a notice instead of a warning, since the table is locked automatically and no user action is required. #5015
 * Enh: Make the "skipped search & replace on large row" log clearer — report binary-data rows as a notice that needs no action and keep a reworded warning for large text rows, without dumping the raw query. #5015
 * Fix: "Set Default" links for Destination Path and Target Hostname in Advanced Settings restored. #5055
 * Fix: "Unlock Remote Sync" button now links to the correct checkout URL when the license is expired. (Pro) #5067
 * Fix: "Unselect All" button now matches the other database table action buttons in dark mode. #5143
+* Fix: Allow capital letters and spaces in staging site names. #5280
 * Fix: Analytics consent modal styling fixed in dark mode; raster logo replaced with a scalable SVG. #5068
 * Fix: Background restore and backup failures now show a clearer error message with actionable guidance, instead of a generic failure notice. #4606
 * Fix: Backup download URL now reflects custom directory set via wpstg.backup.directory filter. #5212
 * Fix: Backup queue self-heals when the worker's loopback HTTP trigger is silently dropped by Cloudflare, restrictive firewalls, or cURL-blocked hosts — jobs no longer stall after the first task. #5118
 * Fix: Clean up stale Remote Sync .wpstgtmp files left behind by crashed pulls on the initiator and, via a once-daily safety net, on both initiator and source sites. (Pro) #5101
 * Fix: Clear stale option caches after direct database option updates. #5173
+* Fix: Correct dark theme colors in the staging setup modal exclude-rule fields and labels. #5283
 * Fix: Correct the dark-mode SweetAlert success icon — the masking wedges rendered as a white disc behind the checkmark on the dark popup. #5232
 * Fix: Do not run the new-administrator-account task when the option is disabled, which previously logged a misleading "missing email or password" warning. #5015
 * Fix: Do not show the "what's new" update modal to brand-new users on their first visit; it now only appears for existing users after an update. #5263
 * Fix: Enforce TLS certificate verification for restore tool requests. (Pro) #5175
+* Fix: Ensure staging sites remain protected by the login prompt when access control is enabled. #5278
+* Fix: Expand and collapse staging folders from the caret icon. #5274
+* Fix: Improve backup and restore error handling to avoid silent failures and retry loops. #3681
 * Fix: Improve next-gen staging site creation and reset with clearer details and more reliable handling of site names that already exist. #5258
 * Fix: Keep background job live log buttons working after reopening the logs modal. #5203
 * Fix: Keep the "Staging" and "Backup & Migration" menu labels untranslated so community translations can't rename them. #5267
@@ -315,16 +323,27 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 * Fix: Logs selector dropdown styling improved in dark mode. #5055
 * Fix: Missing top margin on the WordPress Playground warning callout (staging listing page) added. #5149
 * Fix: Multipart database-only backup no longer fails when the database is larger than the configured split size. #2624
+* Fix: Populate previously selected exclude rules in the staging site Update and Reset modals. #5288
+* Fix: Prevent "Deselect all" tables button from re-selecting tables on the staging Update/Reset modal. #5283
 * Fix: Reduce CPU usage after installing WP Staging and/or WP Staging Pro. #4867
+* Fix: Refresh the push files summary when selecting, deselecting or toggling folders, and align it with the create staging summary. #5283
 * Fix: Remote Sync pulls on the source site are now properly cancelled and cleaned up when the initiator becomes unresponsive. #4870
 * Fix: Remove 42 orphaned translation entries no longer present in the source. #5269
+* Fix: Remove misleading "Small Server Settings" link from backup and restore error messages. #3681
+* Fix: Remove the redundant usage tracking opt-in admin banner. The first-install consent modal and the Settings toggle remain the way to enable or disable sending usage data. #5289
+* Fix: Resolve fatal error on staging site Update/Reset when exclude rules exist. #5283
 * Fix: Restore now retries temporary server errors automatically and shows a clear status instead of appearing stuck. #4909
 * Fix: Restore respects server retry-after timing on temporary limits and handles other server errors more gracefully. #5002
 * Fix: Restoring a large database backup that was split into multiple files no longer fails with a duplicate entry error. #5219
 * Fix: Security checks for backup-file uploads strengthened. #5160
+* Fix: Show the cache-clear notice instead of the staging site URL in the Next-Gen push success modal. #5283
 * Fix: System info card layout no longer breaks when content exceeds the max allowed width. #5055
 * Fix: Throttle failed Remote Sync authentication attempts. (Pro) #5171
 * Fix: Translate 107 staging setup, delete, and push UI strings that previously rendered in English across all 11 locales. #5269
+* Fix: Uniquify the inlined SVG element ids in the analytics consent modal to avoid duplicate-id collisions, and update the affected unit test snapshots. #5296
+* Fix: Update the create staging summary when toggling between current site and entire network options. #5283
+* Fix: Use default plugin paths on staging sites with default WordPress structure to fix subsite asset loading on network staging. #4681
+* Fix: Use the selected staging engine when pushing a staging site instead of the previous selection. #5283
 * UX: Celebrate the first staging site and first backup creation with a brief confetti animation. #5275
 * UX: Make the Staging dashboard task-first — replace the large global Pro banner with a compact, dismissible "Upgrade to Pro" card (90-day per-admin snooze), add a permanent "Compare Free vs Pro" footer card, and improve the empty state. #5275
 * UX: Polished the staging-site delete confirmation modal. #5055

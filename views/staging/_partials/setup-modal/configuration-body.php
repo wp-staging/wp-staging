@@ -45,14 +45,14 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                         value="<?php echo esc_attr($defaultSiteName); ?>"
                         placeholder="<?php echo esc_attr($defaultSiteName); ?>"
                         maxlength="16"
-                        pattern="[a-z0-9_\-]+"
+                        pattern="[A-Za-z0-9 _\-]+"
                         aria-label="<?php esc_attr_e('Staging site name', 'wp-staging'); ?>"
                         aria-describedby="wpstg-clone-id-error-msg"
                         aria-invalid="false"
                         data-clone="<?php echo esc_attr($stagingSiteDto->getCloneId()); ?>"
                         data-default-name="<?php echo esc_attr($defaultSiteName); ?>"
                         data-production-url="<?php echo esc_attr($productionSiteUrl); ?>"
-                        data-invalid-message="<?php esc_attr_e('Use lowercase letters, numbers, hyphens, and underscores only.', 'wp-staging'); ?>"
+                        data-invalid-message="<?php esc_attr_e('Use letters, numbers, spaces, hyphens, and underscores only.', 'wp-staging'); ?>"
                         data-exists-message="<?php esc_attr_e('A staging site with this name already exists. Please choose another name.', 'wp-staging'); ?>"
                     />
                 </label>
@@ -60,7 +60,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                     <span class="wpstg-create-pill wpstg-create-pill--slate"><?php $renderer->icon('link', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('URL preview', 'wp-staging'); ?></span>
                     <span class="wpstg-break-all wpstg-font-mono wpstg-text-[12.5px] wpstg-font-normal wpstg-text-[#374151] dark:wpstg-text-slate-300" data-wpstg-url-preview><span class="wpstg-create-url-base"><?php echo esc_html(trailingslashit($productionSiteUrl)); ?></span><span class="wpstg-create-url-slug wpstg-font-semibold wpstg-text-blue-700 dark:wpstg-text-blue-300"><?php echo esc_html($defaultSiteName); ?></span></span>
                 </div>
-                <div id="wpstg-clone-id-error" class="wpstg-callout wpstg-callout-warning wpstg-mt-3" style="display:none;" role="alert" aria-live="polite"><div class="wpstg-text-sm" id="wpstg-clone-id-error-msg"></div></div>
+                <div id="wpstg-clone-id-error" class="wpstg-callout wpstg-create-name-message wpstg-mt-3" style="display:none;" role="alert" aria-live="polite"><div class="wpstg-text-sm" id="wpstg-clone-id-error-msg"></div></div>
             </section>
             <?php $stagingSetup->renderNetworkCloneSettings(); ?>
             <?php

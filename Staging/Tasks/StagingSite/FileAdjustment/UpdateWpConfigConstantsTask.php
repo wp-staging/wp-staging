@@ -91,6 +91,8 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         $isWpContentOutsideAbspath = $this->siteInfo->isWpContentOutsideAbspath();
         $isExternalDatabase        = $this->jobDataDto->getUseCustomDatabase();
+        $relativePluginPath        = $this->getRelativePluginsDir();
+        $isDefaultPluginPath       = trim($relativePluginPath, '/') === 'wp-content/plugins';
 
         $replaceOrAdd = [
             "WP_LANG_DIR"         => $this->getStagingLangPath(),
@@ -104,9 +106,13 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         ];
 
         if (!$isWpContentOutsideAbspath) {
-            $replaceOrAdd["UPLOADS"]       = sprintf("'%s'", $this->escapeSingleQuotes(untrailingslashit($this->jobDataDto->getStagingSiteUploads())));
-            $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . $this->getRelativePluginsDir() . '"';
-            $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->jobDataDto->getStagingSiteUrl() . $this->getRelativePluginsDir()));
+            $replaceOrAdd["UPLOADS"] = sprintf("'%s'", $this->escapeSingleQuotes(untrailingslashit($this->jobDataDto->getStagingSiteUploads())));
+            // For default plugin layouts WordPress derives WP_PLUGIN_URL per-blog from siteurl;
+            // hardcoding it to the main staging URL would break subsites on a network clone.
+            if (!$isDefaultPluginPath) {
+                $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . $this->getRelativePluginsDir() . '"';
+                $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->jobDataDto->getStagingSiteUrl() . $this->getRelativePluginsDir()));
+            }
         }
 
         if ($isExternalDatabase) {
@@ -153,6 +159,13 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         if ($isWpContentOutsideAbspath) {
             $delete[] = "UPLOADS";
+            $delete[] = "WP_PLUGIN_DIR";
+            $delete[] = "WP_PLUGIN_URL";
+            $delete[] = "WPMU_PLUGIN_DIR";
+            $delete[] = "WPMU_PLUGIN_URL";
+        }
+
+        if ($isDefaultPluginPath) {
             $delete[] = "WP_PLUGIN_DIR";
             $delete[] = "WP_PLUGIN_URL";
             $delete[] = "WPMU_PLUGIN_DIR";

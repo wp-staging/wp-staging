@@ -31,7 +31,6 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
 
     protected function addHooks()
     {
-        add_action(Notices::ACTION_ADMIN_NOTICES, $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentNotice'));
         add_action(Notices::ACTION_ADMIN_NOTICES, $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentFailureNotice'));
         add_action('admin_init', $this->container->callback(AnalyticsConsent::class, 'listenForConsent'));
 
