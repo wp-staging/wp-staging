@@ -12,7 +12,7 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
  * @var AbstractStagingSetup $stagingSetup
  * @var StagingSiteDto $stagingSiteDto
  * @var DirectoryNodeDto[] $directories
- * @var ExcludeFilter $excludeUtils
+ * @var ExcludeFilter $excludeFilters
  * @var bool $showFileDestination
  * @see WPStaging\Staging\Service\DirectoryScanner::renderFilesSelection
  */
@@ -97,11 +97,11 @@ $showFileSizeExcludeLimit = $stagingSetup->isUpdateJob() || $stagingSetup->isRes
             if ($scanner->isUpdateOrResetJob()) :
                 foreach ($stagingSiteDto->getExcludeSizeRules() as $rule) :
                     $hasRules = true;
-                    echo $excludeUtils->renderSizeExclude($rule); // phpcs:ignore
+                    echo $excludeFilters->renderSizeExclude($rule); // phpcs:ignore
                 endforeach;
                 foreach ($stagingSiteDto->getExcludeGlobRules() as $rule) :
                     $hasRules = true;
-                    echo $excludeUtils->renderGlobExclude($rule); // phpcs:ignore
+                    echo $excludeFilters->renderGlobExclude($rule); // phpcs:ignore
                 endforeach;
             endif; ?>
         </div>

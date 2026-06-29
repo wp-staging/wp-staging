@@ -24,7 +24,6 @@ use WPStaging\Backend\Modules\Jobs\Job;
 <div class="wpstg-my-10px">
     <button type="button" class="wpstg-button-unselect button"><?php esc_html_e('Unselect All', 'wp-staging'); ?></button>
     <button type="button" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix); ?> </button>
-    <button type="button" class="wpstg-button-unselect-wpstg button"> <?php esc_html_e('Unselect wpstg', 'wp-staging'); ?> </button>
 </div>
 <select multiple="multiple" id="wpstg_select_tables_cloning">
     <?php

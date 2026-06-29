@@ -17,37 +17,6 @@ class AnalyticsConsent
     const OPTION_NAME_ANALYTICS_REMIND_ME = 'wpstg_analytics_consent_remind_me';
 
     /**
-     * Shows the admin notice asking the user whether he consents to sending usage information to WP STAGING.
-     * @action admin_notices
-     */
-    public function maybeShowConsentNotice()
-    {
-        // Early bail: Not a WP STAGING page
-        if (!WPStaging::make(Notices::class)->isWPStagingAdminPage()) {
-            return;
-        }
-
-        // Early bail: User does not have enough access to consent, or has consented already.
-        if (!current_user_can('manage_options') || get_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED)) {
-            return;
-        }
-
-        $remindMe = get_option(self::OPTION_NAME_ANALYTICS_REMIND_ME);
-
-        if (!empty($remindMe) && time() < $remindMe) {
-            return;
-        }
-
-        $notice = WPSTG_VIEWS_DIR . 'notices/analytics-consent.php';
-
-        if (!file_exists($notice)) {
-            return;
-        }
-
-        include_once $notice;
-    }
-
-    /**
      * If the request that sends the consent fails, we show a notice to let the user know.
      * @action admin_notices
      */

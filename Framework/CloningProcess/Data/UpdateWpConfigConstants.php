@@ -38,6 +38,8 @@ class UpdateWpConfigConstants extends FileCloningService
 
         $isWpContentOutsideAbspath = $this->isWpContentOutsideAbspath();
         $isUploadsOutsideAbspath   = $this->isUploadsOutsideAbspath();
+        $relativePluginPath        = $this->getRelativePluginPath();
+        $isDefaultPluginPath       = trim($relativePluginPath, '/') === 'wp-content/plugins';
 
         $replaceOrAdd = [
             "WP_LANG_DIR"         => $this->getStagingLangPath(),
@@ -51,9 +53,13 @@ class UpdateWpConfigConstants extends FileCloningService
         ];
 
         if (!$isWpContentOutsideAbspath) {
-            $replaceOrAdd["UPLOADS"]       = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder()));
-            $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH) . '"';
-            $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl() . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH)));
+            $replaceOrAdd["UPLOADS"] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder()));
+            // For default plugin layouts WordPress derives WP_PLUGIN_URL per-blog from siteurl;
+            // hardcoding it to the main staging URL would break subsites on a network clone.
+            if (!$isDefaultPluginPath) {
+                $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . $relativePluginPath . '"';
+                $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl() . $relativePluginPath));
+            }
         }
 
         if ($this->dto->isExternal()) {
@@ -111,6 +117,13 @@ class UpdateWpConfigConstants extends FileCloningService
 
         if ($isWpContentOutsideAbspath) {
             $delete[] = "UPLOADS";
+            $delete[] = "WP_PLUGIN_DIR";
+            $delete[] = "WP_PLUGIN_URL";
+            $delete[] = "WPMU_PLUGIN_DIR";
+            $delete[] = "WPMU_PLUGIN_URL";
+        }
+
+        if ($isDefaultPluginPath) {
             $delete[] = "WP_PLUGIN_DIR";
             $delete[] = "WP_PLUGIN_URL";
             $delete[] = "WPMU_PLUGIN_DIR";
@@ -195,6 +208,14 @@ class UpdateWpConfigConstants extends FileCloningService
         $directory = WPStaging::make(Directory::class);
 
         return str_replace($directory->getAbsPath(), '', $directory->getWpContentDirectory());
+    }
+
+    /**
+     * @return string Relative plugins path with leading slash, e.g. /wp-content/plugins.
+     */
+    protected function getRelativePluginPath(): string
+    {
+        return (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH);
     }
 
     /**

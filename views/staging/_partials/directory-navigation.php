@@ -27,9 +27,20 @@ use WPStaging\Staging\Service\DirectoryScanner as Scanner;
  * @var bool    $showChild
  */
 
+$isExpanded = $isScanned === 'true' && $showChild;
 ?>
 
-<div class="wpstg-dir<?php echo $isNavigatable === 'true' ? ' wpstg-dir--expandable' : ''; ?>">
+<div class="wpstg-dir<?php echo $isNavigatable === 'true' ? ' wpstg-dir--expandable' : ''; ?><?php echo $isExpanded ? ' wpstg-dir--open' : ''; ?>">
+    <?php if ($isNavigatable === 'true') : ?>
+        <button
+            type="button"
+            class="wpstg-dir-toggle"
+            aria-expanded="<?php echo $isExpanded ? 'true' : 'false'; ?>"
+            aria-label="<?php esc_attr_e('Expand or collapse folder', 'wp-staging'); ?>"
+        ></button>
+    <?php else : ?>
+        <span class="wpstg-dir-toggle-spacer" aria-hidden="true"></span>
+    <?php endif; ?>
     <?php
         $dataAttributes = [
             'dirType'       => $dirType,
