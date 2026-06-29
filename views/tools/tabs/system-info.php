@@ -26,7 +26,7 @@ $assets            = WPStaging::make(Assets::class);
                 <?php foreach ($navItems as $navItem) : ?>
                     <li>
                         <a href="#<?php echo esc_attr($navItem['id']); ?>" class="wpstg-settings-sidebar-item" data-section="<?php echo esc_attr($navItem['id']); ?>" title="<?php echo esc_attr($navItem['title']); ?>">
-                            <?php $assets->renderSvg($navItem['icon']); ?>
+                            <?php $assets->renderSvg($navItem['icon'] ?? ''); ?>
                             <span class="wpstg-system-info-sidebar-title"><?php echo esc_html($navItem['title']); ?></span>
                         </a>
                     </li>
@@ -79,7 +79,7 @@ $assets            = WPStaging::make(Assets::class);
                                 <?php $toggleId = 'staging-site-' . $index; ?>
                                 <div class="wpstg-system-info-staging-site-card wpstg-card wpstg-system-info-card-body wpstg-w-[unset]">
                                     <div class="wpstg-system-info-staging-site-header wpstg-toggle-header" data-toggle-target="<?php echo esc_attr($toggleId); ?>">
-                                        <h4 class="wpstg-system-info-staging-site-title"><?php echo esc_html($siteData['cloneName']); ?></h4>
+                                        <h4 class="wpstg-system-info-staging-site-title"><?php echo esc_html($siteData['cloneName'] ?? ''); ?></h4>
                                         <svg class="wpstg-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="6 9 12 15 18 9"></polyline>
                                         </svg>
@@ -123,18 +123,18 @@ $assets            = WPStaging::make(Assets::class);
                                 <div class="wpstg-system-info-staging-site-card wpstg-card wpstg-system-info-card-body wpstg-w-[unset]">
                                     <div class="wpstg-system-info-staging-site-header wpstg-toggle-header" data-toggle-target="<?php echo esc_attr($toggleId); ?>">
                                         <h4 class="wpstg-system-info-staging-site-title">
-                                            <?php $assets->renderSvg($provider['id'], 'wpstg-storages-icon'); ?>
-                                            <?php echo esc_html($provider['name']); ?>
+                                            <?php $assets->renderSvg($provider['id'] ?? '', 'wpstg-storages-icon'); ?>
+                                            <?php echo esc_html($provider['name'] ?? ''); ?>
                                         </h4>
                                         <svg class="wpstg-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="6 9 12 15 18 9"></polyline>
                                         </svg>
                                     </div>
                                     <div class="wpstg-system-info-staging-site-details wpstg-toggle-content" id="<?php echo esc_attr($toggleId); ?>">
-                                        <?php foreach ($provider['settings'] as $setting) : ?>
+                                        <?php foreach ($provider['settings'] ?? [] as $setting) : ?>
                                             <?php
-                                                $itemLabel = $setting['label'];
-                                                $itemValue = $setting['value'];
+                                                $itemLabel = $setting['label'] ?? '';
+                                                $itemValue = $setting['value'] ?? '';
                                                 include __DIR__ . '/system-info-item.php';
                                             ?>
                                         <?php endforeach; ?>
@@ -158,8 +158,8 @@ $assets            = WPStaging::make(Assets::class);
                         <div class="wpstg-system-info-card-body">
                         <?php foreach ($section['infoItems'] as $item) : ?>
                             <?php
-                                $itemLabel = $item['label'];
-                                $itemValue = $item['value'];
+                                $itemLabel = $item['label'] ?? '';
+                                $itemValue = $item['value'] ?? '';
                                 include __DIR__ . '/system-info-item.php';
                             ?>
                         <?php endforeach; ?>

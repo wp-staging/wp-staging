@@ -474,7 +474,7 @@ class Files extends JobExecutable
             } else {
                 $this->filesystem->copyFile($file, $destination);
                 // Set file permissions
-                @chmod($destination, $this->permissions->getFilesOctal());
+                @chmod($destination, $this->permissions->getFilePermission($destination));
             }
         } catch (RuntimeException $ex) {
             $this->log('Files: ' . $ex->getMessage(), Logger::TYPE_ERROR);

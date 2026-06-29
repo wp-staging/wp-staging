@@ -8,8 +8,17 @@ use WPStaging\Framework\Database\TableDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
+/**
+ * Scans database tables available for staging setup selection.
+ */
 class TableScanner
 {
+    /** @var string */
+    const STAGING_TABLE_PREFIX = 'wpstg';
+
+    /** @var string */
+    const FILTER_SHOW_STAGING_TABLES = 'wpstg_show_staging_tables_in_staging_setup';
+
     /**
      * @var TemplateEngine
      */
@@ -77,25 +86,57 @@ class TableScanner
         /**
          * @var Collection|TableDto[] $tables
          */
-        $tables   = $this->tableService->findAllTableStatus();
-        $dbPrefix = $this->database->getPrefix();
+        $tables            = $this->tableService->findAllTableStatus();
+        $dbPrefix          = $this->database->getPrefix();
+        $showStagingTables = $this->shouldShowStagingTables($dbPrefix);
 
         // reset the excluded tables
         $this->excludedTables = [];
         $this->currentTables  = [];
 
         foreach ($tables as $table) {
+            $tableName = $table->getName();
+            if ($table->getIsView() || !$this->shouldRenderTable($dbPrefix, $tableName, $showStagingTables)) {
+                continue;
+            }
+
             // Create array of unchecked tables
             // On the main website of a multisite installation, do not select network site tables beginning with wp_1_, wp_2_ etc.
             // (On network sites, the correct tables are selected anyway)
-            if ($this->isTableExcluded($dbPrefix, $table->getName())) {
-                $this->excludedTables[] = $table->getName();
+            if ($this->isTableExcluded($dbPrefix, $tableName)) {
+                $this->excludedTables[] = $tableName;
             }
 
-            if (!$table->getIsView()) {
-                $this->currentTables[] = $table;
-            }
+            $this->currentTables[] = $table;
         }
+    }
+
+    protected function shouldRenderTable(string $dbPrefix, string $tableName, bool $showStagingTables): bool
+    {
+        if ($showStagingTables) {
+            return true;
+        }
+
+        if (!$this->isStagingTable($tableName)) {
+            return true;
+        }
+
+        return $this->isCurrentSiteTable($dbPrefix, $tableName);
+    }
+
+    protected function shouldShowStagingTables(string $dbPrefix): bool
+    {
+        return (bool) apply_filters(self::FILTER_SHOW_STAGING_TABLES, false, $dbPrefix, $this->stagingSetup);
+    }
+
+    protected function isStagingTable(string $tableName): bool
+    {
+        return strpos($tableName, self::STAGING_TABLE_PREFIX) === 0;
+    }
+
+    protected function isCurrentSiteTable(string $dbPrefix, string $tableName): bool
+    {
+        return !empty($dbPrefix) && strpos($tableName, $dbPrefix) === 0;
     }
 
     protected function isTableExcluded(string $dbPrefix, string $tableName): bool

@@ -314,7 +314,7 @@ class FileCopier
         }
 
         // Set file permissions
-        $this->chmod($destinationPath, $this->permissions->getFilesOctal());
+        $this->chmod($destinationPath, $this->permissions->getFilePermission($destinationPath));
 
         $this->setDirPermissions($destinationPath);
 

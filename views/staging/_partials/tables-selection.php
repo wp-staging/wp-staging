@@ -61,10 +61,6 @@ $listClass    = 'wpstg-table-selection-list wpstg-selection-list';
                 <button type="button" class="wpstg-button-select wpstg-btn wpstg-btn-sm wpstg-btn-secondary !wpstg-rounded"><?php esc_html_e('Select live site tables', 'wp-staging'); ?></button>
                 <span class="wpstg--tooltiptext"><?php printf(esc_html__('Select all tables that use this site\'s prefix (%s).', 'wp-staging'), '<code>' . esc_html($dbPrefix) . '</code>'); ?></span>
             </span>
-            <span class="wpstg--tooltip wpstg--tooltip-normal wpstg-selection-action-tip">
-                <button type="button" class="wpstg-button-unselect-wpstg wpstg-btn wpstg-btn-sm wpstg-btn-secondary !wpstg-rounded"><?php esc_html_e('Exclude staging tables', 'wp-staging'); ?></button>
-                <span class="wpstg--tooltiptext"><?php esc_html_e('Remove tables that belong to existing WP STAGING staging sites, keeping any custom selection intact.', 'wp-staging'); ?></span>
-            </span>
         </div>
     </div>
 
