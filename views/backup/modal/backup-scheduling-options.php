@@ -16,7 +16,7 @@ use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Framework\Utils\Times;
 
-$proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
+$proFeature = $isProVersion ? ' ' : ' (' . __('Pro', 'wp-staging') . ')';
 
 ?>
 
@@ -75,7 +75,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
                 <?php if (!$isProVersion) {
                     echo '<br><br><hr>';
                     echo esc_html__('You can customize this start time in WP Staging Pro!', 'wp-staging'); ?>
-                    <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><?php echo esc_html__('Get Pro Version', 'wp-staging'); ?></a>
+                    <a href="<?php echo esc_url(\WPStaging\Framework\Language\Language::getUpgradeUrl('backup_schedule_time')); ?>" target="_blank" class="wpstg-pro-feature-link"><?php echo esc_html__('Get Pro Version', 'wp-staging'); ?></a>
                     <?php
                 }
                 ?>
@@ -102,7 +102,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
                 <?php if (!$isProVersion) {
                     echo '<br><br><hr>';
                     echo esc_html__('Keep more than one automatic backup with WP Staging Pro!', 'wp-staging'); ?>
-                    <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><?php echo esc_html__('Get Pro Version', 'wp-staging'); ?></a>
+                    <a href="<?php echo esc_url(\WPStaging\Framework\Language\Language::getUpgradeUrl('backup_schedule_retention')); ?>" target="_blank" class="wpstg-pro-feature-link"><?php echo esc_html__('Get Pro Version', 'wp-staging'); ?></a>
                     <?php
                 }
                 ?>

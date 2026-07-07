@@ -9,6 +9,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 
 $provider = WPStaging::make(NewsfeedProvider::class);
@@ -129,7 +130,7 @@ $renderTipText = function (array $tip): string {
                     ✨ <?php esc_html_e('Unlock all Pro features', 'wp-staging'); ?>
                     <?php endif; ?>
                 </span>
-                <a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener" class="wpstg-upgrade-banner-btn">
+                <a href="<?php echo esc_url(Language::getUpgradeUrl('newsfeed')); ?>" target="_blank" rel="noopener" class="wpstg-upgrade-banner-btn">
                     <?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?>
                 </a>
             </div>

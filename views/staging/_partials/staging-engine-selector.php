@@ -21,6 +21,12 @@ $engines = [
         'icon'        => 'bolt',
     ],
 ];
+
+if (!$stagingEngine->isNextGenEnabled()) {
+    $engines[StagingEngine::ENGINE_NEXT_GEN]['disabled']    = true;
+    $engines[StagingEngine::ENGINE_NEXT_GEN]['badge']       = esc_html__('Temporarily disabled', 'wp-staging');
+    $engines[StagingEngine::ENGINE_NEXT_GEN]['description'] = esc_html__('Temporarily unavailable while we finish improvements. It will be back very soon.', 'wp-staging');
+}
 ?>
 
 <section class="wpstg-staging-engine wpstg-my-[18px] wpstg-mb-4" data-selected-engine="<?php echo esc_attr($selectedEngine); ?>">
@@ -31,6 +37,7 @@ $engines = [
     <div class="wpstg-staging-engine-options wpstg-grid wpstg-grid-cols-1 md:wpstg-grid-cols-2 wpstg-gap-3" role="radiogroup" aria-label="<?php esc_attr_e('Staging Engine', 'wp-staging'); ?>">
         <?php foreach ($engines as $engine => $engineData) :
             $isSelected       = $selectedEngine === $engine;
+            $isDisabled       = !empty($engineData['disabled']);
             $cardStateClasses = $isSelected
                 ? implode(' ', [
                     'wpstg-border-[#2563eb]',
@@ -57,11 +64,16 @@ $engines = [
             $iconStateClasses = $isSelected
                 ? 'wpstg-bg-[#2563eb] wpstg-text-[#f8fbff] dark:wpstg-bg-blue-600 dark:wpstg-text-white'
                 : 'wpstg-bg-[#f1f4f8] wpstg-text-[#7c8da3] dark:wpstg-bg-slate-800 dark:wpstg-text-slate-300';
-            $badgeClasses = $engine === StagingEngine::ENGINE_NEXT_GEN
-                ? 'wpstg-bg-blue-100 wpstg-text-blue-700 dark:wpstg-bg-blue-900/70 dark:wpstg-text-blue-200'
-                : 'wpstg-bg-slate-100 wpstg-text-slate-700 dark:wpstg-bg-slate-800 dark:wpstg-text-slate-300';
+            $badgeClasses = 'wpstg-bg-slate-100 wpstg-text-slate-700 dark:wpstg-bg-slate-800 dark:wpstg-text-slate-300';
+            if (!$isDisabled && $engine === StagingEngine::ENGINE_NEXT_GEN) {
+                $badgeClasses = 'wpstg-bg-blue-100 wpstg-text-blue-700 dark:wpstg-bg-blue-900/70 dark:wpstg-text-blue-200';
+            }
+
+            $cardInteractionClasses = $isDisabled
+                ? 'wpstg-cursor-not-allowed wpstg-opacity-60'
+                : 'wpstg-cursor-pointer';
             ?>
-            <label class="wpstg-staging-engine-card <?php echo $isSelected ? 'is-selected' : ''; ?> wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-flex-col wpstg-gap-1.5 wpstg-rounded-lg wpstg-border wpstg-border-solid <?php echo esc_attr($cardStateClasses); ?> wpstg-px-5 wpstg-py-4 wpstg-transition wpstg-duration-150" data-engine="<?php echo esc_attr($engine); ?>">
+            <label class="wpstg-staging-engine-card <?php echo $isSelected ? 'is-selected' : ''; ?> <?php echo $isDisabled ? 'is-disabled' : ''; ?> wpstg-relative wpstg-flex <?php echo esc_attr($cardInteractionClasses); ?> wpstg-flex-col wpstg-gap-1.5 wpstg-rounded-lg wpstg-border wpstg-border-solid <?php echo esc_attr($cardStateClasses); ?> wpstg-px-5 wpstg-py-4 wpstg-transition wpstg-duration-150" data-engine="<?php echo esc_attr($engine); ?>"<?php echo $isDisabled ? ' aria-disabled="true"' : ''; ?>>
                 <span class="wpstg-flex wpstg-w-full wpstg-items-center wpstg-gap-3">
                     <span class="wpstg-staging-engine-icon wpstg-staging-engine-icon-<?php echo esc_attr($engineData['icon']); ?> wpstg-inline-flex wpstg-h-10 wpstg-w-10 wpstg-flex-shrink-0 wpstg-items-center wpstg-justify-center wpstg-rounded-lg <?php echo esc_attr($iconStateClasses); ?>" aria-hidden="true">
                         <?php if ($engineData['icon'] === 'bolt') : ?>
@@ -81,6 +93,7 @@ $engines = [
                             name="<?php echo esc_attr($groupName); ?>"
                             value="<?php echo esc_attr($engine); ?>"
                             <?php checked($isSelected); ?>
+                            <?php disabled($isDisabled); ?>
                         />
                     </span>
                 </span>

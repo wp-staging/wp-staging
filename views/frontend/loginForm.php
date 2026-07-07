@@ -10,6 +10,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 
 /* When 'wpstg_user_logged_in_status' is true, it means the credentials are correct, but login might be blocked by a security plugin or active OTP or 2FA authentication */
 $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
@@ -81,7 +82,7 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
                 <?php
                     printf(
                         esc_html__('Automatic login for staging sites. Try %s', 'wp-staging'),
-                        '<a href="https://wp-staging.com/#pricing" target="_blank">' . esc_html('WP Staging Pro') . '</a>'
+                        '<a href="' . esc_url(Language::getUpgradeUrl('login_form')) . '" target="_blank">' . esc_html('WP Staging Pro') . '</a>'
                     );
                 ?>
             </div>

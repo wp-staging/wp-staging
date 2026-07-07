@@ -2,6 +2,7 @@
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\UI\Toggle;
 use WPStaging\Framework\Security\EncryptionNoticeService;
@@ -226,7 +227,7 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php esc_html_e('Compress Backups', 'wp-staging') ?></span>
-                                            <a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
+                                            <a href="<?php echo esc_url(Language::getUpgradeUrl('compress_backups')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         </div>
                                         <div class="wpstg-settings-field-description">
                                             <?php echo esc_html__('This reduces backup size by up to 60%, making it especially useful for large databases.', 'wp-staging'); ?>
@@ -342,7 +343,7 @@ $directory = WPStaging::make(Directory::class);
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php esc_html_e('Slack Notifications', 'wp-staging'); ?></span>
                                         <?php if (!defined('WPSTGPRO_VERSION')) : ?>
-                                        <a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
+                                        <a href="<?php echo esc_url(Language::getUpgradeUrl('slack_notifications')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         <?php endif; ?>
                                     </div>
                                     <div class="wpstg-settings-field-description">
@@ -399,7 +400,7 @@ $directory = WPStaging::make(Directory::class);
                                             <span class="wpstg-settings-field-label">
                                                 <?php echo esc_html__("Keep Permalinks", "wp-staging"); ?>
                                             </span>
-                                            <a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
+                                            <a href="<?php echo esc_url(Language::getUpgradeUrl('keep_permalinks')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         </div>
                                         <div class="wpstg-settings-field-description">
                                             <?php
@@ -423,7 +424,7 @@ $directory = WPStaging::make(Directory::class);
                                             <span class="wpstg-settings-field-label">
                                                 <?php echo esc_html__("Access Permissions", "wp-staging"); ?>
                                             </span>
-                                            <a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
+                                            <a href="<?php echo esc_url(Language::getUpgradeUrl('access_permissions')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         </div>
                                         <div class="wpstg-settings-field-description">
                                             <?php
@@ -453,7 +454,7 @@ $directory = WPStaging::make(Directory::class);
                                             <label class="wpstg-settings-field-label">
                                                 <?php echo esc_html__("Users With Staging Access", "wp-staging"); ?>
                                             </label>
-                                            <a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
+                                            <a href="<?php echo esc_url(Language::getUpgradeUrl('staging_access_users')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         </div>
                                         <div class="wpstg-settings-field-description">
                                             <?php
@@ -473,7 +474,7 @@ $directory = WPStaging::make(Directory::class);
                                             <label class="wpstg-settings-field-label">
                                                 <?php echo esc_html__("Admin Bar Background Color", "wp-staging"); ?>
                                             </label>
-                                            <a href="https://wp-staging.com/#pricing" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
+                                            <a href="<?php echo esc_url(Language::getUpgradeUrl('admin_bar_color')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         </div>
                                         <div class="wpstg-settings-field-description">
                                         </div>

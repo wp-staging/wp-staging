@@ -194,7 +194,21 @@ class Notices
         $this->noticeSettingsAreCorrupted();
         $this->noticeStagingUploadsFolderIsSymlinked();
         $this->noticeTableTmpPrefixConflictNotice();
+        $this->noticeNextGenEngineStagingSites();
         $this->showAnalyticsModal();
+    }
+
+    /**
+     * Warn users who may have created staging sites with the now-disabled
+     * Next-Gen engine that those sites can be corrupted (issue #5346).
+     *
+     * @return void
+     */
+    private function noticeNextGenEngineStagingSites()
+    {
+        if (self::SHOW_ALL_NOTICES || WPStaging::make(NextGenEngineNotice::class)->isEnabled()) {
+            require $this->viewsNoticesPath . "next-gen-engine-notice.php";
+        }
     }
 
     /**

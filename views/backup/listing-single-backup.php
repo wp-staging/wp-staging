@@ -330,7 +330,7 @@ $wpstgRestorePageUrl = add_query_arg([
                 $title       = __('Upgrade required', 'wp-staging');
                 $description = __('This backup is compressed, you need WP Staging Pro to restore it.', 'wp-staging');
                 $buttonText  = __('Get WP Staging Pro', 'wp-staging');
-                $buttonUrl   = 'https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging';
+                $buttonUrl   = \WPStaging\Framework\Language\Language::getUpgradeUrl('compressed_backup_restore');
                 Alert::render($title, $description, $buttonText, $buttonUrl);
             }
             ?>

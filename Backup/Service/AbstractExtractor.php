@@ -272,13 +272,20 @@ abstract class AbstractExtractor
         }
 
         /** @var IndexLineInterface $backupFileIndex */
-        $backupFileIndex         = $this->indexLineDto->readIndexLine($rawIndexFile);
-        $identifiablePath        = $backupFileIndex->getIdentifiablePath();
+        $backupFileIndex  = $this->indexLineDto->readIndexLine($rawIndexFile);
+        $identifiablePath = $backupFileIndex->getIdentifiablePath();
         if (empty($identifiablePath)) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
             $this->debugLog('Identifier not found during extraction. Raw Index is logged: ' . rtrim($rawIndexFile, "\n"));
             throw new \Exception('Skipping file: Identifier not found. Raw Index is logged', self::ITEM_SKIP_EXCEPTION_CODE);
+        }
+
+        if ($this->pathIdentifier->hasPathTraversal($identifiablePath)) {
+            $this->extractorDto->incrementTotalFilesSkipped();
+            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->debugLog('Skipping file with unsafe path (possible path traversal): ' . rtrim($identifiablePath, "\n"));
+            throw new \Exception('Skipping file: unsafe path detected', self::ITEM_SKIP_EXCEPTION_CODE);
         }
 
         $isSegmentedEntry = $backupFileIndex instanceof FileHeader && $this->isSegmentedFileHeader($backupFileIndex);
@@ -305,6 +312,14 @@ abstract class AbstractExtractor
         }
 
         $this->setupExtractingFile($backupFileIndex, $extractFolder);
+
+        if (!$this->pathIdentifier->isPathWithinRoot($this->extractingFile->getBackupPath(), $extractFolder)) {
+            $this->extractorDto->incrementTotalFilesSkipped();
+            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->debugLog('Skipping file outside restore root (possible path traversal): ' . rtrim($identifiablePath, "\n"));
+            throw new \Exception('Skipping file: unsafe path detected', self::ITEM_SKIP_EXCEPTION_CODE);
+        }
+
         if ($this->isFileExtracted($backupFileIndex, $this->extractingFile->getBackupPath())) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);

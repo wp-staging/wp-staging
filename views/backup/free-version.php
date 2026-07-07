@@ -12,7 +12,7 @@ use WPStaging\Framework\Language\Language;
 <span class="wpstg-notice-alert">
     <?php echo sprintf(
         Escape::escapeHtml(__('The free version of WP Staging Backup Plugin does not support WordPress Multisite. You can consider upgrading to the <a href="%s" target="_blank">pro version</a> as needed.', 'wp-staging')),
-        esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing'))
+        esc_url(Language::getUpgradeUrl('backup_multisite'))
     ); ?>
 </span>
 

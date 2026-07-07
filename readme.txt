@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.9.1
+Stable tag: 4.9.2
 Requires PHP: 7.0
 
 WordPress backup, restore & migration in minutes. Clone or duplicate your site and test updates safely on a staging copy. 100% unit-tested.
@@ -279,26 +279,31 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.9.1 =
-* Enh: Extend wpstg_file_permission filter with an optional file path argument for granular per-file permission control. #5237
-* Enh: Hide tables from other staging sites when selecting what to copy. #5251
-* Enh: Improve the plugin description and wording in the readme. #5262
-* Fix: Allow capital letters and spaces in staging site names. #5280
-* Fix: Correct dark theme colors in the staging setup modal exclude-rule fields and labels. #5283
-* Fix: Ensure staging sites remain protected by the login prompt when access control is enabled. #5278
-* Fix: Expand and collapse staging folders from the caret icon. #5274
-* Fix: Improve backup and restore error handling to avoid silent failures and retry loops. #3681
-* Fix: Populate previously selected exclude rules in the staging site Update and Reset modals. #5288
-* Fix: Prevent "Deselect all" tables button from re-selecting tables on the staging Update/Reset modal. #5283
-* Fix: Refresh the push files summary when selecting, deselecting or toggling folders, and align it with the create staging summary. #5283
-* Fix: Remove misleading "Small Server Settings" link from backup and restore error messages. #3681
-* Fix: Remove the redundant usage tracking opt-in admin banner. The first-install consent modal and the Settings toggle remain the way to enable or disable sending usage data. #5289
-* Fix: Resolve fatal error on staging site Update/Reset when exclude rules exist. #5283
-* Fix: Show the cache-clear notice instead of the staging site URL in the Next-Gen push success modal. #5283
-* Fix: Uniquify the inlined SVG element ids in the analytics consent modal to avoid duplicate-id collisions, and update the affected unit test snapshots. #5296
-* Fix: Update the create staging summary when toggling between current site and entire network options. #5283
-* Fix: Use default plugin paths on staging sites with default WordPress structure to fix subsite asset loading on network staging. #4681
-* Fix: Use the selected staging engine when pushing a staging site instead of the previous selection. #5283
+= 4.9.2 =
+* Enh: Add accessible labels to Pro upgrade badges and buttons. #5337
+* Enh: Improve the first-time staging experience by removing the redundant "Create Staging Site" button, sharing a single CTA between the listing and empty state. #5266
+* Enh: Route every in-plugin upgrade link to the wp-staging.com pricing table, localized to the current admin language (de, it, es, fr, pt, pl, ja), with unique UTM tags so each click is identifiable in analytics. #5337
+* Enh: Standardize Pro badge wording across the plugin — small locked controls now read "Pro", section badges "Available in Pro", and the upsell button "Upgrade to Pro". #5337
+* Enh: Suppress the dismissed CLI notice server-side instead of via localStorage, so it no longer briefly flashes before being hidden. #5266
+* Enh: Turn the Pro feature badges in the Create Staging Site modal and other upgrade prompts into links to the pricing table. #5337
+* Fix: 404 error when accessing a staging site created with a name containing spaces or special characters. #5321
+* Fix: A backup no longer fails when it hits a file outside the standard WordPress folders. The file is skipped and noted in the log instead of aborting the whole backup. #5325
+* Fix: Allow staging site names up to 100 characters while keeping the generated directory name capped at 16 characters. #5321
+* Fix: Broken auto login to the staging site when the staging site name contains spaces or special characters. #5321
+* Fix: Fatal error on the staging site caused by an invalid destination path when the site name contains spaces or special characters. #5321
+* Fix: Improve remote backup downloads when the remote file size cannot be detected. (Pro) #5222
+* Fix: Prevent backup restore from writing files outside the restore folder. #5299
+* Fix: Prevent site fatal error when plugin files are partially updated or missing during an upgrade. #5309
+* Fix: Prevent the loading bar from staying visible after a successful backup extraction, and improve the “Show logs” button styling. #5306
+* Fix: Prevent unsafe push when staging and production WordPress versions are incompatible. (Pro) #5286
+* Fix: Remove the security alerts popup from the welcome page. #5336
+* Fix: Sanitize the staging site directory name and URL so spaces and special characters no longer produce a broken path. #5321
+* Fix: Stop remote cloud upload immediately when user cancels instead of continuing in background. (Pro) #3891
+* Fix: Temporarily disable the Next-Gen staging engine to prevent staging-site data corruption (postmeta keys). Users are automatically reverted to the Classic engine and warned when they may have staging sites created with the Next-Gen engine. #5346
+* Fix: Temporary folders left by the restore tool are no longer included in backups when "Backup Other WP Root Folders" is enabled. (Pro) #5158
+*  Tweak: Refresh backup content icons and improve their light and dark mode styling. #5315
+* Dev: Avoid lowering PHP memory limit when loading the restore tool as a library. (Pro) #5345
+* Dev: Streamline the release pipeline's test phase to avoid a long-running idle CI job that wasted runner time on every release. #5142
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

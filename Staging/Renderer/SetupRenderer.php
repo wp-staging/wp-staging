@@ -77,9 +77,9 @@ class SetupRenderer
         $this->renderPartial('setup-option-card', compact('name', 'label', 'description', 'checked', 'checkboxOptions', 'tooltip', 'proLocked'));
     }
 
-    public function proControlRow(string $name, bool $checked, string $label, string $description, string $statusLabel = '', string $badgeLabel = '')
+    public function proControlRow(string $name, bool $checked, string $label, string $description, string $statusLabel = '', string $badgeLabel = '', string $context = '')
     {
-        $this->renderPartial('pro-control-row', compact('name', 'checked', 'label', 'description', 'statusLabel', 'badgeLabel'));
+        $this->renderPartial('pro-control-row', compact('name', 'checked', 'label', 'description', 'statusLabel', 'badgeLabel', 'context'));
     }
 
     public function setupCopyCard(string $checkboxId, string $checkboxClass, string $title, callable $summary, string $buttonClass, string $buttonLabel, string $buttonIcon, $details = null, array $checkboxOptions = [], $afterContent = null)

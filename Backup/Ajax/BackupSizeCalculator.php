@@ -338,6 +338,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $stagingSitesDirs = $stagingSites->getStagingDirectories();
         $dirsToSkip       = $this->directory->getWpDefaultRootDirectories();
         $dirsToSkip       = array_merge($dirsToSkip, $stagingSitesDirs);
+        $dirsToSkip       = array_merge($dirsToSkip, $this->directory->getWpStagingRestoreDirs());
 
         return array_map(function ($path) {
             return rtrim($path, '/');

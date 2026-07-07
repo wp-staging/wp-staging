@@ -46,24 +46,24 @@ $renderer->accordionSection([
                     <strong><?php esc_html_e('Advanced isolation controls are available in Pro.', 'wp-staging'); ?></strong>
                     <span><?php esc_html_e('Prevent staging from sending real emails, running WordPress cron, or triggering WooCommerce background actions.', 'wp-staging'); ?></span>
                 </div>
-                <a class="wpstg-create-runtime-upgrade__button" href="<?php echo esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Unlock isolation controls', 'wp-staging'); ?></a>
+                <a class="wpstg-create-runtime-upgrade__button" href="<?php echo esc_url(Language::getUpgradeUrl('staging_isolation')); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Upgrade to WP STAGING Pro', 'wp-staging'); ?>"><?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?></a>
             </div>
             <div class="wpstg-create-option-stack" data-wpstg-advanced-settings-panel>
                 <?php
                 // The three isolation rows always render in the free build so the
                 // expanded section mirrors the sidebar and the Pro upsell card,
                 // even on sites where WooCommerce is not active.
-                $renderer->proControlRow('wpstg_allow_emails', true, esc_html__('Email delivery', 'wp-staging'), esc_html__('Pro lets you disable outgoing emails from staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'));
-                $renderer->proControlRow('wpstg_enable_cron', true, esc_html__('WordPress cron', 'wp-staging'), esc_html__('Pro lets you stop scheduled tasks from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'));
-                $renderer->proControlRow('wpstg_woo_scheduler_enabled', true, esc_html__('WooCommerce actions', 'wp-staging'), esc_html__('Pro lets you prevent WooCommerce background actions from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'));
+                $renderer->proControlRow('wpstg_allow_emails', true, esc_html__('Email delivery', 'wp-staging'), esc_html__('Pro lets you disable outgoing emails from staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'email_delivery');
+                $renderer->proControlRow('wpstg_enable_cron', true, esc_html__('WordPress cron', 'wp-staging'), esc_html__('Pro lets you stop scheduled tasks from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'wordpress_cron');
+                $renderer->proControlRow('wpstg_woo_scheduler_enabled', true, esc_html__('WooCommerce actions', 'wp-staging'), esc_html__('Pro lets you prevent WooCommerce background actions from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'woocommerce_actions');
                 ?>
                 <div class="wpstg-create-automation-heading">
                     <strong><?php esc_html_e('After creation automation', 'wp-staging'); ?></strong>
                     <span><?php esc_html_e('Optional tasks that run once the staging site is created.', 'wp-staging'); ?></span>
                 </div>
                 <?php
-                $renderer->proControlRow('wpstg_reminder_emails', false, esc_html__('Staging reminder emails', 'wp-staging'), esc_html__('Get reminders that this staging site still exists.', 'wp-staging'), '', esc_html__('Pro', 'wp-staging'));
-                $renderer->proControlRow('wpstg_auto_update_plugins', false, esc_html__('Update plugins after cloning', 'wp-staging'), esc_html__('Automatically update plugins once the staging site is created.', 'wp-staging'), '', esc_html__('Pro', 'wp-staging'));
+                $renderer->proControlRow('wpstg_reminder_emails', false, esc_html__('Staging reminder emails', 'wp-staging'), esc_html__('Get reminders that this staging site still exists.', 'wp-staging'), '', esc_html__('Pro', 'wp-staging'), 'staging_reminder_emails');
+                $renderer->proControlRow('wpstg_auto_update_plugins', false, esc_html__('Update plugins after cloning', 'wp-staging'), esc_html__('Automatically update plugins once the staging site is created.', 'wp-staging'), '', esc_html__('Pro', 'wp-staging'), 'update_plugins_after_cloning');
                 ?>
             </div>
         <?php else : ?>

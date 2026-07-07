@@ -10,6 +10,7 @@
  * @var WPStaging\Framework\Assets\Assets         $assets
  */
 
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $stagingSiteElementId = empty($stagingSiteItem->directoryName) ? $stagingSiteItem->cloneName : $stagingSiteItem->directoryName;
@@ -56,28 +57,28 @@ $stagingSiteElementId = empty($stagingSiteItem->directoryName) ? $stagingSiteIte
                     do_action(TemplateEngine::ACTION_AFTER_EXISTING_CLONES, $stagingSiteItem->cloneId, $stagingSite->toArray(), $license);
 
                     if (!$isPro) :?>
-                    <a href="https://wp-staging.com/pro-features/#edit-data" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Edit Data", "wp-staging"); ?>">
+                    <a href="<?php echo esc_url(Language::getUpgradeUrl('edit_data')); ?>" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Edit Data", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('edit'); ?>
                         </div>
                         <?php esc_html_e("Edit Data", "wp-staging"); ?>
                         <span>(Pro)</span>
                     </a>
-                    <a href="https://wp-staging.com/pro-features/#push-changes" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Push Changes", "wp-staging"); ?>">
+                    <a href="<?php echo esc_url(Language::getUpgradeUrl('push_changes')); ?>" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Push Changes", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('push'); ?>
                         </div>
                         <?php esc_html_e("Push Changes", "wp-staging"); ?>
                         <span>(Pro)</span>
                     </a>
-                    <a href="https://wp-staging.com/pro-features/#share-login-link" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Share Login Link", "wp-staging"); ?>">
+                    <a href="<?php echo esc_url(Language::getUpgradeUrl('share_login')); ?>" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Share Login Link", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('user-plus'); ?>
                         </div>
                         <?php esc_html_e("Share Login Link", "wp-staging"); ?>
                         <span>(Pro)</span>
                     </a>
-                    <a href="https://wp-staging.com/pro-features/#sync-user-account" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Sync User Account", "wp-staging"); ?>">
+                    <a href="<?php echo esc_url(Language::getUpgradeUrl('sync_user')); ?>" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Sync User Account", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('sync-user'); ?>
                         </div>

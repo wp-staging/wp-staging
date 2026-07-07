@@ -195,10 +195,17 @@ class FileBackupService implements ServiceInterface
         } catch (ThresholdException $e) {
             $isFileWrittenCompletely = null;
         } catch (\RuntimeException $e) {
+            // One unclassifiable/invalid file must not abort the whole backup: skip it, but
+            // make it obvious which file was skipped and why so it can be diagnosed. Prefer
+            // $indexPath — that is the path the classifier tried to shorten; $path may already
+            // have ABSPATH prepended and would not match. Collapse newlines so the warning
+            // stays a single log line.
             $isFileWrittenCompletely = true;
-            // Invalid file
-            $this->logger->warning("Invalid file. Could not add file to backup: $path");
-            debug_log("Backup error: cannot append file to backup: $path");
+            $skippedFile             = $indexPath !== '' ? $indexPath : $path;
+            $skippedFile             = $skippedFile === '' ? '(empty path)' : $skippedFile;
+            $reason                  = str_replace(["\r", "\n"], ' ', $e->getMessage());
+            $this->logger->warning(sprintf('Skipped a file that could not be added to the backup: %s — %s', $skippedFile, $reason));
+            debug_log(sprintf('Backup: skipped file "%s" — %s', $skippedFile, $reason));
         } catch (\Throwable $th) {
             throw $th;
         }

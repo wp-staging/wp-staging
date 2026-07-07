@@ -21,7 +21,7 @@ use WPStaging\Framework\Language\Language;
     echo 'WP Staging v. ' . esc_html(WPStaging::getVersion());
     echo ' <a href="' . esc_url(Language::localizeUrl('https://wp-staging.com')) . '" target="_blank">Free Version</a>
             <div class="wpstg-upgrade-license-container">
-            <a href="' . esc_url(Language::localizeUrl('https://wp-staging.com')) . '" class="wpstg-upgrade-license-button" target="_blank">' . esc_html__('Upgrade to Pro', 'wp-staging') . '</a>
+            <a href="' . esc_url(Language::getUpgradeUrl('top_nav')) . '" class="wpstg-upgrade-license-button" target="_blank">' . esc_html__('Upgrade to Pro', 'wp-staging') . '</a>
             </div>';
     ?>
     </div>

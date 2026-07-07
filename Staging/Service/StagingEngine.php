@@ -19,13 +19,45 @@ class StagingEngine
     /** @var string */
     const ENGINE_NEXT_GEN = 'next_gen';
 
+    /**
+     * Master switch for the Next-Gen engine. Temporarily disabled while the
+     * data-corruption issue #5346 is fixed. Flip to true to re-enable it
+     * everywhere (UI, runtime routing and the prepare AJAX endpoints).
+     *
+     * @var bool
+     */
+    const NEXT_GEN_ENABLED = false;
+
     /** @var string[] */
     const ENGINES = [
         self::ENGINE_LEGACY,
         self::ENGINE_NEXT_GEN,
     ];
 
+    public function isNextGenEnabled(): bool
+    {
+        return self::NEXT_GEN_ENABLED;
+    }
+
+    /**
+     * Effective engine used at runtime. Coerces Next-Gen to Classic while the
+     * Next-Gen engine is disabled so all routing falls back to the Classic path.
+     */
     public function getEngine(): string
+    {
+        $engine = $this->getStoredEngine();
+        if ($engine === self::ENGINE_NEXT_GEN && !$this->isNextGenEnabled()) {
+            return self::ENGINE_LEGACY;
+        }
+
+        return $engine;
+    }
+
+    /**
+     * Raw engine preference as saved by the user, ignoring the master switch.
+     * Used by the upgrade routine to detect Next-Gen users before reverting them.
+     */
+    public function getStoredEngine(): string
     {
         $stored = get_option(self::OPTION_NAME, null);
         if ($stored === null) {

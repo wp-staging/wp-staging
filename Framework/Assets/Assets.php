@@ -351,7 +351,7 @@ class Assets
             'licensePlanName'                   => WPStaging::make(CliIntegrationNotice::class)->getLicensePlanName(),
             'licenseUpgradeUrl'                 => $this->getLicenseUpgradeUrl(),
             'licenseRenewalUrl'                 => $this->getLicenseRenewalUrl(),
-            'pricingUrl'                        => Language::localizePricingUrl('https://wp-staging.com/#pricing'),
+            'pricingUrl'                        => Language::getUpgradeUrl('plugin_upsell'),
             'checkoutFallbackUrl'               => Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?nocache=true&download_id=11'),
             'newsfeedData'                      => $this->getNewsfeedDataForJs(),
             'isNewUser'                         => $this->isNewUser(),

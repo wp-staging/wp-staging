@@ -367,13 +367,17 @@ class I18n
                 'import_modal_modal_html'      => esc_html__('Site has been restored from backup. ', 'wp-staging'),
             ],
             'backup_upload_url'                                   => [
-                'handle_success_response_success'          => esc_html__('Upload finished', 'wp-staging'),
-                'handle_success_response_error'            => esc_html__('Invalid request data', 'wp-staging'),
-                'handle_error_response_confirm'            => esc_html__('An error occurred during the download. Do you want to resume the download?', 'wp-staging'),
-                'handle_cancel_process_confirm'            => esc_html__('Do you want to abort the upload?', 'wp-staging'),
-                'upload_backup_from_url_empty_error'       => esc_html__('Backup file URL is empty', 'wp-staging'),
-                'upload_backup_from_url_valid_url_error'   => esc_html__('Please enter a valid backup file url.', 'wp-staging'),
-                'upload_backup_from_url_correct_url_error' => esc_html__('Please enter correct backup file url', 'wp-staging'),
+                'handle_success_response_success'              => esc_html__('Upload finished', 'wp-staging'),
+                'handle_success_response_error'                => esc_html__('Invalid request data', 'wp-staging'),
+                'handle_error_response_confirm'                => esc_html__('An error occurred during the download. Do you want to resume the download?', 'wp-staging'),
+                'handle_cancel_process_confirm'                => esc_html__('Do you want to abort the upload?', 'wp-staging'),
+                'upload_backup_from_url_empty_error'           => esc_html__('Backup file URL is empty', 'wp-staging'),
+                'upload_backup_from_url_valid_url_error'       => esc_html__('Please enter a valid backup file url.', 'wp-staging'),
+                'upload_backup_from_url_correct_url_error'     => esc_html__('Please enter correct backup file url', 'wp-staging'),
+                'upload_backup_from_url_unknown_size_progress' => esc_html__(
+                    'Downloaded {downloadedBytes}',
+                    'wp-staging'
+                ),
             ],
             'backup_upload'                                       => [
                 'upload_not_supported_error'                   => sprintf(esc_html__('Your browser do not support the File API, needed for the uploads. Please try a different/updated browser, or upload the Backup using FTP to the folder %s', 'wp-staging'), '<strong>wp-content/uploads/wp-staging/backups</strong>'),

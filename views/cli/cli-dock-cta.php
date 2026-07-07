@@ -27,7 +27,7 @@ $hasDeveloperLicense = $cliNotice->isDeveloperOrHigherLicense();
     This is intentional - animation only occurs during the JS dismiss flow.
     When users return to a page after previously dismissing, no animation is needed.
 -->
-<div class="wpstg-cli-dock-cta-wrapper wpstg-flex wpstg-flex-col wpstg-items-center">
+<div class="wpstg-cli-dock-cta-wrapper !wpstg-flex wpstg-flex-col wpstg-items-center">
     <button type="button"
         id="wpstg-cli-dock-cta-button"
         class="wpstg-btn wpstg-btn-md wpstg-btn-outline wpstg-cli-dock-cta wpstg-cli-dock-cta--visible wpstg-w-fit"

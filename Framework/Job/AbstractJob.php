@@ -438,6 +438,14 @@ abstract class AbstractJob implements ShutdownableInterface
     }
 
     /**
+     * @return void
+     */
+    protected function deleteJobDataCache()
+    {
+        $this->jobDataCache->delete();
+    }
+
+    /**
      * @param TaskResponseDto $response
      *
      * @return TaskResponseDto

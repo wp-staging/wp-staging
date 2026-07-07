@@ -20,7 +20,7 @@
 
 use WPStaging\Framework\Language\Language;
 
-$upgradeUrl = Language::localizeUrl('https://wp-staging.com/?utm_source=wp-admin&utm_medium=staging_dashboard&utm_campaign=pro_card');
+$upgradeUrl = Language::getUpgradeUrl('dashboard_upgrade_card');
 $compareUrl = Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=staging_dashboard&utm_campaign=pro_card');
 
 $proFeatures = [
