@@ -122,7 +122,12 @@ use WPStaging\Core\WPStaging;
                     ? 'https://wp-staging.com/de/cli/upgrade/'
                     : 'https://wp-staging.com/cli/upgrade/';
 
-                $learnMoreParams = [];
+                $learnMoreParams = [
+                    'utm_source'   => 'wp-staging',
+                    'utm_medium'   => 'plugin',
+                    'utm_campaign' => 'cli_upgrade',
+                    'utm_content'  => 'cli_notice',
+                ];
                 if (!empty($licenseType)) {
                     $learnMoreParams['plan'] = $licenseType;
                 }
@@ -131,9 +136,7 @@ use WPStaging\Core\WPStaging;
                     $learnMoreParams['license_id'] = $licenseId;
                 }
 
-                if (!empty($learnMoreParams)) {
-                    $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
-                }
+                $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
                 ?>
                 <a href="<?php echo esc_url($learnMoreUrl); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-btn wpstg-btn-sm wpstg-btn-ghost wpstg-banner-learn-more">
                     <?php esc_html_e('Learn More', 'wp-staging'); ?>

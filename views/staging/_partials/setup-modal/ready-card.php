@@ -45,7 +45,7 @@ if (empty($runtimeDescription)) {
 }
 
 if ($runtimeLocked) {
-    $runtimeDescription = __('Basic isolation active. Pro unlocks advanced controls.', 'wp-staging');
+    $runtimeDescription = __('Basic isolation active. Advanced controls available in Pro.', 'wp-staging');
 }
 
 if (empty($runtimeTitle)) {

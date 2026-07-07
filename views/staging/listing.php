@@ -14,12 +14,9 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Language\Language;
-use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $isPro = WPStaging::isPro();
-/** @var CliIntegrationNotice $cliNotice */
-$cliNotice = WPStaging::make(CliIntegrationNotice::class);
 include WPSTG_VIEWS_DIR . 'job/modal/success.php';
 include WPSTG_VIEWS_DIR . 'job/modal/process.php';
 
@@ -28,21 +25,11 @@ require WPSTG_VIEWS_DIR . 'job/locked.php';
 $assets = WPStaging::make(Assets::class);
 ?>
 <div id="wpstg-step-1">
-    <div class="wpstg-staging-actions">
-        <button
-            id="wpstg-new-staging"
-            class="wpstg-btn wpstg-btn-md wpstg-btn-primary wpstg-px-3 wpstg-new-staging-btn"
-            <?php echo $error ? 'disabled' : '' ?>
-        >
-            <svg class="wpstg-btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
-        </button>
-
-        <!-- CLI Dock Slot - populated after banner collapse or server-side when banner was dismissed -->
-        <div id="wpstg-cli-dock-slot" class="wpstg-cli-dock-slot"><?php $cliNotice->maybeRenderDockCta(); ?></div>
-    </div>
+<?php
+if (!empty($stagingSites) || $error) {
+    include WPSTG_VIEWS_DIR . 'staging/_partials/create-staging-cta.php';
+}
+?>
 </div>
 
 <?php if (WPStaging::isOnWordPressPlayground()) : ?>
@@ -70,24 +57,18 @@ $assets = WPStaging::make(Assets::class);
     </div>
     <!-- /Existing Clones -->
 <?php endif ?>
-
-<div id="wpstg-no-staging-site-results" class="wpstg-clone wpstg-mt-5 wpstg-text-center" <?php echo ($stagingSites !== [] || $error) ? 'style="display: none;"' : ''; ?> >
-    <svg width="36" height="36" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="wpstg-mb-3 wpstg-text-gray-400 dark:wpstg-text-slate-500" style="display:inline-block;">
-        <path d="M14.9 9c0-.3.1-.6.1-1 0-2.2-1.8-4-4-4-1.6 0-2.9.9-3.6 2.2-.2-.1-.6-.2-.9-.2C5.1 6 4 7.1 4 8.5c0 .2 0 .4.1.5-1.8.3-3.1 1.7-3.1 3.5C1 14.4 2.6 16 4.5 16h10c1.9 0 3.5-1.6 3.5-3.5 0-1.8-1.3-3.3-3.1-3.5z"></path>
-    </svg>
-    <h3 class="wpstg-mt-0 wpstg-mb-2 wpstg-text-lg wpstg-font-semibold"><?php esc_html_e('No staging site yet', 'wp-staging'); ?></h3>
+<?php if (empty($stagingSites) && !$error) : ?>
+<div id="wpstg-no-staging-site-results" class="wpstg-clone !wpstg-mt-0 wpstg-text-center" >
+    <div class="!wpstg-flex wpstg-items-center wpstg-justify-center wpstg-gap-3">
+        <svg width="36" height="36" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="wpstg-mb-3 wpstg-text-gray-400 dark:wpstg-text-slate-500" style="display:inline-block;">
+            <path d="M14.9 9c0-.3.1-.6.1-1 0-2.2-1.8-4-4-4-1.6 0-2.9.9-3.6 2.2-.2-.1-.6-.2-.9-.2C5.1 6 4 7.1 4 8.5c0 .2 0 .4.1.5-1.8.3-3.1 1.7-3.1 3.5C1 14.4 2.6 16 4.5 16h10c1.9 0 3.5-1.6 3.5-3.5 0-1.8-1.3-3.3-3.1-3.5z"></path>
+        </svg>
+        <h3 class="wpstg-mt-0 wpstg-mb-2 wpstg-text-lg wpstg-font-semibold"><?php esc_html_e('No staging site yet', 'wp-staging'); ?></h3>
+    </div>
     <p class="wpstg-mt-0 wpstg-mb-4 wpstg-mx-auto wpstg-max-w-xl wpstg-text-[15px] wpstg-leading-relaxed wpstg-text-gray-600 dark:wpstg-text-slate-300">
         <?php esc_html_e('Create a safe copy of this website before testing updates, changing themes, editing content, or deploying custom code.', 'wp-staging'); ?>
     </p>
-    <button
-        class="wpstg-btn wpstg-btn-md wpstg-btn-primary wpstg-px-3 wpstg-new-staging-btn"
-        <?php echo $error ? 'disabled' : '' ?>
-    >
-        <svg class="wpstg-btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-        </svg>
-        <?php echo esc_html__('Create Staging Site', 'wp-staging'); ?>
-    </button>
+    <?php include WPSTG_VIEWS_DIR . 'staging/_partials/create-staging-cta.php'; ?>
     <p class="wpstg-mt-3 wpstg-mb-0 wpstg-mx-auto wpstg-max-w-xl wpstg-text-[13px] wpstg-text-gray-500 dark:wpstg-text-slate-400">
         <?php esc_html_e('Start with one-click staging on this server. Advanced workflows are available in Pro.', 'wp-staging'); ?>
         <?php if (!$isPro) : ?>
@@ -98,7 +79,7 @@ $assets = WPStaging::make(Assets::class);
         <?php endif; ?>
     </p>
 </div>
-
+<?php endif ?>
 <?php if ($error) : ?>
     <div class="wpstg-clone wpstg-clone-error wpstg--error">
         <h4><?php echo esc_html__("Staging Sites Error: ", "wp-staging"); ?></h4>

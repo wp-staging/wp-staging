@@ -44,7 +44,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                         class="wpstg-input wpstg-input-lg wpstg-box-border !wpstg-w-full"
                         value="<?php echo esc_attr($defaultSiteName); ?>"
                         placeholder="<?php echo esc_attr($defaultSiteName); ?>"
-                        maxlength="16"
+                        maxlength="100"
                         pattern="[A-Za-z0-9 _\-]+"
                         aria-label="<?php esc_attr_e('Staging site name', 'wp-staging'); ?>"
                         aria-describedby="wpstg-clone-id-error-msg"
@@ -179,7 +179,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                 <?php endif; ?>
             </dl>
             <?php if ($isCreate && !$isProLicenseActive) : ?>
-                <a class="wpstg-create-summary-pro-link" href="<?php echo esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')); ?>" target="_blank" rel="noopener noreferrer"><?php $renderer->icon('sparkles', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('Pro unlocks advanced isolation controls', 'wp-staging'); ?></a>
+                <a class="wpstg-create-summary-pro-link" href="<?php echo esc_url(Language::getUpgradeUrl('creation_summary')); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Requires WP STAGING Pro', 'wp-staging'); ?>"><?php $renderer->icon('sparkles', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('Advanced controls available in Pro', 'wp-staging'); ?></a>
             <?php endif; ?>
         </section>
         <?php if ($isReset) : ?>

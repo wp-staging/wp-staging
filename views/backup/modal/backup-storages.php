@@ -10,6 +10,7 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Facades\UI\Checkbox;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Backup\Storage\Providers;
 
 /** @var Providers */
@@ -76,7 +77,7 @@ $restrictedStorages = [
                 $disabledClass = $isDisabled ? 'wpstg-storages-settings-disabled' : '';
                 $tooltipClass  = $isDisabled && $isProVersion ? 'wpstg--tooltip' : '';
                 $tooltipText   = __('Click on "Configure" to set up and activate the storage provider first.', 'wp-staging');
-                $upgradeLink   = sprintf('https://wp-staging.com/get-%s', $storage['id']);
+                $upgradeLink   = Language::getUpgradeUrl('storage_' . $storage['id']);
                 if ($isPersonalLicense || ($isRestrictedStorage && $licenseType !== 'basic')) {
                     $upgradeLink = admin_url('admin.php?page=wpstg-license');
                     $tooltipText = __('Upgrade to the Business plan (or higher) to start using this feature.', 'wp-staging');

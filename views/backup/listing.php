@@ -6,6 +6,7 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 /**
@@ -50,7 +51,12 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
     printf(
         '%s %s',
         '<span style="font-weight: bold">' . esc_html__('Download WP Staging Restore and Extraction Tool:', 'wp-staging') . '</span>',
-        '<a href="https://wp-staging.com/docs/wp-staging-restore/">' . esc_html__('Read More or Upgrade to Pro', 'wp-staging') . '</a>'
+        sprintf(
+            /* translators: 1: link to the restore documentation, 2: link to the Pro upgrade page */
+            esc_html__('%1$s or %2$s', 'wp-staging'),
+            '<a href="' . esc_url('https://wp-staging.com/docs/wp-staging-restore/') . '" target="_blank" rel="noopener">' . esc_html__('Read More', 'wp-staging') . '</a>',
+            '<a href="' . esc_url(Language::getUpgradeUrl('backup_restore_tool')) . '" target="_blank" rel="noopener">' . esc_html__('Upgrade to Pro', 'wp-staging') . '</a>'
+        )
     );
     ?>
 </div>

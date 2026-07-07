@@ -38,15 +38,21 @@ if (!function_exists('wpstgHandleMissingRequiredFile')) {
  */
 $pluginFilePath = empty($pluginFilePath) ? '' : $pluginFilePath;
 
-require_once __DIR__ . '/commonBootstrap.php';
+$commonBootstrap = __DIR__ . '/commonBootstrap.php';
+if (file_exists($commonBootstrap)) {
+    require_once $commonBootstrap;
+} else {
+    wpstgHandleMissingRequiredFile($commonBootstrap);
+}
 
 add_action('plugins_loaded', function () use ($pluginFilePath) {
     // Unused $pluginFilePath: Other code will fail if removed it
-    if (wpstgShouldSkipBootstrap()) {
-        return;
-    }
 
     try {
+        if (function_exists('wpstgShouldSkipBootstrap') && wpstgShouldSkipBootstrap()) {
+            return;
+        }
+
         $files = [
             __DIR__ . '/runtimeRequirements.php',
             __DIR__ . '/bootstrap.php',
@@ -64,7 +70,7 @@ add_action('plugins_loaded', function () use ($pluginFilePath) {
         // "Class not found" cannot escape this safety net and crash WordPress.
         // Issue #5074.
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log('WP STAGING: ' . $e->getMessage());
+            error_log('WP STAGING could not load: ' . $e->getMessage());
         }
     }
 }, 11, 0); // The priority of this hook must be larger than 10 for the runtime requirement check to detect older versions of WPSTAGING.

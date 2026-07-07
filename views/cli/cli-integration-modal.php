@@ -335,8 +335,8 @@ if (!$isDeveloperOrHigher) {
                             <?php echo wp_kses(
                                 sprintf(
                                     __('Step 2 requires a %1$s or %2$s license.', 'wp-staging'),
-                                    '<a href="' . esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')) . '" target="_blank">Developer</a>',
-                                    '<a href="' . esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')) . '" target="_blank">Agency</a>'
+                                    '<a href="' . esc_url(Language::getUpgradeUrl('cli_developer')) . '" target="_blank">Developer</a>',
+                                    '<a href="' . esc_url(Language::getUpgradeUrl('cli_agency')) . '" target="_blank">Agency</a>'
                                 ),
                                 [
                                     'a' => [
@@ -360,7 +360,7 @@ if (!$isDeveloperOrHigher) {
                     <?php if ($licensingState === 'free') : ?>
                         <div class="wpstg-cli-gating-notice">
                             <span><?php echo esc_html__('Running this command requires a Developer or Agency license.', 'wp-staging'); ?></span>
-                            <a href="<?php echo esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')); ?>" target="_blank" rel="noreferrer noopener">
+                            <a href="<?php echo esc_url(Language::getUpgradeUrl('cli_pricing')); ?>" target="_blank" rel="noreferrer noopener">
                                 <?php echo esc_html__('View pricing', 'wp-staging'); ?>
                             </a>
                         </div>
@@ -550,7 +550,12 @@ if (!$isDeveloperOrHigher) {
                         ? 'https://wp-staging.com/de/cli/upgrade/'
                         : 'https://wp-staging.com/cli/upgrade/';
 
-                    $learnMoreParams = [];
+                    $learnMoreParams = [
+                        'utm_source'   => 'wp-staging',
+                        'utm_medium'   => 'plugin',
+                        'utm_campaign' => 'cli_upgrade',
+                        'utm_content'  => 'cli_modal',
+                    ];
                     if (!empty($licenseType)) {
                         $learnMoreParams['plan'] = $licenseType;
                     }
@@ -559,9 +564,7 @@ if (!$isDeveloperOrHigher) {
                         $learnMoreParams['license_id'] = $licenseId;
                     }
 
-                    if (!empty($learnMoreParams)) {
-                        $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
-                    }
+                    $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
                     ?>
                     <a href="<?php echo esc_url($learnMoreUrl); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-link">
                         <?php echo esc_html__('Learn more', 'wp-staging'); ?>

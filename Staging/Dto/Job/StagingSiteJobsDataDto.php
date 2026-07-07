@@ -37,6 +37,9 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
     private $name = '';
 
     /** @var string */
+    private $directoryName = '';
+
+    /** @var string */
     private $stagingEngine = 'next_gen';
 
     /**
@@ -101,6 +104,23 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * @param string $directoryName
+     * @return void
+     */
+    public function setDirectoryName(string $directoryName)
+    {
+        $this->directoryName = $directoryName;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDirectoryName(): string
+    {
+        return $this->directoryName;
     }
 
     /**

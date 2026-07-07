@@ -604,6 +604,17 @@ class Directory implements DirectoryInterface
     }
 
     /**
+     * @return array
+     */
+    public function getWpStagingRestoreDirs(): array
+    {
+        return [
+            $this->getAbsPath() . 'wpstg-restore/',
+            $this->getAbsPath() . 'wpstg-extract/',
+        ];
+    }
+
+    /**
      * Check whether the given path exists in WordPress Root,
      * Method will return true if exists in WordPress Root or is relative to WordPress root.
      *

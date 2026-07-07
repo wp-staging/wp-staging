@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Pluginmeta;
 /* Admin Plugins Meta Data */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Utils\PluginInfo;
 
 class Pluginmeta
@@ -43,7 +44,7 @@ class Pluginmeta
         $pluginBasename = plugin_basename(WPSTG_PLUGIN_FILE);
 
         if ($this->isFreePluginSlug($file) && stripos($pluginBasename, 'wp-staging-pro.php') === false) {
-            $upgradeLink = '<a style="color: #27ae60;" target="_blank" href="' . self::UPGRADE_LINK . '">' . esc_html__('Upgrade to Premium', 'wp-staging') . '</a>';
+            $upgradeLink = '<a style="color: #27ae60;" target="_blank" href="' . esc_url(Language::getUpgradeUrl('plugin_row')) . '">' . esc_html__('Upgrade to Premium', 'wp-staging') . '</a>';
             array_unshift($links, $upgradeLink);
         }
 

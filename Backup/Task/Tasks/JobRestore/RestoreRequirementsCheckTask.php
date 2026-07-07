@@ -20,6 +20,7 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\ThresholdException;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Cache\Cache;
@@ -368,7 +369,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             return;
         }
 
-        throw new RuntimeException('This backup was generated on WP STAGING PRO and cannot be restored on FREE version. Please upgrade to <a href="https://wp-staging.com" target="_blank">WP STAGING PRO</a> to restore this Backup.');
+        throw new RuntimeException('This backup was generated on WP STAGING PRO and cannot be restored on FREE version. Please upgrade to <a href="' . Language::getUpgradeUrl('restore_incompatible') . '" target="_blank">WP STAGING PRO</a> to restore this Backup.');
     }
 
     /*

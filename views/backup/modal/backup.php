@@ -12,6 +12,7 @@
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Framework\Utils\Times;
 use WPStaging\Basic\Ajax\ProCronsCleaner;
@@ -104,7 +105,7 @@ $storagesPrefix = 'storage-';
                     <span class="<?php echo esc_attr($disabledClass); ?>" id="wpstg-wproot-other-files-span" data-id="#wpstg-wproot-scanning-files">
                         <?php esc_html_e('Backup Other WP Root Folders', 'wp-staging'); ?>
                     </span>
-                    <span id="wpstgIncludeOtherFilesInWpRootSize"></span>
+                    <span id="wpstgIncludeOtherFilesInWpRootSize"></span> <!-- used to show the size of the files in the root folder -->
                     <div class="wpstg--tooltip wpstg-wproot-tooltip">
                         <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info" />
                         <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
@@ -113,7 +114,7 @@ $storagesPrefix = 'storage-';
                     </div>
 
                     <?php if (!$isProVersion) : ?>
-                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-u-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
+                        <a href="<?php echo esc_url(Language::getUpgradeUrl('backup_root_files')); ?>" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-u-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
                     <?php else : ?>
                         <fieldset class="wpstg-wproot-files-selection-section wpstg-wproot-files-selection" id="wpstg-wproot-scanning-files">
                             <?php require(WPSTG_VIEWS_DIR . 'pro/backup/backup-files.php'); ?>
@@ -214,7 +215,7 @@ $storagesPrefix = 'storage-';
                             <span class="wpstgExcludeDeactivatedPlugins wpstg-badge-pill hidden">Deactivated plugins</span>
                         </span>
                         <?php if (!$isProVersion) : ?>
-                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-u-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
+                            <a href="<?php echo esc_url(Language::getUpgradeUrl('backup_exclude')); ?>" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-u-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
                         <?php endif; ?>
                     </label>
 
@@ -265,7 +266,7 @@ $storagesPrefix = 'storage-';
                         <?php echo esc_html($cronMessage); ?>
                         <br>
                         <br>
-                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><?php echo sprintf(esc_html__('%sUpgrade to Pro%s to create unlimited backup plans, change the start time or upload backups to cloud storage.', 'wp-staging'), '<strong><u>', '</u></strong>'); ?></a>
+                        <a href="<?php echo esc_url(Language::getUpgradeUrl('backup_schedule')); ?>" target="_blank" class="wpstg-pro-feature-link"><?php echo sprintf(esc_html__('%sUpgrade to Pro%s to create unlimited backup plans, change the start time or upload backups to cloud storage.', 'wp-staging'), '<strong><u>', '</u></strong>'); ?></a>
                     </span>
 
                     <?php require_once WPSTG_VIEWS_DIR . 'backup/modal/backup-scheduling-options.php'; ?>

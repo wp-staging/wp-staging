@@ -2,10 +2,12 @@
 
 namespace WPStaging\Staging\Ajax;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Staging\Service\StagingEngine;
 
 abstract class AbstractAjaxPrepare extends PrepareJob
 {
@@ -20,6 +22,10 @@ abstract class AbstractAjaxPrepare extends PrepareJob
     {
         if (!$this->auth->isAuthenticatedRequest()) {
             wp_send_json_error(null, 401);
+        }
+
+        if (!WPStaging::make(StagingEngine::class)->isNextGenEnabled()) {
+            wp_send_json_error(esc_html__('The Next-Gen engine is temporarily unavailable. Please use the Classic engine.', 'wp-staging'), 403);
         }
 
         try {

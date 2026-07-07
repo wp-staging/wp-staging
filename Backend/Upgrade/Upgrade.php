@@ -14,8 +14,10 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Notifications\Notifications;
 use WPStaging\Staging\Sites;
+use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Storage\Providers;
+use WPStaging\Framework\Notices\NextGenEngineNotice;
 use WPStaging\Framework\Upgrade\UpgradeFlags;
 
 // No Direct Access
@@ -92,8 +94,38 @@ class Upgrade
         $this->upgrade3_0_7();
         $this->upgrade3_8_1();
         $this->migrateRemoteStorageOptionNames();
+        $this->revertNextGenStagingEngine();
 
         $this->setVersion();
+    }
+
+    /**
+     * Revert users off the Next-Gen staging engine (temporarily disabled, issue #5346)
+     * and, when staging sites exist, warn that they may be corrupted.
+     *
+     * Guarded by a persistent feature flag so it runs exactly once, regardless of
+     * the stored version. Idempotent.
+     *
+     * @return void
+     */
+    private function revertNextGenStagingEngine()
+    {
+        if ($this->upgradeFlags->has('next_gen_engine_disabled')) {
+            return;
+        }
+
+        $stagingEngine = WPStaging::make(StagingEngine::class);
+        if ($stagingEngine->getStoredEngine() === StagingEngine::ENGINE_NEXT_GEN) {
+            $stagingEngine->saveEngine(StagingEngine::ENGINE_LEGACY);
+
+            $hasStagingSites = !empty(get_option(Sites::STAGING_SITES_OPTION, []))
+                || !empty(get_option(Sites::OLD_STAGING_SITES_OPTION, []));
+            if ($hasStagingSites) {
+                WPStaging::make(NextGenEngineNotice::class)->enable();
+            }
+        }
+
+        $this->upgradeFlags->mark('next_gen_engine_disabled');
     }
 
     /**

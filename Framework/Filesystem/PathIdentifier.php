@@ -139,7 +139,10 @@ class PathIdentifier
         }
 
         // This should never happen on Backups, as we only scan the folders above explicitly and don't follow links.
-        throw new \RuntimeException("Unknown entity type for path: $path");
+        throw new \RuntimeException(sprintf(
+            'Could not classify %s for backup: it is not inside any known WordPress content directory (plugins, themes, mu-plugins, uploads, languages, wp-content, or the WordPress root).',
+            $path === '' ? 'an empty path' : "the path \"$path\""
+        ));
     }
 
     /**
@@ -163,6 +166,66 @@ class PathIdentifier
     public function getPathWithoutIdentifier($path)
     {
         return substr($path, 8);
+    }
+
+    /**
+     * @param string $identifiablePath e.g. wpstg_u_2019/image.png
+     *
+     * @return bool True when the remainder is unsafe and the entry must be refused.
+     */
+    public function hasPathTraversal(string $identifiablePath): bool
+    {
+        $relativePath = $this->getPathWithoutIdentifier($identifiablePath);
+        if ($relativePath === '') {
+            return true;
+        }
+
+        if (strpos($relativePath, "\0") !== false) {
+            return true;
+        }
+
+        $normalizedPath = str_replace('\\', '/', $relativePath);
+        if ($normalizedPath[0] === '/' || preg_match('#^[a-zA-Z]:#', $normalizedPath) === 1) {
+            return true;
+        }
+
+        return in_array('..', explode('/', $normalizedPath), true);
+    }
+
+    public function isPathWithinRoot(string $targetPath, string $root): bool
+    {
+        $realRoot = realpath($root);
+        if ($realRoot === false) {
+            return false;
+        }
+
+        if (is_link($targetPath)) {
+            return false;
+        }
+
+        $deepestExisting = $targetPath;
+        while (!file_exists($deepestExisting)) {
+            if (is_link($deepestExisting)) {
+                return false;
+            }
+
+            $parent = dirname($deepestExisting);
+            if ($parent === $deepestExisting) {
+                return false;
+            }
+
+            $deepestExisting = $parent;
+        }
+
+        $realExisting = realpath($deepestExisting);
+        if ($realExisting === false) {
+            return false;
+        }
+
+        $realExisting = rtrim($realExisting, '/\\') . DIRECTORY_SEPARATOR;
+        $realRoot     = rtrim($realRoot, '/\\') . DIRECTORY_SEPARATOR;
+
+        return strpos($realExisting, $realRoot) === 0;
     }
 
     /**

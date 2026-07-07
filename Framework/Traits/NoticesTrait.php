@@ -79,6 +79,11 @@ trait NoticesTrait
             return;
         }
 
+        // don't show analytics modal on wpstg-welcome page
+        if ($this->isWpstgWelcomePage()) {
+            return;
+        }
+
         if (WPStaging::make(AnalyticsConsent::class)->hasUserConsent()) {
             return;
         }
@@ -100,6 +105,16 @@ trait NoticesTrait
         }
 
         return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWpstgWelcomePage(): bool
+    {
+        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+
+        return $currentPage === 'wpstg-welcome';
     }
 
     /**

@@ -32,12 +32,18 @@ class DismissNotice
      */
     private $objectCacheNotice;
 
-    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence, ObjectCacheNotice $objectCacheNotice)
+    /**
+     * @var NextGenEngineNotice
+     */
+    private $nextGenEngineNotice;
+
+    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence, ObjectCacheNotice $objectCacheNotice, NextGenEngineNotice $nextGenEngineNotice)
     {
         $this->disabledItemsNotice = $disabledItemsNotice;
         $this->warningsNotice      = $warningsNotice;
         $this->wordFence           = $wordFence;
         $this->objectCacheNotice   = $objectCacheNotice;
+        $this->nextGenEngineNotice = $nextGenEngineNotice;
     }
 
     public function dismiss($noticeToDismiss)
@@ -69,6 +75,11 @@ class DismissNotice
         }
 
         if ($noticeToDismiss === ObjectCacheNotice::ACTION_NOTICE_DISMISS && $this->objectCacheNotice->disable() !== false) {
+            wp_send_json(true);
+            return;
+        }
+
+        if ($noticeToDismiss === 'next_gen_engine' && $this->nextGenEngineNotice->disable() !== false) {
             wp_send_json(true);
             return;
         }

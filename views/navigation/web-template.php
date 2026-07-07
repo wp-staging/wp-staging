@@ -11,6 +11,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 
 $wpstgAdminUrl = get_admin_url() . 'admin.php?page=';
@@ -56,7 +57,7 @@ $menu = [
         'tab'       => esc_html__('Upgrade to Pro', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--license',
         'targetId'  => '',
-        'targetUrl' => 'https://wp-staging.com',
+        'targetUrl' => Language::getUpgradeUrl('main_menu'),
         'page'      => 'wpstg-license',
         'isActive'  => !empty($isActiveLicensePage),
     ],

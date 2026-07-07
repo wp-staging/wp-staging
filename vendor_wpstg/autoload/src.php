@@ -465,6 +465,7 @@ return array(
     'WPStaging\\Framework\\Notices\\CliIntegrationNotice' => $baseDir . '/Framework/Notices/CliIntegrationNotice.php',
     'WPStaging\\Framework\\Notices\\DisabledItemsNotice' => $baseDir . '/Framework/Notices/DisabledItemsNotice.php',
     'WPStaging\\Framework\\Notices\\DismissNotice' => $baseDir . '/Framework/Notices/DismissNotice.php',
+    'WPStaging\\Framework\\Notices\\NextGenEngineNotice' => $baseDir . '/Framework/Notices/NextGenEngineNotice.php',
     'WPStaging\\Framework\\Notices\\Notices' => $baseDir . '/Framework/Notices/Notices.php',
     'WPStaging\\Framework\\Notices\\NoticesHandler' => $baseDir . '/Framework/Notices/NoticesHandler.php',
     'WPStaging\\Framework\\Notices\\ObjectCacheNotice' => $baseDir . '/Framework/Notices/ObjectCacheNotice.php',

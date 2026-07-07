@@ -23,7 +23,7 @@ use WPStaging\Framework\Facades\Escape;
         <li><strong><?php esc_html_e('Authentication', 'wp-staging'); ?></strong> - <?php esc_html_e('Cloned sites are available to authenticated users only.', 'wp-staging'); ?></li>
         <li><strong><?php esc_html_e('High Performance', 'wp-staging'); ?></strong> - <?php esc_html_e('WP STAGING is one of the fastest backup and migration plugins. Compare yourself.', 'wp-staging'); ?></li>
         <li><strong><?php esc_html_e('Secure', 'wp-staging'); ?></strong> - <?php esc_html_e('WP STAGING is no cloud service. Your data belongs to you only.', 'wp-staging'); ?></li>
-        <a href="https://wp-staging.com/?utm_source=wpstg&utm_medium=addon_page&utm_term=click-wpstaging-pro&utm_campaign=wpstaging" target="_blank" class="wpstg-button--big wpstg-button--blue"><?php esc_html_e('Buy WP Staging Pro', 'wp-staging'); ?></a>
+        <a href="<?php echo esc_url(\WPStaging\Framework\Language\Language::getUpgradeUrl('welcome_page')); ?>" target="_blank" class="wpstg-button--big wpstg-button--blue"><?php esc_html_e('Buy WP Staging Pro', 'wp-staging'); ?></a>
         <a href="<?php echo esc_url(admin_url()); ?>admin.php?page=wpstg_clone" target="_self" class="wpstg-primary-color wpstg-ml-30px"><?php esc_html_e('Skip & Start WP Staging', 'wp-staging'); ?></a>
         <div class="wpstg-footer"> <?php esc_html_e('Comes with our money back guarantee * You need to give us chance to resolve your issue first.', 'wp-staging'); ?></div>
     </div>

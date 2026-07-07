@@ -1,6 +1,7 @@
 <?php
 
 use WPStaging\Framework\Facades\UI\Checkbox;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Staging\Service\AbstractStagingSetup;
 
 /**
@@ -38,8 +39,11 @@ $renderer->accordionSection([
 
     // Locked controls in the free build carry the same "Available in Pro"
     // badge as the Staging isolation section, so the gating reads the same way.
-    $renderProBadge = function ($extraClass = '') use ($renderer) {
-        ?><span class="wpstg-badge-amber <?php echo esc_attr($extraClass); ?>"><?php $renderer->icon('lock', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('Available in Pro', 'wp-staging'); ?></span><?php
+    // Each badge links to the pricing page with a unique utm_campaign so the
+    // upgrade click can be attributed to the exact control in Matomo.
+    $renderProBadge = function ($context, $extraClass = '') use ($renderer) {
+        $pricingUrl = Language::getUpgradeUrl($context);
+        ?><a class="wpstg-badge-amber <?php echo esc_attr($extraClass); ?>" href="<?php echo esc_url($pricingUrl); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Requires WP STAGING Pro', 'wp-staging'); ?>"><?php $renderer->icon('lock', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('Available in Pro', 'wp-staging'); ?></a><?php
     };
 
     $pathInlineTarget = $isPro ? ' data-wpstg-inline-target="#wpstg_clone_dir"' : '';
@@ -51,7 +55,7 @@ $renderer->accordionSection([
                 <?php $renderer->icon('folder', 'wpstg-h-5 wpstg-w-5'); ?>
                 <h3><?php esc_html_e('Destination', 'wp-staging'); ?></h3>
                 <?php if ($isDestinationDisabled) {
-                    $renderProBadge('wpstg-ml-auto');
+                    $renderProBadge('destination', 'wpstg-ml-auto');
                 } ?>
             </div>
             <p><?php esc_html_e('Default staging location selected.', 'wp-staging'); ?></p>
@@ -118,7 +122,7 @@ $renderer->accordionSection([
                 <?php $renderer->icon('database', 'wpstg-h-5 wpstg-w-5'); ?>
                 <h3><?php esc_html_e('Database', 'wp-staging'); ?></h3>
                 <?php if ($isDestinationDisabled) {
-                    $renderProBadge('wpstg-ml-auto');
+                    $renderProBadge('database', 'wpstg-ml-auto');
                 } ?>
             </div>
             <p><?php esc_html_e('Current WordPress database selected. Tables will use a staging prefix and will not replace live tables.', 'wp-staging'); ?></p>
@@ -153,7 +157,7 @@ $renderer->accordionSection([
                     <?php $renderer->icon('user-plus', 'wpstg-h-5 wpstg-w-5'); ?>
                     <h3><?php esc_html_e('Add new admin account', 'wp-staging'); ?></h3>
                     <?php if ($isDestinationDisabled) {
-                        $renderProBadge('wpstg-ml-auto');
+                        $renderProBadge('new_admin_user', 'wpstg-ml-auto');
                     } ?>
                 </div>
                 <p><?php esc_html_e('Created only on the staging site.', 'wp-staging'); ?></p>
@@ -179,7 +183,7 @@ $renderer->accordionSection([
                 </span>
                 <span class="wpstg-ml-auto wpstg-flex wpstg-flex-shrink-0 wpstg-items-start wpstg-gap-2">
                     <?php if ($isDestinationDisabled) {
-                        $renderProBadge('wpstg-mt-0.5');
+                        $renderProBadge('symlink_uploads', 'wpstg-mt-0.5');
                     } ?>
                     <span class="wpstg--tooltip wpstg-mt-0.5 wpstg-flex wpstg-h-5 wpstg-w-5 wpstg-flex-shrink-0 wpstg-items-center wpstg-justify-center">
                         <span class="dashicons dashicons-info-outline wpstg-text-[#a8b5c6]" aria-hidden="true"></span>

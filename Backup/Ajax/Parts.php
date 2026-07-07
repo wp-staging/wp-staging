@@ -149,13 +149,13 @@ class Parts extends AbstractTemplateComponent
     private function getIcon(string $partType): string
     {
         $icons = [
-            'database'   => 'database-new',
-            'plugins'    => 'settings',
-            'mu_plugins' => 'file',
-            'themes'     => 'palette',
-            'medias'     => 'images',
-            'others'     => 'folder-new',
-            'root_files' => 'hard-drive',
+            'database'   => 'database',
+            'plugins'    => 'admin-plugins',
+            'mu_plugins' => 'plugins-checked',
+            'themes'     => 'layout',
+            'medias'     => 'images-alt',
+            'others'     => 'admin-generic',
+            'root_files' => 'root-folder',
         ];
         if (isset($icons[$partType])) {
             return $icons[$partType];

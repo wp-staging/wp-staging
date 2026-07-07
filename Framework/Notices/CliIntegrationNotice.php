@@ -10,7 +10,9 @@ use WPStaging\Framework\Traits\NoticesTrait;
  * Displays a dismissible banner promoting the WP Staging CLI tool
  *
  * The banner appears on both Staging and Backup tabs for both free and Pro version users.
- * "Later" dismissal uses client-side localStorage (24 hours). Permanent dismissal uses a wp_option.
+ * "Later" dismissal hides the banner for 24 hours; permanent dismissal hides it for good.
+ * Both dismissal states are stored in wp_options so the banner can be suppressed server-side,
+ * avoiding a flash where the banner renders and is then hidden by JavaScript.
  */
 class CliIntegrationNotice
 {
@@ -27,6 +29,11 @@ class CliIntegrationNotice
      * @var string Option key for showing dock CTA after banner dismissal
      */
     const OPTION_CLI_DOCK_CTA_SHOWN = 'wpstg_cli_dock_cta_shown';
+
+    /**
+     * @var string Option key holding the Unix timestamp until which the banner stays hidden after "Later"
+     */
+    const OPTION_CLI_NOTICE_DISMISSED_UNTIL = 'wpstg_cli_notice_dismissed_until';
 
     /**
      * @var Auth
@@ -64,6 +71,10 @@ class CliIntegrationNotice
             return;
         }
 
+        if ($this->isTemporarilyDismissed()) {
+            return;
+        }
+
         $notice = WPSTG_VIEWS_DIR . 'notices/cli-integration-notice.php';
 
         if (!file_exists($notice)) {
@@ -82,9 +93,30 @@ class CliIntegrationNotice
     }
 
     /**
+     * Whether the banner is within its 24-hour "Later" dismissal window.
+     * Clears the expired option so the banner reappears once the window has passed.
+     *
+     * @return bool
+     */
+    private function isTemporarilyDismissed(): bool
+    {
+        $dismissedUntil = (int)get_option(self::OPTION_CLI_NOTICE_DISMISSED_UNTIL, 0);
+        if ($dismissedUntil === 0) {
+            return false;
+        }
+
+        if (time() < $dismissedUntil) {
+            return true;
+        }
+
+        delete_option(self::OPTION_CLI_NOTICE_DISMISSED_UNTIL);
+        return false;
+    }
+
+    /**
      * AJAX handler to dismiss the CLI notice temporarily.
-     * The 24-hour hiding is handled client-side via localStorage.
-     * This endpoint persists the dock CTA flag.
+     * Hides the banner for 24 hours and persists the dock CTA flag, both server-side,
+     * so the banner is suppressed on the next page load without a flash.
      *
      * @return void
      */
@@ -94,6 +126,7 @@ class CliIntegrationNotice
             wp_send_json_error();
         }
 
+        update_option(self::OPTION_CLI_NOTICE_DISMISSED_UNTIL, time() + DAY_IN_SECONDS, false);
         update_option(self::OPTION_CLI_DOCK_CTA_SHOWN, true, false);
         wp_send_json_success();
     }
@@ -139,7 +172,22 @@ class CliIntegrationNotice
             return false;
         }
 
+        // The dock CTA is the collapsed form of the banner, so it must never show alongside it.
+        if (!$this->isBannerDismissed()) {
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Whether the banner is currently dismissed, either permanently or within its 24-hour window.
+     *
+     * @return bool
+     */
+    private function isBannerDismissed(): bool
+    {
+        return (bool)get_option(self::OPTION_CLI_NOTICE_HIDDEN_FOREVER) || $this->isTemporarilyDismissed();
     }
 
     /**

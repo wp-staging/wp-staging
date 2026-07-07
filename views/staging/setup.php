@@ -69,15 +69,15 @@ if (empty($stagingSitePath) || $stagingSitePath === '/') {
 $showWooSchedulerSettings  = $setupRenderer->hasWooSchedulerSettings($stagingSetup);
 $runtimeSummaryUpgradeLink = $isProLicenseActive ? '' : sprintf(
     ' <a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
-    esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')),
+    esc_url(Language::getUpgradeUrl('runtime_summary')),
     esc_html__('Upgrade', 'wp-staging')
 );
 
 
 $runtimeSummaryTooltips = [
     'emails' => [
-        'enabled'  => __('The staging site is allowed to send real emails.', 'wp-staging'),
-        'disabled' => __('Email sending is blocked on the staging site.', 'wp-staging'),
+        'enabled'  => __('The staging site is allowed to send real emails.', 'wp-staging') . $runtimeSummaryUpgradeLink,
+        'disabled' => __('Email sending is blocked on the staging site.', 'wp-staging') . $runtimeSummaryUpgradeLink,
     ],
     'cron'   => [
         'enabled'  => __('WordPress cron runs scheduled tasks such as publishing schedules, cleanup jobs, and plugin maintenance on staging.', 'wp-staging') . $runtimeSummaryUpgradeLink,

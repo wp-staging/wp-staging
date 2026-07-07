@@ -166,6 +166,65 @@ class Language
     }
 
     /**
+     * Build the localized wp-staging.com pricing-table URL for an in-plugin
+     * "upgrade to Pro" CTA.
+     *
+     * The language path is chosen from the current admin user's locale (falling
+     * back to the site locale), so users land on the pricing table in their own
+     * language. Locales the marketing site does not ship fall back to the
+     * English pricing table. When a $context is given it is added as utm_content
+     * — before the #pricing anchor — so the click is attributable in Matomo.
+     *
+     * @param string $context Optional utm_content slug identifying the link.
+     *                        Sanitized to [a-z0-9_]; anything else is stripped.
+     * @param string $source  utm_source for the click. Defaults to
+     *                        "wp-staging-free"; pass a Pro/licensing source for
+     *                        CTAs shown to licensed users. Sanitized to
+     *                        [a-z0-9_-]; empty input falls back to the default.
+     */
+    public static function getUpgradeUrl(string $context = '', string $source = 'wp-staging-free'): string
+    {
+        // wp-staging.com only ships these languages; every other locale (en,
+        // nl, ru, tr, zh, …) falls back to the English pricing table at "/".
+        $localePaths = [
+            'de' => '/de/',
+            'it' => '/it/',
+            'es' => '/es/',
+            'fr' => '/fr/',
+            'pt' => '/pt/',
+            'pl' => '/pl/',
+            'ja' => '/ja/',
+        ];
+
+        $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
+        $prefix = strtolower(substr($locale, 0, 2));
+        $path   = isset($localePaths[$prefix]) ? $localePaths[$prefix] : '/';
+
+        $base = 'https://wp-staging.com' . $path;
+
+        $context = preg_replace('/[^a-z0-9_]/', '', strtolower($context));
+        if ($context === '') {
+            return $base . '#pricing';
+        }
+
+        $source = preg_replace('/[^a-z0-9_-]/', '', strtolower($source));
+        if ($source === '') {
+            $source = 'wp-staging-free';
+        }
+
+        // Query string must precede the #pricing anchor for the link to both
+        // track and scroll to the pricing table.
+        $query = http_build_query([
+            'utm_source'   => $source,
+            'utm_medium'   => 'plugin',
+            'utm_campaign' => 'pro_upgrade',
+            'utm_content'  => $context,
+        ]);
+
+        return $base . '?' . $query . '#pricing';
+    }
+
+    /**
      * Rewrite the support URL for the current locale.
      * German locales use /de/support/ instead of /support/.
      */

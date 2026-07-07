@@ -11,7 +11,8 @@ use WPStaging\Staging\Service\StagingEngine;
  * @var string $selectorClass
  */
 
-$selectedEngine = empty($selectedEngine) ? WPStaging::make(StagingEngine::class)->getEngine() : $selectedEngine;
+$stagingEngine  = WPStaging::make(StagingEngine::class);
+$selectedEngine = empty($selectedEngine) ? $stagingEngine->getEngine() : $selectedEngine;
 $groupName      = empty($groupName) ? 'wpstg_staging_engine' : $groupName;
 $selectorClass  = empty($selectorClass) ? '' : $selectorClass;
 
@@ -32,12 +33,21 @@ $modalEngines = [
         'icon'        => '<path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>',
     ],
 ];
+
+if (!$stagingEngine->isNextGenEnabled()) {
+    $modalEngines[StagingEngine::ENGINE_NEXT_GEN]['disabled']    = true;
+    $modalEngines[StagingEngine::ENGINE_NEXT_GEN]['badge']       = esc_html__('Temporarily disabled', 'wp-staging');
+    $modalEngines[StagingEngine::ENGINE_NEXT_GEN]['badgeClass']  = 'wpstg-inline-flex wpstg-items-center wpstg-rounded-full wpstg-bg-slate-100 wpstg-px-[7px] wpstg-py-0.5 wpstg-text-[11px] wpstg-font-bold wpstg-leading-none wpstg-text-slate-700 dark:wpstg-bg-slate-800 dark:wpstg-text-slate-300';
+    $modalEngines[StagingEngine::ENGINE_NEXT_GEN]['description'] = esc_html__('Temporarily unavailable while we finish improvements. It will be back very soon.', 'wp-staging');
+    unset($modalEngines[StagingEngine::ENGINE_NEXT_GEN]['feature']);
+}
 ?>
 
 <section class="wpstg-staging-engine wpstg-modal-staging-engine-selector <?php echo esc_attr($selectorClass); ?>" data-selected-engine="<?php echo esc_attr($selectedEngine); ?>">
     <div class="wpstg-staging-engine-options wpstg-grid wpstg-grid-cols-1 md:wpstg-grid-cols-2 wpstg-gap-2" role="radiogroup" aria-label="<?php esc_attr_e('Copy method', 'wp-staging'); ?>">
         <?php foreach ($modalEngines as $engine => $engineData) :
             $isSelected       = $selectedEngine === $engine;
+            $isDisabled       = !empty($engineData['disabled']);
             $cardStateClasses = $isSelected
                 ? implode(' ', [
                     'wpstg-border-[#2563eb]',
@@ -61,8 +71,11 @@ $modalEngines = [
                     'dark:hover:wpstg-border-slate-500',
                     'dark:hover:wpstg-shadow-none',
                 ]);
+            $cardInteractionClasses = $isDisabled
+                ? 'wpstg-cursor-not-allowed wpstg-opacity-60'
+                : 'wpstg-cursor-pointer';
             ?>
-            <label class="wpstg-staging-engine-card <?php echo $isSelected ? 'is-selected' : ''; ?> wpstg-relative wpstg-flex wpstg-min-h-[92px] wpstg-cursor-pointer wpstg-flex-col wpstg-justify-start wpstg-rounded-lg wpstg-border wpstg-border-solid <?php echo esc_attr($cardStateClasses); ?> wpstg-px-4 wpstg-py-3 wpstg-transition wpstg-duration-150" data-engine="<?php echo esc_attr($engine); ?>">
+            <label class="wpstg-staging-engine-card <?php echo $isSelected ? 'is-selected' : ''; ?> <?php echo $isDisabled ? 'is-disabled' : ''; ?> wpstg-relative wpstg-flex wpstg-min-h-[92px] <?php echo esc_attr($cardInteractionClasses); ?> wpstg-flex-col wpstg-justify-start wpstg-rounded-lg wpstg-border wpstg-border-solid <?php echo esc_attr($cardStateClasses); ?> wpstg-px-4 wpstg-py-3 wpstg-transition wpstg-duration-150" data-engine="<?php echo esc_attr($engine); ?>"<?php echo $isDisabled ? ' aria-disabled="true"' : ''; ?>>
                 <span class="wpstg-flex wpstg-w-full wpstg-items-start wpstg-gap-3">
                     <span class="wpstg-flex wpstg-min-w-0 wpstg-flex-1 wpstg-flex-wrap wpstg-items-center wpstg-gap-2">
                         <svg class="wpstg-h-[18px] wpstg-w-[18px] wpstg-flex-shrink-0 <?php echo $isSelected ? 'wpstg-text-[#2563eb] dark:wpstg-text-blue-300' : 'wpstg-text-[#64748b] dark:wpstg-text-slate-400'; ?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?php echo $engineData['icon']; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped ?></svg>
@@ -78,6 +91,7 @@ $modalEngines = [
                             name="<?php echo esc_attr($groupName); ?>"
                             value="<?php echo esc_attr($engine); ?>"
                             <?php checked($isSelected); ?>
+                            <?php disabled($isDisabled); ?>
                         />
                     </span>
                 </span>

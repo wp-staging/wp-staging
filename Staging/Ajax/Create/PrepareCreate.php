@@ -62,7 +62,8 @@ class PrepareCreate extends AbstractAjaxPrepare
             throw new \UnexpectedValueException("Invalid request. Missing 'cloneId'.");
         }
 
-        $data['name'] = empty($data['name']) ? $this->generateStagingSiteName($data['cloneId']) : sanitize_text_field($data['name']);
+        $data['name']          = empty($data['name']) ? $this->generateStagingSiteName($data['cloneId']) : sanitize_text_field($data['name']);
+        $data['directoryName'] = $this->sanitizeDirectoryName($data['name'], $data['cloneId']);
 
         // Included/Excluded tables
         $data['excludedTables'] = array_map('sanitize_text_field', $data['excludedTables']);
@@ -235,6 +236,24 @@ class PrepareCreate extends AbstractAjaxPrepare
         return WPStaging::make(Sites::class)->generateStagingSiteName($cloneId);
     }
 
+    /**
+     * Convert the site name into the directory/url slug shown in the create modal preview.
+     *
+     * @param string $name
+     * @param string $cloneId
+     * @return string
+     */
+    protected function sanitizeDirectoryName(string $name, string $cloneId): string
+    {
+        $name          = preg_replace('#[^\w\s-]+#', '', $name);
+        $directoryName = trim(WPStaging::make(Sites::class)->sanitizeDirectoryName($name), '-');
+        if (empty($directoryName)) {
+            return $this->generateStagingSiteName($cloneId);
+        }
+
+        return $directoryName;
+    }
+
     protected function prepareStagingSiteDto()
     {
         $this->jobDataDto->setIsExternalDatabase(false);
@@ -243,6 +262,7 @@ class PrepareCreate extends AbstractAjaxPrepare
         $stagingSite = new StagingSiteDto();
         $stagingSite->setCloneId($this->jobDataDto->getCloneId());
         $stagingSite->setCloneName($this->jobDataDto->getName());
+        $stagingSite->setDirectoryName($this->jobDataDto->getDirectoryName());
         $stagingSite->setPath($this->jobDataDto->getStagingSitePath());
         $stagingSite->setUrl($this->jobDataDto->getStagingSiteUrl());
         $stagingSite->setStatus(StagingSiteDto::STATUS_UNFINISHED_BROKEN);
@@ -258,11 +278,11 @@ class PrepareCreate extends AbstractAjaxPrepare
     {
         $absPath = trailingslashit($this->filesystem->normalizePath($this->directory->getAbsPath()));
 
-        return $absPath . $data['name'];
+        return $absPath . $data['directoryName'];
     }
 
     protected function getDestinationUrl(array $data): string
     {
-        return trailingslashit(home_url()) . $data['name'];
+        return trailingslashit(home_url()) . $data['directoryName'];
     }
 }

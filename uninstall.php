@@ -341,7 +341,11 @@ class Uninstall
             'wpstg_send_email_as_html',
             'wpstg_cli_notice_hidden_forever',
             'wpstg_cli_dock_cta_shown',
+            'wpstg_cli_notice_dismissed_until',
             'wpstg_completed_upgrades',
+            'wpstg_next_gen_engine_notice',
+            'wpstg_staging_engine_preference',
+            'wpstg_staging_engine_preferences',
         ];
     }
 

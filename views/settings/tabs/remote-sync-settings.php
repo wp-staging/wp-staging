@@ -49,7 +49,7 @@ use WPStaging\Framework\Language\Language;
             <p class="wpstg-text-body wpstg-text-sm wpstg-m-0 wpstg-mb-4">
                 <?php esc_html_e('Remote Sync is available with a WP Staging Developer or Agency plan.', 'wp-staging'); ?>
             </p>
-            <a href="<?php echo esc_url(Language::localizePricingUrl('https://wp-staging.com/#pricing')); ?>" target="_blank" rel="noopener noreferrer" class="wpstg-btn wpstg-btn-md wpstg-btn-primary wpstg-no-underline">
+            <a href="<?php echo esc_url(Language::getUpgradeUrl('remote_sync')); ?>" target="_blank" rel="noopener noreferrer" class="wpstg-btn wpstg-btn-md wpstg-btn-primary wpstg-no-underline">
                 <?php esc_html_e('Unlock Remote Sync', 'wp-staging'); ?>
                 <svg class="wpstg-btn-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
