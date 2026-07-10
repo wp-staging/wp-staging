@@ -12,10 +12,10 @@ You can find the latest version of this this document at
 
 | Severity     | Reward    |
 | ------------ | ----------|
-| Critical     | $800      |
-| High         | $400      |
-| Medium       | $200      |
-| Low          | $100      |
+| Critical     | $400      |
+| High         | $200      |
+| Medium       | $100      |
+| Low          | -         |
 | Informative  | -         |
 
 The severity is based on the [CVSS (Common Vulnerability Scoring System)](https://www.first.org/cvss/calculator/3.0). 
