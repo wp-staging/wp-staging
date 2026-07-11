@@ -75,6 +75,8 @@ support [at] wp-staging.com and briefly describe what you plan to test.
 - Write detailed reports and include step-by-step instructions that we can
   follow to reproduce the issue. Reports that cannot be reproduced from the
   information provided do not qualify for a reward.
+- Reports that appear machine-generated and were not manually verified will
+  be closed without a reward.
 - Focus each report on a single vulnerability, unless demonstrating the impact
   requires chaining several vulnerabilities.
 - For duplicate submissions, only the first reproducible report we receive is
