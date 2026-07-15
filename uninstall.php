@@ -431,6 +431,7 @@ class Uninstall
             'wpstg.backup.schedules.slack_report_sent',
             'wpstg_email_notification_access_token',
             'wpstg.directory_listing.last_checked',
+            'wpstg_push_size_cache',
         ];
     }
 

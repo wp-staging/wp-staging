@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.9.2
+Stable tag: 4.9.3
 Requires PHP: 7.0
 
 WordPress backup, restore & migration in minutes. Clone or duplicate your site and test updates safely on a staging copy. 100% unit-tested.
@@ -18,7 +18,7 @@ WordPress backup, restore & migration in minutes. Clone or duplicate your site a
 
 WP STAGING is the all-in-one WordPress backup, restore, staging, cloning, and migration plugin, built for professional workflows with 100% unit-tested code, thousands of automated tests, and extensive end-to-end testing across supported PHP versions.
 
-Create a full backup or an exact clone or copy of your website in minutes. Use it to duplicate your site, test plugin and theme updates safely, restore your site when needed, move or migrate WordPress to another server, transfer your site to a new host, or build a staging copy before making changes.
+Create a full backup or an exact clone or copy of your website in minutes. Use it to duplicate your site, test plugin and theme updates safely, restore your site when needed, move or migrate WordPress to another server, transfer your site to a new host, or build a staging copy before making changes. WP STAGING also works as a WordPress duplicator, so you do not need a separate duplicator plugin to copy your website.
 
 WP STAGING reliably backs up, clones, and migrates WooCommerce stores too, including orders, products, and customer data.
 
@@ -94,6 +94,10 @@ If you want a guided step-by-step walkthrough, see:
 = How do I duplicate or clone a WordPress site? =
 
 WP STAGING works as a WordPress duplicator: it can duplicate or clone a WordPress site in a few clicks and create an exact copy of your site for testing, development, or as a safety net. Duplication runs in the background, so you can duplicate even large WordPress sites on shared hosting. If you have used a plugin like Duplicator before, WP STAGING covers the same clone and copy workflows and adds backup, restore, and staging.
+
+= Is WP STAGING a good Duplicator alternative? =
+
+Yes. If you are looking for a Duplicator alternative, WP STAGING covers the same use cases: duplicate a WordPress site, create a full-site copy, and move or transfer it to another host. In addition to the duplicator workflow, you get one-click staging sites, scheduled backups, and restore in the same plugin.
 
 = Why do I need a backup plugin at all? =
 
@@ -252,7 +256,7 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 = Installation via admin plugin search =
 
 1. Go to Plugins > Add new. Select "Author" from the dropdown near search input.
-2. Search for "WP STAGING".
+2. Search for "WP STAGING". Searching for "WPStaging" in one word works as well.
 3. Find "WP STAGING - WordPress Backup, Restore & Migration" and click the "Install Now" button.
 4. Activate the plugin.
 5. The plugin should be shown below settings menu.
@@ -279,31 +283,16 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.9.2 =
-* Enh: Add accessible labels to Pro upgrade badges and buttons. #5337
-* Enh: Improve the first-time staging experience by removing the redundant "Create Staging Site" button, sharing a single CTA between the listing and empty state. #5266
-* Enh: Route every in-plugin upgrade link to the wp-staging.com pricing table, localized to the current admin language (de, it, es, fr, pt, pl, ja), with unique UTM tags so each click is identifiable in analytics. #5337
-* Enh: Standardize Pro badge wording across the plugin — small locked controls now read "Pro", section badges "Available in Pro", and the upsell button "Upgrade to Pro". #5337
-* Enh: Suppress the dismissed CLI notice server-side instead of via localStorage, so it no longer briefly flashes before being hidden. #5266
-* Enh: Turn the Pro feature badges in the Create Staging Site modal and other upgrade prompts into links to the pricing table. #5337
-* Fix: 404 error when accessing a staging site created with a name containing spaces or special characters. #5321
-* Fix: A backup no longer fails when it hits a file outside the standard WordPress folders. The file is skipped and noted in the log instead of aborting the whole backup. #5325
-* Fix: Allow staging site names up to 100 characters while keeping the generated directory name capped at 16 characters. #5321
-* Fix: Broken auto login to the staging site when the staging site name contains spaces or special characters. #5321
-* Fix: Fatal error on the staging site caused by an invalid destination path when the site name contains spaces or special characters. #5321
-* Fix: Improve remote backup downloads when the remote file size cannot be detected. (Pro) #5222
-* Fix: Prevent backup restore from writing files outside the restore folder. #5299
-* Fix: Prevent site fatal error when plugin files are partially updated or missing during an upgrade. #5309
-* Fix: Prevent the loading bar from staying visible after a successful backup extraction, and improve the “Show logs” button styling. #5306
-* Fix: Prevent unsafe push when staging and production WordPress versions are incompatible. (Pro) #5286
-* Fix: Remove the security alerts popup from the welcome page. #5336
-* Fix: Sanitize the staging site directory name and URL so spaces and special characters no longer produce a broken path. #5321
-* Fix: Stop remote cloud upload immediately when user cancels instead of continuing in background. (Pro) #3891
-* Fix: Temporarily disable the Next-Gen staging engine to prevent staging-site data corruption (postmeta keys). Users are automatically reverted to the Classic engine and warned when they may have staging sites created with the Next-Gen engine. #5346
-* Fix: Temporary folders left by the restore tool are no longer included in backups when "Backup Other WP Root Folders" is enabled. (Pro) #5158
-*  Tweak: Refresh backup content icons and improve their light and dark mode styling. #5315
-* Dev: Avoid lowering PHP memory limit when loading the restore tool as a library. (Pro) #5345
-* Dev: Streamline the release pipeline's test phase to avoid a long-running idle CI job that wasted runner time on every release. #5142
+= 4.9.3 =
+* Fix: Estimated size in the staging site setup now reflects the selected database tables and the selected files and folders. #5253
+* Fix: List database tables in Push UI for staging sites connected to an external database. #5376
+* Fix: Prevent Remote Sync from failing when optional sync selections are omitted. (Pro) #5329
+* Fix: Prevent a PHP notice about early translation loading when cron schedules are registered. #5318
+* Fix: Prevent a false "core folder excluded" warning in the Create Staging Site modal when staging sites already exist. #5352
+* Fix: Prevent missing optimizer settings from triggering warnings. #5356
+* Fix: Show an upgrade prompt instead of "No backups found" in the CLI installer when the backup list is unavailable. #5370
+* Fix: Prevent the Optimizer mu-plugin from persisting its filtered active_plugins list, which could mass-deactivate every non WP STAGING plugin when core deactivates or activates a plugin during a WP STAGING AJAX request. #5371
+* Dev: Ensure the source Developer license for every Remote Sync E2E test in the shared before-hook, so specs that authenticate against the source no longer fail intermittently with a "Developer plan required" error. #5360
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

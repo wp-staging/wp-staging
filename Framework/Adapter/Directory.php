@@ -51,6 +51,9 @@ class Directory implements DirectoryInterface
     /** @var string */
     const FILTER_GET_UPLOAD_DIR = 'wpstg_get_upload_dir';
 
+    /** Default "bigger than" file size limit in MB, applied by the copy and the size estimate. */
+    const DEFAULT_MAX_FILE_SIZE_MB = 8;
+
     /** @var string|null The directory that holds the uploads, usually wp-content/uploads */
     protected $uploadDir;
 
@@ -319,6 +322,68 @@ class Directory implements DirectoryInterface
         $this->pluginUploadsDirectory = trailingslashit($pluginUploadsDir);
 
         return $this->pluginUploadsDirectory;
+    }
+
+    /**
+     * Directories always excluded from staging and push operations, regardless of user selection.
+     *
+     * @param bool $applyFilter When true 'Directory::FILTER_CLONE_EXCLUDED_FOLDERS' filter is applied.
+     * @return string[]
+     */
+    public function getDefaultExcludedDirectories(bool $applyFilter = true): array
+    {
+        $backupUploadsDirPostfix = '.wpstg_backup';
+
+        $dirs = array_merge($this->getWpStagingDataDirectories(), [
+            trailingslashit(WP_CONTENT_DIR) . 'cache',
+            untrailingslashit($this->getUploadsDirectory()) . $backupUploadsDirPostfix,
+            trailingslashit(WP_CONTENT_DIR) . 'uploads' . $backupUploadsDirPostfix,
+            trailingslashit(WP_CONTENT_DIR) . 'ai1wm-backups',
+            $this->getUploadsDirectory() . 'wio_backup',
+            $this->getStagingSiteDirectoryInsideWpcontent(false),
+        ]);
+
+        if (!$applyFilter) {
+            return $dirs;
+        }
+
+        $dirs = (array) apply_filters(self::FILTER_CLONE_EXCLUDED_FOLDERS, $dirs);
+
+        return $this->ensureWpStagingDataDirectoriesExcluded($dirs);
+    }
+
+    /**
+     * WP STAGING data directories that cloning and estimates must never include.
+     *
+     * @return string[]
+     */
+    public function getWpStagingDataDirectories(): array
+    {
+        return [
+            $this->getPluginWpContentDirectory(),
+            $this->getPluginUploadsDirectory(),
+        ];
+    }
+
+    /**
+     * @param string[] $directories
+     * @return string[]
+     */
+    public function ensureWpStagingDataDirectoriesExcluded(array $directories): array
+    {
+        return array_values(array_unique(array_merge($directories, $this->getWpStagingDataDirectories())));
+    }
+
+    /**
+     * File extensions that staging and push never copy.
+     * Size estimates must skip them too, so they match the real copy.
+     *
+     * @param string[] $additionalExtensions Extra extensions to add to the list.
+     * @return string[]
+     */
+    public function getExcludedFileExtensions(array $additionalExtensions = []): array
+    {
+        return array_merge($additionalExtensions, ['log', 'tmp', 'wpstg']);
     }
 
     /**

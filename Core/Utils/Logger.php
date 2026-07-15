@@ -499,7 +499,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $this->add(sprintf('- File Copy Limit : %s', ($globalSettings->fileLimit ?? 'Not Set')), Logger::TYPE_INFO_SUB);
         $this->add(sprintf('- Maximum File Size : %s', ($globalSettings->maxFileSize ?? 'Not Set')), Logger::TYPE_INFO_SUB);
         $this->add(sprintf('- File Copy Batch Size : %s', ($globalSettings->batchSize ?? 'Not Set')), Logger::TYPE_INFO_SUB);
-        $this->add(sprintf('- Optimizer Active : %s', ($globalSettings->optimizer ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        $isOptimizerActive = isset($globalSettings->optimizer) ? (bool)$globalSettings->optimizer : false;
+        $this->add(sprintf('- Optimizer Active : %s', ($isOptimizerActive ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
     }
 
     /**
