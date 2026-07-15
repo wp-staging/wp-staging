@@ -144,7 +144,9 @@ class DirectoryScanner
      */
     public function setStagingSetup(AbstractStagingSetup $stagingSetup)
     {
-        $this->stagingSetup = $stagingSetup;
+        $this->stagingSetup        = $stagingSetup;
+        $this->excludedDirectories = $stagingSetup->getStagingSiteDto()->getExcludedDirectories();
+        $this->extraDirectories    = $stagingSetup->getStagingSiteDto()->getExtraDirectories();
     }
 
     /**
@@ -227,6 +229,10 @@ class DirectoryScanner
 
             if (strpos($directoryPath, 'wp-content') !== false && is_link($directoryPath)) {
                 $directoryNode->setPath(realpath($directory->getPathname()));
+            } elseif (is_link($directoryPath)) {
+                // Keep the symlink's own location, not its target: a folder linking into
+                // wp-content would otherwise be treated as WP core and pre-selected.
+                $directoryNode->setPath(wp_normalize_path($directoryPath));
             } else {
                 $directoryNode->setPath(trailingslashit($basePath) . ltrim($path, '/'));
             }
@@ -363,6 +369,11 @@ class DirectoryScanner
             $shouldBeChecked = true;
             $isLink          = true;
             $relPath         = 'wp-content';
+        }
+
+        if ($this->isMandatoryExcludedDirectory($path)) {
+            $isDisabled      = true;
+            $shouldBeChecked = false;
         }
 
         // A still-navigatable folder with no subdirectories is a leaf: there is
@@ -509,6 +520,30 @@ class DirectoryScanner
     protected function isPathInDirectories(string $path, array $directories, $basePath = null): bool
     {
         return $this->pathChecker->isPathInPathsList($path, $directories, true, $basePath);
+    }
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    protected function isMandatoryExcludedDirectory(string $path): bool
+    {
+        $path = untrailingslashit(wp_normalize_path($path));
+        foreach ($this->getMandatoryExcludedDirectories() as $excludedDirectory) {
+            if ($path === untrailingslashit(wp_normalize_path($excludedDirectory))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function getMandatoryExcludedDirectories(): array
+    {
+        return $this->directory->getWpStagingDataDirectories();
     }
 
     protected function isWpContentOutsideAbspath(): bool

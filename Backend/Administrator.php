@@ -174,7 +174,6 @@ class Administrator
         add_action("wp_ajax_wpstg_hide_later", [$this, "ajaxHideLaterRating"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_hide_beta", [$this, "ajaxHideBeta"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_logs", [$this, "ajaxLogs"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action("wp_ajax_wpstg_check_disk_space", [$this, "ajaxCheckFreeSpace"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_send_report", [$this, "ajaxSendReport"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_enable_staging_cloning", [$this, "ajaxEnableStagingCloning"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -971,25 +970,6 @@ class Administrator
 
         $logs = WPStaging::make(Logs::class);
         wp_send_json($logs->start());
-    }
-
-    /**
-     * Ajax Checks Free Disk Space
-     */
-    public function ajaxCheckFreeSpace()
-    {
-        if (!$this->isAuthenticated()) {
-            return false;
-        }
-
-        $excludedDirectories = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
-        $extraDirectories    = isset($_POST["extraDirectories"]) ? $this->sanitize->sanitizeString($_POST["extraDirectories"]) : '';
-        $isUploadsSymlinked  = isset($_POST["isUploadsSymlinked"]) && $this->sanitize->sanitizeBool($_POST["isUploadsSymlinked"]);
-
-        $scan = WPStaging::make(Scan::class);
-        $scan->setIsUploadsSymlinked($isUploadsSymlinked);
-
-        return $scan->hasFreeDiskSpace($excludedDirectories, $extraDirectories);
     }
 
     /**

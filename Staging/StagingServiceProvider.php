@@ -12,12 +12,14 @@ use WPStaging\Staging\Ajax\Create;
 use WPStaging\Staging\Ajax\Create\PrepareCreate;
 use WPStaging\Staging\Ajax\Delete;
 use WPStaging\Staging\Ajax\Delete\PrepareDelete;
+use WPStaging\Staging\Ajax\DirectoryChildren;
 use WPStaging\Staging\Ajax\Listing;
 use WPStaging\Staging\Ajax\Delete\DeleteConfirm;
 use WPStaging\Staging\Ajax\Repair;
 use WPStaging\Staging\Ajax\Reset;
 use WPStaging\Staging\Ajax\Reset\PrepareReset;
 use WPStaging\Staging\Ajax\Setup;
+use WPStaging\Staging\Ajax\SizeCalculator;
 use WPStaging\Staging\Ajax\Update;
 use WPStaging\Staging\Ajax\Update\PrepareUpdate;
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
@@ -28,6 +30,9 @@ use WPStaging\Staging\Jobs\StagingSiteReset;
 use WPStaging\Staging\Jobs\StagingSiteUpdate;
 use WPStaging\Staging\Tasks\StagingSite\CleanupStagingTablesTask;
 
+/**
+ * Registers staging services and AJAX endpoints.
+ */
 class StagingServiceProvider extends FeatureServiceProvider
 {
     protected function registerClasses()
@@ -73,6 +78,8 @@ class StagingServiceProvider extends FeatureServiceProvider
     protected function enqueueStagingAjaxListeners()
     {
         add_action('wp_ajax_wpstg--staging-site--setup', $this->container->callback(Setup::class, 'ajaxSetup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--staging-site--size', $this->container->callback(SizeCalculator::class, 'ajaxSize')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--staging-site--directory-children', $this->container->callback(DirectoryChildren::class, 'ajaxRender')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         if (!WPStaging::isBasic()) {
             return;

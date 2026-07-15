@@ -4,18 +4,13 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use DirectoryIterator;
 use Exception;
-use RuntimeException;
 use UnexpectedValueException;
 use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Filesystem\DiskWriteCheck;
-use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
-use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -64,11 +59,6 @@ class Scan extends Job
     protected $dirAdapter;
 
     /**
-     * @var DiskWriteCheck
-     */
-    private $diskWriteCheck;
-
-    /**
      * @var Sanitize
      */
     private $sanitize;
@@ -105,9 +95,6 @@ class Scan extends Job
     /** @var string */
     protected $wpContentPath = WP_CONTENT_DIR;
 
-    /** @var bool */
-    private $isUploadsSymlinked;
-
     /**
      * Job constructor.
      * @throws Exception
@@ -126,7 +113,6 @@ class Scan extends Job
         $this->pathAdapter    = WPStaging::make(PathIdentifier::class);
         $this->pathChecker    = WPStaging::make(PathChecker::class);
         $this->dirAdapter     = WPStaging::make(Directory::class);
-        $this->diskWriteCheck = WPStaging::make(DiskWriteCheck::class);
         $this->sanitize       = WPStaging::make(Sanitize::class);
         $this->templateEngine = WPStaging::make(TemplateEngine::class);
         parent::__construct();
@@ -352,62 +338,6 @@ class Scan extends Job
         }
 
         return $output;
-    }
-
-    /**
-     * Checks if there is enough free disk space to create staging site according to selected directories
-     * Returns null when can't run disk_free_space function one way or another
-     * @param string $excludedDirectories
-     * @param string $extraDirectories
-     *
-     * @return bool|null
-     */
-    public function hasFreeDiskSpace(string $excludedDirectories, string $extraDirectories)
-    {
-        $dirUtils            = new WpDefaultDirectories();
-        $selectedDirectories = $dirUtils->getWpCoreDirectories();
-        $excludedDirectories = $dirUtils->getExcludedDirectories($excludedDirectories);
-
-        if ($this->isUploadsSymlinked) {
-            $uploadDirectory = rtrim(str_replace($this->absPath, PathIdentifier::IDENTIFIER_ABSPATH, $this->dirAdapter->getMainSiteUploadsDirectory()), '/');
-            $excludedDirectories[] = $uploadDirectory;
-        }
-
-        $size = 0;
-        // Scan WP Root path for size (only files)
-        $size += $this->getDirectorySizeExcludingSubdirs($this->absPath);
-        // Scan selected directories for size (wp-core)
-        foreach ($selectedDirectories as $directory) {
-            if ($this->isPathInDirectories($directory, $excludedDirectories)) {
-                continue;
-            }
-
-            $size += $this->getDirectorySizeInclSubdirs($directory, $excludedDirectories);
-        }
-
-        if (!empty($extraDirectories) && $extraDirectories !== '') {
-            $extraDirectories = wpstg_urldecode(explode(ScanConst::DIRECTORIES_SEPARATOR, $extraDirectories));
-            foreach ($extraDirectories as $directory) {
-                $size += $this->getDirectorySizeInclSubdirs($this->absPath . $directory, $excludedDirectories);
-            }
-        }
-
-        $errorMessage = null;
-        try {
-            $this->diskWriteCheck->checkPathCanStoreEnoughBytes($this->absPath, $size);
-        } catch (RuntimeException $ex) {
-            $errorMessage = $ex->getMessage();
-        } catch (DiskNotWritableException $ex) {
-            $errorMessage = $ex->getMessage();
-        }
-
-        $data = [
-            'requiredSpace' => $this->utilsMath->formatSize($size),
-            'errorMessage'  => $errorMessage,
-        ];
-
-        echo json_encode($data);
-        die();
     }
 
     /**
@@ -647,46 +577,6 @@ class Scan extends Job
     }
 
     /**
-     * Get total size of a directory including all its subdirectories
-     * @param string $dir
-     * @param array $excludedDirectories
-     * @return int
-     */
-    protected function getDirectorySizeInclSubdirs($dir, $excludedDirectories)
-    {
-        $size = 0;
-        foreach (glob(rtrim($dir, '/') . '/*', GLOB_NOSORT) as $each) {
-            if (is_file($each)) {
-                $size += filesize($each);
-                continue;
-            }
-
-            if ($this->isPathInDirectories($each, $excludedDirectories)) {
-                continue;
-            }
-
-            $size += $this->getDirectorySizeInclSubdirs($each, $excludedDirectories);
-        }
-
-        return $size;
-    }
-
-    /**
-     * Get total size of a directory excluding all its subdirectories
-     * @param string $dir
-     * @return int
-     */
-    protected function getDirectorySizeExcludingSubdirs($dir)
-    {
-        $size = 0;
-        foreach (glob(rtrim($dir, '/') . '/*', GLOB_NOSORT) as $each) {
-            $size += is_file($each) ? filesize($each) : 0;
-        }
-
-        return $size;
-    }
-
-    /**
      * Is the path present is given list of directories
      * @param string  $path
      * @param array   $directories List of directories relative to ABSPATH with leading slash
@@ -789,14 +679,5 @@ class Scan extends Job
         }
 
         return wp_normalize_path(realpath($targetPath));
-    }
-
-    /**
-     * @param bool $isUploadsSymlinked
-     * @return void
-     */
-    public function setIsUploadsSymlinked(bool $isUploadsSymlinked)
-    {
-        $this->isUploadsSymlinked = $isUploadsSymlinked;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CLI Backup List - Partial template for backup selection in CLI modal step 3
  *
@@ -7,9 +8,21 @@
  *
  * @var array  $backups    Array of available backups
  * @var string $urlAssets  URL to assets directory
+ * @var bool $isDeveloperOrHigher
  */
+
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
+
+$hasListableBackups = false;
+foreach ($backups as $backup) {
+    if (!$backup->isCorrupt && !$backup->isLegacy) {
+        $hasListableBackups = true;
+        break;
+    }
+}
 ?>
-<?php if (!empty($backups)) : ?>
+<?php if ($hasListableBackups) : ?>
     <div class="wpstg-rounded-lg wpstg-border wpstg-border-solid wpstg-border-gray-300 wpstg-bg-white dark:wpstg-border-gray-700 dark:wpstg-bg-dark-boxes">
         <table class="wpstg-w-full wpstg-text-sm wpstg-cli-backup-table-header">
             <thead>
@@ -122,7 +135,7 @@
         </table>
         </div>
     </div>
-<?php else : ?>
+<?php elseif ($isDeveloperOrHigher) : ?>
     <div class="wpstg-rounded-lg wpstg-border wpstg-border-solid wpstg-border-red-200 wpstg-bg-red-50 wpstg-p-4 dark:wpstg-bg-red-950 dark:wpstg-border-red-800">
         <div class="wpstg-flex wpstg-items-start wpstg-gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="wpstg-text-red-500 dark:wpstg-text-red-400 wpstg-flex-shrink-0 wpstg-mt-0.5">
@@ -132,5 +145,19 @@
             </svg>
             <p class="wpstg-text-sm wpstg-text-red-700 dark:wpstg-text-red-300 wpstg-m-0"><?php echo esc_html__('No backups found. Create a backup first, then come back here to get the command to restore the backup on your new local Docker site.', 'wp-staging'); ?></p>
         </div>
+    </div>
+<?php elseif (WPStaging::isBasic()) : ?>
+    <div class="wpstg-cli-gating-notice">
+        <span><?php echo esc_html__('Running this command requires a Developer or Agency license.', 'wp-staging'); ?></span>
+        <a href="<?php echo esc_url(Language::getUpgradeUrl('cli_pricing')); ?>" target="_blank" rel="noreferrer noopener">
+            <?php echo esc_html__('View pricing', 'wp-staging'); ?>
+        </a>
+    </div>
+<?php else : ?>
+    <div class="wpstg-cli-gating-notice">
+        <span><?php echo esc_html__('Running this command requires a Developer or Agency license.', 'wp-staging'); ?></span>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+            <?php echo esc_html__('Upgrade', 'wp-staging'); ?>
+        </a>
     </div>
 <?php endif; ?>

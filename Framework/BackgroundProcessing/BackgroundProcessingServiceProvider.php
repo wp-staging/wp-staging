@@ -79,13 +79,17 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
         // For concurrency purposes, have one single instance of the Queue processor around.
         $this->container->singleton(QueueProcessor::class, QueueProcessor::class);
 
-        /** @var Cron $cron */
-        $cron = $this->container->make(Cron::class);
-
-        $this->registerFeatureDetection($cron);
-        $this->scheduleQueueMaintenance($cron);
-        $this->setupQueueProcessingEntrypoints($cron);
+        $this->registerFeatureDetection();
+        $this->scheduleQueueMaintenance();
+        $this->setupQueueProcessingEntrypoints();
         $this->setupStallDetector();
+
+        // Defer to init so translating the schedule labels doesn't happen too early.
+        if (did_action('init')) {
+            $this->scheduleStaticCronEvents();
+        } else {
+            add_action('init', [$this, 'scheduleStaticCronEvents']);
+        }
 
         return true;
     }
@@ -109,6 +113,31 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
     }
 
     /**
+     * Schedules the plugin's recurring background-processing Cron events.
+     * @return void
+     */
+    public function scheduleStaticCronEvents()
+    {
+        /** @var Cron $cron */
+        $cron = $this->container->make(Cron::class);
+
+        // Once a day fire an action to run the Queue maintenance routines.
+        if (!wp_next_scheduled(self::ACTION_QUEUE_MAINTAIN)) {
+            wp_schedule_event($cron->getFirstRunTimestamp(Cron::DAILY), Cron::DAILY, self::ACTION_QUEUE_MAINTAIN);
+        }
+
+        // Once every hour (kinda, it's Cron), fire the queue processing action.
+        if (!wp_next_scheduled(QueueProcessor::ACTION_QUEUE_PROCESS)) {
+            wp_schedule_event($cron->getFirstRunTimestamp(Cron::HOURLY), Cron::HOURLY, QueueProcessor::ACTION_QUEUE_PROCESS);
+        }
+
+        // Once a week re-run the AJAX support feature detection.
+        if (!wp_next_scheduled(FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION)) {
+            wp_schedule_event($cron->getFirstRunTimestamp(Cron::WEEKLY), Cron::WEEKLY, FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION);
+        }
+    }
+
+    /**
      * Schedules the Queue maintenance by means of the Cron. The Cron is not
      * a really reliable method to execute timely tasks in WordPress, especially
      * if not powered by a real cron, but it's fine for addressing the maintenance
@@ -117,16 +146,10 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      *
      * @since TBD
      *
-     * @param Cron $cron
      * @return void
      */
-    private function scheduleQueueMaintenance(Cron $cron)
+    private function scheduleQueueMaintenance()
     {
-        // Once a day fire an action to run the Queue maintenance routines.
-        if (!wp_next_scheduled(self::ACTION_QUEUE_MAINTAIN)) {
-            wp_schedule_event($cron->getFirstRunTimestamp(Cron::DAILY), Cron::DAILY, self::ACTION_QUEUE_MAINTAIN);
-        }
-
         // When the action fires, run the maintenance routines.
         add_action(self::ACTION_QUEUE_MAINTAIN, [$this, 'runQueueMaintenance']); // phpcs:ignore WPStaging.Security.FirstArgNotAString
     }
@@ -141,10 +164,9 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      * This is why we rely on side-processes that we can trigger while the main PHP process
      * that is handling the user interaction with the site stays fast and snappy.
      *
-     * @param Cron $cron
      * @return void The method does not return any value.
      */
-    private function setupQueueProcessingEntrypoints(Cron $cron)
+    private function setupQueueProcessingEntrypoints()
     {
         /**
          * This is the core of how the Queue works: when the `wpstg_queue_process`, or the AJAX version of it, fires, we'll process some
@@ -162,16 +184,6 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
             if (!has_action($wpAction, $queueProcessorProcess)) {
                 add_action($wpAction, $queueProcessorProcess); // phpcs:ignore WPStaging.Security.FirstArgNotAString -- Queue action callbacks should not take input from request.
             }
-        }
-
-        /*
-         * The first way we trigger the action that will make the Queue Processor process Actions is a Cron schedule.
-         * With full-knowledge of the fact that it will not be reliable, we still try to get some work done
-         * on Cron calls.
-         * Once every hour (kinda, it's Cron), fire the `wpstg_queue_process` action.
-         */
-        if (!wp_next_scheduled(QueueProcessor::ACTION_QUEUE_PROCESS)) {
-            wp_schedule_event($cron->getFirstRunTimestamp(Cron::HOURLY), Cron::HOURLY, QueueProcessor::ACTION_QUEUE_PROCESS);
         }
 
         /*
@@ -305,21 +317,15 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      * feature detection.
      *
      * @since TBD
-     * @param Cron $cron
      * @return void
      */
-    private function registerFeatureDetection(Cron $cron)
+    private function registerFeatureDetection()
     {
         // Register the method that will handle the AJAX check.
         $updateOption = $this->container->callback(FeatureDetection::class, 'updateAjaxTestOption');
         // Hook on authenticated AJAX endpoint to handle the check.
         add_action('wp_ajax_' . FeatureDetection::ACTION_AJAX_TEST, $updateOption); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Public
         add_action('wp_ajax_nopriv_' . FeatureDetection::ACTION_AJAX_TEST, $updateOption); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Public
-
-        // Once a week re-run the check.
-        if (!wp_next_scheduled(FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION)) {
-            wp_schedule_event($cron->getFirstRunTimestamp(Cron::WEEKLY), Cron::WEEKLY, FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION);
-        }
 
         $runAjaxFeatureTest = $this->container->callback(FeatureDetection::class, 'runAjaxFeatureTest');
         add_action(FeatureDetection::ACTION_AJAX_SUPPORT_FEATURE_DETECTION, $runAjaxFeatureTest);

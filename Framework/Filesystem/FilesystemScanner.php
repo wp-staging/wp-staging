@@ -18,6 +18,8 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class FilesystemScanner extends AbstractFilesystemScanner
 {
+    use LegacyFileRulesTrait;
+
     /** @var SeekableQueueInterface */
     protected $filesystemQueue;
 
@@ -623,29 +625,5 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $pathParts = explode(DIRECTORY_SEPARATOR, $path);
 
         return in_array('cache', $pathParts);
-    }
-
-    private function ruleMatch(string $rule, string $name): bool
-    {
-        $rule = trim($rule);
-        if (strpos($rule, ' ') === false) {
-            // Malformed rule, treat as no match
-            return false;
-        }
-
-        list($ruleType, $ruleValue) = explode(' ', $rule, 2);
-        switch ($ruleType) {
-            case 'name_contains':
-                return strpos($name, $ruleValue) !== false;
-            case 'name_begins_with':
-                return strpos($name, $ruleValue) === 0;
-            case 'name_ends_with':
-                return substr($name, -strlen($ruleValue)) === $ruleValue;
-            case 'name_exact_matches':
-                return $name === $ruleValue;
-            default:
-                // Unknown rule type, treat as no match
-                return false;
-        }
     }
 }

@@ -421,9 +421,11 @@ if (!$isDeveloperOrHigher) {
                     <h4 class="wpstg-cli-step-title">
                         <?php echo esc_html__('Step 3: Import & Restore Backup', 'wp-staging'); ?>
                     </h4>
-                    <p class="wpstg-cli-step-note">
-                        <?php echo esc_html__('Select a backup to restore on your local Docker site. Then run the commands below in your terminal.', 'wp-staging'); ?>
-                    </p>
+                    <?php if ($licensingState === 'active') : ?>
+                        <p class="wpstg-cli-step-note">
+                            <?php echo esc_html__('Select a backup to restore on your local Docker site. Then run the commands below in your terminal.', 'wp-staging'); ?>
+                        </p>
+                    <?php endif; ?>
 
                     <!-- Backup Selection List -->
                     <div id="wpstg-cli-backup-list-container">

@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.6.0');
+    define('WPSTG_OPTIMIZER_VERSION', '1.6.1');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -145,6 +145,25 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
     if (is_multisite()) {
         add_filter('site_option_active_sitewide_plugins', 'wpstgExcludeSitePlugins');
     }
+}
+
+if (!function_exists('wpstgDisableActivePluginsFilterAfterLoad')) {
+    /**
+     * Unhook the active_plugins read filters after plugins have loaded.
+     *
+     * They are only needed to stop third-party plugins from loading, which is done by
+     * plugins_loaded. Left registered, activate_plugin()/deactivate_plugins() would persist
+     * their filtered (wp-staging-only) result and deactivate every other plugin (issue #5371).
+     *
+     * @return void
+     */
+    function wpstgDisableActivePluginsFilterAfterLoad()
+    {
+        remove_filter('option_active_plugins', 'wpstgExcludePlugins');
+        remove_filter('site_option_active_sitewide_plugins', 'wpstgExcludeSitePlugins');
+    }
+
+    add_action('plugins_loaded', 'wpstgDisableActivePluginsFilterAfterLoad');
 }
 
 if (!function_exists('wpstgDisableTheme')) {
