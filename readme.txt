@@ -284,7 +284,6 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 == Changelog ==
 
 = 4.9.3 =
-* Enh: Optimize the readme for better visibility on the WordPress.org plugin search. #5205
 * Fix: Estimated size in the staging site setup now reflects the selected database tables and the selected files and folders. #5253
 * Fix: List database tables in Push UI for staging sites connected to an external database. #5376
 * Fix: Prevent Remote Sync from failing when optional sync selections are omitted. (Pro) #5329
