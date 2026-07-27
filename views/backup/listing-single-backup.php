@@ -35,6 +35,7 @@ $requires64Bit          = empty($size) && (PHP_INT_SIZE !== 8);
 $isContaining2GbFile    = $backup->isContaining2GBFile;
 $backupVersion          = $backup->generatedOnBackupVersion;
 $isUnsignedBackup       = $backup->isUnsignedBackup;
+$networkSitesCountLabel = $backup->getNetworkSitesCountLabel();
 
 // Default error message
 if (empty($indexFileError)) {
@@ -77,6 +78,9 @@ $wpstgRestorePageUrl = add_query_arg([
         <?php if (!$isCorrupt) : ?>
             <div class="wpstg-clone-labels">
                 <span class="wpstg-clone-label"><?php echo esc_html($backup->getBackupType()); ?></span>
+                <?php if (!empty($networkSitesCountLabel)) : ?>
+                    <span class="wpstg-clone-label"><?php echo esc_html($networkSitesCountLabel); ?></span>
+                <?php endif; ?>
                 <?php echo $backup->isMultipartBackup ? '<span class="wpstg-clone-label">' . esc_html__('Multipart Backup', 'wp-staging') . '</span>' : ''; ?>
                 <?php if (version_compare($backupVersion, '2.0.0', '<')) : ?>
                     <span class="wpstg-clone-label wpstg-clone-label--warning wpstg--tooltip">

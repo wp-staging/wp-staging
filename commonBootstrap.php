@@ -123,6 +123,26 @@ if (!function_exists('wpstgIsPluginRestRequest')) {
     }
 }
 
+if (!function_exists('wpstgIsStagingSite')) {
+    /**
+     * @param string $stagingMarkerFileName Name of the marker file placed in the site root on staging sites.
+     * @param string $stagingSiteOptionName Option key that stores whether the site is a staging site.
+     * @return bool
+     */
+    function wpstgIsStagingSite(string $stagingMarkerFileName = '.wp-staging', string $stagingSiteOptionName = 'wpstg_is_staging_site'): bool
+    {
+        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
+            return true;
+        }
+
+        if (get_option($stagingSiteOptionName) === 'true') {
+            return true;
+        }
+
+        return file_exists(ABSPATH . $stagingMarkerFileName);
+    }
+}
+
 if (!function_exists('wpstgShouldSkipBootstrap')) {
     function wpstgShouldSkipBootstrap(): bool
     {
@@ -156,15 +176,7 @@ if (!function_exists('wpstgShouldSkipBootstrap')) {
         }
 
         // Staging sites need full bootstrap: login gate, permission checks, admin bar CSS.
-        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
-            return false;
-        }
-
-        if (get_option('wpstg_is_staging_site') === 'true') {
-            return false;
-        }
-
-        if (file_exists(ABSPATH . '.wp-staging')) {
+        if (wpstgIsStagingSite()) {
             return false;
         }
 

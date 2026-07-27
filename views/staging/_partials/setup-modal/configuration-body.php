@@ -63,30 +63,11 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                 <div id="wpstg-clone-id-error" class="wpstg-callout wpstg-create-name-message wpstg-mt-3" style="display:none;" role="alert" aria-live="polite"><div class="wpstg-text-sm" id="wpstg-clone-id-error-msg"></div></div>
             </section>
             <?php $stagingSetup->renderNetworkCloneSettings(); ?>
-            <?php
-            $renderer->readyCard('', '', '', '', true, '', '', '', '', 'shield', [
-                'database' => [
-                    'content' => '#wpstg-setup-tables',
-                    'label'   => __('Customize', 'wp-staging'),
-                    'panel'   => '#wpstg-create-copy-panel',
-                    'trigger' => '.wpstg-create-copy-customize-tables',
-                ],
-                'files'    => [
-                    'content' => '#wpstg-setup-files',
-                    'label'   => __('Customize', 'wp-staging'),
-                    'panel'   => '#wpstg-create-copy-panel',
-                    'trigger' => '.wpstg-create-copy-customize-files',
-                ],
-                'engine'   => [
-                    'label' => __('Customize', 'wp-staging'),
-                    'panel' => '#wpstg-create-engine-panel',
-                ],
-                'runtime'  => [
-                    'label' => __('Customize', 'wp-staging'),
-                    'panel' => '#wpstg-runtime-settings',
-                ],
-            ], !$isProLicenseActive);
-            ?>
+            <?php // Create only: the main card holds both the review card and the shared customize <section> below; its closing </div> is emitted after that section (see the matching endif). ?>
+            <div class="wpstg-create-main-card">
+                <div data-wpstg-create-review-mode>
+                    <?php $renderer->readyCard('', '', '', '', true, '', '', '', '', 'shield', [], !$isProLicenseActive, true); ?>
+                </div>
         <?php else : ?>
             <?php
             $readyCustomizeLinks = [
@@ -124,10 +105,15 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
             ?>
         <?php endif; ?>
 
-        <section class="<?php echo esc_attr($isCreate ? 'wpstg-create-customizations wpstg-create-customizations--collapsed' : 'wpstg-create-customizations wpstg-mt-4'); ?>">
+        <section class="<?php echo esc_attr($isCreate ? 'wpstg-create-customizations' : 'wpstg-create-customizations wpstg-mt-4'); ?>"<?php echo $isCreate ? ' data-wpstg-create-customize-mode style="display: none;" aria-hidden="true"' : ''; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped ?>>
             <?php if ($isCreate) : ?>
-                <h2 class="wpstg-m-0 wpstg-text-sm wpstg-font-bold wpstg-leading-5 wpstg-text-[#001b3d] dark:wpstg-text-slate-100"><?php esc_html_e('Customize staging site', 'wp-staging'); ?></h2>
-                <p class="wpstg-m-0 wpstg-mt-2 wpstg-text-sm wpstg-leading-6 wpstg-text-[#536579] dark:wpstg-text-slate-400"><?php esc_html_e('Recommended defaults are selected. Open a section only to change what gets copied or how staging behaves.', 'wp-staging'); ?></p>
+                <button type="button" class="wpstg-create-back-to-overview" data-wpstg-create-done>
+                    <?php $renderer->icon('arrow-left', 'wpstg-h-3.5 wpstg-w-3.5', 2.2); ?>
+                    <?php esc_html_e('Back to settings overview', 'wp-staging'); ?>
+                </button>
+                <div class="wpstg-create-customizations-header">
+                    <h2 class="wpstg-m-0 wpstg-text-sm wpstg-font-bold wpstg-leading-5 wpstg-text-[#001b3d] dark:wpstg-text-slate-100"><?php esc_html_e('Customize settings', 'wp-staging'); ?></h2>
+                </div>
             <?php endif; ?>
             <div id="wpstg-staging-setup-tabs" class="wpstg-tabs-wrapper wpstg-selection-tabs-wrapper wpstg-create-accordion wpstg-staging-accordion wpstg-mt-4">
                 <?php
@@ -144,13 +130,16 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                 assert($tableScanner instanceof TableScanner);
                 require WPSTG_VIEWS_DIR . 'staging/_partials/what-to-copy-section.php';
                 ?>
-                <?php $renderer->engineSection($setupMode, $enginePanelId); ?>
                 <?php $renderer->runtimeSection($isCreate, $isUpdate, $isProLicenseActive, $showWooSchedulerSettings, $stagingSiteDto, $runtimeSummaryTooltips); ?>
                 <?php if ($isCreate) {
                     $renderer->destinationSection($isProLicenseActive, $isProBuild, $isCreate, $stagingSetup, $defaultPathBase, $defaultSiteName, $productionSiteUrl);
                 } ?>
+                <?php $renderer->engineSection($setupMode, $enginePanelId); ?>
             </div>
         </section>
+        <?php if ($isCreate) : ?>
+            </div><?php // Closes .wpstg-create-main-card opened before the review card above. ?>
+        <?php endif; ?>
     </main>
 
     <aside class="<?php echo esc_attr($summaryClass); ?>" aria-label="<?php echo esc_attr($isCreate ? __('Creation Summary', 'wp-staging') : ($isUpdate ? __('Update Summary', 'wp-staging') : __('Reset Summary', 'wp-staging'))); ?>">
@@ -164,7 +153,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                     <?php if ($isCreate) : ?>
                         <dd class="wpstg-create-summary-files-cell">
                             <span class="wpstg-create-summary-files"><?php esc_html_e('All folders selected', 'wp-staging'); ?></span>
-                            <small class="wpstg-create-summary-subnote"><?php echo wp_kses_post(sprintf(/* translators: %s: file-size limit in MB (a number). */ esc_html__('Files over %s MB skipped', 'wp-staging'), '<span data-wpstg-files-skip-size>8</span>')); ?></small>
+                            <small class="wpstg-create-summary-subnote"><?php echo wp_kses_post(sprintf(/* translators: %s: file-size limit in MB (a number). */ esc_html__('Files over %s MB are skipped', 'wp-staging'), '<span data-wpstg-files-skip-size>8</span>')); ?></small>
                         </dd>
                     <?php else : ?>
                         <dd><?php esc_html_e('Preselected', 'wp-staging'); ?></dd>

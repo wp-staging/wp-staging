@@ -2,10 +2,9 @@
 
 namespace WPStaging\Framework\Filesystem\Filters;
 
-use RecursiveFilterIterator;
 use RecursiveDirectoryIterator;
 
-class RecursiveFileSizeFilter extends RecursiveFilterIterator
+class RecursiveFileSizeFilter extends AbstractRecursiveFilterIterator
 {
     private $sizeFilters = [];
     public function __construct(RecursiveDirectoryIterator $iterator, $sizeFilters = [])
@@ -19,7 +18,12 @@ class RecursiveFileSizeFilter extends RecursiveFilterIterator
     {
         $current = $this->current();
 
-        if (!$current->isFile()) {
+        $isFile = $this->isFileSafely($current);
+        if ($isFile === null) {
+            return false;
+        }
+
+        if (!$isFile) {
             return true;
         }
 

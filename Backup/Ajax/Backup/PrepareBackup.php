@@ -281,6 +281,10 @@ class PrepareBackup extends PrepareJob
         // Single Site or Multisite related properties
         $data['backupType']          = $this->validateAndSanitizeBackupType($data['backupType']);
         $data['isNetworkSiteBackup'] = (is_multisite() && $data['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) ? true : false;
+        if (is_multisite() && $data['backupType'] === BackupMetadata::BACKUP_TYPE_MULTISITE) {
+            $data['sitesToBackup'] = $sites;
+        }
+
         if ($data['isNetworkSiteBackup']) {
             $data['subsiteBlogId'] = $this->validateAndSanitizeSubsiteBlogId($data['subsiteBlogId']);
         }

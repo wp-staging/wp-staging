@@ -99,7 +99,8 @@ class SetupRenderer
         string $engineSuffix = '',
         string $runtimeIcon = 'shield',
         array $customizeLinks = [],
-        bool $runtimeLocked = false
+        bool $runtimeLocked = false,
+        bool $showCustomizeButton = false
     ) {
         $this->renderPartial('ready-card', compact(
             'title',
@@ -113,7 +114,8 @@ class SetupRenderer
             'engineSuffix',
             'runtimeIcon',
             'customizeLinks',
-            'runtimeLocked'
+            'runtimeLocked',
+            'showCustomizeButton'
         ));
     }
 

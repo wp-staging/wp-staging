@@ -79,7 +79,7 @@ trait NoticesTrait
             return;
         }
 
-        // don't show analytics modal on wpstg-welcome page
+        // don't show security alerts consent modal on wpstg-welcome page
         if ($this->isWpstgWelcomePage()) {
             return;
         }

@@ -9,15 +9,15 @@ $groupName      = 'wpstg_staging_engine';
 
 $engines = [
     StagingEngine::ENGINE_LEGACY   => [
-        'title'       => esc_html__('Classic Engine', 'wp-staging'),
+        'title'       => esc_html__('Classic', 'wp-staging'),
         'badge'       => esc_html__('DEFAULT', 'wp-staging'),
-        'description' => esc_html__('The stable, proven engine used by earlier WP Staging versions.', 'wp-staging'),
+        'description' => esc_html__('The stable, proven transfer method used by earlier WP Staging versions.', 'wp-staging'),
         'icon'        => 'clock',
     ],
     StagingEngine::ENGINE_NEXT_GEN => [
-        'title'       => esc_html__('Next-Gen Engine', 'wp-staging'),
+        'title'       => esc_html__('Next-Gen', 'wp-staging'),
         'badge'       => esc_html__('BETA', 'wp-staging'),
-        'description' => esc_html__('Uses the new staging engine designed for faster and more resilient jobs.', 'wp-staging'),
+        'description' => esc_html__('The new transfer method designed for faster and more resilient jobs.', 'wp-staging'),
         'icon'        => 'bolt',
     ],
 ];
@@ -30,11 +30,11 @@ if (!$stagingEngine->isNextGenEnabled()) {
 ?>
 
 <section class="wpstg-staging-engine wpstg-my-[18px] wpstg-mb-4" data-selected-engine="<?php echo esc_attr($selectedEngine); ?>">
-    <h3 class="wpstg-m-0 wpstg-mb-1.5 wpstg-text-base wpstg-font-bold wpstg-leading-tight wpstg-text-[#2c3338] dark:wpstg-text-slate-100"><?php esc_html_e('Staging Engine', 'wp-staging'); ?></h3>
+    <h3 class="wpstg-m-0 wpstg-mb-1.5 wpstg-text-base wpstg-font-bold wpstg-leading-tight wpstg-text-[#2c3338] dark:wpstg-text-slate-100"><?php esc_html_e('Transfer method', 'wp-staging'); ?></h3>
     <p class="wpstg-m-0 wpstg-mb-3 wpstg-text-sm wpstg-leading-normal wpstg-text-[#536579] dark:wpstg-text-slate-400">
-        <?php esc_html_e('Choose the staging engine. This will also be used for future staging actions until changed.', 'wp-staging'); ?>
+        <?php esc_html_e('Choose how WP STAGING transfers the selected data. This method is also used for future staging actions until changed.', 'wp-staging'); ?>
     </p>
-    <div class="wpstg-staging-engine-options wpstg-grid wpstg-grid-cols-1 md:wpstg-grid-cols-2 wpstg-gap-3" role="radiogroup" aria-label="<?php esc_attr_e('Staging Engine', 'wp-staging'); ?>">
+    <div class="wpstg-staging-engine-options wpstg-grid wpstg-grid-cols-1 md:wpstg-grid-cols-2 wpstg-gap-3" role="radiogroup" aria-label="<?php esc_attr_e('Transfer method', 'wp-staging'); ?>">
         <?php foreach ($engines as $engine => $engineData) :
             $isSelected       = $selectedEngine === $engine;
             $isDisabled       = !empty($engineData['disabled']);
@@ -108,7 +108,7 @@ if (!$stagingEngine->isNextGenEnabled()) {
             <path d="M12 8h.01"></path>
         </svg>
         <p class="wpstg-m-0">
-            <strong class="wpstg-font-bold wpstg-text-[#001b3d] dark:wpstg-text-slate-100"><?php esc_html_e('Next-Gen Engine will become your default when this staging job starts.', 'wp-staging'); ?></strong>
+            <strong class="wpstg-font-bold wpstg-text-[#001b3d] dark:wpstg-text-slate-100"><?php esc_html_e('Next-Gen will become your default when this staging job starts.', 'wp-staging'); ?></strong>
             <?php esc_html_e('WP STAGING will use it for this staging site and future staging jobs. You can switch back anytime.', 'wp-staging'); ?>
         </p>
     </div>

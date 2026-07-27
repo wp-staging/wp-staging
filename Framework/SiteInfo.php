@@ -84,15 +84,8 @@ class SiteInfo
      */
     public function isStagingSite(): bool
     {
-        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
-            return true;
-        }
-
-        if (get_option(self::IS_STAGING_KEY) === "true") {
-            return true;
-        }
-
-        return file_exists(ABSPATH . self::STAGING_FILE);
+        // Single source of truth lives in the early bootstrap, before the autoloader.
+        return wpstgIsStagingSite(self::STAGING_FILE, self::IS_STAGING_KEY);
     }
 
     /**

@@ -2,11 +2,10 @@
 
 namespace WPStaging\Framework\Filesystem\Filters;
 
-use FilterIterator;
 use Iterator;
 use WPStaging\Framework\Filesystem\Filters\PathFilterHelper;
 
-class PathExcludeFilter extends FilterIterator
+class PathExcludeFilter extends AbstractFilterIterator
 {
     /**
      * @var PathFilterHelper
@@ -64,7 +63,12 @@ class PathExcludeFilter extends FilterIterator
             return true;
         }
 
-        if ($fileInfo->isDir() && !$this->skipDirectoriesWithIncludeRules && $this->includeFilter->hasRules()) {
+        $isDir = $this->isDirSafely($fileInfo);
+        if ($isDir === null) {
+            return false;
+        }
+
+        if ($isDir && !$this->skipDirectoriesWithIncludeRules && $this->includeFilter->hasRules()) {
             return true;
         }
 

@@ -3,9 +3,8 @@
 namespace WPStaging\Framework\Filesystem\Filters;
 
 use Iterator;
-use FilterIterator;
 
-class FileSizeFilter extends FilterIterator
+class FileSizeFilter extends AbstractFilterIterator
 {
     private $sizeFilters = [];
     public function __construct(Iterator $iterator, $sizeFilters = [])
@@ -19,8 +18,13 @@ class FileSizeFilter extends FilterIterator
     {
         $current = $this->current();
 
+        $isFile = $this->isFileSafely($current);
+        if ($isFile === null) {
+            return false;
+        }
+
         // return true of not file
-        if (!$current->isFile()) {
+        if (!$isFile) {
             return true;
         }
 

@@ -246,9 +246,9 @@ $runtimeSummaryTooltips = [
                             <span class="wpstg-min-w-0 wpstg-flex-1">
                                 <span class="wpstg-flex wpstg-flex-wrap wpstg-items-center wpstg-gap-2">
                                     <strong><?php esc_html_e('Advanced options', 'wp-staging'); ?></strong>
-                                    <span class="wpstg-create-pill wpstg-create-pill--slate wpstg-update-advanced-badge"><span data-wpstg-staging-engine-summary><?php echo esc_html($selectedEngineName); ?></span><span><?php echo esc_html_x('engine', 'follows the engine name in the advanced-options badge, e.g. "Classic engine"', 'wp-staging'); ?></span></span>
+                                    <span class="wpstg-create-pill wpstg-create-pill--slate wpstg-update-advanced-badge" data-wpstg-staging-engine-summary><?php echo esc_html($selectedEngineName); ?></span>
                                 </span>
-                                <span class="wpstg-create-accordion-description"><?php esc_html_e('Engine, emails, scheduler and cleanup behavior', 'wp-staging'); ?></span>
+                                <span class="wpstg-create-accordion-description"><?php esc_html_e('Transfer method, emails, scheduler and cleanup behavior', 'wp-staging'); ?></span>
                             </span>
                             <span class="wpstg-create-accordion-chevron wpstg-staging-accordion-chevron" aria-hidden="true"><?php $setupRenderer->icon('chevron', 'wpstg-h-4 wpstg-w-4'); ?></span>
                         </a>
@@ -256,7 +256,7 @@ $runtimeSummaryTooltips = [
                             <div class="wpstg-update-adv-groups">
 
                                 <div class="wpstg-update-adv-group">
-                                    <div class="wpstg-update-adv-group__label"><?php esc_html_e('Copy method', 'wp-staging'); ?></div>
+                                    <div class="wpstg-update-adv-group__label"><?php esc_html_e('Transfer method', 'wp-staging'); ?></div>
                                     <?php
                                     $selectorClass = 'wpstg-update-engine-selector';
                                     require WPSTG_VIEWS_DIR . 'staging/_partials/staging-engine-selector-modal.php';
@@ -613,8 +613,8 @@ $runtimeSummaryTooltips = [
         aria-labelledby="wpstg-create-modal-title"
         data-engine-legacy-label="<?php esc_attr_e('Classic', 'wp-staging'); ?>"
         data-engine-next-gen-label="<?php esc_attr_e('Next-Gen', 'wp-staging'); ?>"
-        data-engine-legacy-suffix="<?php esc_attr_e(' Engine - faster one available', 'wp-staging'); ?>"
-        data-engine-next-gen-suffix="<?php esc_attr_e(' Engine - recommended', 'wp-staging'); ?>"
+        data-engine-legacy-suffix="<?php esc_attr_e(' - faster one available', 'wp-staging'); ?>"
+        data-engine-next-gen-suffix="<?php esc_attr_e(' - recommended', 'wp-staging'); ?>"
         data-summary-enabled="<?php esc_attr_e('Enabled', 'wp-staging'); ?>"
         data-summary-disabled="<?php esc_attr_e('Disabled', 'wp-staging'); ?>"
         data-summary-emails-enabled="<?php esc_attr_e('Enabled', 'wp-staging'); ?>"

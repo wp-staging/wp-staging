@@ -24,7 +24,7 @@ class RestoreDatabaseTask extends RestoreTask
      * After this time, we will increase the execution by 5s for database restore.
      * @var int
      */
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = 2;
 
     /**
      * After this time (in seconds), we will stop the database restore.
@@ -238,7 +238,7 @@ class RestoreDatabaseTask extends RestoreTask
         $this->databaseImporter->init($this->jobDataDto->getTmpDatabasePrefix());
 
         try {
-            while (!$this->isThreshold()) {
+            while (!$this->isDatabaseRestoreThreshold()) {
                 try {
                     $this->databaseImporter->execute();
                 } catch (\OutOfBoundsException $e) {

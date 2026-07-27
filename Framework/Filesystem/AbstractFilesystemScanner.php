@@ -6,11 +6,13 @@ use Exception;
 use SplFileInfo;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
+use WPStaging\Framework\Traits\SafeFileInfoTrait;
 use WPStaging\Framework\Utils\PluginInfo;
 
 abstract class AbstractFilesystemScanner
 {
     use EndOfLinePlaceholderTrait;
+    use SafeFileInfoTrait;
 
     /**
      * @var string
@@ -166,19 +168,29 @@ abstract class AbstractFilesystemScanner
 
         /** @var SplFileInfo $item */
         foreach ($iterator as $item) {
-            if ($item->isLink() && $processLinks) {
-                $this->processLink($item, $scanLinkDirectory);
-            }
-
-            if ($item->isLink()) {
+            $isLink = $this->isLinkSafely($item);
+            if ($isLink === null) {
                 continue;
             }
 
-            if ($item->isFile() && !$this->skipFiles) {
+            if ($isLink && $processLinks) {
+                $this->processLink($item, $scanLinkDirectory);
+            }
+
+            if ($isLink) {
+                continue;
+            }
+
+            $isFile = $this->isFileSafely($item);
+            if ($isFile === null) {
+                continue;
+            }
+
+            if ($isFile && !$this->skipFiles) {
                 $this->processFile($item);
             }
 
-            if ($item->isFile()) {
+            if ($isFile) {
                 continue;
             }
 
@@ -186,7 +198,8 @@ abstract class AbstractFilesystemScanner
                 continue;
             }
 
-            if ($item->isDir()) {
+            $isDir = $this->isDirSafely($item);
+            if ($isDir) {
                 $this->processDirectory($item);
             }
         }
@@ -242,23 +255,35 @@ abstract class AbstractFilesystemScanner
      */
     protected function processLink(SplFileInfo $linkInfo, bool $scanDirectory = true)
     {
-        // Bail if no link
-        if (!$linkInfo->isLink()) {
+        $isLink = $this->isLinkSafely($linkInfo);
+        if ($isLink === null || !$isLink) {
             return;
         }
 
-        $linkTarget = $linkInfo->getRealPath();
-        $fileInfo   = new SplFileInfo($linkTarget);
-        if ($fileInfo->isLink()) {
+        $linkTarget = $this->getRealPathSafely($linkInfo);
+        if ($linkTarget === false) {
             return;
         }
 
-        if ($fileInfo->isFile()) {
+        $fileInfo = new SplFileInfo($linkTarget);
+
+        $isLink = $this->isLinkSafely($fileInfo);
+        if ($isLink === null || $isLink) {
+            return;
+        }
+
+        $isFile = $this->isFileSafely($fileInfo);
+        if ($isFile === null) {
+            return;
+        }
+
+        if ($isFile) {
             $this->processFile($fileInfo, $linkInfo->getPathname());
             return;
         }
 
-        if ($fileInfo->isDir() && $scanDirectory) {
+        $isDir = $this->isDirSafely($fileInfo);
+        if ($isDir && $scanDirectory) {
             $this->processDirectory($fileInfo, $linkInfo);
             return;
         }
@@ -312,8 +337,13 @@ abstract class AbstractFilesystemScanner
 
         /** @var SplFileInfo $item */
         foreach ($iterator as $item) {
+            $isLink = $this->isLinkSafely($item);
+            if ($isLink === null) {
+                continue;
+            }
+
             // Always check link first otherwise it may be treated as directory
-            if ($item->isLink()) {
+            if ($isLink) {
                 continue;
             }
 
@@ -322,12 +352,18 @@ abstract class AbstractFilesystemScanner
                 $linkPath = trailingslashit($link) . $item->getFilename();
             }
 
-            if ($item->isDir()) {
+            $isDir = $this->isDirSafely($item);
+            if ($isDir === null) {
+                continue;
+            }
+
+            if ($isDir) {
                 $this->recursivePathScanning($item->getPathname(), $linkPath);
                 continue;
             }
 
-            if ($item->isFile()) {
+            $isFile = $this->isFileSafely($item);
+            if ($isFile) {
                 $this->processFile($item, $linkPath);
             }
         }
