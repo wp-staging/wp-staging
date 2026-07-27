@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.6.1
+ * Version: 1.6.2
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.6.1');
+    define('WPSTG_OPTIMIZER_VERSION', '1.6.2');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -57,6 +57,20 @@ if (!function_exists('wpstgIsEnabledOptimizer')) {
     }
 }
 
+if (!function_exists('wpstgIsGoDaddyManagedSite')) {
+    /**
+     * GoDaddy's must-use plugin calls WooCommerce's Action Scheduler, so those plugins must stay loaded.
+     * @return bool
+     */
+    function wpstgIsGoDaddyManagedSite(): bool
+    {
+        $muPluginDir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+        $isGoDaddy   = is_dir($muPluginDir . '/vendor/godaddy/') || is_dir($muPluginDir . '/gd-system-plugin');
+
+        return $isGoDaddy;
+    }
+}
+
 if (!function_exists('wpstgIsExcludedPlugin')) {
     /**
      * Check if a plugin should be excluded from the optimizer and still running during wp staging requests
@@ -65,6 +79,12 @@ if (!function_exists('wpstgIsExcludedPlugin')) {
      */
     function wpstgIsExcludedPlugin(string $plugin): bool
     {
+        // GoDaddy's must-use plugin needs WooCommerce's Action Scheduler, so keep only those exact plugins
+        // active. Match the plugin file exactly so WooCommerce extensions are still disabled as usual.
+        if (wpstgIsGoDaddyManagedSite() && in_array($plugin, ['woocommerce/woocommerce.php', 'action-scheduler/action-scheduler.php'], true)) {
+            return true;
+        }
+
         $excludedPlugins = get_option('wpstg_optimizer_excluded', []);
 
         // Check for custom excluded plugins

@@ -10,10 +10,12 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
+use WPStaging\Framework\Traits\SafeFileInfoTrait;
 
 trait FileScanToCacheTrait
 {
     use EndOfLinePlaceholderTrait;
+    use SafeFileInfoTrait;
 
     /** @var bool */
     protected $isExcludedWpConfig = false;
@@ -89,21 +91,40 @@ trait FileScanToCacheTrait
             foreach ($iterator as $item) {
                 // Always check link first otherwise it may be treated as directory
                 $itemPath = $item->getPathname();
-                if ($item->isLink()) {
+
+                $isLink = $this->isLinkSafely($item);
+                if ($isLink === null) {
+                    continue;
+                }
+
+                if ($isLink) {
                     // Allow copying of link if the link's source is a directory
-                    if (is_dir($item->getRealPath()) && $isRecursive) {
+                    $linkTarget = $this->getRealPathSafely($item);
+                    if ($linkTarget !== false && is_dir($linkTarget) && $isRecursive) {
                         $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath, $shouldScanEmptyDirs);
                     }
 
                     continue;
                 }
 
-                if ($isRecursive && $item->isDir()) {
-                    $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath, $shouldScanEmptyDirs);
+                if ($isRecursive) {
+                    $isDir = $this->isDirSafely($item);
+                    if ($isDir === null) {
+                        continue;
+                    }
+
+                    if ($isDir) {
+                        $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath, $shouldScanEmptyDirs);
+                        continue;
+                    }
+                }
+
+                $isFile = $this->isFileSafely($item);
+                if ($isFile === null) {
                     continue;
                 }
 
-                if ($item->isFile()) {
+                if ($isFile) {
                     $file = $filesystem->maybeNormalizePath($itemPath);
                     $file = $this->strUtils->replaceStartWith($normalizedWpRoot, '', $file);
                     // One more time with not normalized $wpRootPath in case the file path was not normalized

@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Service;
 
 use DirectoryIterator;
+use RuntimeException;
 use Throwable;
 use UnexpectedValueException;
 use WPStaging\Framework\Adapter\Directory;
@@ -213,7 +214,11 @@ class DirectoryScanner
 
         $directories = [];
         foreach ($iterator as $directory) {
-            if ($directory->isDot() || $directory->isFile()) {
+            try {
+                if ($directory->isDot() || $directory->isFile()) {
+                    continue;
+                }
+            } catch (RuntimeException $openBaseDirException) {
                 continue;
             }
 
@@ -277,7 +282,16 @@ class DirectoryScanner
      */
     protected function getPath(DirectoryIterator $directory, string $basePath, string $identifier): string
     {
-        $realPath = $this->isAllowVfsPath && strpos($directory->getPathname(), 'vfs://') === 0 ? $directory->getPathname() : $directory->getRealPath();
+        try {
+            $realPath = $this->isAllowVfsPath && strpos($directory->getPathname(), 'vfs://') === 0 ? $directory->getPathname() : $directory->getRealPath();
+        } catch (RuntimeException $openBaseDirException) {
+            throw new UnexpectedValueException($openBaseDirException->getMessage());
+        }
+
+        if ($realPath === false) {
+            throw new UnexpectedValueException("The path '{$directory->getPathname()}' could not be resolved, likely a dangling symlink.");
+        }
+
         $realPath = wp_normalize_path($realPath);
 
         /**
@@ -290,8 +304,15 @@ class DirectoryScanner
         }
 
         $path = str_replace($basePath, '', $realPath);
+
+        try {
+            $isDir = $directory->isDir();
+        } catch (RuntimeException $openBaseDirException) {
+            throw new UnexpectedValueException($openBaseDirException->getMessage());
+        }
+
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
-        if (!$directory->isDir() || (strlen($path) < 1 && $identifier !== PathIdentifier::IDENTIFIER_WP_CONTENT)) {
+        if (!$isDir || (strlen($path) < 1 && $identifier !== PathIdentifier::IDENTIFIER_WP_CONTENT)) {
             throw new UnexpectedValueException("The path '{$path}' is not a valid directory.");
         }
 

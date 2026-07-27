@@ -18,16 +18,16 @@ $selectorClass  = empty($selectorClass) ? '' : $selectorClass;
 
 $modalEngines = [
     StagingEngine::ENGINE_LEGACY   => [
-        'title'       => esc_html__('Classic Engine', 'wp-staging'),
+        'title'       => esc_html__('Classic', 'wp-staging'),
         'badge'       => '',
         'description' => esc_html__('Stable and widely tested.', 'wp-staging'),
         'badgeClass'  => 'wpstg-bg-blue-600 wpstg-text-white dark:wpstg-bg-blue-500 dark:wpstg-text-white',
         'icon'        => '<path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>',
     ],
     StagingEngine::ENGINE_NEXT_GEN => [
-        'title'       => esc_html__('Next-Gen Engine', 'wp-staging'),
+        'title'       => esc_html__('Next-Gen', 'wp-staging'),
         'badge'       => esc_html__('Beta', 'wp-staging'),
-        'description' => esc_html__('Faster cloning engine for testing. Switch back anytime.', 'wp-staging'),
+        'description' => esc_html__('Faster transfer method for testing. Switch back anytime.', 'wp-staging'),
         'feature'     => esc_html__('Up to 3× faster', 'wp-staging'),
         'badgeClass'  => 'wpstg-badge-amber',
         'icon'        => '<path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>',
@@ -44,7 +44,7 @@ if (!$stagingEngine->isNextGenEnabled()) {
 ?>
 
 <section class="wpstg-staging-engine wpstg-modal-staging-engine-selector <?php echo esc_attr($selectorClass); ?>" data-selected-engine="<?php echo esc_attr($selectedEngine); ?>">
-    <div class="wpstg-staging-engine-options wpstg-grid wpstg-grid-cols-1 md:wpstg-grid-cols-2 wpstg-gap-2" role="radiogroup" aria-label="<?php esc_attr_e('Copy method', 'wp-staging'); ?>">
+    <div class="wpstg-staging-engine-options wpstg-grid wpstg-grid-cols-1 md:wpstg-grid-cols-2 wpstg-gap-2" role="radiogroup" aria-label="<?php esc_attr_e('Transfer method', 'wp-staging'); ?>">
         <?php foreach ($modalEngines as $engine => $engineData) :
             $isSelected       = $selectedEngine === $engine;
             $isDisabled       = !empty($engineData['disabled']);

@@ -81,6 +81,9 @@ class ListableBackup
     /** @var string The subsite install type of this backup */
     public $subsiteType;
 
+    /** @var int Number of sites contained in an entire network backup */
+    public $networkSitesCount = 0;
+
     /** @var string The WP STAGING version this backup was generated on */
     public $generatedOnWPStagingVersion;
 
@@ -163,5 +166,20 @@ class ListableBackup
         }
 
         return esc_html__('Unknown Backup Type', 'wp-staging');
+    }
+
+    /**
+     * @return string
+     */
+    public function getNetworkSitesCountLabel(): string
+    {
+        if ($this->type !== BackupMetadata::BACKUP_TYPE_MULTISITE || $this->networkSitesCount < 1) {
+            return '';
+        }
+
+        return sprintf(
+            _n('%d Site', '%d Sites', $this->networkSitesCount, 'wp-staging'),
+            $this->networkSitesCount
+        );
     }
 }

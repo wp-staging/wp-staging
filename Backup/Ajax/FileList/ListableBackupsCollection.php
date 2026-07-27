@@ -172,6 +172,7 @@ class ListableBackupsCollection
             $listableBackup                                   = new ListableBackup();
             $listableBackup->type                             = $backupMetadata->getBackupType();
             $listableBackup->subsiteType                      = $listableBackup->type === 'single' ? '' : ($backupMetadata->getSubdomainInstall() ? 'Subdomains' : 'Subdirectories');
+            $listableBackup->networkSitesCount                = $this->getNetworkSitesCount($backupMetadata);
             $listableBackup->automatedBackup                  = $backupMetadata->getIsAutomatedBackup();
             $listableBackup->scheduleRecurrence               = $backupMetadata->getScheduleRecurrence();
             $listableBackup->backupName                       = $backupMetadata->getName();
@@ -222,5 +223,20 @@ class ListableBackupsCollection
 
             return $listableBackup;
         }
+    }
+
+    /**
+     * @param BackupMetadata $backupMetadata
+     * @return int
+     */
+    private function getNetworkSitesCount(BackupMetadata $backupMetadata): int
+    {
+        if ($backupMetadata->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE) {
+            return 0;
+        }
+
+        $sites = $backupMetadata->getSites();
+
+        return is_array($sites) ? count($sites) : 0;
     }
 }

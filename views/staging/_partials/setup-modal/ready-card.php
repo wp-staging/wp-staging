@@ -16,6 +16,7 @@
  * @var string                                    $runtimeIcon
  * @var array                                     $customizeLinks
  * @var bool                                      $runtimeLocked
+ * @var bool                                      $showCustomizeButton
  */
 
 if (empty($title)) {
@@ -23,7 +24,7 @@ if (empty($title)) {
 }
 
 if (empty($description)) {
-    $description = __('We will copy your WordPress database and files using safe staging defaults. No customization is required.', 'wp-staging');
+    $description = __('This will copy your WordPress database and files with recommended settings. No customization is required.', 'wp-staging');
 }
 
 if (empty($databaseDescription)) {
@@ -53,14 +54,14 @@ if (empty($runtimeTitle)) {
 }
 
 if (empty($engineSuffix)) {
-    $engineSuffix = __(' Engine - faster one available', 'wp-staging');
+    $engineSuffix = __(' - faster one available', 'wp-staging');
 }
 
-$renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtml = false) use ($customizeLinks, $renderer) {
+$renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtml = false) use ($customizeLinks, $renderer, $showCustomizeButton) {
     $customizeLink = isset($customizeLinks[$key]) && is_array($customizeLinks[$key]) ? $customizeLinks[$key] : [];
     $miniCardAttributes = '';
 
-    if (!empty($customizeLink)) {
+    if (!empty($customizeLink) && !$showCustomizeButton) {
         $miniCardAttributes = sprintf(
             ' data-wpstg-ready-customize data-wpstg-customize-panel="%s" data-wpstg-customize-content="%s" data-wpstg-customize-trigger="%s"',
             esc_attr(isset($customizeLink['panel']) ? $customizeLink['panel'] : ''),
@@ -69,12 +70,12 @@ $renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtm
         );
     }
     ?>
-    <div class="wpstg-create-ready-mini-card <?php echo !empty($customizeLink) ? 'wpstg-create-ready-mini-card--customizable' : ''; ?>"<?php echo $miniCardAttributes; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped ?>>
+    <div class="wpstg-create-ready-mini-card <?php echo (!empty($customizeLink) && !$showCustomizeButton) ? 'wpstg-create-ready-mini-card--customizable' : ''; ?>"<?php echo $miniCardAttributes; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped ?>>
         <?php $renderer->icon($icon); ?>
         <span class="wpstg-min-w-0 wpstg-flex-1">
             <span class="wpstg-create-ready-mini-card__title">
                 <strong><?php echo esc_html($title); ?></strong>
-                <?php if (!empty($customizeLink)) : ?>
+                <?php if (!empty($customizeLink) && !$showCustomizeButton) : ?>
                     <button
                         type="button"
                         class="wpstg-create-ready-customize"
@@ -108,7 +109,7 @@ $renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtm
         <?php $renderMiniCard('database', 'database', __('Database', 'wp-staging'), $databaseDescription); ?>
         <?php $renderMiniCard('files', 'folder', __('Files', 'wp-staging'), $filesDescription, $filesDescriptionIsHtml); ?>
         <?php $engineDescription = '<span class="wpstg-create-summary-engine-inline">' . esc_html($renderer->getSelectedEngineName()) . '</span><span class="wpstg-create-summary-engine-suffix">' . esc_html($engineSuffix) . '</span>'; ?>
-        <?php $renderMiniCard('engine', 'beaker', __('Copy method', 'wp-staging'), $engineDescription, true); ?>
+        <?php $renderMiniCard('engine', 'beaker', __('Transfer method', 'wp-staging'), $engineDescription, true); ?>
         <?php if ($showRuntimeBehavior) :
             $runtimeCustomize = isset($customizeLinks['runtime']) && is_array($customizeLinks['runtime']) ? $customizeLinks['runtime'] : [];
             $runtimeCardClasses = 'wpstg-create-ready-mini-card';
@@ -116,16 +117,16 @@ $renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtm
                 $runtimeCardClasses .= ' wpstg-create-ready-mini-card--pro';
             }
 
-            if (!empty($runtimeCustomize)) {
+            if (!empty($runtimeCustomize) && !$showCustomizeButton) {
                 $runtimeCardClasses .= ' wpstg-create-ready-mini-card--customizable';
             }
             ?>
-            <div class="<?php echo esc_attr($runtimeCardClasses); ?>"<?php echo !empty($runtimeCustomize) ? ' data-wpstg-ready-customize data-wpstg-customize-panel="' . esc_attr(isset($runtimeCustomize['panel']) ? $runtimeCustomize['panel'] : '') . '"' : ''; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped ?>>
+            <div class="<?php echo esc_attr($runtimeCardClasses); ?>"<?php echo (!empty($runtimeCustomize) && !$showCustomizeButton) ? ' data-wpstg-ready-customize data-wpstg-customize-panel="' . esc_attr(isset($runtimeCustomize['panel']) ? $runtimeCustomize['panel'] : '') . '"' : ''; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped ?>>
                 <?php $renderer->icon($runtimeLocked ? 'lock' : $runtimeIcon); ?>
                 <span class="wpstg-min-w-0 wpstg-flex-1">
                     <span class="wpstg-create-ready-mini-card__title">
                         <strong><?php echo esc_html($runtimeTitle); ?></strong>
-                        <?php if (!empty($runtimeCustomize)) : ?>
+                        <?php if (!empty($runtimeCustomize) && !$showCustomizeButton) : ?>
                             <button type="button" class="wpstg-create-ready-customize" data-wpstg-ready-customize data-wpstg-customize-panel="<?php echo esc_attr(isset($runtimeCustomize['panel']) ? $runtimeCustomize['panel'] : ''); ?>"><?php echo esc_html(isset($runtimeCustomize['label']) ? $runtimeCustomize['label'] : __('Customize', 'wp-staging')); ?></button>
                         <?php endif; ?>
                     </span>
@@ -134,4 +135,12 @@ $renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtm
             </div>
         <?php endif; ?>
     </div>
+    <?php if (!empty($showCustomizeButton)) : ?>
+        <div class="wpstg-create-ready-customize-btn-wrap">
+            <button type="button" class="wpstg-create-customize-settings-btn" data-wpstg-create-customize>
+                <?php $renderer->icon('pencil-square', 'wpstg-h-3.5 wpstg-w-3.5'); ?>
+                <?php esc_html_e('Customize settings', 'wp-staging'); ?>
+            </button>
+        </div>
+    <?php endif; ?>
 </section>

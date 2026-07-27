@@ -229,7 +229,7 @@ class RenameDatabaseTask extends RestoreTask
 
         $this->optionsToKeep[] = [
             'name'     => 'wpstg_license_status',
-            'value'    => get_option('wpstg_license_status'),
+            'value'    => maybe_serialize(get_option('wpstg_license_status')),
             'autoload' => in_array('wpstg_license_status', $allOptions),
         ];
 
@@ -439,7 +439,7 @@ class RenameDatabaseTask extends RestoreTask
         }
 
         foreach ($this->optionsToKeep as $optionToKeep) {
-            update_option($optionToKeep['name'], $optionToKeep['value'], $optionToKeep['autoload']);
+            update_option($optionToKeep['name'], maybe_unserialize($optionToKeep['value']), $optionToKeep['autoload']);
         }
 
         foreach ($this->optionsToRemove as $optionToRemove) {

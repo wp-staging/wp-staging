@@ -2,10 +2,9 @@
 
 namespace WPStaging\Framework\Filesystem\Filters;
 
-use RecursiveFilterIterator;
 use RecursiveDirectoryIterator;
 
-class RecursivePathExcludeFilter extends RecursiveFilterIterator
+class RecursivePathExcludeFilter extends AbstractRecursiveFilterIterator
 {
     /**
      * @var array
@@ -68,7 +67,12 @@ class RecursivePathExcludeFilter extends RecursiveFilterIterator
                 return true;
             }
 
-            if ($fileInfo->isDir()) {
+            $isDir = $this->isDirSafely($fileInfo);
+            if ($isDir === null) {
+                return false;
+            }
+
+            if ($isDir) {
                 return true;
             }
         }

@@ -70,7 +70,7 @@ class JobDataDto extends AbstractDto
      * Current execution time in sec for database import
      * @var int
      */
-    private $currentExecutionTimeDatabaseImport = 10;
+    protected $currentExecutionTimeDatabaseImport = 10;
 
     /** @var bool */
     protected $isSlowMySqlServer = false;
@@ -148,7 +148,7 @@ class JobDataDto extends AbstractDto
      * Number of retries for the current task
      * @var int
      */
-    private $numberOfRetries = 0;
+    protected $numberOfRetries = 0;
 
     /**
      * @return string|int|null

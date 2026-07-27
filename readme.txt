@@ -1,4 +1,4 @@
-=== WP STAGING - WordPress Backup, Restore, Migration & Clone ===
+=== WP STAGING - WordPress Backups, Restore, Migration & Clone ===
 
 Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, lucasbustamante, alaasalama, fayyazfayzi
 Donate link: https://wp-staging.com/backup-wordpress
@@ -7,10 +7,10 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.9.3
+Stable tag: 4.9.4
 Requires PHP: 7.0
 
-WordPress backup, restore & migration in minutes. Clone or duplicate your site and test updates safely on a staging copy. 100% unit-tested.
+WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
 
 == Description ==
 
@@ -283,16 +283,24 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.9.3 =
-* Fix: Estimated size in the staging site setup now reflects the selected database tables and the selected files and folders. #5253
-* Fix: List database tables in Push UI for staging sites connected to an external database. #5376
-* Fix: Prevent Remote Sync from failing when optional sync selections are omitted. (Pro) #5329
-* Fix: Prevent a PHP notice about early translation loading when cron schedules are registered. #5318
-* Fix: Prevent a false "core folder excluded" warning in the Create Staging Site modal when staging sites already exist. #5352
-* Fix: Prevent missing optimizer settings from triggering warnings. #5356
-* Fix: Show an upgrade prompt instead of "No backups found" in the CLI installer when the backup list is unavailable. #5370
-* Fix: Prevent the Optimizer mu-plugin from persisting its filtered active_plugins list, which could mass-deactivate every non WP STAGING plugin when core deactivates or activates a plugin during a WP STAGING AJAX request. #5371
-* Dev: Ensure the source Developer license for every Remote Sync E2E test in the shared before-hook, so specs that authenticate against the source no longer fail intermittently with a "Developer plan required" error. #5360
+= 4.9.4 =
+* Enh: Rename the "Engine" / "Copy method" terminology to "Transfer method" across the Create, Push, Update and Reset modals. #5277
+* Enh: Show the Create Staging Site modal customization in place of the review card instead of appending it below. #5277
+* Enh: Show the Push modal customization in place of the review card instead of appending it below the warning. #5277
+* Fix: Consolidate customization into one button in Create/Push modals and stop hiding advanced settings behind cards. #5277
+* Fix: Critical error when opening WP Staging on GoDaddy Managed WordPress sites running WooCommerce. #5399
+* Fix: Include newly added network sites in scheduled multisite backups and show the network site count in backup listings. (Pro) #5338
+* Fix: License status is no longer lost after backup restore. (Pro) #5294
+* Fix: Prevent Windows UNC server paths from being corrupted and rejected when saving the Edit Staging Site form. #5365
+* Fix: Prevent active remote sync pulls from timing out during source preparation. (Pro) #5361
+* Fix: Prevent database restore from stalling when execution time must be increased. #5361
+* Fix: Prevent fatal error when open_basedir restrictions block filesystem scanning during backup size calculation and the staging site directory tree. #5390
+* Fix: Prevent multisite subsite admins from escalating to network Super Admin via temporary login links. #5387
+* Fix: Remove the security alerts popup from the welcome page. #5336
+* Fix: Render {link} placeholders in the What's New modal as real links instead of showing them verbatim. #5405
+* Dev: Load commonBootstrap.php in RoadRunner test harness to fix Playwright database reset failures. #5401
+* Dev: Report lines of code (production, tests, documentation) in every pull request description. #5424
+* Dev: Stop the Fast tests workflow reporting success for runs where every job was skipped. #5420
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
