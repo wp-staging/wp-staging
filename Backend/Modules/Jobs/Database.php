@@ -320,7 +320,13 @@ class Database extends CloningProcess
      */
     private function copyData($destTableName, $srcTableName)
     {
-        $this->databaseCloningService->copyData($srcTableName, $destTableName, $this->options->job->start, $this->settings->queryLimit);
+        try {
+            $this->databaseCloningService->copyData($srcTableName, $destTableName, $this->options->job->start, $this->settings->queryLimit);
+        } catch (FatalException $e) {
+            $this->returnException($e->getMessage());
+            return;
+        }
+
         // Set new offset
         $this->options->job->start += $this->settings->queryLimit;
     }

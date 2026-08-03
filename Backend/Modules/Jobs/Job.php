@@ -10,6 +10,7 @@ use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Database\ExcludedTables;
+use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Math;
@@ -108,6 +109,9 @@ abstract class Job implements ShutdownableInterface
     /** @var SystemInfo */
     protected $systemInfo;
 
+    /** @var ExternalDatabaseConfiguration */
+    protected $externalDatabaseConfiguration;
+
     /**
      * Job constructor.
      * @throws Exception
@@ -117,6 +121,7 @@ abstract class Job implements ShutdownableInterface
         $this->utilsMath = new Math();
 
         $this->excludedTableService = new ExcludedTables();
+        $this->externalDatabaseConfiguration = new ExternalDatabaseConfiguration();
 
         // Services
         //$this->logger     = WPStaging::make(Logger::class);
@@ -239,7 +244,9 @@ abstract class Job implements ShutdownableInterface
     protected function loadLegacyExistingClones()
     {
         $existingClones                = get_option(Sites::STAGING_SITES_OPTION, []);
-        $this->options->existingClones = is_array($existingClones) ? $existingClones : [];
+        $this->options->existingClones = is_array($existingClones)
+            ? array_change_key_case($existingClones, CASE_LOWER)
+            : [];
     }
 
     /**
@@ -508,7 +515,7 @@ abstract class Job implements ShutdownableInterface
      */
     protected function isExternalDatabase()
     {
-        return !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
+        return $this->externalDatabaseConfiguration->isEnabled($this->options);
     }
 
     /**
@@ -516,8 +523,12 @@ abstract class Job implements ShutdownableInterface
      */
     protected function isStagingDatabaseSameAsProductionDatabase()
     {
-        if (empty($this->options->databaseUser) || empty($this->options->databaseServer) || empty($this->options->databaseDatabase)) {
+        if (!$this->isExternalDatabase()) {
             return true;
+        }
+
+        if (!$this->externalDatabaseConfiguration->hasConnectionTarget($this->options)) {
+            return false;
         }
 
         if ($this->options->databaseServer === DB_HOST && $this->options->databaseDatabase === DB_NAME) {

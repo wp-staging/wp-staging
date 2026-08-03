@@ -5,6 +5,7 @@ namespace WPStaging\Backup;
 use SplFileInfo;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Utils\BackupPathResolver;
 
 class BackupDeleter
 {
@@ -14,16 +15,20 @@ class BackupDeleter
     /** @var BackupMetadata */
     protected $backupMetadata;
 
+    /** @var BackupPathResolver */
+    protected $backupPathResolver;
+
     /** @var array */
     protected $errors = [];
 
     /** @var bool */
     protected $deletingAutomatedDatabaseOnlyBackup = false;
 
-    public function __construct(BackupsFinder $backupsFinder, BackupMetadata $backupMetadata)
+    public function __construct(BackupsFinder $backupsFinder, BackupMetadata $backupMetadata, BackupPathResolver $backupPathResolver)
     {
-        $this->backupsFinder  = $backupsFinder;
-        $this->backupMetadata = $backupMetadata;
+        $this->backupsFinder      = $backupsFinder;
+        $this->backupMetadata     = $backupMetadata;
+        $this->backupPathResolver = $backupPathResolver;
     }
 
     /** @return array */
@@ -34,7 +39,7 @@ class BackupDeleter
 
     public function clearErrors()
     {
-        $this->errors = [];
+        $this->errors                              = [];
         $this->deletingAutomatedDatabaseOnlyBackup = false;
     }
 
@@ -147,17 +152,20 @@ class BackupDeleter
             return;
         }
 
-        $backupDirectory = $this->backupsFinder->getBackupsDirectory();
         foreach ($metadata->getMultipartMetadata()->getBackupParts() as $part) {
-            $partPath = $backupDirectory . $part;
+            $partPath = $this->backupPathResolver->resolveBackupPartPath($part, $backup->getFilename());
+            if ($partPath === '') {
+                $this->errors[] = sprintf(__('Skipped a backup part that does not belong to this backup: %s', 'wp-staging'), esc_html($part));
+                continue;
+            }
+
             if (!file_exists($partPath)) {
                 continue;
             }
 
-            $partName = str_replace(dirname($partPath), '', $partPath);
             $deleted = unlink($partPath);
             if (!$deleted) {
-                $this->errors[] = sprintf(__('Unable to delete %s split backup part: %s', 'wp-staging'), $additionalLog, $partName);
+                $this->errors[] = sprintf(__('Unable to delete %s split backup part: %s', 'wp-staging'), $additionalLog, wp_basename($partPath));
             }
         }
     }

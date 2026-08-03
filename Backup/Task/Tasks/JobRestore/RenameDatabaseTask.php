@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
+use stdClass;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Security\AccessToken;
@@ -25,10 +26,13 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Settings\SettingsTable;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RenameDatabaseTask extends RestoreTask
 {
+    use SerializeTrait;
+
     /**
      * @var string
      */
@@ -179,7 +183,7 @@ class RenameDatabaseTask extends RestoreTask
     protected function getAutoloadedOptions()
     {
         global $wpdb;
-        $suppress = $wpdb->suppress_errors();
+        $suppress     = $wpdb->suppress_errors();
         $allOptionsDb = $wpdb->get_results("SELECT option_name FROM $wpdb->options WHERE autoload = 'yes'");
         $wpdb->suppress_errors($suppress);
 
@@ -389,7 +393,7 @@ class RenameDatabaseTask extends RestoreTask
         $result = $this->tablesRenamer->renameConflictingTables();
 
         $this->currentTaskDto->conflictingTablesRenamed = $this->tablesRenamer->getConflictingTablesRenamed();
-        $tablesRenamed = $this->currentTaskDto->nonConflictingTablesRenamed + $this->currentTaskDto->conflictingTablesRenamed;
+        $tablesRenamed                                  = $this->currentTaskDto->nonConflictingTablesRenamed + $this->currentTaskDto->conflictingTablesRenamed;
         $this->logger->info(sprintf('Restored %d/%d tables.', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
         $this->setCurrentTaskDto($this->currentTaskDto);
 
@@ -439,7 +443,7 @@ class RenameDatabaseTask extends RestoreTask
         }
 
         foreach ($this->optionsToKeep as $optionToKeep) {
-            update_option($optionToKeep['name'], maybe_unserialize($optionToKeep['value']), $optionToKeep['autoload']);
+            update_option($optionToKeep['name'], $this->decodePreservedOptionValue($optionToKeep['value']), $optionToKeep['autoload']);
         }
 
         foreach ($this->optionsToRemove as $optionToRemove) {
@@ -504,6 +508,15 @@ class RenameDatabaseTask extends RestoreTask
         $this->logger->info('Database restored successfully.');
 
         Hooks::doAction(self::FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS);
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
+    private function decodePreservedOptionValue($value)
+    {
+        return $this->safeMaybeUnserialize($value, [stdClass::class]);
     }
 
     /**

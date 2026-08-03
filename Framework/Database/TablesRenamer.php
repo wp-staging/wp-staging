@@ -6,6 +6,7 @@ use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Traits\SerializeTrait;
 
 /**
  * This class is responsible for renaming database tables from temporary prefix to production prefix
@@ -13,6 +14,8 @@ use WPStaging\Framework\Facades\Hooks;
  */
 class TablesRenamer
 {
+    use SerializeTrait;
+
     /** @var string */
     const OPTION_ACTIVE_PLUGINS = 'active_plugins';
 
@@ -368,7 +371,7 @@ class TablesRenamer
      */
     public function setupRenamer(): RenameDatabaseTaskDto
     {
-        $taskDto = new RenameDatabaseTaskDto();
+        $taskDto                     = new RenameDatabaseTaskDto();
         $taskDto->tablesBeingRenamed = $this->tableService->findTableNamesStartWith($this->tmpPrefix) ?: [];
         $taskDto->viewsBeingRenamed  = [];
         if ($this->renameViews) {
@@ -386,9 +389,9 @@ class TablesRenamer
             $taskDto->existingTables[] = $this->productionTableBasePrefix . 'usermeta';
         }
 
-        $taskDto->existingViews  = [];
+        $taskDto->existingViews = [];
         if ($this->renameViews) {
-            $taskDto->existingViews  = $this->tableService->findViewsNamesStartWith($this->productionTablePrefix) ?: [];
+            $taskDto->existingViews = $this->tableService->findViewsNamesStartWith($this->productionTablePrefix) ?: [];
         }
 
         $taskDto->conflictingTablesRenamed    = 0;
@@ -517,7 +520,7 @@ class TablesRenamer
             }
 
             $currentTable = $this->getCurrentSiteTable($conflictingTableWithoutPrefix);
-            $tableToDrop  =  $this->getTableShortName($currentTable, $this->dropPrefix);
+            $tableToDrop  = $this->getTableShortName($currentTable, $this->dropPrefix);
             if ($tableToDrop === false) {
                 $tableToDrop = $this->dropPrefix . $conflictingTableWithoutPrefix;
             }
@@ -605,7 +608,7 @@ class TablesRenamer
             return true;
         }
 
-        $this->tablesToBeDropped = $this->tableService->findTableNamesStartWith($this->dropPrefix) ?: [];
+        $this->tablesToBeDropped          = $this->tableService->findTableNamesStartWith($this->dropPrefix) ?: [];
         $this->tablesRemainingToBeDropped = count($this->tablesToBeDropped);
 
         $this->tableService->getDatabase()->exec('SET autocommit=0;');
@@ -643,7 +646,7 @@ class TablesRenamer
             }
 
             $fullTableName = $this->productionTablePrefix . $table;
-            $tableToDrop = $this->getTableShortName($fullTableName, $this->dropPrefix);
+            $tableToDrop   = $this->getTableShortName($fullTableName, $this->dropPrefix);
             if ($tableToDrop === false) {
                 $tableToDrop = $this->dropPrefix . $table;
             }
@@ -715,22 +718,22 @@ class TablesRenamer
         }
 
         // keep only active plugins that are wp staging plugins
-        $currentActivePlugins = maybe_unserialize($currentActivePlugins);
+        $wpstgActivePlugins = $this->safeMaybeUnserialize($currentActivePlugins);
         // in case the active plugins is not an array, we set it to empty array to avoid warnings, type errors
-        if (!is_array($currentActivePlugins)) {
+        if (!is_array($wpstgActivePlugins)) {
             // Let backup the original active plugins value in tmp options table before setting it to empty array
             $this->insertOrUpdateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS . '_bak', $currentActivePlugins);
-            $this->errors[]       = 'The active plugins option in the database is corrupted in the current site. WP Staging has disabled all plugins during the restore process to avoid fatal errors. Nothing to worry about, the active plugins list is going to be replaced. However, the original value has been backed up in the options table with the name "active_plugins_bak".';
-            $currentActivePlugins = [];
+            $this->errors[]     = 'The active plugins option in the database is corrupted in the current site. WP Staging has disabled all plugins during the restore process to avoid fatal errors. Nothing to worry about, the active plugins list is going to be replaced. However, the original value has been backed up in the options table with the name "active_plugins_bak".';
+            $wpstgActivePlugins = [];
         }
 
-        $currentActivePlugins = array_filter($currentActivePlugins, function ($pluginSlug) {
-            return strpos($pluginSlug, self::PLUGIN_BASE_SLUG) === 0;
+        $wpstgActivePlugins = array_filter($wpstgActivePlugins, function ($pluginSlug) {
+            return is_string($pluginSlug) && strpos($pluginSlug, self::PLUGIN_BASE_SLUG) === 0;
         });
 
-        $currentActivePlugins = serialize($currentActivePlugins);
-        $this->updateOptionValue($tmpOptionsTable, self::OPTION_ACTIVE_PLUGINS, $currentActivePlugins);
-        $this->updateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS, $currentActivePlugins);
+        $wpstgActivePlugins = serialize($wpstgActivePlugins);
+        $this->updateOptionValue($tmpOptionsTable, self::OPTION_ACTIVE_PLUGINS, $wpstgActivePlugins);
+        $this->updateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS, $wpstgActivePlugins);
 
         return $activePluginsToPreserve;
     }
@@ -752,22 +755,22 @@ class TablesRenamer
         $currentActivePlugins    = $this->getNetworkOptionValue($productionSiteMetaTable, self::OPTION_ACTIVE_SITEWIDE_PLUGINS);
 
         // keep only active plugins that are wp staging plugins
-        $currentActivePlugins = maybe_unserialize($currentActivePlugins);
+        $wpstgActivePlugins = $this->safeMaybeUnserialize($currentActivePlugins);
         // In case the active sitewide plugins is not an array, we set it to empty array to avoid warnings, type errors
-        if (!is_array($currentActivePlugins)) {
+        if (!is_array($wpstgActivePlugins)) {
             // Let backup the original active sitewide plugins value in tmp sitemeta table before setting it to empty array
             $this->insertOrUpdateNetworkOptionValue($productionSiteMetaTable, self::OPTION_ACTIVE_SITEWIDE_PLUGINS . '_bak', $currentActivePlugins);
-            $this->errors[]       = 'The active sitewide plugins option in the database is corrupted in the current site. WP Staging has disabled all sitewide plugins during the restore process to avoid fatal errors. Nothing to worry about, the active sitewide plugins option is going to be replaced anyway after the restore. However, the original value has been backed up in the sitemeta table with the name "active_sitewide_plugins_bak".';
-            $currentActivePlugins = [];
+            $this->errors[]     = 'The active sitewide plugins option in the database is corrupted in the current site. WP Staging has disabled all sitewide plugins during the restore process to avoid fatal errors. Nothing to worry about, the active sitewide plugins option is going to be replaced anyway after the restore. However, the original value has been backed up in the sitemeta table with the name "active_sitewide_plugins_bak".';
+            $wpstgActivePlugins = [];
         }
 
-        $currentActivePlugins = array_filter($currentActivePlugins, function ($pluginSlug) {
-            return strpos($pluginSlug, self::PLUGIN_BASE_SLUG) === 0;
+        $wpstgActivePlugins = array_filter($wpstgActivePlugins, function ($pluginSlug) {
+            return is_string($pluginSlug) && strpos($pluginSlug, self::PLUGIN_BASE_SLUG) === 0;
         }, ARRAY_FILTER_USE_KEY); // network active plugins are set in key value pair i.e. ['plugin-slug' => time()], so we need to filter the keys instead
 
-        $currentActivePlugins = serialize($currentActivePlugins);
-        $this->updateNetworkOptionValue($tmpSiteMetaTable, self::OPTION_ACTIVE_SITEWIDE_PLUGINS, $currentActivePlugins);
-        $this->updateNetworkOptionValue($productionSiteMetaTable, self::OPTION_ACTIVE_SITEWIDE_PLUGINS, $currentActivePlugins);
+        $wpstgActivePlugins = serialize($wpstgActivePlugins);
+        $this->updateNetworkOptionValue($tmpSiteMetaTable, self::OPTION_ACTIVE_SITEWIDE_PLUGINS, $wpstgActivePlugins);
+        $this->updateNetworkOptionValue($productionSiteMetaTable, self::OPTION_ACTIVE_SITEWIDE_PLUGINS, $wpstgActivePlugins);
 
         return $activePluginsToPreserve;
     }
@@ -781,20 +784,31 @@ class TablesRenamer
     public function restorePreservedActivePlugins(string $activePlugins, string $activeWpstgPlugin, bool $isNetworkActivatedPlugin): bool
     {
         $productionOptionsTable = $this->productionTablePrefix . 'options';
+        $preservedPlugins       = $this->safeMaybeUnserialize($activePlugins);
+
         if ($isNetworkActivatedPlugin) {
-            return $this->updateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS, $activePlugins);
+            if (!is_array($preservedPlugins)) {
+                $this->addRejectedActivePluginsError($activePlugins);
+                $preservedPlugins = [];
+            }
+
+            $preservedPlugins = array_values(array_filter($preservedPlugins, 'is_string'));
+
+            return $this->updateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS, serialize($preservedPlugins));
         }
 
-        $activePlugins = maybe_unserialize($activePlugins);
         // In case the active plugins is not an array, we set it to empty array to avoid warnings, type errors
-        if (!is_array($activePlugins)) {
+        if (!is_array($preservedPlugins)) {
             // Let backup the original active plugins value in production options table before setting it to empty array
             $this->insertOrUpdateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS . '_bak', $activePlugins);
-            $this->errors[] = 'The active plugins option in the database is corrupted after the renamed table. WP Staging has disabled all plugins during the restore process to avoid fatal errors. You can re-activate your plugins from the WordPress admin dashboard after the restore is complete. The original value has been backed up in the options table with the name "active_plugins_bak".';
-            $activePlugins  = [];
+            $this->errors[]   = 'The active plugins option in the database is corrupted after the renamed table. WP Staging has disabled all plugins during the restore process to avoid fatal errors. You can re-activate your plugins from the WordPress admin dashboard after the restore is complete. The original value has been backed up in the options table with the name "active_plugins_bak".';
+            $preservedPlugins = [];
         }
 
-        $activePlugins = array_filter($activePlugins, function ($pluginSlug) {
+        $preservedPlugins = array_filter($preservedPlugins, function ($pluginSlug) {
+            if (!is_string($pluginSlug)) {
+                return false;
+            }
 
             // Disable all wp staging plugins, we will reactive current active wp staging plugin later
             if (strpos($pluginSlug, self::PLUGIN_BASE_SLUG) !== false) {
@@ -805,12 +819,23 @@ class TablesRenamer
         });
 
         // reactivating current active wp staging plugin
-        $activePlugins[] = $activeWpstgPlugin;
-        sort($activePlugins);
+        $preservedPlugins[] = $activeWpstgPlugin;
+        sort($preservedPlugins);
 
-        $activePlugins = serialize($activePlugins);
+        return $this->updateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS, serialize($preservedPlugins));
+    }
 
-        return $this->updateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS, $activePlugins);
+    /**
+     * @param string $originalValue
+     * @return void
+     */
+    protected function addRejectedActivePluginsError(string $originalValue)
+    {
+        if ($originalValue === '') {
+            return;
+        }
+
+        $this->errors[] = 'The active plugins option in the backup is corrupted or contains a serialized PHP object. WP Staging has disabled all plugins during the restore process to avoid fatal errors. You can re-activate your plugins from the WordPress admin dashboard after the restore is complete.';
     }
 
     /**
@@ -821,16 +846,16 @@ class TablesRenamer
      */
     public function restorePreservedActiveSitewidePlugins(string $activeSitewidePlugins, string $activeWpstgPlugin, $time = null): bool
     {
-        $activeSitewidePlugins = maybe_unserialize($activeSitewidePlugins);
+        $preservedSitewidePlugins = $this->safeMaybeUnserialize($activeSitewidePlugins);
         // In case the active sitewide plugins is not an array, we set it to empty array to avoid warnings, type errors
-        if (!is_array($activeSitewidePlugins)) {
+        if (!is_array($preservedSitewidePlugins)) {
             // Let backup the original active sitewide plugins value in production sitemeta table before setting it to empty array
             $this->insertOrUpdateNetworkOptionValue($this->productionTablePrefix . 'sitemeta', self::OPTION_ACTIVE_SITEWIDE_PLUGINS . '_bak', $activeSitewidePlugins);
-            $this->errors[]        = 'The active sitewide plugins option in the database is corrupted after the renamed table. WP Staging has disabled all sitewide plugins during the restore process to avoid fatal errors. You can re-activate your sitewide plugins from the WordPress admin dashboard after the restore is complete. The original value has been backed up in the sitemeta table with the name "active_sitewide_plugins_bak".';
-            $activeSitewidePlugins = [];
+            $this->errors[]           = 'The active sitewide plugins option in the database is corrupted after the renamed table. WP Staging has disabled all sitewide plugins during the restore process to avoid fatal errors. You can re-activate your sitewide plugins from the WordPress admin dashboard after the restore is complete. The original value has been backed up in the sitemeta table with the name "active_sitewide_plugins_bak".';
+            $preservedSitewidePlugins = [];
         }
 
-        $activeSitewidePlugins = array_filter($activeSitewidePlugins, function ($pluginSlug) {
+        $activeSitewidePlugins = array_filter($preservedSitewidePlugins, function ($pluginSlug) {
 
             // Disable all wp staging plugins, we will reactive current active wp staging plugin later
             if (strpos($pluginSlug, self::PLUGIN_BASE_SLUG) !== false) {
@@ -927,7 +952,7 @@ class TablesRenamer
 
         // Rename restored table to existing table
         $database = $this->tableService->getDatabase();
-        $result = $database->exec(sprintf(
+        $result   = $database->exec(sprintf(
             "RENAME TABLE `%s` TO `%s`;",
             $tableToRename,
             $tableAfterRenamed
@@ -957,10 +982,11 @@ class TablesRenamer
      */
     protected function tableExists(string $tableName): bool
     {
-        $database  = $this->tableService->getDatabase()->getWpdba()->getClient();
-        $tableName = $database->esc_like($tableName);
-        $sql       = "SHOW TABLES LIKE '{$tableName}'";
-        $result    = $database->get_results($sql, ARRAY_A);
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
+        $result   = $database->get_results(
+            $database->prepare("SHOW TABLES LIKE %s", $database->esc_like($tableName)),
+            ARRAY_A
+        );
 
         return !empty($result);
     }
@@ -972,10 +998,14 @@ class TablesRenamer
      */
     protected function getOptionValue(string $tableName, string $optionName): string
     {
-        $database   = $this->tableService->getDatabase()->getWpdba()->getClient();
-        $optionName = $database->esc_like($optionName);
-        $sql        = "SELECT option_value FROM {$tableName} WHERE option_name LIKE '{$optionName}'";
-        $result     = $database->get_results($sql, ARRAY_A);
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
+        $result   = $database->get_results(
+            $database->prepare(
+                "SELECT option_value FROM `{$tableName}` WHERE option_name LIKE %s",
+                $database->esc_like($optionName)
+            ),
+            ARRAY_A
+        );
         if (empty($result)) {
             return '';
         }
@@ -991,11 +1021,15 @@ class TablesRenamer
      */
     protected function updateOptionValue(string $tableName, string $optionName, string $optionValue): bool
     {
-        $database   = $this->tableService->getDatabase()->getWpdba()->getClient();
-        $optionName = $database->esc_like($optionName);
-        $sql        = "UPDATE {$tableName} SET option_value = '{$optionValue}' WHERE option_name LIKE '{$optionName}'";
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
 
-        return $database->query($sql);
+        return $database->query(
+            $database->prepare(
+                "UPDATE `{$tableName}` SET option_value = %s WHERE option_name LIKE %s",
+                $optionValue,
+                $database->esc_like($optionName)
+            )
+        );
     }
 
     /**
@@ -1042,10 +1076,14 @@ class TablesRenamer
      */
     protected function getNetworkOptionValue(string $tableName, string $optionName): string
     {
-        $database   = $this->tableService->getDatabase()->getWpdba()->getClient();
-        $optionName = $database->esc_like($optionName);
-        $sql        = "SELECT meta_value FROM {$tableName} WHERE meta_key LIKE '{$optionName}'";
-        $result     = $database->get_results($sql, ARRAY_A);
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
+        $result   = $database->get_results(
+            $database->prepare(
+                "SELECT meta_value FROM `{$tableName}` WHERE meta_key LIKE %s",
+                $database->esc_like($optionName)
+            ),
+            ARRAY_A
+        );
         if (empty($result)) {
             return '';
         }
@@ -1061,10 +1099,15 @@ class TablesRenamer
      */
     protected function insertNetworkOptionValue(string $tableName, string $optionName, string $optionValue): bool
     {
-        $database   = $this->tableService->getDatabase()->getWpdba()->getClient();
-        $optionName = $database->esc_like($optionName);
-        $sql        = "INSERT INTO {$tableName} (meta_key, meta_value) VALUES ('{$optionName}', '{$optionValue}')";
-        return $database->query($sql);
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
+
+        return $database->query(
+            $database->prepare(
+                "INSERT INTO `{$tableName}` (meta_key, meta_value) VALUES (%s, %s)",
+                $optionName,
+                $optionValue
+            )
+        );
     }
 
     /**
@@ -1075,11 +1118,15 @@ class TablesRenamer
      */
     protected function updateNetworkOptionValue(string $tableName, string $optionName, string $optionValue): bool
     {
-        $database   = $this->tableService->getDatabase()->getWpdba()->getClient();
-        $optionName = $database->esc_like($optionName);
-        $sql        = "UPDATE {$tableName} SET meta_value = '{$optionValue}' WHERE meta_key LIKE '{$optionName}'";
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
 
-        return $database->query($sql);
+        return $database->query(
+            $database->prepare(
+                "UPDATE `{$tableName}` SET meta_value = %s WHERE meta_key LIKE %s",
+                $optionValue,
+                $database->esc_like($optionName)
+            )
+        );
     }
 
     /**

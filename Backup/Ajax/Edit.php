@@ -5,7 +5,7 @@ namespace WPStaging\Backup\Ajax;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupMetadataEditor;
 use WPStaging\Backup\Service\BackupsFinder;
-use WPStaging\Core\WPStaging;
+use WPStaging\Backup\Utils\BackupPathResolver;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -19,18 +19,23 @@ class Edit extends AbstractTemplateComponent
     /** @var BackupsFinder */
     private $backupsFinder;
 
+    /** @var BackupPathResolver */
+    private $backupPathResolver;
+
     /** @var Sanitize */
     private $sanitize;
 
     public function __construct(
         BackupsFinder $backupsFinder,
         BackupMetadataEditor $backupMetadataEditor,
+        BackupPathResolver $backupPathResolver,
         Sanitize $sanitize,
         TemplateEngine $templateEngine
     ) {
         parent::__construct($templateEngine);
         $this->backupsFinder        = $backupsFinder;
         $this->backupMetadataEditor = $backupMetadataEditor;
+        $this->backupPathResolver   = $backupPathResolver;
         $this->sanitize             = $sanitize;
     }
 
@@ -84,7 +89,7 @@ class Edit extends AbstractTemplateComponent
                     $increment = strlen($name) + strlen($notes);
 
                     if ($metaData->getIsMultipartBackup()) {
-                        $this->updateBackupParts($metaData, $name, $notes, $increment);
+                        $this->updateBackupParts($metaData, $name, $notes, $increment, $backup->getFilename());
                         return;
                     }
 
@@ -120,14 +125,18 @@ class Edit extends AbstractTemplateComponent
      * @param string $name
      * @param string $notes
      * @param int $incrementSize
+     * @param string $backupFilename
      */
-    protected function updateBackupParts($metaData, $name, $notes, $incrementSize)
+    protected function updateBackupParts($metaData, $name, $notes, $incrementSize, $backupFilename)
     {
-        $backupSize       = 0;
-        $backupsDirectory = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
-        $backupParts      = [];
+        $backupSize  = 0;
+        $backupParts = [];
         foreach ($metaData->getMultipartMetadata()->getBackupParts() as $part) {
-            $backupPart   = $backupsDirectory . $part;
+            $backupPart = $this->backupPathResolver->resolveBackupPartPath($part, $backupFilename);
+            if ($backupPart === '') {
+                continue;
+            }
+
             $partFile     = new FileObject($backupPart, FileObject::MODE_APPEND_AND_READ);
             $partMetadata = (new BackupMetadata())->hydrateByFile($partFile);
             $partSize     = filesize($backupPart);

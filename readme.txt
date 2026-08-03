@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.0
-Stable tag: 4.9.4
+Stable tag: 4.9.5
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,24 +283,29 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.9.4 =
-* Enh: Rename the "Engine" / "Copy method" terminology to "Transfer method" across the Create, Push, Update and Reset modals. #5277
-* Enh: Show the Create Staging Site modal customization in place of the review card instead of appending it below. #5277
-* Enh: Show the Push modal customization in place of the review card instead of appending it below the warning. #5277
-* Fix: Consolidate customization into one button in Create/Push modals and stop hiding advanced settings behind cards. #5277
-* Fix: Critical error when opening WP Staging on GoDaddy Managed WordPress sites running WooCommerce. #5399
-* Fix: Include newly added network sites in scheduled multisite backups and show the network site count in backup listings. (Pro) #5338
-* Fix: License status is no longer lost after backup restore. (Pro) #5294
-* Fix: Prevent Windows UNC server paths from being corrupted and rejected when saving the Edit Staging Site form. #5365
-* Fix: Prevent active remote sync pulls from timing out during source preparation. (Pro) #5361
-* Fix: Prevent database restore from stalling when execution time must be increased. #5361
-* Fix: Prevent fatal error when open_basedir restrictions block filesystem scanning during backup size calculation and the staging site directory tree. #5390
-* Fix: Prevent multisite subsite admins from escalating to network Super Admin via temporary login links. #5387
-* Fix: Remove the security alerts popup from the welcome page. #5336
-* Fix: Render {link} placeholders in the What's New modal as real links instead of showing them verbatim. #5405
-* Dev: Load commonBootstrap.php in RoadRunner test harness to fix Playwright database reset failures. #5401
-* Dev: Report lines of code (production, tests, documentation) in every pull request description. #5424
-* Dev: Stop the Fast tests workflow reporting success for runs where every job was skipped. #5420
+= 4.9.5 =
+* Fix: Block escalation to network Super Admin through staging magic login links. #5408
+* Fix: Contain backup file and part paths across explore, parts, remote upload, delete and edit. #5408
+* Fix: Contain cloud-download backup filenames to the backups directory to prevent arbitrary file write. #5408
+* Fix: Only delete, edit, validate and upload backup parts that belong to the selected backup. #5408
+* Fix: Parameterize temporary-login and restore database writes to close authenticated SQL injection. #5408
+* Fix: Prevent classic staging creation from using incomplete external database settings. (Pro) #5358
+* Fix: Prevent core WordPress and staging site folders from being listed under Backup Other WP Root Folders on Windows UNC network shares. #5430
+* Fix: Prevent directory scanner from rejecting all files on Windows UNC network share paths. #5430
+* Fix: Reject serialized PHP objects in backup data during restore so they cannot be stored and unserialized later. #5408
+* Fix: Require authorization before clearing Pro backup schedules. #5408
+* Fix: Restore the "Extra Directories to Copy" option in the push setup UI. (Pro) #5397
+* Fix: Restrict Slack notification webhooks to allowed hosts and guard the install page with a capability check. #5408
+* Fix: Restrict the remote sync pull download URL to the configured source site. #5408
+* Fix: Stop classic staging creation when required database rows are missing after copying. #5358
+* Fix: Stop treating a public site as a local install when its URL merely contains .local, .test or an internal IP prefix. #5422
+* Fix: Validate remote sync peer URLs against SSRF targets such as loopback and cloud metadata. #5408
+* Dev: Add self-hosted GitHub Actions runners on xsimulator.net to replace the Blacksmith.sh runners. #5412
+* Dev: Add the lines-of-code and CI test result sections to a pull request description that does not carry their markers yet. #5441
+* Dev: Base the extractor tests' unthrottled memory limit on current usage instead of a fixed 200 MB, which the suite's own memory can exceed, and give ValidateBackupTaskTest the memory limit filter its resource checks require. #5445
+* Dev: Fix the intermittent ExtractFilesTaskTest failure on the PHP 8.0 multisite suite. The request caps of 10 and 20 broke out of a run that was still progressing and then asserted it had finished, so a healthy extraction was reported as a failure. #5445
+* Dev: Install the multi-request tests' resource filters once per run and remove them in a finally block, so no exit path can leave the thresholds enabled. #5445
+* Dev: Run the cheap pull request jobs and the Kanban board automation on the self-hosted runners as well. #5412
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

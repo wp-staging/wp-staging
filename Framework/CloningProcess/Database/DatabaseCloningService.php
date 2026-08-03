@@ -72,20 +72,54 @@ class DatabaseCloningService
             /** @var Escape $escapeUtil */
             $escapeUtil   = WPStaging::make(Escape::class);
             $tableColumns = $this->getColumnTypes($srcTableName);
-            // Copy into staging site
-            foreach ($result as $row) {
-                // Prepare values for insert statement (encase in quotes if not null and binary)
-                $values = $this->prepareValuesStatement($row, $tableColumns, $escapeUtil);
-                $query  = "INSERT INTO `$destTableName` VALUES ($values)";
-                if ($stagingDb->query($query) === false) {
-                    $this->log("Can not insert data into table $destTableName");
-                    $this->debugLog("Failed Query: " . $query . " Error: " . $stagingDb->last_error);
-                }
-            }
+            $isCommitted = false;
 
-            // Commit transaction
-            $this->dto->getStagingDb()->query('COMMIT;');
-            $this->dto->getStagingDb()->query('SET autocommit=1;');
+            try {
+                // Copy into staging site
+                foreach ($result as $row) {
+                    // Prepare values for insert statement (encase in quotes if not null and binary)
+                    $values      = $this->prepareValuesStatement($row, $tableColumns, $escapeUtil);
+                    $query       = "INSERT INTO `$destTableName` VALUES ($values)";
+                    $insertQuery = $query;
+                    $inserted    = $stagingDb->query($insertQuery);
+
+                    if ($inserted === false && $this->isDuplicateEntryError($stagingDb->last_error)) {
+                        $this->log(
+                            "DB Data Copy Warning: {$stagingDb->last_error}. "
+                            . "Retrying the row while skipping duplicate keys.",
+                            Logger::TYPE_WARNING
+                        );
+
+                        $insertQuery = preg_replace('/^INSERT\s+INTO/i', 'INSERT IGNORE INTO', $query, 1);
+                        $inserted    = is_string($insertQuery) ? $stagingDb->query($insertQuery) : false;
+
+                        if ($inserted !== false) {
+                            $this->throwOnUnexpectedInsertWarnings($stagingDb, $srcTableName, $destTableName);
+                        }
+                    }
+
+                    if ($inserted === false) {
+                        $lastError = $stagingDb->last_error;
+                        $this->debugLog("Failed Query: " . $insertQuery . " Error: " . $lastError);
+
+                        throw new FatalException(
+                            "DB Data Copy Error: Failed to copy data from {$srcTableName} "
+                            . "to {$destTableName}. {$lastError}"
+                        );
+                    }
+                }
+
+                // Commit transaction
+                $stagingDb->query('COMMIT;');
+                $isCommitted = true;
+            } finally {
+                if (!$isCommitted) {
+                    $stagingDb->query('ROLLBACK;');
+                }
+
+                $stagingDb->query('SET FOREIGN_KEY_CHECKS=1;');
+                $stagingDb->query('SET autocommit=1;');
+            }
         } else {
             $this->log("Copy data from $srcTableName to $destTableName - $offset to $rows records");
 
@@ -96,11 +130,57 @@ class DatabaseCloningService
                 $preparedQuery = $this->dto->getStagingDb()->prepare($preparedQuery, $preparedValues);
             }
 
-            $result = $this->dto->getStagingDb()->query($preparedQuery);
+            $stagingDb = $this->dto->getStagingDb();
+            $result    = $stagingDb->query($preparedQuery);
 
-            if (!$result) {
-                $this->log("DB Data Copy Error:" . $this->dto->getStagingDb()->last_error, Logger::TYPE_WARNING);
+            if ($result === false && $this->isDuplicateEntryError($stagingDb->last_error)) {
+                $this->log(
+                    "DB Data Copy Warning: {$stagingDb->last_error}. Retrying the batch while skipping duplicate keys.",
+                    Logger::TYPE_WARNING
+                );
+
+                $preparedQuery = preg_replace('/^INSERT\s+INTO/i', 'INSERT IGNORE INTO', $preparedQuery, 1);
+                $result        = is_string($preparedQuery) ? $stagingDb->query($preparedQuery) : false;
+
+                if ($result !== false) {
+                    $this->throwOnUnexpectedInsertWarnings($stagingDb, $srcTableName, $destTableName);
+                }
             }
+
+            if ($result === false) {
+                throw new FatalException(
+                    "DB Data Copy Error: Failed to copy data from {$srcTableName} to {$destTableName}. {$stagingDb->last_error}"
+                );
+            }
+        }
+    }
+
+    private function isDuplicateEntryError(string $message): bool
+    {
+        return stripos($message, 'Duplicate entry') !== false;
+    }
+
+    /**
+     * @param \wpdb  $stagingDb
+     * @param string $srcTableName
+     * @param string $destTableName
+     * @return void
+     * @throws FatalException
+     */
+    private function throwOnUnexpectedInsertWarnings($stagingDb, string $srcTableName, string $destTableName)
+    {
+        $warnings = $stagingDb->get_results('SHOW WARNINGS', ARRAY_A);
+        foreach ((array)$warnings as $warning) {
+            $warningCode = isset($warning['Code']) ? (int)$warning['Code'] : 0;
+            if ($warningCode === 1062) {
+                continue;
+            }
+
+            $warningMessage = isset($warning['Message']) ? $warning['Message'] : 'Unknown database warning.';
+            throw new FatalException(
+                "DB Data Copy Error: Failed to copy data from {$srcTableName} to {$destTableName}. "
+                . "Unexpected INSERT IGNORE warning {$warningCode}: {$warningMessage}"
+            );
         }
     }
 

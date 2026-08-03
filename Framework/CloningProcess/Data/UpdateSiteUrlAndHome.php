@@ -56,6 +56,59 @@ class UpdateSiteUrlAndHome extends DBCloningService
             throw new FatalException("Failed to update siteurl and homeurl in {$this->dto->getPrefix()}{$tableName}. {$this->dto->getStagingDb()->last_error}");
         }
 
+        $this->validateRequiredOptions($tableName, $siteUrl);
+
         return true;
+    }
+
+    /**
+     * @param string $tableName
+     * @param string $siteUrl
+     * @return void
+     * @throws FatalException
+     */
+    private function validateRequiredOptions(string $tableName, string $siteUrl)
+    {
+        $optionsTable = $this->dto->getPrefix() . $tableName;
+        $foundOptions = $this->dto->getStagingDb()->get_results(
+            "SELECT option_name, option_value FROM `{$optionsTable}` WHERE option_name = 'siteurl' OR option_name = 'home'",
+            ARRAY_A
+        );
+
+        $foundOptionNames = [];
+        $incorrectOptions = [];
+        foreach ((array)$foundOptions as $foundOption) {
+            $optionName = isset($foundOption['option_name']) ? $foundOption['option_name'] : '';
+            if ($optionName === '') {
+                continue;
+            }
+
+            $foundOptionNames[] = $optionName;
+            if (!isset($foundOption['option_value']) || $foundOption['option_value'] !== $siteUrl) {
+                $incorrectOptions[] = $optionName;
+            }
+        }
+
+        $missingOptions = array_diff(['siteurl', 'home'], $foundOptionNames);
+
+        if (!empty($missingOptions)) {
+            throw new FatalException(
+                sprintf(
+                    'Staging options table %s is missing required rows after database copying: %s.',
+                    $optionsTable,
+                    implode(', ', $missingOptions)
+                )
+            );
+        }
+
+        if (!empty($incorrectOptions)) {
+            throw new FatalException(
+                sprintf(
+                    'Staging options table %s contains incorrect values after updating: %s.',
+                    $optionsTable,
+                    implode(', ', array_unique($incorrectOptions))
+                )
+            );
+        }
     }
 }

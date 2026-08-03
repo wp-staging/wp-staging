@@ -121,6 +121,7 @@ class Finish extends Job
             $this->options->existingClones[$this->options->clone]['datetime']                = time();
             $this->options->existingClones[$this->options->clone]['status']                  = 'finished';
             $this->options->existingClones[$this->options->clone]['prefix']                  = $this->options->prefix;
+            $this->options->existingClones[$this->options->clone]['useCustomDatabase']       = $this->isExternalDatabase();
             $this->options->existingClones[$this->options->clone]['isCronEnabled']           = empty($this->options->isCronEnabled) ? false : true;
             $this->options->existingClones[$this->options->clone]['isEmailsAllowed']         = (bool) $this->options->isEmailsAllowed;
             $this->options->existingClones[$this->options->clone]['uploadsSymlinked']        = (bool) $this->options->uploadsSymlinked;
@@ -148,6 +149,7 @@ class Finish extends Job
             "status"              => "finished",
             "prefix"              => $this->options->prefix,
             "datetime"            => time(),
+            "useCustomDatabase"   => $this->isExternalDatabase(),
             "databaseUser"        => $this->options->databaseUser,
             "databasePassword"    => $this->options->databasePassword,
             "databaseDatabase"    => $this->options->databaseDatabase,

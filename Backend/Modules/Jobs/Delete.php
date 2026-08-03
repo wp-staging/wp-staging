@@ -153,11 +153,7 @@ class Delete extends Job
             return $this->isExternalDb;
         }
 
-        if (!empty($this->clone->databaseUser) && !empty($this->clone->databasePassword) && !empty($this->clone->databaseDatabase) && !empty($this->clone->databaseServer)) {
-            return true;
-        }
-
-        return false;
+        return $this->externalDatabaseConfiguration->isEnabled($this->clone);
     }
 
     /**

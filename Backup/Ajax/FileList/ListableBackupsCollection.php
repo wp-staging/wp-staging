@@ -199,7 +199,7 @@ class ListableBackupsCollection
             $listableBackup->size                             = $backupMetadata->getBackupSize();
             $listableBackup->md5BaseName                      = $md5Basename;
             $listableBackup->isValidFileIndex                 = $this->backupValidator->validateFileIndex($fileObject, $backupMetadata);
-            $listableBackup->isValidMultipartBackup           = $this->backupValidator->checkIfSplitBackupIsValid($backupMetadata);
+            $listableBackup->isValidMultipartBackup           = $this->backupValidator->checkIfSplitBackupIsValid($backupMetadata, $file->getFilename());
             $listableBackup->isUnsupported                    = $this->backupValidator->isUnsupportedBackupVersion($backupMetadata);
             $listableBackup->validationIssues['sizeIssues']   = $this->backupValidator->getPartSizeIssues();
             $listableBackup->validationIssues['missingParts'] = $this->backupValidator->getMissingPartIssues();

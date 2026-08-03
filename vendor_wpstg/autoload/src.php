@@ -341,6 +341,7 @@ return array(
     'WPStaging\\Framework\\Database\\Exporter\\AbstractExporter' => $baseDir . '/Framework/Database/Exporter/AbstractExporter.php',
     'WPStaging\\Framework\\Database\\Exporter\\AbstractExporterProvider' => $baseDir . '/Framework/Database/Exporter/AbstractExporterProvider.php',
     'WPStaging\\Framework\\Database\\Exporter\\AbstractRowsExporter' => $baseDir . '/Framework/Database/Exporter/AbstractRowsExporter.php',
+    'WPStaging\\Framework\\Database\\ExternalDatabaseConfiguration' => $baseDir . '/Framework/Database/ExternalDatabaseConfiguration.php',
     'WPStaging\\Framework\\Database\\OptionPreservationHandler' => $baseDir . '/Framework/Database/OptionPreservationHandler.php',
     'WPStaging\\Framework\\Database\\QueryBuilder\\SelectQuery' => $baseDir . '/Framework/Database/QueryBuilder/SelectQuery.php',
     'WPStaging\\Framework\\Database\\SearchReplace' => $baseDir . '/Framework/Database/SearchReplace.php',
