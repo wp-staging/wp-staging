@@ -17,6 +17,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 
 ?>
 
@@ -117,11 +118,6 @@ use WPStaging\Core\WPStaging;
                     </a>
                 <?php endif; ?>
                 <?php
-                $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
-                $learnMoreUrl = strpos($locale, 'de_') === 0
-                    ? 'https://wp-staging.com/de/cli/upgrade/'
-                    : 'https://wp-staging.com/cli/upgrade/';
-
                 $learnMoreParams = [
                     'utm_source'   => 'wp-staging',
                     'utm_medium'   => 'plugin',
@@ -136,7 +132,10 @@ use WPStaging\Core\WPStaging;
                     $learnMoreParams['license_id'] = $licenseId;
                 }
 
-                $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
+                $learnMoreUrl = Language::addClientAttribution(add_query_arg(
+                    $learnMoreParams,
+                    Language::localizeUrl('https://wp-staging.com/cli/upgrade/')
+                ));
                 ?>
                 <a href="<?php echo esc_url($learnMoreUrl); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-btn wpstg-btn-sm wpstg-btn-ghost wpstg-banner-learn-more">
                     <?php esc_html_e('Learn More', 'wp-staging'); ?>

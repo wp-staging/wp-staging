@@ -352,6 +352,7 @@ class Assets
             'licenseUpgradeUrl'                 => $this->getLicenseUpgradeUrl(),
             'licenseRenewalUrl'                 => $this->getLicenseRenewalUrl(),
             'pricingUrl'                        => Language::getUpgradeUrl('plugin_upsell'),
+            'proFeaturesUrl'                    => Language::addClientAttribution(Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=plugin&utm_campaign=pro_features')),
             'checkoutFallbackUrl'               => Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?nocache=true&download_id=11'),
             'newsfeedData'                      => $this->getNewsfeedDataForJs(),
             'isNewUser'                         => $this->isNewUser(),

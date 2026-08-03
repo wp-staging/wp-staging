@@ -1,6 +1,7 @@
 <?php
 
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Utils\Env;
 
 ?>
 <div class="notice notice-error">
@@ -21,7 +22,7 @@ use WPStaging\Framework\Facades\Escape;
                 <a href="%3$s" target="_blank">Create a staging site without write permission to root.</a>
                 ', 'wp-staging')),
                 esc_html(ABSPATH),
-                esc_html(getenv('USERNAME')) ?: esc_html(getenv('USER')),
+                esc_html((string)Env::get('USERNAME')) ?: esc_html((string)Env::get('USER')),
                 esc_url('https://wp-staging.com/docs/creating-a-staging-site-without-write-permission/')
             );
             ?>

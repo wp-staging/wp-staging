@@ -547,11 +547,6 @@ if (!$isDeveloperOrHigher) {
                     <p class="wpstg-cli-sidebar-card-title"><?php echo esc_html__('Requires Docker', 'wp-staging'); ?></p>
                     <p class="wpstg-cli-sidebar-card-text"><?php echo esc_html__('WP Staging CLI uses Docker to create an isolated local copy of this site.', 'wp-staging'); ?></p>
                     <?php
-                    $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
-                    $learnMoreUrl = strpos($locale, 'de_') === 0
-                        ? 'https://wp-staging.com/de/cli/upgrade/'
-                        : 'https://wp-staging.com/cli/upgrade/';
-
                     $learnMoreParams = [
                         'utm_source'   => 'wp-staging',
                         'utm_medium'   => 'plugin',
@@ -566,7 +561,10 @@ if (!$isDeveloperOrHigher) {
                         $learnMoreParams['license_id'] = $licenseId;
                     }
 
-                    $learnMoreUrl = add_query_arg($learnMoreParams, $learnMoreUrl);
+                    $learnMoreUrl = Language::addClientAttribution(add_query_arg(
+                        $learnMoreParams,
+                        Language::localizeUrl('https://wp-staging.com/cli/upgrade/')
+                    ));
                     ?>
                     <a href="<?php echo esc_url($learnMoreUrl); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-link">
                         <?php echo esc_html__('Learn more', 'wp-staging'); ?>

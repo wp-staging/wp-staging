@@ -32,6 +32,11 @@ class RemoteDownloader
     const FILE_SIZE_PROBE_RESPONSE_LIMIT = 1;
 
     /**
+     * @var int
+     */
+    const MAX_REDIRECTS = 5;
+
+    /**
      * Number of bytes copied from the temporary chunk file into the final upload file at once.
      * @var int
      */
@@ -464,11 +469,10 @@ class RemoteDownloader
     public function fetchRemoteFileSize(bool $sslVerify = true): int
     {
         $args = [
-            'method'      => 'HEAD',
-            'timeout'     => Hooks::applyFilters('wpstg.downloader_timeout', $this->timeout),
-            'redirection' => 5,
-            'sslverify'   => $sslVerify,
-            'headers'     => [
+            'method'    => 'HEAD',
+            'timeout'   => Hooks::applyFilters('wpstg.downloader_timeout', $this->timeout),
+            'sslverify' => $sslVerify,
+            'headers'   => [
                 'Accept-Encoding' => 'identity',
                 'Cache-Control'   => 'no-cache',
             ],
@@ -504,7 +508,6 @@ class RemoteDownloader
         $args = [
             'method'              => 'GET',
             'timeout'             => Hooks::applyFilters('wpstg.downloader_timeout', $this->timeout),
-            'redirection'         => 5,
             'headers'             => array_merge(
                 [
                     'Accept-Encoding' => 'identity',
@@ -746,9 +749,7 @@ class RemoteDownloader
     {
         $args['user-agent'] = 'Mozilla/5.0 (compatible; wp-staging/' . WPStaging::getVersion() . '; +https://wp-staging.com)';
 
-        if (!$this->followRedirects && !isset($args['redirection'])) {
-            $args['redirection'] = 0;
-        }
+        $args['redirection'] = $this->followRedirects ? self::MAX_REDIRECTS : 0;
 
         if (!isset($args['method'])) {
             $args['method'] = 'POST';

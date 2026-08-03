@@ -4,7 +4,6 @@ namespace WPStaging\Backup\Ajax;
 
 use Exception;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\CleanExistingMediaTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreMuPluginsTask;
@@ -15,19 +14,20 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Backup\Utils\BackupPathResolver;
 
 class FileInfo extends AbstractTemplateComponent
 {
-    /** @var BackupsFinder */
-    private $backupsFinder;
+    /** @var BackupPathResolver */
+    private $backupPathResolver;
 
     /** @var string[] */
     private $excludedBackupParts;
 
-    public function __construct(TemplateEngine $templateEngine, BackupsFinder $backupsFinder)
+    public function __construct(TemplateEngine $templateEngine, BackupPathResolver $backupPathResolver)
     {
         parent::__construct($templateEngine);
-        $this->backupsFinder = $backupsFinder;
+        $this->backupPathResolver = $backupPathResolver;
     }
 
     /**
@@ -40,9 +40,13 @@ class FileInfo extends AbstractTemplateComponent
         }
 
         $filePath = isset($_POST['filePath']) ? sanitize_text_field($_POST['filePath']) : '';
-        // Make sure path is inside Backups Directory
-        $backupDir = wp_normalize_path($this->backupsFinder->getBackupsDirectory());
-        $file = $backupDir . str_replace($backupDir, '', wp_normalize_path(untrailingslashit($filePath)));
+        $file     = $this->backupPathResolver->resolveBackupPath($filePath);
+        if ($file === '') {
+            wp_send_json([
+                'error'   => true,
+                'message' => 'Invalid backup file path!',
+            ]);
+        }
 
         try {
             $info = (new BackupMetadata())->hydrateByFilePath($file);

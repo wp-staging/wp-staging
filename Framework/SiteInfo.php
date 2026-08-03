@@ -52,12 +52,26 @@ class SiteInfo
     /** @var string */
     const OTHER_HOST = 'other';
 
-    /** @var string[] */
-    const LOCAL_HOSTNAMES = [
+    /**
+     * `.dev` is a public gTLD as well as a local convention, hence suffix-only:
+     * example.dev is local, foo.dev.example.com is not.
+     *
+     * @var string[]
+     */
+    const LOCAL_HOSTNAME_SUFFIXES = [
         '.local',
         '.test',
-        'localhost',
+        '.localhost',
         '.dev',
+    ];
+
+    /** @var string[] Local only when they are the entire host. */
+    const LOCAL_HOSTNAMES = [
+        'localhost',
+    ];
+
+    /** @var string[] */
+    const LOCAL_IP_PREFIXES = [
         '10.0.0.',
         '172.16.0.',
         '192.168.0.',
@@ -343,21 +357,55 @@ class SiteInfo
 
     /**
      * Check if the website is installed locally.
+     *
+     * Matched anchored on the host: two licence gates short-circuit on this,
+     * so a false positive unlocks paid features on a public site.
+     *
      * @return bool
      */
     public function isLocal(): bool
     {
-        $siteUrl = get_site_url();
-        $isLocal = false;
+        $host = strtolower((string)wp_parse_url(get_site_url(), PHP_URL_HOST));
 
-        foreach (self::LOCAL_HOSTNAMES as $hostname) {
-            if (strpos($siteUrl, $hostname) !== false) {
-                $isLocal = true;
-                break;
+        return apply_filters('wpstg.tests.is_local_site', $this->isLocalHost($host));
+    }
+
+    private function isLocalHost(string $host): bool
+    {
+        if ($host === '') {
+            return false;
+        }
+
+        if (in_array($host, self::LOCAL_HOSTNAMES, true)) {
+            return true;
+        }
+
+        foreach (self::LOCAL_HOSTNAME_SUFFIXES as $suffix) {
+            if (substr($host, -strlen($suffix)) === $suffix) {
+                return true;
             }
         }
 
-        return apply_filters('wpstg.tests.is_local_site', $isLocal);
+        return $this->isPrivateIp($host);
+    }
+
+    /**
+     * Guarded on a real address: 10.0.0.example.com is a valid public hostname
+     * that matches the 10.0.0. prefix.
+     */
+    private function isPrivateIp(string $host): bool
+    {
+        if (filter_var($host, FILTER_VALIDATE_IP) === false) {
+            return false;
+        }
+
+        foreach (self::LOCAL_IP_PREFIXES as $prefix) {
+            if (strpos($host, $prefix) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

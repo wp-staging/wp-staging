@@ -29,12 +29,11 @@ trait WithBackupIdentifier
      */
     public function isBackupPart(string $name)
     {
-        $dbExtension  = DatabaseImporter::FILE_FORMAT;
-        $dbIdentifier = PartIdentifier::DATABASE_PART_IDENTIFIER;
-        if (preg_match("#{$dbIdentifier}(.[0-9]+)?.{$dbExtension}$#", $name)) {
+        if (preg_match($this->getDatabasePartSuffixPattern(), $name)) {
             return true;
         }
 
+        $dbIdentifier          = PartIdentifier::DATABASE_PART_IDENTIFIER;
         $pluginIdentifier      = PartIdentifier::PLUGIN_PART_IDENTIFIER;
         $mupluginIdentifier    = PartIdentifier::MU_PLUGIN_PART_IDENTIFIER;
         $themeIdentifier       = PartIdentifier::THEME_PART_IDENTIFIER;
@@ -79,7 +78,7 @@ trait WithBackupIdentifier
      */
     public function extractBackupIdFromFilename(string $filename)
     {
-        if (strpos($filename, '.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT) !== false) {
+        if (preg_match($this->getDatabasePartSuffixPattern(), $filename)) {
             return $this->extractBackupIdFromDatabaseBackupFilename($filename);
         }
 
@@ -94,14 +93,22 @@ trait WithBackupIdentifier
      */
     protected function extractBackupIdFromDatabaseBackupFilename(string $filename)
     {
-        // This is required if the table prefix contains underscore like wp_some
-        $filename = str_replace('.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT, '', $filename);
-        // Get position of last dot . in filename
+        $filename = preg_replace($this->getDatabasePartSuffixPattern(), '', $filename);
+
         $lastDotPosition = strrpos($filename, '.');
-        // Get filename until last dot to remove the table prefix
-        $filename = substr($filename, 0, $lastDotPosition);
+        if ($lastDotPosition !== false) {
+            $filename = substr($filename, 0, $lastDotPosition);
+        }
 
         $fileInfos = explode('_', $filename);
         return $fileInfos[count($fileInfos) - 1];
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDatabasePartSuffixPattern(): string
+    {
+        return '#\.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '(\.\d+)?\.' . DatabaseImporter::FILE_FORMAT . '$#';
     }
 }

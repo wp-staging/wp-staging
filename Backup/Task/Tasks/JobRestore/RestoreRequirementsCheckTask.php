@@ -501,7 +501,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
                 // todo: add link to compression support article.
                 throw new RuntimeException('Cannot restore! This backup is compressed, but your server does not support compression. Click <a href="https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/" target="_blank">here</a> to learn how to fix it.');
             } elseif ($this->zlibCompressor->supportsCompression() && !$this->zlibCompressor->canUseCompression()) {
-                throw new RuntimeException('Cannot restore! This backup is compressed, you need WP Staging Pro to Restore it. Click <a href="https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
+                throw new RuntimeException('Cannot restore! This backup is compressed, you need WP Staging Pro to Restore it. Click <a href="' . Language::getUpgradeUrl('restore_compressed', 'wpstg-license-ui') . '" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
             }
         }
     }

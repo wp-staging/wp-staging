@@ -194,6 +194,11 @@ class PathIdentifier
 
     public function isPathWithinRoot(string $targetPath, string $root): bool
     {
+        $normalizedTarget = str_replace('\\', '/', $targetPath);
+        if (strpos($normalizedTarget, "\0") !== false || in_array('..', explode('/', $normalizedTarget), true)) {
+            return false;
+        }
+
         $realRoot = realpath($root);
         if ($realRoot === false) {
             return false;

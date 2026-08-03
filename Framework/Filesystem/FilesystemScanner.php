@@ -454,6 +454,30 @@ class FilesystemScanner extends AbstractFilesystemScanner
     }
 
     /**
+     * preScanPath() only enqueues a directory's children, so an empty scan root is never enqueued itself.
+     * Call this first for a single user-selected root and skip preScanPath() when it returns true.
+     *
+     * @param string $path
+     * @return bool True when the directory was empty and got enqueued as such.
+     */
+    public function maybeEnqueueAsEmptyDirectory(string $path): bool
+    {
+        if (!$this->enqueueEmptyDirectories || !is_dir($path)) {
+            return false;
+        }
+
+        $iterator = new \FilesystemIterator($path, \FilesystemIterator::SKIP_DOTS);
+        if ($iterator->valid()) {
+            return false;
+        }
+
+        $this->scannerDto->incrementTotalDirectories();
+        $this->enqueueEmptyDirectory($path);
+
+        return true;
+    }
+
+    /**
      * Enqueue an empty directory using the same root-relative queue format as files.
      * Increment discovered counters so the copier total includes this queue item.
      *

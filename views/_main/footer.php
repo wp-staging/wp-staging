@@ -53,7 +53,7 @@ $wpstgBorlabsAllowedHtml = [
 // Free-build admin page (unlike the dashboard card, it is not suppressed when
 // Pro is merely installed-but-inactive); never a top banner or large upsell.
 if (!\WPStaging\Core\WPStaging::isPro()) :
-    $compareUrl = \WPStaging\Framework\Language\Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=footer&utm_campaign=compare_card');
+    $compareUrl = \WPStaging\Framework\Language\Language::addClientAttribution(\WPStaging\Framework\Language\Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=footer&utm_campaign=compare_card'));
     ?>
     <div class="wpstg-footer-compare wpstg-mx-auto wpstg-mt-2 wpstg-mb-6 wpstg-text-center">
         <a href="<?php echo esc_url($compareUrl); ?>" target="_blank" rel="noopener noreferrer"
