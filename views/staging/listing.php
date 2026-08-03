@@ -74,7 +74,7 @@ if (!empty($stagingSites) || $error) {
         <?php if (!$isPro) : ?>
             <br>
             <a class="wpstg-text-gray-500 hover:wpstg-text-gray-600 dark:wpstg-text-slate-400 dark:hover:wpstg-text-slate-300"
-               href="<?php echo esc_url(Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=staging_empty_state&utm_campaign=compare')); ?>"
+               href="<?php echo esc_url(Language::addClientAttribution(Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=staging_empty_state&utm_campaign=compare'))); ?>"
                target="_blank" rel="noopener noreferrer"><?php esc_html_e('Compare Free vs Pro', 'wp-staging'); ?></a>
         <?php endif; ?>
     </p>

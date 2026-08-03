@@ -268,8 +268,7 @@ class Cloning extends Job
         $this->options->databaseUser     = '';
         $this->options->databasePassword = '';
         $this->options->databaseDatabase = '';
-        // isExternalDatabase() depends upon databaseUser and databasePassword,
-        // Make sure they are set before calling this.
+        // Keep the connected database prefix only when the clone targets an external database.
         $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
         $this->options->databaseSsl    = false;
 
@@ -327,6 +326,7 @@ class Cloning extends Job
             "status"                  => "unfinished or broken (?)",
             "prefix"                  => $this->options->prefix,
             "datetime"                => time(),
+            "useCustomDatabase"       => $this->isExternalDatabase(),
             "databaseUser"            => $this->options->databaseUser,
             "databasePassword"        => $this->options->databasePassword,
             "databaseDatabase"        => $this->options->databaseDatabase,

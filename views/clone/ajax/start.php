@@ -6,6 +6,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Facades\Escape;
 
@@ -63,7 +64,7 @@ include(WPSTG_VIEWS_DIR . 'job/modal/success.php');
                     <?php esc_html_e('If this does not work or another web server like Nginx is used, a few simple changes in the .htaccess (Apache) or *.conf (Nginx) configuration files may be required.', 'wp-staging') ?>
                     <strong><?php echo sprintf(
                         Escape::escapeHtml(__('<a href="%s" target="_blank">Open this tutorial</a> to read more about this.', 'wp-staging')),
-                        'https://wp-staging.com/docs/activate-permalinks-staging-site/?utm_source=wpstg_admin&utm_medium=finish_screen&utm_campaign=tutorial'
+                        Language::addClientAttribution(Language::localizeDocsUrl('https://wp-staging.com/docs/activate-permalinks-staging-site/?utm_source=wpstg_admin&utm_medium=finish_screen&utm_campaign=tutorial'))
                     ) ?></strong>
                 </p>
             </li>

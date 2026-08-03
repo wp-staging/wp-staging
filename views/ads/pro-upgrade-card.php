@@ -21,7 +21,7 @@
 use WPStaging\Framework\Language\Language;
 
 $upgradeUrl = Language::getUpgradeUrl('dashboard_upgrade_card');
-$compareUrl = Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=staging_dashboard&utm_campaign=pro_card');
+$compareUrl = Language::addClientAttribution(Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=staging_dashboard&utm_campaign=pro_card'));
 
 $proFeatures = [
     esc_html__('Push to production', 'wp-staging'),

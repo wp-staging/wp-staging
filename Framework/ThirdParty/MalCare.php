@@ -7,9 +7,13 @@ namespace WPStaging\Framework\ThirdParty;
 use wpdb;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Staging\Sites;
 
+/**
+ * Removes MalCare firewall bootstrapping from classic staging sites.
+ */
 class MalCare
 {
     /**
@@ -37,6 +41,9 @@ class MalCare
      */
     protected $filesystem;
 
+    /** @var ExternalDatabaseConfiguration */
+    private $externalDatabaseConfiguration;
+
     /**
      * @param WpAdapter $wpAdapter
      * @param Sites $sites
@@ -46,6 +53,7 @@ class MalCare
         $this->wpAdapter    = $wpAdapter;
         $this->sites        = $sites;
         $this->filesystem   = $filesystem;
+        $this->externalDatabaseConfiguration = new ExternalDatabaseConfiguration();
     }
 
     /**
@@ -162,9 +170,6 @@ class MalCare
      */
     private function isExternalDatabase($options): bool
     {
-        return !(empty($options->databaseUser) ||
-            empty($options->databasePassword) ||
-            empty($options->databaseDatabase) ||
-            empty($options->databaseServer));
+        return $this->externalDatabaseConfiguration->isEnabled($options);
     }
 }

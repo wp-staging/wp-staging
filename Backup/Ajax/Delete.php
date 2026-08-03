@@ -7,7 +7,7 @@ use SplFileInfo;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
 use WPStaging\Backup\Service\BackupsFinder;
-use WPStaging\Core\WPStaging;
+use WPStaging\Backup\Utils\BackupPathResolver;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -20,10 +20,14 @@ class Delete extends AbstractTemplateComponent
     /** @var BackupsFinder */
     private $backupsFinder;
 
-    public function __construct(BackupsFinder $backupsFinder, TemplateEngine $templateEngine)
+    /** @var BackupPathResolver */
+    private $backupPathResolver;
+
+    public function __construct(BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver, TemplateEngine $templateEngine)
     {
         parent::__construct($templateEngine);
-        $this->backupsFinder = $backupsFinder;
+        $this->backupsFinder      = $backupsFinder;
+        $this->backupPathResolver = $backupPathResolver;
     }
 
     public function render()
@@ -96,7 +100,7 @@ class Delete extends AbstractTemplateComponent
         clearstatcache();
 
         try {
-            $file = new FileObject($backup->getRealPath(), FileObject::MODE_APPEND_AND_READ);
+            $file           = new FileObject($backup->getRealPath(), FileObject::MODE_APPEND_AND_READ);
             $backupMetadata = new BackupMetadata();
             $backupMetadata = $backupMetadata->hydrateByFile($file);
         } catch (Exception $e) {
@@ -113,10 +117,13 @@ class Delete extends AbstractTemplateComponent
 
         $errors = [];
 
-        $backupsDirectory = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
-
         foreach ($backupMetadata->getMultipartMetadata()->getBackupParts() as $part) {
-            $backupPart = $backupsDirectory . $part;
+            $backupPart = $this->backupPathResolver->resolveBackupPartPath($part, $backup->getFilename());
+            if ($backupPart === '') {
+                debug_log('WP STAGING: Refused to delete a backup part that does not belong to this backup: ' . $part);
+                continue;
+            }
+
             if (!file_exists($backupPart)) {
                 continue;
             }

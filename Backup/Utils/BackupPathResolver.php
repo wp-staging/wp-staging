@@ -4,6 +4,7 @@ namespace WPStaging\Backup\Utils;
 
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\WithBackupIdentifier;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 
 /**
  * Utility for resolving backup file paths securely within the backups directory.
@@ -18,11 +19,18 @@ class BackupPathResolver
     private $backupsFinder;
 
     /**
-     * @param BackupsFinder $backupsFinder
+     * @var PathIdentifier
      */
-    public function __construct(BackupsFinder $backupsFinder)
+    private $pathIdentifier;
+
+    /**
+     * @param BackupsFinder $backupsFinder
+     * @param PathIdentifier $pathIdentifier
+     */
+    public function __construct(BackupsFinder $backupsFinder, PathIdentifier $pathIdentifier)
     {
-        $this->backupsFinder = $backupsFinder;
+        $this->backupsFinder  = $backupsFinder;
+        $this->pathIdentifier = $pathIdentifier;
     }
 
     /**
@@ -36,10 +44,10 @@ class BackupPathResolver
         $backupDir = wp_normalize_path($this->backupsFinder->getBackupsDirectory());
         $filePath  = wp_normalize_path(untrailingslashit($filePath));
 
-        $resolvedPath = $backupDir . str_replace($backupDir, '', $filePath);
-        $resolvedPath = wp_normalize_path($resolvedPath);
+        $relativePath = ltrim(str_replace($backupDir, '', $filePath), '/');
+        $resolvedPath = wp_normalize_path(trailingslashit($backupDir) . $relativePath);
 
-        if (strpos($resolvedPath, $backupDir) !== 0) {
+        if (!$this->pathIdentifier->isPathWithinRoot($resolvedPath, $backupDir)) {
             return '';
         }
 
@@ -50,5 +58,27 @@ class BackupPathResolver
         }
 
         return $resolvedPath;
+    }
+
+    /**
+     * @param string $partName Part name as listed in the multipart metadata.
+     * @param string $backupFilename Filename of the backup the part must belong to.
+     * @return string Empty string if invalid, or the resolved path
+     */
+    public function resolveBackupPartPath(string $partName, string $backupFilename): string
+    {
+        if ($partName === '' || $partName !== wp_basename($partName)) {
+            return '';
+        }
+
+        if (!$this->isBackupPart($partName)) {
+            return '';
+        }
+
+        if ($this->extractBackupIdFromFilename($partName) !== $this->extractBackupIdFromFilename($backupFilename)) {
+            return '';
+        }
+
+        return $this->resolveBackupPath($partName);
     }
 }

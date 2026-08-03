@@ -10,9 +10,6 @@ use WPStaging\Framework\Utils\PluginInfo;
 
 class Pluginmeta
 {
-    // Link to Upgrade WP Staging
-    const UPGRADE_LINK = "https://wp-staging.com/premium-upgrade";
-
     /** @var PluginInfo */
     private $pluginInfo;
 

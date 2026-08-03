@@ -15,7 +15,7 @@
     <div id="wpstg-navbar-menu" class="wpstg-navbar-menu hidden">
         <?php foreach ($menu as $tabKey => $tab) :?>
         <div>
-            <a href="javascript:void(0)" data-target-url="<?php echo esc_url($wpstgAdminUrl . $tab['page']); ?>" class="wpstg-button <?php echo ($tab['isActive']) ? 'wpstg--tab--active' : '' ?>"  data-target-id="<?php esc_attr_e($tab['id'], 'wp-staging') ?>">
+            <a href="javascript:void(0)" data-target-url="<?php echo esc_url(!empty($tab['isExternal']) ? $tab['targetUrl'] : $wpstgAdminUrl . $tab['page']); ?>" class="wpstg-button <?php echo ($tab['isActive']) ? 'wpstg--tab--active' : '' ?>"  data-target-id="<?php esc_attr_e($tab['id'], 'wp-staging') ?>">
                 <?php
                 if ($tabKey !== 'tab-license') {
                     echo esc_html($tab['tab']);

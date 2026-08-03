@@ -4,8 +4,12 @@ namespace WPStaging\Framework\Adapter;
 
 use stdClass;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use wpdb;
 
+/**
+ * Resolves the database connection for a classic staging site.
+ */
 class SourceDatabase
 {
     /** @var wpdb */
@@ -14,10 +18,14 @@ class SourceDatabase
     /** @var object */
     private $options;
 
+    /** @var ExternalDatabaseConfiguration */
+    private $externalDatabaseConfiguration;
+
     public function __construct($options = stdClass::class)
     {
         $this->options = $options;
         $this->wpdb    = WPStaging::make('wpdb');
+        $this->externalDatabaseConfiguration = new ExternalDatabaseConfiguration();
     }
 
     /**
@@ -25,10 +33,7 @@ class SourceDatabase
      */
     public function isExternalDatabase()
     {
-        return !(empty($this->options->databaseUser) ||
-            empty($this->options->databasePassword) ||
-            empty($this->options->databaseDatabase) ||
-            empty($this->options->databaseServer));
+        return $this->externalDatabaseConfiguration->isEnabled($this->options);
     }
 
     /**

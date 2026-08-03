@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Language;
 
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Utils\Env;
 
 class Language
 {
@@ -13,6 +14,26 @@ class Language
     const TEXT_DOMAIN = 'wp-staging';
 
     const FILTER_PLUGIN_LOCALE = 'plugin_locale';
+
+    /** @var string */
+    const CLIENT_CLI = 'cli';
+
+    /** @var string */
+    const CLIENT_DESKTOP = 'desktop';
+
+    /** @var string */
+    const DEFAULT_CAMPAIGN = 'pro_upgrade';
+
+    /**
+     * Campaign rather than utm_source or utm_term: campaign name is a top-level
+     * Matomo dimension that archiving never collapses.
+     *
+     * @var array
+     */
+    const CLIENT_CAMPAIGNS = [
+        self::CLIENT_CLI     => 'wp-staging-cli',
+        self::CLIENT_DESKTOP => 'wp-staging-desktop',
+    ];
 
     /**
      * @return void
@@ -30,7 +51,7 @@ class Language
         }
 
         // Traditional WP plugin locale filter
-        $locale = apply_filters(self::FILTER_PLUGIN_LOCALE, $locale, self::TEXT_DOMAIN);
+        $locale       = apply_filters(self::FILTER_PLUGIN_LOCALE, $locale, self::TEXT_DOMAIN);
         $localMoFile  = $this->getLocalMoFile($locale);
         $globalMoFile = $this->getGlobalMoFile($locale);
         // Unfiltered mo file name
@@ -45,7 +66,7 @@ class Language
 
         $moFilesGlobal[] = sprintf('%s/%s/%s', $wpLangDirectory, 'plugins', $globalMoFile);
 
-        // Internal Use Only. Use for loading languages files
+        // Internal use only: loads the .mo files
         Hooks::callInternalHook(self::HOOK_LOAD_MO_FILES, [$locale, $moFileLocal, $moFilesGlobal]);
     }
 
@@ -64,10 +85,9 @@ class Language
     }
 
     /**
-     * Map of locale prefixes/codes to the short code used in our .mo file names.
-     * Order matters: longer prefixes must come before shorter ones so that
-     * e.g. 'zh_CN' matches before a hypothetical 'zh_' entry, and 'pt_BR'
-     * matches before a hypothetical 'pt_' entry.
+     * Locale prefix/code to the short code used in our .mo file names.
+     * Order matters: a longer prefix must precede any shorter one it overlaps,
+     * so a future 'zh_' entry would have to sit after 'zh_CN'.
      */
     const LOCALE_TO_FILE_CODE = [
         'de_'   => 'de',
@@ -83,9 +103,7 @@ class Language
         'ja'    => 'ja',
     ];
 
-    /**
-     * Map of short file codes to their full WordPress locale form used by global .mo files.
-     */
+    /** Short file code to the full WordPress locale used by global .mo files. */
     const FILE_CODE_TO_GLOBAL_LOCALE = [
         'de'    => 'de_DE',
         'es'    => 'es_ES',
@@ -104,7 +122,7 @@ class Language
      * Resolve a WordPress locale to the language code used in our bundled .mo files.
      *
      * @param string $locale
-     * @return string|null The resolved code, or null when no bundled translation exists.
+     * @return string|null Null when no bundled translation exists.
      */
     private function resolveFileCode(string $locale)
     {
@@ -169,23 +187,19 @@ class Language
      * Build the localized wp-staging.com pricing-table URL for an in-plugin
      * "upgrade to Pro" CTA.
      *
-     * The language path is chosen from the current admin user's locale (falling
-     * back to the site locale), so users land on the pricing table in their own
-     * language. Locales the marketing site does not ship fall back to the
-     * English pricing table. When a $context is given it is added as utm_content
-     * — before the #pricing anchor — so the click is attributable in Matomo.
+     * The language path follows the admin user's locale, falling back to the site
+     * locale, so users land on the pricing table in their own language.
      *
      * @param string $context Optional utm_content slug identifying the link.
-     *                        Sanitized to [a-z0-9_]; anything else is stripped.
-     * @param string $source  utm_source for the click. Defaults to
-     *                        "wp-staging-free"; pass a Pro/licensing source for
-     *                        CTAs shown to licensed users. Sanitized to
+     *                        Sanitized to [a-z0-9_].
+     * @param string $source  utm_source for the click; pass a Pro/licensing source
+     *                        for CTAs shown to licensed users. Sanitized to
      *                        [a-z0-9_-]; empty input falls back to the default.
      */
     public static function getUpgradeUrl(string $context = '', string $source = 'wp-staging-free'): string
     {
-        // wp-staging.com only ships these languages; every other locale (en,
-        // nl, ru, tr, zh, …) falls back to the English pricing table at "/".
+        // wp-staging.com ships only these languages; every other locale falls back
+        // to the English pricing table at "/".
         $localePaths = [
             'de' => '/de/',
             'it' => '/it/',
@@ -212,16 +226,86 @@ class Language
             $source = 'wp-staging-free';
         }
 
-        // Query string must precede the #pricing anchor for the link to both
-        // track and scroll to the pricing table.
+        // Query must precede the #pricing anchor, or the link stops both tracking
+        // and scrolling to the pricing table.
         $query = http_build_query([
             'utm_source'   => $source,
             'utm_medium'   => 'plugin',
-            'utm_campaign' => 'pro_upgrade',
+            'utm_campaign' => self::getUpgradeCampaign(),
             'utm_content'  => $context,
         ]);
 
         return $base . '?' . $query . '#pricing';
+    }
+
+    /**
+     * Which WP STAGING environment serves this install: CLIENT_CLI, CLIENT_DESKTOP,
+     * or '' for an ordinary host. The CLI writes WPSTG_CLIENT into the php service
+     * of the site's docker-compose.yml.
+     */
+    public static function getInstallClient(): string
+    {
+        $client = Env::get('WPSTG_CLIENT');
+        if (!is_string($client)) {
+            return '';
+        }
+
+        $client = strtolower(trim($client));
+
+        return array_key_exists($client, self::CLIENT_CAMPAIGNS) ? $client : '';
+    }
+
+    /**
+     * utm_campaign for this install: the environment's own campaign when the
+     * site runs on the CLI or Desktop stack, the generic one everywhere else.
+     */
+    public static function getUpgradeCampaign(): string
+    {
+        $client = self::getInstallClient();
+
+        return $client === '' ? self::DEFAULT_CAMPAIGN : self::CLIENT_CAMPAIGNS[$client];
+    }
+
+    /**
+     * Re-tag an already-campaigned wp-staging.com URL with this install's environment,
+     * for CTAs that build their URL by hand instead of going through getUpgradeUrl().
+     * A URL without a utm_campaign is left untouched, so a plain docs link never
+     * becomes a campaign one.
+     */
+    public static function addClientAttribution(string $url): string
+    {
+        $client = self::getInstallClient();
+        if ($client === '' || strpos($url, 'wp-staging.com') === false) {
+            return $url;
+        }
+
+        // Fragment must trail the query string, or the link stops both tracking
+        // and scrolling.
+        $fragment = '';
+        $hashPos  = strpos($url, '#');
+        if ($hashPos !== false) {
+            $fragment = substr($url, $hashPos);
+            $url      = substr($url, 0, $hashPos);
+        }
+
+        $queryPos = strpos($url, '?');
+        if ($queryPos === false) {
+            return $url . $fragment;
+        }
+
+        $args = [];
+        parse_str(substr($url, $queryPos + 1), $args);
+        if (empty($args['utm_campaign'])) {
+            return $url . $fragment;
+        }
+
+        if (empty($args['utm_content'])) {
+            $args['utm_content'] = $args['utm_campaign'];
+        }
+
+        $args['utm_campaign'] = self::CLIENT_CAMPAIGNS[$client];
+
+        return substr($url, 0, $queryPos) . '?' . http_build_query($args) . $fragment;
     }
 
     /**

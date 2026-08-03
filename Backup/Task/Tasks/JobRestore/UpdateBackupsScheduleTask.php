@@ -5,11 +5,14 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 use Exception;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Framework\Traits\SerializeTrait;
 
 use function WPStaging\functions\debug_log;
 
 class UpdateBackupsScheduleTask extends RestoreTask
 {
+    use SerializeTrait;
+
     /** @var object */
     protected $wpdb;
 
@@ -38,7 +41,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
             return $this->generateResponse();
         }
 
-        $tmpOptionsTable  = $this->jobDataDto->getTmpDatabasePrefix() . 'options';
+        $tmpOptionsTable = $this->jobDataDto->getTmpDatabasePrefix() . 'options';
         if (!$this->wpdb->get_var("SHOW TABLES LIKE '{$tmpOptionsTable}'")) {
             $this->logger->warning('Skipped preserved backup schedules in the database. No option table in the backup!');
             return $this->generateResponse();
@@ -60,13 +63,13 @@ class UpdateBackupsScheduleTask extends RestoreTask
 
         // Cron jobs contained in the production site
         $productionCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$prodOptionsTable} WHERE option_name = 'cron';");
-        $productionCronJobs = maybe_unserialize($productionCronJobs[0]);
+        $productionCronJobs = $this->safeMaybeUnserialize($productionCronJobs[0]);
 
         // Cron jobs contained in the backup file
         $backupCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$tmpOptionsTable} WHERE option_name = 'cron';");
 
         if (isset($backupCronJobs[0])) {
-            $backupCronJobs = maybe_unserialize($backupCronJobs[0]);
+            $backupCronJobs = $this->safeMaybeUnserialize($backupCronJobs[0]);
         }
 
         // WP STAGING Cron jobs from production site
@@ -79,7 +82,10 @@ class UpdateBackupsScheduleTask extends RestoreTask
         $backupCronJobs = $this->addWpStagingCronJobs($backupCronJobs, $wpstgCronJobs);
         $backupCronJobs = serialize($backupCronJobs);
 
-        $query = "UPDATE {$tmpOptionsTable} SET option_value = '{$backupCronJobs}' WHERE option_name = 'cron';";
+        $query = $this->wpdb->prepare(
+            "UPDATE `{$tmpOptionsTable}` SET option_value = %s WHERE option_name = 'cron'",
+            $backupCronJobs
+        );
 
         $result = $this->wpdb->query($query);
 

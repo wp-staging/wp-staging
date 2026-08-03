@@ -9,6 +9,7 @@ use UnexpectedValueException;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Exceptions\WPStagingException;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Filesystem\PathIdentifier;
@@ -113,6 +114,9 @@ class DirectoryScanner
     /** @var string */
     protected $wpContentPath = WP_CONTENT_DIR;
 
+    /** @var Filesystem */
+    protected $filesystem;
+
     /** @var bool */
     protected $useDefaultSelection = false;
 
@@ -121,7 +125,7 @@ class DirectoryScanner
      */
     protected $showFileDestination = true;
 
-    public function __construct(TemplateEngine $templateEngine, Assets $assets, Directory $directory, Strings $strUtils, PathChecker $pathChecker, SiteInfo $siteInfo)
+    public function __construct(TemplateEngine $templateEngine, Assets $assets, Directory $directory, Strings $strUtils, PathChecker $pathChecker, SiteInfo $siteInfo, Filesystem $filesystem)
     {
         $this->templateEngine = $templateEngine;
         $this->directory      = $directory;
@@ -129,6 +133,11 @@ class DirectoryScanner
         $this->pathChecker    = $pathChecker;
         $this->siteInfo       = $siteInfo;
         $this->loaderIcon     = $assets->getAssetsUrl('img/spinner.gif');
+        $this->filesystem     = $filesystem;
+
+        // Normalize so UNC roots match the format getPath() compares realpath() against.
+        $this->absPath       = $this->filesystem->normalizePath($this->absPath, true);
+        $this->wpContentPath = $this->filesystem->normalizePath($this->wpContentPath);
     }
 
     /**
@@ -292,18 +301,14 @@ class DirectoryScanner
             throw new UnexpectedValueException("The path '{$directory->getPathname()}' could not be resolved, likely a dangling symlink.");
         }
 
-        $realPath = wp_normalize_path($realPath);
+        $realPath = $this->filesystem->normalizePath($realPath);
 
         /**
          * Do not follow root path like src/web/..
          * This must be done before \SplFileInfo->isDir() is used!
          * Prevents open base dir restriction fatal errors
          */
-        if (strpos($realPath, $basePath) !== 0) {
-            throw new UnexpectedValueException("The directory at path '{$realPath}' is not within the base path '{$basePath}'.");
-        }
-
-        $path = str_replace($basePath, '', $realPath);
+        $path = $this->stripBasePath($realPath, $basePath);
 
         try {
             $isDir = $directory->isDir();
@@ -317,6 +322,25 @@ class DirectoryScanner
         }
 
         return $path;
+    }
+
+    /**
+     * UNC host/share names are case-insensitive, and realpath() uppercases that
+     * segment on Windows, so UNC roots must be compared case-insensitively.
+     *
+     * @param string $realPath
+     * @param string $basePath
+     * @return string
+     */
+    protected function stripBasePath(string $realPath, string $basePath): string
+    {
+        $isUncBasePath      = strpos($basePath, '//') === 0;
+        $startsWithBasePath = $isUncBasePath ? stripos($realPath, $basePath) === 0 : strpos($realPath, $basePath) === 0;
+        if (!$startsWithBasePath) {
+            throw new UnexpectedValueException("The directory at path '{$realPath}' is not within the base path '{$basePath}'.");
+        }
+
+        return substr($realPath, strlen($basePath));
     }
 
     /**

@@ -16,6 +16,7 @@
 namespace WPStaging\Framework\DI;
 
 use WPStaging\Framework\Exceptions\WPStagingException;
+use WPStaging\Framework\Utils\Env;
 
 /**
  * Class FeatureServiceProvider
@@ -63,7 +64,8 @@ abstract class FeatureServiceProvider extends ServiceProvider implements Feature
             return false;
         }
 
-        if (getenv($trigger) !== false && (bool)getenv($trigger) === false) {
+        $triggerValue = Env::get($trigger);
+        if ($triggerValue !== false && (bool)$triggerValue === false) {
             // The feature can be disabled by setting an environment variable by the trigger name to a falsy value.
             return false;
         }
@@ -94,7 +96,8 @@ abstract class FeatureServiceProvider extends ServiceProvider implements Feature
             return false;
         }
 
-        if (getenv($trigger) !== false && (bool)getenv($trigger) === false) {
+        $triggerValue = Env::get($trigger);
+        if ($triggerValue !== false && (bool)$triggerValue === false) {
             // The feature can be disabled by setting an environment variable by the trigger name to a falsy value.
             return false;
         }

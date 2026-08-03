@@ -2,8 +2,79 @@
 
 namespace WPStaging\Framework\Traits;
 
+use __PHP_Incomplete_Class;
+
 trait SerializeTrait
 {
+    /**
+     * @param mixed $data
+     * @param array $allowedClasses
+     * @return mixed
+     */
+    protected function safeMaybeUnserialize($data, array $allowedClasses = [])
+    {
+        if (!is_string($data) || !$this->isSerialized($data)) {
+            return $data;
+        }
+
+        $value = $this->unserializeQuietly(trim($data), $allowedClasses);
+        if ($this->containsForbiddenClass($value)) {
+            return false;
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param string $data
+     * @param array $allowedClasses
+     * @return mixed
+     */
+    private function unserializeQuietly(string $data, array $allowedClasses)
+    {
+        set_error_handler(function () {
+            return true;
+        });
+
+        try {
+            return unserialize($data, ['allowed_classes' => $allowedClasses]);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * @param mixed $value
+     * @param int $remainingDepth
+     * @return bool
+     */
+    protected function containsForbiddenClass($value, int $remainingDepth = 20): bool
+    {
+        if ($value instanceof __PHP_Incomplete_Class) {
+            return true;
+        }
+
+        if (is_object($value)) {
+            $value = (array)$value;
+        }
+
+        if (!is_array($value)) {
+            return false;
+        }
+
+        if ($remainingDepth < 1) {
+            return true;
+        }
+
+        foreach ($value as $item) {
+            if ($this->containsForbiddenClass($item, $remainingDepth - 1)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @see https://developer.wordpress.org/reference/functions/is_serialized/
      * @return bool

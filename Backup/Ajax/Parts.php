@@ -7,6 +7,7 @@ namespace WPStaging\Backup\Ajax;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Utils\BackupPathResolver;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -20,15 +21,21 @@ class Parts extends AbstractTemplateComponent
     private $backupsFinder;
 
     /**
+     * @var BackupPathResolver
+     */
+    private $backupPathResolver;
+
+    /**
      * @var Urls
      */
     private $urls;
 
-    public function __construct(TemplateEngine $templateEngine, BackupsFinder $backupsFinder, Urls $urls)
+    public function __construct(TemplateEngine $templateEngine, BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver, Urls $urls)
     {
         parent::__construct($templateEngine);
-        $this->backupsFinder = $backupsFinder;
-        $this->urls          = $urls;
+        $this->backupsFinder      = $backupsFinder;
+        $this->backupPathResolver = $backupPathResolver;
+        $this->urls               = $urls;
     }
 
     /**
@@ -53,7 +60,14 @@ class Parts extends AbstractTemplateComponent
             ]);
         }
 
-        $file = $this->getFullPath($backupDir, $indexFile);
+        $file = $this->backupPathResolver->resolveBackupPath($indexFile);
+        if ($file === '') {
+            wp_send_json([
+                'error'   => true,
+                'message' => 'Invalid backup file path!',
+            ]);
+        }
+
         $info = null;
         try {
             $info = (new BackupMetadata())->hydrateByFilePath($file);
@@ -89,7 +103,7 @@ class Parts extends AbstractTemplateComponent
      */
     private function getFullPath(string $backupDir, string $relativePath): string
     {
-        return $backupDir . str_replace($backupDir, '', wp_normalize_path(untrailingslashit($relativePath)));
+        return trailingslashit($backupDir) . basename(wp_normalize_path($relativePath));
     }
 
     /**

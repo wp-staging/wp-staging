@@ -4,8 +4,8 @@ namespace WPStaging\Backup;
 
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
-use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreRequirementsCheckTask;
+use WPStaging\Backup\Utils\BackupPathResolver;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\Strings;
 
@@ -36,9 +36,6 @@ class BackupValidator
         PHP_EOL,
     ];
 
-    /** @var BackupsFinder */
-    private $backupsFinder;
-
     /** @var array */
     protected $missingPartIssues = [];
 
@@ -46,7 +43,7 @@ class BackupValidator
     protected $partSizeIssues = [];
 
     /** @var string */
-    protected $backupDir;
+    protected $backupFilename = '';
 
     /** @var array  */
     protected $existingParts = [];
@@ -57,13 +54,15 @@ class BackupValidator
     /** @var Strings */
     private $strings;
 
-    public function __construct(BackupsFinder $backupsFinder, Strings $strings)
+    /** @var BackupPathResolver */
+    private $backupPathResolver;
+
+    public function __construct(Strings $strings, BackupPathResolver $backupPathResolver)
     {
-        $this->partSizeIssues    = [];
-        $this->missingPartIssues = [];
-        $this->backupsFinder     = $backupsFinder;
-        $this->backupDir         = '';
-        $this->strings           = $strings;
+        $this->partSizeIssues     = [];
+        $this->missingPartIssues  = [];
+        $this->strings            = $strings;
+        $this->backupPathResolver = $backupPathResolver;
     }
 
     /** @return array */
@@ -124,7 +123,7 @@ class BackupValidator
 
         $totalFiles = $metadata->getTotalFiles();
         if ($count !== $totalFiles && !$metadata->getIsMultipartBackup()) {
-            $error = sprintf(esc_html('File Index of %s is invalid! Actual number of files in the backup index: %s. Expected number of files: %s.'), $backupFile, $count, $totalFiles);
+            $error       = sprintf(esc_html('File Index of %s is invalid! Actual number of files in the backup index: %s. Expected number of files: %s.'), $backupFile, $count, $totalFiles);
             $this->error = $error;
             debug_log($error);
 
@@ -137,7 +136,7 @@ class BackupValidator
 
         $totalFiles = $metadata->getMultipartMetadata()->getTotalFiles();
         if ($count !== $totalFiles && $metadata->getIsMultipartBackup()) {
-            $error = sprintf(esc_html('File Index of %s multipart backup is invalid! Actual number of files in the backup index: %s. Expected number of files: %s.'), $backupFile, $count, $totalFiles);
+            $error       = sprintf(esc_html('File Index of %s multipart backup is invalid! Actual number of files in the backup index: %s. Expected number of files: %s.'), $backupFile, $count, $totalFiles);
             $this->error = $error;
             debug_log($error);
 
@@ -173,7 +172,7 @@ class BackupValidator
 
         $backupFile = $this->strings->maskBackupFilename($file->getFilename());
         if (!$this->strings->startsWith($line, 'wpstg_')) {
-            $error = sprintf(esc_html('File Index of %s is invalid! The file index first line does not begin with `wpstg_`. The current first line is: %s.'), $backupFile, $line);
+            $error       = sprintf(esc_html('File Index of %s is invalid! The file index first line does not begin with `wpstg_`. The current first line is: %s.'), $backupFile, $line);
             $this->error = $error;
             debug_log($error);
 
@@ -184,12 +183,14 @@ class BackupValidator
     }
 
     /**
+     * @param BackupMetadata $metadata
+     * @param string $backupFilename Filename of the backup the listed parts must belong to.
      * @return bool
      * @throws BackupRuntimeException
      */
-    public function checkIfSplitBackupIsValid(BackupMetadata $metadata): bool
+    public function checkIfSplitBackupIsValid(BackupMetadata $metadata, string $backupFilename): bool
     {
-        $this->partSizeIssues = [];
+        $this->partSizeIssues    = [];
         $this->missingPartIssues = [];
 
         // Early bail if not split backup
@@ -197,36 +198,24 @@ class BackupValidator
             return true;
         }
 
-        $this->backupDir = wp_normalize_path($this->backupsFinder->getBackupsDirectory());
+        $this->backupFilename = $backupFilename;
 
         $splitMetadata = $metadata->getMultipartMetadata();
 
-        foreach ($splitMetadata->getPluginsParts() as $part) {
-            $this->validatePart($part, 'plugins');
-        }
+        $partsByType = [
+            'plugins'     => $splitMetadata->getPluginsParts(),
+            'themes'      => $splitMetadata->getThemesParts(),
+            'uploads'     => $splitMetadata->getUploadsParts(),
+            'muplugins'   => $splitMetadata->getMuPluginsParts(),
+            'others'      => $splitMetadata->getOthersParts(),
+            'otherWpRoot' => $splitMetadata->getOtherWpRootParts(),
+            'database'    => $splitMetadata->getDatabaseParts(),
+        ];
 
-        foreach ($splitMetadata->getThemesParts() as $part) {
-            $this->validatePart($part, 'themes');
-        }
-
-        foreach ($splitMetadata->getUploadsParts() as $part) {
-            $this->validatePart($part, 'uploads');
-        }
-
-        foreach ($splitMetadata->getMuPluginsParts() as $part) {
-            $this->validatePart($part, 'muplugins');
-        }
-
-        foreach ($splitMetadata->getOthersParts() as $part) {
-            $this->validatePart($part, 'others');
-        }
-
-        foreach ($splitMetadata->getOthersParts() as $part) {
-            $this->validatePart($part, 'otherWpRoot');
-        }
-
-        foreach ($splitMetadata->getDatabaseParts() as $part) {
-            $this->validatePart($part, 'database');
+        foreach ($partsByType as $type => $parts) {
+            foreach ($parts as $part) {
+                $this->validatePart($part, $type);
+            }
         }
 
         return empty($this->partSizeIssues) && empty($this->missingPartIssues);
@@ -239,7 +228,7 @@ class BackupValidator
     public function isUnsupportedBackupVersion(BackupMetadata $metadata): bool
     {
         $isCreatedOnPro = $metadata->getCreatedOnPro();
-        $version = $metadata->getWpstgVersion();
+        $version        = $metadata->getWpstgVersion();
         if (!$isCreatedOnPro) {
             return false;
         }
@@ -248,15 +237,14 @@ class BackupValidator
     }
 
     /**
-     * @param string $part contains part name
-     * @param string $type (plugins|themes|uploads|muplugins|others|database)
-     *
+     * @param string $part
+     * @param string $type
      * @return void
      */
     private function validatePart(string $part, string $type)
     {
-        $path = $this->backupDir . str_replace($this->backupDir, '', wp_normalize_path(untrailingslashit($part)));
-        if (!file_exists($path)) {
+        $path = $this->backupPathResolver->resolveBackupPartPath($part, $this->backupFilename);
+        if ($path === '' || !file_exists($path)) {
             $this->missingPartIssues[] = [
                 'name' => $part,
                 'type' => $type,

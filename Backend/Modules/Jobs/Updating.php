@@ -144,6 +144,7 @@ class Updating extends Job
             $this->options->databaseServer          = $this->getValueFromArray('databaseServer', $currentStagingSite);
             $this->options->databasePrefix          = $this->getValueFromArray('databasePrefix', $currentStagingSite);
             $this->options->databaseSsl             = $this->getValueFromArray('databaseSsl', $currentStagingSite);
+            $this->options->useCustomDatabase       = $this->externalDatabaseConfiguration->isEnabled($currentStagingSite);
             $this->options->destinationHostname     = $this->getValueFromArray('url', $currentStagingSite);
             $this->options->uploadsSymlinked        = $this->getValueFromArray('uploadsSymlinked', $currentStagingSite);
             $this->options->prefix                  = $this->getValueFromArray('prefix', $currentStagingSite);
@@ -165,7 +166,16 @@ class Updating extends Job
             wp_die(sprintf("Fatal Error: Can not %s clone because there is no clone data.", esc_html($job)));
         }
 
-        $this->isExternalDb = !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
+        if (!$this->options->useCustomDatabase) {
+            $this->options->databaseUser     = '';
+            $this->options->databasePassword = '';
+            $this->options->databaseDatabase = '';
+            $this->options->databaseServer   = 'localhost';
+            $this->options->databasePrefix   = '';
+            $this->options->databaseSsl      = false;
+        }
+
+        $this->isExternalDb = (bool)$this->options->useCustomDatabase;
 
         /**
          * @see /WPStaging/Framework/CloningProcess/ExcludedPlugins.php to exclude plugins

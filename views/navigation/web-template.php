@@ -53,13 +53,16 @@ $menu = [
         'page'      => 'wpstg-tools',
         'isActive'  => !empty($isActiveSystemInfoPage),
     ],
+    // Free has no license page, so this tab leaves WordPress for the pricing
+    // table. Pro overrides it to the local license screen further down.
     'tab-license'     => [
-        'tab'       => esc_html__('Upgrade to Pro', 'wp-staging'),
-        'id'        => 'wpstg--tab--toggle--license',
-        'targetId'  => '',
-        'targetUrl' => Language::getUpgradeUrl('main_menu'),
-        'page'      => 'wpstg-license',
-        'isActive'  => !empty($isActiveLicensePage),
+        'tab'        => esc_html__('Upgrade to Pro', 'wp-staging'),
+        'id'         => 'wpstg--tab--toggle--license',
+        'targetId'   => '',
+        'targetUrl'  => Language::getUpgradeUrl('main_menu'),
+        'page'       => 'wpstg-license',
+        'isActive'   => !empty($isActiveLicensePage),
+        'isExternal' => true,
     ],
 ];
 
@@ -71,8 +74,9 @@ if ($isCalledFromIndex) {
 }
 
 if (defined('WPSTGPRO_VERSION')) {
-    $menu['tab-license']['tab']       = __('License', 'wp-staging');
-    $menu['tab-license']['targetUrl'] = esc_url($wpstgAdminUrl) . 'wpstg-license';
+    $menu['tab-license']['tab']        = __('License', 'wp-staging');
+    $menu['tab-license']['targetUrl']  = esc_url($wpstgAdminUrl) . 'wpstg-license';
+    $menu['tab-license']['isExternal'] = false;
 }
 
 $licenseMessage = '';
@@ -95,7 +99,7 @@ if (defined('WPSTGPRO_VERSION') && ((!empty($license->license) && $license->lice
         </li>
         <?php foreach ($menu as $tabKey => $tab) :?>
             <li>
-                <a href="<?php echo esc_attr($tab['targetUrl']) ?>" class="wpstg--tab--content <?php echo ($tab['isActive']) ? 'wpstg--tab--active' : '' ?> wpstg-button" data-target="<?php echo esc_attr($tab['targetId']) ?>" id="<?php echo esc_attr($tab['id']) ?>">
+                <a href="<?php echo esc_attr($tab['targetUrl']) ?>" <?php echo !empty($tab['isExternal']) ? 'target="_blank" rel="noopener noreferrer"' : ''; ?> class="wpstg--tab--content <?php echo ($tab['isActive']) ? 'wpstg--tab--active' : '' ?> wpstg-button" data-target="<?php echo esc_attr($tab['targetId']) ?>" id="<?php echo esc_attr($tab['id']) ?>">
                     <?php
                     if ($tabKey !== 'tab-license') {
                         echo esc_html($tab['tab']);

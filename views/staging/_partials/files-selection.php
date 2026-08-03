@@ -2,7 +2,6 @@
 
 use WPStaging\Staging\Dto\DirectoryNodeDto;
 use WPStaging\Staging\Service\DirectoryScanner;
-use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Service\AbstractStagingSetup;
@@ -132,21 +131,10 @@ $showFileSizeExcludeLimit = $stagingSetup->isUpdateJob() || $stagingSetup->isRes
 
 <?php if (defined('WPSTG_ALLOW_EXTRA_DIRECTORIES') && constant('WPSTG_ALLOW_EXTRA_DIRECTORIES')) { ?>
     <div class="<?php echo esc_attr($extraDirectoriesClass); ?>">
-        <h4 class="wpstg-selection-title wpstg-m-0">
-            <?php echo esc_html__("Extra directories to copy", "wp-staging") ?>
-        </h4>
-
-        <textarea id="wpstg_extraDirectories" name="wpstg_extraDirectories" class="wpstg-input wpstg-mt-2 !wpstg-h-24 !wpstg-w-full"></textarea>
-        <p class="wpstg-selection-description wpstg-mt-2">
-            <span>
-                <?php
-                echo sprintf(
-                    Escape::escapeHtml(__("Enter one folder path per line.<br>Folders must be relative to the path: %s", 'wp-staging')),
-                    esc_html($stagingSetup->getRoot())
-                );
-                ?>
-            </span>
-        </p>
+        <?php
+        $extraDirectoriesRootPath = $stagingSetup->getRoot();
+        require WPSTG_VIEWS_DIR . 'staging/_partials/extra-directories-field.php';
+        ?>
     </div>
 <?php } ?>
 

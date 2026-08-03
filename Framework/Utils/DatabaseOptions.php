@@ -59,7 +59,7 @@ class DatabaseOptions
             return $defaultValue;
         }
 
-        return $this->maybeUnserialize($result);
+        return $this->safeMaybeUnserialize($result);
     }
 
     /**
@@ -146,19 +146,6 @@ class DatabaseOptions
         );
 
         return (bool) $this->db->get_var($sql);
-    }
-
-    /**
-     * @param string $value
-     * @return mixed
-     */
-    private function maybeUnserialize(string $value)
-    {
-        if ($this->isSerialized($value)) {
-            return @unserialize($value);
-        }
-
-        return $value;
     }
 
     /**

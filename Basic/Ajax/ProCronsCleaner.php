@@ -4,6 +4,7 @@ namespace WPStaging\Basic\Ajax;
 
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Framework\Security\Auth;
 
 class ProCronsCleaner
 {
@@ -13,14 +14,22 @@ class ProCronsCleaner
     /** @var BackupScheduler */
     private $backupScheduler;
 
-    public function __construct(Cron $cronAdapter, BackupScheduler $backupScheduler)
+    /** @var Auth */
+    private $auth;
+
+    public function __construct(Cron $cronAdapter, BackupScheduler $backupScheduler, Auth $auth)
     {
         $this->cronAdapter     = $cronAdapter;
         $this->backupScheduler = $backupScheduler;
+        $this->auth            = $auth;
     }
 
     public function ajaxCleanProCrons()
     {
+        if (!$this->auth->isAuthenticatedRequest()) {
+            wp_send_json_error(['message' => esc_html__('Invalid Request!', 'wp-staging')], 401);
+        }
+
         $proCrons        = $this->cronAdapter->getProEvents();
         $backupSchedules = $this->backupScheduler->getSchedules();
 
