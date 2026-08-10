@@ -228,14 +228,37 @@ class Language
 
         // Query must precede the #pricing anchor, or the link stops both tracking
         // and scrolling to the pricing table.
-        $query = http_build_query([
+        return $base . '?' . self::buildUtmQuery($context, $source) . '#pricing';
+    }
+
+    /**
+     * @param string $context Already sanitized utm_content slug.
+     * @param string $source  Already sanitized utm_source slug.
+     * @return string
+     */
+    private static function buildUtmQuery(string $context, string $source): string
+    {
+        return http_build_query([
             'utm_source'   => $source,
             'utm_medium'   => 'plugin',
             'utm_campaign' => self::getUpgradeCampaign(),
             'utm_content'  => $context,
         ]);
+    }
 
-        return $base . '?' . $query . '#pricing';
+    /**
+     * @param string $context Optional utm_content slug, sanitized to [a-z0-9_].
+     */
+    public static function getDesktopUrl(string $context = ''): string
+    {
+        $url     = self::localizeUrl('https://wp-staging.com/desktop/');
+        $context = preg_replace('/[^a-z0-9_]/', '', strtolower($context));
+
+        if ($context === '') {
+            return $url;
+        }
+
+        return $url . '?' . self::buildUtmQuery($context, 'wp-staging-free');
     }
 
     /**

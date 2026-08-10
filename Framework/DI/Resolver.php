@@ -37,7 +37,7 @@ class Resolver extends BaseResolver
         $instance = parent::resolve($id, $buildLine);
         if (is_object($instance) && $instance instanceof ShutdownableInterface) {
             if (!has_action('shutdown', [$instance, 'onWpShutdown'])) {
-                add_action('shutdown', [$instance, 'onWpShutdown']);
+                add_action('shutdown', [$instance, 'onWpShutdown'], ShutdownableInterface::SHUTDOWN_PRIORITY);
             }
         }
 

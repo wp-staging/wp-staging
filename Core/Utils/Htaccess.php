@@ -45,6 +45,7 @@ class Htaccess
             '<IfModule mod_mime.c>',
             'AddType application/octet-stream .log',
             'AddType application/octet-stream .wpstg',
+            'AddType application/octet-stream .wpstgtmp',
             '</IfModule>',
             '<IfModule mod_dir.c>',
             'DirectoryIndex index.php',

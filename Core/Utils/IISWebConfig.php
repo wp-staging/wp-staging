@@ -43,6 +43,7 @@ class IISWebConfig
             '<clear/>',
             '<mimeMap fileExtension=".log" mimeType="application/octet-stream" />',
             '<mimeMap fileExtension=".wpstg" mimeType="application/octet-stream" />',
+            '<mimeMap fileExtension=".wpstgtmp" mimeType="application/octet-stream" />',
             '</staticContent>',
             '<defaultDocument>',
             '<files>',

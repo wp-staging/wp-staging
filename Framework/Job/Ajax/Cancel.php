@@ -9,9 +9,12 @@ use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\Jobs\JobCancel;
+use WPStaging\Framework\Traits\JobResponseTrait;
 
 class Cancel extends AbstractTemplateComponent
 {
+    use JobResponseTrait;
+
     /** @var ProcessLock */
     protected $processLock;
 
@@ -43,7 +46,7 @@ class Cancel extends AbstractTemplateComponent
         /** @var JobCancel $job */
         $job = WPStaging::getInstance()->get(JobCancel::class);
 
-        wp_send_json($job->prepareAndExecute());
+        $this->sendJobResponse($job);
     }
 
     /**

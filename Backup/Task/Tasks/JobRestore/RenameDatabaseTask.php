@@ -443,7 +443,15 @@ class RenameDatabaseTask extends RestoreTask
         }
 
         foreach ($this->optionsToKeep as $optionToKeep) {
-            update_option($optionToKeep['name'], $this->decodePreservedOptionValue($optionToKeep['value']), $optionToKeep['autoload']);
+            $rejected = false;
+            $value    = $this->decodePreservedOptionValue($optionToKeep['value'], $rejected);
+
+            if ($rejected) {
+                $this->logger->warning(sprintf('Could not preserve the option "%s" because its value could not be safely unserialized. The value from the backup is kept instead.', $optionToKeep['name']));
+                continue;
+            }
+
+            update_option($optionToKeep['name'], $value, $optionToKeep['autoload']);
         }
 
         foreach ($this->optionsToRemove as $optionToRemove) {
@@ -512,11 +520,12 @@ class RenameDatabaseTask extends RestoreTask
 
     /**
      * @param mixed $value
+     * @param bool $rejected
      * @return mixed
      */
-    private function decodePreservedOptionValue($value)
+    private function decodePreservedOptionValue($value, &$rejected = false)
     {
-        return $this->safeMaybeUnserialize($value, [stdClass::class]);
+        return $this->safeMaybeUnserialize($value, [stdClass::class], $rejected);
     }
 
     /**

@@ -18,7 +18,7 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
 
     public function commit()
     {
-        $this->execExtendedQuery();
+        return $this->execExtendedQuery();
     }
 
     public function execExtendedQuery()
@@ -29,6 +29,9 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
         $this->extendedQuery .= ';';
         $success = $this->exec($this->extendedQuery);
         if ($success) {
+            if (!$this->hasFailedFlush) {
+                $this->committedLinePosition = $this->bufferedLinePosition;
+            }
             $this->extendedQuery = '';
             $this->databaseImporterDto->setTableToRestore('');
             return true;
@@ -42,10 +45,17 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
                 $this->databaseImporterDto->getTableToRestore(),
                 $this->client->error()
             ));
+            if ($retrySuccess && !$this->hasFailedFlush) {
+                $this->committedLinePosition = $this->bufferedLinePosition;
+            }
+            if (!$retrySuccess) {
+                $this->hasFailedFlush = true;
+            }
             $this->extendedQuery = '';
             $this->databaseImporterDto->setTableToRestore('');
             return $retrySuccess;
         }
+        $this->hasFailedFlush = true;
         $this->showError();
         $this->extendedQuery = '';
         $this->databaseImporterDto->setTableToRestore('');
@@ -101,6 +111,7 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             $this->addWarning(sprintf($this->translate('ExtendedInserterWithoutTransaction Failed Query: %s', 'wp-staging'), substr($this->extendedQuery, 0, 1000)));
         }
+        $additionalInfo = '';
         if ($this->backupDbVersion !== $this->currentDbVersion) {
             $additionalInfo = sprintf($this->translate(' Your current MySQL version is %s. If this issue persists, try using the same MySQL version used to create this Backup (%s).', 'wp-staging'), $this->currentDbVersion, $this->backupDbVersion);
         }
@@ -151,5 +162,6 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
         } else {
             $this->extendedQuery .= ",$matches[2]";
         }
+        $this->bufferedLinePosition = $this->currentLinePosition;
     }
 }

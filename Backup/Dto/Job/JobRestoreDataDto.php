@@ -22,6 +22,12 @@ class JobRestoreDataDto extends JobDataDto
     /** @var int Number of extracted files */
     protected $extractorFilesExtracted = 0;
 
+    /** @var int Byte offset the database restore reached, paired with the steps DTO's current line. */
+    protected $databaseFileOffset = 0;
+
+    /** @var int Line $databaseFileOffset was taken at, so a half-written checkpoint is detectable. */
+    protected $databaseFileOffsetLine = 0;
+
     /** @var int Number of written bytes to process the current files */
     protected $extractorFileWrittenBytes = 0;
 
@@ -234,6 +240,40 @@ class JobRestoreDataDto extends JobDataDto
     public function setExtractorMetadataIndexPosition(int $extractorMetadataIndexPosition)
     {
         $this->extractorMetadataIndexPosition = $extractorMetadataIndexPosition;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDatabaseFileOffset(): int
+    {
+        return $this->databaseFileOffset;
+    }
+
+    /**
+     * @param int $databaseFileOffset
+     * @return void
+     */
+    public function setDatabaseFileOffset(int $databaseFileOffset)
+    {
+        $this->databaseFileOffset = $databaseFileOffset;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDatabaseFileOffsetLine(): int
+    {
+        return $this->databaseFileOffsetLine;
+    }
+
+    /**
+     * @param int $databaseFileOffsetLine
+     * @return void
+     */
+    public function setDatabaseFileOffsetLine(int $databaseFileOffsetLine)
+    {
+        $this->databaseFileOffsetLine = $databaseFileOffsetLine;
     }
 
     /**

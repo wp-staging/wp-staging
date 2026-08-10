@@ -93,9 +93,9 @@ class ErrorHandler
     }
 
     /**
-     * Release the process lock when a fatal error terminates PHP before the job
-     * can clean up. Without this, the next request stays blocked by the stale
-     * lock until ProcessLock's 120s timeout elapses.
+     * Release the process lock when a fatal error terminates PHP before the job can clean up.
+     * The kernel would drop the lock anyway once this request's handles are closed, but releasing
+     * it here also clears the record the fallback path reads on filesystems that cannot lock.
      *
      * @return void
      */

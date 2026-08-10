@@ -59,7 +59,16 @@ class DatabaseOptions
             return $defaultValue;
         }
 
-        return $this->safeMaybeUnserialize($result);
+        $rejected = false;
+        $value    = $this->safeMaybeUnserialize($result, [], $rejected);
+
+        if ($rejected) {
+            debug_log(sprintf('Refused to unserialize database option "%s". Falling back to the default value.', $optionName));
+
+            return $defaultValue;
+        }
+
+        return $value;
     }
 
     /**

@@ -242,20 +242,9 @@ class CliIntegrationNotice
             return __('Unregistered', 'wp-staging');
         }
 
-        $licenseData = $this->getLicenseData();
+        $planName = $licensing->getPlanDisplayName();
 
-        if (!$licenseData || empty($licenseData->price_id)) {
-            return __('Unregistered', 'wp-staging');
-        }
-
-        $priceId   = (string)$licenseData->price_id;
-        $planNames = $licensing->getAvailableLicensePlansByPriceId();
-
-        if (isset($planNames[$priceId]['name'])) {
-            return $planNames[$priceId]['name'];
-        }
-
-        return __('Unregistered', 'wp-staging');
+        return $planName !== '' ? $planName : __('Unregistered', 'wp-staging');
     }
 
     /**

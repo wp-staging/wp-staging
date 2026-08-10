@@ -3,6 +3,8 @@
 namespace WPStaging\Staging\Traits;
 
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Core\WPStaging;
+use WPStaging\Pro\License\LicenseCapabilities;
 use WPStaging\Pro\License\Licensing;
 use WPStaging\Staging\Service\StagingSetup;
 
@@ -188,19 +190,7 @@ trait WithStagingRequirementLogs
             return false;
         }
 
-        $licenseData     = get_option('wpstg_license_status');
-        $licensePriceId  = !empty($licenseData->price_id) ? $licenseData->price_id : '';
-        $acceptablePlans = [
-            Licensing::AGENCY_LICENSE_PLAN_KEY,
-            Licensing::DEVELOPER_LICENSE_PLAN_KEY,
-            Licensing::DEVELOPER_LEGACY_LICENSE_PLAN_KEY,
-            Licensing::DEVELOPER_30_SITES_LICENSE_PLAN_KEY,
-            Licensing::DEVELOPER_NON_RECURRING_LICENSE_PLAN_KEY,
-            Licensing::AGENCY_NON_RECURRING_LICENSE_PLAN_KEY,
-            Licensing::DEVELOPER_UNLIMITED_SITES_LICENSE_PLAN_KEY,
-        ];
-
-        return in_array($licensePriceId, $acceptablePlans, true);
+        return WPStaging::make(Licensing::class)->licenseAllows(LicenseCapabilities::WOO_SCHEDULER);
     }
 
     /**

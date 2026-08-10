@@ -47,29 +47,40 @@ class UpdateBackupsScheduleTask extends RestoreTask
             return $this->generateResponse();
         }
 
-        $this->updateWpStagingCronJobs($tmpOptionsTable);
-
-        $this->logger->info('Preserved backup schedules in the database.');
+        if ($this->updateWpStagingCronJobs($tmpOptionsTable)) {
+            $this->logger->info('Preserved backup schedules in the database.');
+        }
 
         return $this->generateResponse();
     }
 
     /**
+     * @param string $tmpOptionsTable
+     * @return bool
      * @throws Exception
      */
-    protected function updateWpStagingCronJobs(string $tmpOptionsTable)
+    protected function updateWpStagingCronJobs(string $tmpOptionsTable): bool
     {
         $prodOptionsTable = $this->wpdb->prefix . 'options';
 
         // Cron jobs contained in the production site
         $productionCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$prodOptionsTable} WHERE option_name = 'cron';");
-        $productionCronJobs = $this->safeMaybeUnserialize($productionCronJobs[0]);
+        $rejected           = false;
+        $productionCronJobs = isset($productionCronJobs[0]) ? $this->safeMaybeUnserialize($productionCronJobs[0], [], $rejected) : [];
+
+        if ($rejected) {
+            $this->logger->warning('Skipped preserved backup schedules in the database. The cron option of this site could not be unserialized safely.');
+            return false;
+        }
 
         // Cron jobs contained in the backup file
         $backupCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$tmpOptionsTable} WHERE option_name = 'cron';");
+        $rejected       = false;
+        $backupCronJobs = isset($backupCronJobs[0]) ? $this->safeMaybeUnserialize($backupCronJobs[0], [], $rejected) : [];
 
-        if (isset($backupCronJobs[0])) {
-            $backupCronJobs = $this->safeMaybeUnserialize($backupCronJobs[0]);
+        if ($rejected) {
+            $this->logger->warning('Skipped preserved backup schedules in the database. The cron option in the backup could not be unserialized safely.');
+            return false;
         }
 
         // WP STAGING Cron jobs from production site
@@ -89,9 +100,12 @@ class UpdateBackupsScheduleTask extends RestoreTask
 
         $result = $this->wpdb->query($query);
 
-        if (!$result) {
+        if ($result === false) {
             debug_log('Failed to Update WP STAGING Cron Jobs! Error: ' . $this->wpdb->last_error . ' Query: ' . $query);
+            return false;
         }
+
+        return true;
     }
 
     /**

@@ -30,6 +30,11 @@ class DatabaseImporter
     const FILTER_DATABASE_IMPORT_EXCLUDED_QUERIES = 'wpstg.database.import.excludedQueries';
     private $file;
     private $totalLines;
+    private $lineNumberBase = 0;
+    private $hasBufferedLine = false;
+    private $bufferedLineStartOffset = 0;
+    private $currentLineStartOffset = 0;
+    private $currentQueryOffset = 0;
     private $client;
     private $databaseImporterDto;
     private $database;
@@ -68,10 +73,17 @@ class DatabaseImporter
         $this->client   = $database->getClient();
     }
 
-    public function setFile($filePath)
+    public function setFile($filePath, int $knownTotalLines = 0)
     {
-        $this->file       = new FileObject($filePath);
-        $this->totalLines = $this->file->totalLines();
+        $this->file = new FileObject($filePath);
+        if ($knownTotalLines > 0) {
+            $this->file->setTotalLines($knownTotalLines);
+        }
+        $this->totalLines             = $this->file->totalLines();
+        $this->lineNumberBase         = 0;
+        $this->hasBufferedLine        = false;
+        $this->currentQueryOffset     = 0;
+        $this->currentLineStartOffset = 0;
         return $this;
     }
 
@@ -81,7 +93,55 @@ class DatabaseImporter
             throw new \RuntimeException('Restore file is not set');
         }
         $this->file->seek($line);
+        $this->lineNumberBase         = 0;
+        $this->currentQueryOffset     = 0;
+        $this->currentLineStartOffset = 0;
+        $this->hasBufferedLine         = $line > 0;
+        $this->bufferedLineStartOffset = max(0, (int)$this->file->ftell() - strlen((string)$this->file->current()));
         return $this;
+    }
+
+    public function seekToOffset(int $byteOffset, int $lineNumber): bool
+    {
+        if (!$this->file) {
+            throw new \RuntimeException('Restore file is not set');
+        }
+        if ($byteOffset <= 0 || $lineNumber <= 0) {
+            return false;
+        }
+        $fileSize = (int)$this->file->getSize();
+        if ($byteOffset > $fileSize) {
+            return false;
+        }
+        if ($byteOffset < $fileSize && !$this->isStatementBoundary($this->readLineAt($byteOffset))) {
+            return false;
+        }
+        $this->file->fseek($byteOffset);
+        $this->lineNumberBase         = $lineNumber - $this->file->key();
+        $this->currentQueryOffset     = $byteOffset;
+        $this->currentLineStartOffset = $byteOffset;
+        $this->hasBufferedLine        = false;
+        return true;
+    }
+
+    private function readLineAt(int $byteOffset): string
+    {
+        $this->file->fseek($byteOffset);
+        return $this->file->readAndMoveNext();
+    }
+
+    private function isStatementBoundary(string $line): bool
+    {
+        $line = ltrim($line);
+        if ($line === '') {
+            return true;
+        }
+        return (bool)preg_match('/^(INSERT |REPLACE |CREATE |DROP |ALTER |SET |LOCK |UNLOCK |TRUNCATE |UPDATE |DELETE |START TRANSACTION|COMMIT;|--|#|\/\*)/i', $line);
+    }
+
+    public function getCurrentLine(): int
+    {
+        return $this->file->key() + $this->lineNumberBase;
     }
 
     public function init(string $tmpDatabasePrefix)
@@ -100,25 +160,34 @@ class DatabaseImporter
 
     public function retryQuery()
     {
-        $this->databaseImporterDto->setCurrentIndex($this->file->key() - 1);
+        $this->databaseImporterDto->setCurrentIndex($this->getCurrentLine() - 1);
+        $this->databaseImporterDto->setFileOffset($this->currentQueryOffset);
         $this->queryInserter->commit();
     }
 
     public function updateIndex()
     {
-        $this->databaseImporterDto->setCurrentIndex($this->file->key());
-        $this->queryInserter->commit();
+        if ($this->queryInserter->commit() === false || $this->queryInserter->hasFailedFlush()) {
+            return;
+        }
+        $this->databaseImporterDto->setCurrentIndex($this->getCurrentLine());
+        $this->databaseImporterDto->setFileOffset($this->getCurrentOffset());
     }
 
     public function getCurrentOffset(): int
     {
+        if ($this->hasBufferedLine) {
+            return $this->bufferedLineStartOffset;
+        }
         return (int)$this->file->ftell();
     }
 
     public function finish()
     {
+        if ($this->queryInserter->commit() === false) {
+            throw new \RuntimeException(sprintf('Could not restore the last rows of the database. MySQL has returned the error code %d, with message "%s".', $this->client->errno(), $this->client->error()));
+        }
         $this->databaseImporterDto->finish();
-        $this->queryInserter->commit();
     }
 
     public function getQueryCompatibility(): QueryCompatibility
@@ -242,6 +311,7 @@ class DatabaseImporter
             ) {
                 $this->searchReplaceInsertQuery($query);
             }
+            $this->queryInserter->setCurrentLinePosition($this->getCurrentLine());
             try {
                 $result = $this->queryInserter->processQuery($query);
             } catch (\Exception $e) {
@@ -250,8 +320,11 @@ class DatabaseImporter
             if ($result === null && $this->queryInserter->getLastError() !== false) {
                 $this->logWarning($this->queryInserter->getLastError());
             }
+            $isInsertQuery  = true;
+            $hasFlushFailed = false;
         } else {
-            $this->queryInserter->commit();
+            $isInsertQuery = false;
+            $hasFlushFailed = $this->queryInserter->commit() === false;
             $this->queryCompatibility->removeDefiner($query);
             $this->queryCompatibility->removeSqlSecurity($query);
             $this->queryCompatibility->removeAlgorithm($query);
@@ -262,7 +335,8 @@ class DatabaseImporter
         $currentDbVersion = $this->database->getSqlVersion($compact = true);
         $backupDbVersion  = $this->backupDbVersion;
         if ($result === false) {
-            switch ($this->client->errno()) {
+            $probedForReplay = false;
+            switch ($errorNo) {
                 case 1030:
                     $this->queryCompatibility->replaceTableEngineIfUnsupported($query);
                     $result = $this->exec($query);
@@ -293,13 +367,13 @@ class DatabaseImporter
                     }
                     break;
                 case 1226:
-                    if (stripos($this->client->error(), 'max_queries_per_hour') !== false) {
+                    if (stripos($errorMsg, 'max_queries_per_hour') !== false) {
                         throw new \RuntimeException('Your server has reached the maximum allowed queries per hour set by your admin or hosting provider. Please increase MySQL max_queries_per_hour_limit. <a href="https://wp-staging.com/docs/mysql-database-error-codes/" target="_blank">Technical details</a>');
-                    } elseif (stripos($this->client->error(), 'max_updates_per_hour') !== false) {
+                    } elseif (stripos($errorMsg, 'max_updates_per_hour') !== false) {
                         throw new \RuntimeException('Your server has reached the maximum allowed updates per hour set by your admin or hosting provider. Please increase MySQL max_updates_per_hour. <a href="https://wp-staging.com/docs/mysql-database-error-codes/" target="_blank">Technical details</a>');
-                    } elseif (stripos($this->client->error(), 'max_connections_per_hour') !== false) {
+                    } elseif (stripos($errorMsg, 'max_connections_per_hour') !== false) {
                         throw new \RuntimeException('Your server has reached the maximum allowed connections per hour set by your admin or hosting provider. Please increase MySQL max_connections_per_hour. <a href="https://wp-staging.com/docs/mysql-database-error-codes/" target="_blank">Technical details</a>');
-                    } elseif (stripos($this->client->error(), 'max_user_connections') !== false) {
+                    } elseif (stripos($errorMsg, 'max_user_connections') !== false) {
                         throw new \RuntimeException('Your server has reached the maximum allowed connections per hour set by your admin or hosting provider. Please increase MySQL max_user_connections. <a href="https://wp-staging.com/docs/mysql-database-error-codes/" target="_blank">Technical details</a>');
                     }
                     break;
@@ -323,6 +397,15 @@ class DatabaseImporter
                         $this->logWarning(sprintf('PAGE_COMPRESSED removed from Table: %s, as it is not a supported syntax in MySQL.', $tableName));
                     }
                     break;
+                case 1050:
+                    $probedForReplay = true;
+                    $replayedTable   = $this->findReplayedEmptyTemporaryTable($query);
+                    if ($replayedTable === '') {
+                        break;
+                    }
+                    $result = true;
+                    $this->logWarning(sprintf('Table %s was left behind by a restore that did not finish. It is empty, so the restore continues with it instead of creating it again.', htmlspecialchars($replayedTable, ENT_QUOTES)));
+                    break;
                 case 1813:
                     throw new \RuntimeException('Could not restore the database. MySQL returned the error code 1813, which is related to a tablespace error that WP STAGING can\'t handle. Please contact your hosting company.');
                 case 1273:
@@ -334,6 +417,7 @@ class DatabaseImporter
                     break;
             }
             if ($result) {
+                $this->publishCommittedPosition($isInsertQuery, $hasFlushFailed);
                 return true;
             }
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
@@ -343,15 +427,31 @@ class DatabaseImporter
                     $this->debugLog($errorMsg);
                 }
             }
-            $errorNo  = $this->client->errno();
-            $errorMsg = $this->client->error();
+            if (!$probedForReplay && $this->client->errno() !== 0) {
+                $errorNo  = $this->client->errno();
+                $errorMsg = $this->client->error();
+            }
             $additionalInfo = '';
             if ($backupDbVersion !== $currentDbVersion) {
                 $additionalInfo = sprintf(' Your current MySQL version is %s. If this issue persists, try using the same MySQL version used to create this Backup (%s).', $currentDbVersion, $backupDbVersion);
             }
             throw new \RuntimeException(sprintf('Could not restore query. MySQL has returned the error code %d, with message "%s".', $errorNo, $errorMsg) . $additionalInfo);
         }
+        $this->publishCommittedPosition($isInsertQuery, $hasFlushFailed);
         return $result;
+    }
+
+    private function publishCommittedPosition(bool $isInsertQuery, bool $hasFlushFailed)
+    {
+        $hasFlushFailed = $hasFlushFailed || $this->queryInserter->hasFailedFlush();
+        $committedPosition = $this->queryInserter->getCommittedLinePosition();
+        if (!$isInsertQuery && !$hasFlushFailed) {
+            $committedPosition = $this->getCurrentLine();
+        }
+        if ($committedPosition <= $this->databaseImporterDto->getCurrentIndex()) {
+            return;
+        }
+        $this->databaseImporterDto->setCurrentIndex($committedPosition);
     }
 
     protected function maybeShorterTableNameForDropTableQuery(&$query)
@@ -365,6 +465,83 @@ class DatabaseImporter
             $tableName = $this->databaseImporterDto->addShortNameTable($tableName, $this->tmpDatabasePrefix);
         }
         return "DROP TABLE IF EXISTS `$tableName`;";
+    }
+
+    protected function findReplayedEmptyTemporaryTable(string $query): string
+    {
+        if (stripos($query, 'CREATE TABLE') !== 0) {
+            return '';
+        }
+        $tableName = $this->extractTableNameFromQuery($query);
+        if ($tableName === '' || strpos($tableName, $this->tmpDatabasePrefix) !== 0) {
+            return '';
+        }
+        $rows = $this->client->query("SELECT 1 FROM `$tableName` LIMIT 1");
+        if ($rows === false) {
+            return '';
+        }
+        $isEmpty = $this->client->numRows($rows) === 0;
+        $this->client->freeResult($rows);
+        if (!$isEmpty) {
+            return '';
+        }
+        if (!$this->hasSameSchemaAs($tableName, $query)) {
+            return '';
+        }
+        return $tableName;
+    }
+
+    private function hasSameSchemaAs(string $tableName, string $query): bool
+    {
+        $result = $this->client->query("SHOW CREATE TABLE `$tableName`");
+        if ($result === false) {
+            return false;
+        }
+        $row = $this->client->fetchAssoc($result);
+        $this->client->freeResult($result);
+        if (empty($row['Create Table'])) {
+            return false;
+        }
+        $existing = $row['Create Table'];
+        $columns  = $this->columnsOf($existing);
+        if ($columns === [] || $columns !== $this->columnsOf($query)) {
+            return false;
+        }
+        return $this->engineOf($existing) === $this->engineOf($query);
+    }
+
+    private function columnsOf(string $createTableQuery): array
+    {
+        preg_match_all('#[(,]\s*`([^`]+)`\s+([a-zA-Z]+)#', $createTableQuery, $matches, PREG_SET_ORDER);
+        $columns = [];
+        foreach ($matches as $match) {
+            $columns[] = $match[1] . ' ' . $this->canonicalType($match[2]);
+        }
+        return $columns;
+    }
+
+    private function canonicalType(string $type): string
+    {
+        $synonyms = [
+            'bool'      => 'tinyint',
+            'boolean'   => 'tinyint',
+            'integer'   => 'int',
+            'dec'       => 'decimal',
+            'numeric'   => 'decimal',
+            'fixed'     => 'decimal',
+            'real'      => 'double',
+            'character' => 'char',
+        ];
+        $type = strtolower($type);
+        return isset($synonyms[$type]) ? $synonyms[$type] : $type;
+    }
+
+    private function engineOf(string $createTableQuery): string
+    {
+        if (!preg_match('#\sENGINE\s*=\s*([a-zA-Z0-9_]+)#i', $createTableQuery, $matches)) {
+            return '';
+        }
+        return strtolower($matches[1]);
     }
 
     protected function maybeShorterTableNameForCreateTableQuery(&$query)
@@ -514,6 +691,7 @@ class DatabaseImporter
         while (!$this->file->eof()) {
             $line = $this->getLine();
             if ($this->isExecutableQuery($line)) {
+                $this->currentQueryOffset = $this->currentLineStartOffset;
                 return $line;
             }
         }
@@ -525,7 +703,10 @@ class DatabaseImporter
         if ($this->file->eof()) {
             return;
         }
-        return trim($this->file->readAndMoveNext());
+        $line = $this->file->readAndMoveNext();
+        $this->currentLineStartOffset = (int)$this->file->ftell() - strlen($line);
+        $this->hasBufferedLine        = false;
+        return trim($line);
     }
 
     public function isExecutableQuery($query = null)
@@ -551,7 +732,7 @@ class DatabaseImporter
                 'Skipping query because it does not end with a semi-colon.',
                 [
                     'method'     => __METHOD__,
-                    'DbFileLine' => is_object($this->file) ? $this->file->key() : 0,
+                    'DbFileLine' => is_object($this->file) ? $this->getCurrentLine() : 0,
                     'DbQuery'    => $query,
                 ]
             );
@@ -702,8 +883,13 @@ class DatabaseImporter
 
     protected function extractTableNameFromQuery(string $query): string
     {
-        if (preg_match('#^(CREATE TABLE|INSERT INTO|DROP TABLE IF EXISTS)\s+(?:`([^`]+)`|"([^"]+)"|([a-zA-Z0-9_]+))#i', $query, $matches)) {
-            return $matches[2] ?? $matches[3] ?? $matches[4];
+        if (!preg_match('#^(CREATE TABLE|INSERT INTO|DROP TABLE IF EXISTS)\s+(?:`([^`]+)`|"([^"]+)"|([a-zA-Z0-9_]+))#i', $query, $matches)) {
+            return '';
+        }
+        foreach ([$matches[2], $matches[3] ?? '', $matches[4] ?? ''] as $tableName) {
+            if ($tableName !== '') {
+                return $tableName;
+            }
         }
         return '';
     }

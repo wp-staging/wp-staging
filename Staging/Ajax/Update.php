@@ -6,9 +6,11 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Traits\MemoryExhaustTrait;
 use WPStaging\Staging\Jobs\StagingSiteUpdate;
+use WPStaging\Framework\Traits\JobResponseTrait;
 
 class Update extends AbstractTemplateComponent
 {
+    use JobResponseTrait;
     use MemoryExhaustTrait;
 
     /**
@@ -30,7 +32,7 @@ class Update extends AbstractTemplateComponent
         $jobUpdate = $this->getUpdateJob();
         $jobUpdate->setMemoryExhaustErrorTmpFile($tmpFileToDelete);
 
-        wp_send_json($jobUpdate->prepareAndExecute());
+        $this->sendJobResponse($jobUpdate);
     }
 
     /**

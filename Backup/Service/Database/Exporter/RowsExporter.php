@@ -5,6 +5,7 @@ use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\MySQLRowsGeneratorTrait;
+use RuntimeException;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Database\Exporter\AbstractExporter;
@@ -439,17 +440,29 @@ class RowsExporter extends AbstractExporter
         if (!$this->useMemoryExhaustFix) {
             return;
         }
+        $writtenBytes = $this->measureWrittenRows();
         $this->totalRowsExported = $this->jobDataDto->getTotalRowsBackup() + $filesWritten;
         $this->jobDataDto->setTotalRowsBackup($this->totalRowsExported);
         if (!empty($numericPrimaryKey)) {
             $this->tableRowsOffset = $this->lastNumericInsertId;
             $this->jobDataDto->setTableRowsOffset($this->lastNumericInsertId);
             $this->jobDataDto->setLastInsertId($this->lastNumericInsertId);
+            $this->jobDataDto->setSqlWrittenBytes($writtenBytes);
             return;
         }
         $this->tableRowsOffset = $this->jobDataDto->getTableRowsOffset() + $filesWritten;
-        $this->jobDataDto->setTableRowsOffset($this->jobDataDto->getTableRowsOffset() + $filesWritten);
+        $this->jobDataDto->setTableRowsOffset($this->tableRowsOffset);
         $this->jobDataDto->setLastInsertId($this->lastNumericInsertId);
+        $this->jobDataDto->setSqlWrittenBytes($writtenBytes);
+    }
+
+    private function measureWrittenRows(): int
+    {
+        $writtenBytes = $this->getWrittenBytes();
+        if ($writtenBytes === self::BYTES_UNKNOWN) {
+            throw new RuntimeException('Backup database: Could not measure the export file, so the rows just written cannot be checkpointed and a retry would skip them.');
+        }
+        return $writtenBytes;
     }
 
     protected function throwStorageEngineRepairNotSupportedException()

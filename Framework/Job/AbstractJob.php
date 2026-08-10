@@ -11,7 +11,6 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Exceptions\WPStagingException;
-use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
@@ -19,7 +18,6 @@ use WPStaging\Framework\Job\Dto\AbstractDto;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
-use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
 use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Traits\BenchmarkTrait;
@@ -37,6 +35,12 @@ abstract class AbstractJob implements ShutdownableInterface
 
     /** @var Cache $jobDataCache Persists the JobDataDto in the filesystem. */
     private $jobDataCache;
+
+    /** @var bool Whether this request already wrote the job state out. */
+    private $hasPersisted = false;
+
+    /** @var bool Whether the last-chance shutdown function is registered. */
+    private $hasShutdownBackstop = false;
 
     /** @var string */
     protected $currentTaskName;
@@ -117,6 +121,7 @@ abstract class AbstractJob implements ShutdownableInterface
         if ($this->jobDataDto->isFinished() && !$this->jobDataDto->isCleaned()) {
             $this->cleanup();
             $this->jobDataDto->setCleaned();
+            $this->hasPersisted = true;
             return;
         }
 
@@ -126,6 +131,8 @@ abstract class AbstractJob implements ShutdownableInterface
         }
 
         $this->persistJobDataDto();
+
+        $this->hasPersisted = true;
     }
 
     /**
@@ -136,7 +143,11 @@ abstract class AbstractJob implements ShutdownableInterface
         $data = $this->jobDataDto->toArray();
 
         try {
-            $this->jobDataCache->save($data, true);
+            // save() reports a refused write by returning false rather than throwing. Letting
+            // that pass lets a caller publish a checkpoint that depends on this write.
+            if ($this->jobDataCache->save($data, true) === false) {
+                throw new \RuntimeException('Could not persist Job data to cache.');
+            }
         } catch (\Exception $e) {
             debug_log("Could not persist Job data to cache:"  . $e->getMessage());
             throw new \RuntimeException('Could not persist Job data to cache: ' . $e->getMessage(), 0, $e);
@@ -153,6 +164,50 @@ abstract class AbstractJob implements ShutdownableInterface
     public function onWpShutdown()
     {
         $this->persist();
+    }
+
+    /**
+     * Last chance to write the job state, after the `shutdown` action has had its turn.
+     *
+     * A fatal in a callback ahead of this job abandons the rest of the action, and the
+     * state that never reaches disk is the state the next request resumes from. PHP still
+     * calls the remaining shutdown functions after such a fatal, which is the hole this
+     * closes.
+     *
+     * It is a backstop, not a guarantee. A callback ahead of us calling exit() ends the
+     * shutdown sequence outright, and a request killed by the process manager or the OOM
+     * killer reaches no PHP handler at all — which is why the restore checkpoints its
+     * progress as it goes rather than relying on being told it is about to die.
+     *
+     * @return void
+     */
+    public function persistIfShutdownActionDidNotRun()
+    {
+        if ($this->hasPersisted) {
+            return;
+        }
+
+        try {
+            $this->persist();
+        } catch (\Throwable $e) {
+            // Nothing above can report an error this late, and throwing out of a shutdown
+            // function turns a lost checkpoint into a fatal on top of it.
+            debug_log('Job state could not be persisted on shutdown: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * @return void
+     */
+    protected function registerShutdownBackstop()
+    {
+        if ($this->hasShutdownBackstop) {
+            return;
+        }
+
+        $this->hasShutdownBackstop = true;
+
+        register_shutdown_function([$this, 'persistIfShutdownActionDidNotRun']);
     }
 
     /**
@@ -176,6 +231,13 @@ abstract class AbstractJob implements ShutdownableInterface
     /** @return TaskResponseDto */
     public function prepareAndExecute()
     {
+        // Acquired before anything reads or writes the job state, including the two exits below
+        // that delete the job cache: a request that owns none of the state must not be able to
+        // throw away the state another worker is running on, and the persist this request does
+        // on shutdown has to be covered by the same ownership. It is released when the request
+        // ends, so one acquisition covers hydrating, executing and persisting alike.
+        $this->processLock->lockProcess();
+
         try {
             // Check if the last request bailed with a Disk Write failure flag.
             $this->diskFullCheck->hasDiskWriteTestFailed();
@@ -208,12 +270,10 @@ abstract class AbstractJob implements ShutdownableInterface
                 return $this->getJobFailResponse($ex->getMessage());
             }
 
-            $this->processLock->lockProcess();
+            $this->registerShutdownBackstop();
 
             /** @var TaskResponseDto $response */
             $response = $this->execute();
-
-            $this->processLock->unlockProcess();
 
             /*
              * Let's display the name of the task running now, instead
@@ -302,7 +362,6 @@ abstract class AbstractJob implements ShutdownableInterface
     {
         // Early bail: No task health on a task that is retrying a failed request. We will evaluate that on the next request.
         if ($this->jobDataDto->getTaskHealthIsRetrying()) {
-            $this->processLock->unlockProcess();
             $this->jobDataDto->setTaskHealthIsRetrying(false);
 
             return;
@@ -351,17 +410,6 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->addTasks($this->getJobTasks());
         } else {
             $this->checkLastTaskHealth();
-        }
-
-        $retry = isset($_REQUEST['retry']) ? Sanitize::sanitizeBool($_REQUEST['retry']) : false;
-        try {
-            if ($retry) {
-                $this->processLock->unlockProcess();
-            }
-
-            $this->processLock->checkProcessLocked();
-        } catch (ProcessLockedException $e) {
-            wp_send_json_error($e->getMessage(), $e->getCode());
         }
 
         $this->jobDataDto->setInit(false);

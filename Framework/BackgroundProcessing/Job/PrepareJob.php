@@ -38,7 +38,11 @@ abstract class PrepareJob
     use ResourceTrait;
     use QueueActionAware;
 
-    /** @var string */
+    /**
+     * Fired both as an internal hook, which holds a single listener, and as an
+     * ordinary WordPress action, which holds any number of them.
+     * @var string
+     */
     const ACTION_JOB_FAILURE = 'wpstg_background_job_failure';
 
     /** @var AbstractJob */
@@ -168,7 +172,12 @@ abstract class PrepareJob
         debug_log('[BG Queue] act() start: jobId=' . $jobIdForLog . ' class=' . static::class, 'info', false);
 
         try {
-            $this->processLock->checkProcessLocked();
+            // Held for the whole request, not merely checked, and never released early: the job
+            // state is hydrated, executed and persisted below, the job persists itself again on
+            // shutdown, and only one worker may own that unit of work. Releasing at any exit
+            // before shutdown would let a successor persist newer state that this request's own
+            // shutdown write then rolls back.
+            $this->processLock->lockProcess();
         } catch (ProcessLockedException $e) {
             $this->queueAction($args);
 
@@ -181,7 +190,13 @@ abstract class PrepareJob
         $args['isInit']  = false;
         $taskResponseDto = null;
 
-        debug_log('[Schedule Job Data DTO]: ' . json_encode($this->job->getJobDataDto()), 'info', false);
+        // Serialising the whole job DTO on every background request costs a json_encode and
+        // a log write for output nobody reads unless they are debugging, and it is what makes
+        // the debug log grow into megabytes over a long restore. Guard the encode itself:
+        // debug_log() discards 'debug' output, but the argument is built either way.
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+            debug_log('[Schedule Job Data DTO]: ' . json_encode($this->job->getJobDataDto()), 'debug', false);
+        }
 
         do {
             try {
@@ -189,11 +204,18 @@ abstract class PrepareJob
                 $taskResponseDto = $this->job->prepareAndExecute();
                 $this->job->persist();
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
+            } catch (ProcessLockedException $e) {
+                // Another worker won the lock for this step (e.g. a wp-cron request racing the
+                // loopback). Re-queue and let the winning worker carry the job forward, instead of
+                // failing the whole job on a transient contention.
+                $this->queueAction($args);
+
+                debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=process-locked-midrun (re-queued)', 'info', false);
+                return new WP_Error(400, $e->getMessage());
             } catch (Exception $e) {
                 debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
                 $this->handlingError = true;
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
-                $this->processLock->unlockProcess();
 
                 $this->handleError($e->getMessage(), $args);
 
@@ -201,14 +223,11 @@ abstract class PrepareJob
             }
 
             if ($this->isJobCancelled($args)) {
-                $this->processLock->unlockProcess();
                 return new WP_Error(499, 'Job cancelled by user.'); // 499 Client Closed Request: This unofficial but widely used Nginx-specific status code
             }
 
             $errorMessage = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
-                $this->processLock->unlockProcess();
-
                 $this->handleError($errorMessage, $args);
 
                 debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=error', 'info', false);
@@ -368,11 +387,14 @@ abstract class PrepareJob
 
         $jobTransientCache = $this->job->getTransientCache();
 
-        Hooks::callInternalHook(self::ACTION_JOB_FAILURE, [
+        $failure = [
             'jobTransientCache' => $jobTransientCache,
             'errorMessage'      => $errorMessage,
             'jobDataDto'        => $this->job->getJobDataDto(),
-        ]);
+        ];
+
+        Hooks::callInternalHook(self::ACTION_JOB_FAILURE, $failure);
+        Hooks::doAction(self::ACTION_JOB_FAILURE, $failure);
 
         $jobTransientCache->failJob('', $errorMessage);
     }
@@ -418,7 +440,10 @@ abstract class PrepareJob
             return '';
         }
 
-        return $this->job->getCurrentTask()->getLogger()->getFileName();
+        // The logger only has a file name once setFileName() has run. Returning it raw
+        // from a string-typed method turns a task that never got one into a TypeError,
+        // which kills the request before it can respond and surfaces as "No response".
+        return (string)$this->job->getCurrentTask()->getLogger()->getFileName();
     }
 
     private function isJobCancelled(array $args): bool

@@ -148,8 +148,9 @@ class DirectoryListing
     {
         $path = trailingslashit(wp_normalize_path($path));
 
-        // Earliest bail: Directory listing is already prevented.
-        if (file_exists($path . 'index.php')) {
+        // Earliest bail: fully protected already. index.php alone isn't enough — a folder
+        // missing web.config would never get it recreated, 404ing IIS backup downloads.
+        if (file_exists($path . 'index.php') && file_exists($path . '.htaccess') && file_exists($path . 'web.config')) {
             return;
         }
 
@@ -225,21 +226,19 @@ PHP
     {
         $backupDirectory = trailingslashit($backupDirectory);
 
-        // Htaccess
+        // Both create() methods always write .wpstg and .wpstgtmp together, so checking for
+        // .wpstgtmp alone is enough, and they overwrite in place, so no unlink() is needed.
         if (file_exists($backupDirectory . '.htaccess')) {
             if ($contents = file_get_contents($backupDirectory . '.htaccess')) {
-                if (strpos($contents, 'AddType application/octet-stream .wpstg') === false) {
-                    unlink($backupDirectory . '.htaccess');
+                if (strpos($contents, 'AddType application/octet-stream .wpstgtmp') === false) {
                     $this->htaccess->create($backupDirectory . '.htaccess');
                 }
             }
         }
 
-        // IIS Web Config
         if (file_exists($backupDirectory . 'web.config')) {
             if ($contents = file_get_contents($backupDirectory . 'web.config')) {
-                if (strpos($contents, '<mimeMap fileExtension=".wpstg" mimeType="application/octet-stream"') === false) {
-                    unlink($backupDirectory . 'web.config');
+                if (strpos($contents, '<mimeMap fileExtension=".wpstgtmp" mimeType="application/octet-stream"') === false) {
                     $this->webConfig->create($backupDirectory . 'web.config');
                 }
             }

@@ -139,6 +139,8 @@ class RestoreDatabaseTask extends RestoreTask
 
             // To make sure finish condition work.
             $this->stepsDto->setTotal(0);
+
+            $this->resetRestoreCheckpoint();
         }
 
         return $this->generateResponse(false);
@@ -173,10 +175,7 @@ class RestoreDatabaseTask extends RestoreTask
             throw new RuntimeException(sprintf('Can not find database file %s', $databaseFile));
         }
 
-        $this->databaseImporter->setWarningLogCallable([$this->logger, 'warning']);
-        $this->databaseImporter->setNoticeLogCallable([$this->logger, 'notice']);
-        $this->databaseImporter->setFile($databaseFile);
-        $this->databaseImporter->seekLine($this->stepsDto->getCurrent());
+        $this->setupDatabaseImporterFile($databaseFile);
 
         if (!$this->stepsDto->getTotal()) {
             $this->stepsDto->setTotal($this->databaseImporter->getTotalLines());
@@ -184,6 +183,72 @@ class RestoreDatabaseTask extends RestoreTask
 
         $this->databaseImporterDto->setTotalLines($this->databaseImporter->getTotalLines());
         $this->setupSearchReplace();
+    }
+
+    /**
+     * Point the importer at a database file and resume where the previous request stopped.
+     *
+     * Shared with the multipart restore, which reaches its own file through a different route
+     * but must resume the same way.
+     *
+     * @param string $databaseFile
+     * @return void
+     */
+    protected function setupDatabaseImporterFile(string $databaseFile)
+    {
+        $this->databaseImporter->setWarningLogCallable([$this->logger, 'warning']);
+        $this->databaseImporter->setNoticeLogCallable([$this->logger, 'notice']);
+        $this->databaseImporter->setFile($databaseFile, $this->stepsDto->getTotal());
+        $this->seekToRestorePosition();
+    }
+
+    /**
+     * Resume where the previous request stopped.
+     *
+     * seekLine() counts newlines from the start of the file, so resuming at line N re-reads
+     * everything before it. On a large dump that grows until it exceeds the whole request
+     * budget: the request then executes no queries, reports 0 queries per second, and
+     * maybeUpdateExecutionTime() ratchets the limit up until it throws. Resuming at the byte
+     * offset recorded last time is O(1) and avoids that entirely.
+     *
+     * @return void
+     */
+    protected function seekToRestorePosition()
+    {
+        $currentLine = $this->stepsDto->getCurrent();
+
+        if ($this->hasCheckpointForLine($currentLine) && $this->databaseImporter->seekToOffset($this->jobDataDto->getDatabaseFileOffset(), $currentLine)) {
+            return;
+        }
+
+        // No offset recorded yet, or it no longer lands on a statement boundary.
+        $this->databaseImporter->seekLine($currentLine);
+    }
+
+    /**
+     * The line is persisted to the steps cache and the offset to the job cache, in two
+     * separate writes. If the second one never lands, a new line is left paired with an old
+     * offset, which would replay or skip statements, so the offset carries the line it was
+     * taken at and is only trusted when the two still agree.
+     *
+     * @param int $currentLine
+     * @return bool
+     */
+    protected function hasCheckpointForLine(int $currentLine): bool
+    {
+        return $this->jobDataDto->getDatabaseFileOffsetLine() === $currentLine;
+    }
+
+    /**
+     * Each database part is seeked independently, so an offset from the part that just
+     * finished must not survive into the next one.
+     *
+     * @return void
+     */
+    protected function resetRestoreCheckpoint()
+    {
+        $this->jobDataDto->setDatabaseFileOffset(0);
+        $this->jobDataDto->setDatabaseFileOffsetLine(0);
     }
 
     /** @return string */
@@ -237,6 +302,8 @@ class RestoreDatabaseTask extends RestoreTask
     {
         $this->databaseImporter->init($this->jobDataDto->getTmpDatabasePrefix());
 
+        $persistedIndex = $this->databaseImporterDto->getCurrentIndex();
+
         try {
             while (!$this->isDatabaseRestoreThreshold()) {
                 try {
@@ -244,6 +311,17 @@ class RestoreDatabaseTask extends RestoreTask
                 } catch (\OutOfBoundsException $e) {
                     // Skipping INSERT query due to unexpected format...
                     $this->logger->debug($e->getMessage());
+                }
+
+                // The importer only moves this on once a batch has landed in the database,
+                // so writing it out on every move ties the resume point to what is committed.
+                // Waiting instead — for the shutdown hook, or for a time window to pass —
+                // leaves committed rows past the resume point, and the retry replays them
+                // into a duplicate key.
+                $currentIndex = $this->databaseImporterDto->getCurrentIndex();
+                if ($currentIndex > $persistedIndex) {
+                    $persistedIndex = $currentIndex;
+                    $this->persistRestoreProgress();
                 }
             }
         } catch (Exception $e) {
@@ -265,12 +343,43 @@ class RestoreDatabaseTask extends RestoreTask
     }
 
     /**
+     * Write the resume point out together with everything it depends on.
+     *
+     * The seek position is only usable with the short table-name mappings that were created
+     * on the way there: a name over 64 characters is shortened once, and the INSERTs and the
+     * final rename that follow resolve the table through that mapping. Persisting the
+     * position alone would let a hard kill keep the position and lose the mapping, leaving
+     * the next request to resume past the CREATE with no name to insert into.
+     *
+     * Job data goes first, so a kill between the two writes costs a replay rather than a
+     * mapping.
+     *
+     * @return void
+     */
+    protected function persistRestoreProgress()
+    {
+        $this->updateTaskDtos();
+        $this->setCurrentTaskDto($this->currentTaskDto);
+        $this->persistJobDataDto();
+        $this->persistStepsDto();
+    }
+
+    /**
      * Responsible for updating steps dto and current task dto from database importer dto.
      * @return void
      */
     protected function updateTaskDtos()
     {
-        $this->stepsDto->setCurrent($this->databaseImporterDto->getCurrentIndex());
+        // Never backwards. A fresh importer dto starts at zero and stays there when its first
+        // flush fails, and writing that back would send the next request to the top of the
+        // file to replay every row this restore has already committed. The byte offset
+        // describes that same position, so it moves with the line or not at all.
+        $currentIndex = $this->databaseImporterDto->getCurrentIndex();
+        if ($currentIndex > $this->stepsDto->getCurrent()) {
+            $this->stepsDto->setCurrent($currentIndex);
+            $this->jobDataDto->setDatabaseFileOffset($this->databaseImporterDto->getFileOffset());
+            $this->jobDataDto->setDatabaseFileOffsetLine($currentIndex);
+        }
 
         $this->currentTaskDto->fromDatabaseImporterDto($this->databaseImporterDto);
 

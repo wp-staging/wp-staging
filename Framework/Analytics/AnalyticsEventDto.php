@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Analytics;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Experiments\ExperimentManager;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 
 abstract class AnalyticsEventDto implements \JsonSerializable
@@ -57,10 +58,23 @@ abstract class AnalyticsEventDto implements \JsonSerializable
     /** @var array A collection of generic site information. */
     protected $site_info;
 
+    /** @var string|null */
+    protected $experiment;
+
+    /** @var string|null */
+    protected $variant;
+
     public function __construct()
     {
         $this->event = $this->getEventAction();
         $this->site_info = $this->getAnalyticsSiteInfo();
+
+        // Stamped here so a backup or staging site created days after the
+        // onboarding is still attributable to the variant that led the user there.
+        $attribution = WPStaging::make(ExperimentManager::class)->getAttribution();
+
+        $this->experiment = isset($attribution['experiment']) ? $attribution['experiment'] : null;
+        $this->variant    = isset($attribution['variant']) ? $attribution['variant'] : null;
     }
 
     #[\ReturnTypeWillChange]

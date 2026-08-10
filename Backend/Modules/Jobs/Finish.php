@@ -68,6 +68,7 @@ class Finish extends Job
         switch ($this->options->mainJob) {
             case Job::STAGING:
                 WPStaging::make(AnalyticsStagingCreate::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
+                do_action(StagingSiteCreate::ACTION_STAGING_SITE_CREATED, $this->options);
                 break;
             case Job::UPDATE:
                 $processType    = EventLoggerConst::PROCESS_PREFIX_CLONE_UPDATE;

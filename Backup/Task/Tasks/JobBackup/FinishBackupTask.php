@@ -27,6 +27,12 @@ class FinishBackupTask extends BackupTask
     /** @var string */
     const OPTION_LAST_BACKUP = 'wpstg_last_backup_info';
 
+    /**
+     * Fires once a backup has been written successfully, with the job data DTO.
+     * @var string
+     */
+    const ACTION_BACKUP_CREATED = 'wpstg.backup.created';
+
     /** @var AnalyticsBackupCreate */
     protected $analyticsBackupCreate;
 
@@ -84,9 +90,8 @@ class FinishBackupTask extends BackupTask
             'JobBackupDataDto' => $this->jobDataDto,
         ], false);
 
-        // Only clear the failure signal when a *scheduled* backup succeeds.
         // A manual backup completing should not hide a broken cron schedule.
-        if ($this->jobDataDto->getRepeatBackupOnSchedule() || !empty($this->jobDataDto->getScheduleId())) {
+        if ($this->jobDataDto->isScheduledBackup()) {
             delete_option(BackupScheduler::OPTION_LAST_BACKUP_FAILURE);
         }
 
@@ -94,6 +99,8 @@ class FinishBackupTask extends BackupTask
         $this->transientCache->delete(TransientCache::KEY_INVALID_BACKUP_FILE_INDEX);
 
         $this->performFinishBackupAction();
+
+        do_action(self::ACTION_BACKUP_CREATED, $this->jobDataDto);
 
         return $this->overrideGenerateResponse($this->makeListableBackup($backupFilePath));
     }

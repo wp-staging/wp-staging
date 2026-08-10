@@ -18,6 +18,7 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Notices\DismissNotice;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Staging\Sites;
 use WPStaging\Backend\Modules\Jobs\Cancel;
 use WPStaging\Backend\Modules\Jobs\CancelUpdate;
@@ -41,6 +42,7 @@ use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Newsfeed\NewsfeedProvider;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Pro\License\Licensing;
 
 /**
@@ -310,6 +312,47 @@ class Administrator
             [$this, $secondaryPageCallback]
         );
 
+        // Eligible plans open the "Sync from Remote Site" modal; everyone else
+        // (Free, invalid/expired/other plans) gets a Pro upsell to the docs.
+        $canUseRemoteSync = defined('WPSTGPRO_VERSION')
+            && WPStaging::make(Licensing::class)->isActiveAgencyOrDeveloperPlan();
+
+        if ($canUseRemoteSync) {
+            add_submenu_page(
+                $defaultPageSlug,
+                esc_html__("WP Staging - Remote Sync", "wp-staging"),
+                esc_html__("Remote Sync", "wp-staging"),
+                "manage_options",
+                "wpstg_backup&wpstgOpenRemoteSync=true",
+                [$this, "getBackupPage"]
+            );
+
+            // The Remote Sync slug resolves to wpstg_backup, so WordPress marks both
+            // items current. Force only Remote Sync to highlight when its param is present.
+            add_filter('submenu_file', function ($submenuFile) {
+                if (!isset($_GET['page']) || $_GET['page'] !== 'wpstg_backup') {
+                    return $submenuFile;
+                }
+
+                if (isset($_GET['wpstgOpenRemoteSync']) && $this->sanitize->sanitizeBool($_GET['wpstgOpenRemoteSync'])) {
+                    return 'wpstg_backup&wpstgOpenRemoteSync=true';
+                }
+
+                return $submenuFile;
+            });
+        } else {
+            // add_submenu_page() mangles external URLs via plugin_basename(); push the docs
+            // link onto $submenu directly, where a "://" slug is used as the href verbatim.
+            global $submenu;
+            $remoteSyncDocsUrl = esc_url(Language::localizeDocsUrl('https://wp-staging.com/docs/pull-a-wordpress-site-from-one-server-to-another/'));
+            $remoteSyncLabel   = esc_html__("Remote Sync", "wp-staging")
+                . ' <span class="wpstg-menu-pro-badge">' . esc_html__("Pro", "wp-staging") . '</span>';
+            $submenu[$defaultPageSlug][] = [$remoteSyncLabel, "manage_options", $remoteSyncDocsUrl];
+
+            add_action('admin_head', [$this, 'printRemoteSyncMenuBadgeStyle']);
+            add_action('admin_footer', [$this, 'printRemoteSyncMenuBadgeScript']);
+        }
+
         // Page: Temporary Logins
         add_submenu_page(
             $defaultPageSlug,
@@ -378,6 +421,49 @@ class Administrator
                 [$this, "getLicensePage"]
             );
         }
+    }
+
+    /**
+     * Style the Remote Sync upsell "Pro" badge. Inlined because the submenu shows on
+     * every admin page, where no shared Free+Pro stylesheet is loaded.
+     *
+     * @return void
+     */
+    public function printRemoteSyncMenuBadgeStyle()
+    {
+        echo '<style>
+            #adminmenu .wpstg-menu-pro-badge {
+                display: inline-block;
+                margin-left: 5px;
+                padding: 1px 6px;
+                border-radius: 9px;
+                background: #2563eb;
+                color: #fff;
+                font-size: 10px;
+                font-weight: 600;
+                line-height: 1.6;
+                letter-spacing: .3px;
+            }
+        </style>';
+    }
+
+    /**
+     * Open the Remote Sync upsell docs link in a new tab — $submenu cannot set a link
+     * target, so it is applied client-side to the badge's anchor.
+     *
+     * @return void
+     */
+    public function printRemoteSyncMenuBadgeScript()
+    {
+        echo '<script>
+            document.querySelectorAll("#adminmenu .wpstg-menu-pro-badge").forEach(function (badge) {
+                var link = badge.closest("a");
+                if (link) {
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                }
+            });
+        </script>';
     }
 
     /**
@@ -1059,7 +1145,15 @@ class Administrator
         }
 
         // Start the process
-        wp_send_json(WPStaging::make(Processing::class)->start());
+        try {
+            $response = WPStaging::make(Processing::class)->start();
+        } catch (ProcessLockedException $e) {
+            wp_send_json_error($e->getMessage(), $e->getCode());
+
+            return false;
+        }
+
+        wp_send_json($response);
 
         return false;
     }
@@ -1073,6 +1167,7 @@ class Administrator
         $license = get_option('wpstg_license_status');
 
         $licensing                = WPStaging::make(Licensing::class);
+        $licenseEntitlements      = $licensing->getEntitlements();
         $manualActivationUrl      = $licensing->buildManualActivationBaseUrl();
         $manualActivationNonce    = $licensing->generateActivationNonce();
         $manualActivationSiteUrl  = home_url();

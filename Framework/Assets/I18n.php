@@ -250,7 +250,8 @@ class I18n
                 'confirm_button_text'            => esc_html__('Clean Backup Queue', 'wp-staging'),
                 'confirm_title'                  => esc_html__('Are You Sure?', 'wp-staging'),
                 'delete_log_files'               => esc_html__('This will permanently remove the %s logs from your system.', 'wp-staging'),
-
+                'log_deleted_success'            => esc_html__('Log file deleted successfully.', 'wp-staging'),
+                'log_deleted_failed'             => esc_html__('Could not delete the log file. Please check the file and folder permissions.', 'wp-staging'),
             ],
             'clone_edit'                                          => [
                 'check_database_error' => esc_html__('Warning: Database table prefix can not be empty!', 'wp-staging'),

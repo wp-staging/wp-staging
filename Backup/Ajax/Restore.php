@@ -9,9 +9,11 @@ use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Traits\MemoryExhaustTrait;
+use WPStaging\Framework\Traits\JobResponseTrait;
 
 class Restore extends AbstractTemplateComponent
 {
+    use JobResponseTrait;
     use MemoryExhaustTrait;
 
     /**
@@ -33,6 +35,6 @@ class Restore extends AbstractTemplateComponent
         $jobRestore = WPStaging::make(JobRestoreProvider::class)->getJob();
         $jobRestore->setMemoryExhaustErrorTmpFile($tmpFileToDelete);
 
-        wp_send_json($jobRestore->prepareAndExecute());
+        $this->sendJobResponse($jobRestore);
     }
 }

@@ -4,6 +4,7 @@ use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\UI\Alert;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Core\Cron\Cron;
 
@@ -42,6 +43,15 @@ if (empty($indexFileError)) {
     $indexFileError = __("This backup has an invalid files index.", 'wp-staging');
 }
 
+// A backup with no readable metadata is listed under its file name, and the id
+// in that name is what keeps its download from being guessed. Only a name that
+// carries one has anything to hide: a legacy foo.sql has no id, and masking it
+// would rename a file the user knows by sight.
+//
+// The value stays the name everywhere it identifies rather than describes.
+$carriesBackupId = ($isCorrupt || $isLegacy) && preg_match('/_\d{8}-\d{6}_[a-f0-9]+\./', $backupName) === 1;
+$displayName     = $carriesBackupId ? WPStaging::make(Strings::class)->maskBackupFilename($backupName) : $backupName;
+
 // Download URL of backup file
 $downloadUrl = $backup->downloadUrl;
 
@@ -73,7 +83,7 @@ $wpstgRestorePageUrl = add_query_arg([
 <li id="<?php echo esc_attr($id) ?>" class="wpstg-clone wpstg-backup" data-md5="<?php echo esc_attr($backup->md5BaseName); ?>" data-name="<?php echo esc_attr($backup->backupName); ?>">
     <div class="wpstg-clone-header">
         <span class="wpstg-clone-title">
-            <?php echo esc_html(str_replace(['\\&quot;', '\\&#039;'], ['"', "'"], $backupName)); ?>
+            <?php echo esc_html(str_replace(['\\&quot;', '\\&#039;'], ['"', "'"], $displayName)); ?>
         </span>
         <?php if (!$isCorrupt) : ?>
             <div class="wpstg-clone-labels">

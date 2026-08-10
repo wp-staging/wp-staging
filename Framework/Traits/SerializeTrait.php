@@ -9,16 +9,28 @@ trait SerializeTrait
     /**
      * @param mixed $data
      * @param array $allowedClasses
+     * @param bool $rejected Deliberately untyped. Any non-nullable hint throws a TypeError when a caller passes an undeclared variable.
      * @return mixed
      */
-    protected function safeMaybeUnserialize($data, array $allowedClasses = [])
+    protected function safeMaybeUnserialize($data, array $allowedClasses = [], &$rejected = false)
     {
+        $rejected = false;
+
         if (!is_string($data) || !$this->isSerialized($data)) {
             return $data;
         }
 
-        $value = $this->unserializeQuietly(trim($data), $allowedClasses);
+        $data          = trim($data);
+        $failedToParse = false;
+        $value         = $this->unserializeQuietly($data, $allowedClasses, $failedToParse);
+
+        if ($value === false && $failedToParse) {
+            $rejected = true;
+            return false;
+        }
+
         if ($this->containsForbiddenClass($value)) {
+            $rejected = true;
             return false;
         }
 
@@ -28,11 +40,15 @@ trait SerializeTrait
     /**
      * @param string $data
      * @param array $allowedClasses
+     * @param bool $failed
      * @return mixed
      */
-    private function unserializeQuietly(string $data, array $allowedClasses)
+    private function unserializeQuietly(string $data, array $allowedClasses, &$failed = false)
     {
-        set_error_handler(function () {
+        $failed = false;
+
+        set_error_handler(function () use (&$failed) {
+            $failed = true;
             return true;
         });
 
