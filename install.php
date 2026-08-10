@@ -11,10 +11,17 @@ use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Onboarding\FirstInstall;
 
 if (!class_exists('WPStaging\Core\Cron\Cron')) {
     return;
 }
+
+/**
+ * Flag a genuinely new installation before anything below writes an option,
+ * so first-run experiences never reach users who merely reactivated.
+ */
+FirstInstall::markIfFirstInstall();
 
 /**
  * Register Cron Events

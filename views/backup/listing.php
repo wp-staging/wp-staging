@@ -28,7 +28,6 @@ WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();
 /** @var BackupScheduler */
 $backupScheduler = WPStaging::make(BackupScheduler::class);
 $cronStatus      = $backupScheduler->checkCronStatus();
-$cronMessage     = $backupScheduler->getCronMessage();
 
 // Render cron warning notice using modern callout design
 require WPSTG_VIEWS_DIR . 'notices/cron-warning-notice.php';

@@ -58,11 +58,22 @@ class AnalyticsGenericEvent extends AnalyticsEventDto
             $data['custom'] = $this->custom;
         }
 
+        if (!empty($this->experiment)) {
+            $data['experiment'] = $this->experiment;
+            $data['variant']    = $this->variant;
+        }
+
         return $data;
     }
 
     /**
      * Log a generic analytics event immediately in database for later sending.
+     *
+     * Queued regardless of consent, like every other event type. Consent is
+     * enforced once, at dispatch, by {@see \WPStaging\Framework\Analytics\AnalyticsSender},
+     * which leaves the queue untouched until it is granted — so a user who
+     * agrees later is reported from the beginning rather than from the moment
+     * they agreed.
      *
      * @param string $eventName The event name (e.g. 'feature_used')
      * @param string $groupName Optional grouping label (e.g. 'backup')

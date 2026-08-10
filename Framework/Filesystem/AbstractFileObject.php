@@ -36,6 +36,19 @@ abstract class AbstractFileObject extends \SplFileObject
         }
     }
 
+    /**
+     * The line count of a file being restored does not change between requests, so a
+     * caller that already knows it can supply it here and skip the scan in totalLines(),
+     * which otherwise walks the whole file on every request.
+     *
+     * @param int $totalLines
+     * @return void
+     */
+    public function setTotalLines(int $totalLines)
+    {
+        $this->totalLines = $totalLines;
+    }
+
     /** @return int */
     public function totalLines(bool $useParent = false): int
     {
@@ -64,6 +77,16 @@ abstract class AbstractFileObject extends \SplFileObject
             $this->seek($currentKey);
         }
 
+        // Asking for the total means seeking to PHP_INT_MAX and reading key(), so key() has to
+        // report how many records the file holds rather than the index of the last one -
+        // BufferedCache::readBottomLine() hands it to LimitIterator as a count. On the PHP
+        // versions below, the line counter stops on the last record instead of one past it, so
+        // it comes back one short and the difference is added back here. A file ending in a
+        // newline yields a final empty record, and that record counts.
+        //
+        // One of the SplFileObject iterator desync workarounds this class has carried since PHP
+        // 8.0.1. php/php-src#21679 fixes them in PHP 8.6; a runtime probe that bypasses the
+        // workarounds on fixed builds landed in #5085 and was reverted in #5116 until 8.6 ships.
         if ($this->totalLines > 0) {
             if (PHP_VERSION === '8.2.0RC3' || version_compare(PHP_VERSION, '8.2.0', '>=')) {
                 $this->totalLines += 1;

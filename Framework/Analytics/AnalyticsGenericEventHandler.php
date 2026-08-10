@@ -17,14 +17,10 @@ class AnalyticsGenericEventHandler
     /** @var Sanitize */
     private $sanitize;
 
-    /** @var AnalyticsConsent */
-    private $analyticsConsent;
-
-    public function __construct(Auth $auth, Sanitize $sanitize, AnalyticsConsent $analyticsConsent)
+    public function __construct(Auth $auth, Sanitize $sanitize)
     {
-        $this->auth             = $auth;
-        $this->sanitize         = $sanitize;
-        $this->analyticsConsent = $analyticsConsent;
+        $this->auth     = $auth;
+        $this->sanitize = $sanitize;
     }
 
     public function ajaxHandleGenericEvent()
@@ -47,12 +43,6 @@ class AnalyticsGenericEventHandler
         }
 
         $custom = isset($_POST['custom']) ? $this->sanitizeCustomData($this->sanitize->sanitizeArrayString($_POST['custom'])) : [];
-
-        // Do not persist events when consent is missing to avoid unbounded queue growth.
-        if (!$this->analyticsConsent->hasUserConsent()) {
-            wp_send_json_success();
-            return;
-        }
 
         AnalyticsGenericEvent::logEvent($eventName, $groupName, $custom);
 

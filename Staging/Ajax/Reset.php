@@ -6,9 +6,11 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Traits\MemoryExhaustTrait;
 use WPStaging\Staging\Jobs\StagingSiteReset;
+use WPStaging\Framework\Traits\JobResponseTrait;
 
 class Reset extends AbstractTemplateComponent
 {
+    use JobResponseTrait;
     use MemoryExhaustTrait;
 
     /**
@@ -30,7 +32,7 @@ class Reset extends AbstractTemplateComponent
         $jobReset = $this->getResetJob();
         $jobReset->setMemoryExhaustErrorTmpFile($tmpFileToDelete);
 
-        wp_send_json($jobReset->prepareAndExecute());
+        $this->sendJobResponse($jobReset);
     }
 
     /**

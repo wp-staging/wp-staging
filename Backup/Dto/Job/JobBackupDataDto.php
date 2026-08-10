@@ -66,6 +66,12 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var int */
     private $tableRowsOffset = 0;
 
+    /** @var string Sql file $sqlWrittenBytes belongs to, since a multipart rotation restarts the byte count */
+    private $sqlCheckpointFile = '';
+
+    /** @var int Length of the sql file when $tableRowsOffset was last set, rewound to on retry */
+    private $sqlWrittenBytes = 0;
+
     /** @var int */
     private $totalRowsOfTableBeingBackup = 0;
 
@@ -196,6 +202,14 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 
     /** @var array */
     private $pushPrepareData = [];
+
+    /**
+     * @return bool Whether this backup was created by a schedule, as opposed to manually.
+     */
+    public function isScheduledBackup(): bool
+    {
+        return $this->getRepeatBackupOnSchedule() || !empty($this->getScheduleId());
+    }
 
     /**
      * @return string|null
@@ -348,6 +362,38 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setTableRowsOffset($tableRowsOffset)
     {
         $this->tableRowsOffset = (int)$tableRowsOffset;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSqlCheckpointFile()
+    {
+        return (string)$this->sqlCheckpointFile;
+    }
+
+    /**
+     * @param string $sqlCheckpointFile
+     */
+    public function setSqlCheckpointFile($sqlCheckpointFile)
+    {
+        $this->sqlCheckpointFile = (string)$sqlCheckpointFile;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSqlWrittenBytes()
+    {
+        return (int)$this->sqlWrittenBytes;
+    }
+
+    /**
+     * @param int $sqlWrittenBytes
+     */
+    public function setSqlWrittenBytes($sqlWrittenBytes)
+    {
+        $this->sqlWrittenBytes = (int)$sqlWrittenBytes;
     }
 
     /**

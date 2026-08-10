@@ -36,43 +36,65 @@ class DebugLogReader extends LogFiles
             return;
         }
 
+        $deleted = false;
+
         if ($_GET['deleteLog'] === 'wpstaging') {
-            $this->deleteWpStagingDebugLogFile();
+            $deleted = $this->deleteWpStagingDebugLogFile();
         }
 
         if ($_GET['deleteLog'] === 'php') {
-            $this->deletePhpDebugLogFile();
+            $deleted = $this->deletePhpDebugLogFile();
         }
 
-        // Redirect to prevent refresh from deleting the log again
-        wp_redirect(admin_url() . 'admin.php?page=wpstg-tools&tab=system-info');
+        // Redirect so a page refresh does not delete the log again.
+        $redirectUrl = add_query_arg([
+            'page'            => 'wpstg-tools',
+            'tab'             => 'system-info',
+            'logDeleteStatus' => $deleted ? 'success' : 'failed',
+        ], admin_url('admin.php')) . '#logs';
+
+        wp_safe_redirect($redirectUrl);
         exit;
     }
 
     /**
-     * @return bool|null Whether the log file was deleted or not.
+     * @return bool True if the log file was deleted, false otherwise.
      */
-    public function deletePhpDebugLogFile()
+    public function deletePhpDebugLogFile(): bool
     {
-        $phpDebugLogFile = ini_get('error_log');
-
-        if (file_exists($phpDebugLogFile) && is_writable($phpDebugLogFile)) {
-            return unlink($phpDebugLogFile);
-        }
-
-        return null;
+        return $this->deleteLogFile((string)ini_get('error_log'));
     }
 
     /**
-     * @return bool|null
+     * @return bool True if the log file was deleted, false otherwise.
      */
-    public function deleteWpStagingDebugLogFile()
+    public function deleteWpStagingDebugLogFile(): bool
     {
-        if (file_exists(WPSTG_DEBUG_LOG_FILE) && is_writable(WPSTG_DEBUG_LOG_FILE)) {
-            return unlink(WPSTG_DEBUG_LOG_FILE);
+        if (!defined('WPSTG_DEBUG_LOG_FILE')) {
+            return false;
         }
 
-        return null;
+        return $this->deleteLogFile(WPSTG_DEBUG_LOG_FILE);
+    }
+
+    /**
+     * Deletion depends on the folder being writable, not the log file itself, so
+     * a log created by another user can still be removed.
+     *
+     * @param string $path
+     * @return bool True if the file was deleted, false otherwise.
+     */
+    private function deleteLogFile(string $path): bool
+    {
+        if ($path === '' || !file_exists($path)) {
+            return false;
+        }
+
+        if (!is_file($path)) {
+            return false;
+        }
+
+        return $this->filesystem->delete($path);
     }
 
     /**

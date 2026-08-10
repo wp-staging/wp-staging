@@ -3,6 +3,8 @@
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
+use RuntimeException;
+use WPStaging\Framework\Database\Exporter\AbstractExporter;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
@@ -119,6 +121,8 @@ class DatabaseBackupTask extends BackupTask
         $rowsExporter->setNonWpTables($this->jobDataDto->getNonWpTables());
         $rowsExporter->setUseMemoryExhaustFix($useMemoryExhaustFix);
 
+        $this->discardRowsWrittenAfterLastCheckpoint($rowsExporter);
+
         do {
             $rowsExporter->setTableIndex($this->stepsDto->getCurrent());
 
@@ -136,8 +140,10 @@ class DatabaseBackupTask extends BackupTask
                 /*
                  * Persist the steps dto, so that if memory blows while processing
                  * the next table, the next request will continue from there.
+                 * The job data goes with it, or the next table starts on this table's offset.
                  */
                 $this->persistStepsDto();
+                $this->persistJobDataDto();
                 continue;
             }
 
@@ -185,11 +191,17 @@ class DatabaseBackupTask extends BackupTask
                 throw $e;
             }
 
+            // Measured before the row progress moves, so a failure here cannot leave the job
+            // holding an offset past the checkpoint it was persisted with.
+            $writtenBytes = $this->measureCheckpoint($rowsExporter);
+
             $this->stepsDto->setCurrent($rowsExporter->getTableIndex());
             if (!$useMemoryExhaustFix) {
                 $this->jobDataDto->setTotalRowsBackup($rowsExporter->getTotalRowsExported());
                 $this->jobDataDto->setTableRowsOffset($rowsExporter->getTableRowsOffset());
             }
+
+            $this->commitCheckpoint($writtenBytes);
 
             $this->logger->info(sprintf(
                 'Backup database: Table %s. Rows: %s/%s.',
@@ -218,8 +230,10 @@ class DatabaseBackupTask extends BackupTask
                 /*
                  * Persist the steps dto, so that if memory blows while processing
                  * the next table, the next request will continue from there.
+                 * The job data goes with it, or the next table starts on this table's offset.
                  */
                 $this->persistStepsDto();
+                $this->persistJobDataDto();
             }
 
             if ($rowsExporter->doExceedSplitSize()) {
@@ -295,6 +309,91 @@ class DatabaseBackupTask extends BackupTask
     protected function setupMultipartDatabaseFilePathName(wpdb $wpdb)
     {
         // no-op
+    }
+
+    /**
+     * Drop rows a previous request wrote but never accounted for.
+     *
+     * Rows reach the sql file during the request, while the offset tracking them only
+     * reaches the cache on `shutdown`. A request killed in between leaves rows no offset
+     * covers, so the retry exports them twice and the restore fails with MySQL error 1062.
+     *
+     * @param RowsExporter $rowsExporter
+     * @return void
+     */
+    private function discardRowsWrittenAfterLastCheckpoint(RowsExporter $rowsExporter)
+    {
+        $databaseFile = $this->jobDataDto->getDatabaseFile();
+
+        // A rotated multipart file restarts the byte count, and the first request after the
+        // DDL has no checkpoint yet. Neither may be truncated.
+        if ($this->jobDataDto->getSqlCheckpointFile() !== $databaseFile) {
+            $writtenBytes = $this->measureCheckpoint($rowsExporter);
+
+            $this->jobDataDto->setSqlCheckpointFile($databaseFile);
+            $this->commitCheckpoint($writtenBytes);
+
+            return;
+        }
+
+        $checkpoint   = $this->jobDataDto->getSqlWrittenBytes();
+        $writtenBytes = $rowsExporter->getWrittenBytes();
+
+        if ($writtenBytes === AbstractExporter::BYTES_UNKNOWN) {
+            throw new RuntimeException('Backup database: Could not measure the export file, so the unaccounted rows of the previous request cannot be discarded safely.');
+        }
+
+        $result = $rowsExporter->truncateTo($checkpoint);
+
+        if ($result === AbstractExporter::TRUNCATE_FAILED) {
+            // Carrying on would leave the rows the offset no longer accounts for in the export,
+            // which is exactly the duplicate-key failure this checkpoint exists to prevent.
+            throw new RuntimeException(sprintf('Backup database: Could not discard %s of unaccounted rows from a request that did not finish.', size_format($writtenBytes - $checkpoint)));
+        }
+
+        if ($result === AbstractExporter::TRUNCATE_NOT_NEEDED) {
+            return;
+        }
+
+        $this->logger->info(sprintf(
+            'Backup database: Discarded %s of unaccounted rows from a request that did not finish, and will export them again.',
+            size_format($writtenBytes - $checkpoint)
+        ));
+    }
+
+    /**
+     * Measuring is the only step that can fail, so it runs before anything is written to the
+     * dto. A failure after the row offset moved would be persisted by the job as an offset
+     * that accounts for rows the checkpoint does not cover, and the retry would truncate them
+     * away and resume past them.
+     *
+     * @param RowsExporter $rowsExporter
+     * @return int
+     * @throws RuntimeException
+     */
+    private function measureCheckpoint(RowsExporter $rowsExporter): int
+    {
+        $writtenBytes = $rowsExporter->getWrittenBytes();
+
+        if ($writtenBytes === AbstractExporter::BYTES_UNKNOWN) {
+            throw new RuntimeException('Backup database: Could not measure the export file to record a checkpoint.');
+        }
+
+        return $writtenBytes;
+    }
+
+    /**
+     * Checkpoint and offset are only consistent when written together, and now rather than
+     * on `shutdown`: the steps dto is persisted mid-request too, so a stale checkpoint would
+     * truncate away a table that is already marked done.
+     *
+     * @param int $writtenBytes
+     * @return void
+     */
+    private function commitCheckpoint(int $writtenBytes)
+    {
+        $this->jobDataDto->setSqlWrittenBytes($writtenBytes);
+        $this->persistJobDataDto();
     }
 
     /**

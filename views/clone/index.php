@@ -7,29 +7,78 @@
  * @var bool $isStagingPage
  */
 
+use WPStaging\Backup\BackupNextOffer;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Language\Language;
+use WPStaging\Framework\Onboarding\FreeOnboarding;
+use WPStaging\Framework\Onboarding\NextStepRenderer;
+use WPStaging\Framework\Onboarding\OnboardingJourney;
+use WPStaging\Framework\Onboarding\QueuedBackup;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
 $notice       = WPStaging::make(Notices::class);
 
+$onboarding = FreeOnboarding::resolve();
+
+if ($onboarding !== null) {
+    $onboarding->recordExposure();
+}
+
+$journey        = $onboarding === null ? null : $onboarding->getJourney();
+$journeyStep    = $onboarding === null ? '' : $onboarding->getJourneyStep();
+$isPreConsent   = $onboarding !== null && $onboarding->isPreConsent();
+$showBackupNext = $onboarding !== null && $onboarding->shouldOfferBackupNext();
+
+$showSelector        = $journeyStep === OnboardingJourney::STEP_SELECT;
+$completedCapability = $journey === null ? '' : $journey->getAction(OnboardingJourney::POSITION_FIRST);
+$nextCapability      = $journey === null ? '' : $journey->getNextCapability();
+$hasFirstSuccess     = $journey !== null && $journey->isFirstCapabilityCompleted();
+
+$secondAction = $journey === null ? '' : $journey->getAction(OnboardingJourney::POSITION_SECOND);
+
+$nextStepRenderer  = $hasFirstSuccess ? NextStepRenderer::resolve() : null;
+$nextStepMarkup    = $nextStepRenderer === null ? '' : $nextStepRenderer->render();
+$isNextStepVisible = $nextStepMarkup !== '';
+
+$isFocusMode = $isPreConsent || $journeyStep !== '';
+
+// The first run offers a backup after staging; outside it the same offer is
+// made only to a site that has no established backup workflow of its own.
+$isFirstRunOffer = $showBackupNext && $journey !== null && $journey->getNextCapability() !== OnboardingJourney::CAPABILITY_STAGING;
+// class_exists rather than a bare call: resolve() can only catch what happens
+// after the class loads, and a stale autoload map would otherwise take the whole
+// page down for a detail it can perfectly well render without.
+$backupNextOffer = (!$isFocusMode && class_exists(BackupNextOffer::class)) ? BackupNextOffer::resolve() : null;
+$offerBackupNext = $isFirstRunOffer || ($backupNextOffer !== null && $backupNextOffer->isEligible());
+
+$adminUrl           = admin_url('admin.php?page=');
+$queuedBackupStatus = $offerBackupNext || $showBackupNext ? WPStaging::make(QueuedBackup::class)->getStatus() : '';
+$runningCapability  = $journeyStep === OnboardingJourney::STEP_RUNNING ? $journey->getRunningCapability() : '';
+
+$activeCapability = $journeyStep === OnboardingJourney::STEP_RUNNING ? $journey->getActiveCapability() : '';
+$showProgress     = $activeCapability !== '' && !$isNextStepVisible;
+
+// Kept in the DOM so their workflows keep loading behind the first run.
+$onboardingHiddenClass = ($isPreConsent || $showSelector || $isNextStepVisible || $showProgress) ? ' wpstg-onboarding-hidden' : '';
+if ($isNextStepVisible && $secondAction === '') {
+    $journey->recordNextOfferShown();
+}
+
 $isCalledFromIndex = true;
 ?>
 
-<div id="wpstg-clonepage-wrapper">
+<div id="wpstg-clonepage-wrapper" class="<?php echo $isFocusMode ? 'wpstg-onboarding-focus' : ''; ?>">
     <?php
-    if (WPStaging::isPro()) {
-        require_once($this->viewsPath . 'pro/_main/header.php');
-    } else {
-        require_once($this->viewsPath . '_main/header.php');
-    }
+    if (!$isFocusMode) {
+        require_once($this->viewsPath . (WPStaging::isPro() ? 'pro/_main/header.php' : '_main/header.php'));
 
-    do_action('wpstg_notifications');
+        do_action('wpstg_notifications');
+    }
 
     if (empty($isStagingPage)) {
         echo "<script>window.addEventListener('DOMContentLoaded', function() {window.dispatchEvent(new Event('backups-tab'));});</script>";
@@ -43,12 +92,14 @@ $isCalledFromIndex = true;
     ?>
     <div class="wpstg--tab--wrapper">
         <?php
-        require_once(WPSTG_VIEWS_DIR . 'navigation/web-template.php');
+        if (!$isFocusMode) {
+            require_once(WPSTG_VIEWS_DIR . 'navigation/web-template.php');
+        }
         ?>
 
         <div class="wpstg-header">
             <?php
-            if (!WPStaging::isBasic()) {
+            if (!$isFocusMode && !WPStaging::isBasic()) {
                 require_once($this->viewsPath . 'pro/notices/update-notification.php');
             }
             ?>
@@ -63,7 +114,34 @@ $isCalledFromIndex = true;
         </div>
 
         <div class="wpstg--tab--contents <?php echo $isStagingPage ? 'min-h-152' : 'min-h-375'; ?>">
-            <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
+            <?php
+            // Focus mode withholds the header, so without this every state after
+            // the selector is an unbranded card floating in an empty page.
+            if ($isFocusMode) : ?>
+                <div class="wpstg-onboarding__logo">
+                    <?php require WPSTG_VIEWS_DIR . 'notices/_partial/wp-staging-logo-svg.php'; ?>
+                </div>
+            <?php endif;
+
+            if ($isPreConsent) {
+                require WPSTG_VIEWS_DIR . 'onboarding/pre-consent.php';
+            } elseif ($showSelector) {
+                require WPSTG_VIEWS_DIR . 'onboarding/first-run.php';
+            }
+
+            if ($showProgress) {
+                require WPSTG_VIEWS_DIR . 'onboarding/progress.php';
+            }
+
+            // Where a job started from this page renders, instead of the modal.
+            // Its presence is what puts the process UI in focus mode at all.
+            if ($isFocusMode) : ?>
+                <div class="wpstg-onboarding-job" data-wpstg-inline-progress hidden></div>
+            <?php endif;
+
+            echo $nextStepMarkup; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped -- Markup from NextStepRenderer; every value is escaped in onboarding/next-step.php.
+            ?>
+            <div id="wpstg--tab--staging" class="wpstg--tab--content wpstg-onboarding-pane <?php echo esc_attr($classStagingPageActive) . esc_attr($onboardingHiddenClass); ?>">
             <?php
             $notice->maybeShowElementorCloudNotice();
             if ($this->siteInfo->isHostedOnWordPressCom()) {
@@ -79,7 +157,7 @@ $isCalledFromIndex = true;
             }
             ?>
             </div>
-            <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo esc_attr($classBackupPageActive); ?>">
+            <div id="wpstg--tab--backup" class="wpstg--tab--content wpstg-onboarding-pane <?php echo esc_attr($classBackupPageActive) . esc_attr($onboardingHiddenClass); ?>">
                 <?php
                 $cliNotice = WPStaging::make(CliIntegrationNotice::class);
                 $cliNotice->maybeShowCliNotice();
@@ -97,7 +175,7 @@ $isCalledFromIndex = true;
                     </div>
                 </div>
             </div>
-            <div class="wpstg-did-you-know-footer">
+            <div class="wpstg-did-you-know-footer wpstg-onboarding-pane<?php echo esc_attr($onboardingHiddenClass); ?>">
                 <?php echo sprintf(
                     Escape::escapeHtml(__('Need to move this site elsewhere? You can also use backup files for transfers. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
                     Language::localizeDocsUrl('https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/')
@@ -105,7 +183,11 @@ $isCalledFromIndex = true;
             </div>
         </div>
     </div>
-    <?php require_once($this->viewsPath . '_main/footer.php'); ?>
+    <?php
+    if (!$isFocusMode) {
+        require_once($this->viewsPath . '_main/footer.php');
+    }
+    ?>
     <script>
       // Dismiss handler for the compact general "Upgrade to Pro" card. The staging
       // listing is injected via innerHTML (scripts inside it do not execute), so
@@ -155,4 +237,10 @@ $isCalledFromIndex = true;
         <?php include WPSTG_VIEWS_DIR . 'notices/review-prompt-modal.php'; ?>
     </div>
     <?php require_once(WPSTG_VIEWS_DIR . 'notices/review-prompt-handlers.php'); ?>
+
+    <?php if ($offerBackupNext) : ?>
+        <div id="wpstg-backup-next-content" style="display:none;">
+            <?php include WPSTG_VIEWS_DIR . 'onboarding/backup-next.php'; ?>
+        </div>
+    <?php endif; ?>
 </div>

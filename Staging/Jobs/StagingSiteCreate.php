@@ -28,6 +28,13 @@ class StagingSiteCreate extends AbstractJob
     /** @var string */
     const ACTION_CLONING_COMPLETE = 'wpstg_cloning_complete';
 
+    /**
+     * Fires only when a staging site was newly created. ACTION_CLONING_COMPLETE
+     * cannot be used for that: update and reset broadcast the same name.
+     * @var string
+     */
+    const ACTION_STAGING_SITE_CREATED = 'wpstg_staging_site_created';
+
     /** @var StagingSiteJobsDataDto $jobDataDto */
     protected $jobDataDto;
 

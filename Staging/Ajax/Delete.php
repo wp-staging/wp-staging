@@ -6,9 +6,11 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Traits\MemoryExhaustTrait;
 use WPStaging\Staging\Jobs\StagingSiteDelete;
+use WPStaging\Framework\Traits\JobResponseTrait;
 
 class Delete extends AbstractTemplateComponent
 {
+    use JobResponseTrait;
     use MemoryExhaustTrait;
 
     /**
@@ -30,6 +32,6 @@ class Delete extends AbstractTemplateComponent
         $jobDelete = WPStaging::make(StagingSiteDelete::class); // @phpstan-ignore-line
         $jobDelete->setMemoryExhaustErrorTmpFile($tmpFileToDelete); // @phpstan-ignore-line
 
-        wp_send_json($jobDelete->prepareAndExecute());
+        $this->sendJobResponse($jobDelete);
     }
 }

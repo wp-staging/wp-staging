@@ -89,6 +89,7 @@ class FinishStagingSiteCreateTask extends StagingTask
     protected function triggerOnStagingSiteCreatedEvent(StagingSiteDto $stagingSite)
     {
         Hooks::doAction(StagingSiteCreate::ACTION_CLONING_COMPLETE, $stagingSite->toArray());
+        Hooks::doAction(StagingSiteCreate::ACTION_STAGING_SITE_CREATED, $stagingSite->toArray());
     }
 
     protected function getResponseDto()

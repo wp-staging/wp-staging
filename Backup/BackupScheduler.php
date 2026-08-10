@@ -9,15 +9,10 @@ use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
-use WPStaging\Framework\Facades\Escape;
-use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Framework\Network\HttpBasicAuth;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
-use WPStaging\Framework\Utils\ServerVars;
 use WPStaging\Notifications\Notifications;
 
 use function WPStaging\functions\debug_log;
@@ -37,8 +32,6 @@ use function WPStaging\functions\debug_log;
  */
 class BackupScheduler
 {
-    use HttpBasicAuth;
-
     /** @var string */
     const OPTION_BACKUP_SCHEDULE_ERROR_REPORT = 'wpstg_backup_schedules_send_error_report';
 
@@ -66,6 +59,9 @@ class BackupScheduler
     /** @var string */
     const CRON_WARNING_TYPE_OVERDUE = 'overdue';
 
+    /** @var int Seconds a cron task may run late before it counts as overdue. */
+    const OVERDUE_GRACE_PERIOD = 30 * MINUTE_IN_SECONDS;
+
     /** @var string */
     const TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT = 'wpstg.backup.schedules.error_report_sent';
 
@@ -90,9 +86,6 @@ class BackupScheduler
     /** @var string */
     const FILTER_SCHEDULES_BACKUP_INTERVAL = 'wpstg.schedulesBackup.interval';
 
-    /** @var string */
-    const FILTER_CRON_REQUEST = 'cron_request';
-
     /** @var BackupsFinder */
     protected $backupsFinder;
 
@@ -106,12 +99,6 @@ class BackupScheduler
      * @var Notifications
      */
     protected $notifications;
-
-    /**
-     * Store cron related message
-     * @var string
-     */
-    protected $cronMessage;
 
     /** @var int */
     protected $numberOverdueCronjobs = 0;
@@ -509,224 +496,73 @@ class BackupScheduler
     }
 
     /**
-     * Check cron status whether it is working or not
-     * Logic is adopted from WP Crontrol plugin
+     * Whether the scheduled backups look healthy.
      *
-     * @return bool
+     * Warns only on a real problem: a failed or overdue scheduled backup. Nothing else warns.
+     *
+     * @return bool True when no warning is shown.
      */
     public function checkCronStatus(): bool
     {
-        global $wp_version;
-
-        $this->cronMessage              = '';
         $this->cronWarningType          = '';
         $this->lastBackupFailureMessage = '';
-        // Add arrays to collect warnings and general messages
-        $warningMessages = [];
-        $generalMessages = [];
-        // Track the overall result
-        $cronStatusResult = true;
 
-        // Gate 1: No schedules — nothing to warn about.
         if ($this->isSchedulesEmpty()) {
             return true;
         }
 
-        // Gate 2: Unresolved backup failure (no successful backup since the last failure).
-        $lastFailure = get_option(self::OPTION_LAST_BACKUP_FAILURE);
-        if (is_array($lastFailure) && !empty($lastFailure['time'])) {
-            $lastBackupInfo  = get_option(FinishBackupTask::OPTION_LAST_BACKUP, []);
-            $lastSuccessTime = is_array($lastBackupInfo) ? (int)($lastBackupInfo['endTime'] ?? 0) : 0;
-            if ((int)$lastFailure['time'] > $lastSuccessTime) {
-                $this->cronWarningType          = self::CRON_WARNING_TYPE_FAILURE;
-                $this->lastBackupFailureMessage = $lastFailure['message'] ?? '';
-            }
-        }
+        $this->detectScheduledBackupWarning();
 
-        // Gate 3: Backup cron event is overdue (30-minute grace period).
-        if ($this->cronWarningType === '' && $this->hasOverdueBackupCronJob()) {
-            $this->cronWarningType = self::CRON_WARNING_TYPE_OVERDUE;
-        }
-
-        // Gate 4: No outcome signal + DISABLE_WP_CRON set — server cron is intentional, suppress.
-        if ($this->cronWarningType === '' && defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) {
-            return true;
-        }
-
-        // Fall through to infrastructure checks (HTTP test, overdue count) for the Details section.
-
-        if ($this->isCronjobsOverdue()) {
-            if (WPStaging::isPro()) {
-                $overdueMessage = sprintf(
-                    __('There are %s scheduled WordPress tasks overdue. This means the WordPress cron jobs are not working properly, unless this a development site or no users are visiting this website. <a href="%s">Read this article</a> to find a solution.<br><br>', 'wp-staging'),
-                    $this->numberOverdueCronjobs,
-                    'https://wp-staging.com/docs/wp-cron-is-not-working-correctly/'
-                );
-                $this->cronMessage .= $overdueMessage;
-                $warningMessages[] = $overdueMessage;
-
-                if (WPStaging::make(ServerVars::class)->isLitespeed()) {
-                    $litespeedMessage = sprintf(
-                        Escape::escapeHtml(__('This site is using LiteSpeed server, this could prevent the scheduled backups from working properly. Please read <a href="%s" target="_blank">this article here</a> if the backup scheduling is not working properly.', 'wp-staging')),
-                        'https://wp-staging.com/docs/scheduled-backups-do-not-work-hosting-company-uses-the-litespeed-webserver-fix-wp-cron/'
-                    );
-                    $this->cronMessage .= $litespeedMessage;
-                    $generalMessages[] = $litespeedMessage;
-                }
-            } else {
-                $overdueMessage = sprintf(
-                    __('There are %s scheduled WordPress tasks overdue. This means the WordPress cron jobs are not working properly, unless this a development site or no users are visiting this website.<br> <a href="%s">Write to us in the forum</a> to get a solution for this issue from the WP STAGING support team.<br><br>', 'wp-staging'),
-                    $this->numberOverdueCronjobs,
-                    'https://wordpress.org/support/plugin/wp-staging/'
-                );
-                $this->cronMessage .= $overdueMessage;
-                $warningMessages[] = $overdueMessage;
-
-                if (WPStaging::make(ServerVars::class)->isLitespeed()) {
-                    $litespeedMessage = sprintf(
-                        Escape::escapeHtml(__('This site is using LiteSpeed server, this could prevent the scheduled backups from working properly. <a href="%s">Write to us in the forum</a> to get a solution for that issue.', 'wp-staging')),
-                        'https://wordpress.org/support/plugin/wp-staging/'
-                    );
-                    $this->cronMessage .= $litespeedMessage;
-                    $generalMessages[] = $litespeedMessage;
-                }
-            }
-        }
-
-        // Third party plugins that handle crons
-        $thirdPartyCronPlugins = [
-            '\HM\Cavalcade\Plugin\Job'         => 'Cavalcade',
-            '\Automattic\WP\Cron_Control\Main' => 'Cron Control',
-            '\KMM\KRoN\Core'                   => 'KMM KRoN',
-        ];
-
-        foreach ($thirdPartyCronPlugins as $class => $plugin) {
-            if (class_exists($class)) {
-                $thirdPartyMessage = sprintf(
-                    __('WP Cron is being managed by a third party plugin: %s plugin.', 'wp-staging'),
-                    $plugin
-                );
-                $this->cronMessage .= $thirdPartyMessage;
-                $generalMessages[] = $thirdPartyMessage;
-
-                $cronStatusResult = true;
-                break;
-            }
-        }
-
-        if (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) {
-            if (WPStaging::isPro()) {
-                $disabledCronMessage = sprintf(
-                    __('The background backup creation depends on WP-Cron but %s is set to %s in wp-config.php. Background processing might not work. Remove this constant or set its value to %s. Ignore this if you use an external cron job.', 'wp-staging'),
-                    '<code>DISABLE_WP_CRON</code>',
-                    '<code>true</code>',
-                    '<code>false</code>'
-                );
-            } else {
-                $disabledCronMessage = sprintf(
-                    __('The background backup creation depends on WP-Cron but %s is set to %s in wp-config.php. Background processing might not work. Remove this constant or set its value to %s. Ignore this if you use an external cron job. <a href="%s" target="_blank">Ask us in the forum</a> if you need more information.', 'wp-staging'),
-                    '<code>DISABLE_WP_CRON</code>',
-                    '<code>true</code>',
-                    '<code>false</code>',
-                    'https://wordpress.org/support/plugin/wp-staging/'
-                );
-            }
-
-            $this->cronMessage .= $disabledCronMessage;
-            $warningMessages[] = $disabledCronMessage;
-
-            $cronStatusResult = true;
-        }
-
-        if (defined('ALTERNATE_WP_CRON') && ALTERNATE_WP_CRON) {
-            $alternateCronMessage = sprintf(
-                __('The constant %s is set to true.', 'wp-staging'),
-                'ALTERNATE_WP_CRON'
-            );
-            $this->cronMessage .= $alternateCronMessage;
-            $generalMessages[] = $alternateCronMessage;
-
-            $cronStatusResult = true;
-        }
-
-
-        $sslverify   = version_compare($wp_version, '4.0', '<');
-        $doingWpCron = sprintf('%.22F', microtime(true));
-        $urlEndpoint = add_query_arg('doing_wp_cron', $doingWpCron, site_url('wp-cron.php'));
-
-        $cronRequest = apply_filters(self::FILTER_CRON_REQUEST, [
-            'url'  => $urlEndpoint,
-            'key'  => $doingWpCron,
-            'args' => [
-                'timeout'   => 10,
-                'blocking'  => true,
-                'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, $sslverify),
-            ],
-        ]);
-
-        $cronRequest['args']['blocking'] = true;
-
-        $authHeader = $this->getHttpAuthHeaders();
-        if (!empty($authHeader)) {
-            $cronRequest['args']['headers'] = array_merge(
-                isset($cronRequest['args']['headers']) ? $cronRequest['args']['headers'] : [],
-                $authHeader
-            );
-        }
-
-        $result = wp_remote_post($cronRequest['url'], $cronRequest['args']);
-
-        // Action hook for internal use only: used during cron failure test
-        Hooks::doAction('wpstg.tests.backup.scheduler.failing_schedule_error');
-
-        if (is_wp_error($result)) {
-            $errorCronMessage = "Can not create scheduled backups because cron jobs do not work on this site. Error: " . $result->get_error_message() . ". Can not reach endpoint: " . esc_url($urlEndpoint);
-            // Only send the error report mail if error is caused by WP STAGING
-            if ($this->isWpstgError()) {
-                $this->sendErrorReport($errorCronMessage);
-            }
-
-            $this->cronMessage .= $errorCronMessage;
-
-            $cronStatusResult = false;
-        }
-
-        if (wp_remote_retrieve_response_code($result) >= 300) {
-            $httpWarningMessage = sprintf(
-                __('Unexpected HTTP response code: %s. Cron jobs and backup schedule might still work, but we recommend checking the HTTP response of %s', 'wp-staging'),
-                intval(wp_remote_retrieve_response_code($result)),
-                esc_url($urlEndpoint)
-            );
-            $this->cronMessage .= $httpWarningMessage;
-            $warningMessages[] = $httpWarningMessage;
-
-            $cronStatusResult = false;
-        }
-
-        // Send accumulated warning and general reports ONLY ONCE at the end
-        if (!empty($warningMessages)) {
-            $this->sendWarningReport(implode("\n\n", $warningMessages));
-        }
-
-        if (!empty($generalMessages)) {
-            $this->sendGeneralReport(implode("\n\n", $generalMessages));
-        }
-
-        return $cronStatusResult;
+        return $this->cronWarningType === '';
     }
 
     /**
-     * @return bool
+     * Sets the warning type when the last scheduled backup failed or its cron event is overdue.
+     *
+     * @return void
      */
-    private function isCronjobsOverdue(): bool
+    private function detectScheduledBackupWarning()
     {
-        return $this->numberOverdueCronjobs > 4;
+        $lastFailure = get_option(self::OPTION_LAST_BACKUP_FAILURE);
+        if (is_array($lastFailure) && !empty($lastFailure['time']) && (int)$lastFailure['time'] > $this->getLastScheduledBackupSuccessTime()) {
+            $this->cronWarningType          = self::CRON_WARNING_TYPE_FAILURE;
+            $this->lastBackupFailureMessage = $lastFailure['message'] ?? '';
+            return;
+        }
+
+        if ($this->hasOverdueOrMissingBackupCronJob()) {
+            $this->cronWarningType = self::CRON_WARNING_TYPE_OVERDUE;
+        }
     }
 
-    /** @return string */
-    public function getCronMessage(): string
+    /**
+     * A manual backup must not hide a broken schedule, so only a scheduled success counts.
+     *
+     * @return int Timestamp of the last scheduled success, 0 if none or the last was manual.
+     */
+    private function getLastScheduledBackupSuccessTime(): int
     {
-        return $this->cronMessage;
+        $lastBackupInfo = $this->getLastBackupInfo();
+        if (empty($lastBackupInfo['endTime'])) {
+            return 0;
+        }
+
+        $jobDataDto = isset($lastBackupInfo['JobBackupDataDto']) ? $lastBackupInfo['JobBackupDataDto'] : null;
+        if (!($jobDataDto instanceof JobBackupDataDto) || !$jobDataDto->isScheduledBackup()) {
+            return 0;
+        }
+
+        return (int)$lastBackupInfo['endTime'];
+    }
+
+    /**
+     * @return array
+     */
+    private function getLastBackupInfo(): array
+    {
+        $lastBackupInfo = get_option(FinishBackupTask::OPTION_LAST_BACKUP, []);
+
+        return is_array($lastBackupInfo) ? $lastBackupInfo : [];
     }
 
     /** @return int */
@@ -744,7 +580,7 @@ class BackupScheduler
     /** @return bool */
     public function hasOverdueCronJobs(): bool
     {
-        return $this->isCronjobsOverdue();
+        return $this->numberOverdueCronjobs > 4;
     }
 
     /**
@@ -872,21 +708,6 @@ class BackupScheduler
         }
 
         $datetime->setTimestamp($next);
-    }
-
-    /**
-     * Detect whether the last error is caused by WP STAGING
-     *
-     * @return bool
-     */
-    protected function isWpstgError(): bool
-    {
-        $error = error_get_last();
-        if (!is_array($error)) {
-            return false;
-        }
-
-        return strpos($error['file'], WPSTG_PLUGIN_SLUG) !== false;
     }
 
     /**
@@ -1163,7 +984,7 @@ class BackupScheduler
         $cronJobs = $this->getCronJobs();
         $timeNow  = time();
         foreach ($cronJobs as $expectedExecutionTime => $cronJob) {
-            if ($expectedExecutionTime < $timeNow) {
+            if (($expectedExecutionTime + self::OVERDUE_GRACE_PERIOD) < $timeNow) {
                 $this->numberOverdueCronjobs++;
             }
         }
@@ -1184,7 +1005,7 @@ class BackupScheduler
             return;
         }
 
-        if (!($jobDataDto->getRepeatBackupOnSchedule() || !empty($jobDataDto->getScheduleId()))) {
+        if (!$jobDataDto->isScheduledBackup()) {
             return;
         }
 
@@ -1205,27 +1026,28 @@ class BackupScheduler
     }
 
     /**
-     * Returns true if the wpstg_create_cron_backup event is scheduled but has not
-     * fired for more than 30 minutes past its due time.
-     *
-     * Unlike countOverdueCronjobs(), this checks only our own hook — not all WP
-     * cron jobs — so it stays accurate even when DISABLE_WP_CRON=true causes
-     * unrelated core/plugin jobs to pile up in the queue.
+     * Schedules exist at this point, so a backup cron event that is missing from the queue —
+     * or past due beyond the grace period — means scheduled backups are not executing.
+     * Unlike countOverdueCronjobs(), this checks only our own backup event.
      *
      * @return bool
      */
-    private function hasOverdueBackupCronJob(): bool
+    private function hasOverdueOrMissingBackupCronJob(): bool
     {
-        $cronJobs   = $this->getCronJobs();
-        $grace      = 30 * MINUTE_IN_SECONDS;
-        $now        = time();
+        $eventExists = false;
+        $now         = time();
 
-        foreach ($cronJobs as $timestamp => $hooks) {
-            if (isset($hooks[Cron::ACTION_CREATE_CRON_BACKUP]) && ($timestamp + $grace) < $now) {
+        foreach ($this->getCronJobs() as $timestamp => $hooks) {
+            if (!isset($hooks[Cron::ACTION_CREATE_CRON_BACKUP])) {
+                continue;
+            }
+
+            $eventExists = true;
+            if (($timestamp + self::OVERDUE_GRACE_PERIOD) < $now) {
                 return true;
             }
         }
 
-        return false;
+        return !$eventExists;
     }
 }

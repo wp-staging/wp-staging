@@ -3,6 +3,8 @@
 namespace WPStaging\Framework\Notices;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Onboarding\BackupPluginsDetector;
+use WPStaging\Framework\Onboarding\FreeOnboarding;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Facades\Hooks;
 
@@ -34,13 +36,27 @@ class BackupPluginsNotice
     private $auth;
 
     /**
+     * @var BackupPluginsDetector
+     */
+    private $detector;
+
+    /**
+     * @var FreeOnboarding
+     */
+    private $onboarding;
+
+    /**
      * @param Auth $auth
      * @param Notices $notices
+     * @param BackupPluginsDetector $detector
+     * @param FreeOnboarding $onboarding
      */
-    public function __construct(Auth $auth, Notices $notices)
+    public function __construct(Auth $auth, Notices $notices, BackupPluginsDetector $detector, FreeOnboarding $onboarding)
     {
-        $this->notices = $notices;
-        $this->auth = $auth;
+        $this->notices    = $notices;
+        $this->auth       = $auth;
+        $this->detector   = $detector;
+        $this->onboarding = $onboarding;
     }
 
     /**
@@ -60,9 +76,12 @@ class BackupPluginsNotice
             return;
         }
 
-        $isUpdraftInstalled = is_plugin_active('updraftplus/updraftplus.php');
-        $isBackupMigrationInstalled = is_plugin_active('backup-backup/backup-backup.php');
-        if (!$isUpdraftInstalled && !$isBackupMigrationInstalled) {
+        // The task selector carries the competitor message inside the backup card instead.
+        if ($this->onboarding->isTaskSelector()) {
+            return;
+        }
+
+        if (!$this->detector->hasCompetingPlugin()) {
             return;
         }
 

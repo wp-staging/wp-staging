@@ -14,6 +14,10 @@ abstract class QueryInserter
     const FILTER_RESTORE_DATABASE_MAX_ALLOWED_PACKET = 'wpstg.restore.database.maxAllowedPacket';
     const FILTER_RESTORE_DATABASE_INNODB_LOG_SIZE = 'wpstg.restore.database.innoDbLogSize';
     const FILTER_INSERT_IGNORE_DUPLICATE_KEY = 'wpstg.restore.database.insertIgnoreDuplicateKey';
+    protected $currentLinePosition = 0;
+    protected $bufferedLinePosition = 0;
+    protected $committedLinePosition = 0;
+    protected $hasFailedFlush = false;
     protected $client;
     protected $databaseImporterDto;
     protected $limitedMaxAllowedPacket;
@@ -40,6 +44,21 @@ abstract class QueryInserter
         $this->warnings = [];
     }
 
+    public function setCurrentLinePosition(int $position)
+    {
+        $this->currentLinePosition = $position;
+    }
+
+    public function getCommittedLinePosition(): int
+    {
+        return $this->committedLinePosition;
+    }
+
+    public function hasFailedFlush(): bool
+    {
+        return $this->hasFailedFlush;
+    }
+
     public function getWarnings(): array
     {
         return $this->warnings;
@@ -57,6 +76,7 @@ abstract class QueryInserter
 
     protected function setMaxAllowedPackage()
     {
+        $realMaxAllowedPacket = 1 * MB_IN_BYTES;
         try {
             if (isset($this->client->isSQLite) && $this->client->isSQLite) {
                 $realMaxAllowedPacket = 16777216;

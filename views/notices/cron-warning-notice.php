@@ -7,7 +7,6 @@
  *
  * @var BackupScheduler $backupScheduler
  * @var bool $cronStatus
- * @var string $cronMessage
  */
 
 use WPStaging\Backup\BackupScheduler;
@@ -15,7 +14,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\ServerVars;
 
 // Don't show if no cron issues
-if ($cronMessage === '' && $backupScheduler->getWarningType() === '') {
+if ($backupScheduler->getWarningType() === '') {
     return;
 }
 
@@ -50,10 +49,8 @@ $helpUrl = $isPro
             <span class="wpstg-cron-banner-text">
                 <?php if ($warningType === BackupScheduler::CRON_WARNING_TYPE_FAILURE) : ?>
                     <?php esc_html_e('Last scheduled backup failed.', 'wp-staging'); ?>
-                <?php elseif ($warningType === BackupScheduler::CRON_WARNING_TYPE_OVERDUE) : ?>
-                    <?php esc_html_e('Scheduled backup is overdue.', 'wp-staging'); ?>
                 <?php else : ?>
-                    <?php esc_html_e('Scheduled backups may not run.', 'wp-staging'); ?>
+                    <?php esc_html_e('Scheduled backup is overdue.', 'wp-staging'); ?>
                 <?php endif; ?>
             </span>
             <?php if ($hasOverdue) : ?>
@@ -64,11 +61,7 @@ $helpUrl = $isPro
         <!-- Actions - uses UI primitive buttons -->
         <div class="wpstg-cron-banner-actions">
             <a href="<?php echo esc_url($helpUrl); ?>" target="_blank" rel="noopener" class="wpstg-btn wpstg-btn-sm wpstg-btn-warning">
-                <?php if ($warningType === BackupScheduler::CRON_WARNING_TYPE_FAILURE || $warningType === BackupScheduler::CRON_WARNING_TYPE_OVERDUE) : ?>
-                    <?php esc_html_e('Get Help', 'wp-staging'); ?>
-                <?php else : ?>
-                    <?php esc_html_e('Fix WP-Cron', 'wp-staging'); ?>
-                <?php endif; ?>
+                <?php esc_html_e('Get Help', 'wp-staging'); ?>
                 <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>

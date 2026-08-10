@@ -10,6 +10,9 @@ class DatabaseImporterDto
     /** @var int */
     private $currentIndex = 0;
 
+    /** @var int Byte offset matching $currentIndex, for an O(1) resume. */
+    private $fileOffset = 0;
+
     /** @var int */
     private $totalLines = 0;
 
@@ -30,6 +33,20 @@ class DatabaseImporterDto
 
     /** @var int|null */
     private $subsiteId = null;
+
+    public function getFileOffset(): int
+    {
+        return $this->fileOffset;
+    }
+
+    /**
+     * @param int $fileOffset
+     * @return void
+     */
+    public function setFileOffset(int $fileOffset)
+    {
+        $this->fileOffset = $fileOffset;
+    }
 
     public function getCurrentIndex(): int
     {
