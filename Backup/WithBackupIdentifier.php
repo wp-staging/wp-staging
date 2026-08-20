@@ -7,26 +7,26 @@ use WPStaging\Framework\Filesystem\PartIdentifier;
 
 trait WithBackupIdentifier
 {
-    /**
-     * List of ids of multipart backups
-     * @var string[]
-     */
+
+
+
+
     protected $listedMultipartBackups = [];
 
-    /**
-     * @param string $identifier
-     * @param string $input
-     * @return bool
-     */
+
+
+
+
+
     public function checkPartByIdentifier(string $identifier, string $input)
     {
         return preg_match("#{$identifier}(.[0-9]+)?.wpstg$#", $input);
     }
 
-    /**
-     * @param string $name
-     * @return bool
-     */
+
+
+
+
     public function isBackupPart(string $name)
     {
         if (preg_match($this->getDatabasePartSuffixPattern(), $name)) {
@@ -50,9 +50,9 @@ trait WithBackupIdentifier
         return false;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function clearListedMultipartBackups()
     {
         $this->listedMultipartBackups = [];
@@ -72,10 +72,10 @@ trait WithBackupIdentifier
         return false;
     }
 
-    /**
-     * @param string $filename
-     * @return string
-     */
+
+
+
+
     public function extractBackupIdFromFilename(string $filename)
     {
         if (preg_match($this->getDatabasePartSuffixPattern(), $filename)) {
@@ -87,10 +87,10 @@ trait WithBackupIdentifier
         return explode('.', $fileInfos)[0];
     }
 
-    /**
-     * @param string $filename
-     * @return string
-     */
+
+
+
+
     protected function extractBackupIdFromDatabaseBackupFilename(string $filename)
     {
         $filename = preg_replace($this->getDatabasePartSuffixPattern(), '', $filename);
@@ -104,9 +104,9 @@ trait WithBackupIdentifier
         return $fileInfos[count($fileInfos) - 1];
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getDatabasePartSuffixPattern(): string
     {
         return '#\.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '(\.\d+)?\.' . DatabaseImporter::FILE_FORMAT . '$#';

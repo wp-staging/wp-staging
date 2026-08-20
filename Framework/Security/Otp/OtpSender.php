@@ -7,38 +7,38 @@ use WPStaging\Notifications\Notifications;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class OtpSender
- *
- * @package WPStaging\Framework\Security\Otp
- */
+
+
+
+
+
 class OtpSender
 {
-    /**
-     * The transient key for storing the OTP sent status.
-     * @var string
-     */
+
+
+
+
     const TRANSIENT_OTP_SENT = 'wpstg_otp_sent';
 
-    /**
-     * The expiration time for the OTP sent transient in seconds.
-     * @var int
-     */
-    const TRANSIENT_OTP_SENT_EXPIRATION = 30; // 30 seconds
 
-    /**
-     * @var Otp
-     */
+
+
+
+    const TRANSIENT_OTP_SENT_EXPIRATION = 30; 
+
+
+
+
     private $otpService;
 
-    /**
-     * @var Notifications
-     */
+
+
+
     private $notifications;
 
-    /**
-     * @var Auth
-     */
+
+
+
     private $auth;
 
     public function __construct(Otp $otpService, Auth $auth, Notifications $notifications)
@@ -48,10 +48,10 @@ class OtpSender
         $this->auth          = $auth;
     }
 
-    /**
-     * Send OTP to the user
-     * @return void
-     */
+
+
+
+
     public function ajaxSendOtp()
     {
         if (!$this->auth->isAuthenticatedRequest()) {

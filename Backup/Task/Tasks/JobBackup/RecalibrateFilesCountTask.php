@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Recalibrates the total file count in backup metadata to match actual files archived
- *
- * Validates and corrects file count discrepancies between metadata and backup contents,
- * ensuring accurate progress tracking and backup integrity.
- */
+
+
+
+
+
+
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
@@ -25,18 +25,18 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * This is not needed in multipart backups
- */
+
+
+
 class RecalibrateFilesCountTask extends BackupTask
 {
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var BackupMetadata */
+ 
     protected $metadata;
 
-    /** @var string */
+ 
     protected $currentBackupFile;
 
     public function __construct(LoggerInterface $logger, Directory $directory, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -61,7 +61,7 @@ class RecalibrateFilesCountTask extends BackupTask
         try {
             $this->prepareTask();
         } catch (MissingFileException $ex) {
-            // throw error
+ 
         }
 
         $this->recalibrateTotalFilesCount();
@@ -69,9 +69,9 @@ class RecalibrateFilesCountTask extends BackupTask
         return $this->generateResponse();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function prepareTask()
     {
         $this->metadata = new BackupMetadata();
@@ -80,11 +80,11 @@ class RecalibrateFilesCountTask extends BackupTask
         $this->stepsDto->setTotal(1);
     }
 
-    /**
-     * This is not called in multipart backups.
-     * @throws Exception
-     * @return void
-     */
+
+
+
+
+
     protected function recalibrateTotalFilesCount()
     {
         $totalFilesInMetadata = $this->metadata->getTotalFiles();
@@ -127,10 +127,10 @@ class RecalibrateFilesCountTask extends BackupTask
 
         $totalFilesDiscovered = $this->jobDataDto->getDiscoveredFiles();
 
-        // Let add database files into it as well
+ 
         $totalFilesDiscovered += $this->jobDataDto->getMaxDbPartIndex();
 
-        // Let remove invalid files from discovered files
+ 
         $totalFilesDiscovered -= $this->jobDataDto->getInvalidFiles();
 
         if ($totalFilesDiscovered === $totalFilesInBackup) {
@@ -141,29 +141,29 @@ class RecalibrateFilesCountTask extends BackupTask
             $this->logger->debug("Discovered files count does not match total files in backup. Discovered files: $totalFilesDiscovered, Backup: $totalFilesInBackup");
         }
 
-        // Close file descriptor
+ 
         $backupFile = null;
 
         throw new Exception(sprintf("Found %d files in metadata, but found %d files in backup file.", $totalFilesInMetadata, $totalFilesInBackup));
     }
 
-    /**
-     * @param int $totalFiles
-     * @param FileObject $backupFile
-     * @return void
-     */
+
+
+
+
+
     protected function adjustTotalFilesCount(int $totalFiles, FileObject $backupFile)
     {
         $this->jobDataDto->setTotalFiles($totalFiles);
 
-        // Lazy loading, as for most cases it might not be needed at all.
-        /** @var BackupMetadataEditor $backupMetadataEditor */
+ 
+ 
         $backupMetadataEditor = WPStaging::make(BackupMetadataEditor::class);
         $metadata = new BackupMetadata();
         $metadata = $metadata->hydrateByFile($backupFile);
 
         $metadata->setTotalFiles($totalFiles);
-        $metadata->revertBackupSizeToDefault(); // Important for BackupSigner to recalculate the backup size
+        $metadata->revertBackupSizeToDefault(); 
         $backupMetadataEditor->setBackupMetadata($backupFile, $metadata);
         $backupFile = null;
         $this->jobDataDto->setIsGlitchInBackup(true);

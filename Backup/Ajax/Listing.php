@@ -1,15 +1,15 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
+ 
+ 
 
 namespace WPStaging\Backup\Ajax;
 
 class Listing extends BaseListing
 {
-    /**
-     * @return void
-     */
+
+
+
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -29,17 +29,17 @@ class Listing extends BaseListing
         wp_send_json($result);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getTemplate(): string
     {
         return 'backup/listing.php';
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getCommonRenderData(): array
     {
         $data = parent::getCommonRenderData();
@@ -47,7 +47,7 @@ class Listing extends BaseListing
             'isProVersion'      => false,
             'isValidLicense'    => false,
             'isPersonalLicense' => false,
-            'licenseType'       => 'basic', // see Licensing::LICENSE_TYPE_BASIC
+            'licenseType'       => 'basic', 
         ]);
     }
 }

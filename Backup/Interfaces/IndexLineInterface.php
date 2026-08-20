@@ -4,9 +4,9 @@ namespace WPStaging\Backup\Interfaces;
 
 use WPStaging\Framework\Job\Exception\FileValidationException;
 
-/**
- * Use in Backup Index Line
- */
+
+
+
 interface IndexLineInterface
 {
     public function getContentStartOffset(): int;
@@ -25,12 +25,12 @@ interface IndexLineInterface
 
     public function readIndexLine(string $indexLine): IndexLineInterface;
 
-    /**
-     * @param string $filePath
-     * @param string $pathForErrorLogging
-     * @return void
-     *
-     * @throws FileValidationException
-     */
+
+
+
+
+
+
+
     public function validateFile(string $filePath, string $pathForErrorLogging = '');
 }

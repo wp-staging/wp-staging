@@ -20,61 +20,61 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Facades\Hooks;
 
-/**
- * Class FileRestoreTask
- *
- * This is an abstract class for the filesystem-based restore actions of restoring a site,
- * such as plugins, themes, mu-plugins and uploads files.
- *
- * It's main philosophy is to control the individual queue of what needs to be processed
- * from each of the concrete restores. It delegates actual processing of the queue to a separate class.
- *
- * @package WPStaging\Backup\Abstracts\Task
- */
+
+
+
+
+
+
+
+
+
+
+
 abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
 {
     use EndOfLinePlaceholderTrait;
     use RestoreFileExclusionTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_EXCLUDE_FILES_DURING_RESTORE = 'wpstg.backup.restore.exclude_paths';
 
-    /**
-     * Note: internal use
-     * @var string
-     */
+
+
+
+
     const FILTER_EXCLUDE_ENQUEUE_DELETE = 'wpstg.backup.restore.exclude_enqueue_delete';
 
-    /**
-     * @var Filesystem
-     */
+
+
+
     protected $filesystem;
 
-    /**
-     * @var Directory
-     */
+
+
+
     protected $directory;
 
-    /**
-     * @var FileProcessor
-     */
+
+
+
     private $restoreFileProcessor;
 
-    /**
-     * @var int
-     */
+
+
+
     protected $processedNow;
 
-    /**
-     * @var PathIdentifier
-     */
+
+
+
     protected $pathIdentifier;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $isSiteHostedOnWordPressCom = false;
 
     public function __construct(
@@ -96,23 +96,23 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
         $this->isSiteHostedOnWordPressCom = $siteInfo->isHostedOnWordPressCom();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function prepareFileRestore()
     {
         if ($this->stepsDto->getTotal() === 0) {
             $this->buildQueue();
             $this->taskQueue->seek(0);
 
-            // Just an arbitrary number, when there are no more items in the Queue we call stepsDto->finish()
+ 
             $this->stepsDto->setTotal(100);
         }
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute(): TaskResponseDto
     {
         if ($this->isSkipped()) {
@@ -150,36 +150,36 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
         return '_wpstg_tmp';
     }
 
-    /**
-     * Concrete classes of the FileRestoreTask must build
-     * the queue once, enqueuing everything that needs
-     * to be moved or deleted, using $this->enqueueMove
-     * or $this->enqueueDelete.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
     abstract protected function buildQueue();
 
-    /**
-     * Skip the task if part is missing for this task
-     *
-     * @return array
-     */
+
+
+
+
+
     abstract protected function getParts(): array;
 
-    /**
-     * Skip the task if set by filter
-     *
-     * @return bool
-     */
+
+
+
+
+
     abstract protected function isSkipped(): bool;
 
-    /**
-     * Skip the task if part is missing for this task
-     *
-     * @throws MissingFileException
-     * @return void
-     */
+
+
+
+
+
+
     protected function checkMissingParts()
     {
         if (!$this->jobDataDto->getBackupMetadata()->getIsMultipartBackup()) {
@@ -198,10 +198,10 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
         }
     }
 
-    /**
-     * Executes the next item in the queue.
-     * @return void
-     */
+
+
+
+
     protected function processNextItemInQueue()
     {
         $nextInQueueRaw = $this->taskQueue->dequeue();
@@ -210,14 +210,14 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
             throw new FinishedQueueException();
         }
 
-        // Skip blank lines
+ 
         if ($nextInQueueRaw === '') {
             return;
         }
 
         $nextInQueue = json_decode($nextInQueueRaw, true);
 
-        // Make sure we read expected data from the queue
+ 
         if (!is_array($nextInQueue)) {
             $this->logger->warning(sprintf(
                 __('%s: An internal error occurred that prevented this item from being restored. Skipping it... (Error Code: INVALID_QUEUE_ITEM)', 'wp-staging'),
@@ -228,7 +228,7 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
             return;
         }
 
-        // Make sure data is in the expected format
+ 
         array_map(function ($requiredKey) use ($nextInQueue, $nextInQueueRaw) {
             if (!array_key_exists($requiredKey, $nextInQueue)) {
                 $this->logger->warning(sprintf(
@@ -243,21 +243,21 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
 
         $source = $nextInQueue['source'];
 
-        // Make sure destination is within WordPress
-        // @todo Test backup in Windows and restoring in Linux and vice-versa
+ 
+ 
         $destination = $nextInQueue['destination'];
         $destination = $this->replacePlaceholdersWithEOLs($destination);
         $destination = wp_normalize_path($destination);
 
-        // Executes the action
+ 
         $this->restoreFileProcessor->handle($nextInQueue['action'], $source, $destination, $this, $this->logger);
     }
 
-    /**
-     * @param string $source Source path to move.
-     * @param string $destination Where to move source to.
-     * @return void
-     */
+
+
+
+
+
     public function enqueueMove(string $source, string $destination)
     {
         $this->enqueue([
@@ -267,10 +267,10 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
         ]);
     }
 
-    /**
-     * @param string $path The path to delete. Can be a folder, which will be deleted recursively.
-     * @return void
-     */
+
+
+
+
     public function enqueueDelete(string $path)
     {
         if ($this->isExcludeEnqueueDelete($path)) {
@@ -284,19 +284,19 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
         ]);
     }
 
-    /**
-     * Use to retry last action in next request,
-     * if it wasn't completed in current request.
-     * @return void
-     */
+
+
+
+
+
     public function retryLastActionInNextRequest()
     {
         $this->taskQueue->retry($dequeue = false);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isRestoreOnSubsite(): bool
     {
         if (!is_multisite()) {
@@ -306,10 +306,10 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
         return $this->jobDataDto->getBackupMetadata()->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE;
     }
 
-    /**
-     * @param array $action An array of actions to perform.
-     * @return void
-     */
+
+
+
+
     private function enqueue(array $action)
     {
         $this->taskQueue->enqueue(json_encode($action));

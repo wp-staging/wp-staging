@@ -11,19 +11,19 @@ use WPStaging\Framework\Security\Auth;
 
 abstract class PrepareJob
 {
-    /** @var Auth */
+ 
     protected $auth;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var ProcessLock */
+ 
     protected $processLock;
 
-    /** @var string */
+ 
     protected $queueId = '';
 
     public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock)
@@ -44,24 +44,24 @@ abstract class PrepareJob
 
     abstract public function validateAndSanitizeData($data): array;
 
-    /**
-     * Template method that runs the subclass-defined `setupInitialData` and
-     * then persists the resulting job state.
-     *
-     * Persist synchronously instead of relying on the WP `shutdown` hook. On
-     * some hosts (aggressive request termination, Object Cache Pro drop-in
-     * ordering, plugins that die() earlier in shutdown) the hook never fires
-     * and the init=true DTO never reaches disk, so the next processing
-     * request sees an empty DTO. An explicit persist here guarantees the
-     * freshly-hydrated state is written before we respond.
-     *
-     * @param mixed ...$args Forwarded verbatim to `setupInitialData` so
-     *                       subclasses with extra parameters (e.g. PreparePush)
-     *                       keep working unchanged.
-     * @return array
-     * @throws \Exception Propagated from `setupInitialData`; persist does not
-     *                    run when setup throws.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     protected function setupInitialJob(...$args): array
     {
         $sanitizedData = $this->setupInitialData(...$args);
@@ -78,12 +78,12 @@ abstract class PrepareJob
         $this->filesystem->mkdir($this->directory->getCacheDirectory(), true);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function deleteSseCacheFiles()
     {
-        /** @var SseEventCache */
+ 
         $sseCacheEvents = WPStaging::make(SseEventCache::class);
         $sseCacheEvents->deleteSseCacheFiles();
     }
@@ -93,19 +93,19 @@ abstract class PrepareJob
         $this->queueId = $queueId;
     }
 
-    /**
-     * @param mixed $value A value that we want to detect if it's true or false.
-     *
-     * @return bool A PHP boolean interpretation of this value.
-     */
+
+
+
+
+
     protected function jsBoolean($value)
     {
         return $value === 'true' || $value === true;
     }
 
-    /**
-     * @param array|null $sanitizedData
-     * @return array
-     */
+
+
+
+
     abstract protected function setupInitialData($sanitizedData): array;
 }

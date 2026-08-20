@@ -8,86 +8,86 @@ use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient as Database;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Abstract base class for custom database tables.
- *
- * Subclasses implement four abstract methods to define their schema,
- * and inherit all table lifecycle management (creation, version tracking,
- * migration via dbDelta, existence checks, and teardown).
- */
+
+
+
+
+
+
+
 abstract class CustomTable
 {
     const TABLE_NOT_EXIST = -1;
     const TABLE_EXISTS    = 0;
     const TABLE_CREATED   = 1;
 
-    /**
-     * @var Database
-     */
+
+
+
     protected $database;
 
-    /**
-     * @var int|null
-     */
+
+
+
     protected $tableState;
 
-    /**
-     * @param Database|null $database
-     */
+
+
+
     public function __construct($database = null)
     {
         $this->database = $database ?: WPStaging::getInstance()->getContainer()->make(DatabaseAdapter::class)->getClient();
     }
 
-    /**
-     * Returns the unprefixed table name (e.g. 'wpstg_settings').
-     *
-     * @return string
-     */
+
+
+
+
+
     abstract protected function getTableName();
 
-    /**
-     * Returns the wp_options key used to track the table schema version.
-     *
-     * @return string
-     */
+
+
+
+
+
     abstract protected function getTableVersionKey();
 
-    /**
-     * Returns the current schema version string (e.g. '1.0.0').
-     *
-     * @return string
-     */
+
+
+
+
+
     abstract protected function getTableVersion();
 
-    /**
-     * Returns the CREATE TABLE SQL statement for this table.
-     *
-     * @return string
-     */
+
+
+
+
+
     abstract protected function getCreateTableSql();
 
-    /**
-     * Invalidates all cached data for this table.
-     * Subclasses must implement this to clear their specific cache entries.
-     */
+
+
+
+
     abstract public function invalidateCache();
 
-    /**
-     * Returns the fully prefixed table name.
-     *
-     * @return string
-     */
+
+
+
+
+
     public function getFullTableName()
     {
         global $wpdb;
         return $wpdb->prefix . $this->getTableName();
     }
 
-    /**
-     * Ensures the table exists, creating or updating it if necessary.
-     * Called lazily before any CRUD operation.
-     */
+
+
+
+
     public function ensureTable()
     {
         if ($this->tableState === null) {
@@ -95,12 +95,12 @@ abstract class CustomTable
         }
     }
 
-    /**
-     * Checks the table state and triggers creation/update if needed.
-     *
-     * @param bool $force Whether to force the check or trust cached state.
-     * @return int One of the TABLE_* constants.
-     */
+
+
+
+
+
+
     public function checkTable($force = false)
     {
         if (!$force && $this->tableState !== null) {
@@ -127,14 +127,14 @@ abstract class CustomTable
         return $this->tableState;
     }
 
-    /**
-     * Updates the table schema using dbDelta and verifies final table structure.
-     *
-     * We intentionally avoid transaction/rollback flow here because DDL transaction
-     * semantics are engine-dependent and MyISAM does not support transactional rollback.
-     *
-     * @return int One of the TABLE_* constants.
-     */
+
+
+
+
+
+
+
+
     protected function updateTable()
     {
         $tableSql = $this->getCreateTableSql();
@@ -144,7 +144,7 @@ abstract class CustomTable
         dbDelta($tableSql);
 
         if (!$this->hasExpectedSchema()) {
-            // Fallback to direct execution if dbDelta does not materialize the table.
+ 
             if ($this->database->query($tableSql) === false || !$this->hasExpectedSchema()) {
                 debug_log($this->getTableName() . ' Table Upgrade Error: ' . $this->database->error());
                 return self::TABLE_NOT_EXIST;
@@ -156,9 +156,9 @@ abstract class CustomTable
         return self::TABLE_EXISTS;
     }
 
-    /**
-     * @return bool Whether the table exists.
-     */
+
+
+
     public function tableExists()
     {
         global $wpdb;
@@ -185,11 +185,11 @@ abstract class CustomTable
         return !empty($row[0]) && (string)$row[0] === $tableName;
     }
 
-    /**
-     * Verifies the existing table matches the expected schema shape.
-     *
-     * @return bool
-     */
+
+
+
+
+
     protected function hasExpectedSchema()
     {
         if (!$this->tableExists()) {
@@ -219,14 +219,14 @@ abstract class CustomTable
         return true;
     }
 
-    /**
-     * Drops the table if it exists.
-      *
-      * The table is dropped again after option/cache cleanup because hooks triggered by that
-      * cleanup may recreate the table in the same request.
-     *
-     * @return bool Whether the drop was successful.
-     */
+
+
+
+
+
+
+
+
     public function dropTable()
     {
         $tableName = $this->getFullTableName();
@@ -242,9 +242,9 @@ abstract class CustomTable
         return $result !== false && $cleanupResult !== false;
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     private function getActualColumnNames()
     {
         global $wpdb;
@@ -271,9 +271,9 @@ abstract class CustomTable
         return $columns;
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     private function getActualIndexNames()
     {
         global $wpdb;
@@ -300,10 +300,10 @@ abstract class CustomTable
         return array_values(array_unique($indexes));
     }
 
-    /**
-     * @param string $createTableSql
-     * @return array<string,array<string>>
-     */
+
+
+
+
     private function parseExpectedSchema($createTableSql)
     {
         $schema = [
@@ -352,10 +352,10 @@ abstract class CustomTable
         return $schema;
     }
 
-    /**
-     * @param string $tableName
-     * @return int|bool
-     */
+
+
+
+
     private function executeDropTableQuery($tableName)
     {
         global $wpdb;

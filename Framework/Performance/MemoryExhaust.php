@@ -17,17 +17,17 @@ use function WPStaging\functions\debug_log;
 
 class MemoryExhaust extends AbstractTemplateComponent
 {
-    /**
-     * @param TemplateEngine $templateEngine
-     */
+
+
+
     public function __construct(TemplateEngine $templateEngine)
     {
         parent::__construct($templateEngine);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxResponse()
     {
         if (!$this->canRenderAjax()) {

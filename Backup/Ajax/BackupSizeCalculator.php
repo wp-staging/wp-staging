@@ -23,70 +23,70 @@ use WPStaging\Framework\Facades\Hooks;
 
 class BackupSizeCalculator extends AbstractFilesystemScanner
 {
-    /** @var string */
+ 
     const FILTER_EXPORT_FILES_IGNORE_FILE_EXTENSIONS = 'wpstg.export.files.ignore.file_extension';
 
-    /** @var string */
+ 
     const FILTER_EXPORT_FILES_IGNORE_FILE_BIGGER_THAN = 'wpstg.export.files.ignore.file_bigger_than';
 
-    /** @var string */
+ 
     const FILTER_EXPORT_FILES_IGNORE_LARGE_FILES_BY_EXTENSION = 'wpstg.export.files.ignore.file_extension_bigger_than';
 
-    /** @var string */
+ 
     const FILTER_BACKUP_EXCLUDED_DIRECTORIES = 'wpstg.backup.exclude.directories';
 
-    /** @var Sanitize */
+ 
     protected $sanitize;
 
-    /** @var Auth */
+ 
     protected $auth;
 
-    /** @var array */
+ 
     protected $ignoreFileExtensions = [];
 
-    /** @var int */
+ 
     protected $ignoreFileBiggerThan = 0;
 
-    /** @var array */
+ 
     protected $ignoreFileExtensionFilesBiggerThan = [];
 
-    /** @var bool */
+ 
     protected $isSiteHostedOnWordPressCom = false;
 
-    /** @var array */
+ 
     protected $excludedDirectories = [];
 
-    /** @var bool */
+ 
     protected $isExcludingCaches = false;
 
-    /** @var bool */
+ 
     protected $isExcludingLogs = false;
 
-    /** @var bool */
+ 
     protected $isExcludingDeactivatedPlugins = false;
 
-    /** @var bool */
+ 
     protected $isExcludingUnusedThemes = false;
 
-    /** @var Math */
+ 
     protected $math;
 
-    /** @var FilesystemScannerDto */
+ 
     protected $scannerDto;
 
-    /** @var bool */
+ 
     private $isNetworkSiteBackup = false;
 
-    /**
-     * @param Auth $auth
-     * @param Directory $directory
-     * @param Filesystem $filesystem
-     * @param PluginInfo $pluginInfo
-     * @param SiteInfo $siteInfo
-     * @param Math $math
-     * @param Sanitize $sanitize
-     * @param PathIdentifier $pathIdentifier
-     */
+
+
+
+
+
+
+
+
+
+
     public function __construct(Auth $auth, Directory $directory, Filesystem $filesystem, PluginInfo $pluginInfo, SiteInfo $siteInfo, Math $math, Sanitize $sanitize, PathIdentifier $pathIdentifier)
     {
         parent::__construct($directory, $pathIdentifier, $filesystem, $pluginInfo);
@@ -98,41 +98,41 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $this->scannerDto                 = new FilesystemScannerDto();
     }
 
-    /**
-     * Set filters for file exclusion
-     * @return void
-     */
+
+
+
+
     private function setFilters()
     {
-        /**
-         * Allow user to exclude certain file extensions from being backup.
-         */
+
+
+
         $this->ignoreFileExtensions = (array)Hooks::applyFilters(self::FILTER_EXPORT_FILES_IGNORE_FILE_EXTENSIONS, [
-            'wpstg', // WP STAGING backup files
+            'wpstg', 
             'gz',
             'tmp',
         ]);
 
-        /**
-         * Allow user to exclude files larger than given size from being backup.
-         */
+
+
+
         $this->ignoreFileBiggerThan = (int)Hooks::applyFilters(self::FILTER_EXPORT_FILES_IGNORE_FILE_BIGGER_THAN, 200 * MB_IN_BYTES);
 
-        /**
-         * Allow user to exclude files with extension larger than given size from being backup.
-         */
+
+
+
         $this->ignoreFileExtensionFilesBiggerThan = (array)Hooks::applyFilters(self::FILTER_EXPORT_FILES_IGNORE_LARGE_FILES_BY_EXTENSION, [
             'zip' => 50 * MB_IN_BYTES,
         ]);
 
-        // Allows us to use isset for performance
+ 
         $this->ignoreFileExtensions = array_flip($this->ignoreFileExtensions);
     }
 
-    /**
-     * @return void
-     * @throws WPStagingException
-     */
+
+
+
+
     public function ajaxCalculateBackupPartsSize()
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -190,9 +190,9 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         wp_send_json_success();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function calculatePluginsSize()
     {
         $dirToScan    = $this->directory->getPluginsDirectory();
@@ -206,9 +206,9 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         ]);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function calculateMuPluginsSize()
     {
         $dirToScan    = $this->directory->getMuPluginsDirectory();
@@ -222,9 +222,9 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         ]);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function calculateUploadsSize()
     {
         $dirToScan    = $this->directory->getUploadsDirectory();
@@ -237,10 +237,10 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         ]);
     }
 
-    /**
-     * Calculate the size of themes directory
-     * @return void
-     */
+
+
+
+
     protected function calculateThemesSize()
     {
         $excludeRules      = $this->getThemesExcludeRules();
@@ -265,18 +265,12 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         ]);
     }
 
-    /**
-     * @return void
-     * @throws WPStagingException
-     */
+
+
+
+
     protected function calculateOtherFilesInRootSize()
     {
-        if (WPStaging::isBasic()) {
-            wp_send_json_success([
-                'size' => '0.0 B',
-            ]);
-        }
-
         $this->scannerDto->setExcludedDirectories($this->getWpRootExcludedDirs());
         $dirToScan    = $this->directory->getAbsPath();
         $excludeRules = $this->getWpRootExcludeRules();
@@ -288,9 +282,9 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         ]);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function calculateOtherFilesInWpContentSize()
     {
         $dirToScan    = $this->directory->getWpContentDirectory();
@@ -306,13 +300,13 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         ]);
     }
 
-    /**
-     * Generic method to calculate directory size
-     * @param string $directory Directory path to scan
-     * @param string $partIdentifier Identifier for the part being scanned
-     * @param array $excludeRules Rules for excluding paths
-     * @return int
-     */
+
+
+
+
+
+
+
     protected function calculateDirectorySize(string $directory, string $partIdentifier, array $excludeRules = []): int
     {
         if (!is_dir($directory)) {
@@ -326,14 +320,14 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return $this->scannerDto->getFilesystemSize();
     }
 
-    /**
-     * Get WP Root exclude rules
-     * @return array
-     * @throws WPStagingException
-     */
+
+
+
+
+
     protected function getWpRootExcludeRules(): array
     {
-        /** @var Sites */
+ 
         $stagingSites     = WPStaging::make(Sites::class);
         $stagingSitesDirs = $stagingSites->getStagingDirectories();
         $dirsToSkip       = $this->directory->getWpDefaultRootDirectories();
@@ -345,11 +339,11 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         }, $dirsToSkip);
     }
 
-    /**
-     * Get WP Root exclude dir
-     * @return array
-     * @throws WPStagingException
-     */
+
+
+
+
+
     protected function getWpRootExcludedDirs(): array
     {
         if (!$this->isBaseNetworkSite()) {
@@ -363,7 +357,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
             return $this->excludedDirectories;
         }
 
-        // Exclude all wp staging uploads directories from subsites
+ 
         $sitesDirectory = $this->directory->getUploadsDirectory($refresh) . 'sites';
 
         if (is_dir($sitesDirectory) === false) {
@@ -373,7 +367,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $uploadsIt = new DirectoryIterator($sitesDirectory);
 
         foreach ($uploadsIt as $uploadItem) {
-            // Early bail: We don't touch links and we also skip dots
+ 
             if ($uploadItem->isLink() || $uploadItem->isDot()) {
                 continue;
             }
@@ -390,19 +384,19 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return $this->excludedDirectories;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function preRecursivePathScanningStep()
     {
         $this->scannerDto->setFilesystemSize(0);
     }
 
-    /**
-     * @param SplFileInfo $fileInfo
-     * @param string $linkPath
-     * @return void
-     */
+
+
+
+
+
     protected function processFile(SplFileInfo $fileInfo, string $linkPath = '')
     {
         $pathname = $fileInfo->getPathname();
@@ -413,24 +407,24 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $normalizedPath = $this->filesystem->normalizePath($pathname, true);
         $fileSize       = $fileInfo->getSize();
         $fileExtension  = $fileInfo->getExtension();
-        // Skip files based on various criteria
+ 
         if ($this->shouldSkipFile($fileInfo, $fileExtension, $normalizedPath)) {
             return;
         }
 
-        // Add file size to the total
+ 
         $this->scannerDto->incrementDiscoveredFiles();
         $this->scannerDto->incrementDiscoveredFilesByCategory($this->currentPathScanning);
         $this->scannerDto->addFilesystemSize($fileSize);
     }
 
-    /**
-     * Determine if a file should be skipped based on various criteria
-     * @param SplFileInfo $fileInfo
-     * @param string $fileExtension
-     * @param string $normalizedPath
-     * @return bool
-     */
+
+
+
+
+
+
+
     protected function shouldSkipFile(SplFileInfo $fileInfo, string $fileExtension, string $normalizedPath): bool
     {
         if ($this->isExcludedByExtension($fileInfo)) {
@@ -456,11 +450,11 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return false;
     }
 
-    /**
-     * @param SplFileInfo $fileInfo
-     * @param SplFileInfo|null $linkInfo
-     * @return void
-     */
+
+
+
+
+
     protected function processDirectory(SplFileInfo $fileInfo, $linkInfo = null)
     {
         $pathname = $fileInfo->getPathname();
@@ -476,12 +470,12 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $this->preScanPath($pathname, true);
     }
 
-    /**
-     * Determine if a directory should be skipped based on various criteria
-     * @param SplFileInfo $fileInfo
-     * @param string $normalizedPath
-     * @return bool
-     */
+
+
+
+
+
+
     protected function shouldSkipDirectory(SplFileInfo $fileInfo, string $normalizedPath): bool
     {
         if ($this->isExcludedDirectory($fileInfo->getPathname())) {
@@ -499,11 +493,11 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return false;
     }
 
-    /**
-     * Check if a directory is excluded
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
+
     protected function isExcludedDirectory(string $path): bool
     {
         if (empty($path)) {
@@ -520,22 +514,22 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return false;
     }
 
-    /**
-     * Check if a file is excluded by extension
-     * @param SplFileInfo $file
-     * @return bool
-     */
+
+
+
+
+
     protected function isExcludedByExtension(SplFileInfo $file): bool
     {
         $extension = strtolower($file->getExtension());
         return isset($this->ignoreFileExtensions[$extension]);
     }
 
-    /**
-     * Check if a file is excluded by size
-     * @param SplFileInfo $file
-     * @return bool
-     */
+
+
+
+
+
     protected function isExcludedBySize(SplFileInfo $file): bool
     {
         if ($file->getSize() > $this->ignoreFileBiggerThan) {
@@ -550,43 +544,43 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return false;
     }
 
-    /**
-     * Check if a log file can be excluded
-     * @param string $fileExtension
-     * @return bool
-     */
+
+
+
+
+
     protected function canExcludeLogFile(string $fileExtension): bool
     {
         $logExtensions = ['log'];
         return in_array(strtolower($fileExtension), $logExtensions);
     }
 
-    /**
-     * Check if a cache file can be excluded
-     * @param string $fileExtension
-     * @return bool
-     */
+
+
+
+
+
     protected function canExcludeCacheFile(string $fileExtension): bool
     {
         $cacheExtensions = ['cache'];
         return in_array(strtolower($fileExtension), $cacheExtensions);
     }
 
-    /**
-     * Check if a cache directory can be excluded
-     * @param SplFileInfo $dir
-     * @return bool
-     */
+
+
+
+
+
     protected function canExcludeCacheDir(SplFileInfo $dir): bool
     {
         $cacheDirs = ['cache'];
         return in_array(strtolower($dir->getFilename()), $cacheDirs);
     }
 
-    /**
-     * Get directories to exclude from backup
-     * @return array
-     */
+
+
+
+
     protected function getExcludedDirectories(): array
     {
         $excludedDirs   = [];
@@ -595,52 +589,52 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $excludedDirs[] = $this->directory->getPluginWpContentDirectory();
         $excludedDirs[] = trailingslashit(WP_CONTENT_DIR) . 'cache';
 
-        // @see BackupUploadsDir::BACKUP_UPLOADS_DIR_POSTFIX
+ 
         $backupUploadsDirPostFix = '.wpstg_backup';
 
-        // Old uploads backup folder created by WP STAGING during push e.g. wp-content/uploads.wpstg_backup
+ 
         $excludedDirs[] = untrailingslashit($this->directory->getUploadsDirectory()) . $backupUploadsDirPostFix;
-        // Just extra caution if someone changed uploads directory afterwards. Exclude this directory as well.
+ 
         $backupUploadsDir = trailingslashit(WP_CONTENT_DIR) . 'uploads' . $backupUploadsDirPostFix;
         if (!in_array($backupUploadsDir, $excludedDirs)) {
             $excludedDirs[] = $backupUploadsDir;
         }
 
-        /**
-         * @see https://wordpress.org/plugins/all-in-one-wp-migration/
-         *      This folder contains backups generated by All In One WP Migration.
-         */
+
+
+
+
         $excludedDirs[] = trailingslashit(WP_CONTENT_DIR) . 'ai1wm-backups';
 
-        /**
-         * @see https://wordpress.org/plugins/robin-image-optimizer/
-         *      This folder contains a duplicate of the uploads folder, for optimized images.
-         *      It can be manually re-generated from the existing media library later.
-         */
+
+
+
+
+
         $excludedDirs[] = $this->directory->getUploadsDirectory() . 'wio_backup';
 
-        /**
-         * This is default directory that contains staging sites created by WP STAGING when ABSPATH is not writable.
-         * There is no need to backup the staging sites directory
-         */
+
+
+
+
         $excludedDirs[] = $this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false);
 
-        /**
-         * Allow user to filter the excluded directories in a site backup.
-         *
-         * @param array $excludedDirectories
-         *
-         * @return array An array of directories to exclude.
-         */
+
+
+
+
+
+
+
         $this->excludedDirectories = (array)apply_filters(self::FILTER_BACKUP_EXCLUDED_DIRECTORIES, $excludedDirs);
 
         return $this->excludedDirectories;
     }
 
-    /**
-     * Get the root path
-     * @return string
-     */
+
+
+
+
     protected function getRootPath(): string
     {
         if ($this->isSiteHostedOnWordPressCom) {
@@ -650,20 +644,20 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return $this->directory->getAbsPath();
     }
 
-    /**
-     * Get the uploads directory
-     * @return string
-     */
+
+
+
+
     protected function getUploadsDirectory(): string
     {
         $uploadsDir = $this->directory->getUploadsDirectory();
         return $uploadsDir ?: '';
     }
 
-    /**
-     * Get the themes exclude rules
-     * @return array
-     */
+
+
+
+
     protected function getThemesExcludeRules(): array
     {
         if (!$this->isExcludingUnusedThemes) {
@@ -684,10 +678,10 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return $excludeRules;
     }
 
-    /**
-     * Get the active themes
-     * @return array
-     */
+
+
+
+
     protected function getActiveThemes(): array
     {
         if (!is_multisite()) {
@@ -701,10 +695,10 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return $this->pluginInfo->getAllActiveThemesInSubsites();
     }
 
-    /**
-     * Get the plugins exclude rules
-     * @return array
-     */
+
+
+
+
     protected function getPluginsExcludeRules(): array
     {
         if (!$this->isExcludingDeactivatedPlugins) {
@@ -728,39 +722,39 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return $excludeRules;
     }
 
-    /**
-     * Get the active plugins
-     *
-     * @return array
-     */
+
+
+
+
+
     protected function getActivePlugins(): array
     {
-        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+ 
         remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
-        // Not multisite
+ 
         if (!is_multisite()) {
             return wp_get_active_and_valid_plugins();
         }
 
-        // Multisite but only current site is being backup
+ 
         if ($this->isNetworkSiteBackup) {
             return wp_get_active_and_valid_plugins();
         }
 
-        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+ 
         remove_all_filters(WpAdapter::FILTER_SITE_OPTION_ACTIVE_SITEWIDE_PLUGINS);
 
         return array_merge(wp_get_active_network_plugins(), $this->pluginInfo->getAllActivePluginsInSubsites());
     }
 
-    /**
-     * Check if a path is excluded by rules
-     *
-     * @param string $path
-     * @param array $excludeRules
-     * @return bool
-     */
+
+
+
+
+
+
+
     protected function isExcludedByRules(string $path, array $excludeRules): bool
     {
         if (empty($excludeRules)) {
@@ -783,9 +777,9 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         return $isExcluded;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isBaseNetworkSite(): bool
     {
         if (!is_multisite()) {

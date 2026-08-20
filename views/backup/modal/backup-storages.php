@@ -13,18 +13,18 @@ use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Backup\Storage\Providers;
 
-/** @var Providers */
+ 
 $storages = WPStaging::make(Providers::class);
 $assets   = WPStaging::make(Assets::class);
 $restrictedStorages = [
-    'personal'           => ['all'], // all pro storages are restricted
-    'personal_legacy'    => ['pcloud', 'one-drive'], // only pcloud and one-drive are restricted
-    'basic'              => ['all'], // all pro storages are restricted
-    'business'           => ['none'], // no storages are restricted
-    'developer'          => ['none'], // no storages are restricted
-    'developer_legacy'   => ['none'], // no storages are restricted
-    'developer_30_sites' => ['none'], // no storages are restricted
-    'agency'             => ['none'], // no storages are restricted
+    'personal'           => ['all'], 
+    'personal_legacy'    => ['pcloud', 'one-drive'], 
+    'basic'              => ['all'], 
+    'business'           => ['none'], 
+    'developer'          => ['none'], 
+    'developer_legacy'   => ['none'], 
+    'developer_30_sites' => ['none'], 
+    'agency'             => ['none'], 
 ];
 ?>
 <div class="wpstg-storages-section">
@@ -38,7 +38,7 @@ $restrictedStorages = [
         $itemCount = 0;
         $rowCount = 0;
 
-        // Add Local Storage if needed
+ 
         if ($storagesPrefix === 'storage-') :
             $itemCount++;
             ?>

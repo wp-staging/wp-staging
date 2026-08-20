@@ -19,9 +19,9 @@ use WPStaging\Framework\Facades\Facade;
  */
 class Toggle extends Facade
 {
-    /**
-     * @return string
-     */
+
+
+
     protected static function getFacadeAccessor(): string
     {
         return ToggleComponent::class;

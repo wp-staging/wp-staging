@@ -25,20 +25,20 @@ class StagingSiteCreate extends AbstractJob
 {
     use WithDataAdjustmentTasks;
 
-    /** @var string */
+ 
     const ACTION_CLONING_COMPLETE = 'wpstg_cloning_complete';
 
-    /**
-     * Fires only when a staging site was newly created. ACTION_CLONING_COMPLETE
-     * cannot be used for that: update and reset broadcast the same name.
-     * @var string
-     */
+
+
+
+
+
     const ACTION_STAGING_SITE_CREATED = 'wpstg_staging_site_created';
 
-    /** @var StagingSiteJobsDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var array The array of tasks to execute for this job. Populated at init(). */
+ 
     protected $tasks = [];
 
     public static function getJobName()
@@ -80,7 +80,7 @@ class StagingSiteCreate extends AbstractJob
 
     protected function addDatabaseTasks()
     {
-        // Early return if all tables are excluded
+ 
         if ($this->jobDataDto->getAllTablesExcluded() && empty($this->jobDataDto->getNonSiteTables())) {
             return;
         }
@@ -111,6 +111,6 @@ class StagingSiteCreate extends AbstractJob
 
     protected function addAdvanceTasks()
     {
-        // no-op, used in PRO
+ 
     }
 }

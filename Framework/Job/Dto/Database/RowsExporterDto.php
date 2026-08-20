@@ -4,32 +4,32 @@ namespace WPStaging\Framework\Job\Dto\Database;
 
 class RowsExporterDto
 {
-    /** @var int */
+ 
     protected $tableIndex = 0;
 
-    /** @var string */
+ 
     protected $tableName = '';
 
-    /** @var string|null */
+ 
     protected $numericPrimaryKey = null;
 
-    /** @var int */
+ 
     protected $totalRows = 0;
 
-    /** @var int */
+ 
     protected $totalRowsExported = 0;
 
-    /** @var int */
+ 
     protected $rowsOffset = 0;
 
-    /**
-     * @var int
-     * We are starting with -PHP_INT_MAX to ensure that the first inserted value is always greater than this.
-     * Because some tables can contain negative values, we cannot start with 0.
-     */
+
+
+
+
+
     protected $lastInsertedNumericPrimaryKeyValue = -PHP_INT_MAX;
 
-    /** @var bool */
+ 
     protected $locked = false;
 
     public function reset()
@@ -56,10 +56,10 @@ class RowsExporterDto
         return $this->tableIndex;
     }
 
-    /**
-     * @param int $tableIndex
-     * @return void
-     */
+
+
+
+
     public function setTableIndex(int $tableIndex)
     {
         $this->tableIndex = $tableIndex;
@@ -70,27 +70,27 @@ class RowsExporterDto
         return $this->tableName;
     }
 
-    /**
-     * @param string $tableName
-     * @return void
-     */
+
+
+
+
     public function setTableName(string $tableName)
     {
         $this->tableName = $tableName;
     }
 
-    /**
-     * @return string|null
-     */
+
+
+
     public function getNumericPrimaryKey()
     {
         return $this->numericPrimaryKey;
     }
 
-    /**
-     * @param string|null $numericPrimaryKey
-     * @return void
-     */
+
+
+
+
     public function setNumericPrimaryKey($numericPrimaryKey)
     {
         $this->numericPrimaryKey = $numericPrimaryKey;
@@ -101,10 +101,10 @@ class RowsExporterDto
         return $this->totalRows;
     }
 
-    /**
-     * @param int $totalRows
-     * @return void
-     */
+
+
+
+
     public function setTotalRows(int $totalRows)
     {
         $this->totalRows = $totalRows;
@@ -115,10 +115,10 @@ class RowsExporterDto
         return $this->totalRowsExported;
     }
 
-    /**
-     * @param int $rowsExported
-     * @return void
-     */
+
+
+
+
     public function setTotalRowsExported(int $rowsExported)
     {
         $this->totalRowsExported = $rowsExported;
@@ -129,10 +129,10 @@ class RowsExporterDto
         return $this->rowsOffset;
     }
 
-    /**
-     * @param int $rowsOffset
-     * @return void
-     */
+
+
+
+
     public function setRowsOffset(int $rowsOffset)
     {
         $this->rowsOffset = $rowsOffset;
@@ -143,10 +143,10 @@ class RowsExporterDto
         return $this->lastInsertedNumericPrimaryKeyValue;
     }
 
-    /**
-     * @param int $lastInsertedNumericPrimaryKeyValue
-     * @return void
-     */
+
+
+
+
     public function setLastInsertedNumericPrimaryKeyValue(int $lastInsertedNumericPrimaryKeyValue)
     {
         $this->lastInsertedNumericPrimaryKeyValue = $lastInsertedNumericPrimaryKeyValue;
@@ -157,18 +157,18 @@ class RowsExporterDto
         return $this->locked;
     }
 
-    /**
-     * @param bool $locked
-     * @return void
-     */
+
+
+
+
     public function setLocked(bool $locked)
     {
         $this->locked = $locked;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isFinished(): bool
     {
         return $this->rowsOffset >= $this->totalRows;

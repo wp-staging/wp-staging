@@ -21,36 +21,36 @@ use WPStaging\Staging\Traits\WithStagingEnginePreference;
 use WPStaging\Staging\Traits\WithStagingRequirementLogs;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * Validates prerequisites before a staging site create job starts.
- */
+
+
+
 class CreateRequirementsCheckTask extends StagingTask
 {
     use WithStagingEnginePreference;
     use WithStagingRequirementLogs;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var Database */
+ 
     protected $database;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var DiskWriteCheck */
+ 
     protected $diskWriteCheck;
 
-    /** @var AnalyticsStagingCreate */
+ 
     protected $analyticsStagingCreate;
 
-    /** @var SystemInfo */
+ 
     protected $systemInfo;
 
-    /** @var StagingSiteJobsDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var Sites */
+ 
     protected $sites;
 
     public function __construct(
@@ -122,9 +122,9 @@ class CreateRequirementsCheckTask extends StagingTask
         return $this->generateResponse();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function saveStagingSite()
     {
         $stagingSites = $this->sites->tryGettingStagingSites();

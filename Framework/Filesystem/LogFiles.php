@@ -6,24 +6,24 @@ use WPStaging\Framework\Adapter\Directory;
 
 class LogFiles
 {
-    /**
-     * @var string
-     */
+
+
+
     private $logsDirectory;
 
-    /**
-     * @var array
-     */
+
+
+
     private $availableLogFileTypes;
 
-    /**
-     * @var array
-     */
+
+
+
     private $latestLogFiles;
 
-    /**
-     * @param Directory $directory
-     */
+
+
+
     public function __construct(Directory $directory)
     {
         $this->logsDirectory         = $directory->getLogDirectory();
@@ -31,9 +31,9 @@ class LogFiles
         $this->latestLogFiles        = [];
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getLatestLogFiles(): array
     {
         $logFiles = scandir($this->logsDirectory);
@@ -44,10 +44,10 @@ class LogFiles
         return $this->latestLogFiles;
     }
 
-    /**
-     * @param string $fileName
-     * @return void
-     */
+
+
+
+
     private function findLatestLogFiles(string $fileName)
     {
         foreach ($this->availableLogFileTypes as $logFilePrefix) {
@@ -64,9 +64,9 @@ class LogFiles
         }
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getLogsDirectory(): string
     {
         return trailingslashit($this->logsDirectory);
@@ -77,10 +77,10 @@ class LogFiles
         return $this->availableLogFileTypes;
     }
 
-    /**
-     * @param int $days
-     * @return array
-     */
+
+
+
+
     public function getRetentionLogFiles(int $days = 14): array
     {
         $logPrefix = implode('|', $this->availableLogFileTypes);

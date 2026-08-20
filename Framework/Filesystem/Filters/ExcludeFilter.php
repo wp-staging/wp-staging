@@ -20,14 +20,14 @@ class ExcludeFilter
     const SIZE_LESS_THAN = 'size_less_than';
     const SIZE_EQUAL_TO = 'size_equal_to';
 
-    /**
-     * @var Strings
-     */
+
+
+
     private $strUtils;
 
-    /**
-     * @var TemplateEngine
-     */
+
+
+
     private $templateEngine;
 
     public function __construct()
@@ -36,12 +36,12 @@ class ExcludeFilter
         $this->templateEngine = new TemplateEngine();
     }
 
-    /**
-     * Convert wpstg exclude rule to glob rule
-     *
-     * @param string $rule
-     * @return string
-     */
+
+
+
+
+
+
     public function mapExclude($rule)
     {
         if ($this->strUtils->startsWith($rule, 'ext:')) {
@@ -57,7 +57,7 @@ class ExcludeFilter
 
         $globRule = $this->convertToNameGlob($nameRule);
         if ($this->strUtils->startsWith($rule, 'file:')) {
-            // if rule has . that means it was provided with extension
+ 
             if (strpos($globRule, '.') !== false) {
                 return $globRule;
             }
@@ -68,13 +68,13 @@ class ExcludeFilter
         return $globRule . '/**';
     }
 
-    /**
-     * Return rendered exclude template as output for the wpstg exclude filter size rule
-     *
-     * @param string $rule
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
     public function renderSizeExclude($rule)
     {
         list($comparison, $size) = explode(' ', $rule);
@@ -86,13 +86,13 @@ class ExcludeFilter
         ]);
     }
 
-    /**
-     * Return rendered exclude template as output for the wpstg exclude filter glob rule
-     *
-     * @param string $rule
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
     public function renderGlobExclude($rule)
     {
         if ($this->strUtils->startsWith($rule, 'ext:')) {
@@ -120,11 +120,11 @@ class ExcludeFilter
         return '';
     }
 
-    /**
-     * Convert wpstg name rule to glob rule
-     *
-     * @return string
-     */
+
+
+
+
+
     private function convertToNameGlob($rule)
     {
         if ($this->strUtils->startsWith($rule, self::NAME_BEGINS_WITH)) {

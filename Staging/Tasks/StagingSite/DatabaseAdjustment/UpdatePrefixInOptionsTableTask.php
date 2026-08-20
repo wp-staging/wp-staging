@@ -6,30 +6,30 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
 
-/**
- * Replacement for WPStaging\Framework\CloningProcess\Data\UpdateWpOptionsTablePrefix
- */
+
+
+
 class UpdatePrefixInOptionsTableTask extends DatabaseAdjustmentTask
 {
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_update_prefix_options';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Update database prefix in options table';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->setup();
@@ -54,7 +54,7 @@ class UpdatePrefixInOptionsTableTask extends DatabaseAdjustmentTask
             return true;
         }
 
-        // Filter the rows below. Do not update them!
+ 
         $optionsToIgnore = [
             'wp_mail_smtp',
             'wp_mail_smtp_version',

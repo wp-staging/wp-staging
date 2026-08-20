@@ -10,9 +10,9 @@ use WPStaging\Framework\Facades\Facade;
  */
 class Checkbox extends Facade
 {
-    /**
-     * @return string
-     */
+
+
+
     protected static function getFacadeAccessor(): string
     {
         return CheckboxComponent::class;

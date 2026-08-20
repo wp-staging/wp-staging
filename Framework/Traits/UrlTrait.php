@@ -2,29 +2,29 @@
 
 namespace WPStaging\Framework\Traits;
 
-/**
- * Provide helper methods related to Url
- * Useful in standalone tool
- * Trait UrlTrait
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
+
 trait UrlTrait
 {
-    /**
-     * Return url without scheme
-     * @param string $string
-     * @return string
-     */
+
+
+
+
+
     public function getUrlWithoutScheme(string $string): string
     {
         return (string)preg_replace('#^https?://#', '', rtrim($string, '/'));
     }
 
-    /**
-     * Decodes data encoded with MIME base64
-     * @param string $input
-     * @return string
-     */
+
+
+
+
+
     public function base64Decode(string $input): string
     {
         $keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";

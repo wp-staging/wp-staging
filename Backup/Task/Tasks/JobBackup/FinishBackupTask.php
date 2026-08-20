@@ -1,6 +1,6 @@
 <?php
 
-// TODO PHP7.1; constant visibility
+ 
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
@@ -24,19 +24,19 @@ class FinishBackupTask extends BackupTask
 {
     use EventLoggerTrait;
 
-    /** @var string */
+ 
     const OPTION_LAST_BACKUP = 'wpstg_last_backup_info';
 
-    /**
-     * Fires once a backup has been written successfully, with the job data DTO.
-     * @var string
-     */
+
+
+
+
     const ACTION_BACKUP_CREATED = 'wpstg.backup.created';
 
-    /** @var AnalyticsBackupCreate */
+ 
     protected $analyticsBackupCreate;
 
-    /** @var TransientCache */
+ 
     protected $transientCache;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, AnalyticsBackupCreate $analyticsBackupCreate, TransientCache $transientCache)
@@ -57,9 +57,9 @@ class FinishBackupTask extends BackupTask
         return 'Finalizing Backup';
     }
 
-    /**
-     * @return FinalizeBackupResponseDto|TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $backupFilePath = $this->jobDataDto->getBackupFilePath();
@@ -72,7 +72,7 @@ class FinishBackupTask extends BackupTask
             $this->logger->info("✓ Backup successfully created");
         }
 
-        // Background-backup bootstrap requests should not write final completion entries.
+ 
         if (!$this->jobDataDto->getIsCreateBackupInBackground()) {
             $this->maybeLogBackupProcess();
             $this->saveCloudStorageOptions();
@@ -85,17 +85,17 @@ class FinishBackupTask extends BackupTask
         $this->jobDataDto->setEndTime(time());
 
         update_option(static::OPTION_LAST_BACKUP, [
-            'endTime'          => time(), // Unix timestamp is timezone independent
+            'endTime'          => time(), 
             'duration'         => $this->jobDataDto->getDuration(),
             'JobBackupDataDto' => $this->jobDataDto,
         ], false);
 
-        // A manual backup completing should not hide a broken cron schedule.
+ 
         if ($this->jobDataDto->isScheduledBackup()) {
             delete_option(BackupScheduler::OPTION_LAST_BACKUP_FAILURE);
         }
 
-        // Delete the transient cache for the backup file index to make sure it is checked again now
+ 
         $this->transientCache->delete(TransientCache::KEY_INVALID_BACKUP_FILE_INDEX);
 
         $this->performFinishBackupAction();
@@ -105,19 +105,19 @@ class FinishBackupTask extends BackupTask
         return $this->overrideGenerateResponse($this->makeListableBackup($backupFilePath));
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function performFinishBackupAction()
     {
         $this->getJobTransientCache()->completeJob();
     }
 
-    /**
-     * @param null|ListableBackup $backup
-     *
-     * @return FinalizeBackupResponseDto|TaskResponseDto
-     */
+
+
+
+
+
     private function overrideGenerateResponse($backup = null)
     {
         add_filter(self::FILTER_TASK_RESPONSE, function ($response) use ($backup) {
@@ -143,22 +143,22 @@ class FinishBackupTask extends BackupTask
         return $this->generateResponse();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function logCompressionEntry()
     {
-        // Used in PRO version
+ 
     }
 
-    /**
-     * Retains backups, if at least one remote storage is set.
-     *
-     * @return void
-     */
+
+
+
+
+
     protected function saveCloudStorageOptions()
     {
-        // Used in PRO version
+ 
     }
 
     protected function getResponseDto(): FinalizeBackupResponseDto
@@ -166,15 +166,15 @@ class FinishBackupTask extends BackupTask
         return new FinalizeBackupResponseDto();
     }
 
-    /**
-     * This is used to display the "Download Modal" after the backup completes.
-     *
-     * @param string|null $backupFilePath
-     *
-     * @return ListableBackup
-     * @see string src/Backend/public/js/wpstg-admin.js, search for "wpstg--backups--backup"
-     *
-     */
+
+
+
+
+
+
+
+
+
     protected function makeListableBackup($backupFilePath): ListableBackup
     {
         clearstatcache();
@@ -186,9 +186,9 @@ class FinishBackupTask extends BackupTask
         return $backup;
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     protected function getPartsMd5(): array
     {
         $md5 = [];
@@ -199,10 +199,10 @@ class FinishBackupTask extends BackupTask
         return $md5;
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function maybeTriggerBackupCreationInBackground()
     {
         if (!$this->jobDataDto->getIsCreateBackupInBackground()) {
@@ -219,12 +219,12 @@ class FinishBackupTask extends BackupTask
         }
     }
 
-    /**
-     * Scheduled backups are intentionally skipped because they can run frequently
-     * and would otherwise flood the maintenance history with automated entries.
-     *
-     * @return void
-     */
+
+
+
+
+
+
     private function maybeLogBackupProcess()
     {
         if ($this->jobDataDto->getRepeatBackupOnSchedule() || !empty($this->jobDataDto->getScheduleId())) {
@@ -234,15 +234,16 @@ class FinishBackupTask extends BackupTask
         $this->logBackupProcessCompleted($this->jobDataDto);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getBackupCreationPrepareData(): array
     {
         $jobBackupDataDto = $this->jobDataDto;
 
         return [
             'name'                           => $jobBackupDataDto->getName(),
+            'isBeforeUpdateBackup'           => $jobBackupDataDto->getIsBeforeUpdateBackup(),
             'isExportingPlugins'             => $jobBackupDataDto->getIsExportingPlugins(),
             'isExportingMuPlugins'           => $jobBackupDataDto->getIsExportingMuPlugins(),
             'isExportingThemes'              => $jobBackupDataDto->getIsExportingThemes(),
@@ -259,7 +260,7 @@ class FinishBackupTask extends BackupTask
             'isExcludingLogs'                => $jobBackupDataDto->getIsExcludingLogs(),
             'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
             'isExportingOtherWpRootFiles'    => $jobBackupDataDto->getIsExportingOtherWpRootFiles(),
-            'isWpCliRequest'                 => true, // should be true otherwise multisite backup will not work
+            'isWpCliRequest'                 => true, 
             'repeatBackupOnSchedule'         => false,
             'isCreateBackupInBackground'     => false,
             'isAutomatedBackup'              => false,

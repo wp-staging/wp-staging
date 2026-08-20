@@ -31,11 +31,11 @@ use WPStaging\Framework\DI\ServiceProvider;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
-/**
- * Class BackupServiceProvider
- *
- * Responsible for injecting classes which are to be used in FREE/BASIC version only
- */
+
+
+
+
+
 class BackupServiceProvider extends ServiceProvider
 {
     protected function registerClasses()

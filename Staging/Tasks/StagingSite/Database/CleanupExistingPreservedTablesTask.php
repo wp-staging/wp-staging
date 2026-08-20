@@ -2,9 +2,9 @@
 
 namespace WPStaging\Staging\Tasks\StagingSite\Database;
 
-/**
- * Cleans old preserved staging tables before a staging site update starts.
- */
+
+
+
 class CleanupExistingPreservedTablesTask extends CleanupPreservedTablesTask
 {
     public static function getTaskName()

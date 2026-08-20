@@ -18,10 +18,10 @@ use WPStaging\Backup\Utils\BackupPathResolver;
 
 class FileInfo extends AbstractTemplateComponent
 {
-    /** @var BackupPathResolver */
+ 
     private $backupPathResolver;
 
-    /** @var string[] */
+ 
     private $excludedBackupParts;
 
     public function __construct(TemplateEngine $templateEngine, BackupPathResolver $backupPathResolver)
@@ -30,9 +30,9 @@ class FileInfo extends AbstractTemplateComponent
         $this->backupPathResolver = $backupPathResolver;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -74,8 +74,8 @@ class FileInfo extends AbstractTemplateComponent
             'themes'    => $this->isBackupPartReplaced(RestoreThemesTask::FILTER_KEEP_EXISTING_THEMES, $info),
             'muPlugins' => $this->isBackupPartReplaced(RestoreMuPluginsTask::FILTER_KEEP_EXISTING_MUPLUGINS, $info),
             'wpContent' => $this->isBackupPartReplaced(RestoreOtherFilesInWpContentTask::FILTER_KEEP_EXISTING_OTHER_FILES, $info),
-            'wpRoot'    => false, // Other files in WP root folder are not cleaned up before restoring, no need to use filter then.
-            // Each subsite has separate uploads folder, so only filter check is needed!
+            'wpRoot'    => false, 
+ 
             'uploads'   => !Hooks::applyFilters(CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA, false),
         ];
 
@@ -104,9 +104,9 @@ class FileInfo extends AbstractTemplateComponent
 
     protected function isBackupPartReplaced(string $filter, BackupMetadata $metadata): bool
     {
-        // Should only be allowed to replace when restoring on single site or when restoring a full network backup
+ 
         if (!is_multisite() || $metadata->getBackupType() === BackupMetadata::BACKUP_TYPE_MULTISITE) {
-            // If filter returns true, it means the existing files should be kept not replaced
+ 
             return !Hooks::applyFilters($filter, false);
         }
 

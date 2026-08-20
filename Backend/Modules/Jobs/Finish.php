@@ -12,40 +12,40 @@ use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Jobs\StagingSiteCreate;
 
-/**
- * Class Finish
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 class Finish extends Job
 {
     use EventLoggerTrait;
 
-    /**
-     * Clone Key
-     * @var string
-     */
+
+
+
+
     private $clone = '';
 
-    /**
-     * @var Urls
-     */
+
+
+
     private $urls;
 
-    /**
-     * Start Module
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function start()
     {
         $this->urls = WPStaging::make(Urls::class);
 
-        // sanitize the clone name before saving
+ 
         $this->clone = preg_replace("#\W+#", '-', strtolower($this->options->clone));
 
         $this->deleteCacheFiles();
 
-        // Prepare clone records & save scanned directories for delete job later
+ 
         $this->prepareCloneDataRecords();
 
         $this->options->isRunning = false;
@@ -89,10 +89,10 @@ class Finish extends Job
         return (object) $return;
     }
 
-    /**
-     * Delete Cache Files
-     * @throws \Exception
-     */
+
+
+
+
     protected function deleteCacheFiles()
     {
         $this->log("Finish: Deleting clone job's cache files...");
@@ -103,17 +103,17 @@ class Finish extends Job
         $this->log("Finish: Clone job's cache files have been deleted!");
     }
 
-    /**
-     * Prepare clone records. Without this clone data will not get updated in Sites::STAGING_SITES_OPTION during updating process.
-     *
-     * @return bool
-     */
+
+
+
+
+
     protected function prepareCloneDataRecords()
     {
-        // Check if clones still exist
+ 
         $this->log("Finish: Verifying existing clones...");
 
-        // Clone data already exists
+ 
         if (isset($this->options->existingClones[$this->options->clone])) {
             if ($this->isMultisiteAndPro()) {
                 $this->options->existingClones[$this->options->clone]['url'] = $this->getDestinationUrl();
@@ -175,22 +175,22 @@ class Finish extends Job
         return true;
     }
 
-    /**
-     * Get destination Hostname depending on whether WP has been installed in sub dir or not
-     * @return string
-     */
+
+
+
+
     private function getDestinationUrl()
     {
         if (!empty($this->options->cloneHostname)) {
             return $this->options->cloneHostname;
         }
 
-        // if this is single site
+ 
         if (!$this->isMultisiteAndPro()) {
             return trailingslashit(get_site_url()) . $this->options->cloneDirectoryName;
         }
 
-        // The relative path to the main multisite without appending a trailingslash e.g. wordpress
+ 
         $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
         return rtrim($this->urls->getBaseUrl(), '/\\') . $multisitePath . $this->options->cloneDirectoryName;
     }

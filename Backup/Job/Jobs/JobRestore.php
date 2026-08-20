@@ -10,6 +10,7 @@ use WPStaging\Backup\Task\Tasks\JobRestore\CleanExistingMediaTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\ExtractFilesTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreLanguageFilesTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreOtherFilesInWpContentTask;
+use WPStaging\Backup\Task\Tasks\JobRestore\RestoreOtherFilesInWpRootTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RenameDatabaseTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreRequirementsCheckTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreDatabaseTask;
@@ -28,37 +29,37 @@ use WPStaging\Framework\Job\Task\Tasks\CleanupTmpTablesTask;
 
 class JobRestore extends AbstractJob
 {
-    /** @var string */
+ 
     const TMP_DIRECTORY = 'tmp/restore/';
 
-    /** @var JobRestoreDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var BackupMetadata */
+ 
     protected $backupMetadata;
 
-    /** @var array The array of tasks to execute for this job. Populated at init(). */
+ 
     protected $tasks = [];
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getJobName(): string
     {
         return 'backup_restore';
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getJobTasks(): array
     {
         return $this->tasks;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function onWpShutdown()
     {
         if ($this->jobDataDto->isFinished() && !$this->jobDataDto->getIsSyncRequest()) {
@@ -68,12 +69,12 @@ class JobRestore extends AbstractJob
         parent::onWpShutdown();
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     protected function execute(): TaskResponseDto
     {
-        //$this->startBenchmark();
+ 
 
         try {
             $response = $this->getResponse($this->currentTask->execute());
@@ -82,15 +83,15 @@ class JobRestore extends AbstractJob
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
 
-        //$this->finishBenchmark(get_class($this->currentTask));
+ 
 
         return $response;
     }
 
-    /**
-     * @throws \Exception
-     * @return void
-     */
+
+
+
+
     protected function init()
     {
         $this->tasks = [];
@@ -148,25 +149,27 @@ class JobRestore extends AbstractJob
         $this->addFinishTask();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setRequirementTask()
     {
         $this->tasks[] = RestoreRequirementsCheckTask::class;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function addRestoreOtherFilesInWpRootTasks()
     {
-        // no-op
+        if ($this->backupMetadata->getIsExportingOtherWpRootFiles()) {
+            $this->tasks[] = RestoreOtherFilesInWpRootTask::class;
+        }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupBackupMetadata()
     {
         if ($this->jobDataDto->getBackupMetadata()) {
@@ -184,9 +187,9 @@ class JobRestore extends AbstractJob
         $this->jobDataDto->determineIsSameSiteRestore();
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getJobTmpDirectory(): string
     {
         $dir = $this->directory->getTmpDirectory() . $this->jobDataDto->getId();
@@ -195,9 +198,9 @@ class JobRestore extends AbstractJob
         return trailingslashit($dir);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function addDatabaseTasks()
     {
         $this->tasks[] = RestoreDatabaseTask::class;
@@ -206,27 +209,27 @@ class JobRestore extends AbstractJob
         $this->tasks[] = CleanupTmpTablesTask::class;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function addExtractFilesTasks()
     {
         $this->tasks[] = ExtractFilesTask::class;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function addFinishTask()
     {
         $this->tasks[] = RestoreFinishTask::class;
     }
 
-    /**
-     * @param BackupMetadata $metadata
-     *
-     * @return bool
-     */
+
+
+
+
+
     protected function isValidMetadata(BackupMetadata $metadata): bool
     {
         $extension = pathinfo($this->jobDataDto->getFile(), PATHINFO_EXTENSION);

@@ -4,7 +4,7 @@ namespace WPStaging\Backend;
 
 use WPStaging\Backend\Modules\Jobs\Job;
 use WPStaging\Core\WPStaging;
-use WPStaging\Core\DTO\Settings;
+use WPStaging\Framework\Settings\Settings as SettingsService;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Assets\Assets;
@@ -45,31 +45,31 @@ use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Pro\License\Licensing;
 
-/**
- * Class Administrator
- * @package WPStaging\Backend
- */
+
+
+
+
 class Administrator
 {
-    /**
-     * @var int Place WP Staging Menu below Plugins
-     */
+
+
+
     const MENU_POSITION_ORDER = 65;
 
-    /**
-     * @var int Place WP Staging Menu below Plugins for multisite
-     */
+
+
+
     const MENU_POSITION_ORDER_MULTISITE = 20;
 
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_MAIN_SETTING_TABS = 'wpstg.main_settings_tabs';
 
-    /**
-     * All registered WP Staging admin page slugs.
-     * @var string[]
-     */
+
+
+
+
     const ADMIN_PAGE_SLUGS = [
         'wpstg_clone',
         'wpstg_backup',
@@ -81,31 +81,31 @@ class Administrator
         'wpstg-install',
     ];
 
-    /** @var string */
+ 
     private $viewsPath;
 
-    /**
-     * @var Assets
-     */
+
+
+
     private $assets;
 
-    /**
-     * @var Auth
-     */
+
+
+
     private $auth;
 
-    /**
-     * @var SiteInfo
-     */
+
+
+
     private $siteInfo;
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
-    /** @var Report */
+ 
     private $report;
 
-    /** @var PluginInfo */
+ 
     private $pluginInfo;
 
     public function __construct()
@@ -121,21 +121,21 @@ class Administrator
 
         $this->sanitize = WPStaging::make(Sanitize::class);
 
-        // Load plugins meta data
+ 
         $this->loadMeta();
     }
 
-    /**
-     * Load plugin meta data
-     */
+
+
+
     public function loadMeta()
     {
         new Pluginmeta();
     }
 
-    /**
-     * Define Hooks
-     */
+
+
+
     private function defineHooks()
     {
         if (!defined('WPSTGPRO_VERSION')) {
@@ -158,7 +158,7 @@ class Administrator
             add_filter('admin_footer', [$this, 'loadFeedbackForm']);
         }
 
-        // Ajax Requests
+ 
         add_action("wp_ajax_wpstg_scanning", [$this, "ajaxCloneScan"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxCheckCloneDirectoryName"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_restart", [$this, "ajaxRestart"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -186,32 +186,32 @@ class Administrator
         add_action("wp_ajax_wpstg_restore_settings", [$this, "ajaxRestoreSettings"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_send_debug_log_report", [$this->report, "ajaxSendDebugLog"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        // Ajax hooks pro Version
-        // TODO: move all below actions to pro service provider?
+ 
+ 
         add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_push_tables", [$this, "ajaxPushTables"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        // TODO: replace uploads backup during push once we have backups PR ready,
-        // Then there will be no need to have any cron to delete those backups
+ 
+ 
         if (class_exists('WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir')) {
             add_action(BackupUploadsDir::BACKUP_DELETE_CRON_HOOK_NAME, [$this, "removeOldUploadsBackup"]); // phpcs:ignore WPStaging.Security.FirstArgNotAString -- Cron callback
         }
     }
 
-    /**
-     * Load Feedback Form on plugins.php
-     */
+
+
+
     public function loadFeedbackForm()
     {
         $form = WPStaging::make(Feedback::class);
         $form->loadForm();
     }
 
-    /**
-     * Send Feedback data via mail
-     */
+
+
+
     public function sendFeedback()
     {
         if (!$this->isAuthenticated()) {
@@ -222,11 +222,11 @@ class Administrator
         $form->sendDeactivateFeedback();
     }
 
-    /**
-     * Upgrade routine
-     * @action admin_init 10 0
-     * @see \WPStaging\Backend\Administrator::defineHooks
-     */
+
+
+
+
+
     public function upgrade()
     {
         if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\Upgrade\Upgrade')) {
@@ -237,9 +237,9 @@ class Administrator
         $upgrade->doUpgrade();
     }
 
-    /**
-     * Add Admin Menu(s)
-     */
+
+
+
     public function addMenu()
     {
         global $wp_version;
@@ -250,8 +250,8 @@ class Administrator
             $pos = self::MENU_POSITION_ORDER_MULTISITE;
         }
 
-        // Menu Position order needs to be unique for WordPress < 4.4
-        // We are not using a unique position by default to keep WP Staging directly below plugin menu
+ 
+ 
         if (version_compare($wp_version, '4.4', '<')) {
             $pos++;
         }
@@ -260,26 +260,26 @@ class Administrator
 
         $defaultPageSlug       = "wpstg_clone";
         $defaultPageCallback   = "getClonePage";
-        // Brand term — intentionally NOT translatable. Community/wp.org packs must never rename the menu. See #5267.
+ 
         $defaultPageTitle      = "Staging Sites";
         $secondaryPageSlug     = "wpstg_backup";
         $secondaryPageCallback = "getBackupPage";
-        // Brand term — intentionally NOT translatable. The German wp.org pack wrongly renders this as "Sicherung". See #5267.
+ 
         $secondaryPageTitle    = "Backup &amp; Migration";
-        /** @var SiteInfo */
+ 
         $siteInfo = WPStaging::make(SiteInfo::class);
         if ($siteInfo->isHostedOnWordPressCom()) {
             $defaultPageSlug       = "wpstg_backup";
             $defaultPageCallback   = "getBackupPage";
-            // Brand term — intentionally NOT translatable. The German wp.org pack wrongly renders this as "Sicherung". See #5267.
+ 
             $defaultPageTitle      = "Backup &amp; Migration";
             $secondaryPageSlug     = "wpstg_clone";
             $secondaryPageCallback = "getClonePage";
-            // Brand term — intentionally NOT translatable. Community/wp.org packs must never rename the menu. See #5267.
+ 
             $secondaryPageTitle    = "Staging Sites";
         }
 
-        // Main WP Staging Menu
+ 
         add_menu_page(
             "WP STAGING",
             esc_html("WP Staging " . $proSlug),
@@ -290,10 +290,10 @@ class Administrator
             $pos
         );
 
-        // Clone page normally but backup page on WordPress.com
+ 
         add_submenu_page(
             $defaultPageSlug,
-            // Brand term in the browser tab title — intentionally NOT translatable. See #5267.
+ 
             "WP Staging - Staging",
             $defaultPageTitle,
             "manage_options",
@@ -301,10 +301,10 @@ class Administrator
             [$this, $defaultPageCallback]
         );
 
-        // Backup page normally but clone page on WordPress.com
+ 
         add_submenu_page(
             $defaultPageSlug,
-            // Brand term in the browser tab title — intentionally NOT translatable; wp.org de pack wrongly renders "Sicherung". See #5267.
+ 
             "WP Staging - Backup &amp; Migration",
             $secondaryPageTitle,
             "manage_options",
@@ -312,8 +312,8 @@ class Administrator
             [$this, $secondaryPageCallback]
         );
 
-        // Eligible plans open the "Sync from Remote Site" modal; everyone else
-        // (Free, invalid/expired/other plans) gets a Pro upsell to the docs.
+ 
+ 
         $canUseRemoteSync = defined('WPSTGPRO_VERSION')
             && WPStaging::make(Licensing::class)->isActiveAgencyOrDeveloperPlan();
 
@@ -327,8 +327,8 @@ class Administrator
                 [$this, "getBackupPage"]
             );
 
-            // The Remote Sync slug resolves to wpstg_backup, so WordPress marks both
-            // items current. Force only Remote Sync to highlight when its param is present.
+ 
+ 
             add_filter('submenu_file', function ($submenuFile) {
                 if (!isset($_GET['page']) || $_GET['page'] !== 'wpstg_backup') {
                     return $submenuFile;
@@ -341,8 +341,8 @@ class Administrator
                 return $submenuFile;
             });
         } else {
-            // add_submenu_page() mangles external URLs via plugin_basename(); push the docs
-            // link onto $submenu directly, where a "://" slug is used as the href verbatim.
+ 
+ 
             global $submenu;
             $remoteSyncDocsUrl = esc_url(Language::localizeDocsUrl('https://wp-staging.com/docs/pull-a-wordpress-site-from-one-server-to-another/'));
             $remoteSyncLabel   = esc_html__("Remote Sync", "wp-staging")
@@ -353,7 +353,7 @@ class Administrator
             add_action('admin_footer', [$this, 'printRemoteSyncMenuBadgeScript']);
         }
 
-        // Page: Temporary Logins
+ 
         add_submenu_page(
             $defaultPageSlug,
             esc_html__("WP Staging - Temporary Logins", "wp-staging"),
@@ -363,7 +363,7 @@ class Administrator
             [$this, "getTempLoginsPage"]
         );
 
-        // Page: Settings
+ 
         add_submenu_page(
             $defaultPageSlug,
             esc_html__("WP Staging - Settings", "wp-staging"),
@@ -373,7 +373,7 @@ class Administrator
             [$this, "getSettingsPage"]
         );
 
-        // Page: Tools
+ 
         add_submenu_page(
             $defaultPageSlug,
             esc_html__("WP Staging - System Info", "wp-staging"),
@@ -384,7 +384,7 @@ class Administrator
         );
 
         if (!defined('WPSTGPRO_VERSION')) {
-            // Page: Tools
+ 
             add_submenu_page(
                 $defaultPageSlug,
                 esc_html__("WP Staging - Welcome", "wp-staging"),
@@ -396,7 +396,7 @@ class Administrator
         }
 
         if (defined('WPSTGPRO_VERSION')) {
-                // Page: wpstg-restorer
+ 
                 add_submenu_page(
                     $defaultPageSlug,
                     esc_html__("WP Staging - Restore", "wp-staging"),
@@ -406,12 +406,12 @@ class Administrator
                     [$this, "getRestorerPage"]
                 );
 
-                // Remove wpstg-restorer side menu
+ 
                 add_filter('submenu_file', function ($submenu_file) use ($defaultPageSlug) {
                     remove_submenu_page($defaultPageSlug, 'wpstg-restorer');
                 });
 
-            // Page: License
+ 
             add_submenu_page(
                 $defaultPageSlug,
                 esc_html__("WP Staging - Licence", "wp-staging"),
@@ -423,12 +423,12 @@ class Administrator
         }
     }
 
-    /**
-     * Style the Remote Sync upsell "Pro" badge. Inlined because the submenu shows on
-     * every admin page, where no shared Free+Pro stylesheet is loaded.
-     *
-     * @return void
-     */
+
+
+
+
+
+
     public function printRemoteSyncMenuBadgeStyle()
     {
         echo '<style>
@@ -447,12 +447,12 @@ class Administrator
         </style>';
     }
 
-    /**
-     * Open the Remote Sync upsell docs link in a new tab — $submenu cannot set a link
-     * target, so it is applied client-side to the badge's anchor.
-     *
-     * @return void
-     */
+
+
+
+
+
+
     public function printRemoteSyncMenuBadgeScript()
     {
         echo '<script>
@@ -466,31 +466,31 @@ class Administrator
         </script>';
     }
 
-    /**
-     * Settings Page
-     */
+
+
+
     public function getSettingsPage()
     {
 
         $license = get_option('wpstg_license_status');
 
-        // Tabs
+ 
         $tabs = new Tabs(Hooks::applyFilters(self::FILTER_MAIN_SETTING_TABS, [
             "general" => __("General", "wp-staging"),
         ]));
 
         WPStaging::getInstance()
-            // Set tabs
+ 
             ->set("tabs", $tabs)
-            // Forms
+ 
             ->set("forms", new FormSettings($tabs));
 
         require_once "{$this->viewsPath}settings/main-settings.php";
     }
 
-    /**
-     * Clone Page
-     */
+
+
+
     public function getClonePage()
     {
 
@@ -503,14 +503,14 @@ class Administrator
         require_once "{$this->viewsPath}clone/index.php";
     }
 
-    /**
-     * Backup & Migration Page
-     */
+
+
+
     public function getBackupPage()
     {
         $license = get_option('wpstg_license_status');
 
-        // Existing clones
+ 
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         $isBackupPage  = true;
@@ -518,9 +518,9 @@ class Administrator
         require_once "{$this->viewsPath}clone/index.php";
     }
 
-    /**
-     * Welcome Page
-     */
+
+
+
     public function getWelcomePage()
     {
         if (defined('WPSTGPRO_VERSION')) {
@@ -530,12 +530,12 @@ class Administrator
         require_once "{$this->viewsPath}welcome/welcome.php";
     }
 
-    /**
-     * Tools Page
-     */
+
+
+
     public function getToolsPage()
     {
-        // Tabs
+ 
         $tabs = new Tabs([
             "system-info" => __("System Info", "wp-staging"),
         ]);
@@ -544,30 +544,30 @@ class Administrator
 
         WPStaging::getInstance()->set("systemInfo", new SystemInfo());
 
-        // Get license data
+ 
         $license = get_option('wpstg_license_status');
 
         require_once "{$this->viewsPath}tools/index.php";
     }
 
-    /**
-     * WP Staging Restore Page
-     * @todo Move this to Pro namespace
-     */
+
+
+
+
     public function getRestorerPage()
     {
-        // Get license data
+ 
         $license = get_option('wpstg_license_status');
 
         require_once "{$this->viewsPath}pro/wpstg-restorer-ui.php";
     }
 
-    /**
-     * Download wpstg-restore.php file.
-     * @see dev/docs/wpstg-restore/README.md
-     * @return void
-     * @todo Move this to Pro namespace
-     */
+
+
+
+
+
+
     public function downloadWpstgRestoreFile()
     {
         if (!defined('WPSTGPRO_VERSION') || !class_exists('WPStaging\Backend\Pro\WpstgRestoreDownloader', false)) {
@@ -578,10 +578,10 @@ class Administrator
         $WpstgRestore->downloadFile();
     }
 
-    /**
-     * Download System Information and latest log files.
-     * @return void
-     */
+
+
+
+
     public function downloadSystemInfoAndLogFiles()
     {
         if (!current_user_can("update_plugins")) {
@@ -621,12 +621,12 @@ class Administrator
         exit();
     }
 
-    /**
-     * Render a view file
-     * @param string $file
-     * @param array $vars
-     * @return string
-     */
+
+
+
+
+
+
     public function render($file, $vars = [])
     {
         $fullPath = $this->viewsPath . $file . ".php";
@@ -638,7 +638,7 @@ class Administrator
 
         $contents = @file_get_contents($fullPath);
 
-        // Variables are set
+ 
         if (count($vars) > 0) {
             $vars = array_combine(
                 array_map(function ($key) {
@@ -653,17 +653,17 @@ class Administrator
         return $contents;
     }
 
-    /**
-     * @return bool Whether the current request is considered to be authenticated.
-     */
+
+
+
     private function isAuthenticated($nonce = Nonce::WPSTG_NONCE)
     {
         return $this->auth->isAuthenticatedRequest($nonce);
     }
 
-    /**
-     * Restart cloning process
-     */
+
+
+
     public function ajaxRestart()
     {
         if (!$this->isAuthenticated()) {
@@ -674,18 +674,18 @@ class Administrator
         $process->restart();
     }
 
-    /**
-     * Ajax Scan
-     * @action wp_ajax_wpstg_scanning 10 0
-     * @see Administrator::defineHooks()
-     */
+
+
+
+
+
     public function ajaxCloneScan()
     {
         if (!$this->isAuthenticated()) {
             return;
         }
 
-        // Check first if there is already a process running
+ 
         $processLock = WPStaging::make(ProcessLock::class);
         $response    = $processLock->ajaxIsRunning();
         if ($response !== false) {
@@ -698,13 +698,13 @@ class Administrator
 
         $db = WPStaging::make('wpdb');
 
-        // Scan
+ 
         $scan = WPStaging::make(Scan::class);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
         $scan->setInfoIcon($this->assets->getAssetsUrl('svg/info-outline.svg'));
         $scan->start();
 
-        // Get Options
+ 
         $options              = $scan->getOptions();
         $excludeUtils         = WPStaging::make(ExcludeFilter::class);
         $wpDefaultDirectories = WPStaging::make(WpDefaultDirectories::class);
@@ -719,9 +719,9 @@ class Administrator
         wp_die();
     }
 
-    /**
-     * Fetch children of the given directory
-     */
+
+
+
     public function ajaxFetchDirChildren()
     {
         if (!$this->isAuthenticated()) {
@@ -740,7 +740,7 @@ class Administrator
 
         $path = trailingslashit($basePath) . $path;
 
-        // Prevent path traversal outside the base path
+ 
         $resolvedPath = realpath($path);
         $resolvedBase = realpath($basePath);
         if ($resolvedPath === false || $resolvedBase === false) {
@@ -748,7 +748,7 @@ class Administrator
             return;
         }
 
-        // Use trailing slash to enforce directory boundary (prevents matching sibling dirs like wp-content-old)
+ 
         if ($resolvedPath !== $resolvedBase && strpos(trailingslashit($resolvedPath), trailingslashit($resolvedBase)) !== 0) {
             wp_send_json(['success' => false]);
             return;
@@ -766,16 +766,16 @@ class Administrator
         ]);
     }
 
-    /**
-     * Ajax Check Clone Name
-     */
+
+
+
     public function ajaxCheckCloneDirectoryName()
     {
         if (!$this->isAuthenticated()) {
             return;
         }
 
-        /** @var Sites $sitesHelper */
+ 
         $sitesHelper        = WPStaging::make(Sites::class);
         $cloneDirectoryName = isset($_POST["directoryName"]) ? $sitesHelper->sanitizeDirectoryName($_POST["directoryName"]) : '';
 
@@ -795,9 +795,9 @@ class Administrator
         ]);
     }
 
-    /**
-     * Ajax Start Updating Clone (Basically just layout and saving data)
-     */
+
+
+
     public function ajaxUpdateProcess()
     {
         if (!$this->isAuthenticated()) {
@@ -818,9 +818,9 @@ class Administrator
         wp_die();
     }
 
-    /**
-     * Ajax Start Resetting Clone
-     */
+
+
+
     public function ajaxResetProcess()
     {
         if (!$this->isAuthenticated()) {
@@ -840,16 +840,16 @@ class Administrator
         wp_die();
     }
 
-    /**
-     * Ajax Start Clone (Basically just layout and saving data)
-     */
+
+
+
     public function ajaxStartClone()
     {
         if (!$this->isAuthenticated()) {
             return;
         }
 
-        // Check first if there is already a process running
+ 
         $processLock = WPStaging::make(ProcessLock::class);
         $processLock->isRunning();
 
@@ -870,9 +870,9 @@ class Administrator
         wp_die();
     }
 
-    /**
-     * Ajax Clone Database
-     */
+
+
+
     public function ajaxCloneDatabase()
     {
         if (!$this->isAuthenticated()) {
@@ -883,9 +883,9 @@ class Administrator
         wp_send_json($cloning->start());
     }
 
-    /**
-     * Ajax Prepare Directories (get listing of files)
-     */
+
+
+
     public function ajaxPrepareDirectories()
     {
         if (!$this->isAuthenticated()) {
@@ -896,9 +896,9 @@ class Administrator
         wp_send_json($cloning->start());
     }
 
-    /**
-     * Ajax Clone Files
-     */
+
+
+
     public function ajaxCopyFiles()
     {
         if (!$this->isAuthenticated()) {
@@ -909,9 +909,9 @@ class Administrator
         wp_send_json($cloning->start());
     }
 
-    /**
-     * Ajax Replace Data
-     */
+
+
+
     public function ajaxReplaceData()
     {
         if (!$this->isAuthenticated()) {
@@ -922,9 +922,9 @@ class Administrator
         wp_send_json($cloning->start());
     }
 
-    /**
-     * Ajax Finish
-     */
+
+
+
     public function ajaxFinish()
     {
         if (!$this->isAuthenticated()) {
@@ -935,9 +935,9 @@ class Administrator
         wp_send_json($cloning->start());
     }
 
-    /**
-     * Cancel clone
-     */
+
+
+
     public function ajaxCancelClone()
     {
         if (!$this->isAuthenticated()) {
@@ -948,9 +948,9 @@ class Administrator
         wp_send_json($cancel->start());
     }
 
-    /**
-     * Cancel updating process / Do not delete clone!
-     */
+
+
+
     public function ajaxCancelUpdate()
     {
         if (!$this->isAuthenticated()) {
@@ -961,11 +961,11 @@ class Administrator
         wp_send_json($cancelUpdate->start());
     }
 
-    /**
-     * Ajax Hide Rating
-     *
-     * Runs when the user dismisses the notice to rate the plugin.
-     */
+
+
+
+
+
     public function ajaxHideRating()
     {
         if (!$this->isAuthenticated()) {
@@ -979,16 +979,16 @@ class Administrator
         wp_send_json(null);
     }
 
-    /**
-     * Ajax Hide Rating and snooze it with a progressive interval.
-     *
-     * Runs when the user chooses "Maybe Later" on the review prompt. Each
-     * deferral pushes the next prompt further out so we ask less often the
-     * longer the user keeps postponing: 1st -> 14 days, 2nd -> 30 days,
-     * 3rd and beyond -> 180 days. The snooze counter is shared by every review
-     * surface (staging listing strip and backup/clone success modal) via the
-     * single wpstg_rating option, so deferring once defers everywhere.
-     */
+
+
+
+
+
+
+
+
+
+
     public function ajaxHideLaterRating()
     {
         if (!$this->isAuthenticated()) {
@@ -1013,9 +1013,9 @@ class Administrator
         wp_send_json(false);
     }
 
-    /**
-     * Ajax Hide Beta
-     */
+
+
+
     public function ajaxHideBeta()
     {
         if (!$this->isAuthenticated()) {
@@ -1025,29 +1025,29 @@ class Administrator
         wp_send_json(update_option("wpstg_beta", "no"));
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxDismissNotice()
     {
         if (!$this->isAuthenticated()) {
             return;
         }
 
-        // Early bail if no notice option available
+ 
         if (!isset($_POST['wpstg_notice'])) {
             wp_send_json(null);
             return;
         }
 
-        /** @var DismissNotice */
+ 
         $dismissNotice = WPStaging::make(DismissNotice::class);
         $dismissNotice->dismiss($this->sanitize->sanitizeString($_POST['wpstg_notice']));
     }
 
-    /**
-     * Clone logs
-     */
+
+
+
     public function ajaxLogs()
     {
         if (!$this->isAuthenticated()) {
@@ -1058,12 +1058,12 @@ class Administrator
         wp_send_json($logs->start());
     }
 
-    /**
-     * Ajax Start Push Changes Process
-     * Start with the module Scan
-     * @action wp_ajax_wpstg_scans 10 0
-     * @see Administrator::defineHooks()
-     */
+
+
+
+
+
+
     public function ajaxPushScan()
     {
         if (!$this->isAuthenticated()) {
@@ -1074,15 +1074,15 @@ class Administrator
             return false;
         }
 
-        // Scan
+ 
         $scan = WPStaging::make(ScanProModule::class);
 
         $scan->start();
 
-        // Get Options
+ 
         $options = $scan->getOptions();
 
-        // Get Framework\Utils\Math
+ 
         $utilsMath = WPStaging::make(Math::class);
 
         require_once "{$this->viewsPath}pro/scan.php";
@@ -1090,9 +1090,9 @@ class Administrator
         wp_die();
     }
 
-    /**
-     * Fetch all tables for push process
-     */
+
+
+
     public function ajaxPushTables()
     {
         if (!$this->isAuthenticated()) {
@@ -1103,7 +1103,7 @@ class Administrator
             return false;
         }
 
-        // Scan
+ 
         $scan = WPStaging::make(ScanProModule::class);
         $scan->loadStagingDBTables($onlyLoadStagingPrefixTables = false);
         $scan->start();
@@ -1131,9 +1131,9 @@ class Administrator
         exit();
     }
 
-    /**
-     * Ajax Start Pushing. Needs WP Staging Pro
-     */
+
+
+
     public function ajaxPushProcessing()
     {
         if (!$this->isAuthenticated()) {
@@ -1144,7 +1144,7 @@ class Administrator
             return false;
         }
 
-        // Start the process
+ 
         try {
             $response = WPStaging::make(Processing::class)->start();
         } catch (ProcessLockedException $e) {
@@ -1158,12 +1158,12 @@ class Administrator
         return false;
     }
 
-    /**
-     * License Page
-     */
+
+
+
     public function getLicensePage()
     {
-        // Get license data
+ 
         $license = get_option('wpstg_license_status');
 
         $licensing                = WPStaging::make(Licensing::class);
@@ -1176,9 +1176,9 @@ class Administrator
         require_once "{$this->viewsPath}pro/licensing.php";
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function getTempLoginsPage()
     {
         Hooks::applyFilters(Administrator::FILTER_MAIN_SETTING_TABS, [
@@ -1186,52 +1186,52 @@ class Administrator
         ]);
     }
 
-    /**
-     * Send mail via ajax
-     * @param array $args
-     */
+
+
+
+
     public function ajaxSendReport($args = [])
     {
         if (!$this->isAuthenticated()) {
             return;
         }
 
-        // Set params
+ 
         if (empty($args)) {
             $args = stripslashes_deep($_POST);
         }
 
-        // Set e-mail
+ 
         $emailRecipient = '';
         if (isset($args['wpstg_email'])) {
             $emailRecipient = $this->sanitize->sanitizeEmail($args['wpstg_email']);
         }
 
-        // Set hosting provider
+ 
         $providerName = '';
         if (!empty($args['wpstg_provider'])) {
             $providerName = $this->sanitize->sanitizeString($args['wpstg_provider']);
         }
 
-        // Set message
+ 
         $messageBody = '';
         if (!empty($args['wpstg_message'])) {
             $messageBody = $this->sanitize->sanitizeString($args['wpstg_message']);
         }
 
-        // Set syslog
+ 
         $sendLogFiles = false;
         if (isset($args['wpstg_syslog'])) {
             $sendLogFiles = $this->sanitize->sanitizeBool($args['wpstg_syslog']);
         }
 
-        // Set terms
+ 
         $termsAccepted = false;
         if (isset($args['wpstg_terms'])) {
             $termsAccepted = $this->sanitize->sanitizeBool($args['wpstg_terms']);
         }
 
-        // Set forceSend
+ 
         $forceSend = isset($_POST['wpstg_force_send']) && $this->sanitize->sanitizeBool($_POST['wpstg_force_send']);
 
         $report = WPStaging::make(Report::class);
@@ -1241,11 +1241,11 @@ class Administrator
         exit;
     }
 
-    /**
-     * Action to perform when error modal confirm button is clicked
-     *
-     * @todo use constants instead of hardcoded strings for error types
-     */
+
+
+
+
+
     public function ajaxModalError()
     {
         if (!$this->isAuthenticated()) {
@@ -1261,9 +1261,9 @@ class Administrator
         }
     }
 
-    /**
-     * Render tables and files selection for RESET function
-     */
+
+
+
     public function ajaxCloneExcludesSettings()
     {
         if (!$this->isAuthenticated()) {
@@ -1280,7 +1280,7 @@ class Administrator
 
         $templateEngine = WPStaging::make(TemplateEngine::class);
 
-        // Scan
+ 
         $scan = WPStaging::make(Scan::class);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
         $scan->start();
@@ -1297,9 +1297,9 @@ class Administrator
         exit();
     }
 
-    /**
-     * Enable cloning on staging site if it is not enabled already
-     */
+
+
+
     public function ajaxEnableStagingCloning()
     {
         if (!$this->isAuthenticated()) {
@@ -1315,34 +1315,31 @@ class Administrator
         exit();
     }
 
-    /**
-     * Restore Settings, can be used when settings are corrupted
-     */
+
+
+
     public function ajaxRestoreSettings()
     {
         if (!$this->isAuthenticated()) {
             return;
         }
 
-        // Delete old settings
-        delete_option('wpstg_settings');
-        $settings = WPStaging::make(Settings::class);
-        $settings->setDefault();
+        WPStaging::make(SettingsService::class)->restoreDefaults();
     }
 
-    /**
-     * Remove uploads backup
-     */
+
+
+
     public function removeOldUploadsBackup()
     {
         $backup = new BackupUploadsDir(null);
         $backup->removeUploadsBackup();
     }
 
-    /**
-     * Check if Plugin is Pro version
-     * @return bool
-     */
+
+
+
+
     protected function isPro()
     {
         if (!defined("WPSTGPRO_VERSION")) {
@@ -1352,19 +1349,19 @@ class Administrator
         return true;
     }
 
-    /**
-     * @return Cloning
-     */
+
+
+
     private function getCloningJob(): Cloning
     {
         return WPStaging::make(CloningJobProvider::class)->getCloningJob();
     }
 
-    /**
-     * Check if current page is plugins.php
-     * @global array $pagenow
-     * @return bool
-     */
+
+
+
+
+
     private function isPluginsPage()
     {
         global $pagenow;

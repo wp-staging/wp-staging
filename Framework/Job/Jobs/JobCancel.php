@@ -12,12 +12,12 @@ use WPStaging\Framework\Job\Task\Tasks\FinishCancelTask;
 
 class JobCancel extends AbstractJob
 {
-    /** @var array The array of tasks to execute for this job. Populated at init(). */
+ 
     protected $tasks = [];
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $isCancelJob = true;
 
     public static function getJobName()

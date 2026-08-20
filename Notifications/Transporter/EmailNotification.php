@@ -9,55 +9,55 @@ use function WPStaging\functions\debug_log;
 
 class EmailNotification implements NotificationsInterface
 {
-    /**
-     * @var string
-     */
+
+
+
     private $sender = '';
 
-    /**
-     * @var string
-     */
+
+
+
     private $recipient = '';
 
-    /**
-     * @var string
-     */
+
+
+
     private $subject = '';
 
-    /**
-     * @var array
-     */
+
+
+
     private $attachments = [];
 
-    /**
-     * @var array
-     */
+
+
+
     private $headers = [];
 
-    /**
-     * @var bool
-     */
+
+
+
     private $isUseHtml = false;
 
-    /**
-     * @var bool
-     */
+
+
+
     private $isAddFooterMessage = true;
 
-    /**
-     * @param string $subject
-     * @return self
-     */
+
+
+
+
     public function setSubject(string $subject)
     {
         $this->subject = $subject;
         return $this;
     }
 
-    /**
-     * @param string $sender
-     * @return self
-     */
+
+
+
+
     public function setSender(string $sender)
     {
         if (empty($sender)) {
@@ -76,59 +76,59 @@ class EmailNotification implements NotificationsInterface
         return $this;
     }
 
-    /**
-     * @param string $recipient
-     * @return self
-     */
+
+
+
+
     public function setRecipient(string $recipient)
     {
         $this->recipient = $recipient;
         return $this;
     }
 
-    /**
-     * @param array $attachments
-     * @return self
-     */
+
+
+
+
     public function setAttachment(array $attachments)
     {
         $this->attachments = $attachments;
         return $this;
     }
 
-    /**
-     * @param array $headers
-     * @return self
-     */
+
+
+
+
     public function setHeaders(array $headers)
     {
         $this->headers = $headers;
         return $this;
     }
 
-    /**
-     * @param bool $isUseHtml
-     * @return self
-     */
+
+
+
+
     public function setUseHtml(bool $isUseHtml = false)
     {
         $this->isUseHtml = $isUseHtml;
         return $this;
     }
 
-    /**
-     * @param bool $isAddFooterMessage
-     * @return self
-     */
+
+
+
+
     public function setIsAddFooterMessage(bool $isAddFooterMessage = false)
     {
         $this->isAddFooterMessage = $isAddFooterMessage;
         return $this;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function reset()
     {
         $this->sender             = '';
@@ -139,10 +139,10 @@ class EmailNotification implements NotificationsInterface
         $this->isAddFooterMessage = true;
     }
 
-    /**
-     * @param string $message
-     * @return string
-     */
+
+
+
+
     private function addFooterMessage(string $message): string
     {
         if (empty($message) || !$this->isAddFooterMessage) {
@@ -168,10 +168,10 @@ class EmailNotification implements NotificationsInterface
         return $message;
     }
 
-    /**
-     * @param string $message
-     * @return bool
-     */
+
+
+
+
     public function send(string $message): bool
     {
         if (empty($message)) {
@@ -205,11 +205,11 @@ class EmailNotification implements NotificationsInterface
         return wp_mail($this->recipient, $this->subject, $message, $headers, $this->attachments);
     }
 
-    /**
-     * Clean HTML entities and tags from message while preserving line breaks
-     * @param string $message
-     * @return string
-     */
+
+
+
+
+
     private function cleanHtmlEntitiesAndTags(string $message): string
     {
         $message = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');

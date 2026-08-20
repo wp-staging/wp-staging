@@ -4,31 +4,31 @@ namespace WPStaging\Backup\Dto\File;
 
 class ExtractorDto
 {
-    /** @var int */
+ 
     protected $indexStartOffset;
 
-    /** @var int */
+ 
     protected $currentIndexOffset;
 
-    /** @var int */
+ 
     protected $totalFilesExtracted;
 
-    /** @var int */
+ 
     protected $totalFilesSkipped;
 
-    /** @var int */
+ 
     protected $totalChunks;
 
-    /** @var int */
+ 
     protected $extractorFileWrittenBytes;
 
-    /** @var int */
+ 
     protected $extractorFileReadBytes;
 
-    /** @var int */
+ 
     protected $headerBytesRemoved;
 
-    /** @var int */
+ 
     protected $extractorFileBaseBytes;
 
     public function __construct()
@@ -49,10 +49,10 @@ class ExtractorDto
         return $this->indexStartOffset;
     }
 
-    /**
-     * @param int $indexStartOffset
-     * @return void
-     */
+
+
+
+
     public function setIndexStartOffset(int $indexStartOffset)
     {
         $this->indexStartOffset = $indexStartOffset;
@@ -63,10 +63,10 @@ class ExtractorDto
         return $this->currentIndexOffset;
     }
 
-    /**
-     * @param int $currentOffset
-     * @return void
-     */
+
+
+
+
     public function setCurrentIndexOffset(int $currentOffset)
     {
         $this->currentIndexOffset = $currentOffset;
@@ -77,10 +77,10 @@ class ExtractorDto
         return $this->totalFilesExtracted;
     }
 
-    /**
-     * @param int $filesExtracted
-     * @return void
-     */
+
+
+
+
     public function setTotalFilesExtracted(int $filesExtracted)
     {
         $this->totalFilesExtracted = $filesExtracted;
@@ -91,10 +91,10 @@ class ExtractorDto
         return $this->totalFilesSkipped;
     }
 
-    /**
-     * @param int $filesSkipped
-     * @return void
-     */
+
+
+
+
     public function setTotalFilesSkipped(int $filesSkipped)
     {
         $this->totalFilesSkipped = $filesSkipped;
@@ -105,10 +105,10 @@ class ExtractorDto
         return $this->totalChunks;
     }
 
-    /**
-     * @param int $totalChunks
-     * @return void
-     */
+
+
+
+
     public function setTotalChunks(int $totalChunks)
     {
         $this->totalChunks = $totalChunks;
@@ -119,10 +119,10 @@ class ExtractorDto
         return $this->extractorFileWrittenBytes;
     }
 
-    /**
-     * @param int $extractorFileWrittenBytes
-     * @return void
-     */
+
+
+
+
     public function setExtractorFileWrittenBytes(int $extractorFileWrittenBytes)
     {
         $this->extractorFileWrittenBytes = $extractorFileWrittenBytes;
@@ -133,10 +133,10 @@ class ExtractorDto
         return $this->extractorFileReadBytes;
     }
 
-    /**
-     * @param int $extractorFileReadBytes
-     * @return void
-     */
+
+
+
+
     public function setExtractorFileReadBytes(int $extractorFileReadBytes)
     {
         $this->extractorFileReadBytes = $extractorFileReadBytes;
@@ -147,10 +147,10 @@ class ExtractorDto
         return $this->headerBytesRemoved;
     }
 
-    /**
-     * @param int $headerBytesRemoved
-     * @return void
-     */
+
+
+
+
     public function setHeaderBytesRemoved(int $headerBytesRemoved)
     {
         $this->headerBytesRemoved = $headerBytesRemoved;
@@ -161,26 +161,26 @@ class ExtractorDto
         return $this->extractorFileBaseBytes;
     }
 
-    /**
-     * @param int $extractorFileBaseBytes
-     * @return void
-     */
+
+
+
+
     public function setExtractorFileBaseBytes(int $extractorFileBaseBytes)
     {
         $this->extractorFileBaseBytes = $extractorFileBaseBytes;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function incrementTotalFilesExtracted()
     {
         $this->totalFilesExtracted++;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function incrementTotalFilesSkipped()
     {
         $this->totalFilesSkipped++;

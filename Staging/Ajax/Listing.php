@@ -13,10 +13,10 @@ use WPStaging\Staging\Sites;
 
 class Listing extends AbstractTemplateComponent
 {
-    /** @var SiteInfo */
+ 
     private $siteInfo;
 
-    /** @var Assets */
+ 
     private $assets;
 
     public function __construct(TemplateEngine $templateEngine, SiteInfo $siteInfo, Assets $assets)
@@ -26,16 +26,16 @@ class Listing extends AbstractTemplateComponent
         $this->assets   = $assets;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxListing()
     {
         if (!$this->canRenderAjax()) {
             return;
         }
 
-        // Early bailing: for multiple reasons
+ 
         if ($this->siteInfo->isHostedOnWordPressCom()) {
             wp_send_json_error(esc_html__('Staging site feature not supported on sites hosted on Wordpress.com!', 'wp-staging'));
         } elseif (!WPStaging::isPro() && is_multisite()) {
@@ -69,7 +69,7 @@ class Listing extends AbstractTemplateComponent
                 'license'      => get_option('wpstg_license_status'),
                 'iconPath'     => $this->assets->getAssetsUrl('svg/cloud.svg'),
                 'error'        => $error,
-                // TODO: check if required?
+ 
                 'db'           => WPStaging::make('wpdb'),
             ]
         );

@@ -8,8 +8,8 @@
  * @var bool   $isProLicenseActive
  */
 
-// Create default: Pro opens safe (Disabled/green); Free is Pro-locked and runs
-// (Enabled/amber + lock). An unlicensed Pro install is treated as locked too.
+ 
+ 
 $isPro      = $isProLicenseActive;
 $enabled    = !$isPro;
 $stateClass = $enabled ? 'wpstg-create-summary-enabled' : 'wpstg-create-summary-disabled';

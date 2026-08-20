@@ -17,20 +17,20 @@ class CleanupValidationFilesTask extends BackupTask
 {
     use RenameTmpDirectoryTrait;
 
-    /** @var Filesystem */
+ 
     private $filesystem;
 
-    /** @var Directory */
+ 
     private $directory;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param Filesystem $filesystem
-     * @param Directory $directory
-     * @param SeekableQueueInterface $taskQueue
-     */
+
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, Filesystem $filesystem, Directory $directory, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -38,25 +38,25 @@ class CleanupValidationFilesTask extends BackupTask
         $this->directory  = $directory;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'backup_cleanup_validation_files';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Cleaning Validation Files';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $validationDir = $this->directory->getTmpDirectory();
@@ -65,7 +65,7 @@ class CleanupValidationFilesTask extends BackupTask
 
         $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($validationDir, true));
 
-        // Early bail: Path to Clean does not exist
+ 
         if (!file_exists($validationDir)) {
             return $this->generateResponse();
         }
@@ -94,7 +94,7 @@ class CleanupValidationFilesTask extends BackupTask
         }
 
         if ($deleted) {
-            // Successfully deleted
+ 
             $this->logger->info(sprintf(
                 '%s: Path "%s" successfully cleaned up.',
                 static::getTaskTitle(),
@@ -103,12 +103,12 @@ class CleanupValidationFilesTask extends BackupTask
 
             return $this->generateResponse();
         } else {
-            /**
-             * Not successfully deleted.
-             * This can happen if the folder to delete is too large
-             * to be deleted in a single request. We continue
-             * deleting it in the next request...
-             */
+
+
+
+
+
+
             $response = $this->generateResponse(false);
             $response->setIsRunning(true);
 
@@ -118,17 +118,17 @@ class CleanupValidationFilesTask extends BackupTask
                 $relativePathForLogging
             ));
 
-            // Early bail: Response modified for repeating
+ 
             return $response;
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function prepareCleanupValidationTask()
     {
-        // Early bail: Already prepared
+ 
         if ($this->stepsDto->getTotal() === 1) {
             return;
         }

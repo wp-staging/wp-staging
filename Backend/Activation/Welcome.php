@@ -2,13 +2,12 @@
 
 namespace WPStaging\Backend\Activation;
 
-// No Direct Access
+ 
 if (!defined("WPINC")) {
     die;
 }
 
 use WPStaging\Framework\Analytics\Actions\AnalyticsGenericEvent;
-use WPStaging\Framework\Experiments\ExperimentsRegistry;
 use WPStaging\Framework\Onboarding\FreeOnboarding;
 use WPStaging\Framework\Traits\NoticesTrait;
 use WPStaging\Framework\Facades\Escape;
@@ -18,22 +17,22 @@ class Welcome
 {
     use NoticesTrait;
 
-    /**
-     * Marks the welcome page as the one the activation redirect sent the user to.
-     *
-     * The sidebar's "Get WP Staging Pro" opens this same page, so without it the
-     * page cannot tell an upgrade the user went looking for from one the plugin
-     * put in front of them, and both would be attributed as the same click.
-     */
+
+
+
+
+
+
+
     const QUERY_FROM_ACTIVATION = 'wpstg-activation';
 
-    /** utm_content for the buy button on a welcome page reached by activation. */
+ 
     const UTM_CONTENT_ACTIVATION = 'welcome_page_activation';
 
-    /** utm_content for the buy button on a welcome page the user asked for. */
+ 
     const UTM_CONTENT_SIDEBAR = 'sidebar_upgrade';
 
-    /** @see dev/docs/analytics/generic-events.md */
+ 
     const EVENT_ACTIVATION_REDIRECT = 'activation_redirect';
 
     public function __construct()
@@ -46,10 +45,10 @@ class Welcome
         }
     }
 
-    /**
-     * @return void
-     * @todo make this message permanently hideable when dismissed.
-     */
+
+
+
+
     public function wpstgproActivationNotice()
     {
         if ($this->isFirstRunAwaitingConsent()) {
@@ -105,13 +104,13 @@ class Welcome
         <?php
     }
 
-    /**
-     * The neutral first-run shell asks for exactly one decision, and its notice
-     * dispatcher cannot be silenced wholesale because the consent modal renders
-     * through it. So this notice stands down on its own instead.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
     private function isFirstRunAwaitingConsent(): bool
     {
         $onboarding = FreeOnboarding::resolve();
@@ -119,9 +118,9 @@ class Welcome
         return $onboarding !== null && $onboarding->isPreConsentScreen();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxActivatePro()
     {
         if (!check_ajax_referer('wpstg_activate_pro', 'nonce', false)) {
@@ -145,30 +144,30 @@ class Welcome
         wp_send_json_success();
     }
 
-    /**
-     * Sends user to the welcome page on first activation of WPSTG as well as each
-     * time WPSTG is upgraded to a new version
-     *
-     * @access public
-     * @return void
-     * @since 1.0.1
-     */
+
+
+
+
+
+
+
+
     public function welcome()
     {
-        // Bail if pro is installed
+ 
         if (wpstgGetProVersionNumberIfInstalled()) {
             return;
         }
 
-        // Bail if no activation redirect
+ 
         if (get_transient('wpstg_activation_redirect') === false) {
             return;
         }
 
-        // Delete the redirect transient
+ 
         delete_transient('wpstg_activation_redirect');
 
-        // Bail if activating from network, or bulk
+ 
         if (is_network_admin() || isset($_GET['activate-multi'])) {
             return;
         }
@@ -177,36 +176,29 @@ class Welcome
         exit;
     }
 
-    /**
-     * Where a newly activated installation lands.
-     *
-     * The variant is drawn here rather than on the screen that follows, because
-     * which screen follows is what it decides. `control` keeps the welcome page
-     * the funnel is built on; `task_selector` goes straight to WP STAGING, where
-     * the consent question and then the first-run selector take over.
-     *
-     * An installation that is not in the experiment at all — Pro installed, an
-     * upgrade rather than a first install, a user without the capability — draws
-     * no variant and keeps the existing behaviour.
-     */
+
+
+
+
+
+
+
+
     public function getFirstScreenUrl(): string
     {
         $onboarding = FreeOnboarding::resolve();
 
-        return $this->getScreenUrlForVariant($onboarding === null ? '' : $onboarding->getVariant());
+        return $this->getScreenUrl($onboarding !== null && $onboarding->isEligible());
     }
 
-    /**
-     * @param string $variant The drawn variant, or empty for an installation
-     *                        that is not in the experiment.
-     */
-    public function getScreenUrlForVariant(string $variant): string
-    {
-        $isFirstRun = $variant === ExperimentsRegistry::VARIANT_TASK_SELECTOR;
 
-        // The experiment and variant are stamped on every event by the pipeline,
-        // so the payload only has to say where this installation was sent — which
-        // is the thing the variant was drawn to decide.
+
+
+
+
+
+    public function getScreenUrl(bool $isFirstRun): string
+    {
         AnalyticsGenericEvent::logEvent(self::EVENT_ACTIVATION_REDIRECT, FreeOnboarding::ANALYTICS_GROUP, [
             'destination' => $isFirstRun ? 'task_selector' : 'welcome_page',
         ]);
@@ -218,13 +210,13 @@ class Welcome
         return add_query_arg(self::QUERY_FROM_ACTIVATION, '1', admin_url('admin.php?page=wpstg-welcome'));
     }
 
-    /**
-     * @return string The utm_content the buy button should carry, which depends
-     *                on how the user arrived rather than on where they are.
-     */
+
+
+
+
     public static function getUpgradeContext(): string
     {
-        // Read-only routing detail on an admin page the user is already on: it
+ 
         // selects an attribution label and nothing else. phpcs:ignore WordPress.Security.NonceVerification.Recommended
         return isset($_GET[self::QUERY_FROM_ACTIVATION]) ? self::UTM_CONTENT_ACTIVATION : self::UTM_CONTENT_SIDEBAR;
     }

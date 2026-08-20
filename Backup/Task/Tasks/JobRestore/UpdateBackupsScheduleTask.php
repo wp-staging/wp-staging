@@ -13,7 +13,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
 {
     use SerializeTrait;
 
-    /** @var object */
+ 
     protected $wpdb;
 
     public static function getTaskName()
@@ -26,9 +26,9 @@ class UpdateBackupsScheduleTask extends RestoreTask
         return 'Update Backup Schedules';
     }
 
-    /**
-     * @throws Exception
-     */
+
+
+
     public function execute()
     {
         global $wpdb;
@@ -54,16 +54,16 @@ class UpdateBackupsScheduleTask extends RestoreTask
         return $this->generateResponse();
     }
 
-    /**
-     * @param string $tmpOptionsTable
-     * @return bool
-     * @throws Exception
-     */
+
+
+
+
+
     protected function updateWpStagingCronJobs(string $tmpOptionsTable): bool
     {
         $prodOptionsTable = $this->wpdb->prefix . 'options';
 
-        // Cron jobs contained in the production site
+ 
         $productionCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$prodOptionsTable} WHERE option_name = 'cron';");
         $rejected           = false;
         $productionCronJobs = isset($productionCronJobs[0]) ? $this->safeMaybeUnserialize($productionCronJobs[0], [], $rejected) : [];
@@ -73,7 +73,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
             return false;
         }
 
-        // Cron jobs contained in the backup file
+ 
         $backupCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$tmpOptionsTable} WHERE option_name = 'cron';");
         $rejected       = false;
         $backupCronJobs = isset($backupCronJobs[0]) ? $this->safeMaybeUnserialize($backupCronJobs[0], [], $rejected) : [];
@@ -83,13 +83,13 @@ class UpdateBackupsScheduleTask extends RestoreTask
             return false;
         }
 
-        // WP STAGING Cron jobs from production site
+ 
         $wpstgCronJobs = $this->extractWpStagingCrons($productionCronJobs);
 
-        // Clean all WP STAGING cron jobs from the backup file
+ 
         $backupCronJobs = $this->removeWpStagingCronJobs($backupCronJobs);
 
-        // Add all WP STAGING cron jobs from production site to cron jobs of backup file
+ 
         $backupCronJobs = $this->addWpStagingCronJobs($backupCronJobs, $wpstgCronJobs);
         $backupCronJobs = serialize($backupCronJobs);
 
@@ -108,13 +108,13 @@ class UpdateBackupsScheduleTask extends RestoreTask
         return true;
     }
 
-    /**
-     * @param array $cronJobs
-     * @return array
-     */
+
+
+
+
     protected function extractWpStagingCrons($cronJobs)
     {
-        // Bail: Unexpected value - should never happen.
+ 
         if (!is_array($cronJobs)) {
             debug_log('Can not extract WP STAGING cron jobs. Is no array: ' . $cronJobs);
             return [];
@@ -124,7 +124,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
 
         $wpstgCronJobs = [];
 
-        // Extract backup schedules from Cron
+ 
         foreach ($cronJobs as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
@@ -142,13 +142,13 @@ class UpdateBackupsScheduleTask extends RestoreTask
         return $wpstgCronJobs;
     }
 
-    /**
-     * @param array $cronJobs
-     * @return array
-     */
+
+
+
+
     protected function removeWpStagingCronJobs($cronJobs)
     {
-        // Bail: Unexpected value - should never happen.
+ 
         if (!is_array($cronJobs)) {
             debug_log('Can not remove WP STAGING cron jobs. Is no array: ' . $cronJobs);
             return [];
@@ -156,7 +156,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
 
         ksort($cronJobs, SORT_NUMERIC);
 
-        // Remove any WP STAGING backup schedules from Cron
+ 
         foreach ($cronJobs as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
@@ -174,14 +174,14 @@ class UpdateBackupsScheduleTask extends RestoreTask
         return $cronJobs;
     }
 
-    /**
-     * @param array $cronJobs
-     * @param array $wpstgCronJobs
-     * @return array
-     */
+
+
+
+
+
     protected function addWpStagingCronJobs($cronJobs, $wpstgCronJobs)
     {
-        // Bail: Unexpected value - should never happen.
+ 
         if (!is_array($cronJobs)) {
             return [];
         }

@@ -3,35 +3,37 @@
 namespace WPStaging\Framework\Settings;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Security\Auth;
+use WPStaging\Framework\Traits\PagesTrait;
 use WPStaging\Framework\Utils\Sanitize;
 
 class DarkMode
 {
-    /**
-     * @var string
-     */
+    use PagesTrait;
+
+
+
+
     const OPTION_DEFAULT_COLOR_MODE = 'wpstg_default_color_mode';
 
-    /**
-     * @var string
-     */
+
+
+
     const OPTION_DEFAULT_OS_COLOR_MODE = 'wpstg_default_os_color_mode';
 
-    /**
-     * @var Sanitize
-     */
+
+
+
     private $sanitize;
 
-    /**
-     * @var Auth
-     */
+
+
+
     private $auth;
 
-    /**
-     * @var string
-     */
+
+
+
     private $defaultColorMode;
 
     public function __construct()
@@ -41,9 +43,9 @@ class DarkMode
         $this->getDefaultColorMode();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxEnableDefaultColorMode()
     {
         if (!$this->auth->isAuthenticatedRequest('', 'manage_options')) {
@@ -65,9 +67,9 @@ class DarkMode
         wp_send_json_success();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxSetDefaultOsMode()
     {
         if (!$this->auth->isAuthenticatedRequest('', 'manage_options')) {
@@ -86,14 +88,16 @@ class DarkMode
         ]);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function mayBeShowDarkMode()
     {
-        $isDarkModeEnabled = $this->isDarkModeEnabled();
+        if (!$this->isWPStagingAdminPage()) {
+            return;
+        }
 
-        if (!$isDarkModeEnabled) {
+        if (!$this->isDarkModeEnabled()) {
             return;
         }
 
@@ -102,9 +106,9 @@ class DarkMode
         });
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isDarkModeEnabled(): bool
     {
         $defaultColorMode = get_option(self::OPTION_DEFAULT_COLOR_MODE, '');
@@ -125,9 +129,9 @@ class DarkMode
         return true;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getDefaultColorMode()
     {
         $this->defaultColorMode = get_option(self::OPTION_DEFAULT_COLOR_MODE, '');

@@ -6,9 +6,9 @@ use WPStaging\Notifications\Transporter\EmailNotification;
 
 class NotificationsProvider
 {
-    /**
-     * @return array
-     */
+
+
+
     public function getProviders(): array
     {
         return [

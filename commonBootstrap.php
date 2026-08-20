@@ -1,10 +1,10 @@
 <?php
 
 if (!function_exists('wpstgIsAdminActionRequest')) {
-    /**
-     * @param string $requestUri
-     * @return bool
-     */
+
+
+
+
     function wpstgIsAdminActionRequest(string $requestUri): bool
     {
         $requestPath = (string)parse_url($requestUri, PHP_URL_PATH);
@@ -15,10 +15,10 @@ if (!function_exists('wpstgIsAdminActionRequest')) {
 }
 
 if (!function_exists('wpstgIsPluginAction')) {
-    /**
-     * @param string $action
-     * @return bool
-     */
+
+
+
+
     function wpstgIsPluginAction(string $action): bool
     {
         return strpos($action, 'wpstg') === 0 || strpos($action, 'raw_wpstg') === 0;
@@ -26,9 +26,9 @@ if (!function_exists('wpstgIsPluginAction')) {
 }
 
 if (!function_exists('wpstgGetRequestAction')) {
-    /**
-     * @return string
-     */
+
+
+
     function wpstgGetRequestAction(): string
     {
         if (isset($_GET['action'])) {
@@ -50,10 +50,10 @@ if (!function_exists('wpstgGetRequestAction')) {
 }
 
 if (!function_exists('wpstgIsPluginRestRoute')) {
-    /**
-     * @param string $route
-     * @return bool
-     */
+
+
+
+
     function wpstgIsPluginRestRoute(string $route): bool
     {
         $route = ltrim($route, '/');
@@ -63,10 +63,10 @@ if (!function_exists('wpstgIsPluginRestRoute')) {
 }
 
 if (!function_exists('wpstgGetPrettyRestRoute')) {
-    /**
-     * @param string $requestUri
-     * @return string
-     */
+
+
+
+
     function wpstgGetPrettyRestRoute(string $requestUri): string
     {
         $requestPath = (string)parse_url($requestUri, PHP_URL_PATH);
@@ -74,8 +74,8 @@ if (!function_exists('wpstgGetPrettyRestRoute')) {
             return '';
         }
 
-        // REST_REQUEST isn't defined at plugins_loaded; resolve prefix dynamically
-        // so custom rest_url_prefix filters are respected.
+ 
+ 
         $restPrefix = '/' . trim(apply_filters('rest_url_prefix', 'wp-json'), '/') . '/';
         $prefixPosition = strpos($requestPath, $restPrefix);
         if ($prefixPosition === false) {
@@ -87,10 +87,10 @@ if (!function_exists('wpstgGetPrettyRestRoute')) {
 }
 
 if (!function_exists('wpstgIsRestRequest')) {
-    /**
-     * @param string $requestUri
-     * @return bool
-     */
+
+
+
+
     function wpstgIsRestRequest(string $requestUri): bool
     {
         if (wpstgGetPrettyRestRoute($requestUri) !== '') {
@@ -102,10 +102,10 @@ if (!function_exists('wpstgIsRestRequest')) {
 }
 
 if (!function_exists('wpstgIsPluginRestRequest')) {
-    /**
-     * @param string $requestUri
-     * @return bool
-     */
+
+
+
+
     function wpstgIsPluginRestRequest(string $requestUri): bool
     {
         $prettyRoute = wpstgGetPrettyRestRoute($requestUri);
@@ -124,11 +124,11 @@ if (!function_exists('wpstgIsPluginRestRequest')) {
 }
 
 if (!function_exists('wpstgIsStagingSite')) {
-    /**
-     * @param string $stagingMarkerFileName Name of the marker file placed in the site root on staging sites.
-     * @param string $stagingSiteOptionName Option key that stores whether the site is a staging site.
-     * @return bool
-     */
+
+
+
+
+
     function wpstgIsStagingSite(string $stagingMarkerFileName = '.wp-staging', string $stagingSiteOptionName = 'wpstg_is_staging_site'): bool
     {
         if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
@@ -160,12 +160,12 @@ if (!function_exists('wpstgShouldSkipBootstrap')) {
 
         $requestUri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
 
-        // WordPress login page: needed for post-restore login prompt and other login hooks.
+ 
         if (strpos($requestUri, '/wp-login.php') !== false) {
             return false;
         }
 
-        // Temporary/auto login links (?wpstg_login=, ?wpstg_staging_login=, ?action=wpstg_*).
+ 
         $action = wpstgGetRequestAction();
         if (
             !empty($_GET['wpstg_login']) ||
@@ -175,12 +175,12 @@ if (!function_exists('wpstgShouldSkipBootstrap')) {
             return false;
         }
 
-        // Staging sites need full bootstrap: login gate, permission checks, admin bar CSS.
+ 
         if (wpstgIsStagingSite()) {
             return false;
         }
 
-        // Non-WP-CLI PHP processes (test runners, deploy tools) also need full bootstrap.
+ 
         if (php_sapi_name() === 'cli') {
             return false;
         }

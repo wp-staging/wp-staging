@@ -1,36 +1,36 @@
 <?php
 
-/**
- * Globally applicable very tiny functions that have only one specific use case but that are needed more than one time.
- * We use snake case prefix 'wpstg_' to differentiate them with the rest of our code base
- * Yeah, evil in terms of some best "dogmatic" practices and made by laziness... but effective.
- * As they are prefixed we can easily find and refactor them over time.
- *
- * @todo refactor! Split this file into classes for strings, database, filesystem and so on. Move everything under /Frameworks
- *
- */
+
+
+
+
+
+
+
+
+
 
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
-/**
- * Windows Compatibility Fix
- * Replace Windows directory separator (Backward slash)
- * Replace backward slash with forward slash directory separator
- * Reason: Windows understands backward and forward slash while linux only understands forward slash
- *
- * @param string
- **/
+
+
+
+
+
+
+
+
 function wpstg_replace_windows_directory_separator($path)
 {
     return preg_replace('/[\\\\]+/', '/', $path);
 }
 
-/**
- * Search & Replace first occurence of string in haystack
- * @param string $haystack
- * @param string $needle
- * @return string
- */
+
+
+
+
+
+
 function wpstg_replace_first_match($needle, $replace, $haystack)
 {
     $result = $haystack;
@@ -42,25 +42,25 @@ function wpstg_replace_first_match($needle, $replace, $haystack)
     return $result;
 }
 
-/**
- * Check if string is valid date
- * @param string $date
- * @param string $format
- * @return bool
- */
+
+
+
+
+
+
 function wpstg_is_valid_date($date, $format = 'Y-m-d')
 {
     $d = DateTime::createFromFormat($format, $date);
-    // The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
+ 
     return $d && $date === $d->format($format);
 }
 
-/**
- * Convert all values of a string or an array into url decoded values
- * Main use for preventing Wordfence firewall rule 'local file inclusion'
- * @param mixed string|array
- * @return mixed string|array
- */
+
+
+
+
+
+
 function wpstg_urldecode($data)
 {
     if (empty($data)) {
@@ -83,14 +83,14 @@ function wpstg_urldecode($data)
     return $data;
 }
 
-/**
- * Invalidate constraints
- * @param string $query
- * @return string
- */
+
+
+
+
+
 function wpstg_unique_constraint($query)
 {
-    // Change name to random in all constraints, if there, to prevent trouble with existing
+ 
     $query = preg_replace_callback("/CONSTRAINT\s`(\w+)`/", function () {
         return "CONSTRAINT `" . uniqid() . "`";
     }, $query);
@@ -98,37 +98,37 @@ function wpstg_unique_constraint($query)
     return $query;
 }
 
-/**
- * Get relative path to the uploads folder, can be a custom folder e.g assets or default folder wp-content/uploads
- *
- * @return string
- *@see         \WPStaging\Framework\Utils\WpDefaultDirectories::getUploadsPath Removed in favor of this.
- * @todo        Remove this in future versions.
- *
- * @deprecated
- */
+
+
+
+
+
+
+
+
+
 function wpstg_get_abs_upload_dir()
 {
     return (new WpDefaultDirectories())->getUploadsPath();
 }
 
-/**
- * Check if string starts with specific string
- * @param string $haystack
- * @param string $needle
- * @return bool
- */
+
+
+
+
+
+
 function wpstg_starts_with($haystack, $needle)
 {
     $length = strlen($needle);
     return ($needle === substr($haystack, 0, $length));
 }
 
-/**
- * Check if folder is empty
- * @param string $dir
- * @return boolean
- */
+
+
+
+
+
 function wpstg_is_empty_dir($dir)
 {
     if (!is_dir($dir)) {
@@ -143,27 +143,27 @@ function wpstg_is_empty_dir($dir)
     return true;
 }
 
-/**
- * Get absolute WP uploads path e.g.
- * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
- * Single sites: /var/www/htdocs/example.com/wp-content/uploads
- * @return string|false
- */
+
+
+
+
+
+
 function wpstg_get_upload_dir()
 {
     $uploads = wp_upload_dir(null, false);
 
     $baseDir = wpstg_replace_windows_directory_separator($uploads['basedir']);
 
-    // If multisite (and if not the main site in a post-MU network)
+ 
     if (is_multisite() && !(is_main_network() && is_main_site() && defined('MULTISITE'))) {
-        // blogs.dir is used on WP 3.5 and earlier
+ 
         if (strpos($baseDir, 'blogs.dir') !== false) {
-            // remove this piece from the basedir: /blogs.dir/2/files
+ 
             $uploadDir = wpstg_replace_first_match('/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir);
             $dir       = wpstg_replace_windows_directory_separator($uploadDir . '/blogs.dir');
         } else {
-            // remove this piece from the basedir: /sites/2
+ 
             $uploadDir = wpstg_replace_first_match('/sites/' . get_current_blog_id(), null, $baseDir);
             $dir       = wpstg_replace_windows_directory_separator($uploadDir . '/sites');
         }
@@ -175,12 +175,12 @@ function wpstg_get_upload_dir()
     return false;
 }
 
-/**
- * Change chmod of file or folder
- * @param string $file path to file
- * @param mixed $mode false or specific octal value like 0755
- * @return boolean
- */
+
+
+
+
+
+
 function wpstg_chmod($file, $mode = false)
 {
     if (!$mode) {

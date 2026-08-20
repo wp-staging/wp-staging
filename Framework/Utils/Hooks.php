@@ -2,21 +2,21 @@
 
 namespace WPStaging\Framework\Utils;
 
-/**
- * WP Staging wrapper for WordPress hooks functions.
- */
+
+
+
 class Hooks
 {
-    /**
-     *  @var array<string, callable>
-     */
+
+
+
     private $internalHooks;
 
-    /**
-     * @param string $hookName
-     * @param callable $callback
-     * @return void
-     */
+
+
+
+
+
     public function registerInternalHook(string $hookName, $callback)
     {
         if (!is_callable($callback)) {
@@ -30,10 +30,10 @@ class Hooks
         $this->internalHooks[$hookName] = $callback;
     }
 
-    /**
-     * @param string $hookName
-     * @return void
-     */
+
+
+
+
     public function unregisterInternalHook(string $hookName)
     {
         if (isset($this->internalHooks[$hookName])) {
@@ -41,12 +41,12 @@ class Hooks
         }
     }
 
-    /**
-     * @param string $hookName
-     * @param array $args []
-     * @param mixed $defaultValue null
-     * @return mixed
-     */
+
+
+
+
+
+
     public function callInternalHook(string $hookName, array $args = [], $defaultValue = null)
     {
         if (isset($this->internalHooks[$hookName]) && is_callable($this->internalHooks[$hookName])) {
@@ -56,11 +56,11 @@ class Hooks
         return $defaultValue;
     }
 
-    /**
-     * @param string $hookName
-     * @param mixed ...$args
-     * @return void
-     */
+
+
+
+
+
     public function doAction(string $hookName, ...$args)
     {
         if (!function_exists('do_action') || !$this->isHookAllowed($hookName)) {
@@ -70,12 +70,12 @@ class Hooks
         do_action($hookName, ...$args);
     }
 
-    /**
-     * @param string $hookName
-     * @param mixed $value
-     * @param mixed ...$args
-     * @return mixed
-     */
+
+
+
+
+
+
     public function applyFilters(string $hookName, $value, ...$args)
     {
         if (!function_exists('apply_filters') || !$this->isHookAllowed($hookName)) {
@@ -85,17 +85,17 @@ class Hooks
         return apply_filters($hookName, $value, ...$args);
     }
 
-    /**
-     * @param string $hookName
-     * @return bool
-     */
+
+
+
+
     private function isHookAllowed(string $hookName): bool
     {
         if (!$this->isWpstgHook($hookName)) {
             return false;
         }
 
-        // Block test hooks outside of test context
+ 
         if (strpos($hookName, 'wpstg.tests.') === 0 && !$this->isTest()) {
             return false;
         }
@@ -103,18 +103,18 @@ class Hooks
         return true;
     }
 
-    /**
-     * @param string $hookName
-     * @return bool
-     */
+
+
+
+
     private function isWpstgHook(string $hookName): bool
     {
         return strpos($hookName, 'wpstg.') === 0 || strpos($hookName, 'wpstg_') === 0;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isTest(): bool
     {
         return defined('WPSTG_TEST') && constant('WPSTG_TEST') === true;

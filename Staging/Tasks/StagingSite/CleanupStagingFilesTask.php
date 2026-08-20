@@ -15,41 +15,41 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class CleanupStagingFilesTask extends StagingTask
 {
-    /** @var Filesystem */
+ 
     private $filesystem;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param Filesystem $filesystem
-     * @param SeekableQueueInterface $taskQueue
-     */
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, Filesystem $filesystem, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->filesystem = $filesystem;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_cleanup_files';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Cleaning Up Staging Site Files';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $stagingSiteDir = '';
@@ -74,7 +74,7 @@ class CleanupStagingFilesTask extends StagingTask
 
         $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($stagingSiteDir, true));
 
-        // Early bail: Path to Clean does not exist
+ 
         if (!file_exists($stagingSiteDir)) {
             return $this->generateResponse();
         }
@@ -97,7 +97,7 @@ class CleanupStagingFilesTask extends StagingTask
         }
 
         if ($deleted) {
-            // Successfully deleted
+ 
             $this->logger->info(sprintf(
                 '%s: Path "%s" successfully cleaned up.',
                 static::getTaskTitle(),
@@ -106,12 +106,12 @@ class CleanupStagingFilesTask extends StagingTask
 
             return $this->generateResponse();
         } else {
-            /*
-             * Not successfully deleted.
-             * This can happen if the folder to delete is too large
-             * to be deleted in a single request. We continue
-             * deleting it in the next request...
-             */
+
+
+
+
+
+
             $response = $this->generateResponse(false);
             $response->setIsRunning(true);
 
@@ -123,24 +123,24 @@ class CleanupStagingFilesTask extends StagingTask
                 $relativePathForLogging
             ));
 
-            // Early bail: Response modified for repeating
+ 
             return $response;
         }
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function prepareCleanup(): string
     {
         if (!$this->jobDataDto instanceof StagingSiteDtoInterface) {
             throw new Exception('Clone ID not found in job data.');
         }
 
-        /** @var StagingSiteDtoInterface */
+ 
         $jobDataDto  = $this->jobDataDto;
 
-        // Early bail: Already prepared
+ 
         if ($this->stepsDto->getTotal() === 1) {
             return $jobDataDto->getStagingSite()->getPath();
         }

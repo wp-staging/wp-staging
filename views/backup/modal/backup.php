@@ -21,7 +21,7 @@ use WPStaging\Backup\Storage\Providers;
 
 $timeFormatOption = get_option('time_format');
 
-/** @var Times */
+ 
 $time      = WPStaging::make(Times::class);
 $providers = WPStaging::make(Providers::class);
 
@@ -85,24 +85,11 @@ $storagesPrefix = 'storage-';
             </div>
             <div>
                 <label>
-                    <?php if ($isProVersion) : ?>
-                        <div class="wpstg--wproot-expand-folder">
-                            <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info" />
-                        </div>
-                    <?php endif; ?>
-                    <?php
-                        Checkbox::render(
-                            'wpstgIncludeOtherFilesInWpRoot',
-                            'includeOtherFilesInWpRoot',
-                            '',
-                            false,
-                            [
-                                'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
-                                'isDisabled' => !$isProVersion,
-                            ]
-                        );
-                        ?>
-                    <span class="<?php echo esc_attr($disabledClass); ?>" id="wpstg-wproot-other-files-span" data-id="#wpstg-wproot-scanning-files">
+                    <div class="wpstg--wproot-expand-folder">
+                        <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info" />
+                    </div>
+                    <?php Checkbox::render('wpstgIncludeOtherFilesInWpRoot', 'includeOtherFilesInWpRoot', '', false); ?>
+                    <span id="wpstg-wproot-other-files-span" data-id="#wpstg-wproot-scanning-files">
                         <?php esc_html_e('Backup Other WP Root Folders', 'wp-staging'); ?>
                     </span>
                     <span id="wpstgIncludeOtherFilesInWpRootSize"></span> <!-- used to show the size of the files in the root folder -->
@@ -113,13 +100,9 @@ $storagesPrefix = 'storage-';
                         </span>
                     </div>
 
-                    <?php if (!$isProVersion) : ?>
-                        <a href="<?php echo esc_url(Language::getUpgradeUrl('backup_root_files')); ?>" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-u-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
-                    <?php else : ?>
-                        <fieldset class="wpstg-wproot-files-selection-section wpstg-wproot-files-selection" id="wpstg-wproot-scanning-files">
-                            <?php require(WPSTG_VIEWS_DIR . 'pro/backup/backup-files.php'); ?>
-                        </fieldset>
-                    <?php endif; ?>
+                    <fieldset class="wpstg-wproot-files-selection-section wpstg-wproot-files-selection" id="wpstg-wproot-scanning-files">
+                        <?php require(WPSTG_VIEWS_DIR . 'backup/backup-files.php'); ?>
+                    </fieldset>
                 </label>
             </div>
 

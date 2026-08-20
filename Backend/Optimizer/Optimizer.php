@@ -4,36 +4,36 @@ namespace WPStaging\Backend\Optimizer;
 
 use WPStaging\Framework\Filesystem\Filesystem;
 
-// No Direct Access
+ 
 if (!defined("WPINC")) {
     die;
 }
 
-/**
- * Optimizer
- */
+
+
+
 class Optimizer
 {
-    /**
-     * @var string
-     */
+
+
+
     private $mudir;
 
-    /**
-     * @var string
-     */
+
+
+
     private $source;
 
-    /**
-     * @var string
-     */
+
+
+
     private $dest;
 
-    /**
-     * Optimizer constructor.
-     *
-     * If changes are made to this, also check uninstall.php!
-     */
+
+
+
+
+
     public function __construct()
     {
         $this->mudir  = ( defined('WPMU_PLUGIN_DIR') && defined('WPMU_PLUGIN_URL') ) ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
@@ -42,11 +42,11 @@ class Optimizer
         $this->dest   = trailingslashit($this->mudir) . 'wp-staging-optimizer.php';
     }
 
-    /**
-     * Install Optimizer
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function installOptimizer(): bool
     {
         if (file_exists($this->dest) && $this->mustUpdateOptimizer() === false) {
@@ -61,7 +61,7 @@ class Optimizer
             return false;
         }
 
-        // Avoid emitting E_WARNING from copy() when destination is not writable.
+ 
         if (!is_writable($this->mudir)) {
             return false;
         }
@@ -69,11 +69,11 @@ class Optimizer
         return @copy($this->source, $this->dest);
     }
 
-    /**
-     * Check if the Optimizer must use plugin must be updated
-     *
-     * @return bool
-     */
+
+
+
+
+
     private function mustUpdateOptimizer(): bool
     {
         $isVersionNumber = defined('WPSTG_OPTIMIZER_VERSION') ? WPSTG_OPTIMIZER_VERSION : false;

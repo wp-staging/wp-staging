@@ -5,26 +5,26 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database\DatabaseException;
 
-/**
- * Initializes database handles used by legacy staging clone, update, reset, and push jobs.
- */
+
+
+
 abstract class CloningProcess extends JobExecutable
 {
-    /**
-     * Can be local or external \wpdb object
-     * @var \wpdb
-     */
+
+
+
+
     protected $stagingDb;
 
-    /**
-     * Always be the local \wpdb object
-     * @var \wpdb
-     */
+
+
+
+
     protected $productionDb;
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupMemoryExhaustFile()
     {
         $this->memoryExhaustErrorTmpFile = $this->getMemoryExhaustErrorTmpFile(Cloning::WPSTG_REQUEST);
@@ -46,9 +46,9 @@ abstract class CloningProcess extends JobExecutable
         $this->stagingDb = WPStaging::getInstance()->get("wpdb");
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function setExternalDatabase()
     {
         if (!$this->validateExternalDatabaseConnectionData()) {
@@ -67,12 +67,12 @@ abstract class CloningProcess extends JobExecutable
             return false;
         }
 
-        // Check if there were any error when connecting
+ 
         if (
             property_exists($this->stagingDb, 'error') &&
             $this->stagingDb->error instanceof \WP_Error
         ) {
-            /** @var \WP_Error $wp_error */
+ 
             $wp_error = $this->stagingDb->error;
             if ($wp_error->get_error_code() === 'db_connect_fail') {
                 $this->returnException(sprintf(
@@ -91,7 +91,7 @@ abstract class CloningProcess extends JobExecutable
                 property_exists($this->stagingDb, 'error') &&
                 $this->stagingDb->error instanceof \WP_Error
             ) {
-                /** @var \WP_Error $wp_error */
+ 
                 $wp_error = $this->stagingDb->error;
                 if ($wp_error->get_error_code() === 'db_select_fail') {
                     $message = $this->normalizeDatabaseErrorMessage($wp_error->get_error_message());
@@ -99,12 +99,12 @@ abstract class CloningProcess extends JobExecutable
                     exit;
                 }
 
-                // Generic error
+ 
                 $this->returnException(sprintf('Error: Can\'t select database %s. Either it does not exist or you don\'t have privileges to access it.', $this->options->databaseDatabase));
                 exit;
             }
 
-            // Generic error
+ 
             $this->returnException(sprintf('Error: Can\'t select database %s. Either it does not exist or you don\'t have privileges to access it.', $this->options->databaseDatabase));
             exit;
         }
@@ -112,9 +112,9 @@ abstract class CloningProcess extends JobExecutable
         return true;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function validateExternalDatabaseConnectionData(): bool
     {
         try {
@@ -127,9 +127,9 @@ abstract class CloningProcess extends JobExecutable
         return true;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getExternalDatabaseLabel(): string
     {
         $databaseName = isset($this->options->databaseDatabase) ? trim((string)$this->options->databaseDatabase) : '[Not Set]';
@@ -137,10 +137,10 @@ abstract class CloningProcess extends JobExecutable
         return $databaseName;
     }
 
-    /**
-     * @param \WP_Error $wpError
-     * @return string
-     */
+
+
+
+
     private function getExternalDatabaseConnectionFailureMessage(\WP_Error $wpError): string
     {
         $message = $this->normalizeDatabaseErrorMessage($wpError->get_error_message());
@@ -151,10 +151,10 @@ abstract class CloningProcess extends JobExecutable
         return sprintf(__('Reason: %s', 'wp-staging'), $message);
     }
 
-    /**
-     * @param string $message
-     * @return string
-     */
+
+
+
+
     private function normalizeDatabaseErrorMessage(string $message): string
     {
         $message = html_entity_decode($message, ENT_QUOTES, 'UTF-8');

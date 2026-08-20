@@ -5,30 +5,30 @@ namespace WPStaging\Staging\Tasks\StagingSite\DatabaseAdjustment;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
 
-/**
- * Replacement for WPStaging\Framework\CloningProcess\Data\UpdateTablePrefix
- */
+
+
+
 class UpdatePrefixInUserMetaTableTask extends DatabaseAdjustmentTask
 {
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_update_prefix_usermeta';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Update database prefix in usermeta table';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->setup();

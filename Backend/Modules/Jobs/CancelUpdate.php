@@ -4,17 +4,17 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 
-/**
- * Class Cancel Update Processing
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 class CancelUpdate extends Job
 {
 
-    /**
-     * Start Module
-     * @return bool
-     */
+
+
+
+
     public function start()
     {
         $cloneData = $this->createCloneData();
@@ -27,7 +27,7 @@ class CancelUpdate extends Job
             return true;
         }
 
-        // Delete Cache Files
+ 
         $this->deleteCacheFiles();
 
         $this->returnFinish();
@@ -35,9 +35,9 @@ class CancelUpdate extends Job
         return true;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function createCloneData()
     {
         $clone = [];
@@ -54,9 +54,9 @@ class CancelUpdate extends Job
         return $clone;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function check()
     {
         return (
@@ -68,10 +68,10 @@ class CancelUpdate extends Job
                 );
     }
 
-    /**
-     * Get json response
-     * return json
-     */
+
+
+
+
     private function returnFinish($message = '')
     {
 
@@ -85,14 +85,14 @@ class CancelUpdate extends Job
     }
 
 
-    /**
-     * Delete Cache Files
-     */
+
+
+
     protected function deleteCacheFiles()
     {
         $this->log("Cancel Updating: Deleting clone job's cache files...");
 
-        // Clean cache files
+ 
         $this->cloneOptionCache->delete();
         $this->filesIndexCache->delete();
 

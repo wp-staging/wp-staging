@@ -20,36 +20,36 @@ use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * This class is responsible for importing database records from the dump in the staging site tables.
- * @see PrepareDatabaseRowsTask for creating the dump.
- */
+
+
+
+
 class ImportDatabaseRowsTask extends StagingTask
 {
     use WithStagingDatabase;
 
-    /**
-     * After this time, we will increase the execution by 5s for database restore.
-     * @var int
-     */
+
+
+
+
     const MAX_RETRIES = 3;
 
-    /**
-     * After this time (in seconds), we will stop the database restore.
-     * @var int
-     */
+
+
+
+
     const MAX_EXECUTION_TIME_ALLOWED = 60;
 
-    /** @var JobDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface $jobDataDto */
+ 
     protected $jobDataDto; // @phpstan-ignore-line
 
-    /** @var DatabaseImporter */
+ 
     protected $databaseImporter;
 
-    /** @var DatabaseImporterDto */
+ 
     protected $databaseImporterDto;
 
-    /** @var Directory */
+ 
     protected $directory;
 
     public function __construct(Directory $directory, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, DatabaseImporter $databaseImporter)
@@ -70,10 +70,10 @@ class ImportDatabaseRowsTask extends StagingTask
         return 'Importing Database Records into Staging Site';
     }
 
-    /**
-     * @return TaskResponseDto
-     * @throws Exception
-     */
+
+
+
+
     public function execute()
     {
         $this->setup();
@@ -116,9 +116,9 @@ class ImportDatabaseRowsTask extends StagingTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function importDatabase()
     {
         $this->databaseImporter->init($this->jobDataDto->getDatabasePrefix());
@@ -128,7 +128,7 @@ class ImportDatabaseRowsTask extends StagingTask
                 try {
                     $this->databaseImporter->execute();
                 } catch (\OutOfBoundsException $e) {
-                    // Skipping INSERT query due to unexpected format...
+ 
                     $this->logger->debug($e->getMessage());
                 }
             }
@@ -136,7 +136,7 @@ class ImportDatabaseRowsTask extends StagingTask
             if ($e->getCode() === DatabaseImporter::FINISHED_QUEUE_EXCEPTION_CODE) {
                 $this->databaseImporter->finish();
             } elseif ($e->getCode() === DatabaseImporter::THRESHOLD_EXCEPTION_CODE) {
-                // no-op
+ 
             } elseif ($e->getCode() === DatabaseImporter::RETRY_EXCEPTION_CODE) {
                 $this->databaseImporter->retryQuery();
             } else {
@@ -150,9 +150,9 @@ class ImportDatabaseRowsTask extends StagingTask
         $this->databaseImporter->updateIndex();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setup()
     {
         $this->initStagingDatabase($this->jobDataDto->getStagingSite());
@@ -186,18 +186,18 @@ class ImportDatabaseRowsTask extends StagingTask
         $this->databaseImporter->setSearchReplace(new SearchReplace());
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupExecutionTime()
     {
         static::$backupRestoreMaxExecutionTimeInSeconds = $this->jobDataDto->getCurrentExecutionTimeDatabaseImport();
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function maybeUpdateExecutionTime()
     {
         $this->jobDataDto->incrementNumberOfRetries();

@@ -1,6 +1,6 @@
 <?php
 
-//TODO PHP7.x; declare(strict_types=1);
+ 
 
 namespace WPStaging\Framework\Collection;
 
@@ -11,12 +11,12 @@ use WPStaging\Framework\Interfaces\HydrateableInterface;
 
 class Collection extends SplObjectStorage implements JsonSerializable
 {
-    /** @var string */
+ 
     protected $storedClass;
 
-    /**
-     * @param string $storedClass
-     */
+
+
+
     public function __construct($storedClass)
     {
         $this->storedClass = $storedClass;
@@ -25,7 +25,7 @@ class Collection extends SplObjectStorage implements JsonSerializable
     public function toArray()
     {
         $collection = [];
-        /** @var ArrayableInterface $item */
+ 
         foreach ($this as $item) {
             if (method_exists($item, 'toArray')) {
                 $collection[] = $item->toArray();
@@ -45,7 +45,7 @@ class Collection extends SplObjectStorage implements JsonSerializable
                 continue;
             }
 
-            /** @var HydrateableInterface $object */
+ 
             $object = new $this->storedClass();
             $object->hydrate((array) $item);
             $this->attach($object);

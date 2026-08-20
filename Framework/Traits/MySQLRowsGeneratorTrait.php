@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Provides methods to fetch potentially unlimited rows from a database table
- * with resource-usage awareness using raw MySQL(i) queries.
- *
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
+
 
 namespace WPStaging\Framework\Traits;
 
@@ -15,28 +15,28 @@ use WPStaging\Framework\Adapter\Database\MysqliAdapter;
 use WPStaging\Framework\Adapter\Database\SqliteAdapter;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
-/**
- * Trait MySQLRowsGeneratorTrait
- *
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
 trait MySQLRowsGeneratorTrait
 {
     use ResourceTrait;
     use BatchSizeCalculateTrait;
 
-    /** @var bool */
+ 
     protected $useMemoryExhaustFix = false;
 
-    /** @var string */
+ 
     protected $columnToExclude = '';
 
-    /** @var string */
+ 
     protected $valuesToExclude = '';
 
-    /**
-     * @param bool $useMemoryExhaustFix
-     */
+
+
+
     public function setUseMemoryExhaustFix(bool $useMemoryExhaustFix)
     {
         $this->useMemoryExhaustFix = $useMemoryExhaustFix;
@@ -65,21 +65,21 @@ trait MySQLRowsGeneratorTrait
      */
     protected function rowsGenerator(string $databaseName, string $table, $numericPrimaryKey, int $offset, string $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto): Generator
     {
-        /* Kept for debugging purpose
-        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            \WPStaging\functions\debug_log(
-                sprintf(
-                    'MySQLRowsGeneratorTrait: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
-                    size_format($this->getMaxMemoryLimit()),
-                    size_format($this->getScriptMemoryLimit()),
-                    size_format($this->getMemoryUsage()),
-                    $this->findExecutionTimeLimit(),
-                    $this->getRunningTime(),
-                    ($this->isThreshold() ? 'yes' : 'no')
-                )
-            );
-        }
-        */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         $rows      = [];
         $lastFetch = false;
@@ -107,7 +107,7 @@ trait MySQLRowsGeneratorTrait
 
                 $jobDataDto->setDbRequestTime(microtime(true) - $requestStartTime);
 
-                // If a single sql query takes more than 10 seconds, the sql server is treated as a very slow one.
+ 
                 if ($jobDataDto->getDbRequestTime() > 10) {
                     $jobDataDto->setIsSlowMySqlServer(true);
                 }
@@ -125,7 +125,7 @@ trait MySQLRowsGeneratorTrait
                 }
 
                 $rows = [];
-                //while ($row = $result->fetch_assoc()) {
+ 
                 while ($row = $db->fetchAssoc($result)) {
                     $rows[] = $row;
                 }
@@ -148,31 +148,31 @@ trait MySQLRowsGeneratorTrait
                     \WPStaging\functions\debug_log(sprintf('$rows is not an array. Actual type: %s', gettype($rows)));
                 }
 
-                // If we got less than the batch size, then this is the last fetch.
+ 
                 $lastFetch = count($rows) < $batchSize;
             }
 
-            // Take the next row from the ready set.
+ 
             $row = array_pop($rows);
 
             if ($row === null) {
-                // We're done, no more rows to process.
+ 
                 break;
             }
 
-            /**
-             * Extend execution time.
-             * If sql query is slow and takes more than 1 second even with low batch size, extend the available execution time.
-             * Otherwise, it can lead to a slow-down at worse one row per request
-             *
-             * Can happen on very slow mySQL servers.
-             * Fixes #1945 https://github.com/wp-staging/wp-staging-pro/issues/1945
-             */
+
+
+
+
+
+
+
+
             if ($batchSize <= 100 && $jobDataDto->getDbRequestTime() > 1) {
                 $this->setTimeLimit((int)$this->findExecutionTimeLimit() + 10);
             }
 
-            // Check memory usage every 10 rows
+ 
             if (rand(0, 10) === 10 && $this->isThreshold()) {
                 $jobDataDto->setLastQueryInfoJSON(json_encode([$requestId, $table, $offset, $batchSize]));
                 break;
@@ -188,21 +188,21 @@ trait MySQLRowsGeneratorTrait
         } while (!$this->isThreshold());
     }
 
-    /**
-     * @param string|null $numericPrimaryKey
-     * @param string $table
-     * @param string $offset
-     * @param string $batchSize
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
     private function getQueryForExclusion($numericPrimaryKey, string $table, string $offset, string $batchSize): string
     {
         if (empty($numericPrimaryKey)) {
             return "SELECT * FROM `{$table}` WHERE `{$this->columnToExclude}` NOT IN ({$this->valuesToExclude}) AND LIMIT {$offset}, {$batchSize}";
         }
 
-        // Optimal! We have Primary Keys, so it doesn't get slower on large offsets.
+ 
         return <<<SQL
 SELECT  * 
 FROM `{$table}` 
@@ -213,21 +213,21 @@ LIMIT 0, {$batchSize}
 SQL;
     }
 
-    /**
-     * @param string|null $numericPrimaryKey
-     * @param string $table
-     * @param string $offset
-     * @param string $batchSize
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
     private function getQueryWithoutExclusion($numericPrimaryKey, string $table, string $offset, string $batchSize): string
     {
         if (empty($numericPrimaryKey)) {
             return "SELECT * FROM `{$table}` LIMIT {$offset}, {$batchSize}";
         }
 
-        // Optimal! We have Primary Keys, so it doesn't get slower on large offsets.
+ 
         return <<<SQL
 SELECT  *
 FROM `{$table}`

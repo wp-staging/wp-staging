@@ -8,41 +8,41 @@ use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * This class is similar to the src\Framework\CloningProcess\Database\DatabaseCloningService class.
- * It is adjusted to use Backuper Logic and it only focus on creating a table in the staging site.
- * @see src\Framework\CloningProcess\Database\DatabaseCloningService for existing logic
- * @see src\Staging\Service\Database\RowsCopier for logic related to copying tables rows
- */
+
+
+
+
+
+
 class TableCreateService
 {
-    /** @var LoggerInterface */
+ 
     protected $logger;
 
-    /** @var Database */
+ 
     protected $sourceDb;
 
-    /** @var Database */
+ 
     protected $destinationDb;
 
-    /** @var TableService */
+ 
     protected $tableService;
 
-    /** @var string */
+ 
     protected $databaseName;
 
-    /** @var string */
+ 
     protected $sourcePrefix;
 
-    /** @var string */
+ 
     protected $destinationPrefix;
 
-    /** @var bool */
+ 
     protected $isResetExistingTables = false;
 
-    /**
-     * @param Database $database
-     */
+
+
+
     public function __construct(Database $sourceDb, TableService $tableService)
     {
         $this->sourceDb     = $sourceDb;
@@ -94,10 +94,10 @@ class TableCreateService
         return $this->destinationPrefix . $srcTableName;
     }
 
-    /**
-     * @param bool $isResetExistingTables
-     * @return void
-     */
+
+
+
+
     public function setIsResetExistingTables(bool $isResetExistingTables)
     {
         $this->isResetExistingTables = $isResetExistingTables;
@@ -120,15 +120,15 @@ class TableCreateService
         throw new RuntimeException("Cleanup Table - Cannot preserve existing table. Error: Unable to rename table $tableName to $newTableName");
     }
 
-    /**
-     * An interrupted earlier job can leave a backup table behind, which would make the
-     * preserve rename collide and abort the whole clone/update. These
-     * TMP_DATABASE_PREFIX_TO_DROP tables are transient, so a stale one is always safe to
-     * drop before re-preserving.
-     *
-     * @param string $backupTableName
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     protected function dropOrphanedBackupTable(string $backupTableName)
     {
         if (!$this->tableService->tableExists($backupTableName)) {
@@ -139,14 +139,14 @@ class TableCreateService
         $this->tableService->dropTable($backupTableName);
     }
 
-    /**
-     * @param string $destTableName
-     * @param string $srcTableName
-     * @return void
-     */
+
+
+
+
+
     public function createDestinationTable(string $srcTableName, string $destTableName)
     {
-        $this->logger->info(sprintf("Creating table %s", esc_html($destTableName)));
+        $this->logger->info(sprintf("Creating table %s -> %s", esc_html($srcTableName), esc_html($destTableName)));
         $this->dropDestinationTableIfExists($destTableName);
 
         $createTableQuery = $this->tableService->getCreateTableQuery($srcTableName);
@@ -168,10 +168,10 @@ class TableCreateService
         }
     }
 
-    /**
-     * @param string $destTableName
-     * @return void
-     */
+
+
+
+
     protected function dropDestinationTableIfExists(string $destTableName)
     {
         if (!$this->tableService->tableExists($destTableName)) {

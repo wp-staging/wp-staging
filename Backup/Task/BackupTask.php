@@ -10,12 +10,12 @@ use WPStaging\Framework\Job\Task\AbstractTask;
 
 abstract class BackupTask extends AbstractTask
 {
-    /** @var JobBackupDataDto */
+ 
     protected $jobDataDto;
 
     public function setJobDataDto(JobDataDto $jobDataDto)
     {
-        /** @var JobBackupDataDto $jobDataDto */
+ 
         if (
             $jobDataDto->getIsExportingDatabase()
             && !$jobDataDto->getIsExportingMuPlugins()
@@ -33,11 +33,11 @@ abstract class BackupTask extends AbstractTask
 
     protected function addLogMessageToResponse(TaskResponseDto $response)
     {
-        /**
-         * If this backup contains only a database, let's not display log entries
-         * for file-related tasks, as they expose internal behavior of the backup
-         * feature that are not relevant to the user.
-         */
+
+
+
+
+
         if (!$this->jobDataDto->getDatabaseOnlyBackup()) {
             $response->addMessage($this->logger->getLastLogMsg());
             return;

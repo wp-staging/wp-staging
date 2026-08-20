@@ -8,107 +8,107 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 class EmailTemplateBuilder extends AbstractTemplateComponent
 {
-    /**
-     * @var string
-     */
+
+
+
     private $title;
 
-    /**
-     * @var string
-     */
+
+
+
     private $message;
 
-    /**
-     * @var array
-     */
+
+
+
     private $details = [];
 
-    /**
-     * @var bool
-     */
+
+
+
     private $isBasic = false;
 
-    /**
-     * @var string
-     */
+
+
+
     private $recipient = '';
 
-    /**
-     * @param TemplateEngine $templateEngine
-     */
+
+
+
     public function __construct(TemplateEngine $templateEngine)
     {
         parent::__construct($templateEngine);
         $this->isBasic = WPStaging::isBasic();
     }
 
-    /**
-     * Create a new email template builder
-     * @param TemplateEngine $templateEngine
-     * @return self
-     */
+
+
+
+
+
     public static function create(TemplateEngine $templateEngine)
     {
         return new self($templateEngine);
     }
 
-    /**
-     * Set the email title
-     * @param string $title
-     * @return self
-     */
+
+
+
+
+
     public function setTitle(string $title)
     {
         $this->title = $title;
         return $this;
     }
 
-    /**
-     * Set the main message
-     * @param string $message
-     * @return self
-     */
+
+
+
+
+
     public function setMessage(string $message)
     {
         $this->message = $message;
         return $this;
     }
 
-    /**
-     * Add details to the email template
-     * @param array $details
-     * @return self
-     */
+
+
+
+
+
     public function setDetails(array $details)
     {
         $this->details = $details;
         return $this;
     }
 
-    /**
-     * Set the recipient email address
-     * @param string $recipient
-     * @return self
-     */
+
+
+
+
+
     public function setRecipient(string $recipient = '')
     {
         $this->recipient = $recipient;
         return $this;
     }
 
-    /**
-     * Get the template path
-     * @return string
-     */
+
+
+
+
     protected function getTemplate(): string
     {
         return 'notifications/email-template.php';
     }
 
-    /**
-     * Prepare data for template rendering
-     * @return array
-     */
+
+
+
+
     protected function getRenderData(): array
     {
         return [
@@ -123,10 +123,10 @@ class EmailTemplateBuilder extends AbstractTemplateComponent
         ];
     }
 
-    /**
-     * Process the message with JSON beautification and URL conversion
-     * @return string
-     */
+
+
+
+
     private function processMessage(): string
     {
         $message = $this->beautifyJsonInMessage();
@@ -134,10 +134,10 @@ class EmailTemplateBuilder extends AbstractTemplateComponent
         return $this->convertUrlsToLinks($message);
     }
 
-    /**
-     * Get encoded logo SVG
-     * @return string
-     */
+
+
+
+
     private function getEncodedLogo(): string
     {
         $logoUrl = WPSTG_PLUGIN_DIR . 'assets/svg/notification-logo.svg';
@@ -148,11 +148,11 @@ class EmailTemplateBuilder extends AbstractTemplateComponent
         return '';
     }
 
-    /**
-     * Convert URLs in text to clickable links
-     * @param string $text Text containing URLs
-     * @return string Text with clickable links
-     */
+
+
+
+
+
     private function convertUrlsToLinks(string $text): string
     {
         return preg_replace_callback('/\b(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*))/i', function ($matches) {
@@ -170,10 +170,10 @@ class EmailTemplateBuilder extends AbstractTemplateComponent
         }, $text);
     }
 
-    /**
-     * Generate the HTML email template
-     * @return string
-     */
+
+
+
+
     public function generate(): string
     {
         return $this->templateEngine->render(
@@ -182,10 +182,10 @@ class EmailTemplateBuilder extends AbstractTemplateComponent
         );
     }
 
-    /**
-     * Beautifies JSON blocks inside the message.
-     * @return string
-     */
+
+
+
+
     private function beautifyJsonInMessage(): string
     {
         return preg_replace_callback('/\{(?:[^{}]*|(?R))*\}/s', function ($matches) {

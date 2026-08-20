@@ -5,12 +5,12 @@ namespace WPStaging\Backend\DashboardWidget;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 
-/**
- * Renders the WP Staging admin dashboard widget.
- *
- * The widget loads a curated list of WP Staging documentation articles via WordPress'
- * built-in feed loader. The feed is cached on the site for 24 hours.
- */
+
+
+
+
+
+
 class DashboardWidget
 {
     const WIDGET_ID          = 'wpstg_dashboard_widget';
@@ -19,25 +19,25 @@ class DashboardWidget
     const FEED_CACHE_SECONDS = DAY_IN_SECONDS;
     const MAX_ARTICLES       = 5;
 
-    /** @var Language */
+ 
     private $language;
 
-    /**
-     * @param Language $language
-     */
+
+
+
     public function __construct(Language $language)
     {
         $this->language = $language;
     }
 
-    /**
-     * Registers the widget with WordPress.
-     *
-     * Hooked to `wp_dashboard_setup` by DashboardWidgetServiceProvider.
-     * Users can hide the widget via the standard WordPress "Screen Options" menu.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
     public function register()
     {
         if (!current_user_can('manage_options')) {
@@ -51,11 +51,11 @@ class DashboardWidget
         );
     }
 
-    /**
-     * Outputs the widget body. Called by WordPress when rendering the dashboard.
-     *
-     * @return void
-     */
+
+
+
+
+
     public function render()
     {
         $items = $this->fetchArticles();
@@ -68,11 +68,11 @@ class DashboardWidget
         $this->renderArticles($items);
     }
 
-    /**
-     * Fetches the curated documentation feed and returns the parsed items.
-     *
-     * @return array<int, array{title:string, link:string, summary:string}>
-     */
+
+
+
+
+
     private function fetchArticles()
     {
         add_filter('wp_feed_cache_transient_lifetime', [$this, 'feedCacheLifetime'], 10, 1);
@@ -104,12 +104,12 @@ class DashboardWidget
         return $articles;
     }
 
-    /**
-     * Returns the feed URL for the current admin locale, with plugin version and
-     * multisite query parameters appended for access-log segmentation.
-     *
-     * @return string
-     */
+
+
+
+
+
+
     private function getFeedUrl()
     {
         $baseUrl = $this->language->getLocaleLanguageCode() === 'de' ? self::FEED_URL_DE : self::FEED_URL_EN;
@@ -126,20 +126,20 @@ class DashboardWidget
         );
     }
 
-    /**
-     * Filter callback that overrides the default 12h SimplePie transient lifetime.
-     *
-     * @param int $seconds Default lifetime in seconds passed by WordPress.
-     * @return int
-     */
+
+
+
+
+
+
     public function feedCacheLifetime($seconds)
     {
         return self::FEED_CACHE_SECONDS;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function renderEmptyState()
     {
         ?>
@@ -147,10 +147,10 @@ class DashboardWidget
         <?php
     }
 
-    /**
-     * @param array<int, array{title:string, link:string, summary:string}> $items
-     * @return void
-     */
+
+
+
+
     private function renderArticles(array $items)
     {
         ?>

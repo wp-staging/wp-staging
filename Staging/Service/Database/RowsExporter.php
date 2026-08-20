@@ -8,33 +8,33 @@ use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 
-/**
- * @see src\Framework\CloningProcess\Database\DatabaseCloningService for existing logic
- * @see src\Staging\Service\Database\TableCreateService for logic related to creating tables
- */
+
+
+
+
 class RowsExporter extends AbstractRowsExporter
 {
     const FILTER_EXCLUDE_TABLES_DATA = 'wpstg.cloning.database.exclude_tables_data';
 
-    /** @var string */
+ 
     const FILTER_LEGACY_SEARCH_REPLACE_EXCLUDED_ROWS = 'wpstg_clone_searchreplace_excl_rows';
 
-    /** @var string */
+ 
     const FILTER_LEGACY_SEARCH_REPLACE_EXCLUDED = 'wpstg_clone_searchreplace_excl';
 
-    /** @var string */
+ 
     const FILTER_LEGACY_SEARCH_REPLACE_PARAMS = 'wpstg_clone_searchreplace_params';
 
-    /**
-     * Tables without prefix to exclude from data copying. If not excluded in UI or other filters these tables will be created without data.
-     * @var string[]
-     */
+
+
+
+
     const TABLES_EXCLUDED_FROM_DATA_COPYING = [
         'wpstg_queue',
         'wpstg_settings',
     ];
 
-    /** @var string */
+ 
     protected $stagingPrefix;
 
     public function setupDatabase(Database $database)
@@ -49,9 +49,9 @@ class RowsExporter extends AbstractRowsExporter
         $this->stagingPrefix = $stagingPrefix;
     }
 
-    /**
-     * @param int $tableIndex
-     */
+
+
+
     public function setTableIndex(int $tableIndex)
     {
         if ($this->tableIndex !== $tableIndex) {
@@ -67,9 +67,9 @@ class RowsExporter extends AbstractRowsExporter
         $this->tableName = $this->tables[$this->tableIndex]['source'];
     }
 
-    /**
-     * @return void.
-     */
+
+
+
     protected function setupSearchReplace()
     {
         $searchReplaceParams = $this->getSearchReplaceParams();
@@ -96,26 +96,26 @@ class RowsExporter extends AbstractRowsExporter
         );
     }
 
-    /**
-     * @param array $searchReplaceArgs
-     * @return array
-     */
+
+
+
+
     protected function filterSearchReplaceParams(array $searchReplaceArgs): array
     {
         return (array)apply_filters(self::FILTER_LEGACY_SEARCH_REPLACE_PARAMS, $searchReplaceArgs);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getSearchReplaceExcludedPatterns(): array
     {
         return (array)apply_filters(self::FILTER_LEGACY_SEARCH_REPLACE_EXCLUDED, []);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getSearchReplaceExcludedRows(): array
     {
         return (array)apply_filters(self::FILTER_LEGACY_SEARCH_REPLACE_EXCLUDED_ROWS, $this->excludedStrings());
@@ -148,26 +148,26 @@ class RowsExporter extends AbstractRowsExporter
         ];
     }
 
-    /**
-     * Return Hostname without scheme
-     * @param string $string
-     * @return string
-     */
+
+
+
+
+
     protected function getHostnameWithoutScheme(string $string): string
     {
         return preg_replace('#^https?://#', '', rtrim($string, '/'));
     }
 
-    /**
-     * Match legacy Backend\Modules\Jobs\SearchReplace semantic for `wpstg_clone_searchreplace_excl_rows`:
-     * a row whose `option_name` is on the filter list is written to the destination with its values
-     * left untouched. WordPress-core options like siteurl/home/upload_path must exist in the clone
-     * (UpdateSiteUrlAndHomeTask UPDATEs them afterwards); plugin-specific entries stay intact.
-     *
-     * @param string $prefixedTableName
-     * @param array  $row
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
+
     protected function isRowSearchReplaceExcluded(string $prefixedTableName, array $row): bool
     {
         if ($prefixedTableName !== $this->getFinalPrefix() . 'options') {

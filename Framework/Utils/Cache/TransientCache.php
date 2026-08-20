@@ -6,16 +6,16 @@ use function WPStaging\functions\debug_log;
 
 class TransientCache
 {
-    /** @var string used to prevent checking the backup file index with every page reload */
+ 
     const KEY_INVALID_BACKUP_FILE_INDEX = 'is_invalid_backup_file_index';
 
-    /**
-     * Get the value of the cache key.
-     * @param string $key
-     * @param int $expirationTimeSeconds
-     * @param callable $callback
-     * @return false|mixed
-     */
+
+
+
+
+
+
+
     public function get($key, $expirationTimeSeconds = 10, $callback = null)
     {
         $value = get_transient($key);

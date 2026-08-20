@@ -13,16 +13,16 @@ use WPStaging\Framework\Utils\Sanitize;
 
 class Edit extends AbstractTemplateComponent
 {
-    /** @var BackupMetadataEditor */
+ 
     private $backupMetadataEditor;
 
-    /** @var BackupsFinder */
+ 
     private $backupsFinder;
 
-    /** @var BackupPathResolver */
+ 
     private $backupPathResolver;
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
     public function __construct(
@@ -66,7 +66,7 @@ class Edit extends AbstractTemplateComponent
 
         $backups = $this->backupsFinder->findBackups();
 
-        // Early bail: No backups found, nothing to edit
+ 
         if (empty($backups)) {
             wp_send_json([
                 'error'   => true,
@@ -74,12 +74,12 @@ class Edit extends AbstractTemplateComponent
             ]);
         }
 
-        // Name must not be empty.
+ 
         if (empty($name)) {
             $name = __('Backup', 'wp-staging');
         }
 
-        /** @var \SplFileInfo $backup */
+ 
         foreach ($backups as $backup) {
             if ($md5 === md5($backup->getBasename())) {
                 try {
@@ -94,7 +94,7 @@ class Edit extends AbstractTemplateComponent
                     }
 
                     $oldNote       = $metaData->getNote();
-                    $oldNoteLength = 2; // null takes 2 bytes!?
+                    $oldNoteLength = 2; 
                     if ($oldNote !== null) {
                         $oldNoteLength = strlen($oldNote);
                     }
@@ -110,7 +110,7 @@ class Edit extends AbstractTemplateComponent
                 } catch (\Exception $e) {
                     wp_send_json([
                         'error'   => true,
-                        /* We might need to translate the error */
+ 
                         'message' => esc_html__($e->getMessage(), 'wp-staging'),
                     ]);
                 }
@@ -120,13 +120,13 @@ class Edit extends AbstractTemplateComponent
         wp_send_json(true);
     }
 
-    /**
-     * @param BackupMetadata $metaData
-     * @param string $name
-     * @param string $notes
-     * @param int $incrementSize
-     * @param string $backupFilename
-     */
+
+
+
+
+
+
+
     protected function updateBackupParts($metaData, $name, $notes, $incrementSize, $backupFilename)
     {
         $backupSize  = 0;
@@ -157,7 +157,7 @@ class Edit extends AbstractTemplateComponent
         }
 
         foreach ($backupParts as $part) {
-            /** @var BackupMetadata $partMetadata */
+ 
             $partMetadata = $part['metadata'];
             $partMetadata->setName($name);
             $partMetadata->setNote($notes);

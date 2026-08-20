@@ -9,58 +9,58 @@ use WPStaging\Staging\Tasks\StagingSiteUpdate\UpdateRequirementsCheckTask;
 
 class ResetRequirementsCheckTask extends UpdateRequirementsCheckTask
 {
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_site_reset_requirements_check';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Requirements Check';
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function logStartHeader()
     {
         $this->logger->info('#################### Start Staging Site Reset Job ####################');
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function logRequirementsCheckPassed()
     {
         $this->logger->info('Staging Site reset requirements passed...');
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function enqueueStartEvent()
     {
         WPStaging::make(AnalyticsStagingReset::class)->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function enqueueRequirementFailEvent()
     {
         WPStaging::make(AnalyticsStagingReset::class)->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function cannotUpdateIfStagingSiteNoExists()
     {
         $stagingSitePath = $this->jobDataDto->getStagingSitePath();
@@ -69,10 +69,10 @@ class ResetRequirementsCheckTask extends UpdateRequirementsCheckTask
         }
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function cannotUpdateIfUsingExternalDatabase()
     {
         if ($this->jobDataDto->getIsExternalDatabase()) {

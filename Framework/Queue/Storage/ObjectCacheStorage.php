@@ -10,52 +10,52 @@ class ObjectCacheStorage implements StorageInterface, ShutdownableInterface
 {
     use ResourceTrait;
 
-    /**
-     * @var int When this value is hit, a new cache rotation starts,
-     *          to make sure we don't try to bite more than we can chew.
-     */
+
+
+
+
     protected $maxCacheSize;
 
-    /**
-     * @var int The current cache size, that should be smaller than max.
-     */
+
+
+
     protected $currentCacheSize = 0;
 
-    /**
-     * @var string The identifier of this cache instance.
-     */
+
+
+
     protected $key;
 
-    /**
-     * Everytime the Cache gets bigger than maxCacheSize,
-     * this value increases by 1.
-     *
-     * @var int
-     */
+
+
+
+
+
+
     protected $cacheRotation = 0;
 
-    /**
-     * The total items across all cache rotations.
-     *
-     * @var int
-     */
+
+
+
+
+
     protected $totalCount = 0;
 
-    /**
-     * @var array The current data this storage stores.
-     */
+
+
+
     protected $data;
 
     const GROUP = 'wpstg.objectCacheStorage';
 
-    /**
-     * @var JsonDoublyLinkedList
-     */
+
+
+
     protected $linkedList;
 
     public function __construct()
     {
-        // 1MB, or 10% of available memory
+ 
         $this->maxCacheSize = 1 * MB_IN_BYTES;
     }
 
@@ -85,7 +85,7 @@ class ObjectCacheStorage implements StorageInterface, ShutdownableInterface
 
     public function commit()
     {
-        // json_encode removes items from the linkedList
+ 
         $count = $this->linkedList->count();
 
         wp_cache_add($this->cacheKeyThisRotation(), json_encode($this->linkedList), self::GROUP, 1 * DAY_IN_SECONDS);
@@ -93,14 +93,14 @@ class ObjectCacheStorage implements StorageInterface, ShutdownableInterface
         $this->updateCacheInfo($this->cacheRotation + 1);
     }
 
-    /**
-     * This is the entry-point of this cache.
-     * It must be set.
-     *
-     * @param string $key
-     *
-     * @return void|StorageInterface
-     */
+
+
+
+
+
+
+
+
     public function setKey($key)
     {
         if (!is_null($this->key)) {
@@ -261,18 +261,18 @@ class ObjectCacheStorage implements StorageInterface, ShutdownableInterface
     {
         $this->linkedList = new JsonDoublyLinkedList();
 
-        // Free up memory as it reads through the contents.
+ 
         $this->linkedList->setIteratorMode(JsonDoublyLinkedList::IT_MODE_DELETE);
     }
 
     public function getCache()
     {
-        // no-op
+ 
         return null;
     }
 
     public function reverse()
     {
-        // no-op
+ 
     }
 }

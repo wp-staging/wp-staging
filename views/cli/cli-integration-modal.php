@@ -14,30 +14,30 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Utils\Sanitize;
 
-/**
- * @global string $table_prefix
- */
+
+
+
 global $table_prefix;
 
-/**
- * @var bool   $isDeveloperOrHigher Whether user has Developer plan or higher
- * @var array  $backups             Array of available backups
- * @var string $urlAssets           URL to assets directory
- */
 
-// Get site configuration for modal
+
+
+
+
+
+ 
 $sanitize     = WPStaging::make(Sanitize::class);
 $phpVersion   = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
 $wpVersion    = get_bloginfo('version');
 $prodUrl      = home_url();
 $prodHost     = wp_parse_url($prodUrl, PHP_URL_HOST);
-// Sanitize domain for safe use in CLI commands (only alphanumeric, dots, hyphens)
+ 
 $localDomain  = $sanitize->sanitizeDomainForCli(preg_replace('/\.[a-zA-Z0-9]+$/', '', $prodHost) . '.local');
 
-// Sanitize table prefix for safe use in CLI commands (only alphanumeric, underscores)
+ 
 $tablePrefix  = $sanitize->sanitizeTablePrefixForCli($table_prefix);
 $licenseKey       = trim(get_option('wpstg_license_key', ''));
-// Sanitize license key for safe use in CLI commands (only alphanumeric, hyphens)
+ 
 $licenseKeySanitized = $sanitize->sanitizeLicenseKeyForCli($licenseKey);
 $licenseFlag      = !empty($licenseKeySanitized) ? ' -l ' . $licenseKeySanitized : '';
 $maskedLicenseKey = !empty($licenseKeySanitized) ? substr($licenseKeySanitized, 0, 4) . '...' . substr($licenseKeySanitized, -4) : '';
@@ -137,7 +137,7 @@ if (!$isDeveloperOrHigher) {
                     </p>
 
                     <?php
-                    // Mac and Linux share the same bash install command
+ 
                     $cmdBashFull   = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlag : '');
                     $cmdBashMasked = 'curl -fsSL https://wp-staging.com/install.sh | bash' . ($hasLicense ? ' -s --' . $licenseFlagMasked : '');
                     ?>
@@ -433,7 +433,7 @@ if (!$isDeveloperOrHigher) {
                     </div>
 
                     <?php
-                    // Get first backup for default command
+ 
                     $firstBackup = null;
                     foreach ($backups as $backup) {
                         if (!$backup->isCorrupt && !$backup->isLegacy) {
@@ -442,13 +442,13 @@ if (!$isDeveloperOrHigher) {
                         }
                     }
 
-                    // Use first backup URL or placeholder
+ 
                     $defaultBackupUrl = $firstBackup ? $firstBackup->downloadUrl : 'https://example.com/backup.wpstg';
 
-                    // Create masked URL for display (mask the unique identifier part of filename)
+ 
                     $maskedBackupUrl = preg_replace('/(_[0-9]{8}-[0-9]{6}_[a-f0-9]+)(\.wpstg)$/i', '_*****$2', $defaultBackupUrl);
 
-                    // Simplified single restore command with --from flag
+ 
                     $cmdRestoreFull   = sprintf("wpstaging restore %s --from=%s", $localDomain, $defaultBackupUrl);
                     $cmdRestoreMasked = sprintf("wpstaging restore %s --from=%s", $localDomain, $maskedBackupUrl);
                     ?>

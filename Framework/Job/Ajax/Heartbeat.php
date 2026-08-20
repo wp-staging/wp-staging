@@ -8,9 +8,9 @@ use WPStaging\Framework\Job\JobTransientCache;
 
 class Heartbeat extends AbstractTemplateComponent
 {
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxProcess()
     {
         if (!$this->canRenderAjax()) {

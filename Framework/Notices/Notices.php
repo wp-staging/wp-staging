@@ -25,115 +25,115 @@ use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\ThirdParty\Aios;
 
-/**
- * Show Admin Notices | Warnings | Messages
- *
- * Class Notices
- * @package WPStaging\Framework\Notices
- * @todo maybe split this class into multiple classes like staging notices, permission notices etc
- * to avoid dependency hell without using service locator?
- */
+
+
+
+
+
+
+
+
 class Notices
 {
     use NoticesTrait;
 
-    /** @var string */
+ 
     const ACTION_PRO_NOTICES = 'wpstg.notices.show_pro_notices';
 
-    /** @var string */
+ 
     const ACTION_BASIC_NOTICES = 'wpstg.notices.show_basic_notices';
 
-    /** @var string */
+ 
     const ACTION_INJECT_ANALYTICS_CONSENT_ASSETS = 'wpstg.assets.inject_analytics_consent_assets';
 
-    /** @var string */
+ 
     const ACTION_ADMIN_NOTICES = 'wpstg.admin_notices';
 
-    /** @var string */
+ 
     const ACTION_NETWORK_ADMIN_NOTICES = 'wpstg.network_admin_notices';
 
-    /** @var string */
+ 
     const ACTION_ALL_ADMIN_NOTICES = 'wpstg.all_admin_notices';
 
-    /** @var string */
+ 
     const FILTER_NOTICES_HIDE_DIRECTORY_LISTING_WARNINGS = 'wpstg.notices.hideDirectoryListingWarnings';
 
     const FILTER_NOTICES_HIDE_MISSING_PRIMARY_KEY_NOTICE = 'wpstg.notices.hideMissingPrimaryKeyNotice';
 
-    /** @var Assets */
+ 
     private $assets;
 
-    /** @var Directory */
+ 
     private $dirUtil;
 
-    /** @var Cache */
+ 
     private $cache;
 
-    /** @var Logger */
+ 
     private $logger;
 
-    /** @var CloneOptions */
+ 
     private $cloneOptions;
 
-    /** @var ExcludedPlugins */
+ 
     private $excludedPlugins;
 
-    /** @var FreemiusScript */
+ 
     private $freemiusScript;
 
-    /** @var WordFence */
+ 
     private $wordfence;
 
-    /** @var DisabledItemsNotice */
+ 
     private $disabledItemsNotice;
 
-    /** @var WarningsNotice */
+ 
     private $warningsNotice;
 
-    /** @var OutdatedWpStagingNotice */
+ 
     private $outdatedWpStagingNotice;
 
-    /** @var ObjectCacheNotice */
+ 
     private $objectCacheNotice;
 
-    /** @var wpdb */
+ 
     private $db;
 
-    /** For testing all notices */
+ 
     const SHOW_ALL_NOTICES = false;
 
-    /**
-     * @var string The key that holds directory listing errors in the container.
-     */
+
+
+
     public static $directoryListingErrors = 'directoryListingErrors';
 
-    /** @var SiteInfo */
+ 
     private $siteInfo;
 
-    /** @var string */
+ 
     private $viewsNoticesPath;
 
-    /** @var false|mixed|null */
+ 
     private $settings;
 
-    /** @var ServerVars */
+ 
     private $serverVars;
 
-    /** @var bool */
+ 
     private $isWpComSite;
 
-    /** @var WpOptionsInfo */
+ 
     private $wpOptionsInfo;
 
-    /**
-     * @param Assets $assets
-     */
+
+
+
     public function __construct(Assets $assets)
     {
         $this->assets           = $assets;
         $this->viewsNoticesPath = WPSTG_VIEWS_DIR . "notices/";
 
-        // To avoid dependency hell and smooth transition we will be using service locator for below dependencies
+ 
         $this->dirUtil         = WPStaging::make(Directory::class);
         $this->wordfence       = WPStaging::make(WordFence::class);
         $this->cloneOptions    = WPStaging::make(CloneOptions::class);
@@ -144,7 +144,7 @@ class Notices
         $this->db              = WPStaging::make('wpdb');
         $this->wpOptionsInfo   = WPStaging::make(WpOptionsInfo::class);
 
-        // Notices
+ 
         $this->disabledItemsNotice     = WPStaging::make(DisabledItemsNotice::class);
         $this->warningsNotice          = WPStaging::make(WarningsNotice::class);
         $this->outdatedWpStagingNotice = WPStaging::make(OutdatedWpStagingNotice::class);
@@ -155,20 +155,20 @@ class Notices
         $this->isWpComSite = $this->siteInfo->isHostedOnWordPressCom();
     }
 
-    /**
-     * Check whether the plugin is pro version
-     *
-     * @return  bool
-     */
+
+
+
+
+
     protected function isPro(): bool
     {
         return WPStaging::isPro();
     }
 
-    /**
-     * Load admin notices
-     * @throws Exception
-     */
+
+
+
+
     public function renderNotices()
     {
         if (!current_user_can(WPStaging::make(Capabilities::class)->manageWPSTG())) {
@@ -183,9 +183,9 @@ class Notices
         $this->renderNoticesOnWpStagingAdminPages();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function renderNoticesOnAllWpAdminPages()
     {
         $this->noticeListItemsDisabledOnStagingSite();
@@ -198,12 +198,12 @@ class Notices
         $this->showAnalyticsModal();
     }
 
-    /**
-     * Warn users who may have created staging sites with the now-disabled
-     * Next-Gen engine that those sites can be corrupted (issue #5346).
-     *
-     * @return void
-     */
+
+
+
+
+
+
     private function noticeNextGenEngineStagingSites()
     {
         if (self::SHOW_ALL_NOTICES || WPStaging::make(NextGenEngineNotice::class)->isEnabled()) {
@@ -211,9 +211,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function renderNoticesBasicVersion()
     {
         if (!$this->isPro()) {
@@ -221,20 +221,20 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function renderNoticesProVersion()
     {
         if ($this->isPro()) {
-            // This hook is for internal use only. Used in PRO version to display PRO version related notices.
+ 
             do_action(self::ACTION_PRO_NOTICES);
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function renderNoticesOnWpStagingAdminPages()
     {
         if (!current_user_can("update_plugins") || !$this->isWPStagingAdminPage()) {
@@ -257,9 +257,9 @@ class Notices
         $this->noticeAiosSaltPostfixEnabled();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeStagingUploadsFolderIsSymlinked()
     {
         $uploadsPath = wp_upload_dir()['basedir'];
@@ -268,9 +268,9 @@ class Notices
         }
     }
 
-    /**
-     * Show warning notice if current site prefix is equal to one of the WPSTG temporary prefixes wpstgtmp_ or wpstgbak_
-     */
+
+
+
     private function noticeTableTmpPrefixConflictNotice()
     {
         $disallowedPrefixes = [DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP, DatabaseImporter::TMP_DATABASE_PREFIX];
@@ -279,28 +279,28 @@ class Notices
         }
     }
 
-    /**
-     * Displays the notice that we could not prevent
-     * directory listing on a sensitive folder for some reason.
-     *
-     * @param string $viewsNoticesPath The path to the views folder.
-     * @see \WPStaging\Framework\Filesystem\Filesystem::mkdir The place where all errors are enqueued
-     *                                                        to be displayed as a single notice here.
-     *
-     * Note: When refactoring this, keep in mind this code should be
-     * called only once, otherwise the message would be enqueued multiple times.
-     *
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     private function noticeShowDirectoryListingWarning(string $viewsNoticesPath)
     {
         $directoryListingErrors = WPStaging::getInstance()->getContainer()->getFromArray(static::$directoryListingErrors);
 
-        // Early bail: No errors to show
+ 
         if (!self::SHOW_ALL_NOTICES && empty($directoryListingErrors)) {
             return;
         }
 
-        // Early bail: These warnings were disabled by the user.
+ 
         if (Hooks::applyFilters(self::FILTER_NOTICES_HIDE_DIRECTORY_LISTING_WARNINGS, false)) {
             return;
         }
@@ -308,10 +308,10 @@ class Notices
         require_once "{$viewsNoticesPath}directory-listing-could-not-be-prevented.php";
     }
 
-    /**
-     * Check if the url scheme of siteurl and home is identical
-     * @return bool
-     */
+
+
+
+
     private function isDifferentScheme(): bool
     {
         $siteurlScheme = parse_url(get_option('siteurl'), PHP_URL_SCHEME);
@@ -320,56 +320,56 @@ class Notices
         return !($siteurlScheme === $homeScheme);
     }
 
-    /**
-     * Check if the user is using an outdated version of WP Staging Hooks plugin
-     * @return bool
-     */
+
+
+
+
     private function isUsingOutdatedWpstgHooksPlugin(): bool
     {
-        // Minimum version to check
+ 
         $versionToCheck = '0.0.4';
 
-        // Path to WP Staging Hooks plugins in a directory
+ 
         $wpstgHooksPath = 'wp-staging-hooks/wp-staging-hooks.php';
 
-        // Only show notice if plugin exists for above path
+ 
         if (file_exists(WP_PLUGIN_DIR . '/' . $wpstgHooksPath)) {
             $wpstgHooksData = get_plugin_data(WP_PLUGIN_DIR . '/' . $wpstgHooksPath);
-            // Only show notice if current version is below required min version.
+ 
             return version_compare($wpstgHooksData['Version'], $versionToCheck, '>=') ? false : true;
         }
 
-        // Path to WP Staging Hooks plugins directly in plugins dir
+ 
         $wpstgHooksPath = 'wp-staging-hooks.php';
 
-        // Only show notice if plugin exists for above path
+ 
         if (file_exists(WP_PLUGIN_DIR . '/' . $wpstgHooksPath)) {
             $wpstgHooksData = get_plugin_data(WP_PLUGIN_DIR . '/' . $wpstgHooksPath);
-            // Only show notice if current version is below required min version.
+ 
             return version_compare($wpstgHooksData['Version'], $versionToCheck, '>=') ? false : true;
         }
 
         return false;
     }
 
-    /**
-     * Render the notice dismiss action
-     *
-     * @param string $viewsNoticesPath
-     * @param string $wpstgNotice
-     * @param string $cssClassSelectorDismiss
-     * @param string $cssClassSelectorNotice
-     *
-     * @todo Convert to Facade for testability?
-     */
+
+
+
+
+
+
+
+
+
+
     public static function renderNoticeDismissAction(string $viewsNoticesPath, $wpstgNotice, $cssClassSelectorDismiss, $cssClassSelectorNotice)
     {
         require "{$viewsNoticesPath}_partial/notice_dismiss_action.php";
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function maybeShowElementorCloudNotice()
     {
         if (self::SHOW_ALL_NOTICES || ($this->isWPStagingClonePage() && $this->siteInfo->isHostedOnElementorCloud())) {
@@ -377,10 +377,10 @@ class Notices
         }
     }
 
-    /**
-     * @param $settings
-     * @return bool
-     */
+
+
+
+
     private function isSettingsCorrupt(): bool
     {
         if (!is_array($this->settings) && !is_object($this->settings)) {
@@ -390,9 +390,9 @@ class Notices
         return false;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeDbHasMissingOrUnexpectedPrimaryKeys()
     {
         if (Hooks::applyFilters(self::FILTER_NOTICES_HIDE_MISSING_PRIMARY_KEY_NOTICE, false)) {
@@ -407,9 +407,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeDbPrefixDoesNotExist()
     {
         if (self::SHOW_ALL_NOTICES || empty($this->db->prefix)) {
@@ -417,9 +417,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeWPEnginePermalinkWarning()
     {
         if (self::SHOW_ALL_NOTICES || class_exists('WPE_API')) {
@@ -427,10 +427,10 @@ class Notices
         }
     }
 
-    /**
-     * @param $wpstgSettings
-     * @return void
-     */
+
+
+
+
     private function noticeOptimizerIsDisabled()
     {
         $wpstgSettings = (object)$this->settings;
@@ -439,9 +439,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeMuPluginDirNotWriteable()
     {
         $varsDirectory = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
@@ -454,9 +454,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeWpStagingHooksPluginIsOutdated()
     {
         if (self::SHOW_ALL_NOTICES || ($this->isUsingOutdatedWpstgHooksPlugin())) {
@@ -464,9 +464,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeHomeAndSiteurlHaveDifferentScheme()
     {
         if (self::SHOW_ALL_NOTICES || ($this->isDifferentScheme())) {
@@ -474,20 +474,20 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeAbspathDirectoryNotWriteable()
     {
-        // Don't show this notice on WP Com Sites
+ 
         if (self::SHOW_ALL_NOTICES || ((!is_writable(ABSPATH)) && !$this->isWpComSite)) {
             require_once $this->viewsNoticesPath . "staging-directory-permission-problem.php";
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeLoggerDirectoryNotWriteable()
     {
         $logsDir = $this->logger->getLogDir();
@@ -496,9 +496,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeCacheDirectoryNotWriteable()
     {
         $cacheDir = $this->cache->getPath();
@@ -507,9 +507,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeObjectCachePluginNotRestored()
     {
         if (self::SHOW_ALL_NOTICES || ($this->objectCacheNotice->isEnabled())) {
@@ -517,20 +517,20 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeWpStagingVersionIsOutdated()
     {
-        /**
-         * Display outdated WP Staging version notice (Free Only)
-         */
+
+
+
         $this->outdatedWpStagingNotice->showNotice($this->viewsNoticesPath);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeUploadsDirIsOutsideAbspath()
     {
         if (self::SHOW_ALL_NOTICES || (!$this->dirUtil->isPathInWpRoot($this->dirUtil->getUploadsDirectory()) && !$this->siteInfo->isFlywheel() && !$this->isWpComSite)) {
@@ -538,9 +538,9 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeSettingsAreCorrupted()
     {
         if (self::SHOW_ALL_NOTICES || ($this->isSettingsCorrupt())) {
@@ -548,50 +548,50 @@ class Notices
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeWordFenceHasBeenDisabled()
     {
         $this->wordfence->showNotice($this->viewsNoticesPath);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeListItemsDisabledOnStagingSite()
     {
-        // free version has no option to disable outgoing mails
+ 
         $outgoingMailsDisabled = false;
 
         if ($this->isPro()) {
-            // Check mails disabled against both the old and new way of emails disabled option
+ 
             $outgoingMailsDisabled = $this->cloneOptions->get(FirstRun::MAILS_DISABLED_KEY) || (get_option(FirstRun::MAILS_DISABLED_KEY, false));
         }
 
-        // Show notice about what disabled in the staging site. (Show only on staging site)
+ 
         if (self::SHOW_ALL_NOTICES || $this->disabledItemsNotice->isEnabled()) {
             $excludedPlugins = (array)$this->excludedPlugins->getExcludedPlugins();
-            // Show freemius notice if freemius options were deleted during cloning.
+ 
             $freemiusOptionsCleared = $this->freemiusScript->isNoticeEnabled();
-            // Show jetpack staging mode notice if the constant is set on staging site
+ 
             $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
             $excludedFiles              = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
             $excludedGoDaddyFiles       = get_option(Sites::STAGING_EXCLUDED_GD_FILES_OPTION, []);
-            // use require here instead of require_once otherwise unit tests will always fail,
-            // as this notice is tested multiple times.
+ 
+ 
             require $this->viewsNoticesPath . "disabled-items-notice.php";
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function noticeAiosSaltPostfixEnabled()
     {
         $aios = WPStaging::make(Aios::class);
 
-        // Execute it here to prevent this from being executed on each page request and to save db calls.
+ 
         $aios->optimizerWhitelistUpdater();
 
         if (self::SHOW_ALL_NOTICES || $aios->isSaltPostfixOptionEnabled()) {

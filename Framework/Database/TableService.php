@@ -1,7 +1,7 @@
 <?php
 
-// TODO PHP7.x; declare(strict_types=1);
-// TODO PHP7.x type-hints & return types
+ 
+ 
 
 namespace WPStaging\Framework\Database;
 
@@ -14,26 +14,26 @@ use WPStaging\Framework\Utils\Strings;
 
 class TableService
 {
-    /** @var Database */
+ 
     private $database;
 
-    /** @var Database\DatabaseAdapterInterface|Database\InterfaceDatabaseClient|Database\MysqliAdapter|null */
+ 
     private $client;
 
-    /** @var callable|null */
+ 
     private $shouldStop;
 
-    /** @var array */
+ 
     private $errors = [];
 
-    /** @var Strings */
+ 
     private $strHelper;
 
     private $isSqlLite = false;
 
-    /**
-     * @param Database|null $database
-     */
+
+
+
     public function __construct($database = null)
     {
         $this->database  = $database ?: new Database();
@@ -43,36 +43,36 @@ class TableService
         $this->isSqlLite = property_exists($this->client, 'isSQLite');
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getErrors()
     {
         return $this->errors;
     }
 
-    /**
-     * @return callable|null
-     */
+
+
+
     public function getShouldStop()
     {
         return $this->shouldStop;
     }
 
-    /**
-     * @param callable|null $shouldStop
-     * @return self
-     */
+
+
+
+
     public function setShouldStop($shouldStop = null)
     {
         $this->shouldStop = $shouldStop;
         return $this;
     }
 
-    /**
-     * @param string $tableName
-     * @return bool
-     */
+
+
+
+
     public function tableExists(string $tableName): bool
     {
         $wpdb   = $this->database->getWpdb();
@@ -88,11 +88,11 @@ class TableService
         return true;
     }
 
-    /**
-     * Get all tables information in the current datababase as collection
-     *
-     * @return Collection|null
-     */
+
+
+
+
+
     public function findAllTableStatus()
     {
         $tables = $this->database->find("SHOW TABLE STATUS");
@@ -108,15 +108,15 @@ class TableService
         return $collection;
     }
 
-    /**
-     * Get all tables information starting with a specific prefix as collection
-     * @param string|null $prefix
-     *
-     * @return TableDto[]|Collection|null
-     */
+
+
+
+
+
+
     public function findTableStatusStartsWith($prefix = null)
     {
-        // eg: SHOW TABLE STATUS LIKE 'wp\_%';
+ 
         $tables = $this->database->find("SHOW TABLE STATUS LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'");
         if (!$tables) {
             return null;
@@ -130,12 +130,12 @@ class TableService
         return $collection;
     }
 
-    /**
-     * Get names of all table only
-     * @param array $tables
-     *
-     * @return array
-     */
+
+
+
+
+
+
     public function getTablesName($tables): array
     {
         return (!is_array($tables)) ? [] : array_map(function ($table) {
@@ -143,13 +143,13 @@ class TableService
         }, $tables);
     }
 
-    /**
-     * Get all base tables starting with a certain prefix
-     * This does not include table views
-     * @param string $prefix
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
     public function findTableNamesStartWith(string $prefix = ''): array
     {
         $query  = $this->getTablesFindQueryByTableType('BASE TABLE', $prefix);
@@ -170,13 +170,13 @@ class TableService
         return $tables;
     }
 
-    /**
-     * Get all table views starting with a certain prefix
-     *
-     * @param string $prefix
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
     public function findViewsNamesStartWith(string $prefix = ''): array
     {
         $query  = $this->getTablesFindQueryByTableType('VIEW', $prefix);
@@ -197,11 +197,11 @@ class TableService
         return $views;
     }
 
-    /**
-     * @param string $viewName View name
-     *
-     * @return string
-     */
+
+
+
+
+
     public function getCreateViewQuery(string $viewName): string
     {
         $result = $this->client->query("SHOW CREATE VIEW `{$viewName}`");
@@ -216,13 +216,13 @@ class TableService
         return '';
     }
 
-    /**
-     * Get MySQL create table query
-     *
-     * @param string $tableName Table name
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
     public function getCreateTableQuery(string $tableName): string
     {
         $result = $this->client->query("SHOW CREATE TABLE `{$tableName}`");
@@ -241,18 +241,18 @@ class TableService
         return '';
     }
 
-    /**
-     * Delete all the tables or views that starts with $startsWith
-     *
-     * @param string $prefix
-     * @param array $excludedTables
-     * @param bool $deleteViews
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function deleteTablesStartWith(string $prefix, array $excludedTables = [], bool $deleteViews = false): bool
     {
         if ($deleteViews) {
-            // Delete VIEWS first
+ 
             $views = $this->findViewsNamesStartWith($prefix);
             if (is_array($views) && !empty($views)) {
                 $viewsToRemove = array_diff($views, $excludedTables);
@@ -281,12 +281,12 @@ class TableService
         return true;
     }
 
-    /**
-     * Delete Tables
-     * @param array $tables
-     *
-     * @return bool
-     */
+
+
+
+
+
+
     public function deleteTables($tables): bool
     {
         $isForeignKeyCheckEnabled = "0";
@@ -301,7 +301,7 @@ class TableService
         }
 
         foreach ($tables as $table) {
-            // PROTECTION: Never delete any table that begins with wp prefix of live site
+ 
             if ($this->isProductionSiteTableOrView($table)) {
                 $this->errors[] = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
 
@@ -318,16 +318,16 @@ class TableService
         return true;
     }
 
-    /**
-     * Delete Views
-     *
-     * @param array $views
-     * @return bool
-     */
+
+
+
+
+
+
     public function deleteViews($views): bool
     {
         foreach ($views as $view) {
-            // PROTECTION: Never delete any table that begins with wp prefix of live site
+ 
             if ($this->isProductionSiteTableOrView($view)) {
                 $this->errors[] = sprintf(__("Fatal Error: Trying to delete view %s of main WP installation!", 'wp-staging'), $view);
 
@@ -340,18 +340,18 @@ class TableService
         return true;
     }
 
-    /**
-     * @return Database
-     */
+
+
+
     public function getDatabase()
     {
         return $this->database;
     }
 
-    /**
-     * @param string $likeCondition
-     * @return bool
-     */
+
+
+
+
     public function dropTablesLike(string $likeCondition): bool
     {
         $wpdb   = $this->database->getWpdb();
@@ -371,10 +371,10 @@ class TableService
         return true;
     }
 
-    /**
-     * @param string $tableName
-     * @return bool
-     */
+
+
+
+
     public function dropTable(string $tableName): bool
     {
         $wpdb   = $this->database->getWpdb();
@@ -395,14 +395,14 @@ class TableService
         return true;
     }
 
-    /**
-     * @param string $sourceTable
-     * @param string $destinationTable
-     * @return bool
-     */
+
+
+
+
+
     public function renameTable(string $sourceTable, string $destinationTable): bool
     {
-        // Rename table return int on success and false on failure, so we alter the condition to check for false
+ 
         $result = $this->client->query(sprintf(
             "RENAME TABLE `%s` TO `%s`;",
             $sourceTable,
@@ -412,23 +412,23 @@ class TableService
         return $result !== false;
     }
 
-    /**
-     * @param string $sourceTable
-     * @param string $destinationTable
-     * @return bool
-     */
+
+
+
+
+
     public function cloneTableWithoutData(string $sourceTable, string $destinationTable): bool
     {
         return $this->client->query("CREATE TABLE $destinationTable LIKE $sourceTable");
     }
 
-    /**
-     * @param string $sourceTable
-     * @param string $destinationTable
-     * @param int $offset
-     * @param int $limit
-     * @return bool
-     */
+
+
+
+
+
+
+
     public function copyTableData(string $sourceTable, string $destinationTable, int $offset = 0, int $limit = 0): bool
     {
         $query = sprintf(
@@ -442,10 +442,10 @@ class TableService
         return $this->client->query($query);
     }
 
-    /**
-     * @param string $tableName
-     * @return int
-     */
+
+
+
+
     public function getRowsCount(string $tableName, bool $encapsulateTableName = true): int
     {
         $tableName = $encapsulateTableName ? "`$tableName`" : $tableName;
@@ -453,21 +453,21 @@ class TableService
         return (int)$this->database->getWpdb()->get_var("SELECT COUNT(1) FROM $tableName");
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getLastWpdbError(): string
     {
-        /** @var \wpdb */
+ 
         $wpdb = $this->database->getWpdba()->getClient();
 
         return $wpdb->last_error;
     }
 
 
-    /**
-     * @return string The primary key of the current table, if any.
-     */
+
+
+
     public function getNumericPrimaryKey(string $database, string $table): string
     {
         if ($this->hasMoreThanOnePrimaryKey($database, $table)) {
@@ -508,37 +508,37 @@ class TableService
         return $primaryKey->COLUMN_NAME;
     }
 
-    /**
-     * Replace Constraints with empty string to remove them
-     *
-     * @param string $input SQL statement
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
     public function replaceTableConstraints(string $input): string
     {
         $pattern = [
-            /**
-             * This regex pattern makes it possible to match Table Constraints in SQL with close brackets ")" as the end marker.
-             * If it matches, the string will be replaced with close brackets ")" to close "CREATE TABLE" open brackets "(" to avoid syntax errors.
-             *
-             * Example:
-             *  KEY `key1` (`field1`,`field2`), CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-             *
-             * Pattern match:
-             *  , CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION )
-             *
-             * String before:
-             *  KEY `key1` (`field1`,`field2`), CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-             *
-             * String after:
-             * KEY `key1` (`field1`,`field2`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-             *
-             * @see https://github.com/wp-staging/wp-staging-pro/issues/3259
-             * @see https://github.com/wp-staging/wp-staging-pro/pull/3265
-             * @see https://github.com/wp-staging/wp-staging-pro/issues/3303
-             * @see https://github.com/wp-staging/wp-staging-pro/pull/3304
-             */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?(CASCADE|RESTRICT|NO\sACTION|SET\sNULL|SET\sDEFAULT)(,)/i',
             '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?\)/i',
             '/\s+CONSTRAINT(.+)REFERENCES(.+),/i',
@@ -549,11 +549,11 @@ class TableService
         return (string)preg_replace($pattern, $replace, $input);
     }
 
-    /**
-     * @param string $input SQL statement
-     *
-     * @return string
-     */
+
+
+
+
+
     public function replaceTableOptions(string $input): string
     {
         $search = [
@@ -588,10 +588,10 @@ class TableService
         return str_ireplace($search, $replace, $input);
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     public function lockTable(string $tableName)
     {
         if (!$this->client->query("LOCK TABLES `$tableName` WRITE;")) {
@@ -599,10 +599,10 @@ class TableService
         }
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     public function unlockTables()
     {
         if (!$this->client->query("UNLOCK TABLES;")) {
@@ -610,11 +610,11 @@ class TableService
         }
     }
 
-    /**
-     * @param string $tableName
-     *
-     * @return array
-     */
+
+
+
+
+
     public function getColumnTypes(string $tableName): array
     {
         $column_types = [];
@@ -631,20 +631,20 @@ class TableService
         return $column_types;
     }
 
-    /**
-     * @param string $tableOrView
-     * @return bool
-     */
+
+
+
+
     private function isProductionSiteTableOrView($tableOrView): bool
     {
-        // Early return if current database is external
+ 
         if ($this->database->isExternal()) {
             return false;
         }
 
         $productionPrefix = $this->database->getProductionPrefix();
 
-        // If table does not start with production prefix, it is not a production table
+ 
         $result = $this->strHelper->startsWith($tableOrView, $productionPrefix);
         if (!$result) {
             return false;
@@ -668,23 +668,23 @@ class TableService
         return true;
     }
 
-    /**
-     * @param string $tableType
-     * @param string $prefix
-     * @return string
-     */
+
+
+
+
+
     private function getTablesFindQueryByTableType(string $tableType, string $prefix = ''): string
     {
 
         if ($this->isSqlLite) {
-            // SQLite query
+ 
             $tableType = $tableType === 'VIEW' ? 'view' : 'table';
             $query     = "SELECT name FROM sqlite_master WHERE type = '{$tableType}'";
             if (!empty($prefix)) {
                 $query .= " AND name LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'";
             }
         } else {
-            // MySQL-compatible query
+ 
             $dbname = $this->database->getWpdba()->getClient()->dbname;
             $query  = "SHOW FULL TABLES FROM `{$dbname}` WHERE `Table_type` = '{$tableType}'";
             if (!empty($prefix)) {
@@ -695,11 +695,11 @@ class TableService
         return $query;
     }
 
-    /**
-     * @return bool
-     *
-     * @throws UnexpectedValueException
-     */
+
+
+
+
+
     private function hasMoreThanOnePrimaryKey(string $database, string $table): bool
     {
         $query = "SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'";

@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Base class for file backup tasks that archive WordPress files into backups
- *
- * Manages the coordination between file discovery and archiving, handling large files
- * across multiple requests while tracking progress and managing graceful shutdowns.
- */
+
+
+
+
+
+
 
 namespace WPStaging\Backup\Task;
 
@@ -20,12 +20,12 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 abstract class FileBackupTask extends BackupTask
 {
-    /**
-     * Whether if the file backup task gracefully shuts down
-     */
+
+
+
     const TRANSIENT_GRACEFUL_SHUTDOWN = 'wpstg_file_backup_task';
 
-    /** @var FileBackupService */
+ 
     protected $fileBackupService;
 
     public function __construct(FileBackupServiceProvider $fileBackupServiceProvider, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -55,12 +55,12 @@ abstract class FileBackupTask extends BackupTask
         return $this->generateResponse(false);
     }
 
-    /** @return string */
+ 
     abstract protected function getFileIdentifier(): string;
 
-    /**
-     * @return void
-     */
+
+
+
     private function prepareFileBackupTask()
     {
         $this->fileBackupService->inject($this, $this->taskQueue, $this->logger, $this->jobDataDto, $this->stepsDto);
@@ -72,9 +72,9 @@ abstract class FileBackupTask extends BackupTask
         $this->stepsDto->setTotal($this->jobDataDto->getDiscoveredFilesByCategory($this->getFileIdentifier()));
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isOtherWpRootFilesTask(): bool
     {
         return false;
@@ -83,7 +83,7 @@ abstract class FileBackupTask extends BackupTask
     protected function checkIfLastRequestGracefulShutdown()
     {
         $transient = get_transient(self::TRANSIENT_GRACEFUL_SHUTDOWN);
-        // empty that mean it was graceful shutdown
+ 
         if (empty($transient)) {
             return;
         }

@@ -6,7 +6,7 @@ use WPStaging\Backend\Modules\Jobs\Cloning;
 
 class CloningJobProvider
 {
-    /** @var Cloning */
+ 
     private $cloningJob;
 
     public function __construct(Cloning $cloningJob)
@@ -14,9 +14,9 @@ class CloningJobProvider
         $this->cloningJob = $cloningJob;
     }
 
-    /**
-     * @return Cloning
-     */
+
+
+
     public function getCloningJob(): Cloning
     {
         return $this->cloningJob;

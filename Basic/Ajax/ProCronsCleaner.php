@@ -8,13 +8,13 @@ use WPStaging\Framework\Security\Auth;
 
 class ProCronsCleaner
 {
-    /** @var Cron */
+ 
     private $cronAdapter;
 
-    /** @var BackupScheduler */
+ 
     private $backupScheduler;
 
-    /** @var Auth */
+ 
     private $auth;
 
     public function __construct(Cron $cronAdapter, BackupScheduler $backupScheduler, Auth $auth)
@@ -47,9 +47,9 @@ class ProCronsCleaner
         ]);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function haveProCrons()
     {
         $proCrons        = $this->cronAdapter->getProEvents();
@@ -64,11 +64,11 @@ class ProCronsCleaner
         return false;
     }
 
-    /**
-     * @param array $schedule
-     * @param array $proCrons
-     * @return bool
-     */
+
+
+
+
+
     protected function isProCronSchedule($schedule, $proCrons)
     {
         return in_array($schedule['schedule'], $proCrons);

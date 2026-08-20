@@ -13,31 +13,31 @@ use function WPStaging\functions\debug_log;
 
 class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 {
-    /** @var string */
+ 
     const FILE_EXTENSION = 'cache.php';
 
-    /** @var string The string identifier of this task */
+ 
     protected $taskName;
 
-    /** @var FileObject|null The file resource that persists this queue */
+ 
     protected $handle;
 
-    /** @var \Generator */
+ 
     protected $fileGenerator;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var int */
+ 
     protected $offsetBefore;
 
-    /** @var bool */
+ 
     protected $needsUnlock = false;
 
-    /** @var bool Whether the Queue is in write-only mode. */
+ 
     protected $isWriteOnly;
 
     public function __construct(Directory $directory, Filesystem $filesystem)
@@ -51,11 +51,11 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         $this->shutdown();
     }
 
-    /**
-     * @param string $taskName
-     * @param string $queueMode Either opens the Queue for read and write, or optimized to write-only.
-     * @return void
-     */
+
+
+
+
+
     public function setup($taskName, $queueMode = SeekableQueueInterface::MODE_READ_WRITE)
     {
         $this->taskName = $taskName;
@@ -67,7 +67,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
         $isNewQueue = $this->createQueue($path);
 
-        // Developer exception
+ 
         if ($queueMode !== SeekableQueueInterface::MODE_WRITE && $queueMode !== SeekableQueueInterface::MODE_READ_WRITE) {
             throw new \BadMethodCallException();
         }
@@ -83,14 +83,14 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             do {
                 $wouldBlock = false;
 
-                /*
-                 * Windows does not support LOCK_NB (Advisory locking), so we read from the return of flock.
-                 * Unix supports LOCK_NB, so we read from the second parameter of flock.
-                 */
+
+
+
+
                 $locked = $this->handle->flock(LOCK_EX | LOCK_NB, $wouldBlock) || (bool)!$wouldBlock;
 
                 if (!$locked) {
-                    usleep(250000); // 0.25s
+                    usleep(250000); 
                     $waitedTimes++;
                     if ($waitedTimes > 5) {
                         throw new \RuntimeException(sprintf(esc_html__('Could not acquire exclusive lock for writing to Queue file: %s.task', 'wp-staging'), $this->taskName));
@@ -101,15 +101,15 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             $this->needsUnlock = true;
         }
 
-        // Add the PHP header to the queue if it is a new queue
+ 
         if ($isNewQueue) {
             $this->enqueue(Cache::PHP_HEADER);
         }
     }
 
-    /**
-     * @return \Generator
-     */
+
+
+
     protected function initializeGenerator()
     {
         while ($this->handle->valid()) {
@@ -154,18 +154,18 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         $this->handle->fseek($offset);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isFinished(): bool
     {
         return $this->handle->eof();
     }
 
-    /**
-     * @param bool $dequeue
-     * @return string|void
-     */
+
+
+
+
     public function retry($dequeue = true)
     {
         $this->seek($this->offsetBefore);
@@ -175,14 +175,14 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         }
     }
 
-    /**
-     * @param string $data
-     * @return false|int
-     */
+
+
+
+
     public function enqueue($data)
     {
         $trimmedData = trim($data);
-        // Early bail: Write-only optimization
+ 
         if ($this->isWriteOnly) {
             $this->handle->fwrite($trimmedData . PHP_EOL);
 
@@ -202,9 +202,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $offsetEndOfQueue;
     }
 
-    /**
-     * @return string|false
-     */
+
+
+
     public function dequeue()
     {
         if ($this->isWriteOnly) {
@@ -226,10 +226,10 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $this->current();
     }
 
-    /**
-     * @param array $data
-     * @return false|int
-     */
+
+
+
+
     public function enqueueMany(array $data = [])
     {
         foreach ($data as $item) {
@@ -241,17 +241,17 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $this->handle->ftell();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function reset()
     {
         $this->handle->ftruncate(0);
     }
 
-    /**
-     * @return false|int
-     */
+
+
+
     public function getOffset()
     {
         if (!isset($this->handle) || !$this->handle instanceof FileObject) {
@@ -261,9 +261,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $this->handle->ftell();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function shutdown()
     {
         if ($this->needsUnlock && $this->handle instanceof FileObject) {
@@ -273,9 +273,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         $this->handle = null;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function unlockObject()
     {
         try {
@@ -288,11 +288,11 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         }
     }
 
-    /**
-     * @param string $path
-     * @return bool True if the file was created, false if it already existed
-     * @throws RuntimeException when file cannot be created
-     */
+
+
+
+
+
     protected function createQueue(string $path): bool
     {
         if (file_exists($path)) {

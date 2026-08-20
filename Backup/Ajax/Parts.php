@@ -1,6 +1,6 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
+ 
 
 namespace WPStaging\Backup\Ajax;
 
@@ -15,19 +15,19 @@ use WPStaging\Framework\Utils\Urls;
 
 class Parts extends AbstractTemplateComponent
 {
-    /**
-     * @var BackupsFinder
-     */
+
+
+
     private $backupsFinder;
 
-    /**
-     * @var BackupPathResolver
-     */
+
+
+
     private $backupPathResolver;
 
-    /**
-     * @var Urls
-     */
+
+
+
     private $urls;
 
     public function __construct(TemplateEngine $templateEngine, BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver, Urls $urls)
@@ -38,9 +38,9 @@ class Parts extends AbstractTemplateComponent
         $this->urls               = $urls;
     }
 
-    /**
-     * @throws BackupRuntimeException
-     */
+
+
+
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -96,25 +96,25 @@ class Parts extends AbstractTemplateComponent
         wp_send_json($result);
     }
 
-    /**
-     * @param string $backupDir
-     * @param string $relativePath
-     * @return string
-     */
+
+
+
+
+
     private function getFullPath(string $backupDir, string $relativePath): string
     {
         return trailingslashit($backupDir) . basename(wp_normalize_path($relativePath));
     }
 
-    /**
-     * @param string $type
-     * @param int $key
-     * @param string $fileName
-     * @param string $fullPath
-     * @param int $totalParts
-     * @return array
-     * @throws \WPStaging\Backup\Exceptions\BackupRuntimeException
-     */
+
+
+
+
+
+
+
+
+
     private function getPart(string $type, int $key, string $fileName, string $fullPath, int $totalParts): array
     {
         $partName   = $type;
@@ -136,13 +136,13 @@ class Parts extends AbstractTemplateComponent
         ];
     }
 
-    /**
-     * @param string $type
-     * @param array $files
-     * @param string $backupDir
-     * @return array
-     * @throws \WPStaging\Backup\Exceptions\BackupRuntimeException
-     */
+
+
+
+
+
+
+
     private function addParts(string $type, array $files, string $backupDir): array
     {
         $total = count($files);
@@ -156,10 +156,10 @@ class Parts extends AbstractTemplateComponent
         return $parts;
     }
 
-    /**
-     * @param string $partType
-     * @return string
-     */
+
+
+
+
     private function getIcon(string $partType): string
     {
         $icons = [

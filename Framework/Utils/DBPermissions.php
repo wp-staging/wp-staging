@@ -6,16 +6,16 @@ use wpdb;
 use ArrayIterator;
 use WPStaging\Framework\Security\Auth;
 
-/**
- * Class Check user permissions on DB
- * @package WPStaging\Framework\Utils
- */
+
+
+
+
 class DBPermissions
 {
-    /** @var wpdb */
+ 
     protected $wpdb;
 
-    /** @var Auth */
+ 
     private $auth;
 
     public function __construct(wpdb $wpdb, Auth $auth)
@@ -24,9 +24,9 @@ class DBPermissions
         $this->auth = $auth;
     }
 
-    /**
-     * Ajax check user permissions on DB before push process start
-     */
+
+
+
     public function ajaxCheckDBPermissions()
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -62,12 +62,12 @@ class DBPermissions
         ]);
     }
 
-    /**
-     * Check if the current user has the grants given in arguments.
-     *
-     * @param array $grantsToCheck
-     * @return bool
-     */
+
+
+
+
+
+
     public function isAllowed(array $grantsToCheck): bool
     {
         $grants = $this->wpdb->get_results("SHOW GRANTS;");
@@ -76,28 +76,28 @@ class DBPermissions
         }
 
         $hasGranted = array_filter($grants, function ($grant) use ($grantsToCheck) {
-            $grantString = (new ArrayIterator($grant))->current();
+            $grantString = (new ArrayIterator((array)$grant))->current();
 
-            // Check if this grant applies to our database or all databases
+ 
             if (!$this->hasGrantForCurrentDatabase($grantString)) {
                 return false;
             }
 
-            // Check if ALL PRIVILEGES is granted (covers everything)
+ 
             if ($this->hasAllPrivileges($grantString)) {
                 return true;
             }
 
-            // Check specific permissions
+ 
             return $this->hasRequiredPermissions($grantString, $grantsToCheck);
         });
 
         return !empty($hasGranted);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getDebugInfo(): string
     {
         $dbUser = empty($_POST['databaseUser']) ? DB_USER : sanitize_text_field($_POST['databaseUser']);
@@ -117,7 +117,7 @@ class DBPermissions
 
         $grantsHtml = '';
         foreach ($grants as $grant) {
-            $grantString = (new ArrayIterator($grant))->current();
+            $grantString = (new ArrayIterator((array)$grant))->current();
             $grantString = preg_replace('/IDENTIFIED BY PASSWORD\s+([\'"])(?:\\\\.|(?!\1).)*\1/', "IDENTIFIED BY PASSWORD '********'", $grantString);
             $grantString = preg_replace('/IDENTIFIED BY\s+([\'"])(?:\\\\.|(?!\1).)*\1/', "IDENTIFIED BY '********'", $grantString);
             $grantsHtml .= PHP_EOL . $grantString . ';';
@@ -129,46 +129,46 @@ class DBPermissions
         return wp_kses_post($data);
     }
 
-    /**
-     * @param wpdb $wpdb
-     * @return void
-     */
+
+
+
+
     public function setDB(wpdb $wpdb)
     {
         $this->wpdb = $wpdb;
     }
 
-    /**
-     * @param string $grantString
-     * @return bool
-     */
+
+
+
+
     private function hasGrantForCurrentDatabase(string $grantString): bool
     {
         $dbName = $this->wpdb->dbname;
-        // Global privileges (applies to all databases)
+ 
         if (stripos($grantString, '*.*') !== false) {
             return true;
         }
 
-        // Database-specific grants - handle various formats:
-        // `dbname`.*, "dbname".*, dbname.*, ON `dbname`.*, etc.
-        // Also handle escaped database names like `web30\_db4`.*
+ 
+ 
+ 
         $escapedDbName = str_replace('_', '\\_', $dbName);
 
         $patterns = [
-            '/\bON\s+\*\.\*/i', // Global: ON *.*
-            '/\bON\s+`' . preg_quote($dbName, '/') . '`\.\*/i', // Quoted: ON `dbname`.*
-            '/\bON\s+`' . preg_quote($escapedDbName, '/') . '`\.\*/i', // Quoted with escaped underscores: ON `db\_name`.*
-            '/\bON\s+"' . preg_quote($dbName, '/') . '"\.\*/i', // Double-quoted: ON "dbname".*
-            '/\bON\s+"' . preg_quote($escapedDbName, '/') . '"\.\*/i', // Double-quoted with escaped underscores: ON "db\_name".*
-            '/\bON\s+' . preg_quote($dbName, '/') . '\.\*/i', // Unquoted: ON dbname.*
-            '/\bON\s+' . preg_quote($escapedDbName, '/') . '\.\*/i', // Unquoted with escaped underscores: ON db\_name.*
-            '/`' . preg_quote($dbName, '/') . '`\.\*/i', // Direct reference: `dbname`.*
-            '/`' . preg_quote($escapedDbName, '/') . '`\.\*/i', // Direct reference with escaped underscores: `db\_name`.*
-            '/"' . preg_quote($dbName, '/') . '"\.\*/i', // Direct double quoted: "dbname".*
-            '/"' . preg_quote($escapedDbName, '/') . '"\.\*/i', // Direct double quoted with escaped underscores: "db\_name".*
-            '/\b' . preg_quote($dbName, '/') . '\.\*/i', // Direct unquoted: dbname.*
-            '/\b' . preg_quote($escapedDbName, '/') . '\.\*/i', // Direct unquoted with escaped underscores: db\_name.*
+            '/\bON\s+\*\.\*/i', 
+            '/\bON\s+`' . preg_quote($dbName, '/') . '`\.\*/i', 
+            '/\bON\s+`' . preg_quote($escapedDbName, '/') . '`\.\*/i', 
+            '/\bON\s+"' . preg_quote($dbName, '/') . '"\.\*/i', 
+            '/\bON\s+"' . preg_quote($escapedDbName, '/') . '"\.\*/i', 
+            '/\bON\s+' . preg_quote($dbName, '/') . '\.\*/i', 
+            '/\bON\s+' . preg_quote($escapedDbName, '/') . '\.\*/i', 
+            '/`' . preg_quote($dbName, '/') . '`\.\*/i', 
+            '/`' . preg_quote($escapedDbName, '/') . '`\.\*/i', 
+            '/"' . preg_quote($dbName, '/') . '"\.\*/i', 
+            '/"' . preg_quote($escapedDbName, '/') . '"\.\*/i', 
+            '/\b' . preg_quote($dbName, '/') . '\.\*/i', 
+            '/\b' . preg_quote($escapedDbName, '/') . '\.\*/i', 
         ];
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $grantString)) {
@@ -179,20 +179,20 @@ class DBPermissions
         return false;
     }
 
-    /**
-     * @param string $grantString
-     * @return bool
-     */
+
+
+
+
     private function hasAllPrivileges(string $grantString): bool
     {
-        return preg_match('/\bGRANT\s+ALL(\s+PRIVILEGES)?\b/i', $grantString) === 1; // Match both "ALL" and "ALL PRIVILEGES" formats
+        return preg_match('/\bGRANT\s+ALL(\s+PRIVILEGES)?\b/i', $grantString) === 1; 
     }
 
-    /**
-     * @param string $grantString
-     * @param array $grantsToCheck
-     * @return bool
-     */
+
+
+
+
+
     private function hasRequiredPermissions(string $grantString, array $grantsToCheck): bool
     {
         if (!preg_match('/GRANT\s+(.*?)\s+ON\s+/i', $grantString, $matches)) {
@@ -201,10 +201,10 @@ class DBPermissions
 
         $permissionsString       = strtoupper(trim($matches[1]));
         $permissionsString       = preg_replace('/\s*,\s*/', ',', $permissionsString);
-        $grantedPermissions      = array_filter(array_map('trim', explode(',', $permissionsString))); // Split and normalize granted permissions
-        $grantedPermissionsAssoc = array_flip($grantedPermissions); // Convert granted permissions to associative array for O(1) lookups
+        $grantedPermissions      = array_filter(array_map('trim', explode(',', $permissionsString))); 
+        $grantedPermissionsAssoc = array_flip($grantedPermissions); 
 
-        // Check each required permission
+ 
         foreach ($grantsToCheck as $requiredPermission) {
             $requiredPermission = strtoupper(trim($requiredPermission));
             if (!in_array($requiredPermission, $grantedPermissions, true)) {

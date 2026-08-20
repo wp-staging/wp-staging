@@ -7,68 +7,68 @@ use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\DataEncoder;
 use WPStaging\Framework\Utils\Version;
 
-/**
- * Backup Header class
- * It will generate the header of the backup file
- * and read the header of the backup file
- * and update the header of the backup file
- */
+
+
+
+
+
+
 class BackupHeader
 {
     use EncodingErrorHandler;
 
-    /** @var string */
+ 
     const WPSTG_SQL_BACKUP_DUMP_HEADER = "-- WP Staging SQL Backup Dump\n";
 
-    /**
-     * In Length
-     * @var int
-     */
+
+
+
+
     const HEADER_SIZE = 512;
 
-    /**
-     * @var string
-     */
+
+
+
     const HEADER_IN_USE_HEX_FORMAT = '48888';
 
-    /**
-     * File magic
-     * should not exceed 8 characters
-     * @var string
-     */
+
+
+
+
+
     const MAGIC = "wpstg";
 
-    /**
-     * Magic size in length
-     * @var int
-     */
+
+
+
+
     const MAGIC_SIZE = 8;
 
-    /**
-     * Minimum Backup version that support this new header
-     *
-     * @var string
-     */
+
+
+
+
+
     const MIN_BACKUP_VERSION = '2.0.0';
 
-    /**
-     * Backup version
-     * Should not exceed 4-bytes unsigned limit 4294967295
-     * In the format X.Y.Z
-     * Where X is the major version and can be upto 429495 :)
-     * Where Y is the minor version and can be upto 99
-     * Where Z is the patch version and can be upto 99
-     *
-     * @var string
-     */
+
+
+
+
+
+
+
+
+
+
     const BACKUP_VERSION = '2.1.0';
 
-    /**
-     * Original string should not exceed 64 characters for consistency
-     * Generated from running bin2hex(str_pad("originalString", 64, "\0", STR_PAD_RIGHT)) to 128 characters hex string
-     * To retrieve original string run hex2bin(this.constant)
-     * @var string
-     */
+
+
+
+
+
+
     const COPYRIGHT_TEXT = '57502053746167696e672066696c6520666f726d61742062792052656e65204865726d656e617520262048617373616e20536861666971756520323032342f30';
 
     /**
@@ -77,52 +77,52 @@ class BackupHeader
      */
     const COPYRIGHT_TEXT_SIZE = 128;
 
-    /**
-     * @var string
-     */
+
+
+
     private $magic;
 
-    /**
-     * @var int
-     */
+
+
+
     private $backupVersion;
 
-    /**
-     * @var int
-     */
+
+
+
     private $filesIndexStartOffset = 0;
 
-    /**
-     * @var int
-     */
+
+
+
     private $filesIndexEndOffset = 0;
 
-    /**
-     * @var int
-     */
+
+
+
     private $metadataStartOffset = 0;
 
-    /**
-     * @var int
-     */
+
+
+
     private $metadataEndOffset = 0;
 
-    /**
-     * @var string
-     */
+
+
+
     private $copyrightText;
 
-    /** @var DataEncoder */
+ 
     private $encoder;
 
-    /** @var Version */
+ 
     private $versionUtil;
 
-    /**
-     * BackupHeader constructor.
-     * @param DataEncoder $encoder
-     * @param Version $versionUtil
-     */
+
+
+
+
+
     public function __construct(DataEncoder $encoder, Version $versionUtil)
     {
         $this->encoder       = $encoder;
@@ -130,12 +130,12 @@ class BackupHeader
         $this->backupVersion = $this->versionUtil->convertStringFormatToIntFormat(self::BACKUP_VERSION);
     }
 
-    /**
-     * Log encoding errors for backup header
-     *
-     * @param string $errorMessage The error message from DataEncoder
-     * @return void
-     */
+
+
+
+
+
+
     private function logBackupHeaderEncodingError(string $errorMessage)
     {
         $context = [
@@ -153,11 +153,11 @@ class BackupHeader
         );
     }
 
-    /**
-     * Apply fallback values for backup header properties that might be null
-     *
-     * @return void
-     */
+
+
+
+
+
     private function applyBackupHeaderFallbackValues()
     {
         if ($this->backupVersion === null) {
@@ -181,29 +181,29 @@ class BackupHeader
         }
     }
 
-    /**
-     * Get backup version in XYYZZ integer format
-     *
-     * Where ZZ is the patch version from 00 to 99
-     * Where YY is the minor version from 00 to 99
-     * Where X is the major version from 0 to 429495
-     *
-     * @return int
-     */
+
+
+
+
+
+
+
+
+
     public function getBackupVersion(): int
     {
         return $this->backupVersion;
     }
 
-    /**
-     * Get backup version in X.Y.Z string format
-     *
-     * Where Z is the patch version from 0 to 99
-     * Where Y is the minor version from 0 to 99
-     * Where X is the major version from 0 to 429495
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
     public function getFormattedBackupVersion(): string
     {
         return $this->versionUtil->convertIntFormatToStringFormat($this->backupVersion);
@@ -253,12 +253,12 @@ class BackupHeader
         return $this;
     }
 
-    /**
-     * @param string $backupFilePath
-     * @return BackupHeader
-     *
-     * @throws \RuntimeException
-     */
+
+
+
+
+
+
     public function readFromPath(string $backupFilePath): BackupHeader
     {
         if (!file_exists($backupFilePath)) {
@@ -269,12 +269,12 @@ class BackupHeader
         return $this->readFromFileObject($file);
     }
 
-    /**
-     * @param FileObject $file
-     * @return BackupHeader
-     *
-     * @throws \RuntimeException
-     */
+
+
+
+
+
+
     public function readFromFileObject(FileObject $file): BackupHeader
     {
         if ($file->getSize() < self::HEADER_SIZE) {
@@ -287,21 +287,21 @@ class BackupHeader
         return $this->setupBackupHeaderFromRaw($rawHeader);
     }
 
-    /**
-     * @param  string $rawHeader
-     *
-     * @throws InvalidArgumentException
-     * @return BackupHeader
-     */
+
+
+
+
+
+
     public function setupBackupHeaderFromRaw(string $rawHeader): BackupHeader
     {
         $this->magic         = rtrim(substr($rawHeader, 0, self::MAGIC_SIZE));
-        $this->copyrightText = substr($rawHeader, self::HEADER_SIZE - self::COPYRIGHT_TEXT_SIZE, self::COPYRIGHT_TEXT_SIZE); // Don't trim this, because it's fixed length with null characters
+        $this->copyrightText = substr($rawHeader, self::HEADER_SIZE - self::COPYRIGHT_TEXT_SIZE, self::COPYRIGHT_TEXT_SIZE); 
 
-        // Dynamic part of header currently in use
+ 
         $dynamicHeader = substr($rawHeader, self::MAGIC_SIZE, $this->getHeaderInUseSize());
         $headerIntData = $this->encoder->hexToIntArray(self::HEADER_IN_USE_HEX_FORMAT, $dynamicHeader);
-        // Change the below code into [$a, $b, $c, $d, $e] = $array format when min php is 7.1
+ 
         $this->backupVersion         = $headerIntData[0];
         $this->filesIndexStartOffset = $headerIntData[1];
         $this->filesIndexEndOffset   = $headerIntData[2];
@@ -328,7 +328,7 @@ class BackupHeader
     {
         try {
             $encodedData = $this->encoder->intArrayToHex(
-                self::HEADER_IN_USE_HEX_FORMAT, // 36-bytes of hex data
+                self::HEADER_IN_USE_HEX_FORMAT, 
                 [
                     $this->backupVersion,
                     $this->filesIndexStartOffset,
@@ -338,13 +338,13 @@ class BackupHeader
                 ]
             );
         } catch (\InvalidArgumentException $e) {
-            // Log the error with context
+ 
             $this->logBackupHeaderEncodingError($e->getMessage());
 
-            // Apply fallback values
+ 
             $this->applyBackupHeaderFallbackValues();
 
-            // Retry with fallback values
+ 
             $encodedData = $this->encoder->intArrayToHex(
                 self::HEADER_IN_USE_HEX_FORMAT,
                 [
@@ -359,17 +359,17 @@ class BackupHeader
 
         return sprintf(
             '%s%s%s%s',
-            str_pad(self::MAGIC, self::MAGIC_SIZE, "\0", STR_PAD_RIGHT), // let write magic as it is without converting to hex
+            str_pad(self::MAGIC, self::MAGIC_SIZE, "\0", STR_PAD_RIGHT), 
             $encodedData,
             bin2hex(str_pad("", $this->getUnusedBytesSize(), "\0", STR_PAD_RIGHT)),
-            self::COPYRIGHT_TEXT // 64-bytes of fixed hex data
+            self::COPYRIGHT_TEXT 
         );
     }
 
-    /**
-     * @param string $backupFilePath
-     * @return void
-     */
+
+
+
+
     public function updateHeader(string $backupFilePath)
     {
         $header = $this->getHeader();
@@ -379,11 +379,11 @@ class BackupHeader
         $file = null;
     }
 
-    /**
-     * Validate Old Backup Header
-     * @param string $content
-     * @return bool
-     */
+
+
+
+
+
     public function verifyV1FormatHeader(string $content): bool
     {
         if (empty($content)) {
@@ -413,7 +413,7 @@ class BackupHeader
     public function getV1FormatHeader(): string
     {
         $wpstgBackupHeaderFile = WPSTG_RESOURCES_DIR . 'wpstgBackupHeader.txt';
-        // Should not happen
+ 
         if (!file_exists($wpstgBackupHeaderFile)) {
             return "";
         }

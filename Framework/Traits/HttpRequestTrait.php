@@ -6,16 +6,16 @@ use WPStaging\Backup\Exceptions\StorageException;
 
 trait HttpRequestTrait
 {
-    /**
-     * @param string $url.
-     * @param array  $args Optional. Request arguments. Default empty array.
-     *                 See https://developer.wordpress.org/reference/classes/WP_Http/request/ for information on accepted arguments.
-     * @param bool $decodeBody Optional. If true the body will be decoded using json_decode.
-     *
-     * @throws StorageException
-     * @return string|array By default the request's response body will be decoded and return as array,
-     *                      to return the response body as string, pass the decodeBody param as false.
-     */
+
+
+
+
+
+
+
+
+
+
     protected function getRequestBody(string $url, array $args = [], bool $decodeBody = true)
     {
         $response = $this->getRemoteRequest($url, $args);
@@ -27,14 +27,14 @@ trait HttpRequestTrait
         return $body;
     }
 
-    /**
-     * @param string $url.
-     * @param array  $args Optional. Request arguments. Default empty array.
-     *                 See https://developer.wordpress.org/reference/classes/WP_Http/request/ for information on accepted arguments.
-     *
-     * @throws StorageException
-     * @return array The response array
-     */
+
+
+
+
+
+
+
+
     protected function getRemoteRequest(string $url, array $args = []): array
     {
         $defaults = [

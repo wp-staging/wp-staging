@@ -37,11 +37,11 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     $password   = '*********';
 }
 
-/**
- * Avoid renaming the 'wpstg-db-user' field to 'wpstg-db-username' or simply 'username',
- * and 'wpstg-db-pass' to 'wpstg-db-password' or 'password'.
- * Renaming may lead to unintended autofill behavior if the fields are disabled.
- */
+
+
+
+
+
 ?>
 
 <div class="wpstg--advanced-settings--checkbox">

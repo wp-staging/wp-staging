@@ -5,13 +5,13 @@ namespace WPStaging\Framework\Job\Task\FileHandler;
 use WPStaging\Framework\Job\Interfaces\FileTaskInterface;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * Class FileProcessor
- *
- * This class applies the Chain of Responsibility pattern.
- *
- * @package WPStaging\Framework\Job\Task\FileHandler
- */
+
+
+
+
+
+
+
 class FileProcessor
 {
     private $moveHandler;

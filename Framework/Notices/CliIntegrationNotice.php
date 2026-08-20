@@ -6,53 +6,53 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Traits\NoticesTrait;
 
-/**
- * Displays a dismissible banner promoting the WP Staging CLI tool
- *
- * The banner appears on both Staging and Backup tabs for both free and Pro version users.
- * "Later" dismissal hides the banner for 24 hours; permanent dismissal hides it for good.
- * Both dismissal states are stored in wp_options so the banner can be suppressed server-side,
- * avoiding a flash where the banner renders and is then hidden by JavaScript.
- */
+
+
+
+
+
+
+
+
 class CliIntegrationNotice
 {
     use NoticesTrait;
 
     const IS_ENABLED = true;
 
-    /**
-     * @var string Option key for permanent dismissal
-     */
+
+
+
     const OPTION_CLI_NOTICE_HIDDEN_FOREVER = 'wpstg_cli_notice_hidden_forever';
 
-    /**
-     * @var string Option key for showing dock CTA after banner dismissal
-     */
+
+
+
     const OPTION_CLI_DOCK_CTA_SHOWN = 'wpstg_cli_dock_cta_shown';
 
-    /**
-     * @var string Option key holding the Unix timestamp until which the banner stays hidden after "Later"
-     */
+
+
+
     const OPTION_CLI_NOTICE_DISMISSED_UNTIL = 'wpstg_cli_notice_dismissed_until';
 
-    /**
-     * @var Auth
-     */
+
+
+
     private $auth;
 
-    /**
-     * @param Auth $auth
-     */
+
+
+
     public function __construct(Auth $auth)
     {
         $this->auth = $auth;
     }
 
-    /**
-     * Display the CLI integration banner if conditions are met
-     *
-     * @return void
-     */
+
+
+
+
+
     public function maybeShowCliNotice()
     {
         if (!self::IS_ENABLED) {
@@ -92,12 +92,12 @@ class CliIntegrationNotice
         include $notice;
     }
 
-    /**
-     * Whether the banner is within its 24-hour "Later" dismissal window.
-     * Clears the expired option so the banner reappears once the window has passed.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
     private function isTemporarilyDismissed(): bool
     {
         $dismissedUntil = (int)get_option(self::OPTION_CLI_NOTICE_DISMISSED_UNTIL, 0);
@@ -113,13 +113,13 @@ class CliIntegrationNotice
         return false;
     }
 
-    /**
-     * AJAX handler to dismiss the CLI notice temporarily.
-     * Hides the banner for 24 hours and persists the dock CTA flag, both server-side,
-     * so the banner is suppressed on the next page load without a flash.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
     public function ajaxCliNoticeClose()
     {
         if (!$this->auth->isAuthenticatedRequest('', 'manage_options')) {
@@ -131,11 +131,11 @@ class CliIntegrationNotice
         wp_send_json_success();
     }
 
-    /**
-     * AJAX handler to permanently dismiss the CLI notice
-     *
-     * @return void
-     */
+
+
+
+
+
     public function ajaxCliNoticeHideForever()
     {
         if (!$this->auth->isAuthenticatedRequest('', 'manage_options')) {
@@ -147,13 +147,13 @@ class CliIntegrationNotice
         wp_send_json_success();
     }
 
-    /**
-     * Check if the dock CTA should be shown (banner was dismissed).
-     * Shows for all users after banner dismissal. Non-developer users see a "Pro" badge
-     * and an upgrade notice inside the modal.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
     public function shouldShowDockCta(): bool
     {
         if (!self::IS_ENABLED) {
@@ -172,7 +172,7 @@ class CliIntegrationNotice
             return false;
         }
 
-        // The dock CTA is the collapsed form of the banner, so it must never show alongside it.
+ 
         if (!$this->isBannerDismissed()) {
             return false;
         }
@@ -180,52 +180,52 @@ class CliIntegrationNotice
         return true;
     }
 
-    /**
-     * Whether the banner is currently dismissed, either permanently or within its 24-hour window.
-     *
-     * @return bool
-     */
+
+
+
+
+
     private function isBannerDismissed(): bool
     {
         return (bool)get_option(self::OPTION_CLI_NOTICE_HIDDEN_FOREVER) || $this->isTemporarilyDismissed();
     }
 
-    /**
-     * Check if the user has a Developer or higher license plan.
-     * For Basic version, always returns false.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
     public function isDeveloperOrHigherLicense(): bool
     {
         return $this->checkLicensingCondition('isActiveAgencyOrDeveloperPlan');
     }
 
-    /**
-     * Check if the user has an expired Developer or Agency license plan
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function isExpiredDeveloperOrHigherLicense(): bool
     {
         return $this->checkLicensingCondition('isExpiredDeveloperOrAgencyPlan');
     }
 
-    /**
-     * Whether the user has a valid, active pro license (not free, not expired, not unregistered).
-     * Used to decide if the upgrade button should link to the internal license page or external checkout.
-     */
+
+
+
+
     private function hasActiveLicense(): bool
     {
         return $this->checkLicensingCondition('isValidOrExpiredLicenseKey');
     }
 
-    /**
-     * Get the license plan name for the current license.
-     * For Basic version or invalid licenses, returns "Unregistered".
-     *
-     * @return string
-     */
+
+
+
+
+
+
     public function getLicensePlanName(): string
     {
         if (WPStaging::isBasic()) {
@@ -247,11 +247,11 @@ class CliIntegrationNotice
         return $planName !== '' ? $planName : __('Unregistered', 'wp-staging');
     }
 
-    /**
-     * Render the dock CTA if conditions are met (called from staging listing view)
-     *
-     * @return void
-     */
+
+
+
+
+
     public function maybeRenderDockCta()
     {
         if (!$this->shouldShowDockCta()) {
@@ -266,14 +266,14 @@ class CliIntegrationNotice
         include $dockCtaView;
     }
 
-    /**
-     * Render the CLI modal content if the dock CTA should be shown
-     *
-     * This ensures the modal is available when the dock CTA is rendered
-     * server-side (when the banner was previously dismissed).
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
     public function maybeRenderCliModalForDockCta()
     {
         if (!$this->shouldShowDockCta()) {
@@ -283,11 +283,11 @@ class CliIntegrationNotice
         $this->renderCliModalContent();
     }
 
-    /**
-     * Render the CLI modal content with all required variables
-     *
-     * @return void
-     */
+
+
+
+
+
     private function renderCliModalContent()
     {
         if (!empty($GLOBALS['wpstg_cli_modal_rendered'])) {
@@ -307,11 +307,11 @@ class CliIntegrationNotice
         }
     }
 
-    /**
-     * Get the license type slug (e.g. 'free', 'personal', 'business', 'developer', 'agency')
-     *
-     * @return string
-     */
+
+
+
+
+
     private function getLicenseTypeSlug(): string
     {
         if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
@@ -324,12 +324,12 @@ class CliIntegrationNotice
         return $type === 'basic' ? 'free' : $type;
     }
 
-    /**
-     * Get the license ID from stored license status
-     * Returns empty string when unavailable.
-     *
-     * @return string
-     */
+
+
+
+
+
+
     private function getLicenseId(): string
     {
         $licenseData = $this->getLicenseData();
@@ -340,9 +340,9 @@ class CliIntegrationNotice
         return !empty($licenseData->license_id) ? (string)$licenseData->license_id : '';
     }
 
-    /**
-     * @return object|null
-     */
+
+
+
     private function getLicenseData()
     {
         if (!WPStaging::isPro()) {
@@ -353,12 +353,12 @@ class CliIntegrationNotice
         return $license ? (object)$license : null;
     }
 
-    /**
-     * Check a condition on the Licensing class, returning false for Basic version
-     *
-     * @param string $method The Licensing method name to call
-     * @return bool
-     */
+
+
+
+
+
+
     private function checkLicensingCondition(string $method): bool
     {
         if (WPStaging::isBasic()) {
@@ -373,12 +373,12 @@ class CliIntegrationNotice
         return $licensing->$method();
     }
 
-    /**
-     * Fetch sorted listable backups, returning an empty array on failure
-     *
-     * @param bool $isDeveloperOrHigher Whether the user has a Developer+ license
-     * @return array
-     */
+
+
+
+
+
+
     private function fetchSortedBackups(bool $isDeveloperOrHigher = true): array
     {
         if (!$isDeveloperOrHigher || !class_exists('\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection')) {
@@ -386,7 +386,7 @@ class CliIntegrationNotice
         }
 
         try {
-            /** @var \WPStaging\Backup\Ajax\FileList\ListableBackupsCollection $listableBackupsCollection */
+ 
             $listableBackupsCollection = WPStaging::make(\WPStaging\Backup\Ajax\FileList\ListableBackupsCollection::class);
             return $listableBackupsCollection->getSortedListableBackups();
         } catch (\Exception $e) {
@@ -394,11 +394,11 @@ class CliIntegrationNotice
         }
     }
 
-    /**
-     * AJAX handler to get updated CLI modal backup list HTML
-     *
-     * @return void
-     */
+
+
+
+
+
     public function ajaxGetCliBackupList()
     {
         if (!$this->auth->isAuthenticatedRequest('', 'manage_options')) {
@@ -409,7 +409,7 @@ class CliIntegrationNotice
         $backups             = $this->fetchSortedBackups($isDeveloperOrHigher);
         $urlAssets           = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 
-        // Check if there are valid (non-corrupt, non-legacy) backups
+ 
         $hasBackups = false;
         foreach ($backups as $backup) {
             if (!$backup->isCorrupt && !$backup->isLegacy) {

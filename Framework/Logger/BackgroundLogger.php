@@ -8,38 +8,38 @@ use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\Traits\SetTimeLimitTrait;
 
-/**
- * This class is used to push the stored sse events for the background jobs.
- * Providing a feel of realtime logger for the background jobs in the UI.
- */
+
+
+
+
 class BackgroundLogger
 {
     use SetTimeLimitTrait;
 
-    /**
-     * @var SseEventCache
-     */
+
+
+
     private $sseEventCache;
 
-    /**
-     * @var JobTransientCache
-     */
+
+
+
     private $jobTransientCache;
 
-    /**
-     * If a pre-initialized job hasn't been picked up by the background queue
-     * within this many seconds, consider it stale and report an error.
-     */
+
+
+
+
     const STALE_JOB_THRESHOLD_SECONDS = 60;
 
-    /**
-     * @var int
-     */
+
+
+
     private $lastPercentage = 0;
 
-    /**
-     * @var string
-     */
+
+
+
     private $lastTaskTitle = '';
 
     public function __construct(SseEventCache $sseEventCache, JobTransientCache $jobTransientCache)
@@ -48,18 +48,18 @@ class BackgroundLogger
         $this->jobTransientCache = $jobTransientCache;
     }
 
-    /**
-     * Let set headers for the sse stream for sse route only, this is done to make sure that wordpress itself does not
-     * send any headers before we do.
-     * @param mixed $result
-     * @param \WP_REST_Server $server
-     * @param \WP_REST_Request $request
-     *
-     * @return mixed
-     */
+
+
+
+
+
+
+
+
+
     public function maybePrepareSseStream($result, \WP_REST_Server $server, WP_REST_Request $request)
     {
-        // Get the route being requested
+ 
         $route = trim($request->get_route(), '/');
         if ($route !== Rest::WPSTG_ROUTE_NAMESPACE_V1 . '/sse-logs') {
             return $result;
@@ -75,10 +75,10 @@ class BackgroundLogger
         $token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
         $jobId = $this->jobTransientCache->getJobId();
 
-        // Fail-closed when either side is empty — otherwise an attacker sending
-        // no token can open an SSE stream whenever no job is running (both
-        // strings compare equal to '').  hash_equals keeps the compare
-        // timing-safe once an active job ID is known.
+ 
+ 
+ 
+ 
         if ($token === '' || $jobId === '' || !hash_equals((string)$jobId, $token)) {
             return new \WP_Error('rest_forbidden', __('You are not allowed to access this resource.', 'wp-staging'), ['status' => 403]);
         }
@@ -86,14 +86,14 @@ class BackgroundLogger
         return true;
     }
 
-    /**
-     * Don't use return, use exit/die to end the script, otherwise wordpress will try to change the header and generate warnings
-     * @param \WP_REST_Request $request
-     */
+
+
+
+
     public function restEventStream(WP_REST_Request $request)
     {
-        // Origin-side compression buffers the whole response and prevents Cloudflare from
-        // streaming any bytes before the connection closes.
+ 
+ 
         @ini_set('zlib.output_compression', '0');
         @ini_set('output_buffering', 'off');
         @ini_set('implicit_flush', '1');
@@ -108,7 +108,7 @@ class BackgroundLogger
             ob_end_clean();
         }
 
-        // PHP 8.0+ expects bool, earlier versions expect int
+ 
         if (PHP_VERSION_ID >= 80000) {
             // @phpstan-ignore-next-line - PHPStan stubs may expect int for compatibility
             @ob_implicit_flush(true);
@@ -120,7 +120,7 @@ class BackgroundLogger
 
         $this->setHeaders();
 
-        // 2 KiB padding flushes past Cloudflare's response-buffer threshold for first bytes.
+ 
         echo ":" . str_repeat(' ', 2048) . "\n\n"; // phpcs:ignore
         echo "retry: 3000\n\n"; // phpcs:ignore
         echo ": connected\n\n"; // phpcs:ignore
@@ -202,7 +202,7 @@ class BackgroundLogger
                 $this->output($jobId, '', json_encode($event));
             }
 
-            // 1 s heartbeat to keep proxies/CDNs from dropping the connection during idle phases.
+ 
             $now = microtime(true);
             if ($now - $lastHeartbeat >= 1.0) {
                 echo ": ping " . $now . "\n\n"; // phpcs:ignore
@@ -215,7 +215,7 @@ class BackgroundLogger
                 $this->closeStream();
             }
 
-            usleep(200000); // Sleep for 0.2 seconds
+            usleep(200000); 
         }
 
         $this->output($jobId, 'offset', $offset);
@@ -229,13 +229,13 @@ class BackgroundLogger
             echo "event: $name" . "\n"; // phpcs:ignore
         }
 
-        //use \n instead of PHP_EOL for add another line data: if is the same data object https://www.html5rocks.com/en/tutorials/eventsource/basics/#toc-js-api
+ 
         echo "data: $data" . "\n"; // phpcs:ignore
         echo "\n";
 
-        // Flush all active output buffers
+ 
         while (ob_get_level() > 0) {
-            @ob_end_flush(); // Use @ only to suppress harmless warnings
+            @ob_end_flush(); 
         }
 
         flush();
@@ -246,8 +246,8 @@ class BackgroundLogger
         $status  = $this->jobTransientCache->getJobStatus();
         $jobData = $this->jobTransientCache->getJob();
         if ($status === JobTransientCache::STATUS_RUNNING) {
-            // Detect stale pre-initialized jobs where the background queue never started.
-            // preInitAt is set during pre-initialization and removed when the queue calls startJob().
+ 
+ 
             if (!empty($jobData['preInitAt']) && (time() - $jobData['preInitAt']) > self::STALE_JOB_THRESHOLD_SECONDS) {
                 $message = esc_html__('The background process could not start. This usually means the server cannot send HTTP requests to itself (loopback). Please check your server configuration, firewall rules, and DNS settings.', 'wp-staging');
                 $this->jobTransientCache->failJob(
@@ -265,13 +265,13 @@ class BackgroundLogger
 
         if ($status === JobTransientCache::STATUS_CANCELLED) {
             $this->output($jobData['jobId'], SseEventCache::EVENT_TYPE_TASK, json_encode([
-                'percentage' => 60, // We don't show logs for cancelling jobs, this is just a placeholder
+                'percentage' => 60, 
                 'title'      => esc_html__('Processing...', 'wp-staging'),
             ]));
             $data['title'] = $jobData['title'];
         } elseif ($status === JobTransientCache::STATUS_FAILED) {
             $data['message'] = !empty($jobData['message']) ? esc_html((string) $jobData['message']) : esc_html__('Job failed', 'wp-staging');
-            // Optional UX classification; JS defaults to 'error' when absent.
+ 
             if (!empty($jobData['severity'])) {
                 $data['severity'] = $jobData['severity'];
             }
@@ -295,10 +295,10 @@ class BackgroundLogger
         $this->output($jobId, SseEventCache::EVENT_TYPE_TASK, json_encode($taskData));
     }
 
-    /**
-     * Close the stream and exit the script
-     * @return never
-     */
+
+
+
+
     protected function closeStream()
     {
         echo ": stream closed\n\n"; // phpcs:ignore
@@ -314,8 +314,8 @@ class BackgroundLogger
 
         header('Content-Type: text/event-stream; charset=UTF-8');
 
-        // no-store + no-transform are load-bearing for Cloudflare (no-cache alone won't disable
-        // Auto Minify / Polish / Brotli rewriting on the edge).
+ 
+ 
         header('Cache-Control: private, no-cache, no-store, no-transform, must-revalidate, max-age=0');
         header('Pragma: no-cache');
         header('Expires: 0');

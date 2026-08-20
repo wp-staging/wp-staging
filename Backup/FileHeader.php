@@ -18,94 +18,94 @@ class FileHeader implements IndexLineInterface
     use FormatTrait;
     use EncodingErrorHandler;
 
-    /**
-     * Packed Hex Code of `WPSTG`
-     * This constant represents an 48bit unsigned integer packed as a hex string.
-     * It is appended as it is to the start of the file header.
-     *
-     * Example:
-     * $hex = '47f6600b0200';
-     * to make it 8 bytes
-     * $hex = $hex . '0000';
-     * $bin = hex2bin($hex);
-     * $int = unpack('P', $bin)[1];
-     * echo $int; //8780838471 the original string
-     * 87 -> W
-     * 80 -> P
-     * 83 -> S
-     * 84 -> T
-     * 71 -> G
-     * @var string
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const START_SIGNATURE = '47f6600b0200';
 
-    /** @var int */
+ 
     const FILE_HEADER_FIXED_SIZE = 72;
 
-    /** @var int */
+ 
     const INDEX_HEADER_FIXED_SIZE = 72;
 
-    /**
-     * @var string
-     * The File Header format without the start signature to make it compatible with 32bit PHP.
-     * This is a format string used with the DataEncoder class to encode/decode binary data. The format represents how integer values are packed into a binary header structure for backup files. Each character pair in the
-     * string represents the bit size of each field in the header (4=32bit, 5=40bit, 2=16bit, etc.), used when encoding arrays of integers into hexadecimal format for the file header.
-     *
-     * Example:
-     * $format = '44552424';
-     * $intArray = [123456789, 123456789, 123456789, 123456789];
-     * $hex = $encoder->intArrayToHex($format, $intArray); */
+
+
+
+
+
+
+
+
+
+
     const FILE_HEADER_FORMAT = '44552424';
 
-    /** @var string */
+ 
     const INDEX_HEADER_FORMAT = '644552424';
 
-    /** @var string */
+ 
     const CRC32_CHECKSUM_ALGO = 'crc32b';
 
-    /** @var string */
+ 
     private $startSignature;
 
-    /** @var int */
+ 
     private $modifiedTime;
 
-    /** @var string */
+ 
     private $crc32Checksum;
 
-    /** @var int */
+ 
     private $crc32;
 
-    /** @var int */
+ 
     private $compressedSize;
 
-    /** @var int */
+ 
     private $uncompressedSize;
 
-    /** @var int */
+ 
     private $attributes;
 
-    /** @var int */
+ 
     private $extraFieldLength;
 
-    /** @var int */
+ 
     private $fileNameLength;
 
-    /** @var int */
+ 
     private $filePathLength;
 
-    /** @var int */
+ 
     private $startOffset;
 
-    /** @var string */
+ 
     private $filePath;
 
-    /** @var string */
+ 
     private $fileName;
 
-    /** @var string */
+ 
     private $extraField;
 
-    /** @var DataEncoder */
+ 
     private $encoder;
 
     private $pathIdentifier;
@@ -117,13 +117,13 @@ class FileHeader implements IndexLineInterface
         $this->resetHeader();
     }
 
-    /**
-     * Log encoding errors with context about the file being processed
-     *
-     * @param string $method The method where the error occurred
-     * @param string $errorMessage The error message from DataEncoder
-     * @return void
-     */
+
+
+
+
+
+
+
     private function logEncodingError(string $method, string $errorMessage)
     {
         $fileName = $this->getIdentifiablePath();
@@ -143,39 +143,39 @@ class FileHeader implements IndexLineInterface
         $this->logEncodingErrorWithContext($errorMessage, $context, $logMessageTemplate);
     }
 
-    /**
-     * Apply fallback values for null properties to allow backup to continue
-     *
-     * @return void
-     */
+
+
+
+
+
     private function applyFallbackValues()
     {
-        // Apply fallback values for properties that might be null
+ 
         if ($this->modifiedTime === null) {
-            $this->modifiedTime = time(); // Use current time as fallback
+            $this->modifiedTime = time(); 
         }
 
         if ($this->crc32 === null) {
-            $this->crc32 = 0; // Use 0 as fallback for CRC32
+            $this->crc32 = 0; 
         }
 
         if ($this->compressedSize === null) {
-            $this->compressedSize = 0; // Use 0 as fallback
+            $this->compressedSize = 0; 
         }
 
         if ($this->uncompressedSize === null) {
-            $this->uncompressedSize = 0; // Use 0 as fallback
+            $this->uncompressedSize = 0; 
         }
 
         if ($this->attributes === null) {
-            $this->attributes = 0; // Use 0 as fallback
+            $this->attributes = 0; 
         }
 
         if ($this->startOffset === null) {
-            $this->startOffset = 0; // Use 0 as fallback
+            $this->startOffset = 0; 
         }
 
-        // Ensure string lengths are not null
+ 
         if ($this->filePathLength === null) {
             $this->filePathLength = strlen($this->filePath ?: '');
         }
@@ -189,26 +189,26 @@ class FileHeader implements IndexLineInterface
         }
     }
 
-    /**
-     * Helper method to safely encode integer array with error handling and fallback values
-     *
-     * @param string $format The format string for encoding
-     * @param array $intArray The array of integers to encode
-     * @param string $method The calling method name for logging
-     * @return string The encoded hex string
-     */
+
+
+
+
+
+
+
+
     private function encodeIntArrayToHex(string $format, array $intArray, string $method): string
     {
         try {
             return $this->encoder->intArrayToHex($format, $intArray);
         } catch (\InvalidArgumentException $e) {
-            // Log the error with context about which file is causing the issue
+ 
             $this->logEncodingError($method, $e->getMessage());
 
-            // Use fallback values to allow backup to continue
+ 
             $this->applyFallbackValues();
 
-            // Rebuild the array with current property values after fallback application
+ 
             if ($method === 'getFileHeader' || $method === 'getUncompressedFileHeader') {
                 $fallbackArray = [
                     $this->modifiedTime,
@@ -233,7 +233,7 @@ class FileHeader implements IndexLineInterface
                     $this->extraFieldLength,
                 ];
             } else {
-                // Default fallback - use the original array but replace nulls
+ 
                 $fallbackArray = $intArray;
                 foreach ($fallbackArray as $index => $value) {
                     if ($value === null) {
@@ -242,20 +242,20 @@ class FileHeader implements IndexLineInterface
                 }
             }
 
-            // Retry with fallback values
+ 
             return $this->encoder->intArrayToHex($format, $fallbackArray);
         }
     }
 
-    /**
-     * @param string $filePath
-     * @param string $identifiablePath
-     * @param bool   $skipChecksum When true, the whole-file CRC32 is not computed. Callers that
-     *                             override the checksum (e.g. multipart segmenters writing a
-     *                             segment-scoped CRC) can skip the expensive hash_file() step,
-     *                             which otherwise scans the entire source for every segment.
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     public function readFile(string $filePath, string $identifiablePath, bool $skipChecksum = false)
     {
         $fileInfo = new \SplFileInfo($filePath);
@@ -273,19 +273,19 @@ class FileHeader implements IndexLineInterface
         $this->setAttributes(0);
 
         if ($skipChecksum) {
-            // Caller will overwrite the checksum with a domain-specific value (e.g. a
-            // segment-scoped CRC); leave the default 0/'' assigned by resetHeader() in place.
+ 
+ 
             return;
         }
 
         $this->setCrc32Checksum(hash_file(self::CRC32_CHECKSUM_ALGO, $filePath));
     }
 
-    /**
-     * @param string $index
-     * @return void
-     * @throws \UnexpectedValueException
-     */
+
+
+
+
+
     public function decodeFileHeader(string $index)
     {
         $index         = $this->trimTrailingLineBreak($index);
@@ -309,10 +309,10 @@ class FileHeader implements IndexLineInterface
         $this->setExtraField($this->replacePlaceholdersWithEOLs(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
     }
 
-    /**
-     * @param string $index
-     * @return void
-     */
+
+
+
+
     public function decodeIndexHeader(string $index)
     {
         $index         = $this->trimTrailingLineBreak($index);
@@ -334,12 +334,12 @@ class FileHeader implements IndexLineInterface
         $this->setExtraField($this->replacePlaceholdersWithEOLs(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
     }
 
-    /**
-     * Remove only line delimiters that may be appended when reading headers line-by-line.
-     *
-     * Binary header data can legally end with bytes that rtrim() would treat as whitespace
-     * (notably "\0"), so we only strip "\n" and an optional preceding "\r".
-     */
+
+
+
+
+
+
     private function trimTrailingLineBreak(string $line): string
     {
         if (substr($line, -2) === "\r\n") {
@@ -353,11 +353,11 @@ class FileHeader implements IndexLineInterface
         return $line;
     }
 
-    /**
-     * For compatibility with IndexLineInterface
-     * @param string $indexLine
-     * @return IndexLineInterface
-     */
+
+
+
+
+
     public function readIndexLine(string $indexLine): IndexLineInterface
     {
         $this->decodeIndexHeader($indexLine);
@@ -365,11 +365,11 @@ class FileHeader implements IndexLineInterface
         return $this;
     }
 
-    /**
-     * For compatibility with IndexLineInterface
-     * @param string $indexLine
-     * @return bool
-     */
+
+
+
+
+
     public function isIndexLine(string $indexLine): bool
     {
         if (strlen($indexLine) <= self::INDEX_HEADER_FIXED_SIZE) {
@@ -398,21 +398,21 @@ class FileHeader implements IndexLineInterface
         return $fileHeader;
     }
 
-    /**
-     * Used for repairing the file content in compressed file i.e. removing header inside the content. Issue: https://github.com/wp-staging/wp-staging-pro/issues/4241
-     * @return string
-     */
+
+
+
+
     public function getUncompressedFileHeader(): string
     {
-        // Force current attribute to be without compression, preserving them first to restore them later
+ 
         $oldAttributes = $this->attributes;
         $this->setIsCompressed(false);
 
         $fixedHeader = $this->encodeIntArrayToHex(self::FILE_HEADER_FORMAT, [
             $this->modifiedTime,
             $this->crc32,
-            // Usually, it refers to the compressed size, but we need to set it to the uncompressed size because we initially add the file without compression and perform compression later.
-            // This is done to remove this file header within file content through search replace
+ 
+ 
             $this->uncompressedSize,
             $this->uncompressedSize,
             $this->attributes,
@@ -449,9 +449,9 @@ class FileHeader implements IndexLineInterface
         return $fixedHeader;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function resetHeader()
     {
         $this->startSignature   = '';
@@ -475,9 +475,9 @@ class FileHeader implements IndexLineInterface
         return $this->startSignature;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setStartSignature(string $startSignature)
     {
         $this->startSignature = $startSignature;
@@ -488,9 +488,9 @@ class FileHeader implements IndexLineInterface
         return $this->modifiedTime;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setModifiedTime(int $modifiedTime)
     {
         $this->modifiedTime = $modifiedTime;
@@ -501,9 +501,9 @@ class FileHeader implements IndexLineInterface
         return $this->crc32;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setCrc32(int $crc32)
     {
         $this->crc32         = $crc32;
@@ -515,9 +515,9 @@ class FileHeader implements IndexLineInterface
         return $this->crc32Checksum;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setCrc32Checksum(string $crc32Checksum)
     {
         $this->crc32Checksum = $crc32Checksum;
@@ -529,9 +529,9 @@ class FileHeader implements IndexLineInterface
         return $this->compressedSize;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setCompressedSize(int $compressedSize)
     {
         $this->compressedSize = $compressedSize;
@@ -542,9 +542,9 @@ class FileHeader implements IndexLineInterface
         return $this->uncompressedSize;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setUncompressedSize(int $uncompressedSize)
     {
         $this->uncompressedSize = $uncompressedSize;
@@ -555,9 +555,9 @@ class FileHeader implements IndexLineInterface
         return $this->attributes;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setAttributes(int $attributes)
     {
         $this->attributes = $attributes;
@@ -572,9 +572,9 @@ class FileHeader implements IndexLineInterface
         return false;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setIsCompressed(bool $isCompressed)
     {
         $isCompressed ?
@@ -591,9 +591,9 @@ class FileHeader implements IndexLineInterface
         return false;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setIsPreviousPartRequired(bool $isPreviousPartRequired)
     {
         $isPreviousPartRequired ?
@@ -610,9 +610,9 @@ class FileHeader implements IndexLineInterface
         return false;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setIsNextPartRequired(bool $isNextPartRequired)
     {
         $isNextPartRequired ?
@@ -625,26 +625,26 @@ class FileHeader implements IndexLineInterface
         return $this->startOffset;
     }
 
-    /**
-     * Stamp this FileHeader's extraField with the metadata needed to verify the reassembled
-     * file at restore time. Only meant for the terminal segment of a multipart-split file.
-     *
-     * @param int    $wholeFileSize Bytes in the original (un-split) source file.
-     * @param string $wholeFileCrc  hex CRC32 of the whole source file.
-     * @return void
-     */
+
+
+
+
+
+
+
+
     public function setMultipartTailMetadata(int $wholeFileSize, string $wholeFileCrc)
     {
         $this->setExtraFieldEntry(ExtraFieldType::TAIL, sprintf('%d:%s', $wholeFileSize, $wholeFileCrc));
     }
 
-    /**
-     * Decode the extraField as multipart-tail metadata. Returns null when the extraField does
-     * not carry the marker (e.g. non-terminal segments, regular non-segmented entries, or
-     * older backup formats predating this PR).
-     *
-     * @return array|null ['wholeFileSize' => int, 'wholeFileCRC' => string] or null
-     */
+
+
+
+
+
+
+
     public function getMultipartTailMetadata()
     {
         $payload = $this->getExtraFieldEntry(ExtraFieldType::TAIL);
@@ -663,9 +663,9 @@ class FileHeader implements IndexLineInterface
         ];
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setStartOffset(int $startOffset)
     {
         $this->startOffset = $startOffset;
@@ -676,9 +676,9 @@ class FileHeader implements IndexLineInterface
         return $this->filePath;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setFilePath(string $filePath)
     {
         $this->filePath       = $filePath;
@@ -691,9 +691,9 @@ class FileHeader implements IndexLineInterface
         return $this->fileName;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setFileName(string $fileName)
     {
         $this->fileName       = $fileName;
@@ -706,34 +706,34 @@ class FileHeader implements IndexLineInterface
         return $this->extraField;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setExtraField(string $extraField)
     {
         $this->extraField       = $extraField;
-        // Length stored on the wire reflects the EOL-placeholder-encoded form, since
-        // getFileHeader/getIndexHeader run replaceEOLsWithPlaceholders over the whole
-        // concatenated header. Mirroring filePathLength/fileNameLength keeps decoders
-        // able to slice the on-disk bytes correctly when extraField contains a newline
-        // byte (e.g. random TLV value bytes).
+ 
+ 
+ 
+ 
+ 
         $this->extraFieldLength = strlen($this->replaceEOLsWithPlaceholders($extraField));
     }
 
-    /**
-     * Set or replace a single TLV entry inside extraField, preserving any other
-     * entries already encoded there.
-     *
-     * @param int    $type  One of the ExtraFieldType constants. Must not be
-     *                      LEGACY_RAW, which is a parser-only sentinel.
-     * @param string $value Raw bytes for this entry.
-     * @return void
-     * @throws \UnexpectedValueException When $type is LEGACY_RAW, when the
-     *                                   current extraField holds opaque
-     *                                   pre-TLV bytes (which a TLV write would
-     *                                   destroy), or when the codec rejects
-     *                                   the new entry.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function setExtraFieldEntry(int $type, string $value)
     {
         if ($type === ExtraFieldType::LEGACY_RAW) {
@@ -750,12 +750,12 @@ class FileHeader implements IndexLineInterface
         $this->setExtraField($codec->encode($entries));
     }
 
-    /**
-     * Read a single TLV entry from extraField.
-     *
-     * @param int $type One of the ExtraFieldType constants.
-     * @return string|null Raw bytes, or null if the entry is not present.
-     */
+
+
+
+
+
+
     public function getExtraFieldEntry(int $type)
     {
         $entries = (new ExtraFieldCodec())->decode($this->extraField);
@@ -777,12 +777,12 @@ class FileHeader implements IndexLineInterface
         return $this->startOffset + self::FILE_HEADER_FIXED_SIZE + $this->getDynamicHeaderLength() + 1;
     }
 
-    /**
-     * @param string $filePath
-     * @param string $pathForErrorLogging
-     * @return void
-     * @throws FileValidationException
-     */
+
+
+
+
+
+
     public function validateFile(string $filePath, string $pathForErrorLogging = '')
     {
         if (empty($pathForErrorLogging)) {

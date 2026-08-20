@@ -10,25 +10,25 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Hooks;
 
-/**
- * Class DirectoryListing
- *
- * Protect sensitive folders from directory listings.
- *
- * @package WPStaging\Framework\Filesystem
- */
+
+
+
+
+
+
+
 class DirectoryListing
 {
-    /** @var string */
+ 
     const FILTER_DIRECTORY_LISTING_INTERVAL_CHECK = 'wpstg.directory_listing.interval_check';
 
-    /**  @var Directory */
+ 
     private $directory;
 
-    /**  @var Htaccess */
+ 
     private $htaccess;
 
-    /**  @var IISWebConfig */
+ 
     private $webConfig;
 
     public function __construct(Directory $directory, Htaccess $htaccess, IISWebConfig $webConfig)
@@ -38,9 +38,9 @@ class DirectoryListing
         $this->webConfig = $webConfig;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isPathInOpenBaseDir($path): bool
     {
         $openBaseDirPaths = array_map(function ($input) {
@@ -65,9 +65,9 @@ class DirectoryListing
         return false;
     }
 
-    /**
-     * Protect the WPStaging upload folder from directory listing.
-     */
+
+
+
     public function protectPluginUploadDirectory()
     {
         $lastChecked = get_transient('wpstg.directory_listing.last_checked');
@@ -75,7 +75,7 @@ class DirectoryListing
 
         if (!empty($lastChecked)) {
             if (($now - $lastChecked) < $this->getInterval()) {
-                // Early bail: Last check happened not long ago...
+ 
                 return;
             }
         }
@@ -88,7 +88,7 @@ class DirectoryListing
 
             $dirsToProtect = [];
 
-            /** @var \SplFileInfo $item */
+ 
             foreach ($it as $item) {
                 $realPath = $item->getRealPath();
                 if (!$this->isPathInOpenBaseDir($realPath)) {
@@ -106,11 +106,11 @@ class DirectoryListing
                 try {
                     $this->preventDirectoryListing($dir);
                 } catch (\Exception $e) {
-                    /**
-                     * Enqueue this error. All enqueued errors will be shown as a single notice.
-                     *
-                     * @see \WPStaging\Framework\Notices\Notices::showDirectoryListingWarningNotice
-                     */
+
+
+
+
+
                     WPStaging::getInstance()->getContainer()->pushToArray(Notices::$directoryListingErrors, $e->getMessage());
                 }
             }
@@ -119,52 +119,52 @@ class DirectoryListing
         }
     }
 
-    /**
-     * Directory listing protection is very fast. In a high-end computer
-     * with a NVMe hard-drive running Linux, it completes in 0.0057 seconds.
-     *
-     * However, with slow HDDs and more folders this could take longer.
-     *
-     * Since this runs on every request, and disks are the slowest thing in computing,
-     * we micro-optimize this code for performance, avoiding hitting the disk while we can.
-     *
-     * Thus we only run these checks after an interval, which is by default, once every 15 minutes.
-     *
-     * @return int How many seconds to wait between each check for directory listing protection.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     private function getInterval()
     {
         return (int)Hooks::applyFilters(self::FILTER_DIRECTORY_LISTING_INTERVAL_CHECK, 15 * 60);
     }
 
-    /**
-     * @param string $path The path to prevent directory listing.
-     *
-     * @throws RuntimeException When could not prevent directory listing on the given path.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
     public function preventDirectoryListing($path)
     {
         $path = trailingslashit(wp_normalize_path($path));
 
-        // Earliest bail: fully protected already. index.php alone isn't enough — a folder
-        // missing web.config would never get it recreated, 404ing IIS backup downloads.
+ 
+ 
         if (file_exists($path . 'index.php') && file_exists($path . '.htaccess') && file_exists($path . 'web.config')) {
             return;
         }
 
-        // Early bail: Not a directory.
+ 
         if (!is_dir($path)) {
             return;
         }
 
-        // If it's not writable, check if directory listing is prevented. If both fail, bail.
+ 
         if (!is_writable($path) && !file_exists($path . 'index.php')) {
             throw new RuntimeException(sprintf(__('Could not prevent directory listing on %s (Reason: Directory is not writable and does not contain an index file)', 'wp-staging'), untrailingslashit($path)));
         }
 
-        // index.php
+ 
         if (!file_exists($path . 'index.php')) {
             $indexPhpCreated = file_put_contents($path . 'index.php', <<<PHP
 <?php
@@ -191,43 +191,43 @@ PHP
             }
         }
 
-        // index.html
+ 
         if (!file_exists($path . 'index.html')) {
             file_put_contents($path . 'index.html', '');
-            // We'll not throw if index.html fails to write, as this is just an additional protection layer.
+ 
         }
 
-        // .htaccess
+ 
         if (!file_exists($path . '.htaccess')) {
             $this->htaccess->create($path . '.htaccess');
-            // We'll not throw if .htaccess fails to write, as this is just an additional protection layer.
+ 
         }
 
-        // web.config
+ 
         if (!file_exists($path . 'web.config')) {
             $this->webConfig->create($path . 'web.config');
-            // We'll not throw if web.config fails to write, as this is just an additional protection layer.
+ 
         }
     }
 
-    /**
-     * Previous versions of WP STAGING generated .htaccess and web.config files without the headers
-     * to force browser download when using Apache or IIS. This method converts old .htaccess and web.config
-     * to the new version, with the headers.
-     *
-     * If the .htaccess/web.config is already the new version, does nothing.
-     *
-     * @deprecated This affects only folders protected by Directory Listing before WP STAGING Pro 4.0.2.
-     *             Remove after a reasonable amount of time has passed. (eg: Jan 2023)
-     *
-     * @param $backupDirectory
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     public function maybeUpdateOldHtaccessWebConfig($backupDirectory)
     {
         $backupDirectory = trailingslashit($backupDirectory);
 
-        // Both create() methods always write .wpstg and .wpstgtmp together, so checking for
-        // .wpstgtmp alone is enough, and they overwrite in place, so no unlink() is needed.
+ 
+ 
         if (file_exists($backupDirectory . '.htaccess')) {
             if ($contents = file_get_contents($backupDirectory . '.htaccess')) {
                 if (strpos($contents, 'AddType application/octet-stream .wpstgtmp') === false) {

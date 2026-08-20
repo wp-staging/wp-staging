@@ -20,76 +20,76 @@ abstract class AbstractRowsExporter extends AbstractExporter
     use MySQLRowsGeneratorTrait;
     use DatabaseSearchReplaceTrait;
 
-    /** @var JobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var TableService */
+ 
     protected $tableService;
 
-    /** @var LoggerInterface */
+ 
     protected $logger;
 
-    /** @var RowsExporterDto */
+ 
     protected $rowsExporterDto;
 
-    /** @var SearchReplace */
+ 
     protected $searchReplace;
 
-    /**
-     * Current table
-     * @var int
-     */
+
+
+
+
     protected $tableIndex = 0;
 
-    /**
-     * @var int How many rows were exported on this current table
-     */
+
+
+
     protected $tableRowsOffset = 0;
 
-    /**
-     * @var int How many rows were exported across all tables
-     */
+
+
+
     protected $totalRowsExported = 0;
 
-    /**
-     * @var int How many rows the current table has to back up
-     */
+
+
+
     protected $totalRowsInCurrentTable = 0;
 
-    /** @var array */
+ 
     protected $tables = [];
 
-    /** @var array */
+ 
     protected $prefixedValues = [];
 
-    /** @var string A concatenated series of queries to store to the file */
+ 
     protected $pendingQueriesSql = '';
 
-    /** @var int */
+ 
     protected $pendingQueriesCount = 0;
 
-    /** @var bool */
+ 
     protected $isRetryingAfterRepair = false;
 
-    /** @var string The name of the table being exported. */
+ 
     protected $tableName = '';
 
-    /** @var string The name of the database being exported. */
+ 
     protected $databaseName = '';
 
-    /** @var int */
+ 
     protected $lastInsertedNumericPrimaryKeyValue = -PHP_INT_MAX;
 
-    /** @var array Fields/Option name which need special care for search replace */
+ 
     protected $specialFields = [];
 
-    /** @var array */
+ 
     protected $nonWpTables = [];
 
-    /**
-     * @param Database $database
-     * @param TableService $tableService
-     */
+
+
+
+
     public function __construct(Database $database, TableService $tableService)
     {
         parent::__construct($database);
@@ -107,9 +107,9 @@ abstract class AbstractRowsExporter extends AbstractExporter
         $this->tableIndex      = $this->rowsExporterDto->getTableIndex();
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function initiate(): bool
     {
         if ($this->isTableExcluded()) {
@@ -117,14 +117,14 @@ abstract class AbstractRowsExporter extends AbstractExporter
             return false;
         }
 
-        // Table rows already counted
+ 
         if ($this->rowsExporterDto->getTotalRows() > 0) {
             return true;
         }
 
         $this->rowsExporterDto->init($this->tableIndex, $this->tableName, 0);
 
-        // Note: fix for SQLITE
+ 
         $tableName = empty($this->databaseName) ? "`" . $this->tableName . "`" : "`" . $this->databaseName . "`.`" . $this->tableName . "`";
         $rowsCount = $this->tableService->getRowsCount($tableName, false);
 
@@ -159,17 +159,17 @@ abstract class AbstractRowsExporter extends AbstractExporter
         return $this->rowsExporterDto;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isTableExcluded(): bool
     {
         return in_array($this->getTableBeingExported(), $this->excludedTables);
     }
 
-    /**
-     * @param int $tableIndex
-     */
+
+
+
     public function setTableIndex(int $tableIndex)
     {
         if ($this->tableIndex !== $tableIndex) {
@@ -184,20 +184,20 @@ abstract class AbstractRowsExporter extends AbstractExporter
         $this->tableName = $this->tables[$this->tableIndex];
     }
 
-    /**
-     * @return string empty if no table is being exported
-     */
+
+
+
     public function getTableBeingExported(): string
     {
         return $this->tableName;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function countTotalRows(): int
     {
-        // Early bail: Table not found
+ 
         if (!array_key_exists($this->tableIndex, $this->tables)) {
             throw new \RuntimeException('Table not found.');
         }
@@ -216,8 +216,8 @@ abstract class AbstractRowsExporter extends AbstractExporter
             }
 
             switch ($this->client->errno()) {
-                case 144: // Table is crashed and last repair failed
-                case 145: // Table was marked as crashed and should be repaired
+                case 144: 
+                case 145: 
                     if ($this->client->query("REPAIR TABLE `$this->tableName`;")) {
                         $this->logger->warning(sprintf("Table %s is marked as crashed, we automatically repaired it.", $this->tableName));
                     } else {
@@ -240,9 +240,9 @@ abstract class AbstractRowsExporter extends AbstractExporter
         return 0;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function export()
     {
         $requestId         = "rowsExporter_" . $this->jobDataDto->getId();
@@ -260,8 +260,8 @@ abstract class AbstractRowsExporter extends AbstractExporter
             $this->tableRowsOffset                    = $this->rowsExporterDto->getRowsOffset();
             $this->lastInsertedNumericPrimaryKeyValue = (int)$this->rowsExporterDto->getLastInsertedNumericPrimaryKeyValue();
 
-            // Keyset offset defaults to -PHP_INT_MAX so the first fetch still includes a row with primary
-            // key 0; tableRowsOffset (0) would exclude it via `WHERE pk > 0`.
+ 
+ 
             $generatorOffset = !empty($numericPrimaryKey) ? $this->lastInsertedNumericPrimaryKeyValue : $this->tableRowsOffset;
 
             $data = $this->rowsGenerator($this->databaseName, $this->tableName, $numericPrimaryKey, $generatorOffset, $requestId, $this->client, $this->jobDataDto);
@@ -274,10 +274,10 @@ abstract class AbstractRowsExporter extends AbstractExporter
                 $this->writeQueryInsert($row, $finalTableName, $tableColumns);
                 $this->pendingQueriesCount++;
 
-                /**
-                 * This can run hundreds of thousands of times,
-                 * so let's write sometimes.
-                 */
+
+
+
+
                 if ($this->pendingQueriesCount >= 10) {
                     $this->file->fwrite($this->pendingQueriesSql);
                     $this->pendingQueriesSql = '';
@@ -287,7 +287,7 @@ abstract class AbstractRowsExporter extends AbstractExporter
             }
         } while (!$this->isThreshold() && ($this->pendingQueriesCount + $this->rowsExporterDto->getRowsOffset() < $this->rowsExporterDto->getTotalRows()));
 
-        // Commit to file any leftover queries left to write
+ 
         if (!empty($this->pendingQueriesSql)) {
             $this->file->fwrite($this->pendingQueriesSql);
             $this->pendingQueriesSql = '';
@@ -298,9 +298,9 @@ abstract class AbstractRowsExporter extends AbstractExporter
         $this->unlockTables();
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function lockTable()
     {
         try {
@@ -313,9 +313,9 @@ abstract class AbstractRowsExporter extends AbstractExporter
         return true;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function unlockTables(): bool
     {
         if (!$this->rowsExporterDto->isLocked()) {
@@ -332,13 +332,13 @@ abstract class AbstractRowsExporter extends AbstractExporter
         return true;
     }
 
-    /**  @param array $tables */
+ 
     public function setTables(array $tables = [])
     {
         $this->tables = $tables;
     }
 
-    /** @var array $nonWpTables */
+ 
     public function setNonWpTables(array $nonWpTables = [])
     {
         $this->nonWpTables = $nonWpTables;
@@ -349,54 +349,54 @@ abstract class AbstractRowsExporter extends AbstractExporter
         return $this->tableService->getNumericPrimaryKey($this->databaseName, $this->tableName);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function prefixSpecialFields()
     {
         $prefix = $this->getPrefix();
 
-        /**
-         * We do an array_flip for performance reasons, to use the performant
-         * isset($this->prefixedValues['someValue']),
-         * since this function can be called millions of times.
-         */
+
+
+
+
+
         $this->prefixedValues = array_flip(array_map(function ($unprefixedValue) use ($prefix) {
             return $prefix . $unprefixedValue;
         }, $this->specialFields));
     }
 
-    /**
-     * @return string
-     */
+
+
+
     abstract protected function getFinalTableName();
 
-    /**
-     * @return void
-     */
+
+
+
     abstract protected function setupSearchReplace();
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getPrefix(): string
     {
         return $this->database->getBasePrefix();
     }
 
-    /**
-     * @param array $row
-     * @param string $prefixedTableName
-     * @param array $tableColumns
-     *
-     * @return void
-     * @throws Exception
-     */
+
+
+
+
+
+
+
+
     protected function writeQueryInsert(array $row, string $prefixedTableName, array $tableColumns)
     {
         try {
-            // Excluded rows (e.g. siteurl/home) are written unchanged, not dropped — dropping them
-            // breaks WordPress core options that UpdateSiteUrlAndHomeTask updates later.
+ 
+ 
             $skipSearchReplace = $this->isRowSearchReplaceExcluded($prefixedTableName, $row);
 
             foreach ($row as $column => &$value) {
@@ -406,7 +406,7 @@ abstract class AbstractRowsExporter extends AbstractExporter
                     continue;
                 }
 
-                // binary, varbinary, blob
+ 
                 $columnLower = strtolower($column);
                 if (
                     isset($tableColumns[$columnLower]) && (
@@ -433,36 +433,36 @@ abstract class AbstractRowsExporter extends AbstractExporter
             $insertQuery = "INSERT INTO `{$prefixedTableName}` VALUES (" . implode(',', $row) . ");\n";
             $this->appendInsertQuery($insertQuery);
         } catch (Exception $e) {
-            // Row skipped, no-op
+ 
         }
     }
 
-    /**
-     * Hook for subclasses to flag rows that should be exported verbatim (no URL/prefix rewriting).
-     * Default is false — the base class has no reason to skip search-replace for any row.
-     *
-     * @param string $prefixedTableName
-     * @param array  $row
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     protected function isRowSearchReplaceExcluded(string $prefixedTableName, array $row): bool
     {
         return false;
     }
 
-    /**
-     * @param string $insertQuery
-     * @return void
-     */
+
+
+
+
     protected function appendInsertQuery(string $insertQuery)
     {
         $this->pendingQueriesSql .= $insertQuery;
     }
 
-    /**
-     * @return void
-     * @throws \RuntimeException
-     */
+
+
+
+
     protected function throwUnableToCountException()
     {
         throw new \RuntimeException(sprintf(
@@ -473,11 +473,11 @@ abstract class AbstractRowsExporter extends AbstractExporter
         ));
     }
 
-    /**
-     * @param string $numericPrimaryKey
-     * @param array $row
-     * @return bool
-     */
+
+
+
+
+
     protected function isLastInsertedNumericKeyValue(string $numericPrimaryKey, array $row): bool
     {
         if (empty($numericPrimaryKey)) {
@@ -494,11 +494,11 @@ abstract class AbstractRowsExporter extends AbstractExporter
         return false;
     }
 
-    /**
-     * @param string $numericPrimaryKey
-     * @param int $rowsExported
-     * @return void
-     */
+
+
+
+
+
     protected function updateRowsExporterDto(string $numericPrimaryKey, int $rowsExported)
     {
         $this->rowsExporterDto->setTotalRowsExported($this->rowsExporterDto->getTotalRowsExported() + $rowsExported);
@@ -515,7 +515,7 @@ abstract class AbstractRowsExporter extends AbstractExporter
     protected function isRecordExcluded(string $prefixedTableName, string $column, string $value): bool
     {
         if ($prefixedTableName === $this->getFinalPrefix() . 'options' && $column === 'option_name') {
-            // Rows not to export
+ 
             if (substr($value, 0, 1) === '_') {
                 foreach (['_transient_', '_site_transient_', '_wc_session_'] as $excludedOption) {
                     if (strpos($value, $excludedOption) === 0) {
@@ -524,7 +524,7 @@ abstract class AbstractRowsExporter extends AbstractExporter
                 }
             }
 
-            // Don't include analytics events when exporting
+ 
             if (substr($value, 0, 22) === 'wpstg_analytics_event_') {
                 return true;
             }

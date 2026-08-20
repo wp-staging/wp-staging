@@ -35,58 +35,58 @@ use WPStaging\Frontend\Frontend;
 use WPStaging\Pro\ProServiceProvider;
 use WPStaging\Staging\StagingServiceProvider;
 
-/**
- * Class WPStaging
- * @package WPStaging
- */
+
+
+
+
 final class WPStaging
 {
-    /**
-     * Internal Use Only: Hook to register Basic or Pro specific services.
-     * @var string
-     */
+
+
+
+
     const HOOK_BOOTSTRAP_SERVICES = 'wpstg.bootstrap.services';
 
-    /**
-     * @var string
-     */
+
+
+
     const SSE_DIR_NAME = 'sse';
 
-    /**
-     * Singleton instance
-     * @var WPStaging
-     */
+
+
+
+
     private static $instance;
 
-    /**
-     * @var bool
-     */
+
+
+
     private static $useBaseContainerSingleton = false;
 
-    /**
-     * @var Container
-     */
+
+
+
     private $container;
 
-    /**
-     * @var bool Whether this Singleton instance has bootstrapped already.
-     */
+
+
+
     private $isBootstrapped = false;
 
-    /**
-     * @var int|float The microtime where the Container was bootstrapped. Used to identify the time where the application started running.
-     */
+
+
+
     public static $startTime;
 
-    /** @var Filesystem */
+ 
     private $filesystem;
 
-    /** @var ErrorHandler */
+ 
     private $errorHandler;
 
-    /**
-     * WPStaging constructor.
-     */
+
+
+
     private function __construct(Container $container)
     {
         $this->container    = $container;
@@ -100,7 +100,7 @@ final class WPStaging
 
         WPStaging::$startTime = microtime(true);
 
-        // Register Pro or Basic Provider, Always prefer registering Pro if both classes found unless if dev basic constant enabled. If both not present throw error
+ 
         if (class_exists('\WPStaging\Pro\ProServiceProvider') && !WPStaging::isDevBasic()) {
             $this->container->register(ProServiceProvider::class);
         } elseif (class_exists('\WPStaging\Basic\BasicServiceProvider')) {
@@ -116,23 +116,23 @@ final class WPStaging
 
         $this->loadDependencies();
 
-        // Boot the container after dependencies are loaded.
+ 
         $this->container->boot();
 
         $this->container->register(CommonServiceProvider::class);
 
-        /** @var WpAdapter */
+ 
         $wpAdapter = $this->container->get(WpAdapter::class);
 
-        // UI assets are only needed when WordPress is rendering an HTML page
+ 
         if (!$wpAdapter->doingAjax() && !$wpAdapter->isWpCliRequest() && !wp_doing_cron()) {
             $this->container->register(AssetServiceProvider::class);
         }
 
         $currentUrlPath = $this->container->get(Url::class)->getCurrentRoute();
 
-        // Register notices only on UI requests and admin pages except plugins.php
-        // to keep the plugins page alive and allow deactivation of the plugin in case of failure in one of the notices.
+ 
+ 
         if (!$wpAdapter->doingAjax() && !$wpAdapter->isWpCliRequest() && is_admin() && strpos($currentUrlPath, 'plugins.php') === false) {
             $this->container->register(NoticeServiceProvider::class);
             if (isset($GLOBALS['pagenow']) && $GLOBALS['pagenow'] === 'index.php') {
@@ -152,7 +152,7 @@ final class WPStaging
         $this->container->register(StagingServiceProvider::class);
         $this->container->register(BackupServiceProvider::class);
 
-        // Internal Use Only: Register Basic or Pro specific services.
+ 
         Hooks::callInternalHook(self::HOOK_BOOTSTRAP_SERVICES);
 
         $this->handleCacheIssues();
@@ -164,17 +164,17 @@ final class WPStaging
         $this->errorHandler->registerShutdownHandler();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function registerInitHook()
     {
-        /**
-         * This hook is used to delete old SSE files and stale Remote Sync temp backups.
-         * This will run on all requests. To keep memory usage low, avoid booting the whole plugin service graph here.
-         */
+
+
+
+
         add_action('init', function () {
-            // Run this only after 24 hours passed
+ 
             $run = get_transient('wpstg.run_daily');
             if ($run) {
                 return;
@@ -184,7 +184,7 @@ final class WPStaging
 
             $now = time();
 
-            // Lets delete sse files older than 1 hour
+ 
             $sseDir = trailingslashit(WP_CONTENT_DIR) . WPSTG_PLUGIN_DOMAIN . '/' . self::SSE_DIR_NAME;
             $this->cleanupDirectory($sseDir, HOUR_IN_SECONDS, $now, $scanChildren = false);
 
@@ -196,28 +196,28 @@ final class WPStaging
         }, 1);
     }
 
-    /**
-     * Recursively clean up a directory by deleting files older than a specified age and removing empty folders.
-     *
-     * This method scans the specified directory and optionally its subdirectories to delete files that exceed
-     * the maximum age. Empty directories are also removed after their contents are processed.
-     *
-     * @param string $directory The directory to clean up. Must be a valid directory path.
-     * @param int $maxAge Maximum age in seconds for files to keep. Files older than this will be deleted.
-     * @param int $now Current timestamp, used to calculate the age of files.
-     * @param bool $scanChildren If true, the method will recursively scan and clean subdirectories. If false,
-     *                           only the specified directory will be processed, and subdirectories will be ignored.
-     *                           Note: If subdirectories are ignored, they will not be deleted even if empty.
-     *
-     * @return void
-     *
-     * @throws RuntimeException If the directory cannot be read or accessed.
-     *
-     * Example usage:
-     * $this->cleanupDirectory('/path/to/directory', 3600, time(), true);
-     * - Deletes files older than 1 hour (3600 seconds) in the specified directory and its subdirectories.
-     * - Removes empty subdirectories after processing.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private function cleanupDirectory(string $directory, int $maxAge, int $now, bool $scanChildren = true)
     {
         if (!is_dir($directory)) {
@@ -240,10 +240,10 @@ final class WPStaging
                     @unlink($itemPath);
                 }
             } elseif (is_dir($itemPath) && $scanChildren) {
-                // Recursively clean up subdirectories
+ 
                 $this->cleanupDirectory($itemPath, $maxAge, $now);
 
-                // Check if the subdirectory is now empty after cleanup
+ 
                 $subItems    = scandir($itemPath);
                 $subHasFiles = false;
                 foreach ($subItems as $subItem) {
@@ -253,16 +253,16 @@ final class WPStaging
                     }
                 }
 
-                // If subdirectory is empty, delete it
+ 
                 if (!$subHasFiles) {
                     @rmdir($itemPath);
                 } else {
-                    $hasFiles = true; // Parent directory has files
+                    $hasFiles = true; 
                 }
             }
         }
 
-        // If current directory is empty and we are not scanning children directories
+ 
         if (!$hasFiles && $scanChildren) {
             @rmdir($directory);
         }
@@ -289,49 +289,49 @@ final class WPStaging
         }
 
         if ($logsDirectoryExists) {
-            // eg: wpstg_debug_907b4a01db8d244da272601a0491cd5c.log
+ 
             $logFile = sanitize_file_name(sprintf('wpstg_debug_%s.log', strtolower(wp_hash(__FILE__))));
 
             define('WPSTG_DEBUG_LOG_FILE', $logsDirectory . $logFile);
         }
     }
 
-    /**
-     * Initialize cron jobs
-     */
+
+
+
     private function initCron()
     {
-        // Register cron job and add new interval 'weekly'
+ 
         new Cron();
     }
 
-    /**
-     * Get root WP root path -
-     * Changed ABSPATH trailingslash for windows compatibility
-     * @return string
-     */
+
+
+
+
+
     public static function getWPpath()
     {
         return str_replace('/', DIRECTORY_SEPARATOR, ABSPATH);
     }
 
-    /**
-     * Get table prefix of the current site
-     * Always use lowercase on Windows
-     * @return string
-     */
+
+
+
+
+
     public static function getTablePrefix()
     {
-        /** @var Database $db */
+ 
         $db = WPStaging::getInstance()->getVar("database");
         return $db->getPrefix();
     }
 
-    /**
-     * Get base prefix of the current wordpress
-     * Always use lowercase on Windows
-     * @return string
-     */
+
+
+
+
+
     public static function getTableBasePrefix()
     {
         $db = WPStaging::getInstance()->get("wpdb");
@@ -342,20 +342,20 @@ final class WPStaging
         return $db->base_prefix;
     }
 
-    /**
-     * @param bool $useBaseContainerSingleton
-     * @return void
-     */
+
+
+
+
     public static function setUseBaseContainerSingleton(bool $useBaseContainerSingleton)
     {
         static::$useBaseContainerSingleton = $useBaseContainerSingleton;
     }
 
-    /**
-     * Caching and logging folder
-     *
-     * @return string
-     */
+
+
+
+
+
     public static function getContentDir()
     {
         $wp_upload_dir = wp_upload_dir();
@@ -365,11 +365,11 @@ final class WPStaging
         return Hooks::applyFilters(Directory::FILTER_GET_UPLOAD_DIR, $path . '/');
     }
 
-    /**
-     * Get Instance
-     *
-     * @return WPStaging
-     */
+
+
+
+
+
     public static function getInstance()
     {
         if (static::$instance === null) {
@@ -383,10 +383,10 @@ final class WPStaging
         return static::$instance;
     }
 
-    /**
-     * Resets the Dependency Injection Container
-     * Only to be used in automated tests.
-     */
+
+
+
+
     public function resetContainer()
     {
         if (php_sapi_name() == "cli") {
@@ -395,40 +395,40 @@ final class WPStaging
         }
     }
 
-    /**
-     * Is the current PHP OS Windows?
-     *
-     * @return bool
-     */
+
+
+
+
+
     public static function isWindowsOs()
     {
         return strncasecmp(PHP_OS, 'WIN', 3) === 0;
     }
 
-    /**
-     * Is the current PHP OS Mac?
-     *
-     * @return bool
-     */
+
+
+
+
+
     public static function isMacOs()
     {
         return strpos(strtolower(PHP_OS), 'darwin') !== false;
     }
 
-    /**
-     * Load Dependencies
-     */
+
+
+
     private function loadDependencies()
     {
         if (!WPStaging::isWordPressLoaded()) {
             return;
         }
 
-        // Load globally available functions
+ 
         require_once(__DIR__ . "/Utils/functions.php");
 
         $cache = WPStaging::make(Cache::class);
-        $cache->setLifetime(-1); // Non-expireable file
+        $cache->setLifetime(-1); 
         $cache->setPath(WPStaging::getContentDir());
         $this->set("cache", $cache);
 
@@ -436,7 +436,7 @@ final class WPStaging
 
         $this->loadLanguages();
 
-        // Set Administrator
+ 
         if (is_admin()) {
             new Administrator();
             return;
@@ -454,28 +454,28 @@ final class WPStaging
         (new Language())->load();
     }
 
-    /**
-     * Set a variable to DI with given name
-     *
-     * @param string $name
-     * @param mixed $variable
-     *
-     * @return $this
-     * @deprecated Use setVar instead.
-     *
-     */
+
+
+
+
+
+
+
+
+
+
     public function set($name, $variable)
     {
         return $this->setVar($name, $variable);
     }
 
-    /**
-     * Store a variable in DI container with given name
-     *
-     * @param string $name
-     * @param mixed $variable
-     * @return self
-     */
+
+
+
+
+
+
+
     public function setVar(string $name, $variable)
     {
         $this->container->setVar($name, $variable);
@@ -483,43 +483,43 @@ final class WPStaging
         return $this;
     }
 
-    /**
-     * Get given name index from DI
-     *
-     * @param string $name
-     *
-     * @return mixed|null
-     * @deprecated Use getVar instead if you want to retrieve value for a variable set using setVar or set.
-     *
-     */
+
+
+
+
+
+
+
+
+
     public function get($name)
     {
         return $this->container->_get($name);
     }
 
-    /**
-     * Get a variable from DI container with given name
-     *
-     * @param string $name
-     * @param mixed $default
-     * @return mixed
-     */
+
+
+
+
+
+
+
     public function getVar(string $name, $default = null)
     {
         return $this->container->getVar($name, $default);
     }
 
-    /**
-     * Get given name index from DI
-     *
-     * USE THIS WISELY. Most of the time the dependencies should be injected through the __construct!
-     * Google for "service locator vs dependency injection"
-     *
-     * @param string $id The bound service identifier, or a class name to build and return.
-     *
-     * @return mixed The built object bound to the id, the requested
-     *               class instance.
-     */
+
+
+
+
+
+
+
+
+
+
+
     public static function make($id)
     {
         static $container;
@@ -531,44 +531,44 @@ final class WPStaging
         return $container->get($id);
     }
 
-    /**
-     * Get given name index from DI
-     *
-     * @param string $name
-     *
-     * @return mixed|null
-     * @deprecated Refactor implementations of this method to use Dependency Injection instead.
-     *
-     */
+
+
+
+
+
+
+
+
+
     public function _make($name)
     {
         return $this->container->make($name);
     }
 
-    /**
-     * Returns the Container. Use this wisely!
-     *
-     * Acceptable example:
-     * - Using the Container as a cache that lives during the request to avoid doing multiple operations.
-     *
-     * Avoid example:
-     * - Using the Container to build instances of classes outside the __construct
-     *
-     * @return Container
-     */
+
+
+
+
+
+
+
+
+
+
+
     public function getContainer()
     {
         return $this->container;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getVersion()
     {
         if (WPStaging::isDevBasic()) {
             // @phpstan-ignore-next-line
-            return WPSTG_DEV_BASIC; // This constant will only be returned if it's a string e.g. '1.0.0'
+            return WPSTG_DEV_BASIC; 
         }
 
         if (self::isPro()) {
@@ -578,34 +578,34 @@ final class WPStaging
         return WPSTG_VERSION;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public static function isWordPressLoaded()
     {
         return defined('ABSPATH') && function_exists('wp');
     }
 
-    /**
-     * @return bool
-     * @deprecated Use isBasic instead.
-     */
+
+
+
+
     public static function isPro()
     {
         return !self::isBasic();
     }
 
-    /**
-     * @param bool $silence
-     */
+
+
+
     public static function silenceLogs($silence = true)
     {
         WPStaging::getInstance()->setVar('SILENCE_LOGS', $silence);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public static function areLogsSilenced()
     {
         try {
@@ -615,60 +615,60 @@ final class WPStaging
         }
     }
 
-    /**
-     * Executes the first time a clone site runs.
-     */
+
+
+
     private function cloneSiteFirstRun()
     {
         (new FirstRun())->init();
     }
 
-    /**
-     * Takes care of cache issues in certain situations
-     */
+
+
+
     private function handleCacheIssues()
     {
         $permalinksPurge = new PermalinksPurge();
         add_action('wp_loaded', [$permalinksPurge, 'purgePermalinks'], $permalinksPurge::PLUGINS_LOADED_PRIORITY);
     }
 
-    /**
-     * @todo Move this to a base service provider shared between Free and Pro
-     */
+
+
+
     private function preventDirectoryListing()
     {
-        // TODO: inject WpAdapter using DI
+ 
         if (is_admin() && !(new WpAdapter())->doingAjax()) {
-            /** @var DirectoryListing $directoryListing */
+ 
             $directoryListing = $this->getContainer()->get(DirectoryListing::class);
             $directoryListing->protectPluginUploadDirectory();
         }
     }
 
-    /**
-     * Const is used during development for building and testing basic/free features
-     * The constant expects a string value like a version number '1.0.0' to treat the plugin as a free version
-     * Boolean false and the plugin will be treated as a premium version or regular free version depending on
-     * the availability of the constants WPSTGPRO_VERSION or WPSTG_VERSION.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public static function isDevBasic()
     {
         return defined('WPSTG_DEV_BASIC') && is_string(WPSTG_DEV_BASIC);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public static function isBasic()
     {
         return WPStaging::getInstance()->getVar('WPSTG_BASIC', true) === true;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public static function isOnWordPressPlayground(): bool
     {
         return ( ABSPATH === '/wordpress/' && defined('WP_HOME') && strpos(WP_HOME, '/scope:') && ! empty($_SERVER['SERVER_SOFTWARE']) && $_SERVER['SERVER_SOFTWARE'] === 'PHP.wasm' );

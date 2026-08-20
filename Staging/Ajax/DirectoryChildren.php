@@ -13,21 +13,21 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
 use WPStaging\Staging\Service\DirectoryScanner;
 use WPStaging\Staging\Sites;
 
-/**
- * Renders lazily requested directory children for staging operations.
- */
+
+
+
 class DirectoryChildren extends AbstractTemplateComponent
 {
-    /** @var AbstractStagingSetup */
+ 
     private $stagingSetup;
 
-    /** @var DirectoryScanner */
+ 
     private $directoryScanner;
 
-    /** @var Directory */
+ 
     private $directory;
 
-    /** @var Sites */
+ 
     private $stagingSites;
 
     public function __construct(
@@ -44,9 +44,9 @@ class DirectoryChildren extends AbstractTemplateComponent
         $this->stagingSites     = $stagingSites;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxRender()
     {
         if (!$this->canRenderAjax()) {

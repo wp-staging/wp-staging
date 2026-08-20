@@ -7,7 +7,7 @@ use WPStaging\Framework\Utils\Sanitize;
 class Url
 {
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
     public function __construct(Sanitize $sanitize)
@@ -15,12 +15,12 @@ class Url
         $this->sanitize = $sanitize;
     }
 
-    /**
-     * Outputs something like "/example/page.php"
-     * @return string
-     * @todo check if there is a better name for class and method
-     *
-     */
+
+
+
+
+
+
     public function getCurrentRoute()
     {
         if (empty($_SERVER['HTTP_HOST']) || empty($_SERVER['REQUEST_URI'])) {

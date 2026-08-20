@@ -7,28 +7,28 @@ use WPStaging\Framework\Job\Dto\Database\RowsExporterDto;
 
 class RowsExporterTaskDto extends AbstractTaskDto
 {
-    /** @var int */
+ 
     public $tableIndex = 0;
 
-    /** @var string */
+ 
     public $tableName = '';
 
-    /** @var string|null */
+ 
     public $numericPrimaryKey = null;
 
-    /** @var int */
+ 
     public $totalRows = 0;
 
-    /** @var int */
+ 
     public $totalRowsExported = 0;
 
-    /** @var int */
+ 
     public $rowsOffset = 0;
 
-    /** @var int */
+ 
     public $lastInsertedNumericPrimaryKeyValue = -PHP_INT_MAX;
 
-    /** @var bool */
+ 
     public $locked = false;
 
     public function toRowsExporterDto(): RowsExporterDto
@@ -45,10 +45,10 @@ class RowsExporterTaskDto extends AbstractTaskDto
         return $rowsExporterDto;
     }
 
-    /**
-     * @param RowsExporterDto $rowsExporterDto
-     * @return void
-     */
+
+
+
+
     public function fromRowExporterDto(RowsExporterDto $rowsExporterDto)
     {
         $this->tableIndex                         = $rowsExporterDto->getTableIndex();

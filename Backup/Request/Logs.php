@@ -15,13 +15,13 @@ use WPStaging\Backend\Modules\SystemInfo;
 
 class Logs
 {
-    /** @var BackupsFinder */
+ 
     private $backupsFinder;
 
-    /** @var Nonce */
+ 
     private $nonce;
 
-    /** @var string */
+ 
     private $logsDir;
 
     public function __construct(BackupsFinder $backupsFinder, Nonce $nonce)
@@ -48,12 +48,12 @@ class Logs
 
         $backups = $this->backupsFinder->findBackups();
 
-        // Early bail: No backups found, nothing to delete
+ 
         if (empty($backups)) {
             return;
         }
 
-        /** @var \SplFileInfo $backup */
+ 
         foreach ($backups as $backup) {
             if ($md5 === md5($backup->getBasename())) {
                 $this->downloadLogs($backup);
@@ -61,21 +61,21 @@ class Logs
         }
     }
 
-    /** @param \SplFileInfo $backup */
+ 
     protected function downloadLogs($backup)
     {
         $file = new FileObject($backup->getPathname(), FileObject::MODE_APPEND_AND_READ);
-        /** @var BackupMetadata */
+ 
         $metaData = (new BackupMetadata())->hydrateByFile($file);
         $id = $metaData->getId();
         if (empty($id)) {
             $id = $this->extractIdFromBackup($backup->getBasename('.wpstg'));
         }
 
-        /**
-         * Lazy loaded
-         * @var Directory
-         */
+
+
+
+
         $directory = WPStaging::make(Directory::class);
         $this->logsDir = $directory->getLogDirectory();
 
@@ -107,12 +107,12 @@ class Logs
         header('Expires: 0');
         header('Cache-Control: must-revalidate');
         header('Pragma: public');
-        flush(); // Flush system output buffer
+        flush(); 
     }
 
     protected function readDebugLog($size)
     {
-        /** @var DebugLogReader */
+ 
         $debugLog = WPStaging::make(DebugLogReader::class);
 
         $errors = $debugLog->getLastLogEntries($size, true, false);
@@ -120,30 +120,30 @@ class Logs
         echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html($errors)); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
     }
 
-    /**
-     * @param string $backupName
-     * @return string
-     */
+
+
+
+
     protected function extractIdFromBackup($backupName)
     {
         $backupMeta = explode('_', $backupName);
         return trim($backupMeta[count($backupMeta) - 1]);
     }
 
-    /**
-     * @param string $backupId
-     * @return string
-     */
+
+
+
+
     protected function getBackupLogFileName($backupId)
     {
-        /** @var Filesystem */
+ 
         $filesystem = WPStaging::make(Filesystem::class);
 
         $iterator = $filesystem->setRecursive(false)
             ->setDirectory(rtrim($this->logsDir, '/'))
             ->get();
 
-        /** @var \SplFileInfo $item */
+ 
         foreach ($iterator as $item) {
             if ($item->getExtension() !== 'log') {
                 continue;
@@ -162,9 +162,9 @@ class Logs
         return '';
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function downloadSystemInfo()
     {
         $systemInfo = WPStaging::make(SystemInfo::class)->get("systemInfo");

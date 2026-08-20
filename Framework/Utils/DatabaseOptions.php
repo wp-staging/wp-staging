@@ -9,39 +9,39 @@ use wpdb;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class DatabaseOptions
- *
- * Provides direct, cache-free access to the WordPress options table.
- * This bypasses the wp_options caching layer (e.g., object cache, transients)
- * to allow raw interaction with the database, which is useful authentication of login links.
- *
- * @package WPStaging\Framework\Utils
- */
+
+
+
+
+
+
+
+
+
 class DatabaseOptions
 {
     use SerializeTrait;
 
-    /** @var wpdb */
+ 
     private $db;
 
-    /** @var string */
+ 
     private $optionsTable;
 
-    /**
-     * @param Database $database
-     */
+
+
+
     public function __construct(Database $database)
     {
         $this->db           = $database->getWpdb();
         $this->optionsTable = $database->getPrefix() . 'options';
     }
 
-    /**
-     * @param string $optionName
-     * @param mixed  $defaultValue
-     * @return mixed
-     */
+
+
+
+
+
     public function getOption(string $optionName, $defaultValue = false)
     {
         if (!$this->optionExists($optionName)) {
@@ -71,12 +71,12 @@ class DatabaseOptions
         return $value;
     }
 
-    /**
-     * @param string $optionName
-     * @param mixed $optionValue
-     * @param bool $autoload
-     * @return bool
-     */
+
+
+
+
+
+
     public function updateOption(string $optionName, $optionValue, bool $autoload = true): bool
     {
         try {
@@ -118,10 +118,10 @@ class DatabaseOptions
         }
     }
 
-    /**
-     * @param string $optionName
-     * @return bool
-     */
+
+
+
+
     public function deleteOption(string $optionName): bool
     {
         if (!$this->optionExists($optionName)) {
@@ -143,10 +143,10 @@ class DatabaseOptions
         return true;
     }
 
-    /**
-     * @param string $optionName
-     * @return bool
-     */
+
+
+
+
     private function optionExists(string $optionName): bool
     {
         $sql = $this->db->prepare(
@@ -157,18 +157,18 @@ class DatabaseOptions
         return (bool) $this->db->get_var($sql);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getLastDbError(): string
     {
         return !empty($this->db->last_error) ? $this->db->last_error : 'Unknown database error';
     }
 
-    /**
-     * @param string $optionName
-     * @return void
-     */
+
+
+
+
     private function clearOptionCache(string $optionName)
     {
         if (!function_exists('wp_cache_delete')) {

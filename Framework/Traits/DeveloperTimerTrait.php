@@ -1,30 +1,30 @@
 <?php
 
-/**
- * Provides methods to fetch potentially unlimited rows from a database table
- * with resource-usage awareness using raw MySQL(i) queries.
- *
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
+
 
 namespace WPStaging\Framework\Traits;
 
-/**
- * Trait DeveloperTimerTrait
- *
- * This trait should be used ONLY FOR DEBUGGING DURING DEVELOPMENT.
- *
- * This is NOT a substitute to real Profiling, but it proved to be
- * useful to gather data in a way that the developer would like to profile.
- *
- * No production code should call methods from this trait.
- * Feel free to commit code that uses this while the PR is under progress,
- * but it should be removed before the PR is approved.
- *
- * @todo    Add a PHPCS rule that looks for these methods and fail CI.
- *
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 trait DeveloperTimerTrait
 {
     use ResourceTrait;

@@ -25,7 +25,7 @@ $backupParts = [
         'messageWhenExcluded'  => __('Database restore excluded by filter.', 'wp-staging'),
     ],
     [
-        // Importing Users in Database for restoring single/subsite backups on subsite
+ 
         'backupContains'       => $info->getIsExportingDatabase() && is_multisite() && $info->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE,
         'excluded'             => $excluded['database'],
         'messageWhenRestoring' => __('Users from the backup will be imported.', 'wp-staging'),
@@ -116,7 +116,7 @@ $areFilesExcluded = $excluded['plugins']
             <?php
             $backupGeneratedInVersion = $info->getBackupVersion();
             $thisVersion = BackupHeader::BACKUP_VERSION;
-            // Use this in the future if we need to warn the user about compatibility issues between backup version and current version.
+ 
             ?>
             <small><?php echo sprintf(wp_kses_post('This backup was generated on WP STAGING %s. </br> You are running WP STAGING %s.', 'wp-staging'), esc_html($backupGeneratedInVersion), esc_html($thisVersion)) ?></small>
         </div>

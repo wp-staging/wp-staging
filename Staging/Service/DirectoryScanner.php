@@ -20,109 +20,109 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Staging\Dto\DirectoryNodeDto;
 use WPStaging\Staging\Sites;
 
-/**
- * Scans filesystem roots and prepares directory data for the staging selection UI.
- */
+
+
+
 class DirectoryScanner
 {
-    /**
-     * CSS class name to use for WordPress core directories like wp-content, wp-admin, wp-includes
-     * This doesn't contain class selector prefix
-     *
-     * @var string
-     */
+
+
+
+
+
+
     const WP_CORE_DIR = "wpstg-wp-core-dir";
 
-    /**
-     * CSS class name to use for WordPress non core directories
-     * This doesn't contain class selector prefix
-     *
-     * @var string
-     */
+
+
+
+
+
+
     const WP_NON_CORE_DIR = "wpstg-wp-non-core-dir";
 
-    /**
-     * @var TemplateEngine
-     */
+
+
+
     protected $templateEngine;
 
-    /**
-     * @var Directory
-     */
+
+
+
     protected $directory;
 
-    /**
-     * @var Strings
-     */
+
+
+
     protected $strUtils;
 
-    /**
-     * @var PathChecker
-     */
+
+
+
     protected $pathChecker;
 
-    /**
-     * @var SiteInfo
-     */
+
+
+
     protected $siteInfo;
 
-    /**
-     * @var AbstractStagingSetup
-     */
+
+
+
     protected $stagingSetup;
 
-    /**
-     * Normalized absolute paths of existing staging sites, lazily loaded.
-     *
-     * @var array|null
-     */
+
+
+
+
+
     private $stagingSiteDirectories = null;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $loaderIcon = '';
 
-    /**
-     * @var string
-     */
+
+
+
     protected $infoIcon = '';
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $isAllowVfsPath = false;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $scanSubWpContentByDefault = false;
 
-    /**
-     * @var array
-     */
+
+
+
     protected $excludedDirectories = [];
 
-    /**
-     * @var array
-     */
+
+
+
     protected $extraDirectories = [];
 
-    /** @var string */
+ 
     protected $absPath = ABSPATH;
 
-    /** @var string */
+ 
     protected $wpContentPath = WP_CONTENT_DIR;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var bool */
+ 
     protected $useDefaultSelection = false;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $showFileDestination = true;
 
     public function __construct(TemplateEngine $templateEngine, Assets $assets, Directory $directory, Strings $strUtils, PathChecker $pathChecker, SiteInfo $siteInfo, Filesystem $filesystem)
@@ -135,23 +135,23 @@ class DirectoryScanner
         $this->loaderIcon     = $assets->getAssetsUrl('img/spinner.gif');
         $this->filesystem     = $filesystem;
 
-        // Normalize so UNC roots match the format getPath() compares realpath() against.
+ 
         $this->absPath       = $this->filesystem->normalizePath($this->absPath, true);
         $this->wpContentPath = $this->filesystem->normalizePath($this->wpContentPath);
     }
 
-    /**
-     * @param bool $isAllowVfsPath
-     * @return void
-     */
+
+
+
+
     public function setIsAllowVfsPath(bool $isAllowVfsPath)
     {
         $this->isAllowVfsPath = $isAllowVfsPath;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setStagingSetup(AbstractStagingSetup $stagingSetup)
     {
         $this->stagingSetup        = $stagingSetup;
@@ -159,10 +159,10 @@ class DirectoryScanner
         $this->extraDirectories    = $stagingSetup->getStagingSiteDto()->getExtraDirectories();
     }
 
-    /**
-     * @param bool $showFileDestination
-     * @return void
-     */
+
+
+
+
     public function setShowFileDestination(bool $showFileDestination)
     {
         $this->showFileDestination = $showFileDestination;
@@ -177,13 +177,13 @@ class DirectoryScanner
     {
         $directories = $this->scanDirectory($this->absPath, $this->absPath, PathIdentifier::IDENTIFIER_ABSPATH);
 
-        // If wp-content is outside ABSPATH, then scan it too
+ 
         if ($this->isWpContentOutsideAbspath()) {
             $wpContentDirectories = $this->scanDirectory(dirname($this->wpContentPath), $this->wpContentPath, PathIdentifier::IDENTIFIER_WP_CONTENT);
             $directories          = array_merge($directories, $wpContentDirectories);
         }
 
-        /** Value of parent checked will be ignored instead the default selection will be used */
+ 
         $this->useDefaultSelection = true;
 
         $result = $this->templateEngine->render('staging/_partials/files-selection.php', [
@@ -198,12 +198,12 @@ class DirectoryScanner
         echo $result; // phpcs:ignore
     }
 
-    /**
-     * @param string $dirToScan
-     * @param string $basePath
-     * @param string $identifier
-     * @return DirectoryNodeDto[]
-     */
+
+
+
+
+
+
     public function scanDirectory(string $dirToScan, string $basePath, string $identifier): array
     {
         if (!is_dir($dirToScan)) {
@@ -244,8 +244,8 @@ class DirectoryScanner
             if (strpos($directoryPath, 'wp-content') !== false && is_link($directoryPath)) {
                 $directoryNode->setPath(realpath($directory->getPathname()));
             } elseif (is_link($directoryPath)) {
-                // Keep the symlink's own location, not its target: a folder linking into
-                // wp-content would otherwise be treated as WP core and pre-selected.
+ 
+ 
                 $directoryNode->setPath(wp_normalize_path($directoryPath));
             } else {
                 $directoryNode->setPath(trailingslashit($basePath) . ltrim($path, '/'));
@@ -260,19 +260,19 @@ class DirectoryScanner
         return $directories;
     }
 
-    /**
-     * @param DirectoryNodeDto[] $directories
-     * @param bool $parentChecked
-     * @param bool $preserveSelection
-     * @return string
-     */
+
+
+
+
+
+
     public function directoryListing(array $directories, bool $parentChecked = true, bool $preserveSelection = false): string
     {
         uksort($directories, 'strcasecmp');
 
         $output = '';
         foreach ($directories as $dirName => $directory) {
-            // Not a directory, possibly a symlink, therefore we will skip it
+ 
             if (basename($dirName) === "\\") {
                 continue;
             }
@@ -283,12 +283,12 @@ class DirectoryScanner
         return $output;
     }
 
-    /**
-     * @param DirectoryIterator $directory
-     * @param string $basePath
-     * @param string $identifier
-     * @return string
-     */
+
+
+
+
+
+
     protected function getPath(DirectoryIterator $directory, string $basePath, string $identifier): string
     {
         try {
@@ -303,11 +303,11 @@ class DirectoryScanner
 
         $realPath = $this->filesystem->normalizePath($realPath);
 
-        /**
-         * Do not follow root path like src/web/..
-         * This must be done before \SplFileInfo->isDir() is used!
-         * Prevents open base dir restriction fatal errors
-         */
+
+
+
+
+
         $path = $this->stripBasePath($realPath, $basePath);
 
         try {
@@ -316,7 +316,7 @@ class DirectoryScanner
             throw new UnexpectedValueException($openBaseDirException->getMessage());
         }
 
-        // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
+ 
         if (!$isDir || (strlen($path) < 1 && $identifier !== PathIdentifier::IDENTIFIER_WP_CONTENT)) {
             throw new UnexpectedValueException("The path '{$path}' is not a valid directory.");
         }
@@ -324,14 +324,14 @@ class DirectoryScanner
         return $path;
     }
 
-    /**
-     * UNC host/share names are case-insensitive, and realpath() uppercases that
-     * segment on Windows, so UNC roots must be compared case-insensitively.
-     *
-     * @param string $realPath
-     * @param string $basePath
-     * @return string
-     */
+
+
+
+
+
+
+
+
     protected function stripBasePath(string $realPath, string $basePath): string
     {
         $isUncBasePath      = strpos($basePath, '//') === 0;
@@ -343,19 +343,19 @@ class DirectoryScanner
         return substr($realPath, strlen($basePath));
     }
 
-    /**
-     * @param DirectoryNodeDto $directory
-     * @param bool $parentChecked
-     * @param bool $preserveSelection
-     * @return string
-     */
+
+
+
+
+
+
     protected function renderDirectoryNode(DirectoryNodeDto $directory, bool $parentChecked = true, bool $preserveSelection = false): string
     {
         $path    = wp_normalize_path($directory->getPath());
         $relPath = str_replace($directory->getBasePath(), '', $path);
         $relPath = ltrim($relPath, '/');
 
-        // Check if directory name or directory path is not WP core folder
+ 
         $isNotWPCoreDir = $this->isNonWpCoreDirectory($directory->getName(), $path);
 
         $class     = $isNotWPCoreDir ? self::WP_NON_CORE_DIR : self::WP_CORE_DIR;
@@ -376,17 +376,17 @@ class DirectoryScanner
             $showChildByDefault = true;
         }
 
-        // Make wp-includes and wp-admin directory items not expandable. The base
-        // path keeps ABSPATH's trailing slash, so strip it before composing the
-        // core paths — otherwise the double slash never matches and both folders
-        // stay wrongly expandable.
+ 
+ 
+ 
+ 
         $normalizedBasePath = untrailingslashit($directory->getBasePath());
         $isNavigatable      = 'true';
         if ($this->strUtils->startsWith($path, $normalizedBasePath . "/wp-admin") !== false || $this->strUtils->startsWith($path, $normalizedBasePath . "/wp-includes") !== false) {
             $isNavigatable = 'false';
         }
 
-        // Decide if item checkbox is active or not
+ 
         $shouldBeChecked = $this->useDefaultSelection ? !$isNotWPCoreDir : $parentChecked;
         if (!$preserveSelection && $this->isUpdateOrResetJob() && (!$this->isPathInDirectories($path, $this->excludedDirectories, $directory->getBasePath()))) {
             $shouldBeChecked = true;
@@ -421,17 +421,17 @@ class DirectoryScanner
             $shouldBeChecked = false;
         }
 
-        // A still-navigatable folder with no subdirectories is a leaf: there is
-        // nothing to fetch, so mark it non-navigatable and let the view render
-        // it as non-expandable instead of firing a request that returns nothing.
+ 
+ 
+ 
         $isLeaf = false;
         if ($isNavigatable === 'true' && !$this->directoryHasSubdirectories($path)) {
             $isLeaf        = true;
             $isNavigatable = 'false';
         }
 
-        // Flag folders that are themselves an existing staging site so the tree
-        // can explain why they are excluded by default.
+ 
+ 
         $isStagingSite = in_array(rtrim($path, '/\\'), $this->getStagingSiteDirectories(), true);
 
         return $this->templateEngine->render('staging/_partials/directory-navigation.php', [
@@ -461,13 +461,13 @@ class DirectoryScanner
         ]);
     }
 
-    /**
-     * Cheaply checks whether a directory contains at least one subdirectory.
-     * Returns on the first one found so it stays light even on large folders.
-     *
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
+
+
+
     private function directoryHasSubdirectories(string $path): bool
     {
         if (!is_dir($path)) {
@@ -486,20 +486,20 @@ class DirectoryScanner
                 }
             }
         } catch (\Exception $e) {
-            // On any error assume it may have children so a legitimately
-            // expandable folder is never hidden.
+ 
+ 
             return true;
         }
 
         return false;
     }
 
-    /**
-     * Returns the normalized absolute paths of existing staging sites so their
-     * folders can be flagged in the tree.
-     *
-     * @return array
-     */
+
+
+
+
+
+
     private function getStagingSiteDirectories(): array
     {
         if ($this->stagingSiteDirectories !== null) {
@@ -518,13 +518,13 @@ class DirectoryScanner
         return $this->stagingSiteDirectories;
     }
 
-    /**
-     * Check if directory name or directory path is not WP core folder
-     *
-     * @param string $dirname
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
+
+
+
     protected function isNonWpCoreDirectory(string $dirname, string $path): bool
     {
         $coreDirectories = [
@@ -554,23 +554,23 @@ class DirectoryScanner
         return true;
     }
 
-    /**
-     * Is the path present is given list of directories
-     * @param string  $path
-     * @param array   $directories List of directories relative to ABSPATH with leading slash
-     * @param ?string $basePath
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     protected function isPathInDirectories(string $path, array $directories, $basePath = null): bool
     {
         return $this->pathChecker->isPathInPathsList($path, $directories, true, $basePath);
     }
 
-    /**
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
     protected function isMandatoryExcludedDirectory(string $path): bool
     {
         $path = untrailingslashit(wp_normalize_path($path));
@@ -583,9 +583,9 @@ class DirectoryScanner
         return false;
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     protected function getMandatoryExcludedDirectories(): array
     {
         return $this->directory->getWpStagingDataDirectories();
@@ -601,17 +601,17 @@ class DirectoryScanner
         return false;
     }
 
-    /**
-     * Used during push
-     */
+
+
+
     protected function getShouldBeChecked(bool $shouldBeChecked, DirectoryNodeDto $directory): bool
     {
         return $shouldBeChecked;
     }
 
-    /**
-     * Overriden during push
-     */
+
+
+
     protected function getDirectoryType(string $path): string
     {
         $dirType = 'other';

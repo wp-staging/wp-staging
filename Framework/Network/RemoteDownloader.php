@@ -8,168 +8,168 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\Sanitize;
 
-/**
- * Downloads remote files in chunks and probes remote metadata needed for resumable downloads.
- */
+
+
+
 class RemoteDownloader
 {
-    /**
-     * Default timeout in seconds.
-     * @var int
-     */
+
+
+
+
     const DEFAULT_TIMEOUT = 60;
 
-    /**
-     * Extension added to files while they are being downloaded.
-     * @var string
-     */
+
+
+
+
     const UPLOADING_EXTENSION = 'uploading';
 
-    /**
-     * Number of body bytes to read when probing size with GET.
-     * @var int
-     */
+
+
+
+
     const FILE_SIZE_PROBE_RESPONSE_LIMIT = 1;
 
-    /**
-     * @var int
-     */
+
+
+
     const MAX_REDIRECTS = 5;
 
-    /**
-     * Number of bytes copied from the temporary chunk file into the final upload file at once.
-     * @var int
-     */
+
+
+
+
     const FILE_APPEND_BLOCK_SIZE = 1048576;
 
-    /**
-     * Error code used when the remote server returns a full response to a partial download request.
-     * @var string
-     */
+
+
+
+
     const ERROR_PARTIAL_DOWNLOAD_NOT_SUPPORTED = 'partial_download_not_supported';
 
-    /**
-     * Default chunk size in bytes.
-     * @var int
-     */
+
+
+
+
     private $chunkSize = 5 * 1024 * 1024;
 
-    /** @var Sanitize */
+ 
     protected $sanitize;
 
-    /** @var string */
+ 
     protected $remoteUrl = '';
 
-    /** @var string */
+ 
     protected $localPath = '';
 
-    /** @var string */
+ 
     protected $fileName = '';
 
-    /** @var int */
+ 
     protected $remoteFileSize = 0;
 
-    /** @var int */
+ 
     private $startByte = 0;
 
-    /** @var int */
+ 
     private $endByte = 0;
 
-    /** @var int */
+ 
     private $lastDownloadedBytes = 0;
 
-    /** @var bool */
+ 
     private $success = false;
 
-    /** @var bool */
+ 
     private $completed = false;
 
-    /** @var string */
+ 
     private $message = '';
 
-    /** @var string */
+ 
     private $errorCode = '';
 
-    /** @var int */
+ 
     private $timeout = self::DEFAULT_TIMEOUT;
 
-    /** @var resource|null */
+ 
     private $fileHandle = null;
 
-    /** @var array<string, string> */
+ 
     private $customHeaders = [];
 
-    /** @var bool */
+ 
     private $followRedirects = true;
 
-    /** @var bool */
+ 
     private $allowUnknownRemoteFileSize = false;
 
-    /**
-     * @param Sanitize $sanitize
-     */
+
+
+
     public function __construct(Sanitize $sanitize)
     {
         $this->sanitize = $sanitize;
     }
 
-    /**
-     * Ensure file handle is closed when object is destroyed
-     */
+
+
+
     public function __destruct()
     {
         $this->closeFileHandle();
     }
 
-    /**
-     * @param string $url
-     * @return void
-     */
+
+
+
+
     public function setRemoteUrl(string $url)
     {
         $this->remoteUrl = $this->sanitize->sanitizeUrl($url);
     }
 
-    /**
-     * @param string $localPath
-     * @return void
-     */
+
+
+
+
     public function setLocalPath(string $localPath)
     {
         $this->localPath = $this->sanitize->sanitizePath($localPath);
     }
 
-    /**
-     * @param string $fileName
-     * @return void
-     */
+
+
+
+
     public function setFileName(string $fileName)
     {
         $this->fileName = $fileName;
     }
 
-    /**
-     * @param int $fileSize
-     * @return void
-     */
+
+
+
+
     public function setRemoteFileSize(int $fileSize)
     {
         $this->remoteFileSize = $this->sanitize->sanitizeInt($fileSize);
     }
 
-    /**
-     * @param bool $allow
-     * @return void
-     */
+
+
+
+
     public function setAllowUnknownRemoteFileSize(bool $allow)
     {
         $this->allowUnknownRemoteFileSize = $allow;
     }
 
-    /**
-     * @param int $chunkSize
-     * @return void
-     */
+
+
+
+
     public function setChunkSize(int $chunkSize)
     {
         $chunkSize = $this->sanitize->sanitizeInt($chunkSize, true);
@@ -178,18 +178,18 @@ class RemoteDownloader
         }
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getChunkSize(): int
     {
         return $this->chunkSize;
     }
 
-    /**
-     * @param int $startByte
-     * @return void
-     */
+
+
+
+
     public function setStartByte(int $startByte)
     {
         $this->startByte = $this->sanitize->sanitizeInt($startByte);
@@ -215,10 +215,10 @@ class RemoteDownloader
         return $this->success;
     }
 
-    /**
-     * Get the number of bytes downloaded in the last successful chunk.
-     * @return int
-     */
+
+
+
+
     public function getLastDownloadedBytes(): int
     {
         return $this->lastDownloadedBytes;
@@ -244,31 +244,31 @@ class RemoteDownloader
         return $this->localPath . '.' . self::UPLOADING_EXTENSION;
     }
 
-    /**
-     * @param array<string, string> $headers
-     * @return void
-     */
+
+
+
+
     public function setCustomHeaders(array $headers)
     {
         $this->customHeaders = $headers;
     }
 
-    /**
-     * @param bool $follow
-     * @return void
-     */
+
+
+
+
     public function setFollowRedirects(bool $follow)
     {
         $this->followRedirects = $follow;
     }
 
-    /**
-     * @param string $message
-     * @param bool $success
-     * @param bool $completed
-     * @param string $errorCode
-     * @return void
-     */
+
+
+
+
+
+
+
     public function setResponse(string $message, bool $success = false, bool $completed = false, string $errorCode = '')
     {
         $this->message   = esc_html($message);
@@ -277,10 +277,10 @@ class RemoteDownloader
         $this->errorCode = $errorCode;
     }
 
-    /**
-     * Download a chunk of the remote file.
-     * @return void
-     */
+
+
+
+
     public function downloadChunk()
     {
         $this->errorCode = '';
@@ -292,7 +292,7 @@ class RemoteDownloader
         }
 
         $isUnknownSize = $this->remoteFileSize <= 0;
-        // Ensure we don't request beyond the file size when it is known.
+ 
         $this->endByte = $isUnknownSize ?
             $this->startByte + $this->chunkSize - 1 :
             min($this->startByte + $this->chunkSize - 1, $this->remoteFileSize - 1);
@@ -367,16 +367,16 @@ class RemoteDownloader
             }
         } else {
             $this->deleteFile($chunkPath);
-            // Handle empty response - might be at end of file
+ 
             $this->success             = true;
             $this->lastDownloadedBytes = 0;
             $this->maybeFinishDownload(0);
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function closeFileHandle()
     {
         if (!empty($this->fileHandle)) {
@@ -385,13 +385,13 @@ class RemoteDownloader
         }
     }
 
-    /**
-     * Append the streamed chunk file to the local upload file without loading it fully into memory.
-     *
-     * @param string $chunkPath
-     * @param int $bytesToSkip
-     * @return bool
-     */
+
+
+
+
+
+
+
     private function appendChunkToLocalFile(string $chunkPath, int $bytesToSkip = 0)
     {
         $chunkHandle = null;
@@ -446,10 +446,10 @@ class RemoteDownloader
         }
     }
 
-    /**
-     * Send a JSON response for the current download state.
-     * @return void
-     */
+
+
+
+
     public function writeResponse()
     {
         wp_send_json([
@@ -461,11 +461,11 @@ class RemoteDownloader
         ]);
     }
 
-    /**
-     * Get the remote file size.
-     * @param bool $sslVerify
-     * @return int
-     */
+
+
+
+
+
     public function fetchRemoteFileSize(bool $sslVerify = true): int
     {
         $args = [
@@ -498,11 +498,11 @@ class RemoteDownloader
         return $this->getContentLengthFromResponse($response);
     }
 
-    /**
-     * Get the remote file size.
-     * @param bool $sslVerify
-     * @return int
-     */
+
+
+
+
+
     public function fetchRemoteFileSizeByGet(bool $sslVerify = true): int
     {
         $args = [
@@ -548,11 +548,11 @@ class RemoteDownloader
         return $this->getContentLengthFromResponse($response);
     }
 
-    /**
-     * Try all lightweight remote file size probes.
-     *
-     * @return int
-     */
+
+
+
+
+
     public function fetchRemoteFileSizeWithFallbacks(): int
     {
         $fileSize = $this->fetchRemoteFileSize();
@@ -573,15 +573,15 @@ class RemoteDownloader
         return $this->fetchRemoteFileSizeByGet(false);
     }
 
-    /**
-     * Verify if the download is complete.
-     * If the download is complete, rename the temporary file to the original file name.
-     * @param int $contentLength
-     * @return void
-     */
+
+
+
+
+
+
     public function maybeFinishDownload(int $contentLength)
     {
-        // Check if this is the last chunk (either smaller than chunk size OR we've reached the end of file)
+ 
         $isUnknownSize = $this->remoteFileSize <= 0 && $this->allowUnknownRemoteFileSize;
         if ($isUnknownSize && $contentLength === 0 && $this->startByte === 0) {
             $this->message   = esc_html__('Unable to download remote file chunk.', 'wp-staging');
@@ -635,19 +635,19 @@ class RemoteDownloader
         $this->completed = true;
     }
 
-    /**
-     * Move the start byte forward by the actual bytes downloaded.
-     * @return void
-     */
+
+
+
+
     public function advanceStartByte()
     {
         $this->startByte += $this->lastDownloadedBytes;
     }
 
-    /**
-     * Check if the remote file exists.
-     * @return bool
-     */
+
+
+
+
     public function remoteFileExists()
     {
         $args = [
@@ -704,12 +704,12 @@ class RemoteDownloader
         return false;
     }
 
-    /**
-     * Get a chunk of remote file content.
-     * @param int $startByte
-     * @param int $endByte
-     * @return string
-     */
+
+
+
+
+
+
     public function fetchRemoteFileContent(int $startByte, int $endByte)
     {
         $args = [
@@ -740,11 +740,11 @@ class RemoteDownloader
         return '';
     }
 
-    /**
-     * Make a remote request.
-     * @param array $args
-     * @return array|\WP_Error
-     */
+
+
+
+
+
     protected function makeRemoteRequest(array $args)
     {
         $args['user-agent'] = 'Mozilla/5.0 (compatible; wp-staging/' . WPStaging::getVersion() . '; +https://wp-staging.com)';
@@ -765,11 +765,11 @@ class RemoteDownloader
         return wp_remote_request($this->remoteUrl, $args);
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @param array<int, int> $acceptedCodes
-     * @return bool
-     */
+
+
+
+
+
     private function hasSuccessfulResponseCode($response, array $acceptedCodes): bool
     {
         if (!is_array($response)) {
@@ -779,20 +779,20 @@ class RemoteDownloader
         return in_array((int)wp_remote_retrieve_response_code($response), $acceptedCodes, true);
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @return bool
-     */
+
+
+
+
     private function isSuccessfulRemoteFileExistsResponse($response): bool
     {
         return $this->hasSuccessfulResponseCode($response, [200, 206]);
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @param int             $requestedBytes
-     * @return bool
-     */
+
+
+
+
+
     private function hasSuccessfulChunkResponse($response, int $requestedBytes): bool
     {
         if (!is_array($response)) {
@@ -827,19 +827,19 @@ class RemoteDownloader
         return false;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getChunkDownloadPath(): string
     {
         return $this->getUploadPath() . '.chunk';
     }
 
-    /**
-     * @param array<string, mixed>|\WP_Error $response
-     * @param bool $isUnknownSize
-     * @return bool
-     */
+
+
+
+
+
     private function isUnknownSizeEndOfFileResponse($response, bool $isUnknownSize): bool
     {
         return $isUnknownSize &&
@@ -848,17 +848,17 @@ class RemoteDownloader
             (int)wp_remote_retrieve_response_code($response) === 416;
     }
 
-    /**
-     * When size is unknown and the server ignores Range, the streamed chunk
-     * contains bytes from the beginning of the file. Skip already downloaded
-     * bytes before appending the new tail.
-     *
-     * @param array<string, mixed>|\WP_Error $response
-     * @param bool $isUnknownSize
-     * @param int $downloadedBytes
-     * @param int $requestedBytes
-     * @return int
-     */
+
+
+
+
+
+
+
+
+
+
+
     private function getChunkBytesToSkip($response, bool $isUnknownSize, int $downloadedBytes, int $requestedBytes): int
     {
         if (!$isUnknownSize || (int)wp_remote_retrieve_response_code($response) !== 200) {
@@ -872,10 +872,10 @@ class RemoteDownloader
         return $this->startByte;
     }
 
-    /**
-     * @param string $path
-     * @return void
-     */
+
+
+
+
     private function deleteFile(string $path)
     {
         if (file_exists($path)) {
@@ -883,19 +883,19 @@ class RemoteDownloader
         }
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @return int
-     */
+
+
+
+
     private function getContentLengthFromResponse($response): int
     {
         return $this->getPositiveIntegerHeaderFromResponse($response, 'content-length');
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @return int
-     */
+
+
+
+
     private function getContentRangeSizeFromResponse($response): int
     {
         foreach ($this->getHeaderValues($response, 'content-range') as $headerValue) {
@@ -907,11 +907,11 @@ class RemoteDownloader
         return 0;
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @param string $headerName
-     * @return int
-     */
+
+
+
+
+
     private function getPositiveIntegerHeaderFromResponse($response, string $headerName): int
     {
         $headerValues = array_reverse($this->getHeaderValues($response, $headerName));
@@ -928,11 +928,11 @@ class RemoteDownloader
         return 0;
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @param string $headerName
-     * @return array<int, string>
-     */
+
+
+
+
+
     private function getHeaderValues($response, string $headerName): array
     {
         $headerValue = wp_remote_retrieve_header($response, $headerName);
@@ -968,10 +968,10 @@ class RemoteDownloader
         return $values;
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @return bool
-     */
+
+
+
+
     private function isAuthenticationFailure($response): bool
     {
         if (is_wp_error($response) || !is_array($response)) {
@@ -983,10 +983,10 @@ class RemoteDownloader
         return in_array($responseCode, [401, 403], true);
     }
 
-    /**
-     * @param array|\WP_Error $response
-     * @return void
-     */
+
+
+
+
     private function setAuthenticationFailureMessage($response)
     {
         $responseCode = (int) wp_remote_retrieve_response_code($response);

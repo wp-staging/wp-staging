@@ -6,58 +6,58 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Staging\CloneOptions;
 
-/**
- * Class SiteInfo
- *
- * Provides information about the current site.
- *
- * @package WPStaging\Site
- */
+
+
+
+
+
+
+
 class SiteInfo
 {
-    /**
-     * The key used in DB to store is cloneable feature in clone options
-     * @var string
-     */
+
+
+
+
     const IS_CLONEABLE_KEY = 'isCloneable';
 
-    /**
-     * The file which make staging site cloneable
-     * This way is depreciated
-     * @var string
-     */
+
+
+
+
+
     const CLONEABLE_FILE = '.wp-staging-cloneable';
 
-    /**
-     * The key used in DB to store whether site is staging or not
-     * @var string
-     */
+
+
+
+
     const IS_STAGING_KEY = 'wpstg_is_staging_site';
 
-    /**
-     * The file which makes a site a staging site
-     * @var string
-     */
+
+
+
+
     const STAGING_FILE = '.wp-staging';
 
-    /** @var string */
+ 
     const HOSTED_ON_WP = 'wp.com';
 
-    /** @var string */
+ 
     const HOSTED_ON_FLYWHEEL = 'flywheel';
 
-    /** @var string */
+ 
     const HOSTED_ON_BITNAMI = 'bitnami';
 
-    /** @var string */
+ 
     const OTHER_HOST = 'other';
 
-    /**
-     * `.dev` is a public gTLD as well as a local convention, hence suffix-only:
-     * example.dev is local, foo.dev.example.com is not.
-     *
-     * @var string[]
-     */
+
+
+
+
+
+
     const LOCAL_HOSTNAME_SUFFIXES = [
         '.local',
         '.test',
@@ -65,75 +65,75 @@ class SiteInfo
         '.dev',
     ];
 
-    /** @var string[] Local only when they are the entire host. */
+ 
     const LOCAL_HOSTNAMES = [
         'localhost',
     ];
 
-    /** @var string[] */
+ 
     const LOCAL_IP_PREFIXES = [
         '10.0.0.',
         '172.16.0.',
         '192.168.0.',
     ];
 
-    /**
-     * @var CloneOptions
-     */
+
+
+
     private $cloneOptions;
 
-    /**
-     * @var array
-     */
+
+
+
     private $errors = [];
 
     public function __construct()
     {
-        // TODO: inject using DI
+ 
         $this->cloneOptions = new CloneOptions();
     }
 
-    /**
-     * @return bool True if it is staging site. False otherwise.
-     */
+
+
+
     public function isStagingSite(): bool
     {
-        // Single source of truth lives in the early bootstrap, before the autoloader.
+ 
         return wpstgIsStagingSite(self::STAGING_FILE, self::IS_STAGING_KEY);
     }
 
-    /**
-     * @return bool True if it is staging site. False otherwise.
-     */
+
+
+
     public function isCloneable(): bool
     {
-        // Site should be cloneable if not staging i.e. production site
+ 
         if (!$this->isStagingSite()) {
             return true;
         }
 
-        // Old condition to check if staging site is cloneable
+ 
         if (file_exists(ABSPATH . self::CLONEABLE_FILE)) {
             return true;
         }
 
-        // New condition for checking whether staging is cloneable or not
+ 
         return $this->cloneOptions->get(self::IS_CLONEABLE_KEY, false);
     }
 
-    /**
-     * Check if WP is installed in subdirectory
-     * If siteurl and home are not identical we assume the site is located in a subdirectory
-     * related to that instruction https://wordpress.org/support/article/giving-wordpress-its-own-directory/
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
     public function isInstalledInSubDir(): bool
     {
         $siteUrl = get_option('siteurl');
         $homeUrl = get_option('home');
 
-        //Get URL path e.g.https://example.com/path will return /path
+ 
         $siteUrlPath = wp_parse_url($siteUrl, PHP_URL_PATH);
         $homeUrlPath = wp_parse_url($homeUrl, PHP_URL_PATH);
 
@@ -148,19 +148,19 @@ class SiteInfo
         return false;
     }
 
-    /**
-     * Enable the cloning for current staging site.
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function enableStagingSiteCloning(): bool
     {
-        // Early Bail: if site is not staging
+ 
         if (!$this->isStagingSite()) {
             return false;
         }
 
-        // Early Bail: if cloning already enabled
+ 
         if ($this->isCloneable()) {
             return true;
         }
@@ -168,82 +168,82 @@ class SiteInfo
         return $this->cloneOptions->set(self::IS_CLONEABLE_KEY, true);
     }
 
-    /**
-     * Enable the cloning for current staging site.
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function disableStagingSiteCloning(): bool
     {
-        // Early Bail: if site is not staging
+ 
         if (!$this->isStagingSite()) {
             return false;
         }
 
-        // Early Bail: if cloning already disabled
+ 
         if (!$this->isCloneable()) {
             return true;
         }
 
-        // First try disabling if cloneable feature exist due to old way.
+ 
         $cloneableFile = trailingslashit(ABSPATH) . self::CLONEABLE_FILE;
         if (file_exists($cloneableFile) && !unlink($cloneableFile)) {
-            // Error if files exists but unable to unlink
+ 
             return false;
         }
 
-        // Staging site may have been made cloneable through both ways
-        // So now try disabling through new way
+ 
+ 
         return (!file_exists($cloneableFile) && $this->cloneOptions->delete(self::IS_CLONEABLE_KEY));
     }
 
-    /**
-     * @return bool True if "short_open_tags" is enabled, false if disabled.
-     */
+
+
+
     public function isPhpShortTagsEnabled(): bool
     {
         return in_array(strtolower(ini_get('short_open_tags')), ['1', 'on', 'true']);
     }
 
-    /**
-     * Is WP Bakery plugin active?
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function isWpBakeryActive(): bool
     {
         return defined('WPB_VC_VERSION');
     }
 
-    /**
-     * Is Jetpack plugin active?
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function isJetpackActive(): bool
     {
         return class_exists('Jetpack');
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     public function getErrors(): array
     {
         return $this->errors;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isBitnami(): bool
     {
         return ABSPATH === '/opt/bitnami/wordpress/';
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isWpContentOutsideAbspath(): bool
     {
         $wpContentDir = wp_normalize_path(WP_CONTENT_DIR);
@@ -252,9 +252,9 @@ class SiteInfo
         return !(strpos($wpContentDir, $abspath) === 0);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isUploadsOutsideAbspath(): bool
     {
         $uploadDir = wp_normalize_path(wp_upload_dir()['basedir']);
@@ -263,9 +263,9 @@ class SiteInfo
         return strpos($uploadDir, $abspath) !== 0;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isFlywheel(): bool
     {
         if (!$this->isWpContentOutsideAbspath()) {
@@ -275,9 +275,9 @@ class SiteInfo
         return file_exists(trailingslashit(wp_normalize_path(ABSPATH)) . '.fw-config.php');
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isHostedOnWordPressCom(): bool
     {
         if (!$this->isWpContentOutsideAbspath()) {
@@ -293,9 +293,9 @@ class SiteInfo
         return true;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getHostingType(): string
     {
         if ($this->isFlywheel()) {
@@ -335,9 +335,9 @@ class SiteInfo
         }
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isHostedOnElementorCloud(): bool
     {
         $httpHost = !empty($_SERVER['HTTP_HOST']) ? Sanitize::sanitizeString($_SERVER['HTTP_HOST']) : '';
@@ -355,14 +355,14 @@ class SiteInfo
         return false;
     }
 
-    /**
-     * Check if the website is installed locally.
-     *
-     * Matched anchored on the host: two licence gates short-circuit on this,
-     * so a false positive unlocks paid features on a public site.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function isLocal(): bool
     {
         $host = strtolower((string)wp_parse_url(get_site_url(), PHP_URL_HOST));
@@ -389,10 +389,10 @@ class SiteInfo
         return $this->isPrivateIp($host);
     }
 
-    /**
-     * Guarded on a real address: 10.0.0.example.com is a valid public hostname
-     * that matches the 10.0.0. prefix.
-     */
+
+
+
+
     private function isPrivateIp(string $host): bool
     {
         if (filter_var($host, FILTER_VALIDATE_IP) === false) {
@@ -408,10 +408,10 @@ class SiteInfo
         return false;
     }
 
-    /**
-     * Wrapper around is_multisite()
-     * @return bool
-     */
+
+
+
+
     public function isMultisite(): bool
     {
         return is_multisite();

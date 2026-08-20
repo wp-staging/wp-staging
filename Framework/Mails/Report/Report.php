@@ -15,85 +15,85 @@ use function WPStaging\functions\debug_log;
 
 class Report
 {
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_MAILS_REPORT_BUNDLED_LOGS_USE_ZIPARCHIVE = 'wpstg.mails.report.bundled_logs_use_ziparchive';
 
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_SUPPORT_EMAIL = "support@wp-staging.com";
 
-    /**
-     * @var string
-     */
+
+
+
     const EMAIL_SUBJECT = "Report Issue!";
 
-    /**
-     * @var bool
-     */
+
+
+
     const FORCE_SEND_DEBUG_LOG = true;
 
-    /**
-     * @var string
-     */
+
+
+
     const TEMP_DIRECTORY = 'tmp';
 
-    /**
-     * @var int
-     */
+
+
+
     const MAX_SIZE_DEBUG_LOG = 512;
 
-    /**
-     * @var int
-     */
+
+
+
     const RETENTATION_LOG_DAYS = 14;
 
-    /**
-     * @var SystemInfo
-     */
+
+
+
     private $systemInfo;
 
-    /**
-     * @var Directory
-     */
+
+
+
     private $directory;
 
-    /**
-     * @var DebugLogReader
-     */
+
+
+
     private $debugLogReader;
 
-    /**
-     * @var ReportSubmitTransient
-     */
+
+
+
     private $transient;
 
-    /**
-     * @var Auth
-     */
+
+
+
     private $auth;
 
-    /**
-     * @var Sanitize
-     */
+
+
+
     private $sanitize;
 
-    /**
-     * @var Notifications
-     */
+
+
+
     private $notifications;
 
-    /**
-     * @param SystemInfo $systemInfo
-     * @param Directory $directory
-     * @param DebugLogReader $debugLogReader
-     * @param ReportSubmitTransient $reportSubmitTransient
-     * @param Auth $auth
-     * @param Sanitize $sanitize
-     * @param Notifications $notifications
-     */
+
+
+
+
+
+
+
+
+
     public function __construct(SystemInfo $systemInfo, Directory $directory, DebugLogReader $debugLogReader, ReportSubmitTransient $reportSubmitTransient, Auth $auth, Sanitize $sanitize, Notifications $notifications)
     {
         $this->systemInfo     = $systemInfo;
@@ -105,18 +105,18 @@ class Report
         $this->notifications  = $notifications;
     }
 
-    /**
-     * Send customer issue report
-     *
-     * @param string $email User e-mail
-     * @param string $message User message
-     * @param bool $terms User accept terms
-     * @param bool $sendLogFiles User selected syslog
-     * @param string|null $provider User site provider
-     * @param bool $forceSend force send mail even if already sent
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     public function send(string $email, string $message, bool $terms, bool $sendLogFiles, string $provider = '', bool $forceSend = false): array
     {
         $errors = [];
@@ -140,7 +140,7 @@ class Report
         }
 
         if ($forceSend !== self::FORCE_SEND_DEBUG_LOG && $this->transient->getTransient()) {
-            // to show alert using js
+ 
             $errors[] = [
                 "status"  => 'already_submitted',
                 "message" => __("You've already submitted a ticket!<br/>" .
@@ -169,13 +169,13 @@ class Report
         return $errors;
     }
 
-    /**
-     * Send customers debug log
-     * @param string $fromEmail
-     * @param string $debugCode
-     * @param bool $forceSend
-     * @return array
-     */
+
+
+
+
+
+
+
     public function sendDebugLog(string $fromEmail, string $debugCode, bool $forceSend = false): array
     {
         if ($forceSend !== self::FORCE_SEND_DEBUG_LOG && $this->transient->getTransient()) {
@@ -211,9 +211,9 @@ class Report
         return  $errors;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxSendDebugLog()
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -241,9 +241,9 @@ class Report
         wp_send_json(['response' => $response]);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getBundledLogs(): array
     {
         $postfix         = sanitize_file_name(strtolower(wp_hash(uniqid())));
@@ -271,7 +271,7 @@ class Report
             $logFiles[] = $destinationWpstgDebugFilePath;
         }
 
-        // @see DebugLogReader::getLastLogEntries()
+ 
         $debugLogFile = ini_get('error_log');
 
         if (file_exists($debugLogFile) && is_readable($debugLogFile)) {
@@ -323,8 +323,8 @@ class Report
             $zip->addFile($filePath, 'wpstg-bundled-logs/' . basename($filePath));
         }
 
-        // Close the descriptor, otherwise, ZipArchive will not release the lock
-        // and other operations with files like file_exists will fail
+ 
+ 
         $zip->close();
 
         if (file_exists($zipFilePath)) {
@@ -334,9 +334,9 @@ class Report
         return [];
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function deleteBundledLogs()
     {
         $dirPath     = trailingslashit($this->getTempDirectoryForLogsAttachments());
@@ -362,13 +362,13 @@ class Report
         }
     }
 
-    /**
-     * Copy data into file
-     *
-     * @param string $destinationFile  where to copy to.
-     * @param string $data data to put into file.
-     * @return void
-     */
+
+
+
+
+
+
+
     protected function copyDataToFile(string $destinationFile, string $data)
     {
         try {
@@ -386,14 +386,14 @@ class Report
         }
     }
 
-    /**
-     * send feedback via email
-     *
-     * @param string $from
-     * @param string $text
-     * @param array  $attachments
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     private function sendFeedback(string $from, string $text, array $attachments): bool
     {
         $success = $this->notifications->sendEmail(self::WPSTG_SUPPORT_EMAIL, self::EMAIL_SUBJECT, $text, $from, $attachments, Notifications::DISABLE_FOOTER_MESSAGE);
@@ -402,10 +402,10 @@ class Report
         return (bool)$success;
     }
 
-    /**
-     * create temp location for storing logs
-     * @return string temporary path to hold logs attachments
-     */
+
+
+
+
     private function getTempDirectoryForLogsAttachments(): string
     {
         $tempDirectory = trailingslashit(wp_normalize_path($this->directory->getPluginUploadsDirectory() . self::TEMP_DIRECTORY));
@@ -414,9 +414,9 @@ class Report
         return $tempDirectory;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getLicenseKey(): string
     {
         $licenseKey = get_option('wpstg_license_key');

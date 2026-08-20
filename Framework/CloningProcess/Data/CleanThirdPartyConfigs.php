@@ -6,17 +6,17 @@ use WPStaging\Framework\SiteInfo;
 
 class CleanThirdPartyConfigs extends FileCloningService
 {
-    /**
-     * @inheritDoc
-     */
+
+
+
     protected function internalExecute()
     {
         $filesForWhichToCreateDummy = [];
 
-        /** @var SiteInfo $siteInfo */
+ 
         $siteInfo = new SiteInfo();
         if ($siteInfo->isFlywheel()) {
-            $filesForWhichToCreateDummy[] = '.fw-config.php'; // Flywheel config to clean
+            $filesForWhichToCreateDummy[] = '.fw-config.php'; 
         }
 
         foreach ($filesForWhichToCreateDummy as $file) {
@@ -26,9 +26,9 @@ class CleanThirdPartyConfigs extends FileCloningService
         return true;
     }
 
-    /**
-     * @param string $file
-     */
+
+
+
     private function createDummyFile($file)
     {
         $this->log("Creating dummy file for $file");

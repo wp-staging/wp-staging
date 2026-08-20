@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Manages the file backup process for adding files to backup archives
- *
- * Coordinates file archiving operations including reading files from disk,
- * handling large files across multiple requests, and managing backup queues.
- */
+
+
+
+
+
+
 
 namespace WPStaging\Backup\Service;
 
@@ -33,43 +33,46 @@ class FileBackupService implements ServiceInterface
     use ResourceTrait;
     use EndOfLinePlaceholderTrait;
 
-    /** @var Archiver */
+ 
     protected $archiver;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var SeekableQueueInterface */
+ 
     protected $taskQueue;
 
-    /** @var LoggerInterface */
+ 
     protected $logger;
 
-    /** @var JobBackupDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var StepsDto */
+ 
     protected $stepsDto;
 
-    /** @var int|ArchiverDto If a file couldn't be processed in a single request, this will be populated */
+ 
     protected $bigFileBeingProcessed;
 
-    /** @var FileBackupTask */
+ 
     protected $fileBackupTask;
 
-    /** @var bool */
+ 
     protected $isWpContentOutsideAbspath = false;
 
-    /** @var bool */
+ 
+    protected $isOtherWpRootFilesTask = false;
+
+ 
     protected $isGracefulShutdown = true;
 
-    /** @var float */
+ 
     protected $start;
 
-    /** @var string */
+ 
     protected $fileIdentifier;
 
     public function __construct(Archiver $archiver, Directory $directory, Filesystem $filesystem, SiteInfo $siteInfo)
@@ -81,14 +84,14 @@ class FileBackupService implements ServiceInterface
         $this->isWpContentOutsideAbspath = $siteInfo->isWpContentOutsideAbspath();
     }
 
-    /**
-     * @param FileBackupTask $fileBackupTask
-     * @param SeekableQueueInterface $taskQueue
-     * @param LoggerInterface $logger
-     * @param JobBackupDataDto $jobDataDto
-     * @param StepsDto $stepsDto
-     * @return void
-     */
+
+
+
+
+
+
+
+
     public function inject(FileBackupTask $fileBackupTask, SeekableQueueInterface $taskQueue, LoggerInterface $logger, JobBackupDataDto $jobDataDto, StepsDto $stepsDto)
     {
         $this->fileBackupTask = $fileBackupTask;
@@ -98,29 +101,30 @@ class FileBackupService implements ServiceInterface
         $this->stepsDto       = $stepsDto;
     }
 
-    /**
-     * @param bool $isGracefulShutdown
-     * @return void
-     */
+
+
+
+
     public function setIsGracefulShutdown(bool $isGracefulShutdown)
     {
         $this->isGracefulShutdown = $isGracefulShutdown;
     }
 
-    /**
-     * @param string $fileIdentifier
-     * @param bool $isOtherWpRootFilesTask (Used in Pro)
-     * @return void
-     */
+
+
+
+
+
     public function setupArchiver(string $fileIdentifier, bool $isOtherWpRootFilesTask = false)
     {
-        $this->fileIdentifier = $fileIdentifier;
+        $this->fileIdentifier         = $fileIdentifier;
+        $this->isOtherWpRootFilesTask = $isOtherWpRootFilesTask;
         $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function execute()
     {
         $this->archiver->setFileAppendTimeLimit($this->jobDataDto->getFileAppendTimeLimit());
@@ -138,7 +142,7 @@ class FileBackupService implements ServiceInterface
 
                 return;
             } catch (DiskNotWritableException $exception) {
-                // Probably disk full. Should be handled in Job\AbstractJob::prepareAndExecute(). Let's stop the code here if it did not happen!
+ 
                 throw new \Exception('Disk is probably full. Error message: ' . $exception->getMessage());
             } catch (\Throwable $th) {
                 throw new \Exception('Fail to create backup. Error message: ' . $th->getMessage());
@@ -150,11 +154,11 @@ class FileBackupService implements ServiceInterface
         $this->updateMultipartInfo();
     }
 
-    /**
-     * @throws DiskNotWritableException
-     * @throws FinishedQueueException
-     * @return void
-     */
+
+
+
+
+
     public function backup()
     {
         $archiverDto = $this->archiver->getDto();
@@ -195,11 +199,11 @@ class FileBackupService implements ServiceInterface
         } catch (ThresholdException $e) {
             $isFileWrittenCompletely = null;
         } catch (\RuntimeException $e) {
-            // One unclassifiable/invalid file must not abort the whole backup: skip it, but
-            // make it obvious which file was skipped and why so it can be diagnosed. Prefer
-            // $indexPath — that is the path the classifier tried to shorten; $path may already
-            // have ABSPATH prepended and would not match. Collapse newlines so the warning
-            // stays a single log line.
+ 
+ 
+ 
+ 
+ 
             $isFileWrittenCompletely = true;
             $skippedFile             = $indexPath !== '' ? $indexPath : $path;
             $skippedFile             = $skippedFile === '' ? '(empty path)' : $skippedFile;
@@ -211,7 +215,7 @@ class FileBackupService implements ServiceInterface
         }
 
         $this->jobDataDto->setCurrentWrittenFileHeaderBytes(0);
-        // Done processing this file
+ 
         if ($isFileWrittenCompletely === true) {
             $this->jobDataDto->setFileBeingBackupWrittenBytes(0);
             $this->stepsDto->incrementCurrentStep();
@@ -225,7 +229,7 @@ class FileBackupService implements ServiceInterface
             return;
         }
 
-        // Processing a file that could not be finished in this request
+ 
         $archiverDto = $this->archiver->getDto();
         $this->jobDataDto->setFileBeingBackupWrittenBytes($archiverDto->getWrittenBytesTotal());
         $this->jobDataDto->setCurrentFileStartOffset($archiverDto->getStartOffset());
@@ -248,7 +252,7 @@ class FileBackupService implements ServiceInterface
     protected function getBackupSpeed(): string
     {
         $elapsed = microtime(true) - $this->start;
-        // Fixes a "division by zero fatal error" when $elapsed was 0. issue #2571
+ 
         $elapsed = empty($elapsed) ? 1 : $elapsed;
 
         $bytesPerSecond = min(10 * GB_IN_BYTES, absint($this->archiver->getBytesWrittenInThisRequest() / $elapsed));
@@ -257,7 +261,7 @@ class FileBackupService implements ServiceInterface
             return '10GB/s+';
         }
 
-        // Format with 2 decimal places if faster than 1MB/s
+ 
         if ($bytesPerSecond >= MB_IN_BYTES) {
             if ($bytesPerSecond >= GB_IN_BYTES) {
                 return number_format($bytesPerSecond / GB_IN_BYTES, 2) . 'GB/s';
@@ -271,13 +275,13 @@ class FileBackupService implements ServiceInterface
 
     protected function shouldPrependAbsPath(): bool
     {
-        return $this->isWpContentOutsideAbspath === false;
+        return $this->isOtherWpRootFilesTask || ($this->isWpContentOutsideAbspath === false);
     }
 
-    /**
-     * This method logs how many files processed in the current request.
-     * @return void
-     */
+
+
+
+
     protected function logExecution()
     {
         if ($this->bigFileBeingProcessed instanceof ArchiverDto) {
@@ -304,38 +308,38 @@ class FileBackupService implements ServiceInterface
         ));
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function updateMultipartInfo()
     {
-        // Used in Pro
+ 
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function maybeIncrementPartNo(string $path)
     {
-        // Used in Pro
+ 
     }
 
-    /**
-     * Drives the actual append of the current queue entry to the backup. The Pro subclass
-     * overrides this to route oversize files through the cross-part segmenter while keeping
-     * the existing single-shot path for files that fit inside the configured part size.
-     *
-     * Returns true when the file is finished, false when it still needs more work in the
-     * next request, and null when the caller should treat the current work as threshold-hit.
-     *
-     * @param string $path
-     * @param string $indexPath
-     * @return bool|null
-     * @throws BackupSkipItemException
-     * @throws ThresholdException
-     * @throws \RuntimeException
-     * @throws \Throwable
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     protected function appendCurrentFileToBackup(string $path, string $indexPath)
     {
         $this->maybeIncrementPartNo($path);
@@ -356,7 +360,7 @@ class FileBackupService implements ServiceInterface
             case 'rootfiles':
                 return __('root', 'wp-staging');
             default:
-                return $this->fileIdentifier; // fallback
+                return $this->fileIdentifier; 
         }
     }
 

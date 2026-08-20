@@ -5,132 +5,132 @@ namespace WPStaging\Staging\Dto;
 use WPStaging\Framework\Traits\ArrayableTrait;
 use WPStaging\Framework\Traits\HydrateTrait;
 
-/**
- * Class StagingSiteDto
- *
- * This is OOP representation of all staging site options stored in database.
- *
- * @package WPStaging\Staging\Dto
- */
+
+
+
+
+
+
+
 class StagingSiteDto implements \JsonSerializable
 {
     use HydrateTrait;
     use ArrayableTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const STATUS_FINISHED = 'finished';
 
     const STATUS_UNFINISHED_BROKEN = 'unfinished or broken (?)';
 
-    /** @var string */
+ 
     protected $cloneId = '';
 
-    /** @var string */
+ 
     protected $cloneName = '';
 
-    /** @var string */
+ 
     protected $directoryName = '';
 
-    /** @var string */
+ 
     protected $path = '';
 
-    /** @var string */
+ 
     protected $url = '';
 
-    /** @var int */
+ 
     protected $number = 0;
 
-    /** @var string */
+ 
     protected $version = '';
 
-    /** @var string */
+ 
     protected $status = '';
 
-    /** @var string */
+ 
     protected $prefix = '';
 
-    /** @var int */
+ 
     protected $datetime = 0;
 
-    /** @var string */
+ 
     protected $databaseUser = '';
 
-    /** @var string */
+ 
     protected $databasePassword = '';
 
-    /** @var string */
+ 
     protected $databaseDatabase = '';
 
-    /** @var string */
+ 
     protected $databaseServer = '';
 
-    /** @var string */
+ 
     protected $databasePrefix = '';
 
-    /** @var bool */
+ 
     protected $databaseSsl = false;
 
-    /** @var bool */
+ 
     protected $isEmailsAllowed = true;
 
-    /** @var bool */
+ 
     protected $uploadsSymlinked = false;
 
-    /** @var array */
+ 
     protected $includedTables = [];
 
-    /** @var array */
+ 
     protected $excludeSizeRules = [];
 
-    /** @var array */
+ 
     protected $excludeGlobRules = [];
 
-    /** @var array */
+ 
     protected $excludedDirectories = [];
 
-    /** @var array */
+ 
     protected $extraDirectories = [];
 
-    /** @var bool */
+ 
     protected $networkClone = false;
 
-    /**
-     * The blog ID from which this staging site was created (for multisite subsite cloning)
-     * 0 or 1 = main site, 2+ = subsite
-     * @var int
-     */
+
+
+
+
+
     protected $sourceBlogId = 0;
 
-    /** @var bool */
+ 
     protected $isCronEnabled = true;
 
-    /** @var bool */
+ 
     protected $isWooSchedulerEnabled = true;
 
-    /** @var bool */
+ 
     protected $isEmailsReminderEnabled = false;
 
-    /** @var int */
+ 
     protected $ownerId = 0;
 
-    /** @var bool */
+ 
     protected $useNewAdminAccount = false;
 
-    /** @var string */
+ 
     protected $adminEmail = '';
 
-    /** @var string */
+ 
     protected $adminPassword = '';
 
-    /** @var array */
+ 
     protected $excludedDirs = [];
 
-    /** @var array|false */
+ 
     protected $tablePushSelection = false;
 
-    /** @var bool */
+ 
     protected $isAutoUpdatePlugins = false;
 
     public function jsonSerialize(): mixed
@@ -162,10 +162,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->cloneId;
     }
 
-    /**
-     * @param string|null $cloneId
-     * @return void
-     */
+
+
+
+
     public function setCloneId($cloneId)
     {
         $this->cloneId = (string)$cloneId;
@@ -176,10 +176,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->cloneName;
     }
 
-    /**
-     * @param string $cloneName
-     * @return void
-     */
+
+
+
+
     public function setCloneName(string $cloneName)
     {
         $this->cloneName = $cloneName;
@@ -190,10 +190,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->directoryName;
     }
 
-    /**
-     * @param string $directoryName
-     * @return void
-     */
+
+
+
+
     public function setDirectoryName(string $directoryName)
     {
         $this->directoryName = $directoryName;
@@ -204,10 +204,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->path;
     }
 
-    /**
-     * @param string $path
-     * @return void
-     */
+
+
+
+
     public function setPath(string $path)
     {
         $this->path = $path;
@@ -218,10 +218,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->url;
     }
 
-    /**
-     * @param string $url
-     * @return void
-     */
+
+
+
+
     public function setUrl(string $url)
     {
         $this->url = $url;
@@ -232,10 +232,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->number;
     }
 
-    /**
-     * @param int $number
-     * @return void
-     */
+
+
+
+
     public function setNumber(int $number)
     {
         $this->number = $number;
@@ -246,10 +246,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->version;
     }
 
-    /**
-     * @param string $version
-     * @return void
-     */
+
+
+
+
     public function setVersion(string $version)
     {
         $this->version = $version;
@@ -260,10 +260,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->status;
     }
 
-    /**
-     * @param string $status
-     * @return void
-     */
+
+
+
+
     public function setStatus(string $status)
     {
         $this->status = $status;
@@ -274,10 +274,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->prefix;
     }
 
-    /**
-     * @param string $prefix
-     * @return void
-     */
+
+
+
+
     public function setPrefix(string $prefix)
     {
         $this->prefix = $prefix;
@@ -288,10 +288,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->datetime;
     }
 
-    /**
-     * @param int $datetime
-     * @return void
-     */
+
+
+
+
     public function setDatetime(int $datetime)
     {
         $this->datetime = $datetime;
@@ -302,10 +302,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->databaseUser;
     }
 
-    /**
-     * @param string $databaseUser
-     * @return void
-     */
+
+
+
+
     public function setDatabaseUser(string $databaseUser)
     {
         $this->databaseUser = $databaseUser;
@@ -316,10 +316,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->databasePassword;
     }
 
-    /**
-     * @param string $databasePassword
-     * @return void
-     */
+
+
+
+
     public function setDatabasePassword(string $databasePassword)
     {
         $this->databasePassword = $databasePassword;
@@ -330,10 +330,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->databaseDatabase;
     }
 
-    /**
-     * @param string $databaseDatabase
-     * @return void
-     */
+
+
+
+
     public function setDatabaseDatabase(string $databaseDatabase)
     {
         $this->databaseDatabase = $databaseDatabase;
@@ -344,10 +344,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->databaseServer;
     }
 
-    /**
-     * @param string $databaseServer
-     * @return void
-     */
+
+
+
+
     public function setDatabaseServer(string $databaseServer)
     {
         $this->databaseServer = $databaseServer;
@@ -362,10 +362,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->databasePrefix;
     }
 
-    /**
-     * @param string $databasePrefix
-     * @return void
-     */
+
+
+
+
     public function setDatabasePrefix(string $databasePrefix)
     {
         $this->databasePrefix = $databasePrefix;
@@ -376,10 +376,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->databaseSsl;
     }
 
-    /**
-     * @param bool $databaseSsl
-     * @return void
-     */
+
+
+
+
     public function setDatabaseSsl(bool $databaseSsl)
     {
         $this->databaseSsl = $databaseSsl;
@@ -390,10 +390,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->isEmailsAllowed;
     }
 
-    /**
-     * @param bool $isEmailsAllowed
-     * @return void
-     */
+
+
+
+
     public function setIsEmailsAllowed(bool $isEmailsAllowed)
     {
         $this->isEmailsAllowed = $isEmailsAllowed;
@@ -404,10 +404,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->uploadsSymlinked;
     }
 
-    /**
-     * @param bool $uploadsSymlinked
-     * @return void
-     */
+
+
+
+
     public function setUploadsSymlinked(bool $uploadsSymlinked)
     {
         $this->uploadsSymlinked = $uploadsSymlinked;
@@ -418,10 +418,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->includedTables;
     }
 
-    /**
-     * @param array $includedTables
-     * @return void
-     */
+
+
+
+
     public function setIncludedTables(array $includedTables)
     {
         $this->includedTables = $includedTables;
@@ -432,10 +432,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->excludeSizeRules;
     }
 
-    /**
-     * @param array $excludeSizeRules
-     * @return void
-     */
+
+
+
+
     public function setExcludeSizeRules(array $excludeSizeRules)
     {
         $this->excludeSizeRules = $excludeSizeRules;
@@ -446,10 +446,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->excludeGlobRules;
     }
 
-    /**
-     * @param array $excludeGlobRules
-     * @return void
-     */
+
+
+
+
     public function setExcludeGlobRules(array $excludeGlobRules)
     {
         $this->excludeGlobRules = $excludeGlobRules;
@@ -460,10 +460,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->excludedDirectories;
     }
 
-    /**
-     * @param array $excludedDirectories
-     * @return void
-     */
+
+
+
+
     public function setExcludedDirectories(array $excludedDirectories)
     {
         $this->excludedDirectories = $excludedDirectories;
@@ -474,10 +474,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->extraDirectories;
     }
 
-    /**
-     * @param array $extraDirectories
-     * @return void
-     */
+
+
+
+
     public function setExtraDirectories(array $extraDirectories)
     {
         $this->extraDirectories = $extraDirectories;
@@ -488,10 +488,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->networkClone;
     }
 
-    /**
-     * @param bool $networkClone
-     * @return void
-     */
+
+
+
+
     public function setNetworkClone(bool $networkClone)
     {
         $this->networkClone = $networkClone;
@@ -502,10 +502,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->sourceBlogId;
     }
 
-    /**
-     * @param int $sourceBlogId
-     * @return void
-     */
+
+
+
+
     public function setSourceBlogId(int $sourceBlogId)
     {
         $this->sourceBlogId = $sourceBlogId;
@@ -516,10 +516,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->isCronEnabled;
     }
 
-    /**
-     * @param bool $isCronEnabled
-     * @return void
-     */
+
+
+
+
     public function setIsCronEnabled(bool $isCronEnabled)
     {
         $this->isCronEnabled = $isCronEnabled;
@@ -530,10 +530,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->isWooSchedulerEnabled;
     }
 
-    /**
-     * @param bool $isWooSchedulerEnabled
-     * @return void
-     */
+
+
+
+
     public function setIsWooSchedulerEnabled(bool $isWooSchedulerEnabled)
     {
         $this->isWooSchedulerEnabled = $isWooSchedulerEnabled;
@@ -544,10 +544,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->isEmailsReminderEnabled;
     }
 
-    /**
-     * @param bool $isEmailsReminderEnabled
-     * @return void
-     */
+
+
+
+
     public function setIsEmailsReminderEnabled(bool $isEmailsReminderEnabled)
     {
         $this->isEmailsReminderEnabled = $isEmailsReminderEnabled;
@@ -558,10 +558,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->ownerId;
     }
 
-    /**
-     * @param int $ownerId
-     * @return void
-     */
+
+
+
+
     public function setOwnerId(int $ownerId)
     {
         $this->ownerId = $ownerId;
@@ -572,10 +572,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->useNewAdminAccount;
     }
 
-    /**
-     * @param bool $useNewAdminAccount
-     * @return void
-     */
+
+
+
+
     public function setUseNewAdminAccount(bool $useNewAdminAccount)
     {
         $this->useNewAdminAccount = $useNewAdminAccount;
@@ -586,10 +586,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->adminEmail;
     }
 
-    /**
-     * @param string $adminEmail
-     * @return void
-     */
+
+
+
+
     public function setAdminEmail(string $adminEmail)
     {
         $this->adminEmail = $adminEmail;
@@ -600,10 +600,10 @@ class StagingSiteDto implements \JsonSerializable
         return $this->adminPassword;
     }
 
-    /**
-     * @param string $adminPassword
-     * @return void
-     */
+
+
+
+
     public function setAdminPassword(string $adminPassword)
     {
         $this->adminPassword = $adminPassword;
@@ -614,27 +614,27 @@ class StagingSiteDto implements \JsonSerializable
         return $this->excludedDirs;
     }
 
-    /**
-     * @param array $excludedDirs
-     * @return void
-     */
+
+
+
+
     public function setExcludedDirs(array $excludedDirs)
     {
         $this->excludedDirs = $excludedDirs;
     }
 
-    /**
-     * @return array|false
-     */
+
+
+
     public function getTablePushSelection()
     {
         return $this->tablePushSelection;
     }
 
-    /**
-     * @param array|false $tablePushSelection
-     * @return void
-     */
+
+
+
+
     public function setTablePushSelection($tablePushSelection)
     {
         $this->tablePushSelection = $tablePushSelection;
@@ -671,40 +671,40 @@ class StagingSiteDto implements \JsonSerializable
         return isset($owner->user_login) ? $owner->user_login : 'N/A';
     }
 
-    /**
-     * Current Production Site Database Name if no external database is used,
-     * otherwise external database name.
-     *
-     * @return string
-     */
+
+
+
+
+
+
     public function getDatabaseName(): string
     {
         return empty($this->databaseDatabase) ? DB_NAME : $this->databaseDatabase;
     }
 
-    /**
-     * If current production database, return value from $this->prefix,
-     * otherwise return value from $this->databasePrefix.
-     *
-     * @return string
-     */
+
+
+
+
+
+
     public function getUsedPrefix(): string
     {
         return $this->getIsExternalDatabase() ? $this->getDatabasePrefix() : $this->getPrefix();
     }
 
-    /**
-     * @param bool $isAutoUpdatePlugins
-     * @return void
-     */
+
+
+
+
     public function setIsAutoUpdatePlugins(bool $isAutoUpdatePlugins)
     {
         $this->isAutoUpdatePlugins = $isAutoUpdatePlugins;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsAutoUpdatePlugins(): bool
     {
         return $this->isAutoUpdatePlugins;
@@ -717,20 +717,20 @@ class StagingSiteDto implements \JsonSerializable
         return is_link($uploadsDirectory);
     }
 
-    /**
-     * Set whether uploads should be symlinked (used during staging creation)
-     * @param bool $isUploadsSymlink
-     * @return void
-     */
+
+
+
+
+
     public function setIsUploadsSymlink(bool $isUploadsSymlink)
     {
         $this->uploadsSymlinked = $isUploadsSymlink;
     }
 
-    /**
-     * Check if this staging site was created from a multisite subsite
-     * @return bool
-     */
+
+
+
+
     public function isFromSubsite(): bool
     {
         return $this->sourceBlogId > 1;

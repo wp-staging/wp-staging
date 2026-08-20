@@ -2,56 +2,56 @@
 
 namespace WPStaging\Backup\FileHeader;
 
-/**
- * Type-Length-Value codec for FileHeader::extraField.
- *
- * Wire format (all multi-byte integers are big-endian):
- *
- *   bytes  = [magic:2] [entry] [entry] ...
- *   magic  = 0x57 0x54   ("WT")
- *   entry  = [type:1] [length:2] [value:length]
- *
- * Decode rules:
- *   - Empty input              -> []
- *   - Input without "WT" magic -> [LEGACY_RAW => $bytes] (pre-2.1.0 raw value)
- *   - Magic present            -> entries are parsed to end of input
- *   - Type 0xFF on the wire    -> UnexpectedValueException (LEGACY_RAW is parser-only)
- *   - Truncated entry          -> UnexpectedValueException
- *   - Unknown types            -> preserved in the map and round-tripped
- *
- * Magic-byte collision: backups produced before backup version 2.1.0 always
- * wrote an empty extraField, so no legacy bytes can ever start with "WT".
- *
- * @see ExtraFieldType
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 final class ExtraFieldCodec
 {
-    /**
-     * Two-byte magic prefix that distinguishes a TLV-encoded extraField from a
-     * legacy raw value. Chosen as ASCII "WT" (W = WP Staging, T = TLV).
-     */
+
+
+
+
     const MAGIC = "\x57\x54";
 
-    /**
-     * Maximum number of bytes a single entry value may hold. Bounded by the
-     * 2-byte big-endian length field.
-     */
+
+
+
+
     const MAX_VALUE_LENGTH = 65535;
 
-    /**
-     * Encode a map of TLV entries into a byte string.
-     *
-     * The LEGACY_RAW sentinel is parser-only and is silently skipped on encode
-     * so that round-tripping a legacy value through decode/encode does not
-     * smuggle the sentinel back onto disk.
-     *
-     * @param array<int,string> $entries Type-keyed map of value bytes.
-     * @return string
-     * @throws \UnexpectedValueException When a type is out of range, a value
-     *                                   exceeds MAX_VALUE_LENGTH, or a known
-     *                                   type with a fixed wire size receives a
-     *                                   value of the wrong length.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function encode(array $entries): string
     {
         if (empty($entries)) {
@@ -80,7 +80,7 @@ final class ExtraFieldCodec
             $out .= chr($type) . pack('n', $length) . $value;
         }
 
-        // No real entries (e.g. caller passed only LEGACY_RAW): emit empty rather than a bare magic.
+ 
         if ($out === self::MAGIC) {
             return '';
         }
@@ -88,16 +88,16 @@ final class ExtraFieldCodec
         return $out;
     }
 
-    /**
-     * Decode a byte string into a map of TLV entries.
-     *
-     * @param string $bytes
-     * @return array<int,string>
-     * @throws \UnexpectedValueException When the input has the magic prefix but
-     *                                   is malformed (truncated header, length
-     *                                   overrun, duplicate type, or carries the
-     *                                   parser-only LEGACY_RAW type on the wire).
-     */
+
+
+
+
+
+
+
+
+
+
     public function decode(string $bytes): array
     {
         if ($bytes === '') {

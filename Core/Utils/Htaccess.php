@@ -5,27 +5,27 @@ namespace WPStaging\Core\Utils;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 
-// No Direct Access
+ 
 if (!defined("WPINC")) {
     die;
 }
 
-/**
- * Description of Htaccess
- *
- * @author IronMan
- */
+
+
+
+
+
 class Htaccess
 {
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_CREATE_LITE_SPEED_SERVER_CONFIG = 'wpstg.create_litespeed_server_config';
 
-    /**
-     *
-     * @var object
-     */
+
+
+
+
     public $filesystem;
 
     public function __construct()
@@ -33,12 +33,12 @@ class Htaccess
         $this->filesystem = new Filesystem();
     }
 
-    /**
-     * Create .htaccess file
-     *
-     * @param  string  $path Path to file
-     * @return boolean
-     */
+
+
+
+
+
+
     public function create($path)
     {
         return $this->filesystem->create($path, implode(PHP_EOL, [
@@ -56,14 +56,14 @@ class Htaccess
         ]));
     }
 
-    /**
-     * Create .htaccess file for LiteSpeed webserver
-     * The LiteSpeed web server has been known to kill or stop processes that take more than a few seconds to run.
-     * This will tell LiteSpeed to not abruptly abort requests
-     *
-     * @param  string  $path Path to file
-     * @return boolean
-     */
+
+
+
+
+
+
+
+
     public function createLitespeed($path)
     {
         if (!Hooks::applyFilters(self::FILTER_CREATE_LITE_SPEED_SERVER_CONFIG, false)) {
@@ -77,13 +77,13 @@ class Htaccess
         ]);
     }
 
-    /**
-     * Create .htaccess file for staging network
-     *
-     * @param  string  $path Path to file
-     * @param  string  $baseDirectory of staging network
-     * @return boolean
-     */
+
+
+
+
+
+
+
     public function createForStagingNetwork($path, $baseDirectory)
     {
         return $this->filesystem->create($path, implode(PHP_EOL, [

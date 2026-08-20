@@ -7,15 +7,15 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Sites;
 
-/**
- * Trait DatabaseSearchReplaceTrait
- *
- * This trait puts together some common functionality for database search and replace
- * used both by Cloning and Backups. This is not ideal, and should be refactored in the future
- * for a more robust and proper architecture.
- *
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
+
+
+
+
 trait DatabaseSearchReplaceTrait
 {
     private $excludedStrings = [
@@ -37,9 +37,9 @@ trait DatabaseSearchReplaceTrait
         'wpstg_tmp_data',
         'siteurl',
         'home',
-        // Literal option names that start with `wp_` but are not per-blog prefixed. Their names must
-        // survive clone/push unchanged, otherwise a later export collides on the option_name UNIQUE
-        // key (error 1062). Do NOT add `wp_user_roles` — that one IS per-blog and must be renamed.
+ 
+ 
+ 
         'wp_force_deactivated_plugins',
         'wp_page_for_privacy_policy',
     ];
@@ -49,18 +49,18 @@ trait DatabaseSearchReplaceTrait
         return $this->excludedStrings;
     }
 
-    /**
-     * Prepend the following characters to string: %2F%2F, \/\/, //
-     * This is to make sure that only valid hostnames are replaced
-     * @param $string
-     * @return string[]
-     */
+
+
+
+
+
+
     public function generateHostnamePatterns($string)
     {
         return [
-            '%2F%2F' . str_replace('/', '%2F', $string), // HTML entity for WP Backery Page Builder Plugin
-            '\/\/' . str_replace('/', '\/', $string), // Escaped \/ used by revslider and several visual editors
-            '//' . $string, // //example.com
+            '%2F%2F' . str_replace('/', '%2F', $string), 
+            '\/\/' . str_replace('/', '\/', $string), 
+            '//' . $string, 
         ];
     }
 
@@ -75,24 +75,24 @@ trait DatabaseSearchReplaceTrait
         return $urlsHelper->getHomeUrlWithoutScheme();
     }
 
-    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
+
+
+
+
     private function isSubDir()
     {
-        // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
-        // This is happening much more often than you would expect
+ 
+ 
         $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
         $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
 
         return $home !== $siteurl;
     }
 
-    /**
-     * Get the install sub directory if WP is installed in sub directory
-     * @return string
-     */
+
+
+
+
     private function getSubDir()
     {
         $home = get_option('home');

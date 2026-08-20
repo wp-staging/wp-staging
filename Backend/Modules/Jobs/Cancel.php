@@ -5,16 +5,16 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 
-/**
- * Class Cancel Processing
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 class Cancel extends Job
 {
-   /**
-    * Start Module
-    * @return bool
-    */
+
+
+
+
     public function start()
     {
         $cloneData = $this->createCloneData();
@@ -35,9 +35,9 @@ class Cancel extends Job
         return $deleteJob->start($cloneData);
     }
 
-   /**
-    * @return array
-    */
+
+
+
     protected function createCloneData()
     {
         $clone = [];
@@ -60,9 +60,9 @@ class Cancel extends Job
         return $clone;
     }
 
-   /**
-    * @return bool
-    */
+
+
+
     public function check()
     {
         return (
@@ -74,9 +74,9 @@ class Cancel extends Job
               );
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function deleteCacheFiles()
     {
         if ($this->cloneOptionCache->isValid()) {

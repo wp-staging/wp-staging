@@ -17,32 +17,32 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
-/**
- * Calculates the selected non-push staging size without starting a legacy scan job.
- */
+
+
+
 class SizeCalculator extends AbstractTemplateComponent
 {
     use LegacyFileRulesTrait;
 
-    /** @var Directory */
+ 
     private $directory;
 
-    /** @var DirectorySize */
+ 
     private $directorySize;
 
-    /** @var DiskWriteCheck */
+ 
     private $diskWriteCheck;
 
-    /** @var PathChecker */
+ 
     private $pathChecker;
 
-    /** @var PathIdentifier */
+ 
     private $pathIdentifier;
 
-    /** @var Math */
+ 
     private $math;
 
-    /** @var WpDefaultDirectories */
+ 
     private $wpDefaultDirectories;
 
     public function __construct(
@@ -65,9 +65,9 @@ class SizeCalculator extends AbstractTemplateComponent
         $this->wpDefaultDirectories = $wpDefaultDirectories;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxSize()
     {
         if (!$this->canRenderAjax()) {
@@ -82,12 +82,12 @@ class SizeCalculator extends AbstractTemplateComponent
         wp_send_json($this->calculate($excludedDirectories, $extraDirectories, $databaseSize, $isUploadsSymlinked, $this->resolveExclusionRules()));
     }
 
-    /**
-     * The same exclude rules the client sends for the real clone, so the estimate drops the same files.
-     * Missing rules fall back to the copy defaults.
-     *
-     * @return array{extensions: string[], fileRules: string[], folderRules: string[], maxBytes: int}
-     */
+
+
+
+
+
+
     private function resolveExclusionRules(): array
     {
         $userExtensions = array_map('strtolower', $this->requestRules('excludeExtensionRules'));
@@ -103,10 +103,10 @@ class SizeCalculator extends AbstractTemplateComponent
         ];
     }
 
-    /**
-     * @param string $key
-     * @return string[]
-     */
+
+
+
+
     private function requestRules(string $key): array
     {
         if (empty($_POST[$key])) {
@@ -120,14 +120,14 @@ class SizeCalculator extends AbstractTemplateComponent
         }));
     }
 
-    /**
-     * @param string                                                                     $excludedDirectories
-     * @param string                                                                     $extraDirectories
-     * @param int                                                                        $databaseSize
-     * @param bool                                                                       $isUploadsSymlinked
-     * @param array{extensions: string[], fileRules: string[], folderRules: string[], maxBytes: int} $rules
-     * @return array{requiredSpace: string, errorMessage: string|null}
-     */
+
+
+
+
+
+
+
+
     public function calculate(string $excludedDirectories, string $extraDirectories, int $databaseSize, bool $isUploadsSymlinked, array $rules): array
     {
         $absPath             = $this->directory->getAbsPath();
@@ -180,12 +180,12 @@ class SizeCalculator extends AbstractTemplateComponent
         ];
     }
 
-    /**
-     * @param string   $directory
-     * @param string[] $excludedDirectories
-     * @param array    $rules
-     * @return int
-     */
+
+
+
+
+
+
     private function getDirectorySize(string $directory, array $excludedDirectories, array $rules): int
     {
         return $this->directorySize->getSizeInclSubdirs($directory, function ($path) use ($excludedDirectories, $rules) {
@@ -206,7 +206,7 @@ class SizeCalculator extends AbstractTemplateComponent
 
         $size = 0;
         foreach ($entries as $entry) {
-            // Symlinks are not copied to the staging site, so they must not be counted.
+ 
             if (is_link($entry) || !is_file($entry) || $this->isExcludedFileByRules($entry, $rules['extensions'], $rules['fileRules'], $rules['maxBytes'])) {
                 continue;
             }
@@ -217,21 +217,21 @@ class SizeCalculator extends AbstractTemplateComponent
         return $size;
     }
 
-    /**
-     * @param string   $path
-     * @param string[] $directories
-     * @return bool
-     */
+
+
+
+
+
     private function isPathInDirectories(string $path, array $directories): bool
     {
         return $this->pathChecker->isPathInPathsList($path, $directories, true);
     }
 
-    /**
-     * @param string   $directory
-     * @param string[] $directories
-     * @return bool
-     */
+
+
+
+
+
     private function isNestedInDirectories(string $directory, array $directories): bool
     {
         foreach ($directories as $candidate) {

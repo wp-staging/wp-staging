@@ -7,25 +7,25 @@ use WPStaging\Framework\Job\Dto\AbstractTaskDto;
 
 class ExtractFilesTaskDto extends AbstractTaskDto
 {
-    /** @var int */
+ 
     public $currentIndexOffset;
 
-    /** @var int */
+ 
     public $totalFilesExtracted;
 
-    /** @var int */
+ 
     public $totalFilesSkipped;
 
-    /** @var int */
+ 
     public $extractorFileWrittenBytes;
 
-    /** @var int */
+ 
     public $extractorFileReadBytes;
 
-    /** @var int */
+ 
     public $currentHeaderBytesRemoved;
 
-    /** @var int|null */
+ 
     public $extractorFileBaseBytes;
 
     public function toExtractorDto(): ExtractorDto
@@ -42,10 +42,10 @@ class ExtractFilesTaskDto extends AbstractTaskDto
         return $extractorDto;
     }
 
-    /**
-     * @param ExtractorDto $extractorDto
-     * @return void
-     */
+
+
+
+
     public function fromExtractorDto(ExtractorDto $extractorDto)
     {
         $this->currentIndexOffset        = $extractorDto->getCurrentIndexOffset();

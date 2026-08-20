@@ -8,7 +8,7 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
 
 /** @var SystemInfo $systemInfo */
 $systemInfo = WPStaging::getInstance()->get("systemInfo");
-$systemInfo->setStructuredOutput(true); // Enable structured output and get sections
+$systemInfo->setStructuredOutput(true); 
 
 $parser            = new SystemInfoParser();
 $structuredData    = $systemInfo->getSections();
@@ -55,7 +55,7 @@ $assets            = WPStaging::make(Assets::class);
         $seenSectionIds = [];
         $isFirstSection = true;
 
-        // Render processed sections
+ 
         foreach ($processedSections as $currentIndex => $section) :
             if (empty($section['stagingSites']) && empty($section['storageProviders']) && empty($section['infoItems'])) {
                 continue;

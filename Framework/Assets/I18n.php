@@ -5,9 +5,9 @@ namespace WPStaging\Framework\Assets;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 
-/**
- * Provide translated strings which can be used in JS part of the plugin
- */
+
+
+
 class I18n
 {
     public function getTranslations(): array
@@ -67,13 +67,13 @@ class I18n
             'elapsed_time'                                        => esc_html__('Elapsed time', 'wp-staging'),
             'failed_response'                                     => esc_html__('Failed response', 'wp-staging'),
             'unknown_error'                                       => esc_html__('Unknown error', 'wp-staging'),
-            // These strings contain HTML (the `<a>` anchor injected via sprintf)
-            // and are rendered as HTML by their JS consumers (`BackgroundLogger
-            // .showErrorModal` and `WPStaging.showError`). Using `esc_html__()`
-            // here would HTML-encode `>` / `'` in the translatable text, which
-            // then display as literal entities once the combined string is
-            // embedded into `innerHTML`. Use `__()` so the translatable part
-            // stays verbatim and the whole string is ready-to-render HTML.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
             'something_went_wrong_use_low_setting_error_text'     => sprintf(__('Something went wrong! No response. Go to WP Staging > Settings and lower \'File Copy Limit\' and \'DB Query Limit\'. Also set \'CPU Load Priority to low \' and try again. If that does not help, %s', 'wp-staging'), '<a href=\'' . Language::localizeSupportUrl('https://wp-staging.com/support/') . '\' target=\'_blank\'>open a support ticket</a>'),
             'something_went_wrong_open_ticket_error_text'         => sprintf(__('Something went wrong! No response. Please try again. If that does not help, %s', 'wp-staging'), '<a href=\'' . Language::localizeSupportUrl('https://wp-staging.com/support/') . '\' target=\'_blank\'>open a support ticket</a>'),
             'contact_us_to_solve'                                 => sprintf(esc_html__('Please get in contact with us to solve it %s', 'wp-staging'), 'support@wp-staging.com'),
@@ -441,6 +441,8 @@ class I18n
             'http_auth_badge'                                     => esc_html__('HTTP Auth', 'wp-staging'),
             'nothing_to_sync_title'                               => esc_html__('Nothing to sync', 'wp-staging'),
             'nothing_to_sync_body'                                => esc_html__('The source site has no content to sync for the items you selected. Try adjusting your selection or adding content on the remote site first.', 'wp-staging'),
+            'nothing_to_backup_title'                             => esc_html__('Nothing to backup', 'wp-staging'),
+            'nothing_to_backup_body'                              => esc_html__('The items you selected contain no files, so no backup was created. Select an item that has content, or include the database.', 'wp-staging'),
             /* translators: %s is the original server-side reason, kept verbatim under a small "Details" line for support diagnostics. */
             'details_label'                                       => esc_html__('Details: %s', 'wp-staging'),
             'reset_settings_confirmation'                         => esc_html__('Are you sure you want to reset all settings to default values?', 'wp-staging'),
@@ -466,20 +468,20 @@ class I18n
             'remote_sync_user_changed_login_hint'                 => esc_html__('The site was pulled successfully. Your current account may have changed. Login with username and password from the source site.', 'wp-staging'),
             'remote_sync_kept_user_login_hint'                    => esc_html__('The site was pulled successfully. Your current username and password are still valid. Please log in again.', 'wp-staging'),
             'keep_current_user_note'                              => esc_html__('Your current username and password will still be valid, but you will need to log in again after sync.', 'wp-staging'),
-            // Remote Sync sync item labels
+ 
             'mediaLibrary'                                        => esc_html__('Media Library', 'wp-staging'),
             'themes'                                              => esc_html__('Themes', 'wp-staging'),
             'plugins'                                             => esc_html__('Plugins', 'wp-staging'),
             'muPlugins'                                           => esc_html__('MU-Plugins', 'wp-staging'),
             'database'                                            => esc_html__('Database', 'wp-staging'),
             'otherFiles'                                          => esc_html__('Other Files', 'wp-staging'),
-            // Remote Sync password prompt
+ 
             'passwordRequiredTitle'                               => esc_html__('Password Required', 'wp-staging'),
             'passwordRequiredText'                                => esc_html__('The remote site requires a password to connect.', 'wp-staging'),
             'passwordInvalidText'                                 => esc_html__('The password you entered is incorrect. Please try again.', 'wp-staging'),
             'passwordMaxAttempts'                                 => esc_html__('Too many failed password attempts. Please verify the password on the remote site and try again.', 'wp-staging'),
             'enterPassword'                                       => esc_html__('Enter password', 'wp-staging'),
-            // Remote Sync overwrite terminology (button labels — modal body lives in confirm-overwrite.php)
+ 
             'confirm_overwrite_btn'                               => esc_html__('Confirm overwrite', 'wp-staging'),
             'gotIt'                                               => esc_html__('Got it', 'wp-staging'),
             'whatsNewIn'                                          => esc_html__("What's New in %s", 'wp-staging'),
@@ -509,6 +511,108 @@ class I18n
             'pro'                                                 => esc_html__('PRO', 'wp-staging'),
             'documentation'                                       => esc_html__('Documentation', 'wp-staging'),
             'testingConnection'                                   => esc_html__('Testing connection...', 'wp-staging'),
+            'backup_before_update'                                => [
+                'product_label'               => esc_html__('WP STAGING · Update Protection', 'wp-staging'),
+                'headline_backup_required'    => esc_html__('Back up before updating?', 'wp-staging'),
+                'intro_explainer'             => esc_html__('WP STAGING makes sure a recent backup exists before plugin updates, so you can restore your site if something goes wrong.', 'wp-staging'),
+                'notice_title'                => esc_html__('WP STAGING Update Protection', 'wp-staging'),
+                'notice_first_time'           => esc_html__('A recent backup already protects this update.', 'wp-staging'),
+                'notice_updating_named'       => esc_html__('Updating %s…', 'wp-staging'),
+                'notice_updating_bulk'        => esc_html__('Updating %s plugins…', 'wp-staging'),
+                'notice_updating'             => esc_html__('Update started…', 'wp-staging'),
+                'icon_tooltip'                => esc_html__('Powered by WP STAGING', 'wp-staging'),
+                'backup_includes_heading'     => esc_html__('Your protection includes:', 'wp-staging'),
+                'backup_content_database'     => esc_html__('Database', 'wp-staging'),
+                'backup_content_plugin_files' => esc_html__('All plugin files', 'wp-staging'),
+                'backup_content_theme_files'  => esc_html__('All theme files', 'wp-staging'),
+                'backup_content_core_files'   => esc_html__('WordPress core', 'wp-staging'),
+                'plugin_scope_tooltip'        => esc_html__('WP STAGING backs up all plugin files together so they can be restored safely.', 'wp-staging'),
+                'auto_continue_label'         => esc_html__('Update starts automatically after backup', 'wp-staging'),
+                'cancel'                      => esc_html__('Cancel', 'wp-staging'),
+                'proceed'                     => esc_html__('Back Up & Update', 'wp-staging'),
+                'update_without_backup'       => esc_html__('Update without backup', 'wp-staging'),
+                'opt_out'                     => esc_html__('Turn off Update Protection', 'wp-staging'),
+                'opt_out_title'               => esc_html__('Turn off Update Protection?', 'wp-staging'),
+                'opt_out_explanation'         => esc_html__('Plugin updates will work normally without this backup prompt. WP STAGING will remain active.', 'wp-staging'),
+                'opt_out_confirm'             => esc_html__('Turn Off Update Protection', 'wp-staging'),
+                'opt_out_keep'                => esc_html__('Keep Protection', 'wp-staging'),
+                'for_future_updates'          => esc_html__('For future updates', 'wp-staging'),
+                'next_time_label'             => esc_html__('Next time:', 'wp-staging'),
+                'mode_ask'                    => esc_html__('Ask me each time', 'wp-staging'),
+                'mode_always'                 => esc_html__('Always create a backup first', 'wp-staging'),
+                'mode_never'                  => esc_html__('Always update without backup', 'wp-staging'),
+                'mode_always_note'            => esc_html__('Updates will back up first without asking. To be asked again, turn Backup Before Update off and on in WP STAGING > Settings.', 'wp-staging'),
+                'mode_never_note'             => esc_html__('Updates will run without a backup. To be asked again, turn Backup Before Update off and on in WP STAGING > Settings.', 'wp-staging'),
+                'backing_up_notice'           => esc_html__('Keep this page open until the plugin updates start. The recovery backup can finish if you leave, but queued updates will not start automatically.', 'wp-staging'),
+                'step_preparing'              => esc_html__('Preparing backup', 'wp-staging'),
+                'step_backing_up_plugin'      => esc_html__('Backing up plugin files', 'wp-staging'),
+                'step_backing_up_theme'       => esc_html__('Backing up theme files', 'wp-staging'),
+                'step_backing_up_core'        => esc_html__('Backing up WordPress core', 'wp-staging'),
+                'step_starting_plugin'        => esc_html__('Starting plugin update', 'wp-staging'),
+                'step_starting_theme'         => esc_html__('Starting theme update', 'wp-staging'),
+                'step_starting_core'          => esc_html__('Starting WordPress update', 'wp-staging'),
+                'backing_up_subtitle_plugin'  => esc_html__('The plugin update will start automatically as soon as the backup is ready.', 'wp-staging'),
+                'backing_up_subtitle_theme'   => esc_html__('The theme update will start automatically as soon as the backup is ready.', 'wp-staging'),
+                'backing_up_subtitle_core'    => esc_html__('The WordPress update will start automatically as soon as the backup is ready.', 'wp-staging'),
+                'error_title'                 => esc_html__('Backup failed', 'wp-staging'),
+                'error_backup_failed'         => esc_html__('The backup did not finish, so nothing has been updated.', 'wp-staging'),
+                'error_disk_space_title'      => esc_html__('Not enough disk space for a recovery backup', 'wp-staging'),
+                'error_disk_space'            => esc_html__('Nothing has been updated.', 'wp-staging'),
+                'error_permissions'           => esc_html__('WP STAGING couldn’t write the recovery backup to the backup directory. Nothing has been updated.', 'wp-staging'),
+                'error_stalled_title'         => esc_html__('Update Protection couldn’t complete', 'wp-staging'),
+                'error_stalled'               => esc_html__('The recovery backup stopped unexpectedly. Nothing has been updated.', 'wp-staging'),
+                'view_details'                => esc_html__('View details', 'wp-staging'),
+                'error_request_failed'        => esc_html__('Backup request failed. Please try again.', 'wp-staging'),
+                'locked_title'                => esc_html__('Another backup is already running', 'wp-staging'),
+                'locked_desc'                 => esc_html__('We’ll wait for it to finish, then continue your update automatically.', 'wp-staging'),
+                'try_again'                   => esc_html__('Try again', 'wp-staging'),
+                'updating_reassurance'        => esc_html__('Your backup is safe if anything goes wrong.', 'wp-staging'),
+                'update_complete_title'       => esc_html__('Update complete!', 'wp-staging'),
+                'update_complete_subtitle'    => esc_html__('The update was installed successfully.', 'wp-staging'),
+                'update_error_title'          => esc_html__('Update failed', 'wp-staging'),
+                'update_error_note'           => esc_html__('Your backup was created successfully. Restore it anytime from WP STAGING.', 'wp-staging'),
+                'update_error_default'        => esc_html__('The update could not be installed.', 'wp-staging'),
+                'try_update_again'            => esc_html__('Try Update Again', 'wp-staging'),
+                'row_backing_up'              => esc_html__('WP STAGING is creating a recovery backup. This update will start automatically when it is ready.', 'wp-staging'),
+                'row_queued'                  => esc_html__('WP STAGING Update Protection: Queued — waiting for recovery backup.', 'wp-staging'),
+                'panel_backup'                => esc_html__('Creating recovery backup…', 'wp-staging'),
+                'panel_waiting'               => esc_html__('Waiting for the current backup…', 'wp-staging'),
+                'panel_will_update'           => esc_html__('%s will update automatically', 'wp-staging'),
+                'panel_will_update_any'       => esc_html__('The update will start automatically', 'wp-staging'),
+                'panel_queued_one'            => esc_html__('1 additional update queued', 'wp-staging'),
+                'panel_queued'                => esc_html__('%s updates queued', 'wp-staging'),
+                'panel_installing'            => esc_html__('Installing protected updates', 'wp-staging'),
+                'panel_completed'             => esc_html__('%s of %s completed', 'wp-staging'),
+                'panel_done_one'              => esc_html__('%s updated successfully', 'wp-staging'),
+                'panel_done'                  => esc_html__('%s plugins updated successfully', 'wp-staging'),
+                'panel_done_single'           => esc_html__('Update completed successfully', 'wp-staging'),
+                'panel_done_themes'           => esc_html__('%s themes updated successfully', 'wp-staging'),
+                'panel_starting_core'         => esc_html__('Backup complete. Starting the WordPress update…', 'wp-staging'),
+                'panel_starting'              => esc_html__('Backup complete. Starting the update…', 'wp-staging'),
+                'panel_done_note'             => esc_html__('Recovery backup available if you need it.', 'wp-staging'),
+                'panel_keep_open'             => esc_html__('Keep this page open so queued updates can start automatically.', 'wp-staging'),
+                'view_progress'               => esc_html__('View progress', 'wp-staging'),
+                'delete_blocked'              => esc_html__('WP STAGING is backing up this plugin. You can delete it once the recovery backup has finished.', 'wp-staging'),
+                'hide_progress'               => esc_html__('Hide progress — the process will continue', 'wp-staging'),
+                'update_all_without_backup'   => esc_html__('Update all %s plugins without backup', 'wp-staging'),
+                'still_running'               => esc_html__('The backup is still running. It finishes on its own — start the update again once it is done.', 'wp-staging'),
+                'reusable_backup'             => esc_html__('Protected by a backup from %s minutes ago', 'wp-staging'),
+                'reusable_backup_hours'       => esc_html__('Protected by a backup from %s hours ago', 'wp-staging'),
+                'reusable_backup_just_now'    => esc_html__('Protected by a backup from moments ago', 'wp-staging'),
+                'mode_save_failed'            => esc_html__('This choice could not be saved, so the next update will ask again.', 'wp-staging'),
+                'update_no_response'          => esc_html__('WordPress did not report how the update went. Reload the page to see whether it was installed.', 'wp-staging'),
+                'close'                       => esc_html__('Close', 'wp-staging'),
+                'elapsed'                     => esc_html__('Running for %s', 'wp-staging'),
+                'task_preparing'              => esc_html__('Preparing backup', 'wp-staging'),
+                'task_discovering'            => esc_html__('Looking through your files', 'wp-staging'),
+                'task_database'               => esc_html__('Backing up the database', 'wp-staging'),
+                'task_plugins'                => esc_html__('Backing up plugin files', 'wp-staging'),
+                'task_muplugins'              => esc_html__('Backing up must-use plugins', 'wp-staging'),
+                'task_themes'                 => esc_html__('Backing up theme files', 'wp-staging'),
+                'task_uploads'                => esc_html__('Backing up uploads', 'wp-staging'),
+                'task_other_files'            => esc_html__('Backing up other files', 'wp-staging'),
+                'task_finishing'              => esc_html__('Finishing the backup', 'wp-staging'),
+            ],
         ];
     }
 }

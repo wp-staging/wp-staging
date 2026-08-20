@@ -22,13 +22,13 @@ class PrepareRestore extends PrepareJob
 {
     use WithTmpDatabasePrefix;
 
-    /** @var JobRestoreDataDto*/
+ 
     private $jobDataDto;
 
-    /** @var JobRestore */
+ 
     private $jobRestore;
 
-    /** @var TableService */
+ 
     private $tableService;
 
     public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock, TableService $tableService)
@@ -44,7 +44,7 @@ class PrepareRestore extends PrepareJob
         }
 
         try {
-            $this->processLock->checkProcessLocked();
+            $this->processLock->lockProcess();
         } catch (ProcessLockedException $e) {
             wp_send_json_error($e->getMessage(), $e->getCode());
         }
@@ -60,7 +60,7 @@ class PrepareRestore extends PrepareJob
 
     public function prepare($data = null)
     {
-        // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
+ 
         $container        = WPStaging::getInstance()->getContainer();
         $this->jobDataDto = $container->get(JobRestoreDataDto::class);
         $this->jobRestore = $container->get(JobRestoreProvider::class)->getJob();
@@ -103,19 +103,19 @@ class PrepareRestore extends PrepareJob
         return $sanitizedData;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function validateAndSanitizeData($data): array
     {
         $expectedKeys = [
             'file',
         ];
 
-        // Make sure data has no keys other than the expected ones.
+ 
         $data = array_intersect_key($data, array_flip($expectedKeys));
 
-        // Make sure data has all expected keys.
+ 
         foreach ($expectedKeys as $expectedKey) {
             if (!array_key_exists($expectedKey, $data)) {
                 throw new \UnexpectedValueException("Invalid request. Missing '$expectedKey'.");

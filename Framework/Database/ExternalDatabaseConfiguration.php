@@ -4,15 +4,15 @@ namespace WPStaging\Framework\Database;
 
 use WPStaging\Framework\Adapter\Database\DatabaseException;
 
-/**
- * Handles classic external database selection and connection target validation.
- */
+
+
+
 final class ExternalDatabaseConfiguration
 {
-    /**
-     * @param array|object $options
-     * @return bool
-     */
+
+
+
+
     public function isEnabled($options): bool
     {
         $options = $this->normalizeOptions($options);
@@ -24,10 +24,10 @@ final class ExternalDatabaseConfiguration
         return $this->hasConnectionTarget($options);
     }
 
-    /**
-     * @param array|object $options
-     * @return bool
-     */
+
+
+
+
     public function hasConnectionTarget($options): bool
     {
         $options = $this->normalizeOptions($options);
@@ -37,11 +37,11 @@ final class ExternalDatabaseConfiguration
             && $this->getValue($options, 'databaseDatabase') !== '';
     }
 
-    /**
-     * @param array|object $options
-     * @return void
-     * @throws DatabaseException
-     */
+
+
+
+
+
     public function validateConnectionTarget($options)
     {
         $options = $this->normalizeOptions($options);
@@ -55,10 +55,10 @@ final class ExternalDatabaseConfiguration
         }
     }
 
-    /**
-     * @param array|object $options
-     * @return array
-     */
+
+
+
+
     private function normalizeOptions($options): array
     {
         if (is_array($options)) {
@@ -72,11 +72,11 @@ final class ExternalDatabaseConfiguration
         return [];
     }
 
-    /**
-     * @param array  $options
-     * @param string $key
-     * @return string
-     */
+
+
+
+
+
     private function getValue(array $options, string $key): string
     {
         return isset($options[$key]) ? trim((string)$options[$key]) : '';

@@ -2,27 +2,27 @@
 
 namespace WPStaging\Framework\Utils;
 
-/**
- * The class is responsible for converting data to/from binary and/or hex format
- * It uses pack, unpack and bin2hex functions internally
- */
+
+
+
+
 class DataEncoder
 {
-    /**
-     * The pack mode for 64-bit integer
-     * P -> Little Endianness
-     * @var string
-     */
+
+
+
+
+
     const PACK_MODE_64BIT = 'P';
 
-    /**
-     * The pack mode for 32-bit integer
-     * V -> Little Endianness
-     * @var string
-     */
+
+
+
+
+
     const PACK_MODE_32BIT = 'V';
 
-    /** @var string */
+ 
     protected $packMode;
 
     public function __construct()
@@ -30,11 +30,11 @@ class DataEncoder
         $this->packMode = PHP_INT_SIZE === 8 ? self::PACK_MODE_64BIT : self::PACK_MODE_32BIT;
     }
 
-    /**
-     * @param string $format
-     * @param int[] $intArray
-     * @return string
-     */
+
+
+
+
+
     public function intArrayToHex(string $format, array $intArray): string
     {
         if (empty($format)) {
@@ -59,7 +59,7 @@ class DataEncoder
         $index  = 0;
         $result = '';
         foreach ($formats as $format) {
-            // Use try-catch to re-throw for index position
+ 
             try {
                 $bytes = intval($format);
                 if (!is_int($bytes)) {
@@ -79,14 +79,14 @@ class DataEncoder
         return $result;
     }
 
-    /**
-     * Convert an integer to hexadecimal representation
-     *
-     * @param int|float|null $value The value to convert (must be an integer)
-     * @param int $bytes Number of bytes for the representation
-     * @return string Hexadecimal representation
-     * @throws \InvalidArgumentException If value is null, not an integer, or invalid
-     */
+
+
+
+
+
+
+
+
     public function intToHex($value, int $bytes = 8): string
     {
         if ($value === null) {
@@ -105,32 +105,32 @@ class DataEncoder
             throw new \InvalidArgumentException('DataEncoder error: Invalid number of bytes');
         }
 
-        // convert bytes to int
+ 
         $maxInt = (2 ** ($bytes * 8)) - 1;
         if ($value > $maxInt) {
             throw new \InvalidArgumentException('DataEncoder error: Pack: Value is too large for the given number of bytes');
         }
 
         $pack = pack($this->packMode, $value);
-        // Early bail for 64bit system or 32bit system when packing 4 or less bytes
+ 
         if ($bytes <= PHP_INT_SIZE) {
             return bin2hex(substr($pack, 0, $bytes));
         }
 
         $hex = bin2hex($pack);
 
-        // This will pad the hex string with zeros if the number of bytes is less than 8
-        // but greater than 4 for 32bit system
+ 
+ 
         return $hex . str_repeat("00", max(0, $bytes - PHP_INT_SIZE));
     }
 
-    /**
-     * @param string $format
-     * @param string $hex
-     *
-     * @throws \InvalidArgumentException
-     * @return int[]
-     */
+
+
+
+
+
+
+
     public function hexToIntArray(string $format, string $hex): array
     {
         if (empty($format)) {
@@ -149,7 +149,7 @@ class DataEncoder
             throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
 
-        // check for invalid characters in hex
+ 
         if (preg_match('/[^0-9a-fA-F]/', $hex)) {
             throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
@@ -196,7 +196,7 @@ class DataEncoder
             throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
 
-        // check for invalid characters in hex
+ 
         if (preg_match('/[^0-9a-fA-F]/', $hex)) {
             throw new \InvalidArgumentException('DataEncoder error: Invalid hex string: ' . $hex);
         }
@@ -206,13 +206,13 @@ class DataEncoder
             $binary = str_pad($binary, PHP_INT_SIZE, "\x00", STR_PAD_RIGHT);
         }
 
-        // Early bail for 64bit system or 32bit system when unpacking 4 or less bytes
+ 
         if ($bytes <= PHP_INT_SIZE) {
             return unpack($this->packMode, $binary)[1];
         }
 
-        // For 32bit system when unpacking more than 4 bytes, let first check if those are
-        // only zeros, if not throw exception
+ 
+ 
         $extraData = substr($binary, PHP_INT_SIZE);
         $extraZero = str_repeat("\x00", max(0, $bytes - PHP_INT_SIZE));
         if ($extraData !== $extraZero) {

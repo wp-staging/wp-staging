@@ -7,19 +7,19 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
 
 abstract class AnalyticsEventWithTimeDto extends AnalyticsEventDto
 {
-    /** @var int UNIX timestamp whether this job has naturally finished. Eg: Came to the expected ending. */
+ 
     protected $finished_at = null;
 
-    /** @var int UNIX timestamp whether this job has started but did not finish during an expected time-frame. */
+ 
     protected $stale_at = null;
 
-    /** @var int UNIX timestamp whether this job terminated in error. */
+ 
     protected $error_at = null;
 
-    /** @var int UNIX timestamp whether this job has been cancelled by the user. */
+ 
     protected $cancelled_at = null;
 
-    /** @var int A UNIX timestamp for when this event started. */
+ 
     protected $start_at = null;
 
     public function enqueueStartEvent($jobId, $eventData)
@@ -49,7 +49,7 @@ abstract class AnalyticsEventWithTimeDto extends AnalyticsEventDto
         $event->duration = time() - $event->start_at;
         $event->ready_to_send = true;
 
-        // Allow concrete instances of this abstract class to modify this event.
+ 
         foreach ($eventOverrides as $key => $value) {
             $event->$key = $value;
         }
@@ -61,9 +61,9 @@ abstract class AnalyticsEventWithTimeDto extends AnalyticsEventDto
         }
     }
 
-    /**
-     * Cancel event is static as it's a generic event not related to any specific type of event.
-     */
+
+
+
     public static function enqueueCancelEvent($jobId)
     {
         try {
@@ -74,16 +74,16 @@ abstract class AnalyticsEventWithTimeDto extends AnalyticsEventDto
             return;
         }
 
-        // Early bail: Already cancelled
+ 
         if ($event->cancelled_at) {
             return;
         }
 
-        /*
-         * The Cancel routine may be called automatically when an error occurs
-         * to perform cleanup tasks, so let's not register the cancel event
-         * if this event is being triggered by a job that already has an error.
-         */
+
+
+
+
+
         if ($event->error_at) {
             return;
         }
@@ -100,10 +100,10 @@ abstract class AnalyticsEventWithTimeDto extends AnalyticsEventDto
         }
     }
 
-    /**
-     * Error event is static as it's a generic event not related to any specific type of event.
-     */
-    public static function enqueueErrorEvent($jobId, $errorMessage)
+
+
+
+    public static function enqueueErrorEvent($jobId, $errorMessage, string $errorCode = '')
     {
         try {
             $event = static::getEventByJobId($jobId);
@@ -118,6 +118,7 @@ abstract class AnalyticsEventWithTimeDto extends AnalyticsEventDto
         $event->finished_at = null;
         $event->error_at = time();
         $event->error_message = $errorMessage;
+        $event->error_code = ErrorCode::sanitize($errorCode);
         $event->last_debug_logs = $lastDebugLogErrors;
         $event->duration = time() - $event->start_at;
         $event->ready_to_send = true;

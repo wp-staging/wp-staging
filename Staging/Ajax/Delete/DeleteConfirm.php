@@ -12,10 +12,10 @@ class DeleteConfirm extends AbstractTemplateComponent
 {
     use WithStagingDatabase;
 
-    /** @var Sites */
+ 
     private $sites;
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
     public function __construct(Sites $sites, Sanitize $sanitize, TemplateEngine $templateEngine)
@@ -25,9 +25,9 @@ class DeleteConfirm extends AbstractTemplateComponent
         $this->sanitize  = $sanitize;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxConfirm()
     {
         if (!$this->canRenderAjax()) {
@@ -63,7 +63,7 @@ class DeleteConfirm extends AbstractTemplateComponent
                 'stagingSite'         => $stagingSiteDto,
                 'tables'              => $tables === null ? [] : $tables,
                 'isDatabaseConnected' => $connected,
-                'stagingSiteSize'     => '', // TODO: not-available but still used in UI, find a way how we can get this efficiently
+                'stagingSiteSize'     => '', 
             ]
         );
 

@@ -7,31 +7,31 @@ use WPStaging\Backup\Service\Database\DatabaseImporter;
 
 class DatabaseImporterDto
 {
-    /** @var int */
+ 
     private $currentIndex = 0;
 
-    /** @var int Byte offset matching $currentIndex, for an O(1) resume. */
+ 
     private $fileOffset = 0;
 
-    /** @var int */
+ 
     private $totalLines = 0;
 
-    /** @var string */
+ 
     private $tableToRestore = '';
 
-    /** @var string */
+ 
     private $tmpPrefix = '';
 
-    /** @var array<string, string> */
+ 
     private $shortTablesToRestore = [];
 
-    /** @var array<string, string> */
+ 
     private $shortTablesToDrop = [];
 
-    /** @var string */
+ 
     private $backupType = BackupMetadata::BACKUP_TYPE_SINGLE;
 
-    /** @var int|null */
+ 
     private $subsiteId = null;
 
     public function getFileOffset(): int
@@ -39,10 +39,10 @@ class DatabaseImporterDto
         return $this->fileOffset;
     }
 
-    /**
-     * @param int $fileOffset
-     * @return void
-     */
+
+
+
+
     public function setFileOffset(int $fileOffset)
     {
         $this->fileOffset = $fileOffset;
@@ -53,10 +53,10 @@ class DatabaseImporterDto
         return $this->currentIndex;
     }
 
-    /**
-     * @param int $currentIndex
-     * @return void
-     */
+
+
+
+
     public function setCurrentIndex(int $currentIndex)
     {
         $this->currentIndex = $currentIndex;
@@ -67,18 +67,18 @@ class DatabaseImporterDto
         return $this->totalLines;
     }
 
-    /**
-     * @param int $totalLines
-     * @return void
-     */
+
+
+
+
     public function setTotalLines(int $totalLines)
     {
         $this->totalLines = $totalLines;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function finish()
     {
         $this->currentIndex = $this->totalLines;
@@ -89,10 +89,10 @@ class DatabaseImporterDto
         return $this->tableToRestore;
     }
 
-    /**
-     * @param string $tableToRestore
-     * @return void
-     */
+
+
+
+
     public function setTableToRestore(string $tableToRestore)
     {
         $this->tableToRestore = $tableToRestore;
@@ -103,10 +103,10 @@ class DatabaseImporterDto
         return $this->tmpPrefix;
     }
 
-    /**
-     * @param string $tmpPrefix
-     * @return void
-     */
+
+
+
+
     public function setTmpPrefix(string $tmpPrefix)
     {
         $this->tmpPrefix = $tmpPrefix;
@@ -152,11 +152,11 @@ class DatabaseImporterDto
         return $shortTables[$table];
     }
 
-    /**
-     * @param string $prefix
-     *
-     * @return array<string, string>
-     */
+
+
+
+
+
     public function getShortTables(string $prefix): array
     {
         if ($prefix === $this->tmpPrefix) {
@@ -168,12 +168,12 @@ class DatabaseImporterDto
         return [];
     }
 
-    /**
-     * @param array $tables
-     * @param string $prefix
-     *
-     * @return void
-     */
+
+
+
+
+
+
     public function setShortTables(array $tables, string $prefix)
     {
         if ($prefix === $this->tmpPrefix) {
@@ -188,27 +188,27 @@ class DatabaseImporterDto
         return $this->backupType;
     }
 
-    /**
-     * @param string $backupType
-     * @return void
-     */
+
+
+
+
     public function setBackupType(string $backupType)
     {
         $this->backupType = $backupType;
     }
 
-    /**
-     * @return int|null
-     */
+
+
+
     public function getSubsiteId()
     {
         return $this->subsiteId;
     }
 
-    /**
-     * @param int|null $subsiteId
-     * @return void
-     */
+
+
+
+
     public function setSubsiteId($subsiteId)
     {
         $this->subsiteId = $subsiteId;

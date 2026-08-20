@@ -15,13 +15,13 @@ use WPStaging\Staging\Sites;
 
 class PrepareReset extends AbstractAjaxPrepare
 {
-    /** @var string */
+ 
     protected $postDataKey = 'wpstgResetData';
 
-    /** @var StagingSiteJobsDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var StagingSiteReset */
+ 
     protected $jobReset;
 
     protected function postDataSanitization(): array
@@ -42,7 +42,7 @@ class PrepareReset extends AbstractAjaxPrepare
         $data['nonSiteTables']       = isset($_POST['wpstgResetData']['nonSiteTables']) ? $this->parseAndSanitizeTables($_POST['wpstgResetData']['nonSiteTables']) : []; // phpcs:ignore
         $data['excludedDirectories'] = isset($_POST['wpstgResetData']['excludedDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgResetData']['excludedDirectories']) : []; // phpcs:ignore
         $data['extraDirectories']    = isset($_POST['wpstgResetData']['extraDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgResetData']['extraDirectories']) : []; // phpcs:ignore
-        // Exclude rules
+ 
         $data['excludeFileRules']      = isset($_POST['wpstgResetData']['excludeFileRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgResetData']['excludeFileRules']) : []; // phpcs:ignore
         $data['excludeFolderRules']    = isset($_POST['wpstgResetData']['excludeFolderRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgResetData']['excludeFolderRules']) : []; // phpcs:ignore
         $data['excludeExtensionRules'] = isset($_POST['wpstgResetData']['excludeExtensionRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgResetData']['excludeExtensionRules']) : []; // phpcs:ignore
@@ -52,7 +52,7 @@ class PrepareReset extends AbstractAjaxPrepare
 
     protected function additionalSanitization(array $data): array
     {
-        // Clone ID
+ 
         $data['cloneId'] = sanitize_text_field($data['cloneId']);
         $data['stagingEngine'] = StagingEngine::ENGINE_NEXT_GEN;
 
@@ -60,16 +60,16 @@ class PrepareReset extends AbstractAjaxPrepare
             throw new \UnexpectedValueException("Invalid request. Missing 'cloneId'.");
         }
 
-        // Included/Excluded tables
+ 
         $data['excludedTables'] = array_map('sanitize_text_field', $data['excludedTables']);
         $data['includedTables'] = array_map('sanitize_text_field', $data['includedTables']);
         $data['nonSiteTables']  = array_map('sanitize_text_field', $data['nonSiteTables']);
 
-        // Extra directories and directories exclusion and rules
+ 
         $data['extraDirectories']    = array_map('sanitize_text_field', $data['extraDirectories']);
         $data['excludedDirectories'] = array_map('sanitize_text_field', $data['excludedDirectories']);
 
-        // Exclude rules
+ 
         $data['excludeSizeGreaterThan'] = sanitize_text_field($data['excludeSizeGreaterThan']);
         $data['excludeFileRules']       = array_map('sanitize_text_field', $data['excludeFileRules']);
         $data['excludeFolderRules']     = array_map('sanitize_text_field', $data['excludeFolderRules']);
@@ -89,7 +89,7 @@ class PrepareReset extends AbstractAjaxPrepare
             'nonSiteTables'          => [],
             'excludedDirectories'    => [],
             'extraDirectories'       => [],
-            // exclude rules
+ 
             'excludeSizeGreaterThan' => 8,
             'excludeFileRules'       => [],
             'excludeFolderRules'     => [],
@@ -97,20 +97,20 @@ class PrepareReset extends AbstractAjaxPrepare
         ];
     }
 
-    /**
-     * @param array|null $sanitizedData
-     * @return array
-     */
+
+
+
+
     protected function setupInitialData($sanitizedData): array
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
         $this->clearCacheFolder();
 
-        // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
+ 
         $services = WPStaging::getInstance()->getContainer();
-        /** @var StagingSiteJobsDataDto */
+ 
         $this->jobDataDto = $services->get(StagingSiteJobsDataDto::class);
-        /** @var StagingSiteReset */
+ 
         $this->jobReset  = $services->get($this->getJobClass());
 
         $this->populateJobDataDtoByCloneId($sanitizedData['cloneId']);
@@ -133,29 +133,29 @@ class PrepareReset extends AbstractAjaxPrepare
         return $sanitizedData;
     }
 
-    /**
-     * Returns the reference to the current Job, if any.
-     *
-     * @return StagingSiteReset|null The current reference to the Staging Site Reset Job, if any.
-     */
+
+
+
+
+
     public function getJob()
     {
         return $this->jobReset;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getJobClass(): string
     {
         return StagingSiteReset::class;
     }
 
-    /**
-     * Persists the current Job status.
-     *
-     * @return bool Whether the current Job status was persisted or not.
-     */
+
+
+
+
+
     public function persist(): bool
     {
         if (!$this->jobReset instanceof StagingSiteReset) {
@@ -180,9 +180,9 @@ class PrepareReset extends AbstractAjaxPrepare
 
     protected function populateJobDataDtoByCloneId(string $cloneId)
     {
-        /**
-         * @var Sites $stagingSites
-         */
+
+
+
         $stagingSites = WPStaging::make(Sites::class); // @phpstan-ignore-line
         $stagingSite  = $stagingSites->getStagingSiteDtoByCloneId($cloneId);
         $this->jobDataDto->setStagingSite($stagingSite);

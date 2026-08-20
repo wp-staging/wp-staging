@@ -11,25 +11,25 @@ use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 
-/**
- * Cleans temporary backup files created by backup and Remote Sync jobs
- */
+
+
+
 class CleanupTmpBackupsTask extends AbstractTask
 {
-    /** @var BackupsFinder */
+ 
     private $backupsFinder;
 
-    /** @var TmpBackupCleaner */
+ 
     private $tmpBackupCleaner;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param BackupsFinder $backupsFinder
-     * @param TmpBackupCleaner $tmpBackupCleaner
-     * @param SeekableQueueInterface $taskQueue
-     */
+
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, BackupsFinder $backupsFinder, TmpBackupCleaner $tmpBackupCleaner, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -37,25 +37,25 @@ class CleanupTmpBackupsTask extends AbstractTask
         $this->tmpBackupCleaner = $tmpBackupCleaner;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'cancel_cleanup_backups';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return esc_html__('Cleaning up temporary backups…', 'wp-staging');
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->tmpBackupCleaner->clean($this->backupsFinder->getBackupsDirectory());

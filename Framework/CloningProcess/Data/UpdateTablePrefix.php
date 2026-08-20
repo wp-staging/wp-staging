@@ -6,14 +6,14 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 
 class UpdateTablePrefix extends DBCloningService
 {
-    /**
-     * @inheritDoc
-     */
+
+
+
     protected function internalExecute()
     {
         $prefix = $this->dto->getPrefix();
         $db = $this->dto->getStagingDb();
-        //On non-external jobs, $productionDb is same as $db
+ 
         $productionDb = $this->dto->getProductionDb();
         $productionPrefix = $productionDb->prefix;
         if ($this->isNetworkClone()) {
@@ -26,7 +26,7 @@ class UpdateTablePrefix extends DBCloningService
             return true;
         }
 
-        // Skip, prefixes are identical. No change needed
+ 
         if ($productionPrefix === $prefix) {
             $this->log("Prefix already the same - skipping");
             return true;

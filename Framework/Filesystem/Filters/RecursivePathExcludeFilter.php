@@ -6,24 +6,24 @@ use RecursiveDirectoryIterator;
 
 class RecursivePathExcludeFilter extends AbstractRecursiveFilterIterator
 {
-    /**
-     * @var array
-     */
+
+
+
     protected $excludePaths = [];
 
-    /**
-     * @var PathFilterHelper
-     */
+
+
+
     protected $excludeFilter;
 
-    /**
-     * @var PathFilterHelper
-     */
+
+
+
     protected $includeFilter;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $wpRootPath = ABSPATH;
 
     public function __construct(RecursiveDirectoryIterator $iterator, $excludePaths = [], $wpRootPath = ABSPATH)
@@ -37,10 +37,10 @@ class RecursivePathExcludeFilter extends AbstractRecursiveFilterIterator
         $this->includeFilter->categorizeRules($excludePaths);
     }
 
-    /**
-     * Set the WP Root Path
-     * @param string $wpRootPath
-     */
+
+
+
+
     public function setWpRootPath($wpRootPath)
     {
         $this->wpRootPath = $wpRootPath;
@@ -48,10 +48,10 @@ class RecursivePathExcludeFilter extends AbstractRecursiveFilterIterator
         $this->includeFilter->setWpRootPath($wpRootPath);
     }
 
-    /**
-     * Get the WP Root Path
-     * @return string
-     */
+
+
+
+
     public function getWpRootPath()
     {
         return $this->wpRootPath;
@@ -60,7 +60,7 @@ class RecursivePathExcludeFilter extends AbstractRecursiveFilterIterator
     #[\ReturnTypeWillChange]
     public function accept()
     {
-        // Get the current SplFileInfo object
+ 
         $fileInfo = $this->getInnerIterator()->current();
         if ($this->includeFilter->hasRules()) {
             if ($this->includeFilter->isMatched($fileInfo)) {

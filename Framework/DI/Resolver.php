@@ -8,9 +8,9 @@ use WPStaging\Vendor\lucatume\DI52\Builders\Resolver as BaseResolver;
 
 class Resolver extends BaseResolver
 {
-    /**
-     * @param false $resolveUnboundAsSingletons
-     */
+
+
+
     public function __construct($resolveUnboundAsSingletons = false)
     {
         parent::__construct($resolveUnboundAsSingletons);

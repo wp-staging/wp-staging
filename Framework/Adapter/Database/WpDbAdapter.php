@@ -7,7 +7,7 @@ use wpdb;
 
 class WpDbAdapter extends AbstractDatabase
 {
-    /** @var wpdb  */
+ 
     private $client;
 
     public function __construct(wpdb $wpdb)
@@ -15,17 +15,17 @@ class WpDbAdapter extends AbstractDatabase
         $this->client = $wpdb;
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function getClient()
     {
         return $this->client;
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function find($sql, array $conditions = [])
     {
         $records = $this->getResults($sql, $conditions);
@@ -42,9 +42,9 @@ class WpDbAdapter extends AbstractDatabase
         return $collection;
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function findOne($sql, array $conditions = [])
     {
         $records = $this->getResults($sql, $conditions);
@@ -56,36 +56,36 @@ class WpDbAdapter extends AbstractDatabase
         return reset($records);
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function insert(DatabaseQueryDto $queryDto)
     {
-        // TODO: Implement insert() method.
+ 
         return false;
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function update(DatabaseQueryDto $queryDto)
     {
-        // TODO: Implement update() method.
+ 
         return false;
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function delete($tableName, array $condition = [])
     {
-        // TODO: Implement delete() method.
+ 
         return false;
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function exec($sql)
     {
         return $this->client->query($sql);

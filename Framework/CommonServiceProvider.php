@@ -27,13 +27,13 @@ use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\DBPermissions;
 use WPStaging\Staging\Ajax\StagingSiteDataChecker;
 
-/**
- * Class CommonServiceProvider
- *
- * A Service Provider for binds common to both Free and Pro.
- *
- * @package WPStaging\Framework
- */
+
+
+
+
+
+
+
 class CommonServiceProvider extends ServiceProvider
 {
     use EventLoggerTrait;
@@ -47,17 +47,17 @@ class CommonServiceProvider extends ServiceProvider
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupAnalytics'], 25, 0);
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupExpiredOtps'], 25, 0);
 
-        // Per-request cron integrity check (throttled): re-creates missing cron events (e.g. for
-        // backup schedules) even when WP-Cron itself is broken so the daily event above never fires.
-        // Priority 20 so custom recurrences registered on `init` (default priority 10) are present
-        // when wp_next_scheduled / wp_get_schedules are queried.
-        // Wrapped in try/catch: when an outdated free version is active, the DI container may
-        // resolve BackupScheduler from the free autoloader (which prepends), hitting missing
-        // classes (e.g. BackupProcessLock renamed in newer versions) and causing a fatal error.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
         $container = $this->container;
         add_action('init', function () use ($container) {
-            // Skip during WP install (DB schema may not yet exist) and inside the WP-Cron runner
-            // itself (re-entry from within a cron tick would just do a no-op transient read).
+ 
+ 
             if (defined('WP_INSTALLING') && WP_INSTALLING) {
                 return;
             }
@@ -69,7 +69,7 @@ class CommonServiceProvider extends ServiceProvider
             try {
                 $container->make(CronIntegrity::class)->checkAndRepair();
             } catch (\Throwable $e) {
-                // Silently skip — dependency resolution failed (e.g. incompatible free version).
+ 
             }
         }, 20, 0);
         add_action("wp_ajax_wpstg_is_writable_clone_destination_dir", $this->container->callback(StagingSiteDataChecker::class, "ajaxIsWritableCloneDestinationDir")); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -103,33 +103,33 @@ class CommonServiceProvider extends ServiceProvider
         add_action('wp_ajax_wpstg_onboarding_queue_backup', $this->container->callback(OnboardingAjax::class, 'ajaxQueueBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_onboarding_backup_status', $this->container->callback(OnboardingAjax::class, 'ajaxQueuedBackupStatus')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        // Priority 5: a released backup must find the staging site already counted.
+ 
         add_action(StagingSiteCreate::ACTION_STAGING_SITE_CREATED, $this->container->callback(OnboardingJourney::class, 'completeStaging'), 5);
         add_action(StagingSiteCreate::ACTION_STAGING_SITE_CREATED, $this->container->callback(QueuedBackup::class, 'startAfterStagingCreated'));
         add_action(FinishBackupTask::ACTION_BACKUP_CREATED, $this->container->callback(OnboardingJourney::class, 'completeBackup'), 5);
         add_action(FinishBackupTask::ACTION_BACKUP_CREATED, $this->container->callback(QueuedBackup::class, 'markCompleted'));
-        // add_action, not registerInternalHook: that one holds one listener per
-        // hook name, and BackupScheduler already owns this one.
+ 
+ 
         add_action(PrepareJob::ACTION_JOB_FAILURE, $this->container->callback(QueuedBackup::class, 'onBackgroundJobFailure'));
 
         add_action('wp_ajax_wpstg_cancel_clone', $this->container->callback(QueuedBackup::class, 'discardOnStagingRequest'), 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in discardOnStagingRequest()
 
-        // A cancelled job leaves the first run holding the screen for something
-        // that is no longer running, so the capability goes back on offer.
+ 
+ 
         add_action('wp_ajax_wpstg_cancel_clone', $this->container->callback(OnboardingJourney::class, 'abandonActionOnRequest'), 2); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in abandonActionOnRequest()
         add_action('wp_ajax_wpstg--job--cancel', $this->container->callback(OnboardingJourney::class, 'abandonActionOnRequest'), 2); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in abandonActionOnRequest()
         add_action('wp_ajax_wpstg_staging_job_error', $this->container->callback(QueuedBackup::class, 'discardOnStagingRequest'), 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in discardOnStagingRequest()
     }
 
-    /**
-     * Resolved defensively, like the first-run surfaces themselves: this filter
-     * runs on every admin screen, so a first-run detail failing to build must
-     * not be able to take wp-admin down with it.
-     *
-     * @filter admin_body_class
-     * @param string $classes
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
     public function addOnboardingBodyClass($classes)
     {
         $onboarding = FreeOnboarding::resolve();
@@ -137,33 +137,33 @@ class CommonServiceProvider extends ServiceProvider
         return $onboarding === null ? $classes : $onboarding->addFocusModeBodyClass($classes);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function cleanupLogs()
     {
         $this->container->make(LogCleanup::class)->cleanOldLogs();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function cleanupAnalytics()
     {
         $this->container->make(AnalyticsCleanup::class)->cleanupOldAnalytics();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function cleanupExpiredOtps()
     {
         $this->container->make(Otp::class)->cleanupExpiredOtps();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxIsUserAuthenticated()
     {
         if (!is_user_logged_in()) {

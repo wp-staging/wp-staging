@@ -9,47 +9,47 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
-/**
- * Class Job
- * @package WPStaging\Framework\CloningProcess\Data
- */
+
+
+
+
 abstract class Job extends CloningProcess
 {
-    /**
-     * @var string
-     */
+
+
+
     private $prefix;
 
-    /**
-     *
-     * @var string
-     */
+
+
+
+
     private $homeUrl;
 
-    /**
-     *
-     * @var string
-     */
+
+
+
+
     private $siteUrl;
 
-    /**
-     *
-     * @var string
-     */
+
+
+
+
     protected $baseUrl;
 
-    /**
-     * Tables e.g wpstg3_options
-     * @var array
-     */
+
+
+
+
     protected $tables;
 
-    /** @var array */
+ 
     protected $steps = [];
 
-    /**
-     * Initialize
-     */
+
+
+
     public function initialize()
     {
         $this->initializeDbObjects();
@@ -61,22 +61,22 @@ abstract class Job extends CloningProcess
         $this->siteUrl = (new Urls())->getSiteUrl();
         $this->baseUrl = (new Urls())->getBaseUrl();
 
-        // Reset current step
+ 
         if ($this->options->currentStep === 0) {
             $this->options->currentStep = 0;
         }
     }
 
-    /**
-     * Start Module
-     * @return object
-     */
+
+
+
+
     public function start()
     {
-        // Execute steps
+ 
         $this->run();
 
-        // Save option, progress
+ 
         $this->saveOptions();
 
         return (object)$this->response;
@@ -84,10 +84,10 @@ abstract class Job extends CloningProcess
 
     abstract protected function initializeSteps();
 
-    /**
-     * @param int $stepNumber
-     * @return DataCloningDto
-     */
+
+
+
+
     protected function getCloningDto($stepNumber)
     {
         return new DataCloningDto(
@@ -114,22 +114,22 @@ abstract class Job extends CloningProcess
         );
     }
 
-    /**
-     * Execute the Current Step
-     * Returns false when over threshold limits are hit or when the job is done, true otherwise
-     * @return bool
-     */
+
+
+
+
+
     protected function execute()
     {
-        // Over limits threshold
+ 
         if ($this->isOverThreshold()) {
-            // Prepare response and save current progress
+ 
             $this->prepareResponse(false, false);
             $this->saveOptions();
             return false;
         }
 
-        // No more steps, finished
+ 
         if ($this->isFinished()) {
             $this->prepareResponse(true, false);
             return false;
@@ -137,7 +137,7 @@ abstract class Job extends CloningProcess
 
         $step = $this->steps[$this->options->currentStep];
 
-        /** @var CloningService $stepService */
+ 
         $stepService = WPStaging::make($step);
         $stepService->setDataCloningDto($this->getCloningDto($this->options->currentStep));
 
@@ -146,17 +146,17 @@ abstract class Job extends CloningProcess
             return false;
         }
 
-        // Prepare Response
+ 
         $this->prepareResponse();
 
-        // Not finished
+ 
         return true;
     }
 
-    /**
-     * Checks Whether There is Any Job to Execute or Not
-     * @return bool
-     */
+
+
+
+
     protected function isFinished()
     {
         return
@@ -165,19 +165,19 @@ abstract class Job extends CloningProcess
             $this->options->currentStep >= count($this->steps);
     }
 
-    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
+
+
+
+
     protected function isSubDir()
     {
         return (new SiteInfo())->isInstalledInSubDir();
     }
 
-    /**
-     * Get the install sub directory if WP is installed in sub directory
-     * @return string
-     */
+
+
+
+
     protected function getInstallSubDir()
     {
         $home    = get_option('home');
@@ -190,10 +190,10 @@ abstract class Job extends CloningProcess
         return trim(wp_parse_url($siteurl, PHP_URL_PATH), '/');
     }
 
-    /**
-     * Return URL of staging site
-     * @return string
-     */
+
+
+
+
     protected function getStagingSiteUrl()
     {
         if (isset($this->options->url)) {
@@ -209,7 +209,7 @@ abstract class Job extends CloningProcess
                 return trailingslashit($this->baseUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
             }
 
-            // Get the path to the main multisite without a trailingslash e.g. wordpress
+ 
             $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
             return rtrim($this->baseUrl, '/\\') . $multisitePath . $this->options->cloneDirectoryName;
         }

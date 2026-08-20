@@ -13,14 +13,14 @@ class Delete extends AbstractTemplateComponent
     use JobResponseTrait;
     use MemoryExhaustTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_REQUEST = 'wpstg_delete';
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxDelete()
     {
         if (!$this->canRenderAjax()) {

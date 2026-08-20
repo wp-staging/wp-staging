@@ -22,7 +22,7 @@ class CopyPluginsTask extends FileCopierTask
         return PartIdentifier::PLUGIN_PART_IDENTIFIER;
     }
 
-    /** @return bool */
+ 
     protected function getIsWpContent(): bool
     {
         return true;
