@@ -20,7 +20,7 @@ $isPro = WPStaging::isPro();
 include WPSTG_VIEWS_DIR . 'job/modal/success.php';
 include WPSTG_VIEWS_DIR . 'job/modal/process.php';
 
-// Will show a locked message if the process is locked
+ 
 require WPSTG_VIEWS_DIR . 'job/locked.php';
 $assets = WPStaging::make(Assets::class);
 ?>
@@ -102,16 +102,16 @@ if (!empty($stagingSites) || $error) {
 <?php Hooks::doAction(TemplateEngine::HOOK_RENDER_PRO_TEMPLATES); ?>
 
 <?php
-// Compact general "Upgrade to Pro" card. Rendered below the staging list for
-// any Free build (including when the Pro plugin is installed but inactive) when
-// the admin can manage settings and has not snoozed it.
-//
-// It is intentionally NOT shown on the zero-staging-sites first-run screen: that
-// state is owned by the empty-state card so the user can focus on creating the
-// first staging site instead of being pulled toward an upsell. This only gates
-// rendering; the 90-day snooze/dismissal state is left untouched in this state.
-// The card never appears above the staging list/empty state, on the Upgrade
-// page, or alongside a loose review prompt.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 if (
     !empty($stagingSites)
     && !$isPro
@@ -121,9 +121,9 @@ if (
     require WPSTG_VIEWS_DIR . 'ads/pro-upgrade-card.php';
 }
 
-// The review prompt is intentionally NOT rendered on the dashboard. It is a
-// success-based, in-modal ask shown right after a staging site or backup is
-// created (see views/notices/review-prompt-modal.php), never loose dashboard text.
+ 
+ 
+ 
 ?>
 
 <!-- Remove Clone -->

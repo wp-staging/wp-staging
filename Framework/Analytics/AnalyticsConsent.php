@@ -16,18 +16,18 @@ class AnalyticsConsent
     const OPTION_NAME_ANALYTICS_MODAL_DISMISSED = 'wpstg_analytics_modal_dismissed';
     const OPTION_NAME_ANALYTICS_REMIND_ME = 'wpstg_analytics_consent_remind_me';
 
-    /**
-     * If the request that sends the consent fails, we show a notice to let the user know.
-     * @action admin_notices
-     */
+
+
+
+
     public function maybeShowConsentFailureNotice()
     {
-        // Early bail: Not a WP STAGING page
+ 
         if (!WPStaging::make(Notices::class)->isWPStagingAdminPage()) {
             return;
         }
 
-        // Early bail
+ 
         if (!isset($_GET['wpstgConsentFailed'])) {
             return;
         }
@@ -41,23 +41,23 @@ class AnalyticsConsent
         include_once $notice;
     }
 
-    /**
-     * Listens for whether the user has given or denied consent to send usage information.
-     * @action admin_init
-     */
+
+
+
+
     public function listenForConsent()
     {
-        // Early bail: Not a consent request
+ 
         if (!isset($_GET['wpstgConsent'])) {
             return;
         }
 
-        // Early bail: Not enough permissions
+ 
         if (!current_user_can('manage_options')) {
             return;
         }
 
-        // Early bail: Invalid nonce
+ 
         check_ajax_referer('wpstg_consent_nonce', 'wpstgConsentNonce');
 
         if ($_GET['wpstgConsent'] == 'later') {
@@ -67,7 +67,7 @@ class AnalyticsConsent
             return;
         }
 
-        // Early bail: User has not consented
+ 
         if ($_GET['wpstgConsent'] == 'no') {
             update_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED, '1', false);
             update_option(self::OPTION_NAME_ANALYTICS_MODAL_DISMISSED, '1', false);
@@ -83,7 +83,7 @@ class AnalyticsConsent
             try {
                 $this->giveConsent();
             } catch (\Exception $e) {
-                // Show notice informing the user
+ 
                 wp_redirect(add_query_arg([
                     'wpstgConsentFailed' => true,
                 ], $this->getReturnUrl()));
@@ -108,11 +108,11 @@ class AnalyticsConsent
         include_once $notice;
     }
 
-    /**
-     * Registers the consent on the Analytics database
-     *
-     * @throws \Exception
-     */
+
+
+
+
+
     public function giveConsent()
     {
         $url = $this->getApiUrl('consent');
@@ -132,36 +132,36 @@ class AnalyticsConsent
             'sslverify'   => false,
         ]);
 
-        // Early bail: Something went wrong with the consent request.
+ 
         if (is_wp_error($response) || !in_array(wp_remote_retrieve_response_code($response), [201, 409])) {
             $errorMessage = is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_body($response);
             debug_log('WP STAGING Analytics Send Error: ' . $errorMessage, 'debug');
 
-            // Dismiss the consent notice so that it doesn't appear anymore
+ 
             update_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED, '1', false);
 
-            // Dismiss the consent modal so that id doesn't appear anymore
+ 
             update_option(self::OPTION_NAME_ANALYTICS_MODAL_DISMISSED, '1', false);
 
-            // give consent to be able to send data when network is back
+ 
             update_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, '1', false);
 
             throw new \Exception();
         }
     }
 
-    /**
-     * @return bool|null Whether the user has consented to the Analytics. Null if didn't answer.
-     */
+
+
+
     public function hasUserConsent()
     {
         return get_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, null);
     }
 
-    /**
-     * Invalidate the fact that the user has consented.
-     * @todo remove this after testing
-     */
+
+
+
+
     public function invalidateConsent()
     {
         delete_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED);
@@ -175,11 +175,11 @@ class AnalyticsConsent
         return add_query_arg('page', $plugin_page, admin_url($pagenow));
     }
 
-    /**
-     * @param bool $agreeOrDecline True to generate a link that agrees to send usage information. False to generate a link that disagrees.
-     *
-     * @return string The link to either agree or decline analytics.
-     */
+
+
+
+
+
     public function getConsentLink(bool $agreeOrDecline): string
     {
         return add_query_arg([

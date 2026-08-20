@@ -18,15 +18,15 @@
  * Text Domain: wp-staging
  */
 
-// Version number of this mu-plugin. Important for automatic updates
-// Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
+ 
+ 
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
     define('WPSTG_OPTIMIZER_VERSION', '1.6.2');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
-    /** @return string */
+ 
     function wpstgGetPluginsDir(): string
     {
         $pluginsDir = '';
@@ -41,10 +41,10 @@ if (!function_exists('wpstgGetPluginsDir')) {
 }
 
 if (!function_exists('wpstgIsEnabledOptimizer')) {
-    /**
-     * Check if optimizer is enabled
-     * @return bool
-     */
+
+
+
+
     function wpstgIsEnabledOptimizer(): bool
     {
         $status = (object)get_option('wpstg_settings');
@@ -58,10 +58,10 @@ if (!function_exists('wpstgIsEnabledOptimizer')) {
 }
 
 if (!function_exists('wpstgIsGoDaddyManagedSite')) {
-    /**
-     * GoDaddy's must-use plugin calls WooCommerce's Action Scheduler, so those plugins must stay loaded.
-     * @return bool
-     */
+
+
+
+
     function wpstgIsGoDaddyManagedSite(): bool
     {
         $muPluginDir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
@@ -72,22 +72,22 @@ if (!function_exists('wpstgIsGoDaddyManagedSite')) {
 }
 
 if (!function_exists('wpstgIsExcludedPlugin')) {
-    /**
-     * Check if a plugin should be excluded from the optimizer and still running during wp staging requests
-     * @param string $plugin
-     * @return bool
-     */
+
+
+
+
+
     function wpstgIsExcludedPlugin(string $plugin): bool
     {
-        // GoDaddy's must-use plugin needs WooCommerce's Action Scheduler, so keep only those exact plugins
-        // active. Match the plugin file exactly so WooCommerce extensions are still disabled as usual.
+ 
+ 
         if (wpstgIsGoDaddyManagedSite() && in_array($plugin, ['woocommerce/woocommerce.php', 'action-scheduler/action-scheduler.php'], true)) {
             return true;
         }
 
         $excludedPlugins = get_option('wpstg_optimizer_excluded', []);
 
-        // Check for custom excluded plugins
+ 
         foreach ($excludedPlugins as $excludedPlugin) {
             if (strpos($plugin, $excludedPlugin) !== false) {
                 return true;
@@ -99,13 +99,13 @@ if (!function_exists('wpstgIsExcludedPlugin')) {
 }
 
 if (!function_exists('wpstgExcludePlugins')) {
-    /**
-     * Remove all plugins except wp-staging and wp-staging-pro from blog-active plugins
-     *
-     * @param array $plugins numerically keyed array of plugin names (index=>name)
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
     function wpstgExcludePlugins($plugins)
     {
         if (!is_array($plugins) || empty($plugins)) {
@@ -117,7 +117,7 @@ if (!function_exists('wpstgExcludePlugins')) {
         }
 
         foreach ($plugins as $key => $plugin) {
-            // Default filter. Must be at the beginning or wp staging plugin will be filtered and killed
+ 
             if (strpos($plugin, 'wp-staging') !== false || wpstgIsExcludedPlugin($plugin)) {
                 continue;
             }
@@ -133,13 +133,13 @@ if (!function_exists('wpstgExcludePlugins')) {
 }
 
 if (!function_exists('wpstgExcludeSitePlugins')) {
-    /**
-     * Remove all plugins except wp-staging and wp-staging-pro from network-active plugins
-     *
-     * @param array $plugins array of plugins keyed by name (name=>timestamp pairs)
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
     function wpstgExcludeSitePlugins($plugins)
     {
         if (!is_array($plugins) || empty($plugins)) {
@@ -151,7 +151,7 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
         }
 
         foreach ($plugins as $plugin => $timestamp) {
-            // Default filter. Must be at the beginning or wp staging plugin will be filtered and killed
+ 
             if (strpos($plugin, 'wp-staging') !== false || wpstgIsExcludedPlugin($plugin)) {
                 continue;
             }
@@ -168,15 +168,15 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
 }
 
 if (!function_exists('wpstgDisableActivePluginsFilterAfterLoad')) {
-    /**
-     * Unhook the active_plugins read filters after plugins have loaded.
-     *
-     * They are only needed to stop third-party plugins from loading, which is done by
-     * plugins_loaded. Left registered, activate_plugin()/deactivate_plugins() would persist
-     * their filtered (wp-staging-only) result and deactivate every other plugin (issue #5371).
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     function wpstgDisableActivePluginsFilterAfterLoad()
     {
         remove_filter('option_active_plugins', 'wpstgExcludePlugins');
@@ -187,15 +187,15 @@ if (!function_exists('wpstgDisableActivePluginsFilterAfterLoad')) {
 }
 
 if (!function_exists('wpstgDisableTheme')) {
-    /**
-     *
-     * Disables the active theme during WP Staging AJAX requests
-     *
-     *
-     * @param string $dir
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
     function wpstgDisableTheme($dir)
     {
         $enableTheme = apply_filters('wpstg_optimizer_enable_theme', false);
@@ -224,13 +224,13 @@ if (!function_exists('wpstgDisableTheme')) {
 }
 
 if (!function_exists('wpstgIsOptimizerRequest')) {
-    /**
-     * Should the current request be processed by optimizer?
-     *
-     * For WP STAGING requests that require other plugins to be active, use raw_wpstg_{actionName}
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
     function wpstgIsOptimizerRequest(): bool
     {
         if (!wpstgIsEnabledOptimizer()) {
@@ -257,21 +257,21 @@ if (!function_exists('wpstgIsOptimizerRequest')) {
 }
 
 if (!function_exists('wpstgTgmpaCompatibility')) {
-    /**
-     * Remove TGM Plugin Activation 'force_activation' admin_init action hook if present.
-     *
-     * This is to stop excluded plugins being deactivated after a migration, when a theme uses TGMPA to require a plugin to be always active.
-     */
+
+
+
+
+
     function wpstgTgmpaCompatibility()
     {
         $isFunctionRemoved = false;
 
-        // run on wpstg page
+ 
         if (isset($_GET['page']) && $_GET['page'] == 'wpstg_clone') {
             $isFunctionRemoved = true;
         }
 
-        // run on wpstg ajax requests
+ 
         if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && strpos(sanitize_text_field($_POST['action']), 'wpstg') !== false) {
             $isFunctionRemoved = true;
         }
@@ -290,7 +290,7 @@ if (!function_exists('wpstgTgmpaCompatibility')) {
                         continue;
                     }
 
-                    // searching for function this way as can't rely on the calling class being named TGM_Plugin_Activation
+ 
                     if (strpos($key, 'force_activation') !== false) {
                         unset($wp_filter['admin_init'][$priority][$key]);
 
@@ -305,9 +305,9 @@ if (!function_exists('wpstgTgmpaCompatibility')) {
 }
 
 if (!function_exists('wpstgIsStaging')) {
-    /**
-     * @return bool True if it is staging site. False otherwise.
-     */
+
+
+
     function wpstgIsStaging(): bool
     {
         if (defined('WPSTAGING_DEV_SITE') && constant('WPSTAGING_DEV_SITE') === true) {
@@ -327,13 +327,13 @@ if (!function_exists('wpstgIsStaging')) {
 }
 
 if (!function_exists('wpstgGetCloneSettings')) {
-    /**
-     * Get the value of the given option in clone settings,
-     * If no option given return all clone settings
-     *
-     * @param string|null $option
-     * @return mixed
-     */
+
+
+
+
+
+
+
     function wpstgGetCloneSettings($option = null)
     {
         $settings = get_option('wpstg_clone_settings', null);
@@ -354,25 +354,25 @@ if (!function_exists('wpstgGetCloneSettings')) {
     }
 }
 
-/**
- * Disable all outgoing e-mails on Staging site
- * Will check against both the old and new logic of storing emails disabled option
- */
+
+
+
+
 if (wpstgIsStaging() && (((bool)get_option("wpstg_emails_disabled") === true) || (wpstgGetCloneSettings('wpstg_emails_disabled')))) {
     if (!function_exists('wp_mail')) {
-        /**
-         * @param array|string $to
-         * @param string       $subject
-         * @param string       $message
-         * @param array|string $headers
-         * @param array|string $attachments
-         *
-         * @return bool
-         */
+
+
+
+
+
+
+
+
+
         function wp_mail($to, $subject, $message, $headers = '', $attachments = [])
         {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                // Safely cast everything to string
+ 
                 $to          = is_string($to) ? $to : wp_json_encode($to);
                 $subject     = is_string($subject) ? $subject : wp_json_encode($subject);
                 $message     = is_string($message) ? $message : wp_json_encode($message);

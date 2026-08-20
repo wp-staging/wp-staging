@@ -7,9 +7,9 @@ use WPStaging\Framework\Adapter\Directory;
 
 class BackupDownload
 {
-    /**
-     * @return void
-     */
+
+
+
     public function deleteUnfinishedDownloads()
     {
         $dir       = WPStaging::make(Directory::class)->getDownloadsDirectory();
@@ -17,7 +17,7 @@ class BackupDownload
             return;
         }
 
-        $extension = ".wpstg"; // Extension of the file created when download starts.
+        $extension = ".wpstg"; 
         if ($dh = opendir($dir)) {
             while (($file = readdir($dh)) !== false) {
                 if (strpos($file, $extension) !== false) {

@@ -20,44 +20,44 @@ use function WPStaging\functions\debug_log;
 
 class FinishStagingSiteUpdateTask extends StagingTask
 {
-    /** @var StagingSiteJobsDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var Sites */
+ 
     private $sites;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Sites $sites
-     */
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->sites = $sites;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_site_update_finish';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Finishing Staging Site Update';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->getJobTransientCache()->completeJob();
@@ -71,10 +71,10 @@ class FinishStagingSiteUpdateTask extends StagingTask
         return $this->overrideGenerateResponse();
     }
 
-    /**
-     * @param string $stagingSiteName
-     * @return void
-     */
+
+
+
+
     protected function logFinishHeader(string $stagingSiteName)
     {
         $this->logger->info(sprintf(
@@ -104,9 +104,9 @@ class FinishStagingSiteUpdateTask extends StagingTask
         return new FinishStagingSiteResponseDto();
     }
 
-    /**
-     * @return FinishStagingSiteResponseDto|TaskResponseDto
-     */
+
+
+
     private function overrideGenerateResponse()
     {
         add_filter('wpstg.task.response', function ($response) {

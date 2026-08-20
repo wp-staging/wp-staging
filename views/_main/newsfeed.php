@@ -21,12 +21,12 @@ if (empty($data)) {
 
 $proFeatureCount = $provider->countProFeatures($data);
 
-/**
- * Render tip text with embedded link
- *
- * @param array $tip Tip data with text, link, and link_text
- * @return string Rendered HTML
- */
+
+
+
+
+
+
 $renderTipText = function (array $tip): string {
     if (empty($tip['link']) || empty($tip['link_text'])) {
         return esc_html($tip['text'] ?? '');
@@ -35,13 +35,13 @@ $renderTipText = function (array $tip): string {
     $link = '<a href="' . esc_url($tip['link']) . '" target="_blank">' . esc_html($tip['link_text']) . '</a>';
     $text = $tip['text'] ?? '';
 
-    // Replace {link} placeholder with actual link
+ 
     if (strpos($text, '{link}') !== false) {
         $parts = explode('{link}', $text);
         return esc_html($parts[0]) . $link . esc_html($parts[1] ?? '');
     }
 
-    // If no placeholder, append link at end
+ 
     return esc_html($text) . ' ' . $link;
 };
 ?>

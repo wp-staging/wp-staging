@@ -27,7 +27,7 @@ class CopyWpContentTask extends FileCopierTask
         return 'other content folders';
     }
 
-    /** @return bool */
+ 
     protected function getIsWpContent(): bool
     {
         return true;

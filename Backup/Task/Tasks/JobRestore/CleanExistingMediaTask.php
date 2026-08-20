@@ -15,25 +15,25 @@ use WPStaging\Framework\Utils\Cache\Cache;
 
 class CleanExistingMediaTask extends RestoreTask
 {
-    /**
-     * Old filter, cannot be renamed to new pattern
-     * @var string
-     */
+
+
+
+
     const FILTER_KEEP_EXISTING_MEDIA = 'wpstg.backup.restore.keepExistingMedia';
 
-    /**
-     * Paths given should be absolute
-     * @var string
-     */
+
+
+
+
     const FILTER_EXCLUDE_MEDIA_DURING_CLEANUP = 'wpstg.backup.restore.exclude_media_during_cleanup';
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var int */
+ 
     protected $processedNow;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Filesystem $filesystem, Directory $directory)
@@ -58,7 +58,7 @@ class CleanExistingMediaTask extends RestoreTask
         if ($this->stepsDto->getTotal() === 0) {
             $this->taskQueue->seek(0);
 
-            // Just an arbitrary number, when there are no more items to clean we call stepsDto->finish()
+ 
             $this->stepsDto->setTotal(100);
         }
     }
@@ -101,10 +101,10 @@ class CleanExistingMediaTask extends RestoreTask
             $result = $this->filesystem->delete($this->directory->getUploadsDirectory(), false);
             $this->processedNow = $this->filesystem->getProcessedCount();
         } catch (\Exception $e) {
-            //
+ 
         }
 
-        // Finish if all media files are deleted
+ 
         if ($result !== false) {
             $this->stepsDto->finish();
         }
@@ -114,11 +114,11 @@ class CleanExistingMediaTask extends RestoreTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * Should only be true when multisite and blog id of subsite is 1
-     *
-     * @return bool
-     */
+
+
+
+
+
     protected function isMainSite(): bool
     {
         if (!is_multisite()) {

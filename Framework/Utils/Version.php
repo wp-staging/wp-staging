@@ -2,20 +2,20 @@
 
 namespace WPStaging\Framework\Utils;
 
-/**
- * Class Version
- * Provide method to convert version number to integer and vice versa
- * @package WPStaging\Framework\Utils
- */
+
+
+
+
+
 class Version
 {
-    /**
-     * Convert version string format to integer format i.e. 1.0.0 to 10000
-     *
-     * @param string $versionString
-     * @return int
-     * @throws \InvalidArgumentException
-     */
+
+
+
+
+
+
+
     public function convertStringFormatToIntFormat(string $versionString): int
     {
         $versionParts = explode('.', $versionString);
@@ -46,13 +46,13 @@ class Version
         return $versionParts[0] * 10000 + $versionParts[1] * 100 + $versionParts[2];
     }
 
-    /**
-     * Convert version integer format to string format i.e. 10000 to 1.0.0
-     *
-     * @param int $version
-     * @return string
-     * @throws \InvalidArgumentException
-     */
+
+
+
+
+
+
+
     public function convertIntFormatToStringFormat(int $version): string
     {
         if ($version < 1) {

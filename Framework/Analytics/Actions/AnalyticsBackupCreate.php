@@ -7,28 +7,28 @@ use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 
 class AnalyticsBackupCreate extends AnalyticsEventDto
 {
-    /** @var bool */
+ 
     public $is_backup_database;
 
-    /** @var bool */
+ 
     public $is_backup_plugins;
 
-    /** @var bool */
+ 
     public $is_backup_themes;
 
-    /** @var bool */
+ 
     public $is_backup_uploads;
 
-    /** @var bool */
+ 
     public $is_backup_muplugins;
 
-    /** @var bool */
+ 
     public $is_backup_wp_content;
 
-    /** @var bool */
+ 
     public $is_backup_wp_root;
 
-    /** @var int */
+ 
     public $automated_backup;
 
     public function getEventAction()
@@ -49,7 +49,7 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
         $this->is_backup_muplugins  = $eventData->getIsExportingMuPlugins();
         $this->is_backup_wp_content = $eventData->getIsExportingOtherWpContentFiles();
         $this->is_backup_wp_root    = $eventData->getIsExportingOtherWpRootFiles();
-        $this->automated_backup     = (int)$eventData->getIsAutomatedBackup(); // int to convert null to zero
+        $this->automated_backup     = (int)$eventData->getIsAutomatedBackup(); 
 
         parent::enqueueStartEvent($jobId, $eventData);
     }
@@ -59,7 +59,7 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
         parent::enqueueFinishEvent($jobId, null, [
             'filesystem_size'  => $eventData->getFilesystemSize(),
             'database_size'    => $eventData->getDatabaseFileSize(),
-            'discovered_files' => (int)$eventData->getDiscoveredFiles(), // int to convert null to zero
+            'discovered_files' => (int)$eventData->getDiscoveredFiles(), 
         ]);
     }
 }

@@ -20,72 +20,72 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * This class is responsible for copying files from the current site to the staging site in batches.
- */
+
+
+
 class FileCopier
 {
     use ResourceTrait;
     use EndOfLinePlaceholderTrait;
 
-    /**
-     * @var int 512KB
-     */
+
+
+
     const BATCH_SIZE = 512 * 1024;
 
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_COPY_BATCH_SIZE = 'wpstg.clone.copy_batch_size';
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var SiteInfo */
+ 
     protected $siteInfo;
 
-    /** @var Permissions */
+ 
     protected $permissions;
 
-    /** @var Strings */
+ 
     protected $strings;
 
-    /** @var SeekableQueueInterface */
+ 
     protected $taskQueue;
 
-    /** @var LoggerInterface */
+ 
     protected $logger;
 
-    /** @var StepsDto */
+ 
     protected $stepsDto;
 
-    /** @var ?BigFileDto If a file couldn't be processed in a single request, this will be populated */
+ 
     protected $bigFileDto = null;
 
-    /** @var bool */
+ 
     protected $isWpContentOutsideAbspath = false;
 
-    /** @var string */
+ 
     protected $fileIdentifier;
 
-    /** @var int */
+ 
     protected $batchSize = 0;
 
-    /** @var string */
+ 
     protected $stagingSitePath = '';
 
-    /** @var string */
+ 
     protected $absPath = ABSPATH;
 
-    /** @var string */
+ 
     protected $wpContentDir = WP_CONTENT_DIR;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $isWpContent = false;
 
     public function __construct(Filesystem $filesystem, Directory $directory, SiteInfo $siteInfo, Permissions $permissions, Strings $strings)
@@ -101,12 +101,12 @@ class FileCopier
         $this->wpContentDir              = $this->filesystem->normalizePath($this->directory->getWpContentDirectory(), true);
     }
 
-    /**
-     * @param SeekableQueueInterface $taskQueue
-     * @param LoggerInterface $logger
-     * @param StepsDto $stepsDto
-     * @return void
-     */
+
+
+
+
+
+
     public function inject(SeekableQueueInterface $taskQueue, LoggerInterface $logger, StepsDto $stepsDto)
     {
         $this->taskQueue = $taskQueue;
@@ -114,10 +114,10 @@ class FileCopier
         $this->stepsDto  = $stepsDto;
     }
 
-    /**
-     * @param BigFileDto $bigFileDto
-     * @return void
-     */
+
+
+
+
     public function setupBigFileBeingCopied(BigFileDto $bigFileDto)
     {
         if (empty($bigFileDto->getFilePath()) || $bigFileDto->getFileSize() <= 0) {
@@ -128,33 +128,33 @@ class FileCopier
         $this->bigFileDto = $bigFileDto;
     }
 
-    /**
-     * @return ?BigFileDto
-     */
+
+
+
     public function getBigFileDto()
     {
         return $this->bigFileDto;
     }
 
-    /**
-     * @param string $stagingSitePath
-     * @param string $fileIdentifier
-     * @param bool $isWpContent
-     * @return void
-     */
+
+
+
+
+
+
     public function setup(string $stagingSitePath, string $fileIdentifier, bool $isWpContent = false)
     {
         $this->stagingSitePath = $this->filesystem->normalizePath($stagingSitePath, true);
         $this->fileIdentifier  = $fileIdentifier;
         $this->isWpContent     = $isWpContent;
 
-        // Default batch size is 512KB
+ 
         $this->batchSize = Hooks::applyFilters(self::FILTER_COPY_BATCH_SIZE, self::BATCH_SIZE);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function execute()
     {
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
@@ -166,7 +166,7 @@ class FileCopier
 
                 return;
             } catch (DiskNotWritableException $exception) {
-                // Probably disk full. Should be handled in Job\AbstractJob::prepareAndExecute(). Let's stop the code here if it did not happen!
+ 
                 throw new \Exception('Disk is probably full. Error message: ' . $exception->getMessage());
             } catch (\Throwable $th) {
                 throw new \Exception('Fail to copy file. Error message: ' . $th->getMessage());
@@ -182,11 +182,11 @@ class FileCopier
         }
     }
 
-    /**
-     * @throws DiskNotWritableException
-     * @throws FinishedQueueException
-     * @return void
-     */
+
+
+
+
+
     public function copy()
     {
         $path = $this->taskQueue->dequeue();
@@ -205,12 +205,12 @@ class FileCopier
             list($path, $indexPath) = explode(FilesystemScanner::PATH_SEPARATOR, $path);
         }
 
-        // When wp-content is inside of ABSPATH, we need to prepend ABSPATH to the file path, as it was removed while scanning
+ 
         $path = $this->maybePrependSitePath($path);
 
         try {
-            // Directory entries come from the scanner's empty-directory enqueue path; mkdir them so
-            // empty folders are preserved on the staging site instead of being dropped.
+ 
+ 
             if (is_dir($path)) {
                 $isFileWrittenCompletely = $this->processEmptyDirectory($path, $indexPath);
             } else {
@@ -224,7 +224,7 @@ class FileCopier
             throw $th;
         }
 
-        // Done processing this file
+ 
         if ($isFileWrittenCompletely === true) {
             $this->stepsDto->incrementCurrentStep();
             $this->bigFileDto = null;
@@ -232,7 +232,7 @@ class FileCopier
             return;
         }
 
-        // Processing a file that could not be finished in this request
+ 
         $this->taskQueue->retry(false);
     }
 
@@ -241,26 +241,26 @@ class FileCopier
         return $this->shouldPrependAbsPath() ? $this->absPath . $filePath : $filePath;
     }
 
-    /**
-     * Queue entries are root-relative for wp-admin/wp-includes/wp-root files (scanned with rootPath = ABSPATH)
-     * and absolute for wp-content sub-trees on Flywheel-style layouts where wp-content lives outside ABSPATH —
-     * the scanner's str_replace(rootPath, '', $path) is a no-op on those paths and the original absolute path
-     * passes through. Skip prepending only in that one case.
-     */
+
+
+
+
+
+
     protected function shouldPrependAbsPath(): bool
     {
         return !$this->isWpContentOutsideAbspath || !$this->isWpContent;
     }
 
-    /**
-     * Create an empty directory on the staging site for a directory entry the scanner enqueued because no
-     * files were discovered beneath it. Without this, empty folders (e.g. a user-created placeholder dir
-     * inside wp-content) would be silently dropped during cloning — legacy did this via scanToCacheFile.
-     *
-     * @param string $sourcePath
-     * @param string $indexPath
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
     protected function processEmptyDirectory(string $sourcePath, string $indexPath): bool
     {
         $staging = empty($indexPath) ? $sourcePath : $indexPath;
@@ -286,23 +286,23 @@ class FileCopier
 
     protected function processFile(string $filePath, string $indexPath): bool
     {
-        // Invalid file
+ 
         if (!is_file($filePath)) {
             throw new \RuntimeException("Invalid file. Could not copy file: $filePath");
         }
 
-        // If file is unreadable, skip it as if succeeded
+ 
         if (!$this->filesystem->isReadableFile($filePath)) {
             throw new \RuntimeException("Can't read file {$filePath}");
         }
 
         $destinationPath = $this->getDestinationPath($filePath, $indexPath);
 
-        // Get file size
+ 
         $fileSize = filesize($filePath);
 
         $result = false;
-        // File is over batch size
+ 
         if ($fileSize > $this->batchSize) {
             $result = $this->copyBigFile($filePath, $destinationPath, $this->batchSize);
         } else {
@@ -313,7 +313,7 @@ class FileCopier
             return false;
         }
 
-        // Set file permissions
+ 
         $this->chmod($destinationPath, $this->permissions->getFilePermission($destinationPath));
 
         $this->setDirPermissions($destinationPath);
@@ -389,13 +389,13 @@ class FileCopier
         return 'ab';
     }
 
-    /**
-     * Gets destination file and checks if the directory exists, if it does not attempts to create it.
-     * If creating destination directory fails, it will throw exception.
-     * @param string $filePath
-     * @param string $indexPath
-     * @return string
-     */
+
+
+
+
+
+
+
     protected function getDestinationPath(string $filePath, string $indexPath): string
     {
         if (empty($indexPath)) {
@@ -414,17 +414,17 @@ class FileCopier
         }
 
         $destinationDirectory  = dirname($destinationPath);
-        // If directory already exists, return the destination path
+ 
         if (is_dir($destinationDirectory)) {
             return $this->filesystem->normalizePath($destinationPath);
         }
 
-        // If directory does not exist, create it
+ 
         if ($this->filesystem->mkdir($destinationDirectory)) {
             return $this->filesystem->normalizePath($destinationPath);
         }
 
-        // If directory still does not exist, throw an exception
+ 
         if (!is_dir($destinationDirectory)) {
             throw new \RuntimeException("Can not create directory {$destinationDirectory}." . $this->filesystem->getLogs()[0]);
         }
@@ -442,11 +442,11 @@ class FileCopier
         return false;
     }
 
-    /**
-     * @param string $path
-     * @param int $mode
-     * @return bool
-     */
+
+
+
+
+
     protected function chmod(string $path, int $mode): bool
     {
         $lastWarning = null;

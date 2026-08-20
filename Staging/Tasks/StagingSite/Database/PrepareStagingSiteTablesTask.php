@@ -18,22 +18,22 @@ use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Staging\Tasks\StagingTask;
 
-/**
- * This class is responsible for backup of existing staging site tables and creating of staging site tables.
- * This class is used during staging site update.
- * @see CreateDatabaseTableTask for class responsible for handling staging site tables on StagingSiteCreate and StagingSiteReset
- */
+
+
+
+
+
 class PrepareStagingSiteTablesTask extends StagingTask
 {
     use WithStagingDatabase;
 
-    /** @var TableCreateService */
+ 
     protected $tableCreateService;
 
-    /** @var array */
+ 
     protected $tables = [];
 
-    /** @var JobDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface|StagingNetworkDtoInterface $jobDataDto */
+ 
     protected $jobDataDto; // @phpstan-ignore-line
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, TableCreateService $tableCreateService)
@@ -52,10 +52,10 @@ class PrepareStagingSiteTablesTask extends StagingTask
         return 'Backup existing tables and cleaning up database';
     }
 
-    /**
-     * @return TaskResponseDto
-     * @throws Exception
-     */
+
+
+
+
     public function execute()
     {
         $this->setup();
@@ -83,9 +83,9 @@ class PrepareStagingSiteTablesTask extends StagingTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setup()
     {
         $this->initStagingDatabase($this->jobDataDto->getStagingSite());

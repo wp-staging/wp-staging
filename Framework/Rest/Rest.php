@@ -4,22 +4,22 @@ namespace WPStaging\Framework\Rest;
 
 use WPStaging\Framework\Utils\Sanitize;
 
-/**
- * Class Rest
- *
- * @package WPStaging\Framework\Rest
- *
- * @todo merge into WPAdapter class?
- */
+
+
+
+
+
+
+
 class Rest
 {
-    /** @var string */
+ 
     const WPSTG_ROUTE_NAMESPACE_V1 = 'wpstg/v1';
 
-    /** @var int */
+ 
     const REQUEST_TIMEOUT = 30;
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
     public function __construct(Sanitize $sanitize)
@@ -27,10 +27,10 @@ class Rest
         $this->sanitize = $sanitize;
     }
 
-    // Is Rest URL
+ 
     public function isRestUrl()
     {
-        // Early bail if uri is empty
+ 
         if (empty($_SERVER['REQUEST_URI'])) {
             return false;
         }
@@ -46,8 +46,8 @@ class Rest
             return true;
         }
 
-        // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.
-        // To work around this, we manually add index.php to the URL, avoiding the redirect.
+ 
+ 
         if ('index.php/' !== substr($originalUrl, -10)) {
             $urlWithIndex      = add_query_arg('rest_route', '/', $originalUrl . 'index.php');
             $restPathWithIndex = $this->getApiRequestURI($urlWithIndex);
@@ -56,7 +56,7 @@ class Rest
             }
         }
 
-        // Early bail rest url function not exists
+ 
         if (!function_exists('rest_url')) {
             return false;
         }
@@ -64,7 +64,7 @@ class Rest
         $baseRestURL = get_rest_url(get_current_blog_id(), '/');
         $restPath    = $this->getApiRequestURI($baseRestURL);
 
-        // Early bail if rest path is empty
+ 
         if (empty($restPath)) {
             return false;
         }

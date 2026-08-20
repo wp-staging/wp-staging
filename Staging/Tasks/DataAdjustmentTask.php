@@ -16,21 +16,21 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 abstract class DataAdjustmentTask extends StagingTask
 {
-    /** @var JobDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface|AdvanceStagingOptionsInterface|StagingNetworkDtoInterface */
+ 
     protected $jobDataDto; // @phpstan-ignore-line
 
-    /**
-     * @var Urls
-     */
+
+
+
     protected $urls;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Urls $urls
-     */
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Urls $urls)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);

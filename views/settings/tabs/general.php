@@ -255,6 +255,20 @@ $directory = WPStaging::make(Directory::class);
                                     </div>
                                 </div>
                             <?php endif; ?>
+                            <div class="wpstg-settings-field wpstg-settings-has-toggle">
+                                <div>
+                                    <div class="wpstg-settings-field-header">
+                                        <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[enableBackupBeforeUpdate]"); ?></span>
+                                        <span class="wpstg-settings-field-badge wpstg-recommended"><?php esc_html_e('Recommended', 'wp-staging'); ?></span>
+                                    </div>
+                                    <div class="wpstg-settings-field-description">
+                                        <?php esc_html_e('Prompt to create a backup before installing plugin, theme, or WordPress core updates. Turn this off and on again to reset your saved choice for future updates.', 'wp-staging'); ?>
+                                    </div>
+                                </div>
+                                <div class="wpstg-settings-field-input">
+                                    <?php $form->renderInput("wpstg_settings[enableBackupBeforeUpdate]"); ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <!-- /Backups Settings -->
@@ -622,7 +636,7 @@ $directory = WPStaging::make(Directory::class);
                             <div id="wpstg-http-basic-auth-fields" <?php echo $hasHttpAuthCredentials ? '' : 'class="hidden"'; ?>>
                                 <div class="wpstg-mb-4">
                                     <?php
-                                        /** @var EncryptionNoticeService */
+ 
                                         $encryptionNoticeService = WPStaging::make(EncryptionNoticeService::class);
                                         $encryptionNoticeService->renderEncryptedNotice(Queue::OPTION_HTTP_AUTH_CREDENTIALS, 'password', 'HTTP Basic Auth');
                                     ?>

@@ -5,51 +5,51 @@ namespace WPStaging\Framework\Logger;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Utils\Cache\Cache;
 
-/**
- * This class is used to cache the events for the SSE (Server-Sent Events) stream.
- * It stores the events in a cache file and allows to push new events, load existing events,
- * It is used by BackgroundLogger to push the events to the SSE stream.
- */
+
+
+
+
+
 class SseEventCache
 {
-    /**
-     * @var string
-     */
+
+
+
     const EVENT_TYPE_TASK = 'task';
 
-    /**
-     * @var string
-     */
+
+
+
     const EVENT_TYPE_MEMORY_EXHAUST = 'memory_exhaust';
 
-    /**
-     * @var string
-     */
+
+
+
     const EVENT_TYPE_FATAL_ERROR = 'fatal_error';
 
-    /**
-     * @var string
-     */
+
+
+
     const EVENT_TYPE_COMPLETE = 'complete';
 
-    /**
-     * @var string
-     */
+
+
+
     protected $cacheDirectory = '';
 
-    /**
-     * @var int
-     */
+
+
+
     protected $count = 0;
 
-    /**
-     * @var array
-     */
+
+
+
     protected $events = [];
 
-    /**
-     * @var Cache
-     */
+
+
+
     protected $cache;
 
     public function __construct(Cache $cache, Directory $directory)
@@ -59,9 +59,9 @@ class SseEventCache
         $this->cache->setPath($this->cacheDirectory);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function deleteSseCacheFiles()
     {
         if (!file_exists($this->cacheDirectory)) {
@@ -88,7 +88,7 @@ class SseEventCache
 
     public function push(array $log)
     {
-        // Reload to absorb concurrent appends from sibling Logger instances in the same request.
+ 
         $this->load();
 
         $this->events[] = $log;
@@ -99,7 +99,7 @@ class SseEventCache
 
     public function load()
     {
-        // PHP's stat cache otherwise hides cross-process writes from the SSE polling loop.
+ 
         $filePath = $this->cache->getFilePath();
         if ($filePath !== '') {
             clearstatcache(true, $filePath);

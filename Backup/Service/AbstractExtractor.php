@@ -17,93 +17,93 @@ use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\FormatTrait;
 
-/**
- * Base class for extracting files from backup archives during restoration
- *
- * Handles the core logic for reading backup files, extracting file entries, and writing them to disk.
- * Designed to work independently of WordPress core for use in standalone restore tools.
- */
+
+
+
+
+
+
 abstract class AbstractExtractor
 {
     use FormatTrait;
     use DebugLogTrait;
 
-    /** @var string */
+ 
     const VALIDATE_DIRECTORY = 'validate';
 
-    /** @var int */
+ 
     const ITEM_SKIP_EXCEPTION_CODE = 4001;
 
-    /** @var int */
+ 
     const FINISHED_QUEUE_EXCEPTION_CODE = 4002;
 
-    /** @var int */
+ 
     const FILE_FILTERED_EXCEPTION_CODE = 4003;
 
-    /**
-     * File currently being extracted
-     * @var FileBeingExtracted|null
-     */
+
+
+
+
     protected $extractingFile;
 
-    /** @var FileObject */
+ 
     protected $wpstgFile;
 
-    /** @var string */
+ 
     protected $dirRestore;
 
-    /** @var int */
+ 
     protected $wpstgIndexOffsetForCurrentFile;
 
-    /** @var int */
+ 
     protected $wpstgIndexOffsetForNextFile;
 
-    /** @var ExtractorDto */
+ 
     protected $extractorDto;
 
-    /** @var int How many bytes were written in this request. */
+ 
     protected $bytesWrittenThisRequest = 0;
 
-    /** @var bool */
+ 
     protected $isBackupFormatV1 = false;
 
-    /** @var PathIdentifier */
+ 
     protected $pathIdentifier;
 
-    /** @var DirectoryInterface */
+ 
     protected $directory;
 
-    /** @var BackupHeader */
+ 
     protected $backupHeader;
 
-    /** @var IndexLineInterface */
+ 
     protected $indexLineDto;
 
-    /** @var BackupMetadata */
+ 
     protected $backupMetadata;
 
-    /** @var string|null */
+ 
     protected $extractIdentifier = '';
 
-    /** @var bool */
+ 
     protected $isValidateOnly = false;
 
-    /** @var string[] */
+ 
     protected $excludedIdentifier = [];
 
-    /** @var string */
+ 
     protected $databaseBackupFile;
 
-    /** @var int */
+ 
     protected $defaultDirectoryOctal = 0755;
 
-    /** @var string */
+ 
     protected $currentIdentifier;
 
-    /** @var bool */
+ 
     protected $throwExceptionOnValidationFailure = false;
 
-    /** @var string */
+ 
     protected $lastIdentifiablePath;
 
     public function __construct(
@@ -120,10 +120,10 @@ abstract class AbstractExtractor
         $this->excludedIdentifier    = [];
     }
 
-    /**
-     * @param string[] $excludedIdentifier
-     * @return void
-     */
+
+
+
+
     public function setExcludedIdentifiers(array $excludedIdentifier)
     {
         $this->excludedIdentifier = $excludedIdentifier;
@@ -131,9 +131,9 @@ abstract class AbstractExtractor
 
     public function setExtractOnlyPart(string $partToExtract)
     {
-        // Reset the excluded identifier
+ 
         $this->excludedIdentifier = [];
-        // early bail if part to extract is empty
+ 
         if (empty($partToExtract)) {
             return;
         }
@@ -160,7 +160,7 @@ abstract class AbstractExtractor
                 continue;
             }
 
-            // we need to handle the database part separately, as it's not a part of the PathIdentifier
+ 
             if ($part === PartIdentifier::DATABASE_PART_IDENTIFIER) {
                 $this->excludedIdentifier[] = PartIdentifier::DATABASE_PART_IDENTIFIER;
                 continue;
@@ -170,19 +170,19 @@ abstract class AbstractExtractor
         }
     }
 
-    /**
-     * @param IndexLineInterface $indexLineDto
-     * @return void
-     */
+
+
+
+
     public function setIndexLineDto(IndexLineInterface $indexLineDto)
     {
         $this->indexLineDto = $indexLineDto;
     }
 
-    /**
-     * @param bool $isBackupFormatV1
-     * @return void
-     */
+
+
+
+
     public function setIsBackupFormatV1(bool $isBackupFormatV1)
     {
         $this->isBackupFormatV1 = $isBackupFormatV1;
@@ -193,9 +193,9 @@ abstract class AbstractExtractor
         $this->throwExceptionOnValidationFailure = $throwExceptionOnValidationFailure;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getBytesWrittenInThisRequest(): int
     {
         return $this->bytesWrittenThisRequest;
@@ -206,12 +206,12 @@ abstract class AbstractExtractor
         return $this->extractorDto;
     }
 
-    /**
-     * @param ExtractorDto $extractorDto
-     * @param string $backupFilePath
-     * @param string $tmpPath
-     * @return void
-     */
+
+
+
+
+
+
     public function setup(ExtractorDto $extractorDto, string $backupFilePath, string $tmpPath = '')
     {
         $this->dirRestore   = $tmpPath;
@@ -225,10 +225,10 @@ abstract class AbstractExtractor
         $this->dirRestore = rtrim($this->dirRestore, '/') . '/';
     }
 
-    /**
-     * @param string $filePath
-     * @return void
-     */
+
+
+
+
     public function setFileToExtract(string $filePath)
     {
         try {
@@ -243,10 +243,10 @@ abstract class AbstractExtractor
         }
     }
 
-    /**
-     * @param int $fileToExtractOffset
-     * @return void
-     */
+
+
+
+
     public function findFileToExtract(int $fileToExtractOffset = 0)
     {
         if ($fileToExtractOffset > 0) {
@@ -259,19 +259,19 @@ abstract class AbstractExtractor
 
         $this->setWpstgFileOffset();
 
-        // Store the index position when reading the current file
+ 
         $this->wpstgIndexOffsetForCurrentFile = $this->wpstgFile->ftell();
 
         $rawIndexFile = $this->wpstgFile->readAndMoveNext();
 
-        // Store the index position of the next file to be processed
+ 
         $this->wpstgIndexOffsetForNextFile = $this->wpstgFile->ftell();
 
         if (!$this->indexLineDto->isIndexLine($rawIndexFile)) {
             throw new \Exception("", self::FINISHED_QUEUE_EXCEPTION_CODE);
         }
 
-        /** @var IndexLineInterface $backupFileIndex */
+ 
         $backupFileIndex  = $this->indexLineDto->readIndexLine($rawIndexFile);
         $identifiablePath = $backupFileIndex->getIdentifiablePath();
         if (empty($identifiablePath)) {
@@ -330,26 +330,26 @@ abstract class AbstractExtractor
         $this->cleanExistingFile($identifier);
 
         $this->wpstgFile->fseek($this->extractingFile->getCurrentOffset());
-        $this->indexLineDto = $backupFileIndex; // Required for BackupFileIndex
+        $this->indexLineDto = $backupFileIndex; 
     }
 
-    /**
-     * On some servers, sometimes fopen() can not create files. Seems to be caused by big files
-     * Issue: #2560, #2576
-     *
-     * @param string $filePath
-     * @return bool
-     */
+
+
+
+
+
+
+
     public function createEmptyFile(string $filePath): bool
     {
-        // Early bail: file already exists
+ 
         if (file_exists($filePath)) {
             return true;
         }
 
-        // touch() didn't work consistently on a client server, but file_put_contents() worked
-        // also file_put_contents performs better than touch()
-        // @see https://github.com/wp-staging/wp-staging-pro/issues/2807
+ 
+ 
+ 
         return $this->filePutContents($filePath, '') !== false;
     }
 
@@ -389,18 +389,18 @@ abstract class AbstractExtractor
         $exception   = null;
         clearstatcache();
 
-        // Lets only validate if the file headers are not removed
+ 
         if ($this->extractingFile->areHeaderBytesRemoved()) {
             $this->debugLog('Skipping validation for file because duplicate file headers were removed: ' . $pathForErrorLogging);
         } elseif ($this->indexLineDto instanceof FileHeader && $this->isSegmentedFileHeader($this->indexLineDto)) {
             $fileHeader = $this->indexLineDto;
 
-            // Per-segment validation via FileHeader::validateFile() always fails for split files
-            // because the entry's size/CRC describe only this segment's slice while the disk
-            // file is the accumulated bytes from every segment seen so far. Instead:
-            //   - validate the current segment against the slice appended for this index entry;
-            //   - on the terminal segment (no REQUIRE_NEXT_PART) verify the reassembled file
-            //     against the optional whole-file size + CRC stamped into extraField at backup time.
+ 
+ 
+ 
+ 
+ 
+ 
             try {
                 $this->validateMultipartSegment($destinationFilePath, $pathForErrorLogging);
                 if (!$fileHeader->getIsNextPartRequired()) {
@@ -427,17 +427,17 @@ abstract class AbstractExtractor
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function moveToNextFile(string $destinationFilePath = '')
     {
         $this->lastIdentifiablePath = $this->indexLineDto->getIdentifiablePath();
-        // Jump to the next file of the index
+ 
         $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
         $this->extractorDto->incrementTotalFilesExtracted();
 
-        // Reset offset pointers
+ 
         $this->extractorDto->setHeaderBytesRemoved(0);
         $this->extractorDto->setExtractorFileWrittenBytes(0);
         $this->extractorDto->setExtractorFileReadBytes(0);
@@ -474,10 +474,10 @@ abstract class AbstractExtractor
         return $this->extractingFile->getTotalBytes() > 10 * MB_IN_BYTES;
     }
 
-    /**
-     * Fixes issue https://github.com/wp-staging/wp-staging-pro/issues/2861
-     * @return void
-     */
+
+
+
+
     protected function maybeRemoveLastAccidentalCharFromLastExtractedFile()
     {
         if ($this->isValidateOnly) {
@@ -512,14 +512,14 @@ abstract class AbstractExtractor
         $this->extractorDto->setExtractorFileReadBytes($this->extractingFile->getReadBytes());
     }
 
-    /**
-     * Continuation segments append to a file that already contains earlier segments.
-     * Remember that baseline so crash recovery can distinguish previous-segment bytes
-     * from bytes written for the current segment.
-     *
-     * @param IndexLineInterface $backupFileIndex
-     * @return void
-     */
+
+
+
+
+
+
+
+
     protected function maybeSetSegmentBaseBytes(IndexLineInterface $backupFileIndex)
     {
         if (!$backupFileIndex instanceof FileHeader || !$backupFileIndex->getIsPreviousPartRequired()) {
@@ -541,22 +541,22 @@ abstract class AbstractExtractor
         $this->extractorDto->setExtractorFileBaseBytes($baseBytes === false ? 0 : (int) $baseBytes);
     }
 
-    /**
-     * @param \Exception $ex
-     * @param string $filePath
-     * @return void
-     */
+
+
+
+
+
     protected function throwMissingFileException(\Exception $ex, string $filePath)
     {
         throw new \Exception(sprintf("Following backup part missing: %s", $filePath), 0, $ex);
     }
 
-    /**
-     * This function deletes the "w" character which is added at the end of the last restored file.
-     * @see https://github.com/wp-staging/wp-staging-pro/issues/2861
-     *
-     * @return void
-     */
+
+
+
+
+
+
     protected function removeLastCharInExtractedFile()
     {
         $destinationFilePath = $this->extractingFile->getBackupPath();
@@ -570,7 +570,7 @@ abstract class AbstractExtractor
             return;
         }
 
-        $fileContent = substr($fileContent, 0, -1); // Remove the last character
+        $fileContent = substr($fileContent, 0, -1); 
         file_put_contents($destinationFilePath, $fileContent);
     }
 
@@ -589,14 +589,14 @@ abstract class AbstractExtractor
             return;
         }
 
-        // Continuation segment of a multipart-split file — the existing bytes on disk are the
-        // previous parts' segments. Appending is how we stitch segments back together.
+ 
+ 
         if ($this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsPreviousPartRequired()) {
             return;
         }
 
         if (file_exists($this->extractingFile->getBackupPath())) {
-            // Delete the original upload file
+ 
             if (!unlink($this->extractingFile->getBackupPath())) {
                 throw new \RuntimeException(sprintf(__('Could not delete original file %s. Skipping restore of it...', 'wp-staging'), $this->extractingFile->getRelativePath()));
             }
@@ -633,12 +633,12 @@ abstract class AbstractExtractor
             return false;
         }
 
-        // A segmented entry (either flag set) describes only this part's slice of the file, not
-        // the whole file. Never treat it as "already extracted" based on the destination size:
-        //   - First segment (NEXT only) on a partial-disk file would skip extraction and leave
-        //     subsequent segments appending to a half-written file.
-        //   - Continuation segment (PREV set) is handled the same way; size match would be a
-        //     coincidence with the previous segment's slice.
+ 
+ 
+ 
+ 
+ 
+ 
         if ($backupFileIndex instanceof FileHeader && $this->isSegmentedFileHeader($backupFileIndex)) {
             return false;
         }
@@ -646,13 +646,13 @@ abstract class AbstractExtractor
         return $backupFileIndex->getUncompressedSize() === filesize($extractPath);
     }
 
-    /**
-     * True if the index entry is a segment of a multipart-split file (carries either of the
-     * REQUIRE_PREVIOUS_PART / REQUIRE_NEXT_PART continuation flags).
-     *
-     * @param FileHeader $fileHeader
-     * @return bool
-     */
+
+
+
+
+
+
+
     protected function isSegmentedFileHeader(FileHeader $fileHeader): bool
     {
         return $fileHeader->getIsPreviousPartRequired() || $fileHeader->getIsNextPartRequired();
@@ -669,20 +669,20 @@ abstract class AbstractExtractor
             return true;
         }
 
-        /** @var FileHeader $fileHeader */
+ 
         $fileHeader = $this->indexLineDto;
         return !$fileHeader->getIsNextPartRequired();
     }
 
-    /**
-     * Validate that the reassembled multipart-split file matches the whole-file size + CRC
-     * stamped onto the terminal segment's extraField at backup time.
-     *
-     * @param string $filePath            Reassembled file on disk.
-     * @param string $pathForErrorLogging Identifiable path for error messages.
-     * @return void
-     * @throws FileValidationException
-     */
+
+
+
+
+
+
+
+
+
     private function validateMultipartReassembledFile(string $filePath, string $pathForErrorLogging)
     {
         if (!$this->indexLineDto instanceof FileHeader) {
@@ -691,10 +691,10 @@ abstract class AbstractExtractor
 
         $tailMeta = $this->indexLineDto->getMultipartTailMetadata();
         if ($tailMeta === null) {
-            // Producer didn't include the metadata (older backup format predating this change,
-            // or a producer-side bug). Don't fail the restore over a missing optional check;
-            // we still know the bytes appended successfully because per-segment writes return
-            // their byte counts. Log so operators can surface the gap.
+ 
+ 
+ 
+ 
             $this->debugLog('Multipart-split file missing whole-file integrity metadata; skipping verification: ' . $pathForErrorLogging);
             return;
         }
@@ -725,16 +725,16 @@ abstract class AbstractExtractor
         }
     }
 
-    /**
-     * Validate the segment slice that was appended for the current multipart index entry.
-     * The destination file may already contain earlier segments, so regular FileHeader
-     * validation cannot be used directly.
-     *
-     * @param string $filePath
-     * @param string $pathForErrorLogging
-     * @return void
-     * @throws FileValidationException
-     */
+
+
+
+
+
+
+
+
+
+
     private function validateMultipartSegment(string $filePath, string $pathForErrorLogging)
     {
         if (!$this->indexLineDto instanceof FileHeader) {
@@ -795,19 +795,19 @@ abstract class AbstractExtractor
         }
     }
 
-    /**
-     * @see https://github.com/wp-staging/wp-staging-pro/issues/4150
-     * @see https://github.com/wp-staging/wp-staging-pro/issues/4152
-     * @param string $dataToFix
-     * @return string
-     */
+
+
+
+
+
+
     public function maybeRepairMultipleHeadersIssue(string $dataToFix): string
     {
-        /**
-         * @var FileHeader $fileHeader
-         */
+
+
+
         $fileHeader = $this->indexLineDto;
-        // If the file header is found in the data, remove it (this will only remove header from uncompressed file)
+ 
         if (strpos($dataToFix, $fileHeader->getFileHeader()) !== false) {
             $count = substr_count($dataToFix, $fileHeader->getFileHeader());
             $this->extractingFile->addHeaderBytesRemoved($count * ($fileHeader->getDynamicHeaderLength() + 1));
@@ -815,15 +815,15 @@ abstract class AbstractExtractor
             return str_replace($fileHeader->getFileHeader() . "\n", '', $dataToFix);
         }
 
-        // Return early if the file is not compressed because the fix for uncompressed file is already applied above
+ 
         if (!$fileHeader->getIsCompressed()) {
             return $dataToFix;
         }
 
-        /**
-         * If the uncompressed file header is found in the data of compressed file, remove it
-         * Required for : https://github.com/wp-staging/wp-staging-pro/issues/4241
-         */
+
+
+
+
         if (strpos($dataToFix, $fileHeader->getUncompressedFileHeader()) !== false) {
             $count = substr_count($dataToFix, $fileHeader->getUncompressedFileHeader());
             $this->extractingFile->addHeaderBytesRemoved($count * ($fileHeader->getDynamicHeaderLength() + 1));
@@ -834,19 +834,19 @@ abstract class AbstractExtractor
         return $dataToFix;
     }
 
-    /**
-     * file_put_contents doesn't release the resource properly. This is a workaround to release the resource properly
-     * @see https://github.com/wp-staging/wp-staging-pro/issues/2868
-     * @param string $filePath
-     * @param string $content
-     * @return bool
-     */
+
+
+
+
+
+
+
     private function filePutContents(string $filePath, string $content): bool
     {
         if ($fp = fopen($filePath, 'wb')) {
             $bytes = fwrite($fp, $content);
             fclose($fp);
-            $fp = null; // This is important to release the resource properly
+            $fp = null; 
             return $bytes;
         }
 

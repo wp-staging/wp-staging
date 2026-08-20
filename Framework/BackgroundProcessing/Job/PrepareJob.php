@@ -1,10 +1,10 @@
 <?php
 
-/**
- * DRY the logic needed to prepare a job for background processing.
- *
- * @package WPStaging\Framework\BackgroundProcessing\Job
- */
+
+
+
+
+
 
 namespace WPStaging\Framework\BackgroundProcessing\Job;
 
@@ -27,69 +27,69 @@ use WPStaging\Framework\Utils\Times;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class PrepareJob
- *
- * @package WPStaging\Framework\BackgroundProcessing\Job
- *
- */
+
+
+
+
+
+
 abstract class PrepareJob
 {
     use ResourceTrait;
     use QueueActionAware;
 
-    /**
-     * Fired both as an internal hook, which holds a single listener, and as an
-     * ordinary WordPress action, which holds any number of them.
-     * @var string
-     */
+
+
+
+
+
     const ACTION_JOB_FAILURE = 'wpstg_background_job_failure';
 
-    /** @var AbstractJob */
+ 
     protected $job;
 
-    /**
-     * @var AjaxPrepareJob
-     */
+
+
+
     private $ajaxPrepareJob;
 
-    /**
-     * A reference to the instance of the Queue manager the class should use for processing.
-     *
-     * @var Queue
-     */
+
+
+
+
+
     private $queue;
 
-    /** @var ProcessLock */
+ 
     private $processLock;
 
-    /**
-     * The ID of the Action last inserted in the Queue by this class.
-     *
-     * Note: the Action ID is a transient, per-instance, value that will NOT be carried over from instance
-     * to instance of this class during requests.
-     *
-     * @var int|null
-     */
+
+
+
+
+
+
+
+
     private $lastQueuedActionId;
 
-    /** @var Times */
+ 
     private $times;
 
-    /**
-     * @var bool
-     */
+
+
+
     private $handlingError = false;
 
-    /**
-     * @param AjaxPrepareJob $ajaxPrepareJob A reference to the object currently handling
-     *                                          AJAX job preparation requests.
-     * @param Queue          $queue          A reference to the instance of the Queue manager the class
-     *                                          should use for processing.
-     * @param ProcessLock    $processLock    A reference to the Process Lock manager the class should use
-     *                                          to prevent concurrent processing of the job requests.
-     * @param Times          $times          A reference to the Times utility class.
-     */
+
+
+
+
+
+
+
+
+
     public function __construct(AjaxPrepareJob $ajaxPrepareJob, Queue $queue, ProcessLock $processLock, Times $times)
     {
         $this->ajaxPrepareJob = $ajaxPrepareJob;
@@ -98,13 +98,13 @@ abstract class PrepareJob
         $this->times          = $times;
     }
 
-    /**
-     * @param array<string,mixed>|null $data Either a map of the data to prepare this job with, or
-     *                                       `null` to use the default job settings.
-     *
-     * @return string|WP_Error Either the Background Processing Job identifier for this job task, or
-     *                         an error instance detailing the cause of the failure.
-     */
+
+
+
+
+
+
+
     public function prepare($data = null)
     {
         $data = empty($data) ? [] : (array)$data;
@@ -120,7 +120,7 @@ abstract class PrepareJob
 
             $this->queueAction($data);
 
-            // Let convert stalled actions to canceled
+ 
             $this->queue->markDanglingAs(Queue::STATUS_CANCELED, $this->queue->getStalledBreakpointDate(), Queue::SET_UPDATED_AT_TO_NOW);
 
             return $jobId;
@@ -129,14 +129,14 @@ abstract class PrepareJob
         }
     }
 
-    /**
-     * Queues the Background Processing Action required to move this job forward.
-     *
-     * @param array $jobId The identifier of all the Actions part of this job processing.
-     *
-     * @throws QueueException If there is an issue enqueueing the background processing action required by the
-     *                        job prepare.
-     */
+
+
+
+
+
+
+
+
     private function queueAction($args)
     {
         if (!isset($args['jobId'])) {
@@ -154,29 +154,27 @@ abstract class PrepareJob
         $this->lastQueuedActionId = $actionId;
     }
 
-    /**
-     * This method is the one the Queue will invoke to move this job processing forward.
-     *
-     * This method will either end the background processing (on completion or failure), or
-     * enqueue a new Action in the background processing system to keep running this job.
-     *
-     * @param string $jobId The identifier of all the Actions part of this job processing.
-     *
-     * @return WP_Error|TaskResponseDto Either a reference to the updated job task status, or a reference
-     *                                  to the Error instance detailing the reasons of the failure.
-     * @throws QueueException
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     public function act($args)
     {
         $jobIdForLog = isset($args['jobId']) ? (string)$args['jobId'] : 'unknown';
         debug_log('[BG Queue] act() start: jobId=' . $jobIdForLog . ' class=' . static::class, 'info', false);
 
         try {
-            // Held for the whole request, not merely checked, and never released early: the job
-            // state is hydrated, executed and persisted below, the job persists itself again on
-            // shutdown, and only one worker may own that unit of work. Releasing at any exit
-            // before shutdown would let a successor persist newer state that this request's own
-            // shutdown write then rolls back.
+ 
+ 
+ 
             $this->processLock->lockProcess();
         } catch (ProcessLockedException $e) {
             $this->queueAction($args);
@@ -190,24 +188,24 @@ abstract class PrepareJob
         $args['isInit']  = false;
         $taskResponseDto = null;
 
-        // Serialising the whole job DTO on every background request costs a json_encode and
-        // a log write for output nobody reads unless they are debugging, and it is what makes
-        // the debug log grow into megabytes over a long restore. Guard the encode itself:
-        // debug_log() discards 'debug' output, but the argument is built either way.
+ 
+ 
+ 
+ 
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             debug_log('[Schedule Job Data DTO]: ' . json_encode($this->job->getJobDataDto()), 'debug', false);
         }
 
         do {
             try {
-                /** @see WPStaging\Framework\Job\AbstractJob::prepareAndExecute() */
+ 
                 $taskResponseDto = $this->job->prepareAndExecute();
                 $this->job->persist();
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
             } catch (ProcessLockedException $e) {
-                // Another worker won the lock for this step (e.g. a wp-cron request racing the
-                // loopback). Re-queue and let the winning worker carry the job forward, instead of
-                // failing the whole job on a transient contention.
+ 
+ 
+ 
                 $this->queueAction($args);
 
                 debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=process-locked-midrun (re-queued)', 'info', false);
@@ -223,7 +221,7 @@ abstract class PrepareJob
             }
 
             if ($this->isJobCancelled($args)) {
-                return new WP_Error(499, 'Job cancelled by user.'); // 499 Client Closed Request: This unofficial but widely used Nginx-specific status code
+                return new WP_Error(499, 'Job cancelled by user.'); 
             }
 
             $errorMessage = $this->getLastErrorMessage();
@@ -235,58 +233,59 @@ abstract class PrepareJob
             }
 
             if (!$taskResponseDto->isRunning()) {
-                // Cleanup the pending/ready actions for this scheduleId.
+ 
                 if (array_key_exists('scheduleId', $args)) {
                     $this->queue->cleanupActionsByScheduleId($args['scheduleId'], [Queue::STATUS_READY]);
                 }
 
-                // We're finished, get out and bail.
+ 
                 return $taskResponseDto;
             }
 
             $this->job->commitLogs();
         } while (!$this->isThreshold());
 
-        // Check if canceled in the meantime
+ 
         if ($this->isJobCancelled($args)) {
-            return new WP_Error(499, 'Job cancelled by user.'); // 499 Client Closed Request: This unofficial but widely used Nginx-specific status code
+            return new WP_Error(499, 'Job cancelled by user.'); 
         }
 
-        // We're not done, queue a new Action to keep processing this job if it is not cancelled.
+ 
         $this->queueAction($args);
+        $this->processLock->unlockProcess();
 
         debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=chunk-done (re-queued)', 'info', false);
         return $taskResponseDto;
     }
 
-    /**
-     * Returns the ID of the last Background Processing Action queued by this class, if any.
-     *
-     * @return int|null The ID of the last Background Processing Action queued by this class, if any.
-     */
+
+
+
+
+
     public function getLastQueuedActionId()
     {
         return $this->lastQueuedActionId;
     }
 
-    /**
-     * Commits the current Job status to the database.
-     *
-     * This method is a proxy to the Ajax Prepare handler own `commit` method.
-     *
-     * @return bool Whether the commit was successful, in terms of intended state, or not.
-     */
+
+
+
+
+
+
+
     public function persist()
     {
         return $this->ajaxPrepareJob->persist();
     }
 
-    /**
-     * Returns the Job ID of the last Queue action queued by the Job.
-     *
-     * @return string|null Either the Job ID of the last Action queued by the Job, or `null` if the
-     *                     Job did not queue any Action yet.
-     */
+
+
+
+
+
+
     public function getQueuedJobId()
     {
         if (empty($this->lastQueuedActionId)) {
@@ -314,16 +313,16 @@ abstract class PrepareJob
         return 'BackgroundJob';
     }
 
-    /**
-     * Persists the response DTO to the Action custom field, if possible.
-     *
-     * @param Action|null          $action A reference to the Action object currently being processed, or `null` if
-     *                                     the current Action being processed is not available.
-     * @param TaskResponseDto|null $dto    A reference to the current task DTO, or `null` if not available.
-     *
-     * @return void The method does not return any value and will have the side effect of
-     *              persisting the task DTO to the Action custom field.
-     */
+
+
+
+
+
+
+
+
+
+
     private function persistDtoToAction($action = null, $dto = null)
     {
         try {
@@ -338,15 +337,15 @@ abstract class PrepareJob
                 debug_log($errorMessage);
             }
         } catch (Exception $e) {
-            // We could be doing this in the context of Exception handling, let's not throw one more.
+ 
         }
     }
 
-    /**
-     * @param string $errorMessage
-     * @param array $args
-     * @return void
-     */
+
+
+
+
+
     protected function handleError(string $errorMessage, array $args = [])
     {
         $body = '';
@@ -363,9 +362,9 @@ abstract class PrepareJob
             $date->setTimestamp($jobDataDto->getStartTime());
         }
 
-        // Defensive: `_n()` inside getHumanReadableDuration can trigger JIT textdomain
-        // loading, which may re-crash on the same third-party autoload that caused
-        // the error. Fall back to a raw-seconds label so error reporting always completes.
+ 
+ 
+ 
         try {
             $jobDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
         } catch (\Throwable $e) {
@@ -377,10 +376,10 @@ abstract class PrepareJob
         $body .= 'Job ID: ' . $args['jobId'] . PHP_EOL . PHP_EOL;
         $body .= 'Error Message: ' . $errorMessage;
 
-        /**
-         * @todo: Decouple email reporting from BackupScheduler as we now use it for all jobs
-         * @var BackupScheduler $backupScheduler
-         */
+
+
+
+
         $backupScheduler = WPStaging::make(BackupScheduler::class);
         $title = $this->getIsBackupJob() ? '' : esc_html__('WP Staging - Error Report', 'wp-staging');
         $backupScheduler->sendErrorReport($body, $title);
@@ -399,9 +398,9 @@ abstract class PrepareJob
         $jobTransientCache->failJob('', $errorMessage);
     }
 
-    /**
-     * @return string|false Return error message. If there is no error message, return false
-     */
+
+
+
     private function getLastErrorMessage()
     {
         $currentTask = $this->job === null ? null : $this->job->getCurrentTask();
@@ -440,9 +439,9 @@ abstract class PrepareJob
             return '';
         }
 
-        // The logger only has a file name once setFileName() has run. Returning it raw
-        // from a string-typed method turns a task that never got one into a TypeError,
-        // which kills the request before it can respond and surfaces as "No response".
+ 
+ 
+ 
         return (string)$this->job->getCurrentTask()->getLogger()->getFileName();
     }
 

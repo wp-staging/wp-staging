@@ -2,11 +2,11 @@
 
 namespace WPStaging\Framework\Traits;
 
-/**
- * Useful in standalone tool
- * Trait WindowsOsTrait
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
 trait WindowsOsTrait
 {
     public function isWindowsOs(): bool

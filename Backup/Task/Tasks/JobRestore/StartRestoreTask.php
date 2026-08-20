@@ -10,15 +10,15 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Backup\Task\FileRestoreTask;
 
-/**
- * @todo register analytics event and cleaning here
- */
+
+
+
 class StartRestoreTask extends RestoreTask
 {
-    /**
-     * List of filters that are boolean
-     * @var array<string,string>
-     */
+
+
+
+
     const BOOLEAN_FILTERS = [
         CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA                 => 'Keep Existing Media',
         RestorePluginsTask::FILTER_KEEP_EXISTING_PLUGINS                   => 'Keep Existing Plugins',
@@ -31,18 +31,18 @@ class StartRestoreTask extends RestoreTask
         RestoreOtherFilesInWpContentTask::FILTER_KEEP_EXISTING_OTHER_FILES => 'Keep Existing Other Files',
     ];
 
-    /**
-     * List of filters that has string value
-     * @var array<string,string>
-     */
+
+
+
+
     const STRING_FILTERS = [
         DatabaseImporter::CUSTOM_TMP_PREFIX_FILTER => 'Temporary Database Prefix',
     ];
 
-    /**
-     * List of filters that has array value
-     * @var array<string,string>
-     */
+
+
+
+
     const ARRAY_FILTERS = [
         RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS                                    => 'Exclude Backup Parts',
         CleanExistingMediaTask::FILTER_EXCLUDE_MEDIA_DURING_CLEANUP                 => 'Exclude Media During Cleanup',
@@ -90,9 +90,9 @@ class StartRestoreTask extends RestoreTask
         return $this->generateResponse();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function writeRestoreFiltersUsed()
     {
         $this->logger->info('Restore Related Filters:');
@@ -111,11 +111,11 @@ class StartRestoreTask extends RestoreTask
         }
     }
 
-    /**
-     * @param string $filterName
-     * @param mixed $defaultValue
-     * @return mixed
-     */
+
+
+
+
+
     private function getFilterValue(string $filterName, $defaultValue = null)
     {
         if (!has_filter($filterName)) {
@@ -125,12 +125,12 @@ class StartRestoreTask extends RestoreTask
         return Hooks::applyFilters($filterName, $defaultValue);
     }
 
-    /**
-     * @param $filterName
-     * @param $filterText
-     * @param $defaultValue
-     * @return void
-     */
+
+
+
+
+
+
     private function normalizeAndAppendLogs($filterName, $filterText, $defaultValue = '')
     {
         $filterValue = $this->getFilterValue($filterName, $defaultValue);

@@ -15,131 +15,131 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
 class Directory implements DirectoryInterface
 {
-    /**
-     * Staging site directory name, used when ABSPATH is not writeable
-     * @var string
-     */
+
+
+
+
     const STAGING_SITE_DIRECTORY = 'wp-staging-sites';
 
-    /**
-     * Used during PUSH, to avoid conflicts with existing plugins
-     * @var string
-     */
+
+
+
+
     const TMP_PLUGINS_DIRECTORY = 'wpstg-tmp-plugins';
 
-    /**
-     * Used during PUSH, to avoid conflicts with existing themes
-     * @var string
-     */
+
+
+
+
     const TMP_THEMES_DIRECTORY = 'wpstg-tmp-themes';
 
-    /** @var string */
+ 
     const FILTER_CACHE_DIRECTORY = 'wpstg.directory.cacheDirectory';
 
-    /** @var string */
+ 
     const FILTER_PLUGIN_UPLOADS_DIRECTORY = 'wpstg.directory.pluginUploadsDirectory';
 
-    /** @var string */
+ 
     const FILTER_PLUGIN_WP_CONTENT_DIRECTORY = 'wpstg.directory.pluginWpContentDirectory';
 
-    /** @var string */
+ 
     const FILTER_CLONE_EXCLUDED_FOLDERS = 'wpstg_clone_excl_folders';
 
-    /** @var string */
+ 
     const FILTER_CLONE_MU_EXCLUDED_FOLDERS = 'wpstg_clone_mu_excl_folders';
 
-    /** @var string */
+ 
     const FILTER_GET_UPLOAD_DIR = 'wpstg_get_upload_dir';
 
-    /** Default "bigger than" file size limit in MB, applied by the copy and the size estimate. */
+ 
     const DEFAULT_MAX_FILE_SIZE_MB = 8;
 
-    /** @var string|null The directory that holds the uploads, usually wp-content/uploads */
+ 
     protected $uploadDir;
 
-    /** @var string|null The directory that holds the WP STAGING cache directory, usually wp-content/uploads/wp-staging/cache */
+ 
     protected $cacheDirectory;
 
-    /** @var string|null The directory that holds the WP STAGING backup tmp directory, usually wp-content/wp-staging/tmp/restore */
+ 
     protected $tmpDirectory;
 
-    /** @var string|null The directory that holds the WP STAGING logs directory, usually wp-content/uploads/wp-staging/logs */
+ 
     protected $logDirectory;
 
-    /** @var string|null The directory that holds the WP STAGING backup directory, usually wp-content/uploads/wp-staging/backups */
+ 
     protected $backupDirectory;
 
-    /** @var string|null The directory that holds the WP STAGING data directory inside uploads folder, usually wp-content/uploads/wp-staging */
+ 
     protected $pluginUploadsDirectory;
 
-    /** @var string|null The directory that holds the WP STAGING data directory directly inside wp-content, usually wp-content/wp-staging */
+ 
     protected $pluginWpContentDirectory;
 
-    /** @var string|null The directory that holds the plugins, usually wp-content/plugins */
+ 
     protected $pluginsDir;
 
-    /** @var string|null The directory that holds the mu-plugins, usually wp-content/mu-plugins */
+ 
     protected $muPluginsDir;
 
-    /** @var array|null An array of directories that holds themes, usually ['wp-content/themes'] */
+ 
     protected $themesDirs;
 
-    /** @var string|null The directory that holds the currently active theme, usually wp-content/themes */
+ 
     protected $activeThemeParentDir;
 
-    /** @var array|null An array of default directories, such as ['wp-content/themes/', 'wp-content/plugins/', 'wp-content/mu-plugins/', 'wp-content/uploads/'] */
+ 
     protected $defaultWordPressFolders;
 
-    /** @var string|null The directory that points to the wp-content folder, usually wp-content/ */
+ 
     protected $wpContentDirectory;
 
-    /** @var string|null The directory that points to the wp-includes folder, usually wp-includes/ */
+ 
     protected $wpIncludesDirectory;
 
-    /** @var string|null The directory that points to the wp-admin folder, usually wp-admin/ */
+ 
     protected $wpAdminDirectory;
 
-    /** @var string|null The directory that points to the languages folder, usually wp-content/languages/ */
+ 
     protected $langDir;
 
-    /** @var string|null The directory that points to the ABSPATH folder */
+ 
     protected $absPath;
 
-    /** @var string|null The directory that points to main site uploads folder, usually wp-content/uploads */
+ 
     protected $mainSiteUploadsDir;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var Strings */
+ 
     protected $strUtils;
 
-    /** @var string|null The directory that points to the temp directory for downloads */
+ 
     protected $downloadsDirectory;
 
-    /** @var string The directory that stores the sse events cache used for background logging */
+ 
     protected $sseCacheDirectory = '';
 
-    /**
-     * @var string
-     */
+
+
+
     private $stagingSiteUrl;
 
-    /**
-     * @var Urls
-     */
+
+
+
     private $urls;
 
-    /**
-     * @var array
-     */
+
+
+
     private $errors = [];
 
-    /**
-     * @param Filesystem $filesystem
-     * @param Strings $strings
-     * @param Urls $urls
-     */
+
+
+
+
+
     public function __construct(Filesystem $filesystem, Strings $strings, Urls $urls)
     {
         $this->filesystem = $filesystem;
@@ -147,43 +147,43 @@ class Directory implements DirectoryInterface
         $this->urls       = $urls;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function clearErrors()
     {
         $this->errors = [];
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     public function getErrors(): array
     {
         return $this->errors;
     }
 
-    /**
-     * Try to get a staging site main directory inside:
-     * wp-content/wp-staging-sites or wp-content/uploads/wp-staging-sites
-     *
-     * @param bool $createDir if true create dir if it does not exist
-     *
-     * @return bool|string false if dir is not writable otherwise return the full path of staging sites dir.
-     */
+
+
+
+
+
+
+
+
     public function getStagingSiteDirectoryInsideWpcontent(bool $createDir = true)
     {
-        // Try wp-content/wp-staging-sites
+ 
         $baseDir              = WP_CONTENT_DIR;
         $this->stagingSiteUrl = trailingslashit(WP_CONTENT_URL) . self::STAGING_SITE_DIRECTORY;
 
-        // wp-content/wp-staging-sites is not writeable. Try wp-content/uploads/wp-staging-sites
+ 
         if (!is_writable($baseDir)) {
             $baseDir              = $this->getUploadsDirectory();
             $this->stagingSiteUrl = trailingslashit($this->urls->getUploadsUrl()) . self::STAGING_SITE_DIRECTORY;
         }
 
-        // wp-content/uploads/wp-staging-sites is not writeable as well
+ 
         if (!is_writable($baseDir)) {
             $this->stagingSiteUrl = '';
             return false;
@@ -197,18 +197,18 @@ class Directory implements DirectoryInterface
         return $stagingSiteDir;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getStagingSiteUrl(): string
     {
         return $this->stagingSiteUrl;
     }
 
-    /**
-     * @noinspection PhpUnused
-     * @return string
-     */
+
+
+
+
     public function getCacheDirectory(): string
     {
         if (isset($this->cacheDirectory)) {
@@ -222,10 +222,10 @@ class Directory implements DirectoryInterface
         return $this->cacheDirectory;
     }
 
-    /**
-     * @return string
-     * @throws Exception
-     */
+
+
+
+
     public function getTmpDirectory(): string
     {
         if (isset($this->tmpDirectory)) {
@@ -235,20 +235,20 @@ class Directory implements DirectoryInterface
         $this->tmpDirectory = trailingslashit(wp_normalize_path($this->getPluginWpContentDirectory() . JobRestore::TMP_DIRECTORY));
 
         try {
-            // Ensure parent tmp directory has correct permissions
-            // The path is wp-content/wp-staging/tmp/restore/, so we need to fix wp-content/wp-staging/tmp/
+ 
+ 
             $parentTmpDir = trailingslashit($this->getPluginWpContentDirectory() . 'tmp');
             $this->ensureDirectoryPermissions($parentTmpDir);
 
-            // Create directory if it doesn't exist
+ 
             if (!file_exists($this->tmpDirectory)) {
                 wp_mkdir_p($this->tmpDirectory);
             }
 
-            // Ensure the full tmp directory has correct permissions
+ 
             $this->ensureDirectoryPermissions($this->tmpDirectory);
 
-            // Final validation
+ 
             if (!is_readable($this->tmpDirectory)) {
                 throw new Exception(sprintf('Temporary directory is not readable: %s', $this->tmpDirectory));
             }
@@ -263,9 +263,9 @@ class Directory implements DirectoryInterface
         return $this->tmpDirectory;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getLogDirectory(): string
     {
         if (isset($this->logDirectory)) {
@@ -277,9 +277,9 @@ class Directory implements DirectoryInterface
         return $this->logDirectory;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getSseCacheDirectory(): string
     {
         if (!empty($this->sseCacheDirectory)) {
@@ -291,9 +291,9 @@ class Directory implements DirectoryInterface
         return $this->sseCacheDirectory;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getBackupDirectory(): string
     {
         if (isset($this->backupDirectory)) {
@@ -305,17 +305,17 @@ class Directory implements DirectoryInterface
         return $this->backupDirectory;
     }
 
-    /**
-     * @param bool $refresh
-     * @return string
-     */
+
+
+
+
     public function getPluginUploadsDirectory(bool $refresh = false): string
     {
         if (isset($this->pluginUploadsDirectory) && !$refresh) {
             return $this->pluginUploadsDirectory;
         }
 
-        /** This is deprecated filter and its value should always be replaced by newer filter */
+ 
         $pluginUploadsDir = Hooks::applyFilters(self::FILTER_GET_UPLOAD_DIR, wp_normalize_path($this->getUploadsDirectory($refresh) . WPSTG_PLUGIN_DOMAIN));
         $pluginUploadsDir = Hooks::applyFilters(self::FILTER_PLUGIN_UPLOADS_DIRECTORY, $pluginUploadsDir);
 
@@ -324,12 +324,12 @@ class Directory implements DirectoryInterface
         return $this->pluginUploadsDirectory;
     }
 
-    /**
-     * Directories always excluded from staging and push operations, regardless of user selection.
-     *
-     * @param bool $applyFilter When true 'Directory::FILTER_CLONE_EXCLUDED_FOLDERS' filter is applied.
-     * @return string[]
-     */
+
+
+
+
+
+
     public function getDefaultExcludedDirectories(bool $applyFilter = true): array
     {
         $backupUploadsDirPostfix = '.wpstg_backup';
@@ -352,11 +352,11 @@ class Directory implements DirectoryInterface
         return $this->ensureWpStagingDataDirectoriesExcluded($dirs);
     }
 
-    /**
-     * WP STAGING data directories that cloning and estimates must never include.
-     *
-     * @return string[]
-     */
+
+
+
+
+
     public function getWpStagingDataDirectories(): array
     {
         return [
@@ -365,30 +365,30 @@ class Directory implements DirectoryInterface
         ];
     }
 
-    /**
-     * @param string[] $directories
-     * @return string[]
-     */
+
+
+
+
     public function ensureWpStagingDataDirectoriesExcluded(array $directories): array
     {
         return array_values(array_unique(array_merge($directories, $this->getWpStagingDataDirectories())));
     }
 
-    /**
-     * File extensions that staging and push never copy.
-     * Size estimates must skip them too, so they match the real copy.
-     *
-     * @param string[] $additionalExtensions Extra extensions to add to the list.
-     * @return string[]
-     */
+
+
+
+
+
+
+
     public function getExcludedFileExtensions(array $additionalExtensions = []): array
     {
         return array_merge($additionalExtensions, ['log', 'tmp', 'wpstg']);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getPluginWpContentDirectory(): string
     {
         if (isset($this->pluginWpContentDirectory)) {
@@ -403,19 +403,19 @@ class Directory implements DirectoryInterface
         return $this->pluginWpContentDirectory;
     }
 
-    /**
-     * Absolute Path to Upload URL of current single site / network site
-     * @param bool $refresh
-     * @return string
-     */
+
+
+
+
+
     public function getUploadsDirectory(bool $refresh = false): string
     {
         if ($this->uploadDir && !$refresh) {
             return $this->uploadDir;
         }
 
-        // Get absolute path to wordpress uploads directory e.g /var/www/wp-content/uploads/
-        // Default is ABSPATH . 'wp-content/uploads', but it can be customized by the db option upload_path or the constant UPLOADS
+ 
+ 
         $uploadDir = wp_upload_dir(null, false)['basedir'];
 
         $this->uploadDir = trim(trailingslashit(wp_normalize_path($uploadDir)));
@@ -432,11 +432,11 @@ class Directory implements DirectoryInterface
         return str_replace($this->getAbsPath(), '', $this->uploadDir);
     }
 
-    /**
-     * If multisite, return the main site uploads directory
-     * If single site, return the uploads directory
-     * @return string
-     */
+
+
+
+
+
     public function getMainSiteUploadsDirectory(): string
     {
         if (isset($this->mainSiteUploadsDir)) {
@@ -458,9 +458,9 @@ class Directory implements DirectoryInterface
         return $this->mainSiteUploadsDir;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getDefaultWordPressFolders(): array
     {
         if (!isset($this->defaultWordPressFolders)) {
@@ -477,7 +477,7 @@ class Directory implements DirectoryInterface
                 $this->defaultWordPressFolders[] = $this->getMainSiteUploadsDirectory();
             }
 
-            // For edge cases when actual uploads is within wp-content/uploads/some-uploads-dir i.e. subsites clones
+ 
             $baseUploadsFolder = trailingslashit($this->getWpContentDirectory() . 'uploads');
             if (!in_array($baseUploadsFolder, $this->defaultWordPressFolders)) {
                 $this->defaultWordPressFolders[] = $baseUploadsFolder;
@@ -487,9 +487,9 @@ class Directory implements DirectoryInterface
         return $this->defaultWordPressFolders;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getPluginsDirectory(): string
     {
         if (!isset($this->pluginsDir)) {
@@ -499,9 +499,9 @@ class Directory implements DirectoryInterface
         return $this->pluginsDir;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getMuPluginsDirectory(): string
     {
         if (!isset($this->muPluginsDir)) {
@@ -511,47 +511,47 @@ class Directory implements DirectoryInterface
         return $this->muPluginsDir;
     }
 
-    /**
-     * Get the relative path to the plugins directory (relative to ABSPATH)
-     *
-     * @return string
-     */
+
+
+
+
+
     public function getRelativePluginsDirectory(): string
     {
         return str_replace($this->getAbsPath(), '', $this->getPluginsDirectory());
     }
 
-    /**
-     * Get the relative path to the mu-plugins directory (relative to ABSPATH)
-     *
-     * @return string
-     */
+
+
+
+
+
     public function getRelativeMuPluginsDirectory(): string
     {
         return str_replace($this->getAbsPath(), '', $this->getMuPluginsDirectory());
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getPluginsTmpDirectory(): string
     {
         return $this->getWpContentDirectory() . trailingslashit(self::TMP_PLUGINS_DIRECTORY);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getThemesTmpDirectory(): string
     {
         return $this->getWpContentDirectory() . trailingslashit(self::TMP_THEMES_DIRECTORY);
     }
 
-    /**
-     * @throws \RuntimeException
-     *
-     * @return array
-     */
+
+
+
+
+
     public function getAllThemesDirectories(): array
     {
         if (!isset($this->themesDirs)) {
@@ -563,20 +563,20 @@ class Directory implements DirectoryInterface
                 throw new \RuntimeException('Could not get the themes directories.');
             }
 
-            /*
-             * [
-             *  'foo' => '/var/www/single/wp-content/themes',
-             *  'bar' => '/var/www/single/wp-content/themes',
-             *  'baz' => '/var/themes'
-             * ]
-             *
-             * Becomes:
-             *
-             * [
-             *  '/var/www/single/wp-content/themes',
-             *  '/var/themes',
-             * ]
-             */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             $this->themesDirs = array_unique($this->themesDirs);
             $this->themesDirs = array_values($this->themesDirs);
         }
@@ -584,9 +584,9 @@ class Directory implements DirectoryInterface
         return $this->themesDirs;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getActiveThemeParentDirectory(): string
     {
         if (!isset($this->activeThemeParentDir)) {
@@ -596,9 +596,9 @@ class Directory implements DirectoryInterface
         return $this->activeThemeParentDir;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getLangsDirectory(): string
     {
         if (!isset($this->langDir)) {
@@ -608,9 +608,9 @@ class Directory implements DirectoryInterface
         return $this->langDir;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getAbsPath(): string
     {
         if (!isset($this->absPath)) {
@@ -620,9 +620,9 @@ class Directory implements DirectoryInterface
         return $this->absPath;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getWpContentDirectory(): string
     {
         if (!isset($this->wpContentDirectory)) {
@@ -632,9 +632,9 @@ class Directory implements DirectoryInterface
         return $this->wpContentDirectory;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getWpIncludesDirectory(): string
     {
         if (!isset($this->wpIncludesDirectory)) {
@@ -644,9 +644,9 @@ class Directory implements DirectoryInterface
         return $this->wpIncludesDirectory;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getWpAdminDirectory(): string
     {
         if (!isset($this->wpAdminDirectory)) {
@@ -656,9 +656,9 @@ class Directory implements DirectoryInterface
         return $this->wpAdminDirectory;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getWpDefaultRootDirectories(): array
     {
         return [
@@ -668,9 +668,9 @@ class Directory implements DirectoryInterface
         ];
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getWpStagingRestoreDirs(): array
     {
         return [
@@ -679,13 +679,13 @@ class Directory implements DirectoryInterface
         ];
     }
 
-    /**
-     * Check whether the given path exists in WordPress Root,
-     * Method will return true if exists in WordPress Root or is relative to WordPress root.
-     *
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
+
+
+
     public function isPathInWpRoot(string $path): bool
     {
         $path = $this->filesystem->normalizePath($path);
@@ -693,17 +693,17 @@ class Directory implements DirectoryInterface
         return file_exists($path);
     }
 
-    /**
-     * @return Filesystem
-     */
+
+
+
     public function getFileSystem(): Filesystem
     {
         return $this->filesystem;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getDownloadsDirectory(): string
     {
         if (isset($this->downloadsDirectory)) {
@@ -716,10 +716,10 @@ class Directory implements DirectoryInterface
         return $this->downloadsDirectory;
     }
 
-    /**
-    * Return true if the default backup paths has been changed by a filter and is outside abspath
-    * @return bool
-    */
+
+
+
+
     public function isBackupPathOutsideAbspath(): bool
     {
         $defaultBackupDirAbsPath = $this->getPluginUploadsDirectory() . Archiver::BACKUP_DIR_NAME;
@@ -729,14 +729,14 @@ class Directory implements DirectoryInterface
     }
 
 
-    /**
-     * Get excluded directories and map it to array
-     *
-     * @param string $directoriesRequest
-     * @param int $slashMode
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
+
     public function getExcludedDirectories(string $directoriesRequest, int $slashMode = SlashMode::NO_SLASH): array
     {
         if ((empty($directoriesRequest))) {
@@ -751,12 +751,12 @@ class Directory implements DirectoryInterface
         return $excludedDirectories;
     }
 
-    /**
-     * Get size of path
-     * @param string $path
-     * @return int
-     * @throws Exception
-     */
+
+
+
+
+
+
     public function getSize(string $path): int
     {
         $path = realpath($path);
@@ -775,16 +775,16 @@ class Directory implements DirectoryInterface
 
         $totalBytes = 0;
         try {
-            // Iterator
+ 
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS)
             );
 
-            // Loop & add file size
+ 
             foreach ($iterator as $file) {
                 try {
                     $totalBytes += $file->getSize();
-                } catch (Exception $e) { // Some invalid symbolic links can cause issues in *nix systems
+                } catch (Exception $e) { 
                     $this->errors[] = "{$file} is a symbolic link or for some reason its size is invalid";
                 }
             }
@@ -795,16 +795,16 @@ class Directory implements DirectoryInterface
         return $totalBytes;
     }
 
-    /**
-     * Different slash mode for path
-     * @param string $path
-     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
-     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
-     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
-     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
-     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
+
     private function slashit(string $path, int $mode = SlashMode::NO_SLASH): string
     {
         $path = trim(trim($path, '\\'), '/');
@@ -823,30 +823,30 @@ class Directory implements DirectoryInterface
         return $path;
     }
 
-    /**
-     * Ensures a directory exists and has correct read/write permissions
-     *
-     * @param string $directory The directory path to check and fix
-     * @return void
-     * @throws Exception If permissions cannot be set
-     */
+
+
+
+
+
+
+
     private function ensureDirectoryPermissions(string $directory)
     {
-        // Create directory if it doesn't exist
+ 
         if (!file_exists($directory)) {
             wp_mkdir_p($directory);
         }
 
-        // Check and fix permissions if directory is not readable or writable
-        // Return if permissions are already correct
+ 
+ 
         if (is_readable($directory) && is_writable($directory)) {
             return;
         }
 
-        // Use WordPress directory permission constant, or fall back to 0755
+ 
         $dirPermissions = defined('FS_CHMOD_DIR') ? FS_CHMOD_DIR : Permissions::DEFAULT_DIR_PERMISSION;
 
-        // Attempt to fix permissions
+ 
         if (!@chmod($directory, $dirPermissions)) {
             throw new Exception(
                 sprintf(

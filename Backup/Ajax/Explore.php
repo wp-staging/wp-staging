@@ -13,36 +13,36 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
-/**
- * Handles listing and extracting backup contents for the Explore & Extract feature.
- *
- * Uses ExploreCache for server-side caching of the parsed file index,
- * turning repeated folder lookups from full index scans into O(1) array reads.
- */
+
+
+
+
+
+
 class Explore extends AbstractTemplateComponent
 {
-    /**
-     * @var int
-     */
+
+
+
     const MAX_PER_PAGE = 200;
 
-    /**
-     * @var int
-     */
+
+
+
     const MAX_TREE_ITEMS = 300;
 
-    /**
-     * @var PathIdentifier
-     */
+
+
+
     private $pathIdentifier;
 
-    /** @var BackupPathResolver */
+ 
     private $backupPathResolver;
 
-    /** @var Filesystem */
+ 
     private $filesystem;
 
-    /** @var ExploreCache */
+ 
     private $exploreCache;
 
     public function __construct(
@@ -59,11 +59,11 @@ class Explore extends AbstractTemplateComponent
         $this->exploreCache       = $exploreCache;
     }
 
-    /**
-     * Combined endpoint: returns list entries + tree directories in one response
-     *
-     * @return void
-     */
+
+
+
+
+
     public function browse()
     {
         if (!$this->canRenderAjax()) {
@@ -134,9 +134,9 @@ class Explore extends AbstractTemplateComponent
         wp_send_json_success($response);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function listFiles()
     {
         if (!$this->canRenderAjax()) {
@@ -193,9 +193,9 @@ class Explore extends AbstractTemplateComponent
         ]);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function listTree()
     {
         if (!$this->canRenderAjax()) {
@@ -232,9 +232,9 @@ class Explore extends AbstractTemplateComponent
         ]);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function listDirectoryFiles()
     {
         if (!$this->canRenderAjax()) {
@@ -281,21 +281,21 @@ class Explore extends AbstractTemplateComponent
         ]);
     }
 
-    /**
-     * Get directory entries, using the cache when available (non-search queries).
-     *
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @param string $search
-     * @param string $sort
-     * @return array
-     */
+
+
+
+
+
+
+
+
+
+
     private function getDirectoryEntries(string $backupFile, BackupMetadata $metadata, string $folder, string $search, string $sort): array
     {
         $isSearching = $search !== '';
 
-        // Try cache for non-search queries
+ 
         if (!$isSearching) {
             $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
             if ($tree !== null) {
@@ -306,14 +306,14 @@ class Explore extends AbstractTemplateComponent
         return $this->getDirectoryEntriesFromIndex($backupFile, $metadata, $folder, $search, $sort);
     }
 
-    /**
-     * Read entries from the cached folder tree
-     *
-     * @param array $tree
-     * @param string $folder
-     * @param string $sort
-     * @return array
-     */
+
+
+
+
+
+
+
+
     private function getEntriesFromCache(array $tree, string $folder, string $sort): array
     {
         if (!isset($tree[$folder])) {
@@ -350,14 +350,14 @@ class Explore extends AbstractTemplateComponent
         return array_merge($directories, $files);
     }
 
-    /**
-     * Get tree directories from cache when available
-     *
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
+
+
     private function getDirectoryTree(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
         $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
@@ -368,13 +368,13 @@ class Explore extends AbstractTemplateComponent
         return $this->getDirectoryTreeFromIndex($backupFile, $metadata, $folder);
     }
 
-    /**
-     * Read tree directories from the cached folder tree
-     *
-     * @param array $tree
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
+
     private function getTreeFromCache(array $tree, string $folder): array
     {
         if (!isset($tree[$folder])) {
@@ -399,14 +399,14 @@ class Explore extends AbstractTemplateComponent
         return array_slice($result, 0, self::MAX_TREE_ITEMS);
     }
 
-    /**
-     * Get directory stats from cache when available
-     *
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
+
+
     private function getDirectoryStatsForSelection(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
         $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
@@ -417,13 +417,13 @@ class Explore extends AbstractTemplateComponent
         return $this->getDirectoryStatsFromIndex($backupFile, $metadata, $folder);
     }
 
-    /**
-     * Compute stats recursively from the cached tree
-     *
-     * @param array $tree
-     * @param string $folder
-     * @return array{count: int, size: int}
-     */
+
+
+
+
+
+
+
     private function getStatsFromCache(array $tree, string $folder): array
     {
         $count = 0;
@@ -452,14 +452,14 @@ class Explore extends AbstractTemplateComponent
         ];
     }
 
-    /**
-     * Get all files recursively from cache for directory selection
-     *
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
+
+
     private function getDirectoryFilesForSelection(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
         $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
@@ -470,13 +470,13 @@ class Explore extends AbstractTemplateComponent
         return $this->getDirectoryFilesFromIndex($backupFile, $metadata, $folder);
     }
 
-    /**
-     * Collect all files recursively from the cached tree
-     *
-     * @param array $tree
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
+
     private function getFilesFromCache(array $tree, string $folder): array
     {
         $files = [];
@@ -504,16 +504,16 @@ class Explore extends AbstractTemplateComponent
         return $files;
     }
 
-    // ── Fallback: direct index scanning (used when cache is unavailable or for search) ──
+ 
 
-    /**
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @param string $search
-     * @param string $sort
-     * @return array
-     */
+
+
+
+
+
+
+
+
     private function getDirectoryEntriesFromIndex(string $backupFile, BackupMetadata $metadata, string $folder, string $search, string $sort): array
     {
         $isSearching = $search !== '';
@@ -605,12 +605,12 @@ class Explore extends AbstractTemplateComponent
         return $this->sortFiles($files, $sort);
     }
 
-    /**
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
     private function getDirectoryTreeFromIndex(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
         $prefix = $folder === '' ? '' : trailingslashit($folder);
@@ -672,12 +672,12 @@ class Explore extends AbstractTemplateComponent
         return $directories;
     }
 
-    /**
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
     private function getDirectoryFilesFromIndex(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
         $prefix = $folder === '' ? '' : trailingslashit($folder);
@@ -718,12 +718,12 @@ class Explore extends AbstractTemplateComponent
         return $files;
     }
 
-    /**
-     * @param string $backupFile
-     * @param BackupMetadata $metadata
-     * @param string $folder
-     * @return array
-     */
+
+
+
+
+
+
     private function getDirectoryStatsFromIndex(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
         $prefix = $folder === '' ? '' : trailingslashit($folder);
@@ -765,12 +765,12 @@ class Explore extends AbstractTemplateComponent
         ];
     }
 
-    // ── Shared helpers ──
+ 
 
-    /**
-     * @param string $folder
-     * @return string
-     */
+
+
+
+
     private function normalizeFolder(string $folder): string
     {
         $folder = trim($folder);
@@ -779,11 +779,11 @@ class Explore extends AbstractTemplateComponent
         return $this->filesystem->normalizePath($folder);
     }
 
-    /**
-     * @param string $name
-     * @param string $search
-     * @return bool
-     */
+
+
+
+
+
     private function matchesSearch(string $name, string $search): bool
     {
         if ($search === '') {
@@ -792,15 +792,15 @@ class Explore extends AbstractTemplateComponent
 
         $normalizedName = basename($name);
 
-        // Search only from the beginning
+ 
         return stripos($normalizedName, $search) === 0;
     }
 
-    /**
-     * @param array $directories
-     * @param string $sort
-     * @return array
-     */
+
+
+
+
+
     private function sortDirectories(array $directories, string $sort): array
     {
         usort($directories, function ($a, $b) use ($sort) {
@@ -814,11 +814,11 @@ class Explore extends AbstractTemplateComponent
         return $directories;
     }
 
-    /**
-     * @param array $files
-     * @param string $sort
-     * @return array
-     */
+
+
+
+
+
     private function sortFiles(array $files, string $sort): array
     {
         usort($files, function ($a, $b) use ($sort) {
@@ -838,10 +838,10 @@ class Explore extends AbstractTemplateComponent
         return $files;
     }
 
-    /**
-     * @param BackupMetadata $metadata
-     * @return \WPStaging\Backup\Interfaces\IndexLineInterface
-     */
+
+
+
+
     private function createIndexLineDto(BackupMetadata $metadata)
     {
         if ($metadata->getIsBackupFormatV1()) {

@@ -2,119 +2,137 @@
 
 namespace WPStaging\Core\DTO;
 
-/**
- * Class Settings
- * @package WPStaging\Core\DTO
- */
+
+
+
+
 class Settings
 {
 
-    /**
-     * @var array
-     */
+
+
+
+    const OPTION_BACKUP_BEFORE_UPDATE_MODE = 'wpstg_backup_before_update_mode';
+
+
+
+
+
+
+    const OPTION_BACKUP_BEFORE_UPDATE_INTRO_SEEN = 'wpstg_backup_before_update_intro_seen';
+
+
+
+
     protected $_raw;
 
-    /**
-     * @var int
-     */
+
+
+
     protected $queryLimit;
 
-    /**
-     * @var int
-     */
+
+
+
     protected $querySRLimit;
 
-    /**
-     * @var int
-     */
+
+
+
     protected $fileLimit;
 
-    /**
-     * @var int
-     */
+
+
+
     protected $maxFileSize;
 
-    /**
-     * @var int
-     */
+
+
+
     protected $batchSize;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $cpuLoad;
 
-    /**
-     * @var int
-     */
+
+
+
     protected $delayRequests;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $unInstallOnDelete;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $optimizer;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $disableAdminLogin;
 
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $keepPermalinks;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $debugMode;
 
 
-    /**
-     * User roles to access the staging site
-     * @var array
-     */
+
+
+
+
     protected $userRoles = [];
 
-    /**
-     * Users with access to staging site regardless of role (comma-separated list)
-     * @var string
-     */
+
+
+
+
     protected $usersWithStagingAccess = "";
 
-    /**
-     * Color of the admin bar in hexadecimal format
-     * @var string
-     */
+
+
+
+
     protected $adminBarColor = "";
 
-    /**
-     * @var bool Enable compression for backups.
-     */
+
+
+
     protected $enableCompression;
 
-    /**
-     * Settings constructor.
-     */
+
+
+
+    protected $enableBackupBeforeUpdate;
+
+
+
+
     public function __construct()
     {
-        $this->_raw = get_option("wpstg_settings", []);
+        $stored     = get_option("wpstg_settings", []);
+        $this->_raw = $stored;
 
-        if (!empty($this->_raw)) {
-            $this->hydrate($this->_raw);
+        if (!empty($stored)) {
+            $this->hydrate($stored);
         }
     }
 
-    /**
-     * @param array|object $settings
-     * @return $this
-     */
+
+
+
+
     public function hydrate($settings = [])
     {
         $this->_raw = $settings;
@@ -133,193 +151,193 @@ class Settings
     }
 
 
-    /**
-     * @return array
-     */
+
+
+
     public function getRaw()
     {
         return $this->_raw;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getQueryLimit()
     {
         return $this->queryLimit;
     }
 
-    /**
-     * @param int $queryLimit
-     */
+
+
+
     public function setQueryLimit($queryLimit)
     {
         $this->queryLimit = $queryLimit;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getQuerySRLimit()
     {
         return $this->querySRLimit;
     }
 
-    /**
-     * @param int $querySRLimit
-     */
+
+
+
     public function setQuerySRLimit($querySRLimit)
     {
         $this->querySRLimit = $querySRLimit;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getFileLimit()
     {
         return $this->fileLimit;
     }
 
-    /**
-     * @param int $fileLimit
-     */
+
+
+
     public function setFileLimit($fileLimit)
     {
         $this->fileLimit = $fileLimit;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getBatchSize()
     {
         return $this->batchSize;
     }
 
-    /**
-     * @param int $batchSize
-     */
+
+
+
     public function setBatchSize($batchSize)
     {
         $this->batchSize = $batchSize;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getCpuLoad()
     {
         return $this->cpuLoad;
     }
 
-    /**
-     * @return int
-     */
-/*    public function getDelayRequests()
-    {
-        return $this->delayRequests;
-    }*/
 
-    /**
-     * @param string $cpuLoad
-     */
+
+
+
+
+
+
+
+
+
+
     public function setCpuLoad($cpuLoad)
     {
         $this->cpuLoad = $cpuLoad;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isUnInstallOnDelete()
     {
         return ($this->unInstallOnDelete == '1');
     }
 
-    /**
-     * @param bool $unInstallOnDelete
-     */
+
+
+
     public function setUnInstallOnDelete($unInstallOnDelete)
     {
         $this->unInstallOnDelete = $unInstallOnDelete;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isOptimizer()
     {
         return ($this->optimizer == '1');
     }
 
-    /**
-     * @param bool $optimizer
-     */
+
+
+
     public function setOptimizer($optimizer)
     {
         $this->optimizer = $optimizer;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isDisableAdminLogin()
     {
         return ($this->disableAdminLogin == '1');
     }
 
-    /**
-     * @param bool $disableAdminLogin
-     */
+
+
+
     public function setDisableAdminLogin($disableAdminLogin)
     {
         $this->disableAdminLogin = $disableAdminLogin;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isDebugMode()
     {
         return ($this->debugMode == '1');
     }
 
-    /**
-     * @param bool $debugMode
-     */
+
+
+
     public function setDebugMode($debugMode)
     {
         $this->debugMode = $debugMode;
     }
 
-    /**
-     * @param array $userRoles
-     */
+
+
+
     public function setUserRoles($userRoles)
     {
         $this->userRoles = $userRoles;
     }
 
-    /**
-     * @param string $usersWithStagingAccess
-     */
+
+
+
     public function setUsersWithStagingAccess($usersWithStagingAccess)
     {
         $this->usersWithStagingAccess = $usersWithStagingAccess;
     }
 
-    /**
-     * @param string $adminBarColor
-     */
+
+
+
     public function setAdminBarColor($adminBarColor)
     {
         $this->adminBarColor = $adminBarColor;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getAdminBarColor()
     {
         return $this->adminBarColor;
@@ -335,9 +353,22 @@ class Settings
         $this->enableCompression = $enableCompression;
     }
 
-    /**
-     * Set default values for settings
-     */
+
+
+
+    public function isBackupBeforeUpdateEnabled(): bool
+    {
+        if ($this->enableBackupBeforeUpdate === null) {
+            return true;
+        }
+
+        return (bool)$this->enableBackupBeforeUpdate;
+    }
+
+
+
+
+
     public function setDefault()
     {
         if (!isset($this->_raw)) {
@@ -367,7 +398,7 @@ class Settings
             $settings->batchSize = "2";
             $settings->maxFileSize = "8";
             $settings->optimizer = "1";
-            // Save settings in form on array
+ 
             update_option('wpstg_settings', json_decode(json_encode($settings), true));
 
             return $this->hydrate($settings)->_raw;

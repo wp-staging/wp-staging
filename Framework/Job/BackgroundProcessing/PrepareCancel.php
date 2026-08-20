@@ -12,28 +12,28 @@ use WPStaging\Framework\Utils\Times;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class PrepareCancel
- * Prepares a Cancel to be executed using Background Processing.
- *
- * @package WPStaging\Framework\Job\BackgroundProcessing
- */
+
+
+
+
+
+
 class PrepareCancel extends PrepareJob
 {
-    /**
-     * @param AjaxPrepareCancel $ajaxPrepareCancel
-     * @param Queue             $queue
-     * @param ProcessLock       $processLock
-     * @param Times             $times
-     */
+
+
+
+
+
+
     public function __construct(AjaxPrepareCancel $ajaxPrepareCancel, Queue $queue, ProcessLock $processLock, Times $times)
     {
         parent::__construct($ajaxPrepareCancel, $queue, $processLock, $times);
     }
 
-    /**
-     * Returns the default data configuration that will be used to prepare a cancel job
-     */
+
+
+
     public function getDefaultDataConfiguration(): array
     {
         return [

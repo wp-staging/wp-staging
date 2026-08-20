@@ -21,12 +21,12 @@ use WPStaging\Staging\CloneOptions;
  * @see Scan::start For details on $options.
  */
 
-// By default symlink option is unchecked
+ 
 $uploadsSymlinked = false;
 
-/**
- * Used for overwriting the default destination path and destination hostname via hook
- */
+
+
+
 $directory = WPStaging::getWPpath();
 $customDir = $directory;
 
@@ -37,14 +37,14 @@ if (is_multisite() && !SUBDOMAIN_INSTALL) {
 }
 $customHostname = $hostname;
 
-// Apply Filters in only PRO version
+ 
 if ($isPro) {
     $hostname       = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_HOSTNAME, $hostname);
     $customHostname = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_HOSTNAME, '');
     $directory      = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_DIR, $directory);
     $customDir      = Hooks::applyFilters(CloneOptions::FILTER_CLONING_TARGET_DIR, '');
 } else {
-    // Disable pro settings when not PRO version
+ 
     $customDir           = '';
     $customHostname      = '';
 }

@@ -9,21 +9,21 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 abstract class BaseListing extends AbstractTemplateComponent
 {
-    /**
-     * @var Directory
-     */
+
+
+
     protected $directory;
 
-    /**
-     * @var BackupScheduler
-     */
+
+
+
     protected $backupScheduler;
 
-    /**
-     * @param BackupScheduler $backupScheduler
-     * @param Directory $directory
-     * @param TemplateEngine $templateEngine
-     */
+
+
+
+
+
     public function __construct(BackupScheduler $backupScheduler, Directory $directory, TemplateEngine $templateEngine)
     {
         parent::__construct($templateEngine);
@@ -31,9 +31,9 @@ abstract class BaseListing extends AbstractTemplateComponent
         $this->directory = $directory;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getDirectories(): array
     {
         return [
@@ -46,9 +46,9 @@ abstract class BaseListing extends AbstractTemplateComponent
         ];
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getCommonRenderData(): array
     {
         return [

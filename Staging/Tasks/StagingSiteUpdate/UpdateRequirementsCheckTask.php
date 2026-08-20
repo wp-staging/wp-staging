@@ -22,36 +22,36 @@ use WPStaging\Staging\Traits\WithStagingEnginePreference;
 use WPStaging\Staging\Traits\WithStagingRequirementLogs;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * Validates prerequisites before a staging site update job starts.
- */
+
+
+
 class UpdateRequirementsCheckTask extends StagingTask
 {
     use WithStagingEnginePreference;
     use WithStagingRequirementLogs;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var Database */
+ 
     protected $database;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var DiskWriteCheck */
+ 
     protected $diskWriteCheck;
 
-    /** @var AnalyticsStagingUpdate */
+ 
     protected $analyticsStagingUpdate;
 
-    /** @var SystemInfo */
+ 
     protected $systemInfo;
 
-    /** @var StagingSiteJobsDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var Sites */
+ 
     protected $sites;
 
     public function __construct(
@@ -79,25 +79,25 @@ class UpdateRequirementsCheckTask extends StagingTask
         $this->sites                  = $sites;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_site_update_requirements_check';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Requirements Check';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         if (!$this->stepsDto->getTotal()) {
@@ -131,41 +131,41 @@ class UpdateRequirementsCheckTask extends StagingTask
         return $this->generateResponse();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function logStartHeader()
     {
         $this->logger->info('#################### Start Staging Site Update Job ####################');
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function logRequirementsCheckPassed()
     {
         $this->logger->info('Staging Site update requirements passed...');
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function enqueueStartEvent()
     {
         $this->analyticsStagingUpdate->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function enqueueRequirementFailEvent()
     {
         $this->analyticsStagingUpdate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function saveStagingSite()
     {
         $stagingSites = $this->sites->tryGettingStagingSites();
@@ -173,10 +173,10 @@ class UpdateRequirementsCheckTask extends StagingTask
         $this->sites->updateStagingSites($stagingSites);
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function cannotUpdateStagingSiteOnMultisite()
     {
         if (is_multisite()) {
@@ -184,10 +184,10 @@ class UpdateRequirementsCheckTask extends StagingTask
         }
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function cannotUpdateIfCantWriteToDisk()
     {
         try {
@@ -197,10 +197,10 @@ class UpdateRequirementsCheckTask extends StagingTask
         }
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function cannotUpdateIfStagingSiteNoExists()
     {
         $stagingSitePath = $this->jobDataDto->getStagingSitePath();
@@ -209,10 +209,10 @@ class UpdateRequirementsCheckTask extends StagingTask
         }
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function cannotUpdateIfUsingExternalDatabase()
     {
         if ($this->jobDataDto->getIsExternalDatabase()) {
@@ -228,9 +228,9 @@ class UpdateRequirementsCheckTask extends StagingTask
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function writeStagingSettingsLogs()
     {
         $this->logger->info('Staging Settings:');

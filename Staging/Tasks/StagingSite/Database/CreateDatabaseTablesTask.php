@@ -18,22 +18,22 @@ use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Staging\Tasks\StagingTask;
 
-/**
- * This class is responsible for creating empty database tables on the staging site.
- * This class is used during staging site create and reset operations.
- * @see PrepareStagingSiteTablesTask for staging site update.
- */
+
+
+
+
+
 class CreateDatabaseTablesTask extends StagingTask
 {
     use WithStagingDatabase;
 
-    /** @var TableCreateService */
+ 
     protected $tableCreateService;
 
-    /** @var array */
+ 
     protected $tables = [];
 
-    /** @var JobDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface|StagingNetworkDtoInterface $jobDataDto */
+ 
     protected $jobDataDto; // @phpstan-ignore-line
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, TableCreateService $tableCreateService)
@@ -52,10 +52,10 @@ class CreateDatabaseTablesTask extends StagingTask
         return 'Creating Database Tables';
     }
 
-    /**
-     * @return TaskResponseDto
-     * @throws Exception
-     */
+
+
+
+
     public function execute()
     {
         $this->setup();
@@ -77,9 +77,9 @@ class CreateDatabaseTablesTask extends StagingTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setup()
     {
         $this->initStagingDatabase($this->jobDataDto->getStagingSite());

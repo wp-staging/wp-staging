@@ -12,28 +12,28 @@ use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Utils\Times;
 
-/**
- * @todo move html code to view for renderScheduleList()
- */
+
+
+
 class ScheduleList
 {
-    /** @var Times */
+ 
     private $times;
 
     private $backupScheduler;
 
     private $isPro;
 
-    /** @var Providers */
+ 
     protected $providers;
 
-    /** @var Assets */
+ 
     protected $assets;
 
-    /**
-     * @param BackupScheduler $backupScheduler
-     * @param Assets $assets
-     */
+
+
+
+
     public function __construct(BackupScheduler $backupScheduler, Assets $assets)
     {
         $this->backupScheduler = $backupScheduler;
@@ -43,11 +43,11 @@ class ScheduleList
         $this->isPro           = WPStaging::isPro();
     }
 
-    /**
-     * Rendered via AJAX.
-     *
-     * @throws \Exception
-     */
+
+
+
+
+
     public function renderScheduleList()
     {
         if (!current_user_can((new Capabilities())->manageWPSTG())) {
@@ -186,10 +186,10 @@ class ScheduleList
         wp_send_json_success(ob_get_clean());
     }
 
-    /**
-     * @return string|void
-     * @throws \Exception
-     */
+
+
+
+
     public function renderNextBackupSnippet()
     {
         if (!current_user_can((new Capabilities())->manageWPSTG())) {
@@ -252,10 +252,10 @@ class ScheduleList
             endif;
     }
 
-    /**
-     * @param string $backupType
-     * @return string
-     */
+
+
+
+
     public function getBackupType(string $backupType = ''): string
     {
         if ($backupType === BackupMetadata::BACKUP_TYPE_SINGLE) {

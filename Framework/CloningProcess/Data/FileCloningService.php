@@ -7,12 +7,12 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\SiteInfo;
 
-//TODO: Class may not be needed in the future due to DTO introduction. Remove if unnecessary
+ 
 abstract class FileCloningService extends CloningService
 {
-    /**
-     * @return false|string
-     */
+
+
+
     protected function readFile($file)
     {
         $path = $this->dto->getDestinationDir() . $file;
@@ -23,9 +23,9 @@ abstract class FileCloningService extends CloningService
         return $content;
     }
 
-    /**
-     * @param string $content
-     */
+
+
+
     protected function writeFile($file, $content)
     {
         $path       = $this->dto->getDestinationDir() . $file;
@@ -35,49 +35,49 @@ abstract class FileCloningService extends CloningService
         }
     }
 
-    /**
-     * @return false|string
-     */
+
+
+
     protected function readWpConfig()
     {
         $fileContent = $this->readFile('wp-config.php');
         return $this->normalizeFileContent($fileContent);
     }
 
-    /**
-     * @param string $content
-     */
+
+
+
     protected function writeWpConfig($content)
     {
         $this->writeFile('wp-config.php', $content);
     }
 
-    /**
-     * Check if WP is installed in subdir
-     * @return bool
-     */
+
+
+
+
     protected function isSubDir()
     {
         return (new SiteInfo())->isInstalledInSubDir();
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isExcludedWpConfig()
     {
         return $this->dto->getJob()->excludeWpConfigDuringUpdate();
     }
 
-    /**
-     * Handle carriage-return byte character
-     * @param string $fileContent
-     * @return string
-     */
+
+
+
+
+
     protected function normalizeFileContent(string $fileContent): string
     {
         if ($fileContent === '' || strpos($fileContent, "\r") === false) {
-            // No carriage returns found, nothing to normalize
+ 
             return $fileContent;
         }
 

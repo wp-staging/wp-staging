@@ -61,7 +61,7 @@ if ($isLocked) {
         <div class="wpstg--locked-process--footer wpstg-flex wpstg-items-center wpstg-gap-3 wpstg-shrink-0">
             <button class="wpstg--locked-process--btn wpstg--locked-process--show-logs wpstg-btn wpstg-btn-md wpstg-btn-secondary"><?php esc_html_e('View live logs', 'wp-staging'); ?></button>
             <?php
-            // Lets show cancel button only when it is cancellable
+ 
             if ($isCancelable) : ?>
             <button class="wpstg--locked-process--btn wpstg--locked-process--cancel-job wpstg-btn wpstg-btn-md wpstg-btn-danger"><?php esc_html_e('Cancel', 'wp-staging'); ?></button>
             <?php endif; ?>
@@ -69,7 +69,7 @@ if ($isLocked) {
         <?php endif; ?>
     </div>
     <?php
-    // as explained above, we only show the cancel modal if the job is cancellable
+ 
     if ($isCancelable) :
         require_once WPSTG_VIEWS_DIR . 'job/modal/confirm-cancel.php';
     endif;

@@ -7,19 +7,19 @@ use WPStaging\Framework\Filesystem\Filters\PathFilterHelper;
 
 class PathExcludeFilter extends AbstractFilterIterator
 {
-    /**
-     * @var PathFilterHelper
-     */
+
+
+
     protected $excludeFilter;
 
-    /**
-     * @var PathFilterHelper
-     */
+
+
+
     protected $includeFilter;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $skipDirectoriesWithIncludeRules = false;
 
     public function __construct(Iterator $iterator, $exclude = [], $wpRootPath = ABSPATH, $skipDirectoriesWithIncludeRules = false)
@@ -35,20 +35,20 @@ class PathExcludeFilter extends AbstractFilterIterator
         $this->skipDirectoriesWithIncludeRules = $skipDirectoriesWithIncludeRules;
     }
 
-    /**
-     * Set the WP Root Path
-     * @param string $wpRootPath
-     */
+
+
+
+
     public function setWpRootPath($wpRootPath)
     {
         $this->excludeFilter->setWpRootPath($wpRootPath);
         $this->includeFilter->setWpRootPath($wpRootPath);
     }
 
-    /**
-     * Get the WP Root Path
-     * @return string
-     */
+
+
+
+
     public function getWpRootPath()
     {
         return $this->excludeFilter->getWpRootPath();
@@ -57,7 +57,7 @@ class PathExcludeFilter extends AbstractFilterIterator
     #[\ReturnTypeWillChange]
     public function accept()
     {
-        // Get the current SplFileInfo object
+ 
         $fileInfo = $this->getInnerIterator()->current();
         if ($this->includeFilter->isMatched($fileInfo)) {
             return true;

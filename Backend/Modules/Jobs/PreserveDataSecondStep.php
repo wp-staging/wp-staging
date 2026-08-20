@@ -12,22 +12,22 @@ use WPStaging\Backend\Modules\Jobs\Job as MainJob;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Copy wpstg_tmp_data back to wpstg_staging_sites after cloning with class::PreserveDataSecondStep
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 class PreserveDataSecondStep extends JobExecutable
 {
-    /** @var \wpdb */
+ 
     private $stagingDb;
 
-    /** @var \wpdb */
+ 
     private $productionDb;
 
-    /** @var string */
+ 
     private $stagingPrefix;
 
-    /** @var object */
+ 
     private $preservedData;
 
     protected function calculateTotalSteps()
@@ -35,7 +35,7 @@ class PreserveDataSecondStep extends JobExecutable
         $this->options->totalSteps = 1;
     }
 
-    /** @return object */
+ 
     public function start()
     {
         $this->run();
@@ -44,7 +44,7 @@ class PreserveDataSecondStep extends JobExecutable
         return (object)$this->response;
     }
 
-    /** @return false */
+ 
     protected function execute()
     {
         $db = new SourceDatabase($this->options);
@@ -63,15 +63,15 @@ class PreserveDataSecondStep extends JobExecutable
         return false;
     }
 
-    /** @return true */
+ 
     public function copyToStaging()
     {
-        // Early bail if table doesn't exist
+ 
         if (!$this->tableExists($this->stagingPrefix . "options")) {
             return true;
         }
 
-        // Get wpstg_tmp_data from production database
+ 
         $result = $this->productionDb->get_var(
             $this->productionDb->prepare(
                 "SELECT `option_value` FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s",
@@ -79,16 +79,16 @@ class PreserveDataSecondStep extends JobExecutable
             )
         );
 
-        // Nothing to do
+ 
         if (!$result) {
             return true;
         }
 
-        // Make sure this is compatible with Free Version
-        // @see \WPStaging\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
+ 
+ 
         $backupSchedulesOption = 'wpstg_backup_schedules';
 
-        // Delete wpstg_tmp_data from the production site
+ 
         $deleteTmpData = $this->productionDb->query(
             $this->productionDb->prepare("DELETE FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s", "wpstg_tmp_data")
         );
@@ -99,21 +99,21 @@ class PreserveDataSecondStep extends JobExecutable
 
         $this->preservedData = maybe_unserialize($result);
 
-        // Preserve wpstg_staging_sites in staging database
+ 
         $this->preserveStagingOption(Sites::STAGING_SITES_OPTION, $this->preservedData->stagingSites, 'existing clones');
-        // Preserve wpstg_settings in staging database (preserved during update only, not during reset)
+ 
         if ($this->options->mainJob === MainJob::UPDATE && isset($this->preservedData->settings)) {
             $this->preserveStagingOption("wpstg_settings", $this->preservedData->settings, 'settings');
         }
 
-        // Preserve wpstg_login_link_settings in staging database
+ 
         $this->preserveStagingOption("wpstg_login_link_settings", $this->preservedData->loginLinkSettings, 'login settings');
 
-        // Preserve wpstg_clone_options in staging database
+ 
         $this->updateCloneOptions();
         $this->preserveStagingOption(CloneOptions::WPSTG_CLONE_SETTINGS_KEY, $this->preservedData->cloneOptions, 'clone options');
 
-        // Preserve backup schedules
+ 
         $this->preserveStagingOption($backupSchedulesOption, $this->preservedData->backupSchedules, 'backup schedules');
 
         foreach (Providers::STORAGE_LABELS as $identifier => $label) {
@@ -129,11 +129,11 @@ class PreserveDataSecondStep extends JobExecutable
         return true;
     }
 
-    /**
-     * @param string $optionName
-     * @param string $optionValue
-     * @param bool   $autoload
-     */
+
+
+
+
+
     protected function preserveStagingOption($optionName, $optionValue, $logEntity, $autoload = false)
     {
         $isDeleted = $this->deleteStagingSiteOption($optionName);
@@ -149,11 +149,11 @@ class PreserveDataSecondStep extends JobExecutable
         }
     }
 
-    /**
-     * @param string $optionName
-     *
-     * @return bool|int Number of rows affected. Boolean false on error
-     */
+
+
+
+
+
     protected function deleteStagingSiteOption($optionName)
     {
         return $this->stagingDb->query(
@@ -161,13 +161,13 @@ class PreserveDataSecondStep extends JobExecutable
         );
     }
 
-    /**
-     * @param string $optionName
-     * @param string $optionValue
-     * @param bool   $autoload
-     *
-     * @return bool|int Number of rows affected. Boolean false on error
-     */
+
+
+
+
+
+
+
     protected function insertOptionIntoStagingSite($optionName, $optionValue, $autoload = false)
     {
         $autoload = $autoload ? 'yes' : 'no';
@@ -182,13 +182,13 @@ class PreserveDataSecondStep extends JobExecutable
         );
     }
 
-    /**
-     * Get the preserved storage value, checking both the new hyphenated and legacy camelCase property names.
-     * This ensures backward compatibility if wpstg_tmp_data was created by an older plugin version.
-     *
-     * @param string $identifier The new hyphenated storage identifier
-     * @return string|null The preserved value, or null if not found
-     */
+
+
+
+
+
+
+
     protected function getPreservedStorageValue(string $identifier)
     {
         if ($this->propertyExists($identifier)) {
@@ -203,11 +203,11 @@ class PreserveDataSecondStep extends JobExecutable
         return null;
     }
 
-    /**
-     * @param string $property
-     *
-     * @return bool
-     */
+
+
+
+
+
     protected function propertyExists($property)
     {
         if (!is_object($this->preservedData)) {
@@ -221,21 +221,21 @@ class PreserveDataSecondStep extends JobExecutable
         return !empty($this->preservedData->{$property});
     }
 
-    /**
-     * Check if table exists
-     * @param string $table
-     * @return bool
-     */
+
+
+
+
+
     private function tableExists($table)
     {
         return !($table != $this->stagingDb->get_var("SHOW TABLES LIKE '{$table}'"));
     }
 
-    /**
-     * Update wpstg_clone_options before restoring it.
-     *
-     * @return void
-     */
+
+
+
+
+
     private function updateCloneOptions()
     {
         if ($this->getOptions()->mainJob !== MainJob::UPDATE) {
@@ -249,13 +249,13 @@ class PreserveDataSecondStep extends JobExecutable
             $data = new \stdClass();
         }
 
-        // Should not happen, but if it happens just return earlier without changing anything.
+ 
         if (!is_object($data)) {
             debug_log('Fail to update clone options before restore.');
             return;
         }
 
-        // clean up old option wpstg_woo_scheduler_disabled if exists
+ 
         if (property_exists($data, 'wpstg_woo_scheduler_disabled')) {
             unset($data->wpstg_woo_scheduler_disabled);
         }

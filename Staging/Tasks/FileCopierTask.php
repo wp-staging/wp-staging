@@ -14,13 +14,13 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 abstract class FileCopierTask extends StagingTask
 {
-    /** @var FileCopier */
+ 
     protected $fileCopier;
 
-    /** @var FilesystemScannerDtoInterface|StagingOperationDtoInterface $jobDataDto */
+ 
     protected $jobDataDto; // @phpstan-ignore-line
 
-    /** @var FileCopierTaskDto */
+ 
     protected $currentTaskDto;
 
     public function __construct(FileCopier $fileCopier, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -41,13 +41,13 @@ abstract class FileCopierTask extends StagingTask
 
     public function execute(): TaskResponseDto
     {
-        // Early bail if the task is excluded
+ 
         if ($this->getIsExcluded()) {
             return $this->generateResponse(true);
         }
 
         $this->prepareFileCopyingTask();
-        // If no file let's skip this task
+ 
         if ($this->stepsDto->getTotal() === 0) {
             return $this->generateResponse(true);
         }
@@ -61,7 +61,7 @@ abstract class FileCopierTask extends StagingTask
         return $this->generateResponse(false);
     }
 
-    /** @return string */
+ 
     abstract protected function getFileIdentifier(): string;
 
     protected function getLoggerFriendlyName(): string
@@ -69,27 +69,27 @@ abstract class FileCopierTask extends StagingTask
         return $this->getFileIdentifier();
     }
 
-    /** @return bool */
+ 
     protected function getIsWpContent(): bool
     {
         return false;
     }
 
-    /** @return bool */
+ 
     protected function getIsExcluded(): bool
     {
         return false;
     }
 
-    /** @return string */
+ 
     protected function getCurrentTaskType(): string
     {
         return FileCopierTaskDto::class;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function prepareFileCopyingTask()
     {
         $this->fileCopier->inject($this->taskQueue, $this->logger, $this->stepsDto);

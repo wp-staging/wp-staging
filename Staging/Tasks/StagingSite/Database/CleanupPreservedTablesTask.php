@@ -13,16 +13,16 @@ use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Staging\Traits\WithStagingDatabase;
 
-/**
- * Cleans preserved staging tables after a successful staging site update.
- */
+
+
+
 class CleanupPreservedTablesTask extends StagingTask
 {
     use WithStagingDatabase;
 
-    /**
-     * @var JobDataDto|StagingSiteJobsDataDto|StagingOperationDtoInterface|StagingDatabaseDtoInterface|StagingSiteDtoInterface
-     */
+
+
+
     protected $jobDataDto; // @phpstan-ignore-line
 
     public static function getTaskName()
@@ -35,9 +35,9 @@ class CleanupPreservedTablesTask extends StagingTask
         return 'Cleaning Up Preserved Tables';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->setup();
@@ -54,9 +54,9 @@ class CleanupPreservedTablesTask extends StagingTask
         return $this->generateResponse();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setup()
     {
         $this->initStagingDatabase($this->jobDataDto->getStagingSite());

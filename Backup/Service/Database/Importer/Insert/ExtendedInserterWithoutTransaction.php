@@ -1,41 +1,71 @@
 <?php
+
 namespace WPStaging\Backup\Service\Database\Importer\Insert;
+
+
+
+
+
 class ExtendedInserterWithoutTransaction extends QueryInserter
 {
     protected $extendedQuery = '';
+
+
+
+
+
+
+
 
     public function processQuery(&$queryToInsert)
     {
         if ($this->doQueryExceedsMaxAllowedPacket($queryToInsert)) {
             return null;
         }
+
         $this->extendInsert($queryToInsert);
+
         if (strlen($this->extendedQuery) >= $this->limitedMaxAllowedPacket) {
             return $this->execExtendedQuery();
         }
+
         return null;
     }
+
+
+
 
     public function commit()
     {
         return $this->execExtendedQuery();
     }
 
+
+
+
     public function execExtendedQuery()
     {
         if (empty($this->extendedQuery)) {
             return null;
         }
+
         $this->extendedQuery .= ';';
+
         $success = $this->exec($this->extendedQuery);
+
         if ($success) {
+ 
+ 
+ 
             if (!$this->hasFailedFlush) {
                 $this->committedLinePosition = $this->bufferedLinePosition;
             }
+
             $this->extendedQuery = '';
             $this->databaseImporterDto->setTableToRestore('');
             return true;
         }
+
         if ($this->client->errno() === 1062 && $this->applyFilters(self::FILTER_INSERT_IGNORE_DUPLICATE_KEY, false)) {
             $retryQuery   = preg_replace('/^INSERT INTO/', 'INSERT IGNORE INTO', $this->extendedQuery, 1);
             $retrySuccess = $this->exec($retryQuery);
@@ -48,22 +78,32 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
             if ($retrySuccess && !$this->hasFailedFlush) {
                 $this->committedLinePosition = $this->bufferedLinePosition;
             }
+
             if (!$retrySuccess) {
                 $this->hasFailedFlush = true;
             }
+
             $this->extendedQuery = '';
             $this->databaseImporterDto->setTableToRestore('');
             return $retrySuccess;
         }
+
         $this->hasFailedFlush = true;
+
         $this->showError();
         $this->extendedQuery = '';
         $this->databaseImporterDto->setTableToRestore('');
         return false;
     }
 
+
+
+
     protected function showError()
     {
+
+
+
         switch ($this->client->errno()) {
             case 1153:
             case 2006:
@@ -80,6 +120,10 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
                 $this->addWarning($this->translate('FULLTEXT removed from query, as your current MySQL version does not support it. To not see this message anymore, please upgrade your MySQL version.', 'wp-staging'));
                 break;
             case 1226:
+
+
+
+
                 if (stripos($this->client->error(), 'max_queries_per_hour') !== false) {
                     $this->addWarning($this->translate('Your server has reached the maximum allowed queries per hour set by your admin or hosting provider. Please increase MySQL max_queries_per_hour_limit. <a href="https://wp-staging.com/docs/mysql-database-error-codes/" target="_blank">Technical details</a>', 'wp-staging'));
                 } elseif (stripos($this->client->error(), 'max_updates_per_hour') !== false) {
@@ -93,10 +137,14 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
             case 1813:
                 $this->addWarning($this->translate('Could not restore the database. MySQL returned the error code 1813, which is related to a tablespace error that WP STAGING can\'t handle. Please contact your hosting company.', 'wp-staging'));
                 break;
+ 
+ 
+ 
             case 1062:
                 $offendingTable = $this->databaseImporterDto->getTableToRestore();
                 $errno          = $this->client->errno();
                 $errorMsg       = $this->client->error();
+
                 $this->extendedQuery = '';
                 $this->databaseImporterDto->setTableToRestore('');
                 throw new \RuntimeException(sprintf(
@@ -108,34 +156,48 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
                     $errorMsg
                 ));
         }
+
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             $this->addWarning(sprintf($this->translate('ExtendedInserterWithoutTransaction Failed Query: %s', 'wp-staging'), substr($this->extendedQuery, 0, 1000)));
         }
+
         $additionalInfo = '';
         if ($this->backupDbVersion !== $this->currentDbVersion) {
             $additionalInfo = sprintf($this->translate(' Your current MySQL version is %s. If this issue persists, try using the same MySQL version used to create this Backup (%s).', 'wp-staging'), $this->currentDbVersion, $this->backupDbVersion);
         }
+
         $this->addWarning(sprintf($this->translate('Could not restore the query. MySQL has returned the error code %d, with message "%s".', 'wp-staging'), $this->client->errno(), $this->client->error()) . $additionalInfo);
     }
+
+
+
 
     protected function extendInsert(&$insertQuery)
     {
         preg_match('#^INSERT INTO `(.+?(?=`))` VALUES (\(.+\));$#', $insertQuery, $matches);
+
         if (count($matches) !== 3) {
             throw new \Exception("Skipping INSERT query: $insertQuery");
         }
+
+ 
         $insertingIntoTableName = $matches[1];
+
         $extendedQueryMaxLength = $this->limitedMaxAllowedPacket;
         if (isset($this->client->isSQLite) && $this->client->isSQLite && method_exists($this->client, 'getSQLitePageSize')) {
             $extendedQueryMaxLength = $this->client->getSQLitePageSize();
             $extendedQueryMaxLength = empty($extendedQueryMaxLength) ? 2048 : $extendedQueryMaxLength;
         }
+
         $insertingIntoHeader = "INSERT INTO `$insertingIntoTableName` VALUES ";
+
         $isFirstValue = false;
+
         if (empty($this->databaseImporterDto->getTableToRestore())) {
             if (!empty($this->extendedQuery)) {
                 throw new \UnexpectedValueException('Query is not empty, cannot proceed.');
             }
+
             $this->databaseImporterDto->setTableToRestore($insertingIntoTableName);
             $this->extendedQuery .= $insertingIntoHeader;
             $isFirstValue = true;
@@ -144,24 +206,32 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
             if (!empty($this->extendedQuery)) {
                 throw new \UnexpectedValueException('Query is not empty, cannot proceed.');
             }
+
             $this->databaseImporterDto->setTableToRestore($insertingIntoTableName);
             $this->extendedQuery .= $insertingIntoHeader;
             $isFirstValue = true;
         }
+
+ 
         if (!$isFirstValue && strlen($this->extendedQuery . ",$matches[2]") >= $extendedQueryMaxLength) {
             $this->execExtendedQuery();
             if (!empty($this->extendedQuery)) {
                 throw new \UnexpectedValueException('Query is not empty, cannot proceed.');
             }
+
             $this->databaseImporterDto->setTableToRestore($insertingIntoTableName);
             $this->extendedQuery .= $insertingIntoHeader;
             $isFirstValue = true;
         }
+
         if ($isFirstValue) {
             $this->extendedQuery .= $matches[2];
         } else {
             $this->extendedQuery .= ",$matches[2]";
         }
+
+ 
+ 
         $this->bufferedLinePosition = $this->currentLinePosition;
     }
 }

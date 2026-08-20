@@ -9,66 +9,66 @@ use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 
-/**
- * Class BackupContent
- *
- * List files<BackupItemDto> in the backup with optional paging
- *
- * @package WPStaging\Backup
- */
+
+
+
+
+
+
+
 class BackupContent
 {
-    /** @var string */
+ 
     private $backupFile = '';
 
-    /** @var int */
+ 
     private $totalFiles = 0;
 
-    /** @var int */
+ 
     private $filesFound = 0;
 
-    /** @var int */
+ 
     private $perPage = 20;
 
-    /** @var int */
+ 
     private $indexOffsetStart = 0;
 
-    /** @var int */
+ 
     private $indexOffsetEnd = 0;
 
-    /** @var int */
+ 
     private $indexPage = 0;
 
-    /** @var int */
+ 
     private $currentOffset = 0;
 
-    /** @var int */
+ 
     private $currentIndex = 0;
 
-    /** @var int */
+ 
     private $indexOffset = 0;
 
-    /** @var IndexLineInterface */
+ 
     private $indexLineDto;
 
-    /** @var PathIdentifier */
+ 
     private $pathIdentifier;
 
-    /** @var array */
+ 
     private $filters = [
         'filename' => '',
         'sortby'   => '',
     ];
 
-    /** @var string[] */
+ 
     private $databaseFiles = [];
 
-    /**
-     * @param string $backupFile
-     * @param IndexLineInterface $indexLineDto
-     * @param BackupMetadata|null $backupMetadata
-     * @return void
-     */
+
+
+
+
+
+
     public function setBackup(string $backupFile, IndexLineInterface $indexLineDto, $backupMetadata = null)
     {
         if ($backupMetadata === null) {
@@ -83,37 +83,37 @@ class BackupContent
         $this->indexOffsetEnd   = $backupMetadata->getHeaderEnd();
     }
 
-    /**
-     * @param int $perPage
-     * @return void
-     */
+
+
+
+
     public function setPerPage(int $perPage)
     {
         $this->perPage = $perPage;
     }
 
-    /**
-     * @param PathIdentifier $pathIdentifier
-     * @return void
-     */
+
+
+
+
     public function setPathIdentifier(PathIdentifier $pathIdentifier)
     {
         $this->pathIdentifier = $pathIdentifier;
     }
 
-    /**
-     * @param string[] $databaseFiles
-     * @return void
-     */
+
+
+
+
     public function setDatabaseFiles(array $databaseFiles)
     {
         $this->databaseFiles = $databaseFiles;
     }
 
-    /**
-     * @param array $filters { filename: string, sortby: string }
-     * @return void
-     */
+
+
+
+
     public function setFilters(array $filters)
     {
         $filters['filename'] = $filters['filename'] ?? '';
@@ -122,19 +122,19 @@ class BackupContent
         $this->filters = $filters;
     }
 
-    /**
-     * @param int $indexOffset
-     * @return void
-     */
+
+
+
+
     public function setIndexOffset(int $indexOffset)
     {
         $this->indexOffset = $indexOffset;
     }
 
-    /**
-     * @param int $page
-     * @return \Generator<BackupItemDto>
-     */
+
+
+
+
     public function getFiles(int $page = 1)
     {
         if ($page < 1) {
@@ -196,9 +196,9 @@ class BackupContent
         $objectFile = null;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getPagingData(): array
     {
         return [
@@ -212,26 +212,26 @@ class BackupContent
         ];
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getIndexOffset(): int
     {
         return $this->indexOffset;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getCurrentOffset(): int
     {
         return $this->currentOffset;
     }
 
-    /**
-     * @param int $currentOffset
-     * @return int
-     */
+
+
+
+
     public function getNextOffset(int $currentOffset): int
     {
         $objectFile = new FileObject($this->backupFile, 'rb');
@@ -252,10 +252,10 @@ class BackupContent
         return $nextOffset;
     }
 
-    /**
-     * @param BackupItemDto $backupFile
-     * @return bool
-     */
+
+
+
+
     private function isFiltered(BackupItemDto $backupFile): bool
     {
         if ($this->filterByName($backupFile)) {
@@ -265,10 +265,10 @@ class BackupContent
         return $this->filterBySortBy($backupFile);
     }
 
-    /**
-     * @param BackupItemDto $backupFile
-     * @return bool
-     */
+
+
+
+
     private function filterByName(BackupItemDto $backupFile): bool
     {
         if (empty($this->filters['filename'])) {
@@ -278,10 +278,10 @@ class BackupContent
         return strpos($backupFile->getPath(), $this->filters['filename']) === false;
     }
 
-    /**
-     * @param BackupItemDto $backupFile
-     * @return bool
-     */
+
+
+
+
     private function filterBySortBy(BackupItemDto $backupFile): bool
     {
         if (empty($this->filters['sortby'])) {

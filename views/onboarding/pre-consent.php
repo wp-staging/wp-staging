@@ -3,8 +3,8 @@
 /**
  * The neutral first-run shell shown while the analytics question is still open.
  *
- * Identical for both variants, and deliberately silent about staging, backups
- * and Desktop: naming any first action would leak part of the treatment.
+ * Deliberately silent about staging, backups and Desktop: the selector asks
+ * which of them comes first, and naming one here would pre-empt that question.
  *
  * @see \WPStaging\Framework\Onboarding\FreeOnboarding::getStage()
  */

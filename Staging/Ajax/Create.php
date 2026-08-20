@@ -13,14 +13,14 @@ class Create extends AbstractTemplateComponent
     use JobResponseTrait;
     use MemoryExhaustTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_REQUEST = 'wpstg_staging_create';
 
-    /**
-     * @return void
-     */
+
+
+
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -35,9 +35,9 @@ class Create extends AbstractTemplateComponent
         $this->sendJobResponse($jobCreate);
     }
 
-    /**
-     * @return StagingSiteCreate
-     */
+
+
+
     protected function getCreateJob()
     {
         return WPStaging::make(StagingSiteCreate::class);

@@ -4,52 +4,52 @@ namespace WPStaging\Framework\Settings;
 
 use WPStaging\Framework\Database\CustomTable;
 
-/**
- * Manages the wpstg_settings custom table for storing plugin settings.
- *
- * Uses WordPress object cache (wp_cache_*) for per-request caching.
- */
+
+
+
+
+
 class SettingsTable extends CustomTable
 {
-    /** @var string */
+ 
     const CACHE_GROUP = 'wpstg_settings';
 
-    /** @var string */
+ 
     const CACHE_EXISTS_KEY_SUFFIX = '__exists';
 
-    /**
-     * Table name without prefix
-     * @var string
-     */
+
+
+
+
     const TABLE_NAME = 'wpstg_settings';
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getTableName()
     {
         return self::TABLE_NAME;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getTableVersionKey()
     {
         return 'wpstg_settings_table_version';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getTableVersion()
     {
         return '1.0.0';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getCreateTableSql()
     {
         global $wpdb;
@@ -73,13 +73,13 @@ class SettingsTable extends CustomTable
         return $sql;
     }
 
-    /**
-     * Get a setting value from the settings table.
-     *
-     * @param string $name
-     * @param mixed  $default
-     * @return mixed
-     */
+
+
+
+
+
+
+
     public function get($name, $default = null)
     {
         $existsFound  = false;
@@ -118,13 +118,13 @@ class SettingsTable extends CustomTable
         return $value;
     }
 
-    /**
-     * Set a setting value in the settings table.
-     *
-     * @param string $name
-     * @param mixed  $value
-     * @return bool
-     */
+
+
+
+
+
+
+
     public function set($name, $value)
     {
         $this->ensureTable();
@@ -146,12 +146,12 @@ class SettingsTable extends CustomTable
         return false;
     }
 
-    /**
-     * Delete a setting from the settings table.
-     *
-     * @param string $name
-     * @return bool
-     */
+
+
+
+
+
+
     public function delete($name)
     {
         $this->ensureTable();
@@ -166,9 +166,9 @@ class SettingsTable extends CustomTable
         return $result !== false;
     }
 
-    /**
-     * Invalidates all cached data for this table.
-     */
+
+
+
     public function invalidateCache()
     {
         if (function_exists('wp_cache_flush_group')) {
@@ -178,12 +178,12 @@ class SettingsTable extends CustomTable
         }
     }
 
-    /**
-     * Check if a setting exists in the settings table.
-     *
-     * @param string $name
-     * @return bool
-     */
+
+
+
+
+
+
     public function has($name)
     {
         $existsCacheKey = $this->getExistsCacheKey($name);
@@ -210,10 +210,10 @@ class SettingsTable extends CustomTable
         return $exists;
     }
 
-    /**
-     * @param string $name
-     * @return string
-     */
+
+
+
+
     private function getExistsCacheKey($name)
     {
         return $name . self::CACHE_EXISTS_KEY_SUFFIX;

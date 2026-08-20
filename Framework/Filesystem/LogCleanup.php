@@ -7,10 +7,10 @@ use WPStaging\Framework\Facades\Hooks;
 
 class LogCleanup
 {
-    /** @var string */
+ 
     const FILTER_LOGS_DELETE_OLDER_THAN_DAYS = 'wpstg.logs.deleteOlderThanDays';
 
-    /** @var string */
+ 
     const FILTER_LOGS_DELETE_BIGGER_THAN_BYTES = 'wpstg.logs.deleteBiggerThanBytes';
 
     protected $logger;
@@ -25,17 +25,17 @@ class LogCleanup
         try {
             $it = new \DirectoryIterator($this->logger->getLogDir());
         } catch (\Exception $e) {
-            // Early bail: Couldn't open directory.
+ 
             return;
         }
 
-        // Delete logs older than 14 days by default
+ 
         $deleteOlderThanDays = absint(Hooks::applyFilters(self::FILTER_LOGS_DELETE_OLDER_THAN_DAYS, 14));
 
-        // Delete logs bigger than 5mb by default
+ 
         $deleteBiggerThan = absint(Hooks::applyFilters(self::FILTER_LOGS_DELETE_BIGGER_THAN_BYTES, 5 * MB_IN_BYTES));
 
-        /** @var \SplFileInfo $splFileInfo */
+ 
         foreach ($it as $splFileInfo) {
             if ($splFileInfo->isFile() && !$splFileInfo->isLink() && $splFileInfo->getExtension() === 'log') {
                 if ($splFileInfo->getSize() > $deleteBiggerThan) {
@@ -44,7 +44,7 @@ class LogCleanup
                 }
 
                 if ($splFileInfo->getMTime() < strtotime("-$deleteOlderThanDays days")) {
-                    // Not silenced nor logged
+ 
                     unlink($splFileInfo->getPathname());
                 }
             }

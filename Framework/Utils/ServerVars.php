@@ -6,10 +6,10 @@ use WPStaging\Framework\Utils\Sanitize as UtilsSanitize;
 
 class ServerVars
 {
-    /** @var UtilsSanitize */
+ 
     private $sanitize;
 
-    /** @var string */
+ 
     private $serverSoftware = null;
 
     public function __construct(UtilsSanitize $sanitize)
@@ -17,7 +17,7 @@ class ServerVars
         $this->sanitize = $sanitize;
     }
 
-    /** @return string */
+ 
     public function getServerSoftware()
     {
         if ($this->serverSoftware === null) {
@@ -27,9 +27,9 @@ class ServerVars
         return $this->serverSoftware;
     }
 
-    /**
-     * @param int $seconds
-     */
+
+
+
     public function setTimeLimit($seconds = 0)
     {
         // phpcs:ignore PHPCompatibility.IniDirectives.RemovedIniDirectives.safe_modeDeprecatedRemoved
@@ -38,25 +38,25 @@ class ServerVars
         }
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isApache()
     {
         return stripos($this->getServerSoftware(), 'apache') === 0;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isLitespeed()
     {
         return stripos($this->getServerSoftware(), 'LiteSpeed') === 0;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isFunctionDisabled(string $functionName): bool {
         $disableFunctions = array_map(function ($input) {
             return trim($input);

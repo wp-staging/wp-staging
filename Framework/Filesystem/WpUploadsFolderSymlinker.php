@@ -5,31 +5,31 @@ namespace WPStaging\Framework\Filesystem;
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
-/*
- * This is a service class to symlink the upload folder of production site
- * to staging site
- * Symlink will only work if staging site is on same hosting as production site
- */
+
+
+
+
+
 class WpUploadsFolderSymlinker
 {
-    /**
-     * @var string
-     */
+
+
+
     protected $stagingWpPath;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $stagingUploadPath;
 
-    /**
-     * @var WpDefaultDirectories
-     */
+
+
+
     protected $wpDirectories;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $error;
 
     public function __construct(WpDefaultDirectories $wpDirectories)
@@ -37,28 +37,28 @@ class WpUploadsFolderSymlinker
         $this->wpDirectories = $wpDirectories;
     }
 
-    /**
-     * @param string $stagingWpPath
-     * @return void
-     */
+
+
+
+
     public function setStagingPath(string $stagingWpPath)
     {
         $this->stagingWpPath     = trailingslashit($stagingWpPath);
         $this->stagingUploadPath = rtrim($this->stagingWpPath . $this->wpDirectories->getRelativeUploadPath(), '/');
     }
 
-    /**
-     * @param string $stagingUploadPath
-     * @return void
-     */
+
+
+
+
     public function setStagingSiteUploadPath(string $stagingUploadPath)
     {
         $this->stagingUploadPath = rtrim($stagingUploadPath, '/');
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function trySymlink()
     {
         if (is_link($this->stagingUploadPath)) {
@@ -75,7 +75,7 @@ class WpUploadsFolderSymlinker
 
         (new Filesystem())->mkdir(dirname($this->stagingUploadPath));
 
-        // try symlink with exec(ln) if exec is enabled and user is on windows
+ 
         if ((stripos(PHP_OS, 'WIN') === 0) && $this->isExecEnabled()) {
             return $this->linkWithExec($uploadPath, $this->stagingUploadPath);
         }
@@ -83,21 +83,21 @@ class WpUploadsFolderSymlinker
         return $this->link($uploadPath, $this->stagingUploadPath);
     }
 
-    /**
-     * Return error
-     */
+
+
+
     public function getError()
     {
         return $this->error;
     }
 
-    /**
-     * Try symlinking with exec
-     *
-     * @param string $source
-     * @param string $destination
-     * @return boolean
-     */
+
+
+
+
+
+
+
     private function linkWithExec($source, $destination)
     {
         try {
@@ -109,13 +109,13 @@ class WpUploadsFolderSymlinker
         }
     }
 
-    /**
-     * Try symlinking with php function
-     *
-     * @param string $source
-     * @param string $destination
-     * @return boolean
-     */
+
+
+
+
+
+
+
     private function link($source, $destination)
     {
         try {

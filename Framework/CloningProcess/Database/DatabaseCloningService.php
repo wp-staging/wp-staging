@@ -12,20 +12,20 @@ use WPStaging\Framework\Utils\Escape;
 
 class DatabaseCloningService
 {
-    /**
-     * @var CloningDto
-     */
+
+
+
     protected $dto;
 
-    /**
-     * @var SelectQuery
-     */
+
+
+
     protected $selectQueryBuilder;
 
-    /**
-     * DatabaseCloningService constructor.
-     * @param CloningDto $dto
-     */
+
+
+
+
     public function __construct(CloningDto $dto)
     {
         $this->dto = $dto;
@@ -33,15 +33,15 @@ class DatabaseCloningService
         $this->selectQueryBuilder = new SelectQuery();
     }
 
-    /**
-     * @param string $srcTableName
-     * @param string $destTableName
-     * @param int $offset
-     * @param int $limit
-     */
+
+
+
+
+
+
     public function copyData($srcTableName, $destTableName, $offset, $limit)
     {
-        // Don't replace the table name if the table prefix is a custom prefix and if table is cloned into external database
+ 
         if (!$this->shouldRenameTable($srcTableName)) {
             $destTableName = $srcTableName;
         }
@@ -62,22 +62,22 @@ class DatabaseCloningService
                 $preparedQuery = $this->dto->getProductionDb()->prepare($preparedQuery, $preparedValues);
             }
 
-            // Get data from production site
+ 
             $result = $this->dto->getProductionDb()->get_results($preparedQuery, ARRAY_A);
-            // Start transaction
+ 
             $stagingDb->query('SET autocommit=0;');
             $stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
             $stagingDb->query('START TRANSACTION;');
 
-            /** @var Escape $escapeUtil */
+ 
             $escapeUtil   = WPStaging::make(Escape::class);
             $tableColumns = $this->getColumnTypes($srcTableName);
             $isCommitted = false;
 
             try {
-                // Copy into staging site
+ 
                 foreach ($result as $row) {
-                    // Prepare values for insert statement (encase in quotes if not null and binary)
+ 
                     $values      = $this->prepareValuesStatement($row, $tableColumns, $escapeUtil);
                     $query       = "INSERT INTO `$destTableName` VALUES ($values)";
                     $insertQuery = $query;
@@ -109,7 +109,7 @@ class DatabaseCloningService
                     }
                 }
 
-                // Commit transaction
+ 
                 $stagingDb->query('COMMIT;');
                 $isCommitted = true;
             } finally {
@@ -160,13 +160,13 @@ class DatabaseCloningService
         return stripos($message, 'Duplicate entry') !== false;
     }
 
-    /**
-     * @param \wpdb  $stagingDb
-     * @param string $srcTableName
-     * @param string $destTableName
-     * @return void
-     * @throws FatalException
-     */
+
+
+
+
+
+
+
     private function throwOnUnexpectedInsertWarnings($stagingDb, string $srcTableName, string $destTableName)
     {
         $warnings = $stagingDb->get_results('SHOW WARNINGS', ARRAY_A);
@@ -184,11 +184,11 @@ class DatabaseCloningService
         }
     }
 
-    /**
-     * @param string $tableName
-     *
-     * @return boolean
-     */
+
+
+
+
+
     public function isMissingTable($tableName)
     {
         $result = $this->dto->getProductionDb()->query("SHOW TABLES LIKE '$tableName'");
@@ -200,12 +200,12 @@ class DatabaseCloningService
         return false;
     }
 
-    /**
-     * Check if table already exists
-     * @param $srcTableName
-     * @param $destTableName
-     * @return bool
-     */
+
+
+
+
+
+
     private function isDestTableExist($srcTableName, $destTableName)
     {
         if (!$this->shouldRenameTable($srcTableName)) {
@@ -218,12 +218,12 @@ class DatabaseCloningService
         return ($destTableName === $existingTable);
     }
 
-    /**
-     * Drop table from database
-     *
-     * @param string $srcTableName
-     * @param string $destTableName
-     */
+
+
+
+
+
+
     private function dropDestTable($srcTableName, $destTableName)
     {
         if (!$this->shouldRenameTable($srcTableName)) {
@@ -237,10 +237,10 @@ class DatabaseCloningService
         $stagingDb->query("SET FOREIGN_KEY_CHECKS=1");
     }
 
-    /**
-     * @param $srcTable
-     * @return bool
-     */
+
+
+
+
     private function beginsWithWordPressPrefix($srcTable)
     {
         $productionDb = $this->dto->getProductionDb();
@@ -251,11 +251,11 @@ class DatabaseCloningService
         return false;
     }
 
-    /**
-     * If table is not multisite user or usermeta table and does not
-     * @param string
-     * @return bool
-     */
+
+
+
+
+
     private function shouldRenameTable($srcTable)
     {
         if ($this->dto->isExternal() && $this->isMultisiteWpCoreTable($srcTable)) {
@@ -269,10 +269,10 @@ class DatabaseCloningService
         return true;
     }
 
-    /**
-     * @param $tableName
-     * @return bool
-     */
+
+
+
+
     private function isMultisiteWpCoreTable($tableName)
     {
         $basePrefix = $this->dto->getProductionDb()->base_prefix;
@@ -289,11 +289,11 @@ class DatabaseCloningService
         return false;
     }
 
-    /**
-     * @param string $destTableName
-     * @param string $srcTableName
-     * @return int Number of rows in source table
-     */
+
+
+
+
+
     public function createTable($srcTableName, $destTableName)
     {
         if ($this->isDestTableExist($srcTableName, $destTableName)) {
@@ -306,34 +306,34 @@ class DatabaseCloningService
             $this->log("COPY table {$this->dto->getExternalDatabaseName()}.$srcTableName");
             $sql = $this->getTableCreateStatement($srcTableName);
 
-            // Handle case where getTableCreateStatement returns empty array on error
+ 
             if ($sql === []) {
                 throw new FatalException("DB External Copy - Fatal Error: Could not get CREATE statement for table $srcTableName");
             }
 
-            // Replace whole table name if it begins with WordPress prefix.
-            // Don't replace it if it's a custom table beginning with another prefix #1303
-            // Prevents bug where $old table prefix contains no underscore | Fix missing underscore issue #251.
+ 
+ 
+ 
             if ($this->beginsWithWordPressPrefix($srcTableName) || $this->isMultisiteWpCoreTable($srcTableName)) {
                 $sql = str_replace("CREATE TABLE `$srcTableName`", "CREATE TABLE `$destTableName`", $sql);
             }
 
-            // Make constraint unique to prevent error:(errno: 121 "Duplicate key on write or update")
+ 
             $sql = wpstg_unique_constraint($sql);
             $stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
-            //\WPStaging\functions\debug_log(" DB Query " . $sql);
+ 
             if ($stagingDb->query($sql) === false) {
                 throw new FatalException("DB External Copy - Fatal Error: $stagingDb->last_error Query: $sql");
             }
         } else {
-            $this->log("Creating table $destTableName");
+            $this->log("Creating table $srcTableName -> $destTableName");
             $query = "CREATE TABLE `{$destTableName}` LIKE `{$srcTableName}`";
             if ($stagingDb->query($query) === false) {
                 throw new FatalException("DB Internal Copy - Fatal Error: {$stagingDb->last_error} Query: {$query}");
             }
         }
 
-        // Note: fix for SQLITE
+ 
         $tableName = empty($productionDb->dbname) ? "`" . $srcTableName . "`" : "`" . $productionDb->dbname . "`.`" . $srcTableName . "`";
 
         $rowsInTable = (int)$productionDb->get_var("SELECT COUNT(1) FROM " . $tableName);
@@ -341,81 +341,81 @@ class DatabaseCloningService
         return $rowsInTable;
     }
 
-    /**
-     * @param $tableName
-     * @return string
-     */
+
+
+
+
     public function removeDBPrefix($tableName)
     {
         return (new Strings())->str_replace_first(WPStaging::getTablePrefix(), '', $tableName);
     }
 
-    /**
-     * @param $tableName
-     * @return string
-     */
+
+
+
+
     public function removeDbBasePrefix($tableName)
     {
         return (new Strings())->str_replace_first(WPStaging::getTableBasePrefix(), '', $tableName);
     }
 
-    /**
-     * @param string $message
-     * @param string $type
-     */
+
+
+
+
     protected function log($message, $type = Logger::TYPE_INFO)
     {
         $prependString = $this->dto->isExternal() ? "DB External Copy: " : "DB Copy: ";
         $this->dto->getJob()->log($prependString . $message, $type);
     }
 
-    /**
-     * @param string $message
-     * @param string $type
-     */
+
+
+
+
     protected function debugLog($message, $type = Logger::TYPE_INFO)
     {
         $prependString = $this->dto->isExternal() ? "DB External Copy: " : "DB Copy: ";
         $this->dto->getJob()->debugLog($prependString . $message, $type);
     }
 
-    /**
-     * Get MySQL create-table query statement.
-     * Only used by external databases
-     *
-     * @param string $tableName Table name
-     * @return string|array Returns CREATE TABLE statement as string, or empty array on error
-     */
+
+
+
+
+
+
+
     private function getTableCreateStatement($tableName)
     {
         $productionDb = $this->dto->getProductionDb();
 
-        // Get the CREATE statement from production table
+ 
         $statement = $productionDb->get_results("SHOW CREATE TABLE `$tableName`", 'ARRAY_A')[0];
 
         if ($this->dto->isMultisite()) {
-            // Convert prefix and entire table name to lowercase to prevent capitalization issues:
-            // https://dev.mysql.com/doc/refman/5.7/en/identifier-case-sensitivity.html
+ 
+ 
 
-            // @todo Testing! Can lead to issues with CONSTRAINTS
+ 
 
-            // Edit: Disabled as we must not change the capitalization of the prefix any longer!
-            // This prevented sites from proper cloning where prefix contains capitalized letters
-            // Keep this here for reference purposes and to make sure no one EVER tries to implement this again!
-            // $row[0] = str_replace($tableName, strtolower($tableName), $row[0]);
+ 
+ 
+ 
+ 
 
-            // Build full qualified statement for table [prefix_]users from main site e.g. wp_users
+ 
             if ($this->removeDbBasePrefix($tableName) === 'users') {
                 $statement = str_replace($tableName, $productionDb->base_prefix . 'users', $statement);
             }
 
-            // Build full qualified statement for table [prefix_]usermeta from main site e.g. wp_usermeta
+ 
             if ($this->removeDbBasePrefix($tableName) === 'usermeta') {
                 $statement = str_replace($tableName, $productionDb->base_prefix . 'usermeta', $statement);
             }
         }
 
-        // Return create table statement
+ 
         if (isset($statement['Create Table'])) {
             return $statement['Create Table'];
         }
@@ -423,13 +423,13 @@ class DatabaseCloningService
         return [];
     }
 
-    /**
-     * Foreach value in values, perform adjustment for binary and null values otherwise encase in quotes
-     * @param array  $row
-     * @param array  $tableColumns
-     * @param Escape $escapeUtil
-     * @return string
-     */
+
+
+
+
+
+
+
     protected function prepareValuesStatement($row, $tableColumns, $escapeUtil)
     {
         $preparedValues = [];
@@ -454,11 +454,11 @@ class DatabaseCloningService
         return implode(', ', $preparedValues);
     }
 
-    /**
-     * @param string $tableName Table name
-     *
-     * @return array
-     */
+
+
+
+
+
     private function getColumnTypes($tableName)
     {
         $column_types = [];

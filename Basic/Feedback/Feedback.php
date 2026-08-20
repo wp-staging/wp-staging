@@ -4,30 +4,31 @@ namespace WPStaging\Basic\Feedback;
 
 use WP_User;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\PluginLifecycle;
 use WPStaging\Notifications\Notifications;
 
 class Feedback
 {
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_FEEDBACK_EMAIL = "feedback@wp-staging.com";
 
-    /**
-     * Current page is plugins.php
-     * @global array $pagenow
-     * @return bool
-     */
+
+
+
+
+
     private function isPluginsPage(): bool
     {
         global $pagenow;
         return ( $pagenow === 'plugins.php' );
     }
 
-    /**
-     * Load feedback form
-     * @return void
-     */
+
+
+
+
     public function loadForm()
     {
         $screen = get_current_screen();
@@ -48,17 +49,19 @@ class Feedback
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function sendDeactivateFeedback()
     {
         if (!empty($_POST['data'])) {
             // phpcs:ignore
-            parse_str($_POST['data'], $form);  // This is a js serialised string. It needs to be parsed first. It will be sanitised on the next lines after parsing it.
+            parse_str($_POST['data'], $form); 
         }
 
         $reasons = isset($form['wpstg_disable_reason']) ? (array)$form['wpstg_disable_reason'] : [];
+
+        PluginLifecycle::rememberDeactivationReason($reasons);
 
         $body    = '';
         $subject = [];

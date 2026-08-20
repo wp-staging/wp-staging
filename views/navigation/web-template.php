@@ -16,7 +16,7 @@ use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 
 $wpstgAdminUrl = get_admin_url() . 'admin.php?page=';
 
-// Get newsfeed data for header notification badge (JS handles seen state via localStorage)
+ 
 $newsfeedProvider  = WPStaging::make(NewsfeedProvider::class);
 $newsfeedData      = $newsfeedProvider->getNewsfeedData();
 $showNewsfeedBadge = !empty($newsfeedData);
@@ -53,8 +53,8 @@ $menu = [
         'page'      => 'wpstg-tools',
         'isActive'  => !empty($isActiveSystemInfoPage),
     ],
-    // Free has no license page, so this tab leaves WordPress for the pricing
-    // table. Pro overrides it to the local license screen further down.
+ 
+ 
     'tab-license'     => [
         'tab'        => esc_html__('Upgrade to Pro', 'wp-staging'),
         'id'         => 'wpstg--tab--toggle--license',

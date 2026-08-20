@@ -15,33 +15,33 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
 {
     use WithStagingDatabase;
 
-    /**
-     * @var ?Database
-     */
+
+
+
     protected $database = null;
 
-    /**
-     * @var ?\wpdb
-     */
+
+
+
     protected $wpdb = null;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Urls $urls
-     * @param Database $database
-     */
+
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Urls $urls, Database $database)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue, $urls);
         $this->database = $database;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setup()
     {
         $this->initStagingDatabase($this->getStagingSiteDto($this->jobDataDto->getCloneId()));
@@ -54,21 +54,21 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         }
     }
 
-    /**
-     * Check if the table exists in the staging database.
-     * @param string $tableName
-     * @return bool
-     */
+
+
+
+
+
     protected function isTableExists(string $tableName): bool
     {
         return $this->tableService->tableExists($tableName);
     }
 
-    /**
-     * Check if the table excluded.
-     * @param string $tableNameWithoutPrefix
-     * @return bool
-     */
+
+
+
+
+
     protected function isTableExcluded(string $tableNameWithoutPrefix): bool
     {
         $tableName = $this->getPrefixedStagingTableName($tableNameWithoutPrefix);
@@ -98,15 +98,15 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         return false;
     }
 
-    /**
-     * @param string $optionName
-     * @param string|null $optionValue
-     * @param bool $autoload
-     * @return bool
-     */
+
+
+
+
+
+
     protected function insertOption(string $optionName, $optionValue, bool $autoload = false): bool
     {
-        // Let delete the option regardless it exists or not
+ 
         $this->deleteOption($optionName);
 
         $optionTable = $this->getOptionsTableName();
@@ -118,11 +118,11 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         );
     }
 
-    /**
-     * @param string $optionName
-     * @param string $optionValue
-     * @return bool
-     */
+
+
+
+
+
     protected function updateOption(string $optionName, string $optionValue): bool
     {
         $optionTable = $this->getOptionsTableName();
@@ -133,10 +133,10 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         );
     }
 
-    /**
-     * @param string $optionName
-     * @return bool
-     */
+
+
+
+
     protected function deleteOption(string $optionName): bool
     {
         $optionTable = $this->getOptionsTableName();
@@ -151,11 +151,11 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         return $this->getPrefixedStagingTableName('options');
     }
 
-    /**
-     * @param string $query
-     * @param array $parameters
-     * @return bool
-     */
+
+
+
+
+
     protected function executeQuery(string $query, ...$parameters): bool
     {
         $result = $this->wpdb->query(

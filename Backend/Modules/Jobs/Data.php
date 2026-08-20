@@ -16,15 +16,15 @@ use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpConfig;
 use WPStaging\Framework\Utils\Strings;
 
-/**
- * Class Data
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 class Data extends DataJob
 {
-    /**
-     * Initialize
-     */
+
+
+
     public function initialize()
     {
         parent::initialize();
@@ -34,22 +34,22 @@ class Data extends DataJob
     protected function initializeSteps()
     {
         $this->steps = [
-            CopyWpConfig::class, // Copy wp-config.php from the staging site if it is located outside of root one level up or copy default wp-config.php if production site uses bedrock or any other boilerplate solution that stores wp default config data elsewhere.
+            CopyWpConfig::class, 
             UpdateSiteUrlAndHome::class,
             UpdateStagingOptionsTable::class,
             UpdateTablePrefix::class,
             UpdateWpConfig::class,
-            ResetIndexPhp::class, // This is needed if live site is located in subfolder. @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
-            UpdateWpOptionsTablePrefix::class, // This is important when custom folders are used
+            ResetIndexPhp::class, 
+            UpdateWpOptionsTablePrefix::class, 
             UpdateWpConfigConstants::class,
-            CleanThirdPartyConfigs::class, // Remove or use dummy config files for hosting like Flywheel etc
-            CleanupTemporaryLogins::class, // Cleanup temporary users and their metadata
+            CleanThirdPartyConfigs::class, 
+            CleanupTemporaryLogins::class, 
         ];
     }
 
-    /**
-     * Get a list of tables to copy
-     */
+
+
+
     protected function getTables()
     {
         $strings = new Strings();
@@ -59,10 +59,10 @@ class Data extends DataJob
         }
     }
 
-    /**
-     * Calculate total steps in this job and assign it to $this->options->totalSteps
-     * @return void
-     */
+
+
+
+
     protected function calculateTotalSteps()
     {
         $this->options->totalSteps = 9;

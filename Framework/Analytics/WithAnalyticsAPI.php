@@ -15,11 +15,11 @@ trait WithAnalyticsAPI
         return $url . '/' . $endpoint;
     }
 
-    /**
-     * We use the hash of the salt as the identifier, this will only change if the salts changes.
-     *
-     * @return string
-     */
+
+
+
+
+
     protected function getSiteHash()
     {
         $hostName = parse_url(get_site_url());

@@ -5,30 +5,30 @@ namespace WPStaging\Staging\Tasks\StagingSite\FileAdjustment;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Staging\Tasks\FileAdjustmentTask;
 
-/**
- * Replacement for WPStaging\Framework\CloningProcess\Data\ResetIndex
- */
+
+
+
 class VerifyIndexTask extends FileAdjustmentTask
 {
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_verify_index';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Verifying staging site `index.php` file';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->logger->info('Verifying index.php file for staging site');
@@ -38,10 +38,10 @@ class VerifyIndexTask extends FileAdjustmentTask
         }
 
         $this->logger->warning('Current site installation is in a subdirectory. Trying fixing index.php file...');
-        /**
-         * Before WordPress 5.4: require( dirname( __FILE__ ) . '/wp-blog-header.php' );
-         * Since WordPress 5.4:  require __DIR__ . '/wp-blog-header.php';
-         */
+
+
+
+
         $pattern = "/require(.*)wp-blog-header.php(.*)/";
         $content = $this->readFile('index.php');
 

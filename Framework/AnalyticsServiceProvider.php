@@ -5,6 +5,7 @@ namespace WPStaging\Framework;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Analytics\AnalyticsGenericEventHandler;
 use WPStaging\Framework\Analytics\AnalyticsSender;
 use WPStaging\Framework\DI\FeatureServiceProvider;
@@ -15,7 +16,7 @@ use WPStaging\Framework\Utils\Sanitize;
 
 class AnalyticsServiceProvider extends FeatureServiceProvider
 {
-    /** @var Sanitize */
+ 
     private $sanitize;
 
     public static function getFeatureTrigger()
@@ -36,14 +37,14 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
 
         $this->sanitize = WPStaging::make(Sanitize::class);
 
-        /*
-         * Analytics error detection for Backup actions
-         *
-         * The AJAX event name avoids using "analytics_error" on purpose to
-         * avoid ad blocks from blocking the request from happening.
-         *
-         * "analytics" should never be mentioned in JavaScript, only on server-side.
-         */
+
+
+
+
+
+
+
+
         add_action("wp_ajax_wpstg_job_error", function () { // phpcs:ignore WPStaging.Security.AuthorizationChecked
             if (empty($_POST)) {
                 return;
@@ -63,10 +64,12 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
 
             $jobId = isset($_POST['job_id']) ? $this->sanitize->htmlDecodeAndSanitize($_POST['job_id']) : '';
 
-            AnalyticsEventDto::enqueueErrorEvent($jobId, $errorMessage);
+            $errorCode = isset($_POST['error_code']) ? ErrorCode::sanitize($this->sanitize->htmlDecodeAndSanitize($_POST['error_code'])) : '';
+
+            AnalyticsEventDto::enqueueErrorEvent($jobId, $errorMessage, $errorCode);
         });
 
-        // Analytics error detection for Staging actions
+ 
         add_action("wp_ajax_wpstg_staging_job_error", function () { // phpcs:ignore WPStaging.Security.AuthorizationChecked
             if (empty($_POST)) {
                 return;
@@ -82,16 +85,16 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
                 }
             }
 
-            // prevent emptying HTML string, as Staging errors might be returned in HTML (?)
+ 
             $errorMessage = isset($_POST['error_message']) ? $this->sanitize->htmlDecodeAndSanitize($_POST['error_message']) : '';
 
-            /**
-             * Get the "options" object from cache
-             * @see \WPStaging\Backend\Modules\Jobs\Job::__construct
-             * @var Cache $cache
-             */
+
+
+
+
+
             $cache = WPStaging::make(Cache::class);
-            $cache->setLifetime(-1); // Non-expireable file
+            $cache->setLifetime(-1); 
             $cache->setPath(WPStaging::getContentDir());
 
             $options = $cache->get("clone_options");
@@ -105,7 +108,9 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
                 return;
             }
 
-            AnalyticsEventDto::enqueueErrorEvent($jobId, $errorMessage);
+            $errorCode = isset($_POST['error_code']) ? ErrorCode::sanitize($this->sanitize->htmlDecodeAndSanitize($_POST['error_code'])) : '';
+
+            AnalyticsEventDto::enqueueErrorEvent($jobId, $errorMessage, $errorCode);
         });
 
         add_action('wp_ajax_wpstg_event_generic', $this->container->callback(AnalyticsGenericEventHandler::class, 'ajaxHandleGenericEvent')); // phpcs:ignore WPStaging.Security.AuthorizationChecked

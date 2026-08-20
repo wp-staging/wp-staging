@@ -2,127 +2,138 @@
 
 namespace WPStaging\Framework\Job;
 
-/**
- * It is used to cache the current running job data in a transient.
- * So it can be used for BackgroundLogger to push the events to the SSE stream.
- */
+
+
+
+
 class JobTransientCache
 {
-    /**
-     * This is the time in seconds that the job transient will be kept.
-     * This is used to show the current job status in the UI.
-     * Transient will be deleted automatically after this time if not deleted manually in case of inactivity.
-     * @var int
-     */
-    const JOB_TRANSIENT_EXPIRY = 60 * 6; // 6 minutes
 
-    /**
-     * This is the time in seconds that the job transient will be kept after the job is completed.
-     * Instead of deleting the transient immediately, we reduce it expiry to 15 seconds, to every open SSE stream
-     * can get the latest status of the job.
-     * @var int
-     */
+
+
+
+
+
+    const JOB_TRANSIENT_EXPIRY = 60 * 6; 
+
+
+
+
+
+
+
     const JOB_TRANSIENT_EXPIRY_ON_COMPLETE = 15;
 
-    /**
-     * This is the transient key that will be used to store the current job data.
-     * @var string
-     */
+
+
+
+
     const TRANSIENT_CURRENT_JOB = 'wpstg_current_job';
 
-    /**
-     * @var string
-     */
+
+
+
     const STATUS_RUNNING = 'running';
 
-    /**
-     * @var string
-     */
+
+
+
     const STATUS_SUCCESS = 'success';
 
-    /**
-     * @var string
-     */
+
+
+
     const STATUS_FAILED  = 'failed';
 
-    /**
-     * @var string
-     */
+
+
+
     const STATUS_CANCELLED = 'cancelled';
 
-    /**
-     * @var string
-     */
+
+
+
     const STATUS_STALED = 'staled';
 
-    /**
-     * @var string
-     */
+
+
+
+    const SEVERITY_ERROR = 'error';
+
+
+
+
+
+    const SEVERITY_NOTICE = 'notice';
+
+
+
+
     const JOB_TYPE_BACKUP = 'Backup';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_RESTORE = 'Restore';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_EXTRACT = 'Extract';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_CANCEL = 'Cancel';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_PLUGINS_UPDATER = 'Plugins_Updater';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_STAGING_CREATE = 'Staging_Create';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_STAGING_UPDATE = 'Staging_Update';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_STAGING_RESET = 'Staging_Reset';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_STAGING_PUSH = 'Staging_Push';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_STAGING_DELETE = 'Staging_Delete';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_PULL_PREPARE = 'Pull_Prepare';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_PULL_RESTORE = 'Pull_Restore';
 
-    /**
-     * @var string
-     */
+
+
+
     const JOB_TYPE_REMOTE_UPLOAD = 'Remote_Upload';
 
-    /**
-     * @var string[]
-     */
+
+
+
     const CANCELABLE_JOBS = [
         self::JOB_TYPE_BACKUP,
         self::JOB_TYPE_RESTORE,
@@ -135,13 +146,13 @@ class JobTransientCache
         self::JOB_TYPE_REMOTE_UPLOAD,
     ];
 
-    /**
-     * @param string $jobId
-     * @param string $jobTitle
-     * @param string $jobType
-     * @param string $queueId
-     * @return void
-     */
+
+
+
+
+
+
+
     public function startJob(string $jobId, string $jobTitle, string $jobType = 'job', string $queueId = '')
     {
         $jobData = [
@@ -159,12 +170,12 @@ class JobTransientCache
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
     }
 
-    /**
-     * Mark the current job as pre-initialized so the SSE endpoint can detect
-     * if the background queue never started processing.
-     * When the background queue picks up the job and calls startJob() again,
-     * the preInitAt field is automatically removed (startJob creates fresh data).
-     */
+
+
+
+
+
+
     public function markAsPreInitialized()
     {
         $jobData = $this->getJob();
@@ -177,10 +188,10 @@ class JobTransientCache
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
     }
 
-    /**
-     * @param string $title
-     * @return void
-     */
+
+
+
+
     public function updateTitle(string $title)
     {
         $jobData = $this->getJob();
@@ -190,39 +201,39 @@ class JobTransientCache
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function completeJob()
     {
         $this->stopJob(self::STATUS_SUCCESS);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function cancelJob(string $jobTitle)
     {
         $this->stopJob(self::STATUS_CANCELLED, $jobTitle);
     }
 
-    /**
-     * @param string $title
-     * @param string $message
-     * @param string $severity 'error' (default, red-X modal) or 'notice'
-     *                         (info-style modal for expected no-ops such as
-     *                         a Remote Sync selection that resolves to zero
-     *                         files on the source).
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     public function failJob(string $title = '', string $message = '', string $severity = '')
     {
         $this->stopJob(self::STATUS_FAILED, $title, $message, $severity);
     }
 
-    /**
-     * @return array|null
-     */
+
+
+
     public function getJob()
     {
         $jobData = get_transient(self::TRANSIENT_CURRENT_JOB);
@@ -253,9 +264,9 @@ class JobTransientCache
         return $jobData['status'];
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function update()
     {
         $jobData = $this->getJob();
@@ -265,12 +276,12 @@ class JobTransientCache
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
     }
 
-    /**
-     * @param string $status
-     * @param string $title
-     * @param string $message
-     * @return void
-     */
+
+
+
+
+
+
     private function stopJob(string $status, string $title = '', string $message = '', string $severity = '')
     {
         $jobData = $this->getJob();
@@ -284,15 +295,15 @@ class JobTransientCache
             $jobData['message'] = $message;
         }
 
-        // Severity is only used for failed jobs. Empty string means "don't
-        // overwrite" — lets a caller that ran earlier (e.g. the Remote Sync
-        // hook) preserve its classification when the generic PrepareJob
-        // finalisation later calls failJob() without a severity.
+ 
+ 
+ 
+ 
         if ($severity !== '') {
             $jobData['severity'] = $severity;
         }
 
-        // This will make sure to update the expiry as well if the status was already the same!
+ 
         delete_transient(self::TRANSIENT_CURRENT_JOB);
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY_ON_COMPLETE);
     }

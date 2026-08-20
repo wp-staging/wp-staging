@@ -23,7 +23,7 @@ class FileSizeFilter extends AbstractFilterIterator
             return false;
         }
 
-        // return true of not file
+ 
         if (!$isFile) {
             return true;
         }
@@ -43,30 +43,30 @@ class FileSizeFilter extends AbstractFilterIterator
         return true;
     }
 
-    /**
-     * Compare Bytes
-     *
-     * @param string|int $compare
-     * @param string|int $compareWith
-     * @param string $comparator
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function compareBytes($compare, $compareWith, $comparator = '=')
     {
         $compare = wp_convert_hr_to_bytes($compare);
         $compareWith = wp_convert_hr_to_bytes($compareWith);
 
-        // comparison for equal to
+ 
         if (($comparator === '=' || $comparator === ExcludeFilter::SIZE_EQUAL_TO) && ($compare == $compareWith)) {
             return true;
         }
 
-        // comparison for greater than
+ 
         if (($comparator === '>' || $comparator === ExcludeFilter::SIZE_GREATER_THAN) && ($compare > $compareWith)) {
             return true;
         }
 
-        // comparison for less than
+ 
         if (($comparator === '<' || $comparator === ExcludeFilter::SIZE_LESS_THAN) && ($compare < $compareWith)) {
             return true;
         }

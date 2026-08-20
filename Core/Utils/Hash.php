@@ -19,15 +19,15 @@ class Hash
         $this->initialize();
     }
 
-    /** @return string */
+ 
     public function getHash(): string
     {
         return $this->hash;
     }
 
-    /* Create a unique nonce of a string */
+ 
 
-    /** @return void */
+ 
     private function initialize()
     {
         $a = "67452301";
@@ -43,7 +43,7 @@ class Hash
             $C = $c;
             $D = $d;
 
-            /* ROUND 1 */
+ 
             $this->FF($A, $B, $C, $D, $words[0 + ($i * 16)], 7, "d76aa478");
             $this->FF($D, $A, $B, $C, $words[1 + ($i * 16)], 12, "e8c7b756");
             $this->FF($C, $D, $A, $B, $words[2 + ($i * 16)], 17, "242070db");
@@ -61,7 +61,7 @@ class Hash
             $this->FF($C, $D, $A, $B, $words[14 + ($i * 16)], 17, "a679438e");
             $this->FF($B, $C, $D, $A, $words[15 + ($i * 16)], 22, "49b40821");
 
-            /* ROUND 2 */
+ 
             $this->GG($A, $B, $C, $D, $words[1 + ($i * 16)], 5, "f61e2562");
             $this->GG($D, $A, $B, $C, $words[6 + ($i * 16)], 9, "c040b340");
             $this->GG($C, $D, $A, $B, $words[11 + ($i * 16)], 14, "265e5a51");
@@ -79,7 +79,7 @@ class Hash
             $this->GG($C, $D, $A, $B, $words[7 + ($i * 16)], 14, "676f02d9");
             $this->GG($B, $C, $D, $A, $words[12 + ($i * 16)], 20, "8d2a4c8a");
 
-            /* ROUND 3 */
+ 
             $this->HH($A, $B, $C, $D, $words[5 + ($i * 16)], 4, "fffa3942");
             $this->HH($D, $A, $B, $C, $words[8 + ($i * 16)], 11, "8771f681");
             $this->HH($C, $D, $A, $B, $words[11 + ($i * 16)], 16, "6d9d6122");
@@ -97,7 +97,7 @@ class Hash
             $this->HH($C, $D, $A, $B, $words[15 + ($i * 16)], 16, "1fa27cf8");
             $this->HH($B, $C, $D, $A, $words[2 + ($i * 16)], 23, "c4ac5665");
 
-            /* ROUND 4 */
+ 
             $this->II($A, $B, $C, $D, $words[0 + ($i * 16)], 6, "f4292244");
             $this->II($D, $A, $B, $C, $words[7 + ($i * 16)], 10, "432aff97");
             $this->II($C, $D, $A, $B, $words[14 + ($i * 16)], 15, "ab9423a7");
@@ -126,9 +126,9 @@ class Hash
         $this->hash = $nonce;
     }
 
-    /* General functions */
+ 
 
-    /** @return string */
+ 
     private function hexbin($str): string
     {
         $hexbinmap = [
@@ -162,11 +162,11 @@ class Hash
         }
 
         $bin = ltrim($bin, '0');
-        // echo "Original: ".$str."  New: ".$bin."<br />";
+ 
         return $bin;
     }
 
-    /** @return string */
+ 
     private function strhex($str): string
     {
         $hex = "";
@@ -177,14 +177,14 @@ class Hash
         return $hex;
     }
 
-    /* MD5-specific functions */
+ 
 
-    /** @return array */
+ 
     private function init($string): array
     {
         $len    = strlen($string) * 8;
-        $hex    = $this->strhex($string); // convert ascii string to hex
-        $bin    = $this->leftPad($this->hexbin($hex), $len); // convert hex string to bin
+        $hex    = $this->strhex($string); 
+        $bin    = $this->leftPad($this->hexbin($hex), $len); 
         $padded = $this->pad($bin);
         $padded = $this->pad($padded, 1, $len);
         $block  = str_split($padded, 32);
@@ -196,7 +196,7 @@ class Hash
         return $block;
     }
 
-    /** @return string */
+ 
     private function pad($bin, $type = 0, $len = 0): string
     {
         if ($type == 0) {
@@ -208,7 +208,7 @@ class Hash
                 }
             }
 
-        // append length (b) of string to latter 64 bits
+ 
         } elseif ($type == 1) {
             $bLen = $this->leftPad(decbin($len), 64);
             $bin .= implode('', array_reverse(str_split($bLen, 8)));
@@ -217,109 +217,109 @@ class Hash
         return $bin;
     }
 
-    /* MD5 base functions */
+ 
 
-    /** @return int */
+ 
     private function F($X, $Y, $Z): int // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $X    = hexdec($X);
         $Y    = hexdec($Y);
         $Z    = hexdec($Z);
-        $calc = (($X & $Y) | ((~ $X) & $Z)); // X AND Y OR NOT X AND Z
+        $calc = (($X & $Y) | ((~ $X) & $Z)); 
         return $calc;
     }
 
-    /** @return int */
+ 
     private function G($X, $Y, $Z): int // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $X    = hexdec($X);
         $Y    = hexdec($Y);
         $Z    = hexdec($Z);
-        $calc = (($X & $Z) | ($Y & (~ $Z))); // X AND Z OR Y AND NOT Z
+        $calc = (($X & $Z) | ($Y & (~ $Z))); 
         return $calc;
     }
 
-    /** @return int */
+ 
     private function H($X, $Y, $Z): int // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $X    = hexdec($X);
         $Y    = hexdec($Y);
         $Z    = hexdec($Z);
-        $calc = ($X ^ $Y ^ $Z); // X XOR Y XOR Z
+        $calc = ($X ^ $Y ^ $Z); 
         return $calc;
     }
 
-    /** @return int */
+ 
     private function I($X, $Y, $Z): int // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
         $X    = hexdec($X);
         $Y    = hexdec($Y);
         $Z    = hexdec($Z);
-        $calc = ($Y ^ ($X | (~ $Z))); // Y XOR (X OR NOT Z)
+        $calc = ($Y ^ ($X | (~ $Z))); 
         return $calc;
     }
 
-    /* MD5 round functions */
+ 
 
-    /*
-      $A - hex, $B - hex, $C - hex, $D - hex (F - dec)
-      $M - binary
-      $s - decimal
-      $t - hex
-     */
 
-    /** @return void */
+
+
+
+
+
+
+ 
     private function FF(&$A, $B, $C, $D, $M, $s, $t)
     {
         $A = hexdec($A);
         $t = hexdec($t);
         $M = bindec($M);
-        $A = ($A + $this->F($B, $C, $D) + $M + $t) & 0xffffffff; //decimal
+        $A = ($A + $this->F($B, $C, $D) + $M + $t) & 0xffffffff; 
         $A = $this->rotate($A, $s);
         $A = dechex((hexdec($B) + hexdec($A)) & 0xffffffff);
     }
 
-    /** @return void */
+ 
     private function GG(&$A, $B, $C, $D, $M, $s, $t)
     {
         $A = hexdec($A);
         $t = hexdec($t);
         $M = bindec($M);
-        $A = ($A + $this->G($B, $C, $D) + $M + $t) & 0xffffffff; //decimal
+        $A = ($A + $this->G($B, $C, $D) + $M + $t) & 0xffffffff; 
         $A = $this->rotate($A, $s);
         $A = dechex((hexdec($B) + hexdec($A)) & 0xffffffff);
     }
 
-    /** @return void */
+ 
     private function HH(&$A, $B, $C, $D, $M, $s, $t)
     {
         $A = hexdec($A);
         $t = hexdec($t);
         $M = bindec($M);
-        $A = ($A + $this->H($B, $C, $D) + $M + $t) & 0xffffffff; //decimal
+        $A = ($A + $this->H($B, $C, $D) + $M + $t) & 0xffffffff; 
         $A = $this->rotate($A, $s);
         $A = dechex((hexdec($B) + hexdec($A)) & 0xffffffff);
     }
 
-    /** @return void */
+ 
     private function II(&$A, $B, $C, $D, $M, $s, $t)
     {
         $A = hexdec($A);
         $t = hexdec($t);
         $M = bindec($M);
-        $A = ($A + $this->I($B, $C, $D) + $M + $t) & 0xffffffff; //decimal
+        $A = ($A + $this->I($B, $C, $D) + $M + $t) & 0xffffffff; 
         $A = $this->rotate($A, $s);
         $A = dechex((hexdec($B) + hexdec($A)) & 0xffffffff);
     }
 
-    // shift
-    /** @return string */
+ 
+ 
     private function rotate($decimal, $bits): string
     {
         return dechex((($decimal << $bits) | ($decimal >> (32 - $bits))) & 0xffffffff);
     }
 
-    /** @return void */
+ 
     private function addVars(&$a, &$b, &$c, &$d, $A, $B, $C, $D)
     {
         $A  = hexdec($A);
@@ -342,7 +342,7 @@ class Hash
         $d = dechex($dd);
     }
 
-    /** @return string */
+ 
     private function leftPad($needs_padding, $alignment): string
     {
         if (strlen($needs_padding) % $alignment) {

@@ -4,16 +4,16 @@ namespace WPStaging\Core\Forms\Elements;
 
 use WPStaging\Core\Forms\ElementsWithOptions;
 
-/**
- * Class Select
- * @package WPStaging\Core\Forms\Elements
- */
+
+
+
+
 class SelectMultiple extends ElementsWithOptions
 {
 
-    /**
-     * @return string
-     */
+
+
+
     protected function prepareOutput()
     {
         $output = "<select multiple id='{$this->getId()}' name='{$this->name}' {$this->prepareAttributes()}>";
@@ -21,7 +21,7 @@ class SelectMultiple extends ElementsWithOptions
         foreach ($this->options as $id => $value) {
             $selected = ($this->isSelected($id)) ? " selected=''" : '';
 
-            //$output .= "<option value='{$id}'{$selected}>{$value}</option>";
+ 
             $output .= "<option value='{$id}'{$selected}>{$value}</option>";
         }
 
@@ -30,10 +30,10 @@ class SelectMultiple extends ElementsWithOptions
         return $output;
     }
 
-    /**
-     * @param string $value
-     * @return bool
-     */
+
+
+
+
     private function isSelected($value)
     {
         if (
@@ -49,9 +49,9 @@ class SelectMultiple extends ElementsWithOptions
         return false;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function render()
     {
         return ($this->renderFile) ? @file_get_contents($this->renderFile) : $this->prepareOutput();

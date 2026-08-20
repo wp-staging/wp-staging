@@ -10,7 +10,7 @@
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 
-/** @var Providers */
+ 
 $storages = WPStaging::make(Providers::class);
 
 $disabledProAttribute = $isProVersion ? '' : ' disabled';

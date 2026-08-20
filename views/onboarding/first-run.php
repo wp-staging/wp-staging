@@ -1,8 +1,7 @@
 <?php
 
 /**
- * First-run action selector, the `task_selector` variant of the
- * `free_onboarding_v1` experiment.
+ * The three-card first-run action selector.
  *
  * @see \WPStaging\Framework\Onboarding\FreeOnboarding
  *
@@ -12,7 +11,8 @@
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Onboarding\OnboardingJourney;
 
-$competitorName = $onboarding->getBackupPluginsDetector()->getCompetitorName();
+$competitorName  = $onboarding->getBackupPluginsDetector()->getCompetitorName();
+$isHostedOnWpCom = $onboarding->isHostedOnWordPressCom();
 ?>
 <div
     id="wpstg-onboarding"
@@ -24,9 +24,11 @@ $competitorName = $onboarding->getBackupPluginsDetector()->getCompetitorName();
     <h1 class="wpstg-onboarding__headline"><?php esc_html_e('What would you like to do first?', 'wp-staging'); ?></h1>
     <p class="wpstg-onboarding__lede"><?php esc_html_e('Start with one. You can use all three anytime.', 'wp-staging'); ?></p>
 
+    <?php require WPSTG_VIEWS_DIR . 'onboarding/update-protection.php'; ?>
+
     <div class="wpstg-onboarding__cards">
 
-        <div class="wpstg-onboarding-card wpstg-onboarding-card--staging">
+        <div class="wpstg-onboarding-card wpstg-onboarding-card--staging <?php echo $isHostedOnWpCom ? 'wpstg-hidden' : ''; ?>">
             <div class="wpstg-icon-box wpstg-icon-box-blue wpstg-onboarding-card__icon">
                 <?php
                 $capability = OnboardingJourney::CAPABILITY_STAGING;
@@ -45,8 +47,8 @@ $competitorName = $onboarding->getBackupPluginsDetector()->getCompetitorName();
             </button>
 
             <?php
-            // Deliberately a text link, not a second button: the settings dialog
-            // is for the few who want it, and everyone else gets one click.
+ 
+ 
             ?>
             <button
                 type="button"

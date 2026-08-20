@@ -6,15 +6,15 @@ use WPStaging\Framework\ErrorHandler;
 
 trait MemoryExhaustTrait
 {
-    /**
-     * @var string
-     */
+
+
+
     protected $memoryExhaustErrorTmpFile = '';
 
-    /**
-     * @param  string $requestType
-     * @return string
-     */
+
+
+
+
     public function getMemoryExhaustErrorTmpFile(string $requestType): string
     {
         if (empty($this->memoryExhaustErrorTmpFile)) {
@@ -24,10 +24,10 @@ trait MemoryExhaustTrait
         return $this->memoryExhaustErrorTmpFile;
     }
 
-    /**
-     * @param  string $requestType
-     * @return string
-     */
+
+
+
+
     protected function setupTmpErrorFile(string $requestType): string
     {
         if (!defined('WPSTG_UPLOADS_DIR')) {
@@ -41,9 +41,9 @@ trait MemoryExhaustTrait
         return trailingslashit(WPSTG_UPLOADS_DIR) . $requestType . ErrorHandler::ERROR_FILE_EXTENSION;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function removeMemoryExhaustErrorTmpFile()
     {
         if ($this->memoryExhaustErrorTmpFile === '') {

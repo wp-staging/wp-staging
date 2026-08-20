@@ -1,8 +1,8 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-// TODO PHP7.1; constant visibility
+ 
+ 
+ 
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
@@ -35,48 +35,48 @@ class FinalizeBackupTask extends BackupTask
 {
     use WithBackupIdentifier;
 
-    /** @var Archiver */
+ 
     protected $archiver;
 
-    /** @var \wpdb */
+ 
     protected $wpdb;
 
-    /** @var PathIdentifier */
+ 
     protected $pathIdentifier;
 
-    /** @var BackupMetadataEditor */
+ 
     protected $backupMetadataEditor;
 
-    /** @var AnalyticsBackupCreate */
+ 
     protected $analyticsBackupCreate;
 
-    /** @var BufferedCache */
+ 
     protected $sqlCache;
 
-    /** @var SiteInfo */
+ 
     protected $siteInfo;
 
-    /** @var array */
+ 
     protected $databaseParts = [];
 
-    /** @var int */
+ 
     protected $currentFileIndex = 0;
 
-    /** @var array */
+ 
     protected $currentFileInfo = [];
 
-    /**
-     * @param Archiver $archiver
-     * @param BufferedCache $sqlCache
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param PathIdentifier $pathIdentifier
-     * @param BackupMetadataEditor $backupMetadataEditor
-     * @param AnalyticsBackupCreate $analyticsBackupCreate
-     * @param SiteInfo $siteInfo
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     public function __construct(
         Archiver $archiver,
         BufferedCache $sqlCache,
@@ -101,27 +101,27 @@ class FinalizeBackupTask extends BackupTask
         $this->siteInfo              = $siteInfo;
     }
 
-    /**
-     * @example 'backup_site_restore_themes'
-     * @return string
-     */
+
+
+
+
     public static function getTaskName(): string
     {
         return 'backup_combine';
     }
 
-    /**
-     * @example 'Restoring Themes From Backup'
-     * @return string
-     */
+
+
+
+
     public static function getTaskTitle(): string
     {
         return 'Preparing Backup File';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute(): TaskResponseDto
     {
         $this->prepareSetup();
@@ -158,9 +158,9 @@ class FinalizeBackupTask extends BackupTask
         return $this->generateResponse($incrementStep);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function prepareSetup()
     {
         if ($this->stepsDto->getTotal() > 0) {
@@ -188,9 +188,9 @@ class FinalizeBackupTask extends BackupTask
         $this->stepsDto->setTotal(count($this->jobDataDto->getMultipartFilesInfo()));
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function prepareArchiver()
     {
         $multipartFilesInfo     = $this->jobDataDto->getMultipartFilesInfo();
@@ -200,9 +200,9 @@ class FinalizeBackupTask extends BackupTask
         $this->archiver->setIsLocalBackup($this->jobDataDto->isLocalBackup());
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getPrefix(): string
     {
         if (is_multisite() && !$this->jobDataDto->getIsNetworkSiteBackup()) {
@@ -212,11 +212,11 @@ class FinalizeBackupTask extends BackupTask
         return $this->wpdb->prefix;
     }
 
-    /**
-     * @param ArchiverDto $archiverDto
-     * @param bool $isUploadBackup
-     * @return BackupMetadata
-     */
+
+
+
+
+
     protected function prepareBackupMetadata(ArchiverDto $archiverDto, bool $isUploadBackup): BackupMetadata
     {
         $backupMetadata = $archiverDto->getBackupMetadata();
@@ -225,9 +225,10 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setTotalFiles($this->jobDataDto->getTotalFiles());
         $backupMetadata->setName($this->jobDataDto->getName());
         $backupMetadata->setIsAutomatedBackup($this->jobDataDto->getIsAutomatedBackup());
+        $backupMetadata->setIsBeforeUpdateBackup($this->jobDataDto->getIsBeforeUpdateBackup());
         $backupMetadata->setPrefix($this->getPrefix());
 
-        // What the backup includes
+ 
         $backupMetadata->setIsExportingPlugins($this->jobDataDto->getIsExportingPlugins());
         $backupMetadata->setIsExportingMuPlugins($this->jobDataDto->getIsExportingMuPlugins());
         $backupMetadata->setIsExportingThemes($this->jobDataDto->getIsExportingThemes());
@@ -251,7 +252,7 @@ class FinalizeBackupTask extends BackupTask
 
             $maxTableLength = 0;
             foreach ($this->jobDataDto->getTablesToBackup() as $table) {
-                // Get the biggest table name, without the prefix.
+ 
                 $maxTableLength = max($maxTableLength, strlen(substr($table, strlen($this->wpdb->base_prefix))));
             }
 
@@ -280,20 +281,20 @@ class FinalizeBackupTask extends BackupTask
         return $backupMetadata;
     }
 
-    /**
-     * @see \wp_version_check
-     * @see https://codex.wordpress.org/Converting_Database_Character_Sets
-     */
+
+
+
+
     protected function addSystemInfoToBackupMetadata(BackupMetadata &$backupMetadata)
     {
         global $wp_version, $wp_db_version;
-        /**
-         * @var string $wp_version
-         * @var int    $wp_db_version
-         */
+
+
+
+
         include ABSPATH . WPINC . '/version.php';
 
-        /** @var Database $database */
+ 
         $database = WPStaging::make(Database::class);
 
         $serverType = $database->getServerType();
@@ -309,37 +310,37 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setSqlServerVersion($serverType . ' ' . $mysqlVersion);
     }
 
-    /**
-     * @return FinalizeBackupResponseDto
-     */
+
+
+
     protected function getResponseDto(): FinalizeBackupResponseDto
     {
         return new FinalizeBackupResponseDto();
     }
 
-    /**
-     * @param BackupMetadata $backupMetadata
-     * @param bool $isUploadBackup
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
     protected function addSplitMetadata(BackupMetadata $backupMetadata, bool $isUploadBackup)
     {
-        // no-op, used in pro version.
+ 
     }
 
-    /**
-     * @param BackupMetadata $backupMetadata
-     * @return void
-     */
+
+
+
+
     protected function addMultisiteMetadata(BackupMetadata $backupMetadata)
     {
-        // no-op, used in pro version.
+ 
     }
 
-    /**
-     * @throws NotFoundException
-     */
+
+
+
     protected function addFilesIndex()
     {
         if ($this->currentFileInfo['status'] !== 'Pending') {
@@ -374,12 +375,12 @@ class FinalizeBackupTask extends BackupTask
         $this->jobDataDto->updateMultipartFileInfo($this->currentFileInfo, $this->currentFileIndex);
     }
 
-    /**
-     * @param ArchiverDto $archiverDto
-     * @param bool $isUploadBackup
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
     protected function addBackupMetadata(ArchiverDto $archiverDto, bool $isUploadBackup)
     {
         if ($this->currentFileInfo['status'] !== 'IndexAdded') {
@@ -388,7 +389,7 @@ class FinalizeBackupTask extends BackupTask
 
         $backupMetadata = $this->prepareBackupMetadata($archiverDto, $isUploadBackup);
         if (!$this->jobDataDto->getIsMultipartBackup()) {
-            // Write the Backup metadata
+ 
             $backupFilePath = $this->archiver->generateBackupMetadata($this->currentFileInfo['sizeBeforeAddingIndex']);
             $this->jobDataDto->setBackupFilePath($backupFilePath);
 
@@ -405,19 +406,19 @@ class FinalizeBackupTask extends BackupTask
         $this->addMultipartInfoToMetadata($backupMetadata);
     }
 
-    /**
-     * @param BackupMetadata $backupMetadata
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
+
     protected function addMultipartInfoToMetadata(BackupMetadata $backupMetadata)
     {
-        // no-op, used in pro version.
+ 
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getFinalBackupParentDirectory(): string
     {
         return $this->archiver->getFinalBackupParentDirectory($this->jobDataDto->isLocalBackup());

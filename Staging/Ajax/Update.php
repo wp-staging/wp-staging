@@ -13,14 +13,14 @@ class Update extends AbstractTemplateComponent
     use JobResponseTrait;
     use MemoryExhaustTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_REQUEST = 'wpstg_staging_update';
 
-    /**
-     * @return void
-     */
+
+
+
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -35,9 +35,9 @@ class Update extends AbstractTemplateComponent
         $this->sendJobResponse($jobUpdate);
     }
 
-    /**
-     * @return StagingSiteUpdate
-     */
+
+
+
     protected function getUpdateJob()
     {
         return WPStaging::make(StagingSiteUpdate::class);

@@ -14,22 +14,22 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * Preserve staging-site-only options across a staging site update. The update flow renames the
- * existing wpstg0_options to wpstgbak_options and imports the production options into a fresh
- * wpstg0_options — so any options that only existed on the staging site (cloud storage credentials,
- * backup schedules, license key, etc.) would be lost without this task reinstating them from the
- * backup copy.
- *
- * Legacy did the same thing via PreserveDataFirstStep/PreserveDataSecondStep using a
- * wpstg_tmp_data option round-trip; here we read directly from the already-renamed backup table.
- */
+
+
+
+
+
+
+
+
+
+
 class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
 {
-    /** @var string */
+ 
     const FILTER_PRESERVED_OPTIONS = 'wpstg_preserved_options';
 
-    /** @var OptionPreservationHandler */
+ 
     protected $optionPreservationHandler;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Urls $urls, Database $database, OptionPreservationHandler $optionPreservationHandler)
@@ -60,7 +60,7 @@ class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
         $bakOptionsTable  = DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP . 'options';
 
         if (!$this->isTableExists($bakOptionsTable)) {
-            // Nothing to preserve — previous staging options table never existed or already cleaned up.
+ 
             return $this->generateResponse();
         }
 
@@ -79,8 +79,8 @@ class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
             return $this->generateResponse();
         }
 
-        // Delete matching option names from the fresh staging options table to avoid unique-key
-        // collisions on option_name when we insert the preserved rows.
+ 
+ 
         $this->optionPreservationHandler->deleteFromTable($likeStatement, $destOptionsTable);
 
         $sql = $this->optionPreservationHandler->createInsertQuery($preservedRows, $destOptionsTable);
@@ -91,12 +91,12 @@ class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
         return $this->generateResponse();
     }
 
-    /**
-     * Option names whose staging values must survive a staging-site update. Subclasses may extend
-     * this list with version-specific entries (e.g. Pro adds cloud-storage credentials).
-     *
-     * @return string[]
-     */
+
+
+
+
+
+
     protected function getPreservedOptions(): array
     {
         return [
@@ -123,12 +123,12 @@ class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
         ];
     }
 
-    /**
-     * Escape option names so SQL LIKE treats "_" and "%" as literal characters.
-     *
-     * @param string[] $optionsToPreserve
-     * @return string[]
-     */
+
+
+
+
+
+
     protected function escapeLiteralOptionsForLike(array $optionsToPreserve): array
     {
         return array_map(function ($optionName) {
@@ -136,10 +136,10 @@ class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
         }, $optionsToPreserve);
     }
 
-    /**
-     * @param string $sqlbatch
-     * @return void
-     */
+
+
+
+
     protected function executeBulk(string $sqlbatch)
     {
         $queries = array_filter(explode(";\n", $sqlbatch));

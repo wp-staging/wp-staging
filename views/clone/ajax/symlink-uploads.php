@@ -16,7 +16,7 @@ use WPStaging\Framework\Facades\UI\Checkbox;
  * @see Scan::start For details on $options.
  */
 
-// By default symlink option is unchecked
+ 
 $uploadsSymlinked = false;
 
 if ($isPro && !empty($options->current)) {

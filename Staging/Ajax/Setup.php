@@ -16,29 +16,29 @@ use WPStaging\Staging\Service\DirectoryScanner;
 use WPStaging\Staging\Service\TableScanner;
 use WPStaging\Staging\Sites;
 
-/**
- * Renders the unified staging setup UI for create, update, and reset jobs.
- */
+
+
+
 class Setup extends AbstractTemplateComponent
 {
-    /**
-     * @var AbstractStagingSetup
-     */
+
+
+
     private $stagingSetup;
 
-    /**
-     * @var DirectoryScanner
-     */
+
+
+
     private $directoryScanner;
 
-    /**
-     * @var TableScanner
-     */
+
+
+
     private $tableScanner;
 
-    /**
-     * @var ProcessLock
-     */
+
+
+
     private $processLock;
 
     public function __construct(TemplateEngine $templateEngine, AbstractStagingSetup $stagingSetup, DirectoryScanner $directoryScanner, TableScanner $tableScanner, ProcessLock $processLock)
@@ -50,9 +50,9 @@ class Setup extends AbstractTemplateComponent
         $this->tableScanner     = $tableScanner;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxSetup()
     {
         if (!$this->canRenderAjax()) {
@@ -60,7 +60,7 @@ class Setup extends AbstractTemplateComponent
         }
 
         try {
-            $this->processLock->checkProcessLocked();
+            $this->processLock->lockProcess();
         } catch (ProcessLockedException $e) {
             wp_send_json_error($e->getMessage(), $e->getCode());
         }
@@ -169,17 +169,17 @@ class Setup extends AbstractTemplateComponent
         return Sanitize::sanitizeString($_POST['updateModal']) === 'true';
     }
 
-    /**
-     * @param string $cloneId
-     * @return StagingSiteDto
-     * @throws \Exception
-     */
+
+
+
+
+
     private function getStagingSiteDtoByCloneId(string $cloneId): StagingSiteDto
     {
-        /**
-         * Lazy loading and it is not needed everywhere.
-         * @var Sites $stagingSitesService
-         */
+
+
+
+
         $stagingSitesService = WPStaging::make(Sites::class);
 
         return $stagingSitesService->getStagingSiteDtoByCloneId($cloneId);

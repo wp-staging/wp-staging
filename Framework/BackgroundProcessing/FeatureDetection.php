@@ -1,10 +1,10 @@
 <?php
 
-/**
- * Provides feature detection for the Queue system.
- *
- * @package WPStaging\Framework\BackgroundProcessing
- */
+
+
+
+
+
 
 namespace WPStaging\Framework\BackgroundProcessing;
 
@@ -15,55 +15,55 @@ use WPStaging\Framework\Notices\Notices;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class FeatureDetection
- *
- * @package WPStaging\Framework\BackgroundProcessing
- */
+
+
+
+
+
 class FeatureDetection
 {
     use HttpBasicAuth;
 
-    /** @var string */
+ 
     const ACTION_AJAX_TEST = 'wpstg_ajax_test_action';
 
-    /** @var string */
+ 
     const ACTION_AJAX_SUPPORT_FEATURE_DETECTION = 'wpstg_q_ajax_support_feature_detection';
 
-    /** @var string */
+ 
     const FILTER_HTTPS_LOCAL_SSL_VERIFY = 'https_local_ssl_verify';
 
-    /** @var string */
+ 
     const AJAX_OPTION_NAME = 'wpstg_q_feature_detection_ajax_available';
 
-    /** @var string */
+ 
     const AJAX_REQUEST_QUERY_VAR = 'wpstg_q_ajax_check';
 
-    /**
-     * A cache property to store the result of the AJAX support check.
-     *
-     * @var bool
-     */
+
+
+
+
+
     protected $isAjaxAvailableCache;
 
-    /**
-     * Returns whether the AJAX based queue processing system is available or not.
-     *
-     * @param bool $showAdminNotice Whether to show an admin notice on missing support or not.
-     *
-     * @return bool Whether the AJAX based queue processing system is available or not.
-     */
+
+
+
+
+
+
+
     public function isAjaxAvailable($showAdminNotice = true)
     {
-        //debug_log('isAjaxAvailable start');
+ 
         if ($this->isAjaxAvailableCache === null) {
-            // Run this check only on Admin UI and on PHP initial state.
-            // TODO: inject WpAdapter using DI
+ 
+ 
             $notRightContext = wp_installing() || (defined('REST_REQUEST') && REST_REQUEST) || (new WpAdapter())->doingAjax()
                 || wp_doing_cron() || !is_admin();
 
             if ($notRightContext) {
-                // Default to say that it's supported if we cannot exclude it.
+ 
                 debug_log(sprintf(
                     "isAjaxAvailable not right context: Is WP Installing? %s - Is Rest? %s - Is Ajax? %s - Is Cron? %s - Is admin? %s",
                     wp_installing() ? 'true' : 'false',
@@ -90,32 +90,32 @@ class FeatureDetection
             add_action(Notices::ACTION_ADMIN_NOTICES, [$this, 'ajaxSupportMissingAdminNotice']);
         }
 
-        //debug_log('isAjaxAvailable end. Result: ' . $this->isAjaxAvailableCache);
+ 
 
         return $this->isAjaxAvailableCache;
     }
 
-    /**
-     * Runs the AJAX support feature detection test.
-     *
-     * This method will fire a non-blocking POST request
-     * to the `admin-ajax` endpoint.
-     * In response, the `updateAjaxTestOption` will update
-     * the flag option value and set it to `y` or not set it at all.
-     * This method will wait for some time for its counter-part, the
-     * `updateAjaxTestOption` running in the other request, to update
-     * the option. If the time runs out and the option is not there,
-     * the we know AJAX is either not working or not reliable enough.
-     * The method uses an option, and not a transient, as flag value to
-     * be able to force re-fetch it from the database.
-     *
-     * @return bool Whether the AJAX-based system is supported or not.
-     *
-     * @see FeatureDetection::updateAjaxTestOption()
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function runAjaxFeatureTest()
     {
-        // Start from a clean state.
+ 
         debug_log('Starting from a clean state...', 'info', false);
         delete_option(self::AJAX_OPTION_NAME);
 
@@ -147,7 +147,7 @@ class FeatureDetection
         }
 
         $test = static function () {
-            // Run a direct query to force the re-fetch and not hit the cache.
+ 
             global $wpdb;
             $fetched = $wpdb->get_var(
                 $wpdb->prepare(
@@ -163,8 +163,8 @@ class FeatureDetection
         };
 
         $waited   = 0;
-        $waitStep = .5 * 1e6; // 0.5 second
-        $timeout  = 10 * 1e6; // 10 seconds
+        $waitStep = .5 * 1e6; 
+        $timeout  = 10 * 1e6; 
 
         do {
             debug_log('runAjaxFeatureTest waited ' . number_format($waited / 1e6, 1) . ' seconds...', 'info', false);
@@ -172,30 +172,30 @@ class FeatureDetection
             usleep((int)$waitStep);
 
             if ($test()) {
-                // Look no further, it worked.
+ 
                 debug_log('runAjaxFeatureTest worked', 'info', false);
                 return true;
             }
         } while ($waited <= $timeout);
 
-        // We waited enough: either the AJAX system is not available or is not reliable.
+ 
         debug_log('runAjaxFeatureTest did not work', 'info', false);
         return false;
     }
 
-    /**
-     * Writes `y` to the feature detection option.
-     *
-     * This method will be called in response to the AJAX request
-     * fired by the `runAjaxFeatureTest` method.
-     * That method will wait, in its PHP process, for this method to
-     * udpate the option value and deem the AJAX support as "working".
-     *
-     * @return void The method does not return any value and will have the
-     *              side effect of updating the option.
-     *
-     * @see FeatureDetection::runAjaxFeatureTest()
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function updateAjaxTestOption()
     {
         debug_log('Running updateAjaxTestOption', 'info', false);
@@ -208,12 +208,12 @@ class FeatureDetection
         debug_log('Complete updateAjaxTestOption. New value: ' . get_option(self::AJAX_OPTION_NAME), 'info', false);
     }
 
-    /**
-     * Displays a dismissible admin notice to let the user know the BG Processing system will not
-     * perform at its best due to lack of AJAX support.
-     *
-     * @return void The method will have the side effect of echoing HTML to the page.
-     */
+
+
+
+
+
+
     public function ajaxSupportMissingAdminNotice()
     {
         $message = __(

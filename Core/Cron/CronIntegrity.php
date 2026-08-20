@@ -9,41 +9,41 @@ use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Per-request cron integrity check.
- *
- * Detects WP Staging cron events that should be registered but are missing
- * (or corrupted) in WordPress' cron option, and repairs them. Covers:
- *
- *  - Static recurring events (daily/weekly maintenance, queue maintenance,
- *    queue process, ajax feature detection) — missing events are re-scheduled;
- *    events registered with the wrong recurrence are re-scheduled with the
- *    correct one.
- *  - Dynamic per-schedule backup events in `wpstg_backup_schedules` — missing,
- *    orphaned (cron entry whose scheduleId no longer exists in the option), or
- *    registered with the wrong recurrence all trigger a full
- *    `BackupScheduler::reCreateCron()` rebuild.
- *
- * Throttled via a transient so the check (and any DB writes it triggers) runs
- * at most once every THROTTLE_SECONDS. Emits a diagnostic snapshot to the
- * debug log on every run so we can correlate cron failures (loopback
- * timeouts, DISABLE_WP_CRON, timezone drift) with users' bug reports.
- *
- * The whole run is wrapped in a top-level try/catch: since this fires on
- * `init`, a crash here would break every request for every plugin.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class CronIntegrity
 {
-    /** @var string */
+ 
     const TRANSIENT_INTEGRITY_CHECKED = 'wpstg.cron.integrity_checked';
 
-    /** @var int */
+ 
     const THROTTLE_SECONDS = HOUR_IN_SECONDS;
 
-    /** @var BackupScheduler */
+ 
     private $backupScheduler;
 
-    /** @var bool */
+ 
     private $ranThisRequest = false;
 
     public function __construct(BackupScheduler $backupScheduler)
@@ -51,9 +51,9 @@ class CronIntegrity
         $this->backupScheduler = $backupScheduler;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function checkAndRepair()
     {
         if ($this->ranThisRequest) {
@@ -62,10 +62,10 @@ class CronIntegrity
 
         $this->ranThisRequest = true;
 
-        // Per-blog transient by design: the backup schedules option (`wpstg_backup_schedules`)
-        // and WordPress cron events are per-blog on multisite, so the throttle window is
-        // also per-blog. On a large network this means the check runs once per blog per
-        // THROTTLE_SECONDS, not once per network.
+ 
+ 
+ 
+ 
         if (get_transient(self::TRANSIENT_INTEGRITY_CHECKED)) {
             return;
         }
@@ -82,23 +82,23 @@ class CronIntegrity
         }
     }
 
-    /**
-     * Static, always-on cron events registered by the plugin. Each entry is
-     * [action, recurrence]. Two corruption modes are repaired here:
-     *
-     *  1. Event is missing → re-register.
-     *  2. Event exists but registered under a different recurrence → clear
-     *     and re-register with the correct recurrence.
-     *
-     * Repair is skipped when the owning feature is not booted on this
-     * request (`has_action($action) === false`) so we don't re-create cron
-     * events for features that are currently disabled or whose service
-     * provider hasn't registered its callbacks. That avoids "ghost" events
-     * that tick with no handler and that reappear after being intentionally
-     * removed by the user.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private function checkStaticEvents()
     {
         $events = [
@@ -139,15 +139,15 @@ class CronIntegrity
             }
 
             if (!$recurrenceOk) {
-                // Recurrence is not registered yet (e.g. Free mode does not have Cron::HOURLY).
-                // Skip — the service provider that owns this event will not have registered it either.
+ 
+ 
                 continue;
             }
 
             if (!$hasHandler) {
-                // No callback is attached to this action on this request, so re-scheduling would
-                // create a ghost event that fires with no listener. This also preserves user/admin
-                // intent when a feature is disabled.
+ 
+ 
+ 
                 continue;
             }
 
@@ -174,21 +174,21 @@ class CronIntegrity
         debug_log('[Cron Integrity] Static events snapshot: ' . wp_json_encode($snapshot), 'debug', false);
     }
 
-    /**
-     * Three corruption modes for backup schedule crons:
-     *
-     *  1. Missing: schedule exists in the option but no matching cron entry.
-     *  2. Orphaned: cron entry exists but its scheduleId is no longer in the
-     *     option (e.g. a restore/migration left dangling crons).
-     *  3. Wrong recurrence: cron entry exists for a scheduleId but is
-     *     registered under a different recurrence than the option says.
-     *
-     * Any mode triggers a full `BackupScheduler::reCreateCron()`, which wipes
-     * all `wpstg_create_cron_backup` entries and re-registers them from the
-     * option (the source of truth).
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private function checkBackupSchedules()
     {
         $schedules        = $this->backupScheduler->getSchedules();
@@ -214,11 +214,11 @@ class CronIntegrity
         }
 
         if (!$hasHandler) {
-            // No callback is attached to ACTION_CREATE_CRON_BACKUP on this request (e.g. REST/WP-CLI
-            // where BackupServiceProvider::enqueueAjaxListeners has not run). Re-registering here
-            // would create ghost events that tick with no listener, which is exactly what this
-            // integrity check is meant to prevent. Defer repair to a request context that has the
-            // handler attached.
+ 
+ 
+ 
+ 
+ 
             debug_log('[Cron Integrity] Skipping backup cron repair: no handler attached for ' . Cron::ACTION_CREATE_CRON_BACKUP . ' on this request.', 'info', false);
             return;
         }
@@ -239,14 +239,14 @@ class CronIntegrity
         }
     }
 
-    /**
-     * Collect scheduleIds present in cron entries for ACTION_CREATE_CRON_BACKUP
-     * that are no longer in the `wpstg_backup_schedules` option.
-     *
-     * @param array $schedules       Schedules from `wpstg_backup_schedules`.
-     * @param array $scheduledByCron Output of `findScheduledBackupCrons()`.
-     * @return string[]
-     */
+
+
+
+
+
+
+
+
     private function findOrphanedBackupCronScheduleIds(array $schedules, array $scheduledByCron): array
     {
         $knownIds = [];
@@ -266,17 +266,17 @@ class CronIntegrity
         return array_values(array_unique($orphans));
     }
 
-    /**
-     * Walk `get_option('cron')` and collect currently scheduled
-     * ACTION_CREATE_CRON_BACKUP entries keyed by scheduleId.
-     *
-     * Matching by scheduleId — rather than by `wp_next_scheduled(..., [$schedule])`
-     * — is resilient to byte drift between the stored schedule array and the
-     * args that were serialized at scheduling time (plugin upgrade / restore /
-     * migration scenarios).
-     *
-     * @return array<string, array{recurrence: string|null, timestamp: int}>
-     */
+
+
+
+
+
+
+
+
+
+
+
     private function findScheduledBackupCrons(): array
     {
         $cron = get_option('cron');
@@ -296,8 +296,8 @@ class CronIntegrity
                 }
 
                 $scheduleId = $entry['args'][0]['scheduleId'];
-                // If the same scheduleId appears multiple times (shouldn't happen, but defensive),
-                // keep the earliest one — reCreateCron() will consolidate them anyway.
+ 
+ 
                 if (!isset($scheduled[$scheduleId])) {
                     $scheduled[$scheduleId] = [
                         'recurrence' => isset($entry['schedule']) ? $entry['schedule'] : null,
@@ -310,9 +310,9 @@ class CronIntegrity
         return $scheduled;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function buildEnvironmentSnapshot(): array
     {
         return [
@@ -323,11 +323,11 @@ class CronIntegrity
         ];
     }
 
-    /**
-     * @param array $schedules
-     * @param array $scheduledByCron Output of `findScheduledBackupCrons()`.
-     * @return array
-     */
+
+
+
+
+
     private function buildBackupSchedulesSnapshot(array $schedules, array $scheduledByCron): array
     {
         $registeredRecurrences = wp_get_schedules();
@@ -347,9 +347,9 @@ class CronIntegrity
             $wrongRec         = $isScheduled && $actualRecurrence !== $recurrence;
 
             if (!$isScheduled) {
-                // Only treat as "missing" (and thus repairable) if the recurrence is registered.
-                // Otherwise reCreateCron() would be triggered every throttle window and fail
-                // silently, producing churn for no benefit.
+ 
+ 
+ 
                 if ($recurrenceOk) {
                     $missing[] = $scheduleId;
                 } else {

@@ -12,10 +12,10 @@ use WPStaging\Framework\Filesystem\FileObject;
 
 class BackupRepairer
 {
-    /** @var BackupMetadataEditor */
+ 
     private $metadataEditor;
 
-    /** @var string|false */
+ 
     private $error = false;
 
     public function __construct(BackupMetadataEditor $metadataEditor)
@@ -23,16 +23,16 @@ class BackupRepairer
         $this->metadataEditor = $metadataEditor;
     }
 
-    /** @return string|false */
+ 
     public function getError()
     {
         return $this->error;
     }
 
-    /**
-     * @param string $filePath
-     * @return bool true on success. False on error
-     */
+
+
+
+
     public function repairMetadataSize($filePath)
     {
         $this->error = false;
@@ -48,7 +48,7 @@ class BackupRepairer
             return false;
         }
 
-        // Early bail if file is not wpstg
+ 
         if ($file->getExtension() !== 'wpstg') {
             return true;
         }
@@ -61,17 +61,17 @@ class BackupRepairer
             return false;
         }
 
-        // Early bail if size is not zero
+ 
         if ($backupMetadata->getBackupSize() !== 0) {
             return true;
         }
 
-        /*
-         * The length of the backup file size in bytes is added to the total file size
-         *
-         * Before: "backupSize": "" // 2 bytes are already consumed by the string ""
-         * After:  "backupSize": 123456 // 4 additional bytes are added = 6 (4+2)
-         */
+
+
+
+
+
+
         $fileSize = $file->getSize();
         if ($fileSize === false || $fileSize < 1) {
             $this->error = __('Backup size cannot be determined or is zero', 'wp-staging');

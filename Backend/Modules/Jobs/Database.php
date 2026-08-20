@@ -15,29 +15,29 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Staging\Service\Database\RowsExporter;
 
-/**
- * Class Database
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 class Database extends CloningProcess
 {
     use TotalStepsAreNumberOfTables;
     use TablePrefixValidator;
 
-    /**
-     * @var DatabaseCloningService
-     */
+
+
+
     private $databaseCloningService;
 
-    /**
-     * @var int
-     */
+
+
+
     private $total = 0;
 
-    /**
-     * Initialize
-     * @throws \Exception
-     */
+
+
+
+
     public function initialize()
     {
         $this->setupMemoryExhaustFile();
@@ -54,15 +54,15 @@ class Database extends CloningProcess
         $this->generateDto();
         $this->addMissingTables();
         $this->total = count($this->options->tables);
-        // if mainJob is 'Reset', add one extra pre step for deleting all tables
+ 
         if ($this->options->mainJob === Job::RESET) {
             $this->total++;
         }
     }
 
-    /**
-     *
-     */
+
+
+
     protected function generateDto()
     {
         $this->databaseCloningService = new DatabaseCloningService(
@@ -81,63 +81,63 @@ class Database extends CloningProcess
         );
     }
 
-    /**
-     * Execute the Current Step
-     * Returns false when over threshold limits are hit or when the job is done, true otherwise
-     * @return bool
-     * @throws \Exception
-     */
+
+
+
+
+
+
     protected function execute()
     {
-        // Over limits threshold
+ 
         if ($this->isOverThreshold()) {
-            // Prepare response and save current progress
+ 
             $this->prepareResponse(false, false);
             $this->saveOptions();
             return false;
         }
 
-        // No more steps, finished
+ 
         if ($this->options->currentStep > $this->total || !$this->isRunning()) {
             $this->prepareResponse(true, false);
             return false;
         }
 
         if (!$this->deleteAllTables()) {
-            // Prepare Response
+ 
             $this->prepareResponse(false, false);
 
-            // Not finished
+ 
             return true;
         }
 
-        // decrement the tableIndex if mainJob is 'resetting'
+ 
         $tableIndex = $this->options->currentStep;
         if ($this->options->mainJob === Job::RESET) {
             $tableIndex--;
         }
 
-        // Copy table
+ 
         if (isset($this->options->tables[$tableIndex]) && !$this->copyTable($this->options->tables[$tableIndex])) {
-            // Prepare Response
+ 
             $this->prepareResponse(false, false);
 
-            // Not finished
+ 
             return true;
         }
 
         $this->prepareResponse();
 
-        // Not finished
+ 
         return true;
     }
 
-    /**
-     * Delete all tables in staging site if the mainJob is 'resetting'
-     *
-     * @return bool
-     * @throws \Exception
-     */
+
+
+
+
+
+
     private function deleteAllTables()
     {
         if ($this->options->mainJob !== Job::RESET) {
@@ -164,7 +164,7 @@ class Database extends CloningProcess
             $this->saveOptions();
         }
 
-        // TODO: inject using DI
+ 
         $tableService = new TableService(new DatabaseAdapter($this->stagingDb));
         $tableService->setShouldStop([$this, 'isOverThreshold']);
         if (!$tableService->deleteTablesStartWith($this->getStagingPrefix())) {
@@ -178,11 +178,11 @@ class Database extends CloningProcess
         return true;
     }
 
-    /**
-     * Check if table already exists
-     * @param string $name
-     * @return bool
-     */
+
+
+
+
+
     private function isTableExist($name)
     {
         $old = $this->stagingDb->get_var($this->stagingDb->prepare("SHOW TABLES LIKE %s", $name));
@@ -195,22 +195,22 @@ class Database extends CloningProcess
         );
     }
 
-    /**
-     * Check if table already exists and the main job is not updating
-     * @param string $name
-     * @return bool
-     */
+
+
+
+
+
     private function shouldAbortIfTableExist($name)
     {
         return isset($this->options->mainJob) && $this->options->mainJob !== Job::UPDATE && $this->isTableExist($name);
     }
 
-    /**
-     * Finish the step
-     */
+
+
+
     private function finishStep()
     {
-        // This job is not finished yet
+ 
         if ($this->options->job->total > $this->options->job->start) {
             return false;
         }
@@ -220,22 +220,22 @@ class Database extends CloningProcess
         return true;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function finishDataCopying()
     {
-        // Add it to cloned tables listing
+ 
         $this->options->clonedTables[] = isset($this->options->tables[$this->options->currentStep]) ? $this->options->tables[$this->options->currentStep] : false;
 
-        // Reset job
+ 
         $this->options->job = new stdClass();
     }
 
-    /**
-     * Check if external database is used and if It's not pro version
-     * @return bool
-     */
+
+
+
+
     private function abortIfExternalButNotPro()
     {
         if (defined('WPSTGPRO_VERSION')) {
@@ -247,17 +247,17 @@ class Database extends CloningProcess
         return true;
     }
 
-    /**
-     * Set the job
-     * @param string $table
-     */
+
+
+
+
     private function setJob($table)
     {
         if (isset($this->options->job->current)) {
             return;
         }
 
-        // Create job object if not exists
+ 
         if (!is_object($this->options->job)) {
             $this->options->job = new stdClass();
         }
@@ -266,11 +266,11 @@ class Database extends CloningProcess
         $this->options->job->start   = 0;
     }
 
-    /**
-     * @param $srcTableName string|object
-     * @return bool
-     * @throws \Exception
-     */
+
+
+
+
+
     private function copyTable($srcTableName)
     {
         $srcTableName = is_object($srcTableName) ? $srcTableName->name : $srcTableName;
@@ -279,12 +279,12 @@ class Database extends CloningProcess
         $destTableName      = $this->getStagingPrefix() . $tableWithoutPrefix;
 
         if ($this->isMultisiteAndPro()) {
-            // Build full name of table 'users' from main site e.g. wp_users
+ 
             if ($tableWithoutPrefix === 'users') {
                 $srcTableName = $this->productionDb->base_prefix . 'users';
             }
 
-            // Build full name of table 'usermeta' from main site e.g. wp_usermeta
+ 
             if ($tableWithoutPrefix === 'usermeta') {
                 $srcTableName = $this->productionDb->base_prefix . 'usermeta';
             }
@@ -313,11 +313,11 @@ class Database extends CloningProcess
         return $this->finishStep();
     }
 
-    /**
-     * Copy data from old table to new table
-     * @param string $destTableName
-     * @param string $srcTableName
-     */
+
+
+
+
+
     private function copyData($destTableName, $srcTableName)
     {
         try {
@@ -327,15 +327,15 @@ class Database extends CloningProcess
             return;
         }
 
-        // Set new offset
+ 
         $this->options->job->start += $this->settings->queryLimit;
     }
 
-    /**
-     * Is table excluded from database copying processing?
-     * @param string $table
-     * @return bool
-     */
+
+
+
+
+
     private function isExcludedTable(string $table)
     {
 
@@ -356,13 +356,13 @@ class Database extends CloningProcess
         return false;
     }
 
-    /**
-     * Start Job and create tables
-     * @param string $destinationTable
-     * @param string $sourceTable
-     * @return bool
-     * @throws \Exception
-     */
+
+
+
+
+
+
+
     private function startJob($destinationTable, $sourceTable)
     {
         if ($this->isExcludedTable($destinationTable)) {
@@ -397,17 +397,17 @@ class Database extends CloningProcess
         return true;
     }
 
-    /**
-     * Add wp_users and wp_usermeta to the tables if they do not exist
-     * because they are not available in MU installation, but we need them on the staging site
-     *
-     * return void
-     * @throws \Exception
-     */
+
+
+
+
+
+
+
     private function addMissingTables()
     {
         $dbPrefix = WPStaging::getTablePrefix();
-        // Early bail: if updating
+ 
         if (isset($this->options->mainJob) && $this->options->mainJob === Job::UPDATE) {
             return;
         }
@@ -423,9 +423,9 @@ class Database extends CloningProcess
         }
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function abortIfStagingPrefixEqualsProdPrefix()
     {
         $dbPrefix = WPStaging::getTablePrefix();
@@ -438,10 +438,10 @@ class Database extends CloningProcess
         return false;
     }
 
-    /**
-     * Get new prefix for the staging site
-     * @return string
-     */
+
+
+
+
     protected function getStagingPrefix()
     {
         if ($this->isExternalDatabase()) {
@@ -455,11 +455,11 @@ class Database extends CloningProcess
         return $this->options->prefix;
     }
 
-    /**
-     * Return fatal error and stops here if sub folder already exists
-     * and mainJob is not updating and resetting the clone
-     * @return bool
-     */
+
+
+
+
+
     private function abortIfDirectoryNotEmpty()
     {
         $path = trailingslashit($this->options->cloneDir);
@@ -471,18 +471,18 @@ class Database extends CloningProcess
         return false;
     }
 
-    /**
-     * Return fatal error, if unable to create staging site directory
-     * @return bool
-     */
+
+
+
+
     private function abortIfDirectoryNotCreated()
     {
-        // Early bail if not a new staging site
+ 
         if (isset($this->options->mainJob) && ($this->isUpdateOrResetJob())) {
             return false;
         }
 
-        // Early bail if directory already exists
+ 
         $path = trailingslashit($this->options->cloneDir);
         if (is_dir($path)) {
             return false;
@@ -497,14 +497,14 @@ class Database extends CloningProcess
         return true;
     }
 
-    /**
-     * Stop cloning if database prefix contains hyphen
-     * @return bool
-     */
+
+
+
+
     private function abortIfPrefixContainsInvalidCharacter()
     {
-        // make sure prefix doesn't contain any invalid character
-        // same condition as in WordPress wpdb::set_prefix() method
+ 
+ 
         if (preg_match('|[^a-z0-9_]|i', $this->options->databasePrefix)) {
             $this->returnException(__("Table prefix contains invalid character(s). Use different prefix with valid characters.", 'wp-staging'));
             return true;
@@ -518,10 +518,10 @@ class Database extends CloningProcess
         return false;
     }
 
-    /**
-     * Check if the copy process started or not.
-     * @return bool
-     */
+
+
+
+
     private function isCopyProcessStarted()
     {
         return isset($this->options->job->copyProcessStarted) && $this->options->job->copyProcessStarted === true;

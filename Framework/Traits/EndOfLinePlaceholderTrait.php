@@ -2,28 +2,28 @@
 
 namespace WPStaging\Framework\Traits;
 
-/**
- * Trait EndOfLinePlaceholderTrait
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
 trait EndOfLinePlaceholderTrait
 {
     use WindowsOsTrait;
 
-    /**
-     * @param  array|string $subject
-     *
-     * @see https://github.com/wp-staging/wp-staging-pro/issues/3402
-     *
-     * @return array|string
-     */
+
+
+
+
+
+
+
     public function replaceEOLsWithPlaceholders($subject)
     {
         if ($subject === null) {
             return $subject;
         }
 
-        //Early bail: newline (\n) in file name will not happen on windows.
+ 
         if ($this->isWindowsOs()) {
             return $subject;
         }
@@ -31,13 +31,13 @@ trait EndOfLinePlaceholderTrait
         return empty($subject) ? $subject : str_replace([PHP_EOL], ['{WPSTG_EOL}'], $subject);
     }
 
-    /**
-     * @param  array|string $subject
-     *
-     * @see https://github.com/wp-staging/wp-staging-pro/issues/3402
-     *
-     * @return array|string
-     */
+
+
+
+
+
+
+
     public function replacePlaceholdersWithEOLs($subject)
     {
         if ($subject === null) {

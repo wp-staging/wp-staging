@@ -14,77 +14,77 @@ use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\Escape;
 
-/**
- * Class SearchReplace
- *
- * Used for CLONING
- * @see \WPStaging\Backend\Pro\Modules\Jobs\SearchReplace Used for PUSHING
- *
- * @todo Unify those
- *
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
+
+
+
+
+
+
 class SearchReplace extends CloningProcess
 {
     use TotalStepsAreNumberOfTables;
     use DbRowsGeneratorTrait;
     use DatabaseSearchReplaceTrait;
 
-    /** @var string */
+ 
     const FILTER_CLONE_SEARCH_REPLACE_EXCLUDED_ROWS = 'wpstg_clone_searchreplace_excl_rows';
 
-    /** @var string */
+ 
     const FILTER_CLONE_SEARCH_REPLACE_EXCLUDED = 'wpstg_clone_searchreplace_excl';
 
-    /** @var string */
+ 
     const FILTER_CLONE_SEARCH_REPLACE_PARAMS = 'wpstg_clone_searchreplace_params';
 
-    /**
-     * The maximum number of failed attempts after which the Job should just move on.
-     *
-     * @var int
-     */
+
+
+
+
+
     protected $maxFailedAttempts = 10;
 
-    /**
-     * The number of processed items, or `null` if the job did not run yet.
-     *
-     * @var int|null
-     */
+
+
+
+
+
     protected $processed;
 
-    /**
-     * @var int
-     */
+
+
+
     private $total = 0;
 
-    /**
-     *
-     * @var string
-     */
+
+
+
+
     private $sourceHostname;
 
-    /**
-     *
-     * @var string
-     */
+
+
+
+
     private $destinationHostname;
 
-    /**
-     *
-     * @var Strings
-     */
+
+
+
+
     private $strings;
 
-    /**
-     * The prefix of the new database tables which are used for the live site after updating tables
-     * @var string
-     */
+
+
+
+
     public $tmpPrefix;
 
-    /**
-     * Initialize
-     */
+
+
+
     public function initialize()
     {
         $this->setupMemoryExhaustFile();
@@ -98,105 +98,105 @@ class SearchReplace extends CloningProcess
 
     public function start()
     {
-        // Skip job. Nothing to do
+ 
         if ($this->options->totalSteps === 0) {
             $this->prepareResponse(true, false);
         }
 
         $this->run();
 
-        // Save option, progress
+ 
         $this->saveOptions();
 
         return (object)$this->response;
     }
 
-    /**
-     * Execute the Current Step
-     * Returns false when over threshold limits are hit or when the job is done, true otherwise
-     * @return bool
-     */
+
+
+
+
+
     protected function execute()
     {
-        // Over limits threshold
+ 
         if ($this->isOverThreshold()) {
-            // Prepare response and save current progress
+ 
             $this->prepareResponse(false, false);
             $this->saveOptions();
             return false;
         }
 
-        // No more steps, finished
+ 
         if ($this->options->currentStep > $this->total || !isset($this->options->tables[$this->options->currentStep])) {
             $this->prepareResponse(true, false);
             return false;
         }
 
-        // Table is excluded
+ 
         if (in_array($this->options->tables[$this->options->currentStep], $this->options->excludedTables)) {
             $this->prepareResponse();
             return true;
         }
 
-        // Search & Replace
+ 
         if (!$this->updateTable($this->options->tables[$this->options->currentStep])) {
-            // Prepare Response
+ 
             $this->prepareResponse(false, false);
 
-            // Not finished
+ 
             return true;
         }
 
 
-        // Prepare Response
+ 
         $this->prepareResponse();
 
-        // Not finished
+ 
         return true;
     }
 
-    /**
-     * Copy Tables
-     * @param string $tableName
-     * @return bool
-     */
+
+
+
+
+
     private function updateTable($tableName)
     {
         $strings      = new Strings();
         $table        = $strings->strReplaceFirst(WPStaging::getTablePrefix(), '', $tableName);
         $newTableName = $this->tmpPrefix . $table;
 
-        // Save current job
+ 
         $this->setJob($newTableName);
 
-        // Beginning of the job
+ 
         if (!$this->startJob($newTableName, $tableName)) {
             return true;
         }
 
-        // Copy data
+ 
         $this->startReplace($newTableName);
 
-        // Finish the step
+ 
         return $this->finishStep();
     }
 
-    /**
-     * Get destination hostname without scheme e.g example.com/staging or staging.example.com
-     *
-     * Conditions:
-     * - Main job is 'update'
-     * - WP installed in sub dir
-     * - Target hostname in advanced settings defined (Pro version only)
-     *
-     * @return string
-     * @todo Complex conditions. Might need refactor
-     */
+
+
+
+
+
+
+
+
+
+
+
     private function getDestinationHostname()
     {
-        // Update process: Neither 'push' nor 'clone'
+ 
         if ($this->options->mainJob === Job::UPDATE) {
-            // Defined and created in advanced settings with pro version
+ 
             if (!empty($this->options->cloneHostname)) {
                 return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
             }
@@ -204,32 +204,32 @@ class SearchReplace extends CloningProcess
             return $this->strings->getUrlWithoutScheme($this->options->destinationHostname);
         }
 
-        // Clone process: Defined and created in advanced settings with pro version
+ 
         if (!empty($this->options->cloneHostname)) {
             return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
         }
 
-        // Clone process: WP installed in sub directory under root
+ 
         if ($this->isSubDir()) {
             return $this->strings->getUrlWithoutScheme(trailingslashit($this->options->destinationHostname) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName);
         }
 
         if ($this->isMultisiteAndPro()) {
             $multisiteHostname = (new Multisite())->getHomeDomainWithoutScheme();
-            // Relative path to root of main multisite without leading or trailing slash e.g.: wordpress
+ 
             $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
 
             return rtrim($multisiteHostname, '/\\') . $multisitePath . $this->options->cloneDirectoryName;
         }
 
-        // Clone process: Default
+ 
         return $this->strings->getUrlWithoutScheme(trailingslashit($this->options->destinationHostname) . $this->options->cloneDirectoryName);
     }
 
-    /**
-     * Start search replace job
-     * @param string $table
-     */
+
+
+
+
     private function startReplace($table)
     {
         $rows = $this->options->job->start + $this->settings->querySRLimit;
@@ -246,7 +246,7 @@ class SearchReplace extends CloningProcess
             "DB Search & Replace:  Table {$table} {$this->options->job->start} to {$rows} records"
         );
 
-        // Search & Replace
+ 
         $this->searchReplace($table, []);
 
         if ($this->isSearchReplaceGeneratorDisabled()) {
@@ -254,13 +254,13 @@ class SearchReplace extends CloningProcess
         }
     }
 
-    /**
-     * Gets the columns in a table.
-     * @access public
-     * @param string $table The table to check.
-     * @return array|false Either the primary key and columns structures, or `false` to indicate the query
-     *                     failed or the table is not describe-able.
-     */
+
+
+
+
+
+
+
     protected function getColumns($table)
     {
         $primaryKeys = [];
@@ -268,7 +268,7 @@ class SearchReplace extends CloningProcess
         $fields      = $this->stagingDb->get_results('DESCRIBE ' . $table);
 
         if (empty($fields)) {
-            // Either there was an error or the table has no columns.
+ 
             return false;
         }
 
@@ -284,12 +284,12 @@ class SearchReplace extends CloningProcess
         return [$primaryKeys, $columns];
     }
 
-    /**
-     *
-     * @param string $table The table to run the replacement on.
-     * @param array $args An associative array containing arguments for this run.
-     * @return bool Whether the search-replace operation was successful or not.
-     */
+
+
+
+
+
+
     private function searchReplace($table, $args)
     {
         $table = esc_sql($table);
@@ -308,14 +308,14 @@ class SearchReplace extends CloningProcess
         $args['case_insensitive'] = false;
         $args['skip_transients'] = 'on';
 
-        // Allow filtering of search & replace parameters
+ 
         $args = Hooks::applyFilters(self::FILTER_CLONE_SEARCH_REPLACE_PARAMS, $args);
 
-        // Get columns and primary keys
+ 
         $primaryKeyAndColumns = $this->getColumns($table);
 
         if ($primaryKeyAndColumns === false) {
-            // Stop here: for some reason the table cannot be described or there was an error.
+ 
             ++$this->options->job->failedAttempts;
             return false;
         }
@@ -337,14 +337,14 @@ class SearchReplace extends CloningProcess
             $data = $this->rowsGenerator($table, $offset, $limit, $this->stagingDb);
         }
 
-        // Filter certain rows (of other plugins)
+ 
         $filter = $this->excludedStrings();
 
         $filter = apply_filters(self::FILTER_CLONE_SEARCH_REPLACE_EXCLUDED_ROWS, $filter);
 
         $processed = 0;
 
-        // Go through the table rows
+ 
         foreach ($data as $row) {
             $processed++;
             $currentRow++;
@@ -356,67 +356,67 @@ class SearchReplace extends CloningProcess
                 $this->lastFetchedPrimaryKeyValue = $row[$this->numericPrimaryKey];
             }
 
-            // Skip rows
+ 
             if (isset($row['option_name']) && in_array($row['option_name'], $filter)) {
                 continue;
             }
 
-            // Skip transients (There can be thousands of them. Save memory and increase performance)
+ 
             if (isset($row['option_name']) && $args['skip_transients'] === 'on' && strpos($row['option_name'], '_transient') !== false
             ) {
                 continue;
             }
 
-            // Skip rows with more than 5MB to save memory. These rows contain log data or something similiar but never site relevant data
+ 
             if (isset($row['option_value']) && strlen($row['option_value']) >= 5000000) {
                 continue;
             }
 
-            // Go through the columns
+ 
             foreach ($columns as $column) {
                 $dataRow = $row[$column];
 
-                // Don't use empty() here, because it will also skip valid '0' values
+ 
                 if (is_null($dataRow)) {
                     continue;
                 }
 
-                // Skip column larger than 5MB
+ 
                 $size = strlen($dataRow);
                 if ($size >= 5000000) {
                     continue;
                 }
 
-                // Skip primary key column
+ 
                 if (in_array($column, $primaryKeys)) {
                     $whereSql[] = $column . ' = "' . WPStaging::make(Escape::class)->mysqlRealEscapeString($dataRow) . '"';
                     continue;
                 }
 
-                // Skip GUIDs by default.
+ 
                 if ($args['replace_guids'] !== 'on' && $column === 'guid') {
                     continue;
                 }
 
                 $excludes = Hooks::applyFilters(self::FILTER_CLONE_SEARCH_REPLACE_EXCLUDED, []);
                 $searchReplace = new \WPStaging\Framework\Database\SearchReplace($args['search_for'], $args['replace_with'], $args['case_insensitive'], $excludes);
-                /** @var SiteInfo */
+ 
                 $siteInfo = WPStaging::make(SiteInfo::class);
                 $searchReplace->setWpBakeryActive($siteInfo->isWpBakeryActive());
                 $dataRow = $searchReplace->replaceExtended($dataRow);
 
-                // Something was changed
+ 
                 if ($row[$column] !== $dataRow) {
                     $updateSql[] = $column . " = '" . WPStaging::make(Escape::class)->mysqlRealEscapeString($dataRow) . "'";
                     $doUpdate = true;
                 }
             }
 
-            // Determine what to do with updates.
+ 
             if ($args['dry_run'] === 'on') {
-                // Don't do anything if a dry run
+ 
             } elseif ($doUpdate && !empty($whereSql)) {
-                // If there are changes to make, run the query.
+ 
                 $sql = 'UPDATE ' . $table . ' SET ' . implode(', ', $updateSql) . ' WHERE ' . implode(' AND ', array_filter($whereSql));
                 $result = $this->stagingDb->query($sql);
 
@@ -428,7 +428,7 @@ class SearchReplace extends CloningProcess
                     );
                 }
             }
-        } // end row loop
+        } 
 
         unset($row, $updateSql, $whereSql, $sql, $currentRow);
 
@@ -436,22 +436,22 @@ class SearchReplace extends CloningProcess
             $this->updateJobStart($processed, $this->stagingDb, $table);
         }
 
-        // DB Flush
+ 
         $this->stagingDb->flush();
         return true;
     }
 
-    /**
-     * Set the job
-     * @param string $table
-     */
+
+
+
+
     private function setJob($table)
     {
         if (!empty($this->options->job->current)) {
             return;
         }
 
-        // Create job object if not exists
+ 
         if (!is_object($this->options->job)) {
             $this->options->job = new stdClass();
         }
@@ -460,19 +460,19 @@ class SearchReplace extends CloningProcess
         $this->options->job->start = 0;
     }
 
-    /**
-     * Start Job
-     * @param string $newTableName
-     * @param string $oldTableName
-     * @return bool
-     */
+
+
+
+
+
+
     private function startJob($newTableName, $oldTableName)
     {
         if ($this->isExcludedTable($newTableName)) {
             return false;
         }
 
-        // Table does not exist
+ 
         $result = $this->productionDb->query("SHOW TABLES LIKE '{$oldTableName}'");
         if (!$result || $result === 0) {
             return false;
@@ -483,7 +483,7 @@ class SearchReplace extends CloningProcess
         }
 
         if ($this->options->job->start !== 0) {
-            // The job was attempted too many times and should be skipped now.
+ 
             return !($this->options->job->failedAttempts > $this->maxFailedAttempts);
         }
 
@@ -498,11 +498,11 @@ class SearchReplace extends CloningProcess
         return true;
     }
 
-    /**
-     * Is table excluded from search replace processing?
-     * @param string $table
-     * @return boolean
-     */
+
+
+
+
+
     private function isExcludedTable($table)
     {
         $tables = $this->excludedTableService->getExcludedTablesForSearchReplace($this->isNetworkClone());
@@ -520,56 +520,56 @@ class SearchReplace extends CloningProcess
         return false;
     }
 
-    /**
-     * Finish the step
-     */
+
+
+
     protected function finishStep()
     {
-        // This job is not finished yet
+ 
         if (!$this->noResultRows && ($this->options->job->total > $this->options->job->start)) {
             return false;
         }
 
-        // Add it to cloned tables listing
+ 
         $this->options->clonedTables[] = $this->options->tables[$this->options->currentStep];
 
-        // Reset job
+ 
         $this->options->job = new stdClass();
 
         return true;
     }
 
-    /**
-     * Updates the (next) job start to reflect the number of actually processed rows.
-     *
-     * If nothing was processed, then the job start  will be ticked by 1.
-     *
-     * @param int $processed The  number of actually processed rows in this run.
-     * @param wpdb $db The wpdb instance being used to process.
-     * @param string $table The table being processed.
-     *
-     * @return void The method does not return any value.
-     */
+
+
+
+
+
+
+
+
+
+
+
     protected function updateJobStart($processed, wpdb $db, $table)
     {
         $this->processed = absint($processed);
 
-        // If it is a numeric primary key table execution,
-        // Save the last processed primary key value for the next request
+ 
+ 
         if ($this->executeNumericPrimaryKeyQuery && $this->lastFetchedPrimaryKeyValue !== false) {
             $this->options->job->lastProcessedId = $this->lastFetchedPrimaryKeyValue;
             $this->options->job->start += $this->processed;
             return;
         }
 
-        // We make sure to increment the offset at least in 1 to avoid infinite loops.
+ 
         $minimumProcessed = 1;
 
-        /*
-         * There are some scenarios where we couldn't process any rows in this request.
-         * The exact causes of this is still under investigation, but to mitigate this
-         * effect, we will smartly set the offset for the next job based on some context.
-         */
+
+
+
+
+
         if ($this->processed === 0) {
             $this->logDebug('SEARCH_REPLACE: Processed is zero');
 
@@ -577,11 +577,11 @@ class SearchReplace extends CloningProcess
 
             if (is_numeric($totalRowsInTable)) {
                 $this->logDebug("SEARCH_REPLACE: Rows count is numeric: $totalRowsInTable");
-                // Skip 1% of the current table on each iteration, with a minimum of 1 and a maximum of the query limit.
+ 
                 $minimumProcessed = min(max((int)$totalRowsInTable / 100, 1), $this->settings->querySRLimit);
             } else {
                 $this->logDebug(sprintf("SEARCH_REPLACE: Rows count is not numeric. Type: %s. Json encoded value: %s", gettype($totalRowsInTable), wp_json_encode($totalRowsInTable)));
-                // Unexpected result from query. Set the offset to the limit.
+ 
                 $minimumProcessed = $this->settings->querySRLimit;
             }
 
@@ -591,12 +591,12 @@ class SearchReplace extends CloningProcess
         $this->options->job->start += max($processed, $minimumProcessed);
     }
 
-    /**
-     * Returns the number of rows processed by the job.
-     *
-     * @return int|null Either the number of rows processed by the Job, or `null` if the Job did
-     *                  not run yet.
-     */
+
+
+
+
+
+
     public function getProcessed()
     {
         return $this->processed;
@@ -607,9 +607,9 @@ class SearchReplace extends CloningProcess
         \WPStaging\functions\debug_log($message, 'debug');
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isSearchReplaceGeneratorDisabled(): bool
     {
         if (!defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR')) {

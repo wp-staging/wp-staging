@@ -32,7 +32,7 @@ if ($onboarding !== null) {
 $journey        = $onboarding === null ? null : $onboarding->getJourney();
 $journeyStep    = $onboarding === null ? '' : $onboarding->getJourneyStep();
 $isPreConsent   = $onboarding !== null && $onboarding->isPreConsent();
-$showBackupNext = $onboarding !== null && $onboarding->shouldOfferBackupNext();
+$showBackupNext = $onboarding !== null && $onboarding->isTaskSelector();
 
 $showSelector        = $journeyStep === OnboardingJourney::STEP_SELECT;
 $completedCapability = $journey === null ? '' : $journey->getAction(OnboardingJourney::POSITION_FIRST);
@@ -47,12 +47,12 @@ $isNextStepVisible = $nextStepMarkup !== '';
 
 $isFocusMode = $isPreConsent || $journeyStep !== '';
 
-// The first run offers a backup after staging; outside it the same offer is
-// made only to a site that has no established backup workflow of its own.
+ 
+ 
 $isFirstRunOffer = $showBackupNext && $journey !== null && $journey->getNextCapability() !== OnboardingJourney::CAPABILITY_STAGING;
-// class_exists rather than a bare call: resolve() can only catch what happens
-// after the class loads, and a stale autoload map would otherwise take the whole
-// page down for a detail it can perfectly well render without.
+ 
+ 
+ 
 $backupNextOffer = (!$isFocusMode && class_exists(BackupNextOffer::class)) ? BackupNextOffer::resolve() : null;
 $offerBackupNext = $isFirstRunOffer || ($backupNextOffer !== null && $backupNextOffer->isEligible());
 
@@ -63,7 +63,7 @@ $runningCapability  = $journeyStep === OnboardingJourney::STEP_RUNNING ? $journe
 $activeCapability = $journeyStep === OnboardingJourney::STEP_RUNNING ? $journey->getActiveCapability() : '';
 $showProgress     = $activeCapability !== '' && !$isNextStepVisible;
 
-// Kept in the DOM so their workflows keep loading behind the first run.
+ 
 $onboardingHiddenClass = ($isPreConsent || $showSelector || $isNextStepVisible || $showProgress) ? ' wpstg-onboarding-hidden' : '';
 if ($isNextStepVisible && $secondAction === '') {
     $journey->recordNextOfferShown();
@@ -115,8 +115,8 @@ $isCalledFromIndex = true;
 
         <div class="wpstg--tab--contents <?php echo $isStagingPage ? 'min-h-152' : 'min-h-375'; ?>">
             <?php
-            // Focus mode withholds the header, so without this every state after
-            // the selector is an unbranded card floating in an empty page.
+ 
+ 
             if ($isFocusMode) : ?>
                 <div class="wpstg-onboarding__logo">
                     <?php require WPSTG_VIEWS_DIR . 'notices/_partial/wp-staging-logo-svg.php'; ?>
@@ -133,8 +133,8 @@ $isCalledFromIndex = true;
                 require WPSTG_VIEWS_DIR . 'onboarding/progress.php';
             }
 
-            // Where a job started from this page renders, instead of the modal.
-            // Its presence is what puts the process UI in focus mode at all.
+ 
+ 
             if ($isFocusMode) : ?>
                 <div class="wpstg-onboarding-job" data-wpstg-inline-progress hidden></div>
             <?php endif;
@@ -161,7 +161,7 @@ $isCalledFromIndex = true;
                 <?php
                 $cliNotice = WPStaging::make(CliIntegrationNotice::class);
                 $cliNotice->maybeShowCliNotice();
-                // When banner is dismissed but dock CTA should be shown, render modal separately
+ 
                 $cliNotice->maybeRenderCliModalForDockCta();
                 ?>
                 <div id="wpstg-backup-content">
@@ -229,9 +229,9 @@ $isCalledFromIndex = true;
       })();
     </script>
     <?php
-    // Hidden host for the staging-created success modal's review block. Kept on
-    // the persistent page (not the AJAX-injected listing) so it is available when
-    // the success modal is built. Empty unless Free and review-eligible.
+ 
+ 
+ 
     ?>
     <div id="wpstg-staging-review-content" style="display:none;">
         <?php include WPSTG_VIEWS_DIR . 'notices/review-prompt-modal.php'; ?>

@@ -8,51 +8,51 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Staging\Dto\StagingSiteDto;
 
-/**
- * @package WPStaging\Staging\Service
- */
+
+
+
 abstract class AbstractStagingSetup
 {
-    /** @var string */
+ 
     const JOB_NEW_STAGING_SITE = 'new';
 
-    /** @var string */
+ 
     const JOB_UPDATE = 'update';
 
-    /** @var string */
+ 
     const JOB_RESET = 'reset';
 
-    /** @var string */
+ 
     const JOB_PUSH = 'push';
 
-    /**
-     * @var StagingSiteDto
-     */
+
+
+
     protected $stagingSiteDto;
 
-    /**
-     * @var TemplateEngine
-     */
+
+
+
     protected $templateEngine;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $openDisabledSettingsSectionByDefault = true;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $stagingJob;
 
-    /**
-     * @var string
-     */
+
+
+
     private $infoIcon;
 
-    /**
-     * @var WpDefaultDirectories
-     */
+
+
+
     private $wpDefaultDirectories;
 
     public function __construct(TemplateEngine $templateEngine, Assets $assets, WpDefaultDirectories $wpDefaultDirectories)
@@ -62,29 +62,29 @@ abstract class AbstractStagingSetup
         $this->wpDefaultDirectories = $wpDefaultDirectories;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function initNewStagingSite()
     {
         $this->stagingJob     = StagingSetup::JOB_NEW_STAGING_SITE;
         $this->stagingSiteDto = new StagingSiteDto();
     }
 
-    /**
-     * @param StagingSiteDto $stagingSiteDto
-     * @return void
-     */
+
+
+
+
     public function initUpdateJob(StagingSiteDto $stagingSiteDto)
     {
         $this->stagingJob     = StagingSetup::JOB_UPDATE;
         $this->stagingSiteDto = $stagingSiteDto;
     }
 
-    /**
-     * @param StagingSiteDto $stagingSiteDto
-     * @return void
-     */
+
+
+
+
     public function initResetJob(StagingSiteDto $stagingSiteDto)
     {
         $this->stagingJob     = StagingSetup::JOB_RESET;
@@ -131,7 +131,10 @@ abstract class AbstractStagingSetup
         return wp_normalize_path(ABSPATH);
     }
 
-    public function renderSettings(string $name, string $label, string $description, bool $checked = false, bool $disabled = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', string $tooltip = null)
+
+
+
+    public function renderSettings(string $name, string $label, string $description, bool $checked = false, bool $disabled = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', $tooltip = null)
     {
         $view = $this->templateEngine->render(
             'staging/_partials/settings.php',
@@ -173,14 +176,14 @@ abstract class AbstractStagingSetup
         return $this->openDisabledSettingsSectionByDefault;
     }
 
-    /**
-     * Whether Pro advanced settings are unlocked at render time. True only on a
-     * Pro build with a valid/active (or local) license; the free build is always
-     * locked. Used to keep advanced settings disabled when a Pro install runs
-     * without a valid license.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function isProLicenseActive(): bool
     {
         return false;
@@ -192,7 +195,10 @@ abstract class AbstractStagingSetup
 
     abstract public function renderAdvanceSettingsHeader();
 
-    abstract public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', string $tooltip = null);
+
+
+
+    abstract public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', $tooltip = null);
 
     abstract public function renderNewAdminSettings();
 

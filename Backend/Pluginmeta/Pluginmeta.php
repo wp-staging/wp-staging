@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backend\Pluginmeta;
 
-/* Admin Plugins Meta Data */
+ 
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
@@ -10,7 +10,7 @@ use WPStaging\Framework\Utils\PluginInfo;
 
 class Pluginmeta
 {
-    /** @var PluginInfo */
+ 
     private $pluginInfo;
 
     public function __construct()
@@ -19,9 +19,9 @@ class Pluginmeta
         $this->defineHooks();
     }
 
-    /**
-     * Define Hooks
-     */
+
+
+
     public function defineHooks()
     {
         add_filter('plugin_row_meta', [$this, 'rowMeta'], 10, 2);
@@ -29,13 +29,13 @@ class Pluginmeta
         add_filter('network_admin_plugin_action_links', [$this, 'editFreeActionRow'], 10, 2);
     }
 
-    /**
-     * Plugins row action links for the free version
-     *
-     * @param array $links already defined action links
-     * @param string $file plugin file path and name being processed
-     * @return array $links
-     */
+
+
+
+
+
+
+
     public function actionLinks(array $links, string $file): array
     {
         $pluginBasename = plugin_basename(WPSTG_PLUGIN_FILE);
@@ -45,11 +45,11 @@ class Pluginmeta
             array_unshift($links, $upgradeLink);
         }
 
-        // show on both free and pro version
-        // as WPSTG_PLUGIN_FILE is common for both free and pro version
-        // defined during requirement bootstrapping
-        // this will now work for wp-staging-dev/wp-staging-pro.php
-        // since the settings link will only work if the plugins is activated, it is good to show it this way
+ 
+ 
+ 
+ 
+ 
         if ($this->canShowSettingsLink($file)) {
             $settingsLink = '<a href="' . admin_url('admin.php?page=wpstg-settings') . '">' . esc_html__('Settings', 'wp-staging') . '</a>';
             array_unshift($links, $settingsLink);
@@ -66,13 +66,13 @@ class Pluginmeta
         return $this->editFreeActionRow($links, $file);
     }
 
-    /**
-     * Check if it's a free plugin slug
-     * Checking against hardcoded plugin paths allow us to show an upgrade link even if the plugin is not activated
-     *
-     * @param $pluginSlug
-     * @return bool
-     */
+
+
+
+
+
+
+
     private function isFreePluginSlug($pluginSlug): bool
     {
         $freePluginSlugs = [
@@ -83,11 +83,11 @@ class Pluginmeta
         return in_array($pluginSlug, $freePluginSlugs);
     }
 
-    /**
-     * @param array $links
-     * @param string $file
-     * @return array
-     */
+
+
+
+
+
     public function editFreeActionRow(array $links, string $file): array
     {
         if (stripos($file, 'wp-staging.php') === false) {
@@ -111,9 +111,9 @@ class Pluginmeta
         return $links;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function canShowFreeRequiredNotice(): bool
     {
         if (!wpstgIsFreeVersionRequiredForPro()) {
@@ -140,10 +140,10 @@ class Pluginmeta
         return true;
     }
 
-    /**
-     * @param $file
-     * @return bool
-     */
+
+
+
+
     private function canShowSettingsLink($file): bool
     {
         if (!defined('WPSTG_PLUGIN_FILE')) {
@@ -162,13 +162,13 @@ class Pluginmeta
         return true;
     }
 
-    /**
-     * Plugin row meta links
-     *
-     * @param array $input already defined meta links
-     * @param string $file plugin file path and name being processed
-     * @return array
-     */
+
+
+
+
+
+
+
     public function rowMeta(array $input, string $file): array
     {
         if ($file != 'wp-staging/wp-staging.php' && $file != 'wp-staging-pro/wp-staging-pro.php') {

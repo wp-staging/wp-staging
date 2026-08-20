@@ -1,7 +1,7 @@
 <?php
 
-// TODO PHP7.x; declare(strict_types=1);
-// TODO PHP7.x; return types && type-hints
+ 
+ 
 
 namespace WPStaging\Framework\Job;
 
@@ -30,47 +30,47 @@ abstract class AbstractJob implements ShutdownableInterface
 {
     use BenchmarkTrait;
 
-    /** @var JobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var Cache $jobDataCache Persists the JobDataDto in the filesystem. */
+ 
     private $jobDataCache;
 
-    /** @var bool Whether this request already wrote the job state out. */
+ 
     private $hasPersisted = false;
 
-    /** @var bool Whether the last-chance shutdown function is registered. */
+ 
     private $hasShutdownBackstop = false;
 
-    /** @var string */
+ 
     protected $currentTaskName;
 
-    /** @var AbstractTask */
+ 
     protected $currentTask;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var ProcessLock */
+ 
     protected $processLock;
 
-    /** @var DiskWriteCheck */
+ 
     protected $diskFullCheck;
 
-    /** @var JobTransientCache */
+ 
     protected $jobTransientCache;
 
-    /** @var string|false */
+ 
     protected $memoryExhaustErrorTmpFile = false;
 
     protected $maxRetries = 10;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $isCancelJob = false;
 
     public function __construct(
@@ -97,15 +97,15 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->jobTransientCache = $jobTransientCache;
     }
 
-    /**
-     * Persists the Job status to the current cross-request caching system.
-     *
-     * This method will be invoked in the context of the WordPress `shutdown` hook and should
-     * not be invoked out of that context if not with full knowledge of its side-effects.
-     *
-     * @return void The method has the side-effect of persisting the Job status to the caching
-     *              system.
-     */
+
+
+
+
+
+
+
+
+
     public function persist()
     {
         if ($this->jobDataDto->isStatusCheck()) {
@@ -115,7 +115,7 @@ abstract class AbstractJob implements ShutdownableInterface
         try {
             $this->diskFullCheck->testDiskIsWriteable();
         } catch (DiskNotWritableException $e) {
-            // no-op, this is handled on the beginning of the next request
+ 
         }
 
         if ($this->jobDataDto->isFinished() && !$this->jobDataDto->isCleaned()) {
@@ -135,16 +135,16 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->hasPersisted = true;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function persistJobDataDto()
     {
         $data = $this->jobDataDto->toArray();
 
         try {
-            // save() reports a refused write by returning false rather than throwing. Letting
-            // that pass lets a caller publish a checkpoint that depends on this write.
+ 
+ 
             if ($this->jobDataCache->save($data, true) === false) {
                 throw new \RuntimeException('Could not persist Job data to cache.');
             }
@@ -154,33 +154,37 @@ abstract class AbstractJob implements ShutdownableInterface
         }
     }
 
-    /**
-     * This method will be called in the context of the WordPress `shutdown` action to
-     * persist the Job status once and only once.
-     *
-     * @return void The method has the side-effect of persisting the Job status to the caching
-     *              system.
-     */
+
+
+
+
+
+
+
     public function onWpShutdown()
     {
+        if ($this->hasPersisted) {
+            return;
+        }
+
         $this->persist();
     }
 
-    /**
-     * Last chance to write the job state, after the `shutdown` action has had its turn.
-     *
-     * A fatal in a callback ahead of this job abandons the rest of the action, and the
-     * state that never reaches disk is the state the next request resumes from. PHP still
-     * calls the remaining shutdown functions after such a fatal, which is the hole this
-     * closes.
-     *
-     * It is a backstop, not a guarantee. A callback ahead of us calling exit() ends the
-     * shutdown sequence outright, and a request killed by the process manager or the OOM
-     * killer reaches no PHP handler at all — which is why the restore checkpoints its
-     * progress as it goes rather than relying on being told it is about to die.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function persistIfShutdownActionDidNotRun()
     {
         if ($this->hasPersisted) {
@@ -190,15 +194,15 @@ abstract class AbstractJob implements ShutdownableInterface
         try {
             $this->persist();
         } catch (\Throwable $e) {
-            // Nothing above can report an error this late, and throwing out of a shutdown
-            // function turns a lost checkpoint into a fatal on top of it.
+ 
+ 
             debug_log('Job state could not be persisted on shutdown: ' . $e->getMessage());
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function registerShutdownBackstop()
     {
         if ($this->hasShutdownBackstop) {
@@ -210,36 +214,36 @@ abstract class AbstractJob implements ShutdownableInterface
         register_shutdown_function([$this, 'persistIfShutdownActionDidNotRun']);
     }
 
-    /**
-     * @return string
-     * @throws WPStagingException
-     */
+
+
+
+
     public static function getJobName()
     {
         throw new WPStagingException('Any extending class MUST override the getJobName method.');
     }
 
-    /** @return array */
+ 
     abstract protected function getJobTasks();
 
-    /** @return TaskResponseDto */
+ 
     abstract protected function execute();
 
-    /** @return void */
+ 
     abstract protected function init();
 
-    /** @return TaskResponseDto */
+ 
     public function prepareAndExecute()
     {
-        // Acquired before anything reads or writes the job state, including the two exits below
-        // that delete the job cache: a request that owns none of the state must not be able to
-        // throw away the state another worker is running on, and the persist this request does
-        // on shutdown has to be covered by the same ownership. It is released when the request
-        // ends, so one acquisition covers hydrating, executing and persisting alike.
+ 
+ 
+ 
+ 
+ 
         $this->processLock->lockProcess();
 
         try {
-            // Check if the last request bailed with a Disk Write failure flag.
+ 
             $this->diskFullCheck->hasDiskWriteTestFailed();
         } catch (DiskNotWritableException $e) {
             $this->jobDataCache->delete();
@@ -272,16 +276,16 @@ abstract class AbstractJob implements ShutdownableInterface
 
             $this->registerShutdownBackstop();
 
-            /** @var TaskResponseDto $response */
+ 
             $response = $this->execute();
 
-            /*
-             * Let's display the name of the task running now, instead
-             * of the task that just run to the user.
-             *
-             * Since we already popped from the queue to get here,
-             * the current item now is the next.
-             */
+
+
+
+
+
+
+
             $nextTask = $this->jobDataDto->getCurrentTask();
 
             if (is_subclass_of($nextTask, AbstractTask::class)) {
@@ -298,44 +302,44 @@ abstract class AbstractJob implements ShutdownableInterface
 
             return $response;
         } catch (DiskNotWritableException $e) {
-            /**
-             * Assume a DiskWriteCheck flag has been set, so the next request can pick it up.
-             *
-             * @see DiskWriteCheck::testDiskIsWriteable()
-             * @see DiskWriteCheck::hasDiskWriteTestFailed()
-             */
+
+
+
+
+
+
             return $this->getJobRetryResponse($e->getMessage());
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function updateTasks()
     {
         $this->init();
         $this->addTasks($this->getJobTasks());
     }
 
-    /**
-     * @return JobTransientCache
-     */
+
+
+
     public function getTransientCache(): JobTransientCache
     {
         return $this->jobTransientCache;
     }
 
-    /**
-     * @return JobDataDto
-     */
+
+
+
     public function getJobDataDto()
     {
         return $this->jobDataDto;
     }
 
-    /**
-     * @var $jobDataDto JobDataDto
-     */
+
+
+
     public function setJobDataDto($jobDataDto)
     {
         $this->jobDataDto = $jobDataDto;
@@ -350,17 +354,17 @@ abstract class AbstractJob implements ShutdownableInterface
         try {
             return $this->jobTransientCache->getJobStatus() === JobTransientCache::STATUS_CANCELLED;
         } catch (\Throwable $e) {
-            // If the job transient cache is not set, we assume the job is not cancelled.
+ 
             return false;
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function checkLastTaskHealth()
     {
-        // Early bail: No task health on a task that is retrying a failed request. We will evaluate that on the next request.
+ 
         if ($this->jobDataDto->getTaskHealthIsRetrying()) {
             $this->jobDataDto->setTaskHealthIsRetrying(false);
 
@@ -368,7 +372,7 @@ abstract class AbstractJob implements ShutdownableInterface
         }
 
         if (!$this->jobDataDto->getTaskHealthResponded()) {
-            // This happens when the previous task started but never generated a response.
+ 
             $this->jobDataDto->setTaskHealthSequentialFailedRetries($this->jobDataDto->getTaskHealthSequentialFailedRetries() + 1);
             $this->jobDataCache->save($this->jobDataDto);
 
@@ -389,7 +393,7 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->jobDataDto->hydrate($data);
         }
 
-        // From now on, classes that require a JobDataDto will receive this instance.
+ 
         WPStaging::getInstance()->getContainer()->singleton(JobDataDto::class, $this->jobDataDto);
 
         $action = empty($_GET['action']) ? '' : sanitize_text_field($_GET['action']);
@@ -420,7 +424,7 @@ abstract class AbstractJob implements ShutdownableInterface
             throw new \RuntimeException('Internal error: Next task of queue job is null or invalid.');
         }
 
-        /** @var AbstractTask currentTask */
+ 
         $this->currentTask = WPStaging::getInstance()->get($this->currentTaskName);
 
         if (!$this->currentTask instanceof AbstractTask) {
@@ -438,7 +442,7 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->currentTask->setDebug(defined('WPSTG_DEBUG') && WPSTG_DEBUG);
         $this->currentTask->setupLogger();
 
-        // Initialize Task Health Status
+ 
         $this->jobDataDto->setTaskHealthName($this->currentTaskName);
         $this->jobDataDto->setTaskHealthResponded(false);
     }
@@ -450,16 +454,16 @@ abstract class AbstractJob implements ShutdownableInterface
         }
     }
 
-    /** @return AbstractTask */
+ 
     public function getCurrentTask()
     {
         return $this->currentTask;
     }
 
-    /**
-     * @param string $memoryExhaustErrorTmpFile
-     * @return void
-     */
+
+
+
+
     public function setMemoryExhaustErrorTmpFile(string $memoryExhaustErrorTmpFile)
     {
         $this->memoryExhaustErrorTmpFile = $memoryExhaustErrorTmpFile;
@@ -478,26 +482,26 @@ abstract class AbstractJob implements ShutdownableInterface
 
     protected function cleanup()
     {
-        // This excludes all files except cache files from deleting i.e. only delete .cache files
+ 
         $this->filesystem->setExcludePaths(['*.*', '!*.cache.php', '!*.cache', '!*.wpstg', '!*.sql']);
         $this->filesystem->delete($this->directory->getCacheDirectory(), $deleteSelf = false);
         $this->filesystem->setExcludePaths([]);
         $this->filesystem->mkdir($this->directory->getCacheDirectory(), true);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function deleteJobDataCache()
     {
         $this->jobDataCache->delete();
     }
 
-    /**
-     * @param TaskResponseDto $response
-     *
-     * @return TaskResponseDto
-     */
+
+
+
+
+
     protected function getResponse(TaskResponseDto $response)
     {
         $this->jobDataDto->setTaskHealthResponded(true);
@@ -505,7 +509,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
         $response->setJob(substr($this->findCurrentJob(), 3));
 
-        // Task is not done yet, add it to beginning of the queue again
+ 
         if ($response->isRunning()) {
             $className = get_class($this->currentTask);
         }
@@ -513,14 +517,14 @@ abstract class AbstractJob implements ShutdownableInterface
         try {
             if (!$response->isRunning()) {
                 $this->jobDataDto->moveToNextTask();
-                // Persist the updated task index immediately while the process lock is still held.
-                // This prevents a race condition where a concurrent background process could read
-                // the stale currentTaskIndex from cache and re-execute the just-completed task.
+ 
+ 
+ 
                 $this->persistJobDataDto();
             }
         } catch (FinishedQueueException $e) {
             $this->jobDataDto->setFinished(true);
-            // Persist completion state immediately to prevent stale task index reads by concurrent requests.
+ 
             $this->persistJobDataDto();
 
             return $response;
@@ -585,9 +589,9 @@ abstract class AbstractJob implements ShutdownableInterface
         return $response;
     }
 
-    /**
-     * @return string Formatted date string
-     */
+
+
+
     private function getFormattedDate()
     {
         return current_time(Logger::LOG_DATETIME_FORMAT);

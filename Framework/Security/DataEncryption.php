@@ -8,28 +8,28 @@ use WPStaging\Vendor\phpseclib3\Crypt\PublicKeyLoader;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class Data Encryption
- *
- * Class responsible for encrypting and decrypting data
- *
- * @package WPStaging\Framework\Security
- */
+
+
+
+
+
+
+
 class DataEncryption
 {
-    /** @var string */
+ 
     const FILTER_FRAMEWORK_SECURITY_DATA_ENCRYPTION_USE_SSL = 'wpstg.framework.security.dataEncryption.useSsl';
 
-    /** @var bool */
+ 
     private $hasSsl;
 
-    /** @var string */
+ 
     private $prefix;
 
-    /** @var string */
+ 
     private $key;
 
-    /** @var string */
+ 
     private $salt;
 
     public function __construct()
@@ -50,10 +50,10 @@ class DataEncryption
         return class_exists(\WPStaging\Vendor\phpseclib3\Crypt\PublicKeyLoader::class);
     }
 
-    /**
-     * @param string|int $value
-     * @return string
-     */
+
+
+
+
     public function encrypt($value): string
     {
         if ($this->hasSsl) {
@@ -63,10 +63,10 @@ class DataEncryption
         return $this->base64Encrypt($value);
     }
 
-    /**
-     * @param string $value
-     * @return string
-     */
+
+
+
+
     public function decrypt(string $value): string
     {
         if ($this->verifyPrefix($value, 'ssl')) {
@@ -76,10 +76,10 @@ class DataEncryption
         return $this->base64Decrypt($value);
     }
 
-    /**
-     * @param string|int $value
-     * @return string
-     */
+
+
+
+
     protected function base64Encrypt($value): string
     {
         if (!$this->isValidKeySalt() || $value === '' || $this->isEncrypted($value)) {
@@ -107,10 +107,10 @@ class DataEncryption
         return $this->setPrefixType('b64') . $this->normalizeBase64Encode($encrypted);
     }
 
-    /**
-     * @param string $inputValue
-     * @return string
-     */
+
+
+
+
     protected function base64Decrypt(string $inputValue): string
     {
         if (!$this->isValidKeySalt() || !is_string($inputValue) || $inputValue === '' || !$this->isEncrypted($inputValue) || !$this->verifyPrefix($inputValue, 'b64')) {
@@ -147,10 +147,10 @@ class DataEncryption
         return $decrypted;
     }
 
-    /**
-     * @param string|int $value
-     * @return string
-     */
+
+
+
+
     protected function sslEncrypt($value): string
     {
         if (!$this->isValidKeySalt() || $value === '' || !$this->hasSsl || $this->isEncrypted($value)) {
@@ -169,10 +169,10 @@ class DataEncryption
         return $this->setPrefixType('ssl') . $this->normalizeBase64Encode($iv . $rawValue);
     }
 
-    /**
-     * @param string $inputValue
-     * @return string
-     */
+
+
+
+
     protected function sslDecrypt(string $inputValue): string
     {
         if (!$this->isValidKeySalt() || !is_string($inputValue) || $inputValue === '' || !$this->hasSsl || !$this->isEncrypted($inputValue) || !$this->verifyPrefix($inputValue, 'ssl')) {
@@ -196,66 +196,66 @@ class DataEncryption
         return substr($value, 0, - strlen($this->salt));
     }
 
-    /** @return true */
+ 
     protected function disableUseSssl()
     {
         $this->hasSsl = false;
         return true;
     }
 
-    /**
-     * @param string $value
-     * @return string
-     */
+
+
+
+
     public function setKey(string $value): string
     {
         $this->key = (string)$value;
         return $this->key;
     }
 
-    /**
-     * @param string $value
-     * @return string
-     */
+
+
+
+
     public function setSalt(string $value): string
     {
         $this->salt = (string)$value;
         return $this->salt;
     }
 
-    /** @return string */
+ 
     public function getKey(): string
     {
         return $this->key;
     }
 
-    /** @return string */
+ 
     public function getSalt(): string
     {
         return $this->salt;
     }
 
-    /**
-     * @param string $value
-     * @param string $type
-     * @return bool
-     */
+
+
+
+
+
     protected function verifyPrefix(string $value, string $type): bool
     {
         $type = '!' . $type . '!';
         return substr($value, 0, strlen($this->prefix . $type)) === $this->prefix . $type;
     }
 
-    /**
-     * @param string $value
-     * @return bool
-     */
+
+
+
+
     public function isEncrypted(string $value): bool
     {
         return preg_match('@^' . preg_quote($this->prefix, '@') . '!(b64|ssl|rsa)!([a-zA-Z0-9\-_]+)$@', $value);
     }
 
-    /** @return bool */
+ 
     protected function isValidKeySalt(): bool
     {
         $key  = $this->getKey();
@@ -263,23 +263,23 @@ class DataEncryption
         return (!empty($key) && is_string($key)) && (!empty($salt) && is_string($salt));
     }
 
-    /** @return string */
+ 
     protected function getPrefix(): string
     {
         return $this->prefix;
     }
 
-    /**
-     * @param string $value
-     * @return string
-     */
+
+
+
+
     protected function setPrefix(string $value): string
     {
         $this->prefix = $value;
         return $this->prefix;
     }
 
-    /** @return string|false */
+ 
     private function getDefaultKey()
     {
         if (defined('WPSTG_ENCRYPTION_KEY') && !empty(WPSTG_ENCRYPTION_KEY) && is_string(WPSTG_ENCRYPTION_KEY)) {
@@ -293,7 +293,7 @@ class DataEncryption
         return false;
     }
 
-    /** @return string|false */
+ 
     private function getDefaultSalt()
     {
         if (defined('WPSTG_ENCRYPTION_SALT') && !empty(WPSTG_ENCRYPTION_SALT) && is_string(WPSTG_ENCRYPTION_SALT)) {
@@ -307,40 +307,40 @@ class DataEncryption
         return false;
     }
 
-    /**
-     * @param string $value
-     * @param string $type
-     * @return string
-     */
+
+
+
+
+
     private function stripPrefix(string $value, string $type): string
     {
         $type = '!' . $type . '!';
         return substr($value, strlen($this->prefix . $type));
     }
 
-    /**
-     * @param string $type
-     * @return string
-     */
+
+
+
+
     private function setPrefixType(string $type): string
     {
         return $this->prefix . '!' . $type . '!';
     }
 
-    /**
-     * @param string $value
-     * @return string
-     */
+
+
+
+
     private function normalizeBase64Encode(string $value): string
     {
         // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
         return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($value));
     }
 
-    /**
-     * @param string $value
-     * @return string
-     */
+
+
+
+
     private function normalizeBase64Decode(string $value)
     {
         // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
@@ -370,11 +370,11 @@ class DataEncryption
         ];
     }
 
-    /**
-     * @param string|int $value
-     * @param string $publicKey
-     * @return string
-     */
+
+
+
+
+
     public function rsaEncrypt($value, string $publicKey): string
     {
         if ($value === '' || $this->isEncrypted($value)) {
@@ -391,11 +391,11 @@ class DataEncryption
         return $this->setPrefixType('rsa') . $this->normalizeBase64Encode($cipherText);
     }
 
-    /**
-     * @param string $inputValue
-     * @param string $privateKey
-     * @return string
-     */
+
+
+
+
+
     public function rsaDecrypt(string $inputValue, string $privateKey): string
     {
         if (!is_string($inputValue) || $inputValue === '' || !$this->isEncrypted($inputValue) || !$this->verifyPrefix($inputValue, 'rsa')) {

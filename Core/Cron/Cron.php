@@ -1,54 +1,54 @@
 <?php
 
-/**
- * Cron relevant stuff
- */
+
+
+
 
 namespace WPStaging\Core\Cron;
 
 use WPStaging\Core\WPStaging;
 
-// No Direct Access
+ 
 if (!defined("WPINC")) {
     die;
 }
 
 class Cron
 {
-    /** @var string */
+ 
     const HOURLY          = 'wpstg_hourly';
 
-    /** @var string */
+ 
     const SIX_HOURS       = 'wpstg_six_hours';
 
-    /** @var string */
+ 
     const TWELVE_HOURS    = 'wpstg_twelve_hours';
 
-    /** @var string */
+ 
     const DAILY           = 'wpstg_daily';
 
-    /** @var string */
+ 
     const EVERY_TWO_DAYS  = 'wpstg_every_two_days';
 
-    /** @var string */
+ 
     const WEEKLY          = 'wpstg_weekly';
 
-    /** @var string */
+ 
     const EVERY_TWO_WEEKS = 'wpstg_every_two_weeks';
 
-    /** @var string */
-    const MONTHLY         = 'wpstg_montly'; // @todo: fix the typo in "montly"
+ 
+    const MONTHLY         = 'wpstg_montly'; 
 
-    /** @var string */
+ 
     const BASIC_DAILY     = 'wpstg_basic_daily';
 
-    /** @var string */
+ 
     const ACTION_DAILY_EVENT = 'wpstg_daily_event';
 
-    /** @var string */
+ 
     const ACTION_WEEKLY_EVENT = 'wpstg_weekly_event';
 
-    /** @var string */
+ 
     const ACTION_CREATE_CRON_BACKUP = 'wpstg_create_cron_backup';
 
     public function __construct()
@@ -56,18 +56,18 @@ class Cron
         add_filter('cron_schedules', [$this, 'addIntervals']);
     }
 
-    /**
-     * Add new intervals for wp cron jobs
-     * @param array $schedules
-     * @return array
-     */
+
+
+
+
+
     public function addIntervals($schedules)
     {
         if (!WPStaging::isPro()) {
             return $this->addBasicIntervals($schedules);
         }
 
-        // add weekly and monthly intervals
+ 
         $schedules['weekly'] = [
             'interval' => WEEK_IN_SECONDS,
             'display'  => __('Once Weekly', 'wp-staging'),
@@ -108,8 +108,8 @@ class Cron
             'display'  => __('WP Staging events that happens weekly', 'wp-staging'),
         ];
 
-        // Weekly schedules for specific days (1-7, Monday-Sunday, ISO 8601 standard)
-        // Day 1 = Monday, Day 2 = Tuesday, ..., Day 7 = Sunday
+ 
+ 
         for ($day = 1; $day <= 7; $day++) {
             $dayName = $this->getDayName($day);
             $schedules[static::WEEKLY . '_' . $day] = [
@@ -144,12 +144,12 @@ class Cron
         return $schedules;
     }
 
-    /**
-     * Get day name from day number (1-7, Monday-Sunday, ISO 8601)
-     *
-     * @param int $dayNumber Day number (1=Monday, 7=Sunday)
-     * @return string Day name
-     */
+
+
+
+
+
+
     public static function getDayName(int $dayNumber): string
     {
         $days = [
@@ -165,18 +165,18 @@ class Cron
         return isset($days[$dayNumber]) ? $days[$dayNumber] : '';
     }
 
-    /**
-     * Extract day number from schedule name
-     *
-     * @param string $cronInterval Schedule name (e.g., 'wpstg_weekly_3')
-     * @return int|null Day number (1-7) or null if not a day-specific schedule
-     */
+
+
+
+
+
+
     public static function extractDayFromSchedule(string $cronInterval)
     {
-        // Check for day-specific schedules (format: schedule_type_day)
+ 
         if (preg_match('/_(\d+)$/', $cronInterval, $matches)) {
             $day = (int)$matches[1];
-            // Validate it's in the range 1-7
+ 
             if ($day >= 1 && $day <= 7) {
                 return $day;
             }
@@ -185,16 +185,16 @@ class Cron
         return null;
     }
 
-    /**
-     * @param string $cronInterval
-     * @return string
-     */
+
+
+
+
     public static function getCronDisplayName($cronInterval)
     {
-        // Check for day-specific schedules (e.g., wpstg_weekly_1, wpstg_weekly_2)
+ 
         $day = self::extractDayFromSchedule($cronInterval);
         if ($day !== null) {
-            // Extract base schedule type
+ 
             $baseSchedule = preg_replace('/_\d+$/', '', $cronInterval);
 
             if ($baseSchedule === static::WEEKLY) {
@@ -205,7 +205,7 @@ class Cron
             }
         }
 
-        // Handle regular schedules
+ 
         switch ($cronInterval) {
             case static::HOURLY:
                 return __('Hourly', 'wp-staging');
@@ -218,7 +218,7 @@ class Cron
             case static::EVERY_TWO_DAYS:
                 return __('Every 2 Days', 'wp-staging');
             case static::WEEKLY:
-                return __('Weekly', 'wp-staging'); // Backward compatibility: plain wpstg_weekly without day
+                return __('Weekly', 'wp-staging'); 
             case static::EVERY_TWO_WEEKS:
                 return __('Every 2 weeks', 'wp-staging');
             case static::MONTHLY:
@@ -230,9 +230,9 @@ class Cron
         return $cronInterval;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getProEvents()
     {
         return [
@@ -247,15 +247,15 @@ class Cron
         ];
     }
 
-    /**
-     * Return a conservative first-run timestamp for plugin-owned static cron events.
-     *
-     * Scheduling at the current timestamp makes events immediately due after activation
-     * or repair, which can create avoidable CPU bursts on the next request.
-     *
-     * @param string $recurrence
-     * @return int
-     */
+
+
+
+
+
+
+
+
+
     public function getFirstRunTimestamp(string $recurrence): int
     {
         switch ($recurrence) {
@@ -295,9 +295,9 @@ class Cron
         return time() + $delay;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function scheduleEvent()
     {
         if (!wp_next_scheduled(self::ACTION_WEEKLY_EVENT)) {

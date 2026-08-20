@@ -21,101 +21,101 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Service\StagingEngine;
 
-/**
- * Class Job
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 abstract class Job implements ShutdownableInterface
 {
     use ResourceTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const PUSH    = 'push';
 
-    /**
-     * @var string
-     */
+
+
+
     const STAGING = 'cloning';
 
-    /**
-     * @var string
-     */
+
+
+
     const RESET   = 'resetting';
 
-    /**
-     * @var string
-     */
+
+
+
     const UPDATE  = 'updating';
 
-    /**
-     * Temp file base name for files index for cloning and push
-     * @var string
-     */
+
+
+
+
     const FILES_INDEX_KEY = 'clone_files_index';
 
-    /**
-     * Temp file base name that contain clone related data for cloning and push
-     * @var string
-     */
+
+
+
+
     const CLONE_OPTIONS_KEY = 'clone_options';
 
-    /**
-     * @var Cache
-     */
+
+
+
     protected $cloneOptionCache;
 
-    /**
-     * @var Cache
-     */
+
+
+
     protected $filesIndexCache;
 
-    /**
-     * @var Cache
-     */
+
+
+
     protected $cache;
 
-    /**
-     * @var Logger
-     */
+
+
+
     protected $logger;
 
-    /**
-     * @var stdClass|null
-     */
+
+
+
     protected $options;
 
-    /**
-     * @var object
-     */
+
+
+
     protected $settings;
 
-    /**
-     * Multisite home domain without scheme
-     * @var string
-     */
+
+
+
+
     protected $baseUrl;
 
-    /** @var ExcludedTables */
+ 
     protected $excludedTableService;
 
-    /** @var UniqueIdentifier */
+ 
     protected $identifier;
 
-    /** @var Math */
+ 
     protected $utilsMath;
 
-    /** @var SystemInfo */
+ 
     protected $systemInfo;
 
-    /** @var ExternalDatabaseConfiguration */
+ 
     protected $externalDatabaseConfiguration;
 
-    /**
-     * Job constructor.
-     * @throws Exception
-     */
+
+
+
+
     public function __construct()
     {
         $this->utilsMath = new Math();
@@ -123,17 +123,17 @@ abstract class Job implements ShutdownableInterface
         $this->excludedTableService = new ExcludedTables();
         $this->externalDatabaseConfiguration = new ExternalDatabaseConfiguration();
 
-        // Services
-        //$this->logger     = WPStaging::make(Logger::class);
+ 
+ 
         $this->logger     = WPStaging::getInstance()->get("logger");
         $this->systemInfo = WPStaging::make(SystemInfo::class);
         $this->identifier = WPStaging::make(UniqueIdentifier::class);
 
         $this->setupCacheFiles();
 
-        // Settings and Options
+ 
         $this->options  = $this->cloneOptionCache->get();
-        // Convert into object
+ 
         $this->options  = json_decode(json_encode($this->options));
         $this->settings = (object)((new Settings())->setDefault());
 
@@ -148,52 +148,52 @@ abstract class Job implements ShutdownableInterface
         $this->initialize();
     }
 
-    /**
-     * To be override by child classes
-     * @return void
-     */
+
+
+
+
     public function initialize()
     {
-        // do nothing
+ 
     }
 
-    /**
-     * @todo can be removed?
-     * @return void
-     */
+
+
+
+
     public function onWpShutdown()
     {
-        // do nothing
+ 
     }
 
     protected function setupCacheFiles()
     {
-        // For clone options
+ 
         $this->cloneOptionCache = WPStaging::make(Cache::class);
-        $this->cloneOptionCache->setLifetime(-1); // Non-expireable file
+        $this->cloneOptionCache->setLifetime(-1); 
         $this->cloneOptionCache->setPath(WPStaging::getContentDir());
         $this->cloneOptionCache->setFileName(self::CLONE_OPTIONS_KEY);
 
-        // For files index to copy files
+ 
         $this->filesIndexCache = WPStaging::make(Cache::class);
-        $this->filesIndexCache->setLifetime(-1); // Non-expireable file
+        $this->filesIndexCache->setLifetime(-1); 
         $this->filesIndexCache->setPath(WPStaging::getContentDir());
         $this->filesIndexCache->setFileName(self::FILES_INDEX_KEY);
 
-        // For other purposes
+ 
         $this->cache = WPStaging::make(Cache::class);
-        $this->cache->setLifetime(-1); // Non-expireable file
+        $this->cache->setLifetime(-1); 
         $this->cache->setPath(WPStaging::getContentDir());
     }
 
-    /**
-     * @param null|array|object $options
-     * @return bool
-     * @throws Exception
-     */
+
+
+
+
+
     public function saveOptions($options = null)
     {
-        // Get default options
+ 
         if ($options === null) {
             $options = $this->options;
         }
@@ -206,41 +206,41 @@ abstract class Job implements ShutdownableInterface
         $options->expiresAt = $now->add(new DateInterval('P1D'))->format('Y-m-d H:i:s');
 
         if (!property_exists($options, 'jobIdentifier')) {
-            $options->jobIdentifier = rand(0, 2147483647); // 32 bits int max
+            $options->jobIdentifier = rand(0, 2147483647); 
         }
 
-        // Ensure that it is an object
+ 
         $options = json_decode(json_encode($options));
         $result  = $this->cloneOptionCache->save($options);
 
         return $result !== false;
     }
 
-    /**
-     * @return object
-     */
+
+
+
     public function getOptions()
     {
         return $this->options;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function markLegacyStagingEngine()
     {
         $this->options->stagingEngine = StagingEngine::ENGINE_LEGACY;
         WPStaging::make(StagingEngine::class)->saveEngine(StagingEngine::ENGINE_LEGACY);
     }
 
-    /**
-     * Loads the staging site list that the legacy scan step used to cache.
-     *
-     * Direct legacy starts from the refactored setup UI skip the scan request, so
-     * update/reset need this before they can resolve the selected staging site.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
     protected function loadLegacyExistingClones()
     {
         $existingClones                = get_option(Sites::STAGING_SITES_OPTION, []);
@@ -249,15 +249,15 @@ abstract class Job implements ShutdownableInterface
             : [];
     }
 
-    /**
-     * Initializes the legacy job state that used to be prepared by the scan step.
-     *
-     * The refactored setup UI can start legacy jobs directly, so create/update/reset
-     * need these defaults before the first wpstg_processing request runs.
-     *
-     * @param string $mainJob
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     protected function initializeLegacyStagingRun($mainJob)
     {
         $this->options->mainJob     = $mainJob;
@@ -311,10 +311,10 @@ abstract class Job implements ShutdownableInterface
         $this->markLegacyStagingEngine();
     }
 
-    /**
-     * Get current time in seconds
-     * @return float
-     */
+
+
+
+
     protected function time()
     {
         $time = microtime();
@@ -323,12 +323,12 @@ abstract class Job implements ShutdownableInterface
         return $time;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isOverThreshold()
     {
-        // Check if the memory is over threshold
+ 
         $usedMemory        = $this->getMemoryPeakUsage();
         $maxMemoryLimit    = $this->getMaxMemoryLimit();
         $scriptMemoryLimit = $this->getScriptMemoryLimit();
@@ -357,7 +357,7 @@ abstract class Job implements ShutdownableInterface
             return true;
         }
 
-        // Check if execution time is over threshold
+ 
         if ($this->isTimeLimit()) {
             $this->debugLog(
                 sprintf(
@@ -373,10 +373,10 @@ abstract class Job implements ShutdownableInterface
         return false;
     }
 
-    /**
-     * @param string $msg
-     * @param string $type
-     */
+
+
+
+
     public function log($msg, $type = Logger::TYPE_INFO)
     {
         if ($this->logger === null) {
@@ -388,26 +388,26 @@ abstract class Job implements ShutdownableInterface
         $this->logger->add($msg, $type);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getFilesIndexCacheFilePath(): string
     {
         return trailingslashit($this->cache->getPath()) . self::FILES_INDEX_KEY . '.' . Cache::FILE_EXTENSION;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getLogFilename()
     {
         $uniqueId = $this->identifier->getIdentifier();
-        // If job is not cloning i.e. updating, resetting, pushing
+ 
         if (!empty($this->options->mainJob) && $this->options->mainJob !== Job::STAGING) {
             return $this->options->mainJob . '_' . $uniqueId . '_' . date('Y-m-d', time());
         }
 
-        // If job is cloning
+ 
         if (!empty($this->options->clone) && !empty($this->options->mainJob)) {
             return $this->options->mainJob . '_' . $uniqueId . '_' . $this->options->clone . '_' . date('Y-m-d', time());
         }
@@ -423,10 +423,10 @@ abstract class Job implements ShutdownableInterface
         return 'unknown_job_' . $uniqueId . '_' . date('Y-m-d', time());
     }
 
-    /**
-     * @param string $msg
-     * @param string $type
-     */
+
+
+
+
     public function debugLog($msg, $type = Logger::TYPE_INFO)
     {
         $this->logger->setFileName($this->getLogFilename());
@@ -436,10 +436,10 @@ abstract class Job implements ShutdownableInterface
         }
     }
 
-    /**
-     * Throw an error message via json and stop further execution
-     * @param string $message
-     */
+
+
+
+
     public function returnException($message = '')
     {
         wp_die(
@@ -454,10 +454,10 @@ abstract class Job implements ShutdownableInterface
         );
     }
 
-    /**
-     * Is job running
-     * @return bool
-     */
+
+
+
+
     protected function isRunning()
     {
         if (!isset($this->options) || !isset($this->options->isRunning) || !isset($this->options->expiresAt)) {
@@ -479,17 +479,17 @@ abstract class Job implements ShutdownableInterface
         return defined('WPSTGPRO_VERSION');
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isMultisiteAndPro()
     {
         return $this->isPro() && is_multisite();
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function isNetworkClone()
     {
         if (!isset($this->options->networkClone)) {
@@ -499,28 +499,28 @@ abstract class Job implements ShutdownableInterface
         return $this->isMultisiteAndPro() && $this->options->networkClone;
     }
 
-    /**
-     * Should exclude wp-config file during clone update
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function excludeWpConfigDuringUpdate()
     {
         return $this->options->mainJob === self::UPDATE;
     }
 
-    /**
-     * Check if external database is used
-     * @return bool
-     */
+
+
+
+
     protected function isExternalDatabase()
     {
         return $this->externalDatabaseConfiguration->isEnabled($this->options);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isStagingDatabaseSameAsProductionDatabase()
     {
         if (!$this->isExternalDatabase()) {
@@ -550,20 +550,20 @@ abstract class Job implements ShutdownableInterface
         return false;
     }
 
-    /**
-     * Is the current main job UPDATE or RESET
-     *
-     * @return bool
-     */
+
+
+
+
+
     public function isUpdateOrResetJob(): bool
     {
         return isset($this->options->mainJob) && ($this->options->mainJob === self::RESET || $this->options->mainJob === self::UPDATE);
     }
 
-    /**
-     * @param string $jobName
-     * @return void
-     */
+
+
+
+
     protected function addJobSettingsToLogs(string $jobName = 'WP Staging Job')
     {
         $this->logger->add(sprintf('%s Settings', esc_html($jobName)), Logger::TYPE_INFO);
@@ -597,9 +597,9 @@ abstract class Job implements ShutdownableInterface
         $this->logger->writeGlobalSettingsToLogs();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function writeAdvancedSettingsToLogs()
     {
         $this->logger->add('Advanced Settings', Logger::TYPE_INFO);

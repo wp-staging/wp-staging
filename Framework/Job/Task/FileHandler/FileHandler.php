@@ -8,19 +8,19 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 abstract class FileHandler
 {
-    /** @var FileTaskInterface */
+ 
     protected $fileTask;
 
-    /** @var LoggerInterface */
+ 
     protected $logger;
 
-    /** @var resource|null */
+ 
     protected $handle;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var string */
+ 
     protected $processTitle;
 
     public function __construct(Filesystem $filesystem)

@@ -11,16 +11,16 @@
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 
-// Settings Enabled by default
+ 
 use WPStaging\Framework\Facades\UI\Checkbox;
 
 $settingsEnabled = true;
-// New staging site. Mails Sending is checked by default.
+ 
 if (!$isPro) {
     $settingsEnabled = false;
 }
 
-// Only change default check status when clone options exists plugin is PRO
+ 
 $isAutoUpdatePlugins = false;
 if ($isPro && !empty($options->current)) {
     $isAutoUpdatePlugins = isset($options->existingClones[$options->current]['isAutoUpdatePlugins']) ? (bool) $options->existingClones[$options->current]['isAutoUpdatePlugins'] : false;

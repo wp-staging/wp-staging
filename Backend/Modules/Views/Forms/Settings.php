@@ -17,38 +17,38 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\DataEncryption;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
-/**
- * Builds and manages the settings form for WP Staging plugin configuration
- *
- * This class generates the settings form structure for the WordPress admin interface.
- * It creates form elements for various plugin settings including:
- * - Database copy and search/replace query limits
- * - File copy limits and batch sizes
- * - CPU load priority and request delays
- * - Feature toggles (optimizer, debug mode, compression)
- * - User access permissions and role management
- * - Admin bar customization
- *
- * The class dynamically builds forms based on available tabs and handles both
- * free and pro version settings appropriately.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Settings
 {
 
-    /**
-     * @var array
-     */
+
+
+
     private $form = [];
 
-    /**
-     * @var Tabs
-     */
+
+
+
     private $tabs;
 
-    /**
-     * Settings constructor.
-     * @param Tabs $tabs
-     */
+
+
+
+
     public function __construct($tabs)
     {
         $this->tabs = $tabs;
@@ -68,7 +68,7 @@ class Settings
 
         $settings = json_decode(json_encode(get_option("wpstg_settings", [])));
 
-       // DB Copy Query Limit
+ 
         $element = new Numerical(
             "wpstg_settings[queryLimit]",
             [
@@ -84,7 +84,7 @@ class Settings
             ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 10000),
             'wpstg-settings-query-limit'
         );
-       // DB Search & Replace Query Limit
+ 
         $element = new Numerical(
             "wpstg_settings[querySRLimit]",
             [
@@ -102,7 +102,7 @@ class Settings
         );
 
         $options = ['1' => '1', '10' => '10', '50' => '50', '250' => '250', '500' => '500', '1000' => '1000'];
-       // DB Copy Query Limit
+ 
         $element = new Select(
             "wpstg_settings[fileLimit]",
             $options,
@@ -123,7 +123,7 @@ class Settings
         );
 
 
-       // File Copy Batch Size
+ 
         $element = new Numerical(
             "wpstg_settings[maxFileSize]",
             [
@@ -140,7 +140,7 @@ class Settings
             'wpstg-settings-max-file-size'
         );
 
-       // File Copy Batch Size
+ 
         $element = new Numerical(
             "wpstg_settings[batchSize]",
             [
@@ -157,7 +157,7 @@ class Settings
             'wpstg-settings-batch-size'
         );
 
-       // CPU load priority
+ 
         $element = new Select(
             "wpstg_settings[cpuLoad]",
             [
@@ -175,7 +175,7 @@ class Settings
             'wpstg-settings-cpu-load'
         );
 
-       // Delay Between Requests
+ 
         $element = new Numerical(
             "wpstg_settings[delayRequests]",
             [
@@ -193,7 +193,7 @@ class Settings
         );
 
 
-       // Optimizer
+ 
         $element = new Toggle(
             "wpstg_settings[optimizer]",
             ['1' => ""]
@@ -206,7 +206,7 @@ class Settings
         );
 
 
-        // Disable admin authorization
+ 
         if (!defined('WPSTGPRO_VERSION')) {
             $element = new Toggle(
                 "wpstg_settings[disableAdminLogin]",
@@ -220,7 +220,7 @@ class Settings
             );
         }
 
-        // Keep permalinks
+ 
         if (defined('WPSTGPRO_VERSION')) {
             $element = new Toggle(
                 "wpstg_settings[keepPermalinks]",
@@ -234,7 +234,7 @@ class Settings
             );
         }
 
-       // Debug Mode
+ 
         $element = new Toggle(
             "wpstg_settings[debugMode]",
             ['1' => '']
@@ -246,7 +246,7 @@ class Settings
             'wpstg-settings-debug-mode'
         );
 
-       // Remove Data on Uninstall?
+ 
         $element = new Toggle(
             "wpstg_settings[unInstallOnDelete]",
             ['1' => '']
@@ -258,7 +258,7 @@ class Settings
             'wpstg-settings-uninstall-on-delete'
         );
 
-        // Get user roles
+ 
         if (defined('WPSTGPRO_VERSION')) {
             $element = new SelectMultiple('wpstg_settings[userRoles][]', $this->getUserRoles());
             $this->form["general"]->add(
@@ -286,7 +286,7 @@ class Settings
             'wpstg-settings-admin-bar-color'
         );
 
-        // Compress Backups
+ 
         if (defined('WPSTGPRO_VERSION')) {
             $element = new Toggle(
                 "wpstg_settings[enableCompression]",
@@ -311,7 +311,18 @@ class Settings
             }
         }
 
-        // HTTP Basic Auth
+        $element = new Toggle(
+            "wpstg_settings[enableBackupBeforeUpdate]",
+            ['1' => '']
+        );
+
+        $this->form["general"]->add(
+            $element->setLabel(__("Backup Before Update", "wp-staging"))
+            ->setDefault((isset($settings->enableBackupBeforeUpdate)) ? $settings->enableBackupBeforeUpdate : '1'),
+            'wpstg-settings-enable-backup-before-update'
+        );
+
+ 
         $httpAuthCredentials = get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []);
 
         $element = new Text('wpstg_settings[httpAuthUsername]', []);
@@ -331,10 +342,10 @@ class Settings
         );
     }
 
-    /**
-     * Get available user Roles
-     * @return array
-     */
+
+
+
+
     private function getUserRoles()
     {
         $userRoles = [];
@@ -345,10 +356,10 @@ class Settings
         return array_merge(['all' => __('Allow access from all visitors', 'wp-staging')], $userRoles);
     }
 
-    /**
-     * @param string $name
-     * @return array|Form
-     */
+
+
+
+
     public function get($name = null)
     {
         return ($name === null) ? $this->form : $this->form[$name];

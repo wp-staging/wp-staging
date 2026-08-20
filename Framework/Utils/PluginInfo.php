@@ -4,20 +4,20 @@ namespace WPStaging\Framework\Utils;
 
 class PluginInfo
 {
-    /** @var string */
+ 
     const FILTER_STYLESHEET_DIRECTORY = 'stylesheet_directory';
 
-    /** @var string */
+ 
     const FILTER_TEMPLATE_DIRECTORY = 'template_directory';
 
-    /**
-     * Checks if the admin menu can be displayed. The different cases are:
-     *  - if the free only version is active;
-     *  - if the pro version is active then the free version must be active and compatible with the pro version.
-     *  - if the free is not require for pro.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function canShowAdminMenu(): bool
     {
         if (!defined('WPSTGPRO_VERSION')) {
@@ -39,9 +39,9 @@ class PluginInfo
         return false;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getAllActivePluginsInSubsites(): array
     {
         if (!is_multisite()) {
@@ -70,9 +70,9 @@ class PluginInfo
         return array_unique($activePlugins);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getAllActiveThemesInSubsites(): array
     {
         if (!is_multisite()) {
@@ -82,8 +82,8 @@ class PluginInfo
         $activeThemes = [];
         $sites        = get_sites();
 
-        remove_all_filters(self::FILTER_STYLESHEET_DIRECTORY); // to get the real value of get_stylesheet_directory().
-        remove_all_filters(self::FILTER_TEMPLATE_DIRECTORY); // to get the real value of get_template_directory().
+        remove_all_filters(self::FILTER_STYLESHEET_DIRECTORY); 
+        remove_all_filters(self::FILTER_TEMPLATE_DIRECTORY); 
 
         foreach ($sites as $site) {
             switch_to_blog($site->blog_id);
@@ -97,19 +97,19 @@ class PluginInfo
         return array_unique($activeThemes);
     }
 
-    /**
-     * Get active parent and child themes
-     * @return array
-     */
+
+
+
+
     public function getActiveThemes(): array
     {
         $activeThemes = [];
 
-        remove_all_filters(self::FILTER_STYLESHEET_DIRECTORY); // to get the real value of get_stylesheet_directory().
-        remove_all_filters(self::FILTER_TEMPLATE_DIRECTORY); // to get the real value of get_template_directory().
+        remove_all_filters(self::FILTER_STYLESHEET_DIRECTORY); 
+        remove_all_filters(self::FILTER_TEMPLATE_DIRECTORY); 
 
-        $activeThemes[] = get_stylesheet_directory(); // child theme
-        $activeThemes[] = get_template_directory(); // parent theme
+        $activeThemes[] = get_stylesheet_directory(); 
+        $activeThemes[] = get_template_directory(); 
 
         return array_unique($activeThemes);
     }

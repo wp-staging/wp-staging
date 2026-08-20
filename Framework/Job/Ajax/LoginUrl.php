@@ -6,9 +6,9 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 
 class LoginUrl extends AbstractTemplateComponent
 {
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxLoginUrl()
     {
         if (!$this->canRenderAjax()) {

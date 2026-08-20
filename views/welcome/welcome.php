@@ -5,8 +5,8 @@ use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Language\Language;
 
 // Two paths lead here — the redirect that follows activation, and the sidebar
-// entry someone opens because they want to upgrade — and they are worth very
-// different amounts. This is the last point where they can still be told apart.
+ 
+ 
 $upgradeUrl = Language::getUpgradeUrl(Welcome::getUpgradeContext());
 
 ?>

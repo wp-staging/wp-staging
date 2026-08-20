@@ -4,16 +4,16 @@ namespace WPStaging\Core\Forms\Elements;
 
 use WPStaging\Core\Forms\ElementsWithOptions;
 
-/**
- * Class Select
- * @package WPStaging\Core\Forms\Elements
- */
+
+
+
+
 class Select extends ElementsWithOptions
 {
 
-    /**
-     * @return string
-     */
+
+
+
     protected function prepareOutput()
     {
         $output = "<select id='{$this->getId()}' name='{$this->name}' {$this->prepareAttributes()}>";
@@ -29,10 +29,10 @@ class Select extends ElementsWithOptions
         return $output;
     }
 
-    /**
-     * @param string $value
-     * @return bool
-     */
+
+
+
+
     private function isSelected($value)
     {
         if (
@@ -48,9 +48,9 @@ class Select extends ElementsWithOptions
         return false;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function render()
     {
         return ($this->renderFile) ? @file_get_contents($this->renderFile) : $this->prepareOutput();

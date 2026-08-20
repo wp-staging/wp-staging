@@ -8,25 +8,25 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
 class SelectedTables
 {
-    /** @var array */
+ 
     private $includedTables = [];
 
-    /** @var array */
+ 
     private $excludedTables = [];
 
-    /** @var array */
+ 
     private $selectedTablesWithoutPrefix = [];
 
-    /** @var bool */
+ 
     private $allTablesExcluded = false;
 
-    /** @var bool */
+ 
     private $includeAllTables = false;
 
-    /** @var wpdb|null */
+ 
     private $wpdb;
 
-    /** @var string|null */
+ 
     private $prefix;
 
     public function __construct($includedTables = '', $excludedTables = '', $selectedTablesWithoutPrefix = '')
@@ -38,10 +38,10 @@ class SelectedTables
         $this->prefix                      = null;
     }
 
-    /**
-     * @param array|string $tables
-     * @return void
-     */
+
+
+
+
     public function setIncludedTables($tables)
     {
         if (is_array($tables)) {
@@ -52,10 +52,10 @@ class SelectedTables
         $this->includedTables = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
     }
 
-    /**
-     * @param array|string $tables
-     * @return void
-     */
+
+
+
+
     public function setExcludedTables($tables)
     {
         if (is_array($tables)) {
@@ -66,10 +66,10 @@ class SelectedTables
         $this->excludedTables = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
     }
 
-    /**
-     * @param array|string $tables
-     * @return void
-     */
+
+
+
+
     public function setSelectedTablesWithoutPrefix($tables)
     {
         if (is_array($tables)) {
@@ -80,34 +80,34 @@ class SelectedTables
         $this->selectedTablesWithoutPrefix = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
     }
 
-    /**
-     * @param bool $areAllTablesExcluded
-     * @return void
-     */
+
+
+
+
     public function setAllTablesExcluded(bool $areAllTablesExcluded = false)
     {
         $this->allTablesExcluded = $areAllTablesExcluded;
     }
 
-    /**
-     * @param bool $includeAllTables
-     * @return void
-     */
+
+
+
+
     public function shouldIncludeAllTables(bool $includeAllTables = false)
     {
         $this->includeAllTables = $includeAllTables;
     }
 
-    /**
-     * @param bool $isNetworkClone
-     * @return array
-     */
+
+
+
+
     public function getSelectedTables(bool $isNetworkClone = false)
     {
-        // A subsite table (e.g. wpstg0_2_options) can appear in BOTH the prefixed
-        // set and selectedTablesWithoutPrefix during a multisite network-clone
-        // update, which would export and restore it twice and trip the
-        // duplicate-key guard. Deduplicate so each table is operated on once.
+ 
+ 
+ 
+ 
         if (!empty($this->includedTables)) {
             return array_values(array_unique(array_merge($this->includedTables, $this->selectedTablesWithoutPrefix)));
         }
@@ -116,14 +116,14 @@ class SelectedTables
         return array_values(array_unique(array_merge($selectedTables, $this->selectedTablesWithoutPrefix)));
     }
 
-    /**
-     * @param string $server
-     * @param string $username
-     * @param string $password
-     * @param string $database
-     * @param string $prefix
-     * @param bool $useSsl
-     */
+
+
+
+
+
+
+
+
     public function setDatabaseInfo($server, $username, $password, $database, $prefix, $useSsl = false)
     {
         if (empty($username) || empty($database)) {
@@ -141,10 +141,10 @@ class SelectedTables
         $this->prefix       = $prefix;
     }
 
-    /**W
-     * @param wpdb $wpdb
-     * @param string $prefix
-     */
+
+
+
+
     public function setWpdb($wpdb, $prefix)
     {
         $this->wpdb         = $wpdb;
@@ -152,11 +152,11 @@ class SelectedTables
         $this->prefix       = $prefix;
     }
 
-    /**
-     * Get Prefixed Table excluding the excluded tables
-     * @param bool $isNetworkClone
-     * @param bool $includeSize
-     */
+
+
+
+
+
     public function getPrefixedTables($isNetworkClone, $includeSize = false)
     {
         if ($this->allTablesExcluded) {
@@ -203,25 +203,25 @@ class SelectedTables
         return $selectedTables;
     }
 
-    /**
-     * @param string $tableName
-     * @param string $tablePrefix
-     * @param bool $isMultisite
-     * @param bool $isMainsite
-     * @param bool $isNetwork
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
     public function isPrefixedTable($tableName, $tablePrefix, $isMultisite, $isMainsite, $isNetwork)
     {
         if (!empty($tablePrefix) && strpos($tableName, $tablePrefix) !== 0) {
             return false;
         }
 
-        /**
-         * We also need to skip subsite tables for multisite mainsite if it is not a network clone
-         * i.e. tables like wpstg0_1_*, wpstg0_2_* will not be selected it is a single site clone from multisite mainsite if the prefix is wpstg0
-         */
+
+
+
+
         if ($isMultisite && $isMainsite && !$isNetwork && preg_match('/^' . $tablePrefix . '\d+_/', $tableName)) {
             return false;
         }

@@ -11,9 +11,9 @@ use WPStaging\Framework\Facades\Facade;
  */
 class Alert extends Facade
 {
-    /**
-     * @return string
-     */
+
+
+
     protected static function getFacadeAccessor(): string
     {
         return AlertComponent::class;

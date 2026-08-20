@@ -27,13 +27,13 @@ class StagingSiteReset extends AbstractJob
 {
     use WithDataAdjustmentTasks;
 
-    /** @var string */
+ 
     const ACTION_CLONING_COMPLETE = 'wpstg_cloning_complete';
 
-    /** @var StagingSiteJobsDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var array The array of tasks to execute for this job. Populated at init(). */
+ 
     protected $tasks = [];
 
     public static function getJobName()
@@ -75,7 +75,7 @@ class StagingSiteReset extends AbstractJob
 
     protected function addDatabaseTasks()
     {
-        // Always drop the existing staging tables on a reset — that is the definition of a reset.
+ 
         $this->tasks[] = CleanupStagingTablesTask::class;
 
         if ($this->jobDataDto->getAllTablesExcluded() && empty($this->jobDataDto->getNonSiteTables())) {
@@ -109,6 +109,6 @@ class StagingSiteReset extends AbstractJob
 
     protected function addAdvanceTasks()
     {
-        // no-op, used in PRO
+ 
     }
 }

@@ -25,28 +25,28 @@ class Upload extends AbstractTemplateComponent
 {
     use WithBackupIdentifier;
 
-    /**
-     * @var string
-     */
+
+
+
     const OPTION_UPLOAD_PREPARED = 'wpstg.backups.upload_prepared';
 
-    /** @var BackupsFinder */
+ 
     private $backupsFinder;
 
-    /** @var BackupRepairer */
+ 
     private $backupRepairer;
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
-    /**
-     * @var Filesystem
-     */
+
+
+
     private $filesystem;
 
-    /**
-     * @var Otp
-     */
+
+
+
     private $otpService;
 
     public function __construct(BackupsFinder $backupsFinder, TemplateEngine $templateEngine, BackupRepairer $backupRepairer, Sanitize $sanitize, Filesystem $filesystem, Otp $otpService)
@@ -93,15 +93,15 @@ class Upload extends AbstractTemplateComponent
             return;
         }
 
-        /**
-         * Example:
-         *
-         * name = "8xx.290.myftpupload.com_20210521-193355_967950a65d39 (2).wpstg"
-         * type = "application/octet-stream"
-         * tmp_name = "/tmp/phpYFrjBk"
-         * error = {int} 0
-         * size = {int} 1048576
-         */
+
+
+
+
+
+
+
+
+
         $file = isset($_FILES['file']) ? $this->sanitize->sanitizeFileUpload($_FILES['file']) : null;
 
         try {
@@ -135,7 +135,7 @@ class Upload extends AbstractTemplateComponent
         if ($this->isBackupPart($originalPath) && file_exists($originalPath)) {
             wp_send_json_error([
                 'message' => __('This backup part exists already', 'wp-staging'),
-            ], 409); // 409 status code for conflict
+            ], 409); 
         }
 
         $fullPath = $backupsDirectory . $uniqueIdentifierSuffix . $resumableFilename . '.uploading';
@@ -148,7 +148,7 @@ class Upload extends AbstractTemplateComponent
             ], 400);
         }
 
-        // If neither uploading file or the upload prepared option that mean that the upload is not prepared and didn't pass through the OTP process!
+ 
         if (!file_exists($fullPath) && get_option(self::OPTION_UPLOAD_PREPARED) !== 'true') {
             wp_send_json_error([
                 'message' => __('The backup file is missing or the upload process is not ready. Try again to upload the backup file or open a support request.', 'wp-staging'),
@@ -158,7 +158,7 @@ class Upload extends AbstractTemplateComponent
         delete_option(self::OPTION_UPLOAD_PREPARED);
         $resumableInternalIdentifier = md5($fullPath);
 
-        // Check free disk space on the first request
+ 
         if ($resumableChunkNumber <= 1) {
             try {
                 WPStaging::make(DiskWriteCheck::class)->checkPathCanStoreEnoughBytes($this->backupsFinder->getBackupsDirectory(), $resumableTotalSize);
@@ -168,16 +168,16 @@ class Upload extends AbstractTemplateComponent
                     'isDiskFull' => true,
                 ], 507);
             } catch (\RuntimeException $e) {
-                // no-op
+ 
             }
         }
 
-        // Assert chunks are in sequential order
+ 
         if ($resumableChunkNumber > 1 && $resumableTotalChunks > 1) {
             $nextExpectedChunk = (int)get_transient("wpstg.upload.nextExpectedChunk.$resumableInternalIdentifier");
 
             if ($nextExpectedChunk !== $resumableChunkNumber) {
-                // 409 would make more sense, but let's throw a 418 in tribute to the only person in the world capable to laugh at this joke.
+ 
                 wp_send_json_error('', 418);
             }
         }
@@ -188,14 +188,14 @@ class Upload extends AbstractTemplateComponent
             $result = file_put_contents($fullPath, file_get_contents($file['tmp_name']), FILE_APPEND);
 
             if (!$result) {
-                // Do a disk_free_space() check
+ 
                 try {
                     WPStaging::make(DiskWriteCheck::class)->checkPathCanStoreEnoughBytes($this->backupsFinder->getBackupsDirectory());
                 } catch (\RuntimeException $e) {
-                    // no-op
+ 
                 }
 
-                // If that succeeds or could not be determined, also do a real write check.
+ 
                 WPStaging::make(DiskWriteCheck::class)->testDiskIsWriteable();
             }
         } catch (DiskNotWritableException $e) {
@@ -213,7 +213,7 @@ class Upload extends AbstractTemplateComponent
             ], 500);
         }
 
-        // Last chunk?
+ 
         if ($resumableChunkNumber === $resumableTotalChunks) {
             try {
                 delete_transient("wpstg.upload.nextExpectedChunk.$resumableInternalIdentifier");
@@ -235,11 +235,11 @@ class Upload extends AbstractTemplateComponent
                 ], 500);
             }
         } else {
-            // Set the next expected chunk, to avoid scenarios where an erratic network connection could skip chunks or send them in unexpected order, eg:
-            // chunk.part.1
-            // chunk.part.2
-            // chunk.part.4 <-- not what we want!
-            // chunk.part.3
+ 
+ 
+ 
+ 
+ 
             set_transient("wpstg.upload.nextExpectedChunk.$resumableInternalIdentifier", $resumableChunkNumber + 1, 1 * DAY_IN_SECONDS);
         }
 
@@ -255,7 +255,7 @@ class Upload extends AbstractTemplateComponent
         }
 
         try {
-            /** @var \SplFileInfo $splFileInfo */
+ 
             foreach (new \DirectoryIterator($this->backupsFinder->getBackupsDirectory()) as $splFileInfo) {
                 if ($splFileInfo->isFile() && !$splFileInfo->isLink() && $splFileInfo->getExtension() === 'uploading') {
                     unlink($splFileInfo->getPathname());
@@ -284,7 +284,7 @@ class Upload extends AbstractTemplateComponent
         $estimatedSize = $metadata->getBackupSize();
         $isSplitBackup = $metadata->getIsMultipartBackup();
 
-        // Repairing the backup size in metadata
+ 
         if ($estimatedSize === 0 && !$isSplitBackup) {
             $this->backupRepairer->repairMetadataSize($fullPath);
             return;
@@ -309,7 +309,7 @@ class Upload extends AbstractTemplateComponent
 
         switch ((int)$file['error']) {
             case UPLOAD_ERR_OK:
-                // Ok, no-op
+ 
                 break;
             case UPLOAD_ERR_INI_SIZE:
             case UPLOAD_ERR_FORM_SIZE:
@@ -329,19 +329,19 @@ class Upload extends AbstractTemplateComponent
             throw new Exception(sprintf(__('Invalid backup file extension: %s', 'wp-staging'), $file['name']));
         }
 
-        /**
-         * Example:
-         *
-         * resumableChunkNumber = "1"
-         * resumableChunkSize = "1048576"
-         * resumableCurrentChunkSize = "1048576"
-         * resumableTotalSize = "14209912"
-         * resumableType = ""
-         * resumableIdentifier = "14209912-multitestswp-staginglocal_fcd2fae486dcwpstg"
-         * resumableFilename = "multi.tests.wp-staging.local_fcd2fae486dc.wpstg"
-         * resumableRelativePath = "multi.tests.wp-staging.local_fcd2fae486dc.wpstg"
-         * resumableTotalChunks = "13"
-         */
+
+
+
+
+
+
+
+
+
+
+
+
+
         $requiredValues = [
             'resumableChunkNumber',
             'resumableChunkSize',

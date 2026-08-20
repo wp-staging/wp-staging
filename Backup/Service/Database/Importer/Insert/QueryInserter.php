@@ -1,5 +1,7 @@
 <?php
+
 namespace WPStaging\Backup\Service\Database\Importer\Insert;
+
 use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
@@ -7,25 +9,61 @@ use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Framework\Traits\ApplyFiltersTrait;
 use WPStaging\Framework\Traits\I18nTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
+
 abstract class QueryInserter
 {
     use I18nTrait;
     use ApplyFiltersTrait;
+
+ 
     const FILTER_RESTORE_DATABASE_MAX_ALLOWED_PACKET = 'wpstg.restore.database.maxAllowedPacket';
+
+ 
     const FILTER_RESTORE_DATABASE_INNODB_LOG_SIZE = 'wpstg.restore.database.innoDbLogSize';
+
+ 
     const FILTER_INSERT_IGNORE_DUPLICATE_KEY = 'wpstg.restore.database.insertIgnoreDuplicateKey';
+
+ 
     protected $currentLinePosition = 0;
+
+ 
     protected $bufferedLinePosition = 0;
+
+ 
     protected $committedLinePosition = 0;
+
+ 
     protected $hasFailedFlush = false;
+
+ 
     protected $client;
+
+ 
     protected $databaseImporterDto;
+
+ 
     protected $limitedMaxAllowedPacket;
+
+ 
     protected $realMaxAllowedPacket;
+
+ 
     protected $maxInnoDbLogSize;
+
+ 
     protected $currentDbVersion;
+
+ 
     protected $backupDbVersion;
+
+ 
     protected $warnings = [];
+
+
+
+
+
 
     public function setDbVersions(string $currentDbVersion, string $backupDbVersion)
     {
@@ -33,31 +71,66 @@ abstract class QueryInserter
         $this->backupDbVersion  = $backupDbVersion;
     }
 
+
+
+
+
+
     protected $error = false;
+
+
+
+
+
 
     public function initialize(InterfaceDatabaseClient $client, DatabaseImporterDto $databaseImporterDto)
     {
         $this->client              = $client;
         $this->databaseImporterDto = $databaseImporterDto;
+
         $this->setMaxAllowedPackage();
         $this->setInnoDbLogFileSize();
+
         $this->warnings = [];
     }
+
+
+
+
+
+
+
+
 
     public function setCurrentLinePosition(int $position)
     {
         $this->currentLinePosition = $position;
     }
 
+
+
+
+
+
     public function getCommittedLinePosition(): int
     {
         return $this->committedLinePosition;
     }
 
+
+
+
+
+
+
+
     public function hasFailedFlush(): bool
     {
         return $this->hasFailedFlush;
     }
+
+
+
 
     public function getWarnings(): array
     {
@@ -66,54 +139,105 @@ abstract class QueryInserter
 
     abstract public function processQuery(&$insertQuery);
 
+
+
+
+
+
     abstract public function commit();
 
     protected function exec(&$query)
     {
         $result = $this->client->query($query);
+
         return $result !== false;
     }
 
     protected function setMaxAllowedPackage()
     {
+ 
+
+ 
+ 
+ 
         $realMaxAllowedPacket = 1 * MB_IN_BYTES;
+
         try {
             if (isset($this->client->isSQLite) && $this->client->isSQLite) {
+ 
                 $realMaxAllowedPacket = 16777216;
             } else {
                 $result = $this->client->query("SHOW VARIABLES LIKE 'max_allowed_packet'");
                 $row    = $this->client->fetchAssoc($result);
+
+ 
                 $this->client->freeResult($result);
+
                 $realMaxAllowedPacket = $this->getNumberFromResult($row);
             }
+
+ 
             $limitedMaxAllowedPacket = max(16 * KB_IN_BYTES, 0.9 * $realMaxAllowedPacket);
+
+ 
             $limitedMaxAllowedPacket = min(256 * KB_IN_BYTES, $limitedMaxAllowedPacket);
         } catch (\Throwable $e) {
+ 
             $limitedMaxAllowedPacket = (1 * MB_IN_BYTES) * 0.9;
         }
+
         $limitedMaxAllowedPacket = $this->applyFilters(self::FILTER_RESTORE_DATABASE_MAX_ALLOWED_PACKET, $limitedMaxAllowedPacket);
+
         $this->limitedMaxAllowedPacket = (int)$limitedMaxAllowedPacket;
+
         $this->realMaxAllowedPacket = (int)$realMaxAllowedPacket;
     }
 
     protected function setInnoDbLogFileSize()
     {
         try {
+ 
+ 
+ 
+ 
+ 
+ 
             $innoDbLogFileSize       = $this->client->query("SHOW VARIABLES LIKE 'innodb_log_file_size';");
             $innoDbLogFileSizeResult = $this->client->fetchAssoc($innoDbLogFileSize);
             $innoDbLogFileSize       = $this->getNumberFromResult($innoDbLogFileSizeResult);
+
+ 
+ 
+ 
+ 
+ 
             $innoDbLogFileGroups       = $this->client->query("SHOW VARIABLES LIKE 'innodb_log_files_in_group';");
             $innoDbLogFileGroupsResult = $this->client->fetchAssoc($innoDbLogFileGroups);
             $innoDbLogFileGroups       = $this->getNumberFromResult($innoDbLogFileGroupsResult);
+
             $innoDbLogSize = $innoDbLogFileSize * $innoDbLogFileGroups;
+
+ 
             $innoDbLogSize = max(1 * MB_IN_BYTES, $innoDbLogSize * 0.9);
+
+ 
             $innoDbLogSize = min(64 * MB_IN_BYTES, $innoDbLogSize);
         } catch (\Throwable $e) {
+ 
             $innoDbLogSize = 9 * MB_IN_BYTES;
         }
+
         $innoDbLogSize = $this->applyFilters(self::FILTER_RESTORE_DATABASE_INNODB_LOG_SIZE, $innoDbLogSize);
+
         $this->maxInnoDbLogSize = (int)$innoDbLogSize;
     }
+
+
+
+
+
+
+
 
     private function getNumberFromResult($result)
     {
@@ -129,10 +253,17 @@ abstract class QueryInserter
         }
     }
 
+ 
     public function getLastError()
     {
         return $this->error;
     }
+
+
+
+
+
+
 
     protected function doQueryExceedsMaxAllowedPacket($query)
     {
@@ -145,8 +276,10 @@ abstract class QueryInserter
                 size_format($this->realMaxAllowedPacket),
                 'https://wp-staging.com/docs/increase-max_allowed_packet-size-in-mysql/'
             );
+
             return true;
         }
+
         return false;
     }
 

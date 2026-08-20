@@ -35,7 +35,7 @@ class AnalyticsBackupRestore extends AnalyticsEventDto
         $this->is_backup_wp_content    = $eventData->getBackupMetadata()->getIsExportingOtherWpContentFiles();
         $this->database_size           = $eventData->getBackupMetadata()->getDatabaseFileSize() ?? 0;
         $this->requirement_fail_reason = $eventData->getRequirementFailReason();
-        $this->automated_backup        = (int)$eventData->getBackupMetadata()->getIsAutomatedBackup(); // int to convert null to zero
+        $this->automated_backup        = (int)$eventData->getBackupMetadata()->getIsAutomatedBackup(); 
 
         parent::enqueueStartEvent($eventId, $eventData);
     }

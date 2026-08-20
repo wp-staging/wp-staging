@@ -4,7 +4,7 @@
  * Plugin Name: WP STAGING WordPress Backup Plugin - Backup Duplicator & Migration
  * Plugin URI: https://wp-staging.com
  * Description: Backup and staging environments, migrating WordPress sites. Update plugins without risk. Full backup and testing suite - 100% unit and end-to-end tested.
- * Version: 4.10.0
+ * Version: 4.11.0
  * Requires at least: 3.6+
  * Requires PHP: 7.0
  * Author: WP-STAGING, WPStagingBackup
@@ -19,28 +19,28 @@ if (!defined("WPINC")) {
     die;
 }
 
-/**
- * Welcome to WP STAGING.
- *
- * If you're reading this, you are a curious person that likes
- * to understand how things works, and that's awesome!
- *
- * The philosophy of this file is to work on all PHP versions.
- *
- * Before PHP can understand conditionals such as "if, else",
- * it has to parse this file and split it into "tokens". This
- * process is called "lexical analysis", and exists in almost
- * all programming languages.
- *
- * This file uses only syntax that works with all PHP versions,
- * so that any PHP version can parse it and run our version check
- * conditional.
- *
- * Then we add more PHP files to be parsed, making sure they are
- * running in a PHP version capable of parsing the syntax we are using.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if (version_compare(phpversion(), '7.0.0', '>=')) {
-    // The absolute path to the main file of this plugin.
+ 
     global $pluginFilePath;
     $pluginFilePath = __FILE__;
 

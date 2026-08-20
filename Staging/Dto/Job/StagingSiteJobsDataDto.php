@@ -16,9 +16,9 @@ use WPStaging\Staging\Traits\StagingOperationDtoTrait;
 use WPStaging\Staging\Traits\WithAdvanceStagingOptions;
 use WPStaging\Staging\Traits\WithStagingSiteDto;
 
-/**
- * This is a common dto that is used for staging site jobs (create, update, reset)
- */
+
+
+
 class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingSiteDtoInterface, StagingOperationDtoInterface, AdvanceStagingOptionsInterface, FilesystemScannerDtoInterface, StagingNetworkDtoInterface
 {
     use FilesystemScannerDtoTrait, WithAdvanceStagingOptions, WithStagingSiteDto, StagingOperationDtoTrait, StagingDatabaseDtoTrait, StagingNetworkDtoTrait {
@@ -30,196 +30,196 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
         WithAdvanceStagingOptions::getTmpExcludedFullPaths insteadof FilesystemScannerDtoTrait;
     }
 
-    /** @var string */
+ 
     private $cloneId = '';
 
-    /** @var string */
+ 
     private $name = '';
 
-    /** @var string */
+ 
     private $directoryName = '';
 
-    /** @var string */
+ 
     private $stagingEngine = 'next_gen';
 
-    /**
-     * Used in update job
-     * @var bool
-     */
+
+
+
+
     private $isCleanPluginsThemes = false;
 
-    /**
-     * Used in update job
-     * @var bool
-     */
+
+
+
+
     private $isCleanUploads = false;
 
-    /**
-     * Tracks if plugins cleanup is done during update
-     * @var bool
-     */
+
+
+
+
     private $isPluginsCleanupDone = false;
 
-    /**
-     * Tracks if themes cleanup is done during update
-     * @var bool
-     */
+
+
+
+
     private $isThemesCleanupDone = false;
 
-    /**
-     * Tracks if uploads cleanup is done during update
-     * @var bool
-     */
+
+
+
+
     private $isUploadsCleanupDone = false;
 
-    /**
-     * @param string $cloneId
-     * @return void
-     */
+
+
+
+
     public function setCloneId(string $cloneId)
     {
         $this->cloneId = $cloneId;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getCloneId(): string
     {
         return $this->cloneId;
     }
 
-    /**
-     * @param string $name
-     * @return void
-     */
+
+
+
+
     public function setName(string $name)
     {
         $this->name = $name;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @param string $directoryName
-     * @return void
-     */
+
+
+
+
     public function setDirectoryName(string $directoryName)
     {
         $this->directoryName = $directoryName;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getDirectoryName(): string
     {
         return $this->directoryName;
     }
 
-    /**
-     * @param string $stagingEngine
-     * @return void
-     */
+
+
+
+
     public function setStagingEngine(string $stagingEngine)
     {
         $this->stagingEngine = $stagingEngine;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getStagingEngine(): string
     {
         return $this->stagingEngine;
     }
 
-    /**
-     * @param bool $cleanPluginsThemes
-     * @return void
-     */
+
+
+
+
     public function setIsCleanPluginsThemes(bool $cleanPluginsThemes)
     {
         $this->isCleanPluginsThemes = $cleanPluginsThemes;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsCleanPluginsThemes(): bool
     {
         return $this->isCleanPluginsThemes;
     }
 
-    /**
-     * @param bool $cleanUploads
-     * @return void
-     */
+
+
+
+
     public function setIsCleanUploads(bool $cleanUploads)
     {
         $this->isCleanUploads = $cleanUploads;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsCleanUploads(): bool
     {
         return $this->isCleanUploads;
     }
 
-    /**
-     * @param bool $isPluginsCleanupDone
-     * @return void
-     */
+
+
+
+
     public function setIsPluginsCleanupDone(bool $isPluginsCleanupDone)
     {
         $this->isPluginsCleanupDone = $isPluginsCleanupDone;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsPluginsCleanupDone(): bool
     {
         return $this->isPluginsCleanupDone;
     }
 
-    /**
-     * @param bool $isThemesCleanupDone
-     * @return void
-     */
+
+
+
+
     public function setIsThemesCleanupDone(bool $isThemesCleanupDone)
     {
         $this->isThemesCleanupDone = $isThemesCleanupDone;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsThemesCleanupDone(): bool
     {
         return $this->isThemesCleanupDone;
     }
 
-    /**
-     * @param bool $isUploadsCleanupDone
-     * @return void
-     */
+
+
+
+
     public function setIsUploadsCleanupDone(bool $isUploadsCleanupDone)
     {
         $this->isUploadsCleanupDone = $isUploadsCleanupDone;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsUploadsCleanupDone(): bool
     {
         return $this->isUploadsCleanupDone;

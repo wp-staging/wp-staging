@@ -8,11 +8,11 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 
-// Show CLI integration notice (includes modal when banner is visible)
+ 
 $cliNotice = WPStaging::make(CliIntegrationNotice::class);
 $cliNotice->maybeShowCliNotice();
 
-// When banner is dismissed but dock CTA should be shown, render modal separately
+ 
 $cliNotice->maybeRenderCliModalForDockCta();
 
 ?>

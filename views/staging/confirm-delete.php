@@ -30,11 +30,11 @@ foreach ($tables as $table) {
     }
 }
 
-/**
- * A staging table holds sensitive data when its name maps to wp_options
- * (settings) or wp_users / wp_usermeta (user accounts). Tag it so the design's
- * amber chip + critical note can flag it.
- */
+
+
+
+
+
 $sensitiveTag = function ($tableName) use ($tablePrefix) {
     $suffix = substr($tableName, strlen($tablePrefix));
     if ($suffix === 'options') {
@@ -63,10 +63,10 @@ $wpstgIcons = [
     'chevron'   => 'M19.5 8.25l-7.5 7.5-7.5-7.5',
 ];
 
-/**
- * Render an inline Heroicons-outline glyph. Color is inherited from the parent
- * text color (currentColor); size is set in px.
- */
+
+
+
+
 $wpstgIcon = function ($name, $size = 16, $classes = '', $strokeWidth = '1.75') use ($wpstgIcons) {
     if (!isset($wpstgIcons[$name])) {
         return;

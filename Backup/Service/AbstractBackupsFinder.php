@@ -6,27 +6,27 @@ use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\WindowsOsTrait;
 
-/**
- * Class AbstractBackupsFinder
- * This class should not use any wp core functions or classes.
- *
- * Finds the .wpstg backups in the filesystem.
- *
- * @package WPStaging\Backup
- */
+
+
+
+
+
+
+
+
 abstract class AbstractBackupsFinder
 {
     use WithBackupIdentifier;
     use DebugLogTrait;
     use WindowsOsTrait;
 
-    /** @var int */
+ 
     const MAX_BACKUP_FILE_TO_SCAN = 1000;
 
-    /** @var string */
+ 
     protected $backupsDirectory;
 
-    /** @var int */
+ 
     protected $backupsCount;
 
     public function resetBackupsCount()
@@ -34,27 +34,27 @@ abstract class AbstractBackupsFinder
         $this->backupsCount = 0;
     }
 
-    /**
-     * @param string $backupsDirectory
-     * @return void
-     */
+
+
+
+
     public function setBackupsDirectory(string $backupsDirectory)
     {
         $this->backupsDirectory = $backupsDirectory;
     }
 
-    /**
-     * @param bool $refresh
-     * @return string
-     */
+
+
+
+
     public function getBackupsDirectory(bool $refresh = false): string
     {
         return $this->backupsDirectory;
     }
 
-    /**
-     * @return array An array of SplFileInfo objects of .wpstg backup files.
-     */
+
+
+
     public function findBackups(): array
     {
         try {
@@ -68,7 +68,7 @@ abstract class AbstractBackupsFinder
 
         $this->clearListedMultipartBackups();
 
-        /** @var \SplFileInfo $file */
+ 
         foreach ($it as $file) {
             if (($file->getExtension() === 'wpstg' || $file->getExtension() === 'sql') && !$file->isLink()) {
                 if ($this->backupsCount >= self::MAX_BACKUP_FILE_TO_SCAN) {
@@ -79,7 +79,7 @@ abstract class AbstractBackupsFinder
                     continue;
                 }
 
-                // Windows has cache issue, to keep linux operations fast we only check file exist on Windows
+ 
                 if ($this->isWindowsOs() && !file_exists($file->getPathname())) {
                     continue;
                 }
@@ -93,11 +93,11 @@ abstract class AbstractBackupsFinder
         return $backups;
     }
 
-    /**
-     * @param string $md5
-     *
-     * @return \SplFileInfo
-     */
+
+
+
+
+
     public function findBackupByMd5Hash(string $md5): \SplFileInfo
     {
         $backup = array_filter($this->findBackups(), function ($splFileInfo) use ($md5) {

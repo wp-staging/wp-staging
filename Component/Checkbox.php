@@ -6,9 +6,9 @@ use WPStaging\Core\Forms\Elements\Check;
 
 class Checkbox
 {
-    /**
-     * @var Check|null
-     */
+
+
+
     protected $checkbox = null;
 
     public function __construct()
@@ -16,30 +16,30 @@ class Checkbox
         $this->checkbox = new Check('');
     }
 
-    /**
-     * @param string $id
-     * @param string $name
-     * @param string $value
-     * @param bool $isChecked
-     * @param array $attributes [
-     *   'classes' => string,
-     *   'onChange' => string,
-     *   'isDisabled' => bool,
-     *   'usePrimitive' => bool
-     *  ]
-     * @param array $dataAttributes [
-     *   'id' => string,
-     *   'dirType' => string,
-     *   'path' => string,
-     *   'prefix' => string,
-     *   'path' => bool,
-     *   'isScanned' => bool,
-     *   'isNavigatable' => bool,
-     *   'deletePath'    => string,
-     *  ]
-     * @param bool $returnAsString
-     * @return string|void
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function render(string $id, string $name, string $value = '', bool $isChecked = false, array $attributes = [], array $dataAttributes = [], bool $returnAsString = false)
     {
         $classes            = isset($attributes['classes']) ? $attributes['classes'] : '';
@@ -60,13 +60,13 @@ class Checkbox
         if ($returnAsString) {
             ob_start();
 
-            /** @noinspection PhpIncludeInspection */
+ 
             require trailingslashit(WPSTG_VIEWS_DIR) . 'components/checkbox.php';
 
             return ob_get_clean();
         }
 
-        /** @noinspection PhpIncludeInspection */
+ 
         require trailingslashit(WPSTG_VIEWS_DIR) . 'components/checkbox.php';
     }
 }

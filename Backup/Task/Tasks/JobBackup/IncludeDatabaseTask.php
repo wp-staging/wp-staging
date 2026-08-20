@@ -1,8 +1,8 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-// TODO PHP7.1; constant visibility
+ 
+ 
+ 
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
@@ -18,7 +18,7 @@ use WPStaging\Framework\Job\Exception\ThresholdException;
 
 class IncludeDatabaseTask extends BackupTask
 {
-    /** @var Archiver */
+ 
     private $archiver;
 
     public function __construct(Archiver $archiver, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -39,8 +39,8 @@ class IncludeDatabaseTask extends BackupTask
 
     public function execute()
     {
-        // A new task may report finished when total/current are both zero.
-        // Only bail out after steps were initialized and truly completed.
+ 
+ 
         if ($this->stepsDto->getTotal() > 0 && $this->stepsDto->isFinished()) {
             return $this->generateResponse();
         }

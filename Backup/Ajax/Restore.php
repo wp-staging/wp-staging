@@ -1,7 +1,7 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
+ 
+ 
 
 namespace WPStaging\Backup\Ajax;
 
@@ -16,14 +16,14 @@ class Restore extends AbstractTemplateComponent
     use JobResponseTrait;
     use MemoryExhaustTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_REQUEST = 'wpstg_restore';
 
-    /**
-     * @return void
-     */
+
+
+
     public function render()
     {
         if (!$this->canRenderAjax()) {

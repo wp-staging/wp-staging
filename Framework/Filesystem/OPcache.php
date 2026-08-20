@@ -10,14 +10,14 @@ use function WPStaging\functions\debug_log;
 
 class OPcache
 {
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_OPCACHE_MAYBE_INVALIDATE = 'wpstg.opcache.maybe_invalidate';
 
-    /**
-     * @var ServerVars
-     */
+
+
+
     private $serverVars;
 
     public function __construct()
@@ -25,10 +25,10 @@ class OPcache
         $this->serverVars = WPStaging::make(ServerVars::class);
     }
 
-    /**
-     * Check if OPcache API is accessible (not restricted by opcache.restrict_api)
-     * @return bool
-     */
+
+
+
+
     private function isOpCacheApiAccessible(): bool
     {
         $restrictApi = ini_get('opcache.restrict_api');
@@ -61,12 +61,12 @@ class OPcache
         return @opcache_reset();
     }
 
-    /**
-     * @see https://developer.wordpress.org/reference/functions/wp_opcache_invalidate/
-     * @param string $filePath
-     * @param bool $force
-     * @return bool
-     */
+
+
+
+
+
+
     public function invalidateFile(string $filePath, bool $force = false): bool
     {
         static $canInvalidate = null;
@@ -92,10 +92,10 @@ class OPcache
         return @opcache_invalidate($filePath, $force);
     }
 
-    /**
-     * @param string $dirPath
-     * @return void
-     */
+
+
+
+
     public function invalidateDirectory(string $dirPath)
     {
         if (!is_dir($dirPath)) {
@@ -112,7 +112,7 @@ class OPcache
         }
     }
 
-    /** @return void */
+ 
     public function maybeInvalidate()
     {
         if (!Hooks::applyFilters(self::FILTER_OPCACHE_MAYBE_INVALIDATE, true)) {
@@ -120,20 +120,20 @@ class OPcache
             return;
         }
 
-        // If can use opcache_reset
+ 
         if ($this->reset()) {
             debug_log('opcache_reset executed.', 'info', false);
             return;
         }
 
-        // Abort if opcache_invalidate not available
+ 
         if (!function_exists('opcache_invalidate') || $this->serverVars->isFunctionDisabled('opcache_invalidate')) {
             return;
         }
 
         debug_log('Trigger opcache invalidate.', 'info', false);
 
-        // If can use opcache_get_status
+ 
         if (function_exists('opcache_get_status') && !$this->serverVars->isFunctionDisabled('opcache_get_status') && $this->isOpCacheApiAccessible()) {
             $opcacheStatus = @opcache_get_status();
             if (!empty($opcacheStatus['scripts'])) {
@@ -145,7 +145,7 @@ class OPcache
             return;
         }
 
-        // Invalidate wp core files
+ 
         $wpCoreFiles = [
             'index.php',
             'wp-activate.php',
@@ -173,7 +173,7 @@ class OPcache
             }
         }
 
-        // Invalidate directory
+ 
         $wpCoreDirs = [
             'wp-admin/',
             'wp-includes/',

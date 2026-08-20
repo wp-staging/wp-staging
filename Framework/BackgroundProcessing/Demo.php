@@ -1,16 +1,16 @@
 <?php
 
-/**
- * Runs a Queue Background Processing Demo from the browser.
- *
- * Go to https:<site>/?wpstg_q_demo to run the demo queueing 100 actions and close all browser windows on the site.
- *
- * Go to https:<site>/?wpstg_q_demo=<n> to run the demo queueing <n> actions and close all browser windows on the site.
- *
- * @since   TBD
- *
- * @package WPStaging\Framework\BackgroundProcessing
- */
+
+
+
+
+
+
+
+
+
+
+
 
 namespace WPStaging\Framework\BackgroundProcessing;
 

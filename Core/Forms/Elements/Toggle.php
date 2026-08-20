@@ -5,25 +5,25 @@ namespace WPStaging\Core\Forms\Elements;
 use WPStaging\Core\Forms\ElementsWithOptions;
 use WPStaging\Framework\Facades\UI\Toggle as ToggleFacade;
 
-/**
- * Form element class for toggle switches in the WP Staging settings forms
- *
- * This class extends ElementsWithOptions to provide toggle switch functionality
- * within the form builder system. It:
- * - Renders toggle switches with proper checked states
- * - Supports multiple value types (string, int, array)
- * - Integrates with the form rendering system
- * - Handles default values and state management
- * - Uses the Toggle facade for consistent UI rendering
- *
- * This element is commonly used for on/off settings like "Debug Mode" or "Optimizer".
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Toggle extends ElementsWithOptions
 {
 
-    /**
-     * @return string
-     */
+
+
+
     protected function prepareOutput(): string
     {
         $output = '';
@@ -40,11 +40,11 @@ class Toggle extends ElementsWithOptions
         return $output;
     }
 
-    /**
-     * Tested against both types(int and string) due to string as parameter type https://github.com/wp-staging/wp-staging-pro/pull/3190
-     * @param string $value
-     * @return bool
-     */
+
+
+
+
+
     private function isChecked(string $value): bool
     {
         if (
@@ -61,9 +61,9 @@ class Toggle extends ElementsWithOptions
         return false;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function render()
     {
         return ($this->renderFile) ? @file_get_contents($this->renderFile) : $this->prepareOutput();

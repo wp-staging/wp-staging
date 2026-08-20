@@ -15,10 +15,10 @@ class CleanupTmpTablesTask extends AbstractTask
 {
     private $tableService;
 
-    /** @var array An array with the name of all existing tables. */
+ 
     protected $tables = [];
 
-    /** @var array An array with the name of all existing views. */
+ 
     protected $views = [];
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, TableService $tableService, SeekableQueueInterface $taskQueue)
@@ -27,11 +27,11 @@ class CleanupTmpTablesTask extends AbstractTask
         $this->tableService = $tableService;
     }
 
-    /**
-     * Can be either wpstgtmp_ or wpstgbak_
-     *
-     * @return string
-     */
+
+
+
+
+
     public static function getTempTableType(): string
     {
         return DatabaseImporter::TMP_DATABASE_PREFIX;
@@ -48,9 +48,9 @@ class CleanupTmpTablesTask extends AbstractTask
         return esc_html__('Cleaning Up Temp. Tables', 'wp-staging');
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute(): TaskResponseDto
     {
         $tmpTableType = static::getTempTableType();
@@ -62,7 +62,7 @@ class CleanupTmpTablesTask extends AbstractTask
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             $tableOrViewName = $this->taskQueue->dequeue();
 
-            // Double-check we are deleting a temporary table just to be extra-careful.
+ 
             if (strpos($tableOrViewName, $tmpTableType) !== 0) {
                 $this->logger->warning(sprintf(
                     '%s: Temporary table "%s" did not start with temporary prefix "%s" and was skipped.',
@@ -107,7 +107,7 @@ class CleanupTmpTablesTask extends AbstractTask
         if ($this->taskQueue->isFinished()) {
             $this->stepsDto->finish();
 
-            // Successfully deleted
+ 
             $this->logger->info(sprintf(
                 '%s: Tables with temporary prefix "%s" successfully cleaned up.',
                 static::getTaskTitle(),
@@ -119,12 +119,12 @@ class CleanupTmpTablesTask extends AbstractTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @param string $tmpTableType
-     */
+
+
+
     public function prepareCleanupRestoreTask(string $tmpTableType)
     {
-        // Early bail: Already prepared
+ 
         if ($this->stepsDto->getTotal() > 0) {
             return;
         }

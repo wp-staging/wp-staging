@@ -13,20 +13,20 @@ use WPStaging\Framework\SiteInfo;
 
 class UpdateWpConfigConstants extends FileCloningService
 {
-    /**
-     * By default, we disable the debug constants in the staging site.
-     * This is to prevent the staging site from displaying debug information to the public.
-     * To preserve the debug constants value on staging site whether true or false, use this filter.
-     * @var string
-     */
+
+
+
+
+
+
     const FILTER_PRESERVE_DEBUG_CONSTANTS = 'wpstg.cloning.preserve_debug_constants';
 
-    /** @var string */
+ 
     protected $abspathRegex = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function internalExecute(): bool
     {
         $this->log("Updating constants in wp-config.php");
@@ -54,8 +54,8 @@ class UpdateWpConfigConstants extends FileCloningService
 
         if (!$isWpContentOutsideAbspath) {
             $replaceOrAdd["UPLOADS"] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder()));
-            // For default plugin layouts WordPress derives WP_PLUGIN_URL per-blog from siteurl;
-            // hardcoding it to the main staging URL would break subsites on a network clone.
+ 
+ 
             if (!$isDefaultPluginPath) {
                 $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . $relativePluginPath . '"';
                 $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl() . $relativePluginPath));
@@ -83,19 +83,19 @@ class UpdateWpConfigConstants extends FileCloningService
             $replaceOrAdd["SITE_ID_CURRENT_SITE"] = SITE_ID_CURRENT_SITE;
             $replaceOrAdd["BLOG_ID_CURRENT_SITE"] = BLOG_ID_CURRENT_SITE;
         } else {
-            //It's OK to attempt replacing multi-site constants even in single-site jobs as they will not be present in a single-site wp-config.php
+ 
             $replaceOrSkip["WP_ALLOW_MULTISITE"] = 'false';
             $replaceOrSkip["MULTISITE"]          = 'false';
         }
 
-        // turn off debug constants on staging site
+ 
         if (!apply_filters(self::FILTER_PRESERVE_DEBUG_CONSTANTS, false)) {
             $replaceOrAdd['WP_DEBUG']         = 'false';
             $replaceOrAdd['WP_DEBUG_LOG']     = 'false';
             $replaceOrAdd['WP_DEBUG_DISPLAY'] = 'false';
         }
 
-        /** @var Jetpack $jetpackHelper */
+ 
         $jetpackHelper = WPStaging::make(Jetpack::class);
         if ($jetpackHelper->isJetpackActive()) {
             $replaceOrAdd[Jetpack::STAGING_MODE_CONST] = 'true';
@@ -103,7 +103,7 @@ class UpdateWpConfigConstants extends FileCloningService
 
         $delete = [];
 
-        // Don't delete custom wp-content path constants
+ 
         if ('wp-content' === trim($this->getRelativeWpContentDir(), '/')) {
             $delete[] = "WP_CONTENT_DIR";
             $delete[] = "WP_CONTENT_URL";
@@ -139,13 +139,13 @@ class UpdateWpConfigConstants extends FileCloningService
             $delete[] = "MYSQL_CLIENT_FLAGS";
         }
 
-        /**
-         * Allows to filter the constants to be replaced/added.
-         *
-         * @param array $replaceOrAdd The array of constants to be replaced in the staging site's wp-config.php
-         *
-         * @return array The array of constants.
-         */
+
+
+
+
+
+
+
         $replaceOrAdd = (array)apply_filters(UpdateWpConfigConstantsTask::FILTER_CONSTANTS_REPLACE_OR_ADD, $replaceOrAdd);
 
         $content = $this->readWpConfig();
@@ -166,61 +166,61 @@ class UpdateWpConfigConstants extends FileCloningService
         return true;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isWpContentOutsideAbspath(): bool
     {
-        /** @var SiteInfo $siteInfo */
+ 
         $siteInfo = WPStaging::make(SiteInfo::class);
 
         return $siteInfo->isWpContentOutsideAbspath();
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isUploadsOutsideAbspath(): bool
     {
-        /** @var SiteInfo $siteInfo */
+ 
         $siteInfo = WPStaging::make(SiteInfo::class);
 
         return $siteInfo->isUploadsOutsideAbspath();
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isFlywheelHosting(): bool
     {
-        /** @var SiteInfo $siteInfo */
+ 
         $siteInfo = WPStaging::make(SiteInfo::class);
 
         return $siteInfo->isFlywheel();
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getRelativeWpContentDir(): string
     {
-        /** @var Directory $directory */
+ 
         $directory = WPStaging::make(Directory::class);
 
         return str_replace($directory->getAbsPath(), '', $directory->getWpContentDirectory());
     }
 
-    /**
-     * @return string Relative plugins path with leading slash, e.g. /wp-content/plugins.
-     */
+
+
+
     protected function getRelativePluginPath(): string
     {
         return (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getStagingLangPath(): string
     {
         if ($this->isWpContentOutsideAbspath()) {
@@ -230,26 +230,26 @@ class UpdateWpConfigConstants extends FileCloningService
         return sprintf("__DIR__ . '/%s/languages'", $this->escapeSingleQuotes(trim($this->getRelativeWpContentDir(), '/')));
     }
 
-    /**
-     * Helper function to return a string with single
-     * quotes escaped.
-     *
-     * @param string $string
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
     private function escapeSingleQuotes(string $string): string
     {
         return str_replace("'", "\'", $string);
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return bool|string|string[]|null
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
+
     protected function replaceExistingDefinition(string $constant, string $content, string $newDefinition)
     {
         $pattern = $this->getDefineRegex($constant);
@@ -261,7 +261,7 @@ class UpdateWpConfigConstants extends FileCloningService
 
         $replace = sprintf("define('%s', %s);", $constant, $newDefinition);
 
-        // escaping dollar sign in the value
+ 
         $replacementEscapedCharacter = addcslashes($replace, '\\$');
 
         $content = preg_replace([$pattern], $replacementEscapedCharacter, $content);
@@ -274,13 +274,13 @@ class UpdateWpConfigConstants extends FileCloningService
         return $content;
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return string
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
+
     protected function addDefinition(string $constant, string $content, string $newDefinition)
     {
         if (!$this->abspathConstantExists($content)) {
@@ -301,7 +301,7 @@ if ( ! defined( 'ABSPATH' ) )
 EOT;
         }
 
-        // escaping dollar sign
+ 
         $replacementEscaped = addcslashes($replacement, '\\$');
 
         if (($content = preg_replace([$this->abspathRegex], $replacementEscaped, $content)) === null) {
@@ -312,10 +312,10 @@ EOT;
         return $content;
     }
 
-    /**
-     * @param $content string
-     * @return bool
-     */
+
+
+
+
     private function abspathConstantExists(string $content): bool
     {
         preg_match($this->abspathRegex, $content, $matches);
@@ -326,23 +326,23 @@ EOT;
         return true;
     }
 
-    /**
-     * Treat certain constants differently because other plugins or themes could declare this constant outside wp-config.php.
-     * E.g. Local by Flywheel does.
-     * We don't add the defined condition to all constants because it would make it
-     * difficult to debug and find out why a staging site breaks if client site overwrites a default constant outside wp-config.php.
-     * So we treat some constants like WP_ENVIRONMENT_TYPE differently.
-     *
-     * @param $constant string Name of the constant
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
+
     private function maybeAddDefinedCondition(string $constant): bool
     {
         if ($constant === 'WP_ENVIRONMENT_TYPE' || $constant === 'WPSTAGING_DEV_SITE') {
             return true;
         }
 
-        // Staging on playground/wpnow
+ 
         if ($constant === 'WP_SITEURL' || $constant === 'WP_HOME') {
             return true;
         }
@@ -350,12 +350,12 @@ EOT;
         return false;
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @return string|array|null
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
     protected function deleteDefinition(string $constant, string $content)
     {
         $pattern = $this->getDefineRegex($constant);
@@ -374,12 +374,12 @@ EOT;
         return $content;
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return string
-     */
+
+
+
+
+
+
     protected function replaceOrAddDefinition(string $constant, string $content, string $newDefinition)
     {
         $newContent = $this->replaceExistingDefinition($constant, $content, $newDefinition);
@@ -391,12 +391,12 @@ EOT;
         return $newContent;
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return bool|string|string[]|null
-     */
+
+
+
+
+
+
     protected function replaceOrSkipDefinition(string $constant, string $content, string $newDefinition)
     {
         $newContent = $this->replaceExistingDefinition($constant, $content, $newDefinition);

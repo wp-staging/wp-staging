@@ -5,14 +5,14 @@ namespace WPStaging\Staging\Renderer;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Service\AbstractStagingSetup;
 
-/**
- * Renders shared setup modal UI fragments.
- */
+
+
+
 class SetupRenderer
 {
-    /**
-     * @var string
-     */
+
+
+
     private $selectedEngineName = '';
 
     public function setSelectedEngineName(string $selectedEngineName = ''): self

@@ -1,10 +1,10 @@
 <?php
 
-/**
- * This class is not PSR-3 compliant. Currently just added the basic functionality to make the "change" easier
- * in the future. For now, there are just few things to make transition easy.
- *
- */
+
+
+
+
+
 
 namespace WPStaging\Core\Utils;
 
@@ -21,10 +21,10 @@ use WPStaging\Framework\Traits\FormatTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
 
-/**
- * Class Logger
- * @package WPStaging\Core\Utils
- */
+
+
+
+
 class Logger implements LoggerInterface, ShutdownableInterface
 {
     use FormatTrait;
@@ -45,73 +45,73 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     const TYPE_INFO_SUB = "INFO_SUB";
 
-    /**
-     * @var string
-     */
+
+
+
     const LOG_DATETIME_FORMAT = "Y/m/d H:i:s";
 
-    /**
-     * Log directory (full path)
-     * @var string
-     */
+
+
+
+
     private $logDir;
 
-    /**
-     * Log file extension
-     * @var string
-     */
+
+
+
+
     private $logExtension   = "log";
 
-    /**
-     * Messages to log
-     * @var array
-     */
+
+
+
+
     private $messages       = [];
 
-    /**
-     * Forced filename for the log
-     * @var null|string
-     */
+
+
+
+
     private $fileName       = null;
 
-    /** @var Settings */
+ 
     private $settingsDto;
 
-    /**
-     * @var SseEventCache|null
-     */
+
+
+
     private $sseEventCache = null;
 
-    /** @var bool */
+ 
     private $sseSetupAttempted = false;
 
-    /**
-     * Logger constructor.
-     *
-     * @param null|string $logDir
-     * @param null|string $logExtension
-     *
-     * @throws \Exception
-     */
+
+
+
+
+
+
+
+
     public function __construct($logDir = null, $logExtension = null, $settingsDto = null)
     {
-        // Set log directory
+ 
         if (!empty($logDir) && is_dir($logDir)) {
             $this->logDir = rtrim($logDir, "/\\") . DIRECTORY_SEPARATOR;
         } else {
-            // Set default
+ 
             $this->logDir = WPStaging::getContentDir() . "logs" . DIRECTORY_SEPARATOR;
         }
 
-        // Set log extension
+ 
         if (!empty($logExtension)) {
             $this->logExtension = $logExtension;
         }
 
-        /**
-         * If log directory doesn't exist, create it.
-         * @see \WPStaging\Framework\Notices\Notices::renderNotices Notice that shows if log directory couldn't be created.
-         */
+
+
+
+
         (new Filesystem())->mkdir($this->logDir);
 
         $this->settingsDto = $settingsDto;
@@ -136,12 +136,12 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $this->sseSetupAttempted = true;
     }
 
-    /**
-     * Backstop for Logger instances that were not wired up via setupSseLogger() (alt DI keys,
-     * direct `new Logger()`, stale OPcache). SSE is best-effort, must not break disk logging.
-     *
-     * @return void
-     */
+
+
+
+
+
+
     private function lazyAttachSseEventCache()
     {
         if ($this->sseSetupAttempted || $this->sseEventCache !== null) {
@@ -160,21 +160,21 @@ class Logger implements LoggerInterface, ShutdownableInterface
             $this->sseEventCache->setJobId($jobId);
             $this->sseEventCache->load();
         } catch (\Throwable $e) {
-            // best-effort
+ 
         }
     }
 
-    /**
-     * @param string $additionalHeader
-     * @return void
-     */
+
+
+
+
     public function writeLogHeader(string $additionalHeader = '')
     {
         $systemInfo = WPStaging::make(SystemInfo::class);
 
-        /** @var SiteInfo */
+ 
         $siteInfo   = WPStaging::make(SiteInfo::class);
-        // Keeping these non-translated
+ 
         $host       = 'General';
         if ($siteInfo->isHostedOnWordPressCom()) {
             $host   = 'WordPress.com';
@@ -182,7 +182,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
             $host   = 'Flywheel';
         }
 
-        /** @var WpAdapter */
+ 
         $wpAdapter = WPStaging::make(WpAdapter::class);
 
         $this->info('System Info' . $additionalHeader);
@@ -205,22 +205,22 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $this->add(sprintf('- PHP Max Execution Time: %s', ini_get("max_execution_time")), self::TYPE_INFO_SUB);
     }
 
-    /**
-     * @param string $level
-     * @param string $message
-     * @param array $context
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
     public function log($level, $message, array $context = [])
     {
         $this->add($message, $level);
     }
 
-    /**
-     * @param string $message
-     * @param string $type
-     */
+
+
+
+
     public function add($message, $type = self::TYPE_ERROR)
     {
         $log = [
@@ -238,11 +238,11 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
-    /**
-     * @param string $type
-     * @param array $data
-     * @return void
-     */
+
+
+
+
+
     public function pushSseEvent(string $type, array $data)
     {
         $this->lazyAttachSseEventCache();
@@ -255,25 +255,25 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
-    /**
-     * @return null|string
-     */
+
+
+
     public function getFileName()
     {
         return $this->fileName;
     }
 
-    /**
-     * @param string $fileName
-     */
+
+
+
     public function setFileName($fileName)
     {
         $this->fileName = $fileName;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function commit()
     {
         if (empty($this->messages)) {
@@ -294,24 +294,24 @@ class Logger implements LoggerInterface, ShutdownableInterface
         return (@file_put_contents($this->getLogFile(), $messageString, FILE_APPEND));
     }
 
-    /**
-     * @param null|string $file
-     *
-     * @return string
-     */
+
+
+
+
+
     public function read($file = null)
     {
         return @file_get_contents($this->getLogFile($file));
     }
 
-    /**
-     * @param null|string $fileName
-     *
-     * @return string
-     */
+
+
+
+
+
     public function getLogFile($fileName = null)
     {
-        // Default
+ 
         if ($fileName === null) {
             $fileName = ($this->fileName !== null) ? $this->fileName : date("Y_m_d");
         }
@@ -319,14 +319,14 @@ class Logger implements LoggerInterface, ShutdownableInterface
         return $this->logDir . $fileName . '.' . $this->logExtension;
     }
 
-    /**
-     * Delete a log file
-     *
-     * @param string $logFileName
-     *
-     * @return bool
-     * @throws \Exception
-     */
+
+
+
+
+
+
+
+
     public function delete($logFileName)
     {
         $logFile = $this->logDir . $logFileName . '.' . $this->logExtension;
@@ -338,44 +338,44 @@ class Logger implements LoggerInterface, ShutdownableInterface
         return true;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getLogDir()
     {
         return $this->logDir;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getLogExtension()
     {
         return $this->logExtension;
     }
 
-    /**
-     * Get last element of logging data array
-     * @return array
-     */
+
+
+
+
     public function getLastLogMsg()
     {
-        // return all messages
+ 
         if (count($this->messages) > 1) {
             return $this->messages;
         } else {
-            // Return last message
+ 
             return $this->messages[] = array_pop($this->messages);
         }
     }
 
-    /**
-     * Get last error message
-     * @param array $types - Types in which search the last logged message
-     *                     - Default [ERROR, CRITICAL]
-     *
-     * @return array|false
-     */
+
+
+
+
+
+
+
     public function getLastErrorMsg($types = [self::TYPE_ERROR, self::TYPE_CRITICAL])
     {
         if (count($this->messages) === 0) {
@@ -383,7 +383,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
 
         foreach (array_reverse($this->messages) as $message) {
-            // Skip if type is not set
+ 
             if (empty($message['type'])) {
                 continue;
             }
@@ -396,67 +396,67 @@ class Logger implements LoggerInterface, ShutdownableInterface
         return false;
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function emergency($message, array $context = [])
     {
         $this->add($message, LogLevel::EMERGENCY);
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function alert($message, array $context = [])
     {
         $this->add($message, LogLevel::ALERT);
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function critical($message, array $context = [])
     {
         $this->add($message, LogLevel::CRITICAL);
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function error($message, array $context = [])
     {
         $this->add($message, LogLevel::ERROR);
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function warning($message, array $context = [])
     {
         $this->add($message, LogLevel::WARNING);
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function notice($message, array $context = [])
     {
         $this->add($message, LogLevel::NOTICE);
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function info($message, array $context = [])
     {
         $this->add($message, LogLevel::INFO);
     }
 
-    /**
-     * @param string $message
-     * @param array $context
-     * @return void
-     */
+
+
+
+
+
     public function debug($message, array $context = [])
     {
         if ($this->isDebugMode()) {
@@ -464,9 +464,9 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function writeInstalledPluginsAndThemes()
     {
         $allPlugins = get_plugins();
@@ -487,9 +487,9 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
 
-    /**
-     * @return void
-     */
+
+
+
     public function writeGlobalSettingsToLogs()
     {
         $globalSettings = (object)get_option('wpstg_settings', []);
@@ -503,10 +503,10 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $this->add(sprintf('- Optimizer Active : %s', ($isOptimizerActive ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
     }
 
-    /**
-     * @param $tables
-     * @return void
-     */
+
+
+
+
     public function writeSelectedTablesToLogs($tables)
     {
         if (count($tables) === 0) {
@@ -523,11 +523,11 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
-    /**
-     * @param $providerName
-     * @param $authClass
-     * @return void
-     */
+
+
+
+
+
     public function logProviderSettings($providerName, $authClass)
     {
         $excludedFields = [
@@ -569,7 +569,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
-    /** @return bool */
+ 
     protected function isDebugMode(): bool
     {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG === true) {
@@ -580,12 +580,12 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
 
-    /**
-     * @param array $allPlugins
-     * @param array $activePlugins
-     * @param array $networkActivePlugins
-     * @return void
-     */
+
+
+
+
+
+
     protected function listActivePlugins(array $allPlugins, array $activePlugins, array $networkActivePlugins = [])
     {
         $isMultisite = is_multisite();
@@ -614,11 +614,11 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
-    /**
-     * @param array $allPlugins
-     * @param array $allActivePlugins
-     * @return void
-     */
+
+
+
+
+
     protected function listInactivePlugins(array $allPlugins, array $allActivePlugins)
     {
         $this->info("Inactive Plugins");
@@ -630,21 +630,21 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
-    /**
-     * @param \WP_Theme $activeTheme
-     * @return void
-     */
+
+
+
+
     protected function listActiveTheme(\WP_Theme $activeTheme)
     {
         $this->info("Activated Theme");
         $this->add(sprintf("- %s : %s", $activeTheme->get('Name'), $activeTheme->get('Version')), self::TYPE_INFO_SUB);
     }
 
-    /**
-     * @param array $allThemes
-     * @param \WP_Theme $activeTheme
-     * @return void
-     */
+
+
+
+
+
     protected function listInactiveThemes(array $allThemes, \WP_Theme $activeTheme)
     {
         $this->info("Inactive Themes");

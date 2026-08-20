@@ -15,9 +15,9 @@ use WPStaging\Framework\Settings\SettingsTable as SettingsTableService;
  */
 class SettingsTable extends Facade
 {
-    /**
-     * @return string
-     */
+
+
+
     protected static function getFacadeAccessor()
     {
         return SettingsTableService::class;

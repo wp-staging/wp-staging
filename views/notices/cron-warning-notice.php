@@ -13,7 +13,7 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\ServerVars;
 
-// Don't show if no cron issues
+ 
 if ($backupScheduler->getWarningType() === '') {
     return;
 }
@@ -26,7 +26,7 @@ $isPro          = WPStaging::isPro();
 $warningType    = $backupScheduler->getWarningType();
 $failureMessage = $backupScheduler->getLastBackupFailureMessage();
 
-// Help article URL
+ 
 $helpUrl = $isPro
     ? 'https://wp-staging.com/docs/wp-cron-is-not-working-correctly/'
     : 'https://wordpress.org/support/plugin/wp-staging/';

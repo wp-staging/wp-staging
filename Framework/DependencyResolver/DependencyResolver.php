@@ -6,19 +6,20 @@ use WPStaging\Framework\DependencyResolver\Exceptions\CircularReferenceException
 use WPStaging\Framework\DependencyResolver\Exceptions\MissingReferenceException;
 use WPStaging\Framework\DependencyResolver\Exceptions\ResolveException;
 
-/**
- * Class DependencyResolver
- *
- * This is a port of https://github.com/anthonykgross/dependency-resolver, adapted to run on our PHP requirement version.
- *
- * @package WPStaging\Framework\DependencyResolver
- */
+
+
+
+
+
+
+
 class DependencyResolver
 {
-    /**
-     * @throws ResolveException
-     */
-    public static function resolve(array $tree, ResolveBehaviour $resolveBehaviour = null)
+
+
+
+
+    public static function resolve(array $tree, $resolveBehaviour = null)
     {
         if (is_null($resolveBehaviour)) {
             $resolveBehaviour = ResolveBehaviour::create()->setThrowOnCircularReference(true);
@@ -27,7 +28,7 @@ class DependencyResolver
         $resolved = [];
         $unresolved = [];
 
-        // Resolve dependencies for each table
+ 
         foreach (array_keys($tree) as $table) {
             list($resolved, $unresolved, $returnImmediately) = self::resolver($table, $tree, $resolved, $unresolved, $resolveBehaviour);
 
@@ -39,11 +40,11 @@ class DependencyResolver
         return $resolved;
     }
 
-    /**
-     * @param int|string $item
-     *
-     * @throws ResolveException
-     */
+
+
+
+
+
     private static function resolver($item, array $items, array $resolved, array $unresolved, ResolveBehaviour $resolveBehaviour)
     {
         $unresolved[] = $item;
@@ -77,12 +78,12 @@ class DependencyResolver
             }
         }
 
-        // Add $item to $resolved if it's not already there
+ 
         if (!in_array($item, $resolved, true)) {
             $resolved[] = $item;
         }
 
-        // Remove all occurrences of $item in $unresolved
+ 
         while (($index = array_search($item, $unresolved, true)) !== false) {
             unset($unresolved[$index]);
         }

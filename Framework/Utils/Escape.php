@@ -4,32 +4,32 @@ namespace WPStaging\Framework\Utils;
 
 class Escape
 {
-    /**
-     * Escape html with allowed html tags
-     *
-     * @param string $content
-     * @return string
-     */
+
+
+
+
+
+
     public function escapeHtml(string $content): string
     {
         return wp_kses($content, $this->htmlAllowedDuringEscape([]));
     }
 
-    /**
-     * Html decode and then wp_kses_post
-     *
-     * @param string $text
-     * @return string
-     */
+
+
+
+
+
+
     public function decodeKsesPost(string $text): string
     {
         return wp_kses_post(html_entity_decode($text));
     }
 
-    /**
-     * @param array $array
-     * @return array
-     */
+
+
+
+
     public function htmlAllowedDuringEscape(array $array): array
     {
         return [
@@ -119,13 +119,13 @@ class Escape
         ];
     }
 
-    /**
-     * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
-     * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
-     * @access public
-     * @param string|array $input The string to escape.
-     * @return string|array
-     */
+
+
+
+
+
+
+
     public function mysqlRealEscapeString($input)
     {
         if (is_array($input)) {

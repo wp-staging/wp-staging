@@ -28,27 +28,27 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RestoreRequirementsCheckTask extends RestoreTask
 {
-    /** @var TableService */
+ 
     protected $tableService;
 
-    /** @var JobRestoreDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var DiskWriteCheck */
+ 
     protected $diskWriteCheck;
 
-    /** @var string A WPSTAGING backup with a version lower than this one is a beta release for pro. */
+ 
     const BETA_VERSION_LIMIT_PRO = '4';
 
-    /** @var AnalyticsBackupRestore */
+ 
     protected $analyticsBackupRestore;
 
-    /**
-     * @var SiteInfo
-     */
+
+
+
     protected $siteInfo;
 
-    /** @var ZlibCompressor */
+ 
     protected $zlibCompressor;
 
     public function __construct(
@@ -86,17 +86,17 @@ class RestoreRequirementsCheckTask extends RestoreTask
     public function execute()
     {
         if (!$this->stepsDto->getTotal()) {
-            // The only requirement checking that really needs a step is the free disk space one, all other happens instantly.
+ 
             $this->stepsDto->setTotal(1);
         }
 
         try {
-            // Warnings
+ 
             $this->shouldWarnIfRestoringBackupWithShortOpenTags();
             $this->shouldWarnIfRunning32Bits();
             $this->shouldWarnIfTheresNotEnoughFreeDiskSpace();
 
-            // Errors
+ 
             $this->cannotRestoreOnMultisite();
             $this->cannotMigrate();
             $this->cannotRestoreMultipartBackup();
@@ -120,7 +120,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->logger->critical($e->getMessage());
 
             $this->jobDataDto->setRequirementFailReason($e->getMessage());
-            // todo: Set the requirement fail reason
+ 
             if (!$this->jobDataDto->getIsSyncRequest()) {
                 $this->analyticsBackupRestore->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
             }
@@ -183,15 +183,15 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->logger->warning($e->getMessage());
             return;
         } catch (RuntimeException $e) {
-            // soft error, no action needed, but log
+ 
             $this->logger->debug($e->getMessage());
         }
     }
 
-    /**
-     * @throws RuntimeException When trying to restore a .wpstg file generated from a multi-site
-     *                          installation into a single-site.
-     */
+
+
+
+
     protected function cannotRestoreMultisiteBackupOnSingleSite()
     {
         $backupType = $this->jobDataDto->getBackupMetadata()->getBackupType();
@@ -221,7 +221,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $tables = $this->tableService->findTableStatusStartsWith($prefix);
 
         if (empty($tables)) {
-            // This should never happen, as we are running this in the context of a WordPress plugin.
+ 
             throw new RuntimeException("We could not find any tables with the prefix \"$prefix\". The backup restore cannot start. Please, feel free to reach out to WP STAGING support for assistance.");
         }
 
@@ -235,7 +235,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $this->jobDataDto->setShortNamesTablesToRestore();
 
         $requireShortNamesForTablesToDrop = false;
-        /** @var TableDto $table */
+ 
         foreach ($tables as $table) {
             if (!$table instanceof TableDto) {
                 throw new RuntimeException("We could not read information from tables to determine whether the backup restore is able to run or not, therefore the backup restore cannot start. Please, feel free to reach out to WP STAGING support for assistance.");
@@ -259,38 +259,38 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
     }
 
-    /**
-     * When restoring a backup, we detect and can recover from disk fulls while
-     * extracting the .wpstg file to a temporary directory. However, depending
-     * on the size of the database in this backup, we might hit disk limits
-     * while inserting data into MySQL.
-     *
-     * We cannot prevent every possible issue, but we can try to catch some.
-     *
-     * This method tries to write a file the same size as the database being
-     * restored to the filesystem. If there is not enough disk space for
-     * this operation, there will hardly be enough disk space to restore the
-     * database.
-     *
-     * @throws ThresholdException
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     protected function cannotRestoreIfThereIsNotEnoughFreeDiskSpaceForTheDatabase()
     {
         $databaseFileSize = $this->jobDataDto->getBackupMetadata()->getDatabaseFileSize();
 
-        // Early bail: No database in this backup
+ 
         if (empty($databaseFileSize)) {
             $this->stepsDto->incrementCurrentStep();
 
             return;
         }
 
-        /**
-         * We estimate we need 110% of the original backup file of free disk space for the restore process.
-         *
-         * wp-content/uploads/wp-staging/tmp/restore/wp-content/* (extracted files)
-         * Tmp database (in MySQL)
-         */
+
+
+
+
+
+
         $estimatedSizeNeeded = (int)($databaseFileSize * 1.1);
 
         $tmpFile = __DIR__ . '/diskCheck.wpstg';
@@ -315,7 +315,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
                 $writtenBytes += $writtenNow;
             }
 
-            // Only check threshold every now and then
+ 
             if ($timesWritten++ >= 5) {
                 if ($this->isThreshold()) {
                     $this->jobDataDto->setExtractorFileWrittenBytes($fileObject->getSize());
@@ -332,15 +332,15 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $this->stepsDto->incrementCurrentStep();
     }
 
-    /**
-     * Disallows backups generated in newer versions of WP STAGING to be restored
-     * using older versions of WP STAGING.
-     */
+
+
+
+
     protected function cannotRestoreIfBackupGeneratedOnNewerBackupVersion()
     {
         $backupVersion = $this->jobDataDto->getBackupMetadata()->getBackupVersion();
-        // No backup version mean older backups, generated before this feature was implemented.
-        // So allow it to restore.
+ 
+ 
         if (empty($backupVersion)) {
             return;
         }
@@ -357,14 +357,14 @@ class RestoreRequirementsCheckTask extends RestoreTask
         throw new RuntimeException(sprintf('This backup was created with a newer version of WP Staging! Please update the WP Staging plugin first! Then start the restoration of the backup again. - Backup Format Version: %s.', esc_html($backupVersion)));
     }
 
-    /**
-     * Disallows backups generated in the PRO version to be restored using the free version.
-     */
+
+
+
     protected function cannotRestoreIfBackupGeneratedOnProVersion()
     {
         $metadata = $this->jobDataDto->getBackupMetadata();
 
-        // Early bail: free version
+ 
         if (!$metadata->getCreatedOnPro()) {
             return;
         }
@@ -372,24 +372,24 @@ class RestoreRequirementsCheckTask extends RestoreTask
         throw new RuntimeException('This backup was generated on WP STAGING PRO and cannot be restored on FREE version. Please upgrade to <a href="' . Language::getUpgradeUrl('restore_incompatible') . '" target="_blank">WP STAGING PRO</a> to restore this Backup.');
     }
 
-    /*
-     * Disallow backups that contains database generated in newer versions of WordPress to be restored
-     * in older versions of WordPress that has a different database schema.
-     */
+
+
+
+
     protected function cannotRestoreIfBackupGeneratedOnNewerWPDbVersion()
     {
         if (!$this->jobDataDto->getBackupMetadata()->getIsExportingDatabase()) {
             return;
         }
 
-        /**
-         * @var string $GLOBALS['wp_version']
-         * @var int    $GLOBALS['wp_db_version']
-         */
+
+
+
+
         include ABSPATH . WPINC . '/version.php';
 
-        // use $GLOBALS to make phpstan happy
-        // This should never happen
+ 
+ 
         if (!isset($GLOBALS['wp_version']) || !isset($GLOBALS['wp_db_version'])) {
             $this->logger->warning('Could not determine the WP DB Schema Version in the Backup. No action is necessary, the backup will proceed...');
 
@@ -411,9 +411,9 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
     }
 
-    /*
-     * Disallow backups generated in the MVP to be restored using the newer version of WP STAGING.
-     */
+
+
+
     protected function cannotRestoreBackupCreatedBeforeMVP()
     {
         if ($this->isDevVersion()) {
@@ -422,7 +422,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
         $metadata = $this->jobDataDto->getBackupMetadata();
 
-        // Early bail: free version
+ 
         if (!$metadata->getCreatedOnPro()) {
             return;
         }
@@ -434,7 +434,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
     protected function cannotRestoreIfAnyTemporaryPrefixIsCurrentSitePrefix()
     {
-        // Early bail if not restoring database
+ 
         if (!$this->jobDataDto->getBackupMetadata()->getIsExportingDatabase()) {
             return;
         }
@@ -443,7 +443,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
         $prefix = $wpdb->base_prefix;
 
-        // Should not happen but if it does, add a bail for such cases
+ 
         if (DatabaseImporter::TMP_DATABASE_PREFIX === $prefix || DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP === $prefix) {
             throw new RuntimeException(sprintf('Restore stopped! Your current site prefix is %s. This is a temporary prefix used by WP Staging during restore. Please contact support to get help restoring the backup.', $prefix));
         }
@@ -473,7 +473,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             throw new RuntimeException(sprintf("Cannot Restore this backup! This backup has different URL scheme (%s) than your current site scheme (%s). <a href='https://wp-staging.com' target='_blank'>Get WP Staging Pro</a> to restore this backup on this website.", esc_html($this->getUrlScheme($this->jobDataDto->getBackupMetadata()->getSiteUrl())), esc_html($this->getUrlScheme(site_url()))));
         }
 
-        // Early bail if same site backup restore
+ 
         if ($this->jobDataDto->getIsSameSiteBackupRestore()) {
             return;
         }
@@ -498,7 +498,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
     {
         if ($this->jobDataDto->getBackupMetadata()->getIsZlibCompressed()) {
             if (!$this->zlibCompressor->supportsCompression()) {
-                // todo: add link to compression support article.
+ 
                 throw new RuntimeException('Cannot restore! This backup is compressed, but your server does not support compression. Click <a href="https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/" target="_blank">here</a> to learn how to fix it.');
             } elseif ($this->zlibCompressor->supportsCompression() && !$this->zlibCompressor->canUseCompression()) {
                 throw new RuntimeException('Cannot restore! This backup is compressed, you need WP Staging Pro to Restore it. Click <a href="' . Language::getUpgradeUrl('restore_compressed', 'wpstg-license-ui') . '" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
@@ -506,39 +506,39 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isDevVersion()
     {
         return defined('WPSTG_IS_DEV') && WPSTG_IS_DEV;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getCurrentBackupVersion()
     {
         return BackupHeader::BACKUP_VERSION;
     }
 
-    /**
-     * @param string $tableName
-     * @return string
-     */
+
+
+
+
     protected function getUrlScheme(string $url): string
     {
         return parse_url($url, PHP_URL_SCHEME);
     }
 
-    /**
-     * This method make sure that there should be something to restore from the backup
-     * Otherwise stop the restore process
-     * @throws RuntimeException
-     */
+
+
+
+
+
     protected function checkNothingToRestore()
     {
-        /** @var BackupMetadata */
+ 
         $backupMetadata = $this->jobDataDto->getBackupMetadata();
         if ($backupMetadata->getIsExportingDatabase() && !$this->isBackupPartSkipped(PartIdentifier::DATABASE_PART_IDENTIFIER)) {
             return;

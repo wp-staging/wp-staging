@@ -3,71 +3,75 @@
 namespace WPStaging\Framework\Settings;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Core\DTO\Settings as SettingsDTO;
+use WPStaging\Framework\Facades\Sanitize as SanitizeFacade;
 use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Network\HttpBasicAuth;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backup\BackupScheduler;
+use WPStaging\Backup\Service\UpdateProtectionSettings;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Security\DataEncryption;
 use WPStaging\Notifications\Notifications;
 
-/**
- * This class provides functionality for managing application settings.
- */
+
+
+
 class Settings
 {
     use HttpBasicAuth;
 
-    /** @var string */
+ 
     const ACTION_WPSTG_PRO_SETTINGS = 'wpstg.views.pro.settings';
 
-    /**
-     * @var array
-     * Sanitize the options to escape from XSS
-     */
+
+
+
+
     private $optionsToSanitize = [
-        'queryLimit'        => 'sanitizeInt',
-        'querySRLimit'      => 'sanitizeInt',
-        'fileLimit'         => 'sanitizeInt',
-        'maxFileSize'       => 'sanitizeInt',
-        'batchSize'         => 'sanitizeInt',
-        'delayRequest'      => 'sanitizeInt',
-        'cpuLoad'           => 'sanitizeString',
-        'unInstallOnDelete' => 'sanitizeBool',
-        'optimizer'         => 'sanitizeBool',
-        'disableAdminLogin' => 'sanitizeBool',
-        'keepPermalinks'    => 'sanitizeBool',
-        'debugMode'         => 'sanitizeBool',
+        'queryLimit'               => 'sanitizeInt',
+        'querySRLimit'             => 'sanitizeInt',
+        'fileLimit'                => 'sanitizeInt',
+        'maxFileSize'              => 'sanitizeInt',
+        'batchSize'                => 'sanitizeInt',
+        'delayRequest'             => 'sanitizeInt',
+        'cpuLoad'                  => 'sanitizeString',
+        'unInstallOnDelete'        => 'sanitizeBool',
+        'optimizer'                => 'sanitizeBool',
+        'disableAdminLogin'        => 'sanitizeBool',
+        'keepPermalinks'           => 'sanitizeBool',
+        'debugMode'                => 'sanitizeBool',
+        'enableBackupBeforeUpdate' => 'sanitizeBool',
     ];
 
-    /**
-     * @var SiteInfo
-     */
+
+
+
     private $siteInfo;
 
-    /**
-     * @var Sanitize
-     */
+
+
+
     private $sanitize;
 
-    /** @var Queue */
+ 
     private $queue;
 
-    /** @var Auth */
+ 
     private $auth;
 
-    /** @var DataEncryption */
+ 
     private $dataEncryption;
 
-    /**
-     * @param SiteInfo $siteInfo
-     * @param Sanitize $sanitize
-     * @param Queue $queue
-     * @param Auth $auth
-     * @param DataEncryption $dataEncryption
-     */
+
+
+
+
+
+
+
     public function __construct(SiteInfo $siteInfo, Sanitize $sanitize, Queue $queue, Auth $auth, DataEncryption $dataEncryption)
     {
         $this->siteInfo       = $siteInfo;
@@ -77,79 +81,44 @@ class Settings
         $this->dataEncryption = $dataEncryption;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function registerSettings()
     {
         register_setting("wpstg_settings", "wpstg_settings", [$this, "sanitizeOptions"]);
     }
 
-    /**
-     * Sanitize options data and delete the cache
-     * @param array $data
-     * @return array
-     */
+
+
+
+
+
     public function sanitizeOptions(array $data = []): array
     {
-        // is_array() is required otherwise new clone will fail.
+        $isFormSubmission                  = $this->isSettingsFormSubmission();
         $showErrorToggleStagingSiteCloning = false;
-        if ($this->siteInfo->isStagingSite() && is_array($data)) {
-            $isStagingCloneable = isset($data['isStagingSiteCloneable']) ? $data['isStagingSiteCloneable'] : 'false';
-            unset($data['isStagingSiteCloneable']);
-            $showErrorToggleStagingSiteCloning = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
-        }
 
-        if (is_array($data)) {
-            $optionBackupScheduleErrorReport = isset($data['schedulesErrorReport']) ? 'true' : '';
-            $optionBackupScheduleWarningReport = isset($data['schedulesWarningReport']) ? 'true' : '';
-            $optionBackupScheduleGeneralReport = isset($data['schedulesGeneralReport']) ? 'true' : '';
-            $optionBackupScheduleReportEmail = !empty($data['schedulesReportEmail']) ? $this->sanitize->sanitizeEmail($data['schedulesReportEmail']) : '';
-
-            if (empty($optionBackupScheduleReportEmail)) {
-                $optionBackupScheduleErrorReport = '';
-            }
-
-            unset($data['schedulesErrorReport'], $data['schedulesReportEmail']);
-
-            $optionBackupScheduleSlackErrorReport   = isset($data['schedulesSlackErrorReport']) ? 'true' : '';
-            $optionBackupScheduleReportSlackWebhook = !empty($data['schedulesReportSlackWebhook']) ? $this->sanitize->sanitizeUrl($data['schedulesReportSlackWebhook']) : '';
-            $optionSendEmailAsHTML                  = isset($data['emailAsHTML']) ? 'true' : '';
-
-            if (empty($optionBackupScheduleReportSlackWebhook)) {
-                $optionBackupScheduleSlackErrorReport = '';
-            }
-
-            unset($data['schedulesErrorSlackReport'], $data['schedulesReportSlackWebhook']);
-
-            $this->setErrorReportOptions(
-                $optionBackupScheduleErrorReport,
-                $optionBackupScheduleWarningReport,
-                $optionBackupScheduleGeneralReport,
-                $optionBackupScheduleReportEmail,
-                $optionBackupScheduleSlackErrorReport,
-                $optionBackupScheduleReportSlackWebhook,
-                $optionSendEmailAsHTML
-            );
-
-            $this->saveHttpAuthCredentials($data);
-            unset($data['httpAuthUsername'], $data['httpAuthPassword']);
+        if ($isFormSubmission) {
+            $showErrorToggleStagingSiteCloning = $this->applySideEffects($data);
         }
 
         $sanitized = $this->sanitizeData($data);
 
-        if ($showErrorToggleStagingSiteCloning) {
-            add_settings_error("wpstg-notices", '', __("Settings updated. But unable to activate/deactivate the site cloneable status!", "wp-staging"), "warning");
-        } else {
-            add_settings_error("wpstg-notices", '', __("Settings updated.", "wp-staging"), "updated");
+        if ($isFormSubmission && function_exists('add_settings_error')) {
+            if ($showErrorToggleStagingSiteCloning) {
+                add_settings_error("wpstg-notices", '', __("Settings updated. But unable to activate/deactivate the site cloneable status!", "wp-staging"), "warning");
+            } else {
+                add_settings_error("wpstg-notices", '', __("Settings updated.", "wp-staging"), "updated");
+            }
         }
 
         return $sanitized;
     }
 
-    /**
-     * @return null
-     */
+
+
+
     public function ajaxPurgeQueueTable()
     {
         if ($this->auth->isAuthenticatedRequest() === false) {
@@ -183,26 +152,26 @@ class Settings
         return null;
     }
 
-    /**
-     * Lightweight AJAX action that serves as the loopback target for HTTP Basic Auth testing.
-     * Returns a simple success response so the caller can verify the request went through.
-     *
-     * No auth check: this endpoint is intentionally public (wp_ajax_nopriv_) so the
-     * server-side loopback in ajaxTestHttpAuth() can reach it without a WP session.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     public function ajaxHttpAuthPing()
     {
         wp_send_json_success(['ping' => true]);
     }
 
-    /**
-     * Tests that the saved HTTP Basic Auth credentials allow loopback requests to admin-ajax.php.
-     * Performs a wp_remote_post() to the ping action using the stored credentials.
-     *
-     * @return void
-     */
+
+
+
+
+
+
     public function ajaxTestHttpAuth()
     {
         if ($this->auth->isAuthenticatedRequest() === false) {
@@ -263,10 +232,10 @@ class Settings
         wp_send_json_success(['message' => esc_html__('Connection successful! Background tasks will be able to reach wp-admin.', 'wp-staging')]);
     }
 
-    /**
-     * @param array $data
-     * @return array
-     */
+
+
+
+
     protected function sanitizeData(array $data = []): array
     {
         $sanitized = [];
@@ -289,13 +258,13 @@ class Settings
         return $sanitized;
     }
 
-    /**
-     * Toggle staging site cloning
-     *
-     * @param bool $isCloneable
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
     protected function toggleStagingSiteCloning(bool $isCloneable): bool
     {
         if ($isCloneable && $this->siteInfo->enableStagingSiteCloning()) {
@@ -309,18 +278,18 @@ class Settings
         return false;
     }
 
-    /**
-     * Set backup schedule error reporting options
-     *
-     * @param string $optionBackupScheduleErrorReport 'true' if active
-     * @param string $optionBackupScheduleWarningReport 'true' if active
-     * @param string $optionBackupScheduleGeneralReport 'true' if active
-     * @param string $optionBackupScheduleReportEmail
-     * @param string $optionBackupScheduleSlackErrorReport 'true' if active
-     * @param string $optionBackupScheduleReportSlackWebhook
-     * @param string $optionSendEmailAsHTML 'true' if active
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     protected function setErrorReportOptions(
         string $optionBackupScheduleErrorReport,
         string $optionBackupScheduleWarningReport,
@@ -343,14 +312,14 @@ class Settings
         update_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, $optionSendEmailAsHTML);
     }
 
-    /**
-     * Save HTTP Basic Auth credentials for loopback requests.
-     * If username is empty, both username and password are cleared.
-     * If password is blank and username is provided, existing password is preserved.
-     *
-     * @param array $data
-     * @return void
-     */
+
+
+
+
+
+
+
+
     protected function saveHttpAuthCredentials(array $data)
     {
         $username = isset($data['httpAuthUsername'])
@@ -377,5 +346,103 @@ class Settings
             'username' => $username,
             'password' => $password,
         ], false);
+    }
+
+
+
+
+
+
+
+
+
+    public function restoreDefaults()
+    {
+        delete_option('wpstg_settings');
+        (new SettingsDTO())->setDefault();
+
+        $data = [];
+        $this->applySideEffects($data);
+    }
+
+
+
+
+
+
+
+
+    private function applySideEffects(array &$data): bool
+    {
+        $showErrorToggleStagingSiteCloning = false;
+        if ($this->siteInfo->isStagingSite()) {
+            $isStagingCloneable = isset($data['isStagingSiteCloneable']) ? $data['isStagingSiteCloneable'] : 'false';
+            unset($data['isStagingSiteCloneable']);
+            $showErrorToggleStagingSiteCloning = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
+        }
+
+        $optionBackupScheduleErrorReport = isset($data['schedulesErrorReport']) ? 'true' : '';
+        $optionBackupScheduleWarningReport = isset($data['schedulesWarningReport']) ? 'true' : '';
+        $optionBackupScheduleGeneralReport = isset($data['schedulesGeneralReport']) ? 'true' : '';
+        $optionBackupScheduleReportEmail = !empty($data['schedulesReportEmail']) ? $this->sanitize->sanitizeEmail($data['schedulesReportEmail']) : '';
+
+        if (empty($optionBackupScheduleReportEmail)) {
+            $optionBackupScheduleErrorReport = '';
+        }
+
+        unset($data['schedulesErrorReport'], $data['schedulesReportEmail']);
+
+        $optionBackupScheduleSlackErrorReport   = isset($data['schedulesSlackErrorReport']) ? 'true' : '';
+        $optionBackupScheduleReportSlackWebhook = !empty($data['schedulesReportSlackWebhook']) ? $this->sanitize->sanitizeUrl($data['schedulesReportSlackWebhook']) : '';
+        $optionSendEmailAsHTML                  = isset($data['emailAsHTML']) ? 'true' : '';
+
+        if (empty($optionBackupScheduleReportSlackWebhook)) {
+            $optionBackupScheduleSlackErrorReport = '';
+        }
+
+        unset($data['schedulesErrorSlackReport'], $data['schedulesReportSlackWebhook']);
+
+        $this->setErrorReportOptions(
+            $optionBackupScheduleErrorReport,
+            $optionBackupScheduleWarningReport,
+            $optionBackupScheduleGeneralReport,
+            $optionBackupScheduleReportEmail,
+            $optionBackupScheduleSlackErrorReport,
+            $optionBackupScheduleReportSlackWebhook,
+            $optionSendEmailAsHTML
+        );
+
+        $this->saveHttpAuthCredentials($data);
+        unset($data['httpAuthUsername'], $data['httpAuthPassword']);
+
+        $data['enableBackupBeforeUpdate'] = $data['enableBackupBeforeUpdate'] ?? '0';
+
+        if ($data['enableBackupBeforeUpdate'] === '0') {
+            WPStaging::make(UpdateProtectionSettings::class)->forgetMode();
+        }
+
+        return $showErrorToggleStagingSiteCloning;
+    }
+
+
+
+
+
+
+
+
+
+
+    private function isSettingsFormSubmission(): bool
+    {
+        if (!isset($_POST['option_page']) || !isset($_POST['_wpnonce'])) {
+            return false;
+        }
+
+        if (SanitizeFacade::sanitizeString(wp_unslash($_POST['option_page'])) !== 'wpstg_settings') {
+            return false;
+        }
+
+        return (bool)wp_verify_nonce(SanitizeFacade::sanitizeString(wp_unslash($_POST['_wpnonce'])), 'wpstg_settings-options');
     }
 }

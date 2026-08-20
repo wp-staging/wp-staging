@@ -21,37 +21,37 @@ use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * Replacement for WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable
- */
+
+
+
 class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
 {
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_CLONING_UPDATE_ACTIVE_PLUGINS = 'wpstg.cloning.update_active_plugins';
 
-    /** @var string */
+ 
     const FILTER_CLONING_PRESERVE_UPLOAD_PATH = 'wpstg.cloning.preserve_upload_path';
 
-    /**
-     * @var ExcludedPlugins
-     */
+
+
+
     protected $excludedPlugins;
 
-    /**
-     * @var FreemiusScript
-     */
+
+
+
     protected $freemiusScript;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Urls $urls
-     * @param Database $database
-     */
+
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Urls $urls, Database $database, FreemiusScript $freemiusScript, ExcludedPlugins $excludedPlugins)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue, $urls, $database);
@@ -59,25 +59,25 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         $this->excludedPlugins = $excludedPlugins;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_update_options';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Update options in options table';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->setup();
@@ -104,27 +104,27 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
 
         $this->adjustCloneOptions($cloneOptions);
 
-        // only insert or update clone option if job is not updating
-        // during update this data will be preserved
+ 
+ 
         if ($jobType !== StagingSetup::JOB_UPDATE) {
             $updateOrInsert[CloneOptions::WPSTG_CLONE_SETTINGS_KEY] = serialize((object) $cloneOptions);
         }
 
         if ($this->jobDataDto->getIsKeepPermalinks()) {
-            /**
-             * if staging site is created with keep permalinks setting off,
-             * The below code make sure permalinks settings are kept during update,
-             * when later production site has keep permalinks setting on,
-             * without the need to also keep permalinks setting on staging site too.
-             */
+
+
+
+
+
+
             $updateOrInsert['wpstg_rmpermalinks_executed'] = 'true';
         } else {
             $updateOrInsert['rewrite_rules'] = null;
             $updateOrInsert['permalink_structure'] = ' ';
         }
 
-        // Only show freemius notice if freemius options exists on the productions site
-        // These freemius options will be deleted from option table, see below.
+ 
+ 
         if (!$this->jobDataDto->getIsStagingNetwork() && $this->freemiusScript->hasFreemiusOptions()) {
             $updateOrInsert[FreemiusScript::NOTICE_OPTION] = true;
         }
@@ -160,24 +160,24 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
 
         $this->updateOptions($update);
 
-        // Options to delete on the staging site
+ 
         $toDelete = [
-            '_transient_wp_core_block_css_files' // Transient that breaks the css on staging site for Twenty Twenty Three theme
+            '_transient_wp_core_block_css_files' 
         ];
 
         if (!$this->jobDataDto->getIsStagingNetwork() && $this->freemiusScript->hasFreemiusOptions()) {
             $toDelete = array_merge($toDelete, $this->freemiusScript->getFreemiusOptions());
         }
 
-        // Delete options for new clone or reset job
+ 
         if ($jobType !== StagingSetup::JOB_UPDATE) {
-            // @see WPStaging\Pro\Backup\Storage\GoogleDrive\Auth::getOptionName for option name
+ 
             $toDelete[] = 'wpstg_google-drive';
-            $toDelete[] = 'wpstg_googledrive'; // Legacy
+            $toDelete[] = 'wpstg_googledrive'; 
             $toDelete[] = 'wpstg_dropbox';
             $toDelete[] = 'wpstg_one-drive';
             $toDelete[] = 'wpstg_pcloud';
-            // Should we delete other cloud storage options too?
+ 
             $toDelete[] = FinishBackupTask::OPTION_LAST_BACKUP;
         }
 
@@ -195,10 +195,10 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         return !(bool)Hooks::applyFilters(self::FILTER_CLONING_PRESERVE_UPLOAD_PATH, false);
     }
 
-    /**
-     * @param array $options
-     * @return void
-     */
+
+
+
+
     protected function updateOrInsertOptions(array $options)
     {
         foreach ($options as $name => $value) {
@@ -219,11 +219,11 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         }
     }
 
-    /**
-     * Delete given options
-     *
-     * @param array $options
-     */
+
+
+
+
+
     protected function deleteOptions($options)
     {
         foreach ($options as $option) {
@@ -234,12 +234,12 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         }
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getActivePluginsToUpdate(): array
     {
-        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+ 
         remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
         $activePlugins = get_option('active_plugins');
@@ -255,11 +255,11 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         return $activePlugins;
     }
 
-    /**
-     * @param array $cloneOptions
-     */
+
+
+
     protected function adjustCloneOptions(array &$cloneOptions)
     {
-        // used in pro
+ 
     }
 }

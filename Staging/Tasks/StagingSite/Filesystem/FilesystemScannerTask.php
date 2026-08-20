@@ -24,101 +24,101 @@ use WPStaging\Staging\Tasks\FileCopierTask;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * @todo: In Finalizing PR, re-use the existing cloning filters here
- */
+
+
+
 class FilesystemScannerTask extends StagingTask
 {
     use LegacyFileRulesTrait;
 
-    /** @var int */
+ 
     const STEP_SCAN_WP_ROOT_FILES = 0;
 
-    /** @var int */
+ 
     const STEP_SCAN_WP_ADMIN_DIRECTORY = 1;
 
-    /** @var int */
+ 
     const STEP_SCAN_WP_INCLUDES_DIRECTORY = 2;
 
-    /** @var int */
+ 
     const STEP_SCAN_PLUGINS_DIRECTORY = 3;
 
-    /** @var int */
+ 
     const STEP_SCAN_MU_PLUGINS_DIRECTORY = 4;
 
-    /** @var int */
+ 
     const STEP_SCAN_THEMES_DIRECTORY = 5;
 
-    /** @var int */
+ 
     const STEP_SCAN_UPLOADS_DIRECTORY = 6;
 
-    /** @var int */
+ 
     const STEP_SCAN_OTHER_WP_CONTENT_DIRECTORIES = 7;
 
-    /** @var int */
+ 
     const STEP_SCAN_EXTRA_DIRECTORIES = 8;
 
-    /** @var string */
+ 
     const FILTER_IGNORE_FILE_EXTENSION = 'wpstg.cloning.files.ignore.file_extension';
 
-    /** @var string */
+ 
     const FILTER_IGNORE_FILE_BIGGER_THAN = 'wpstg.cloning.files.ignore.file_bigger_than';
 
-    /** @var string */
+ 
     const FILTER_EXCLUDE_DIRECTORIES = 'wpstg.cloning.exclude.directories';
 
-    /** @var string */
+ 
     const FILTER_LEGACY_EXCLUDE_FILES_FULL_PATH = 'wpstg.clone.excluded_files_full_path';
 
-    /** @var string */
+ 
     const FILTER_LEGACY_EXCLUDE_FILES = 'wpstg_clone_excluded_files';
 
-    /** @var string */
+ 
     const FILTER_LEGACY_EXCLUDED_FILE_SIZE = 'wpstg_clone_file_size_exclude';
 
-    /**
-     * 9 steps for scanning each identifier and the last step to deep scan non-scanned directories
-     * @var int
-     */
+
+
+
+
     const TOTAL_STEPS = 10;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var FilesystemScanner */
+ 
     protected $filesystemScanner;
 
-    /** @var PathChecker */
+ 
     protected $pathChecker;
 
-    /** @var array */
+ 
     protected $ignoreFileExtensions = [];
 
-    /** @var int */
+ 
     protected $ignoreFileBiggerThan = 0;
 
-    /** @var array */
+ 
     protected $ignoreFileExtensionFilesBiggerThan = [];
 
-    /** @var array */
+ 
     protected $legacyExcludedFileNameRules = [];
 
-    /** @var JobDataDto|FilesystemScannerDtoInterface|StagingOperationDtoInterface $jobDataDto */
+ 
     protected $jobDataDto; // @phpstan-ignore-line
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Directory $directory
-     * @param Filesystem $filesystem
-     * @param FilesystemScanner $filesystemScanner
-     * @param PathChecker $pathChecker
-     */
+
+
+
+
+
+
+
+
+
+
     public function __construct(
         LoggerInterface $logger,
         Cache $cache,
@@ -137,26 +137,26 @@ class FilesystemScannerTask extends StagingTask
         $this->pathChecker       = $pathChecker;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName(): string
     {
         return 'staging_filesystem_scan';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle(): string
     {
         return 'Discovering Files';
     }
 
-    /**
-     * @inheritDoc
-     * @throws DiskNotWritableException
-     */
+
+
+
+
     public function execute(): TaskResponseDto
     {
         $this->setupFilters();
@@ -214,16 +214,16 @@ class FilesystemScannerTask extends StagingTask
         } else {
             $this->jobDataDto->setDiscoveringFilesRequests($this->jobDataDto->getDiscoveringFilesRequests() + 1);
 
-            // The manual percentage increments 30% per request, until it hits 90%, point of which it increments 1%
+ 
             if ($this->jobDataDto->getDiscoveringFilesRequests() <= 3) {
-                // 30%, 60%, 90%...
+ 
                 $manualPercentage = $this->jobDataDto->getDiscoveringFilesRequests() * 30;
             } elseif ($this->jobDataDto->getDiscoveringFilesRequests() >= 4 && $this->jobDataDto->getDiscoveringFilesRequests() <= 14) {
-                // 91%, 92%, 93%...
+ 
                 $manualPercentage = 90;
                 $manualPercentage += $this->jobDataDto->getDiscoveringFilesRequests() - 3;
             } else {
-                // 99%
+ 
                 $manualPercentage = 99;
             }
 
@@ -234,14 +234,14 @@ class FilesystemScannerTask extends StagingTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupFilters()
     {
-        /**
-         * Allow user to exclude certain file extensions from being copied.
-         */
+
+
+
         $this->ignoreFileExtensions = $this->directory->getExcludedFileExtensions($this->jobDataDto->getExcludeExtensionRules());
 
         $this->ignoreFileExtensions = (array)apply_filters(self::FILTER_IGNORE_FILE_EXTENSION, $this->ignoreFileExtensions);
@@ -270,9 +270,9 @@ class FilesystemScannerTask extends StagingTask
 
         $excludeSizeGreaterThanInMb = $this->jobDataDto->getExcludeSizeGreaterThan();
 
-        /**
-         * Allow user to exclude files larger than given size from being copied.
-         */
+
+
+
         $this->ignoreFileBiggerThan = (int)apply_filters(self::FILTER_IGNORE_FILE_BIGGER_THAN, $excludeSizeGreaterThanInMb * MB_IN_BYTES);
         $legacyFileSizeFilterValue  = apply_filters(self::FILTER_LEGACY_EXCLUDED_FILE_SIZE, $this->ignoreFileBiggerThan);
         if (is_numeric($legacyFileSizeFilterValue)) {
@@ -282,13 +282,13 @@ class FilesystemScannerTask extends StagingTask
         $legacyExcludedExtensions = $this->extractFileExtensions($this->legacyExcludedFileNameRules);
         $this->ignoreFileExtensions = array_merge($this->ignoreFileExtensions, $legacyExcludedExtensions);
 
-        // Allows us to use isset for performance
+ 
         $this->ignoreFileExtensions = array_flip($this->ignoreFileExtensions);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupFilesystemScanner()
     {
         if (empty($this->stepsDto->getTotal())) {
@@ -314,7 +314,7 @@ class FilesystemScannerTask extends StagingTask
             $excludeFileRules
         );
         $this->filesystemScanner->setRecursiveExcludeRules([
-            '**/wp-staging*/**/node_modules', // skip WP Staging plugins' node_modules during the deep scan
+            '**/wp-staging*/**/node_modules', 
         ]);
         $this->filesystemScanner->setLogTitle(static::getTaskTitle());
         $this->filesystemScanner->setQueueCacheName(FileCopierTask::getTaskName());
@@ -322,10 +322,10 @@ class FilesystemScannerTask extends StagingTask
         $this->filesystemScanner->inject($this->logger, $this->taskQueue, $this->getScannerDto());
     }
 
-    /**
-     * Only Scan files in root directory (ABSPATH) but doesn't scan any directory in it.
-     * @return TaskResponseDto
-     */
+
+
+
+
     protected function scanWpRootFiles(): TaskResponseDto
     {
         $dirToScan = $this->directory->getAbsPath();
@@ -390,7 +390,7 @@ class FilesystemScannerTask extends StagingTask
 
     protected function scanMuPluginsDirectory(): TaskResponseDto
     {
-        // Early bail: mu-plugins directory doesn't exist
+ 
         if (!is_dir($this->directory->getMuPluginsDirectory())) {
             $this->jobDataDto->setIsMuPluginsExcluded(true);
             return $this->generateResponse();
@@ -440,7 +440,7 @@ class FilesystemScannerTask extends StagingTask
 
     protected function scanUploadsDirectory(): TaskResponseDto
     {
-        // Early bail: Uploads directory doesn't exist
+ 
         if (!is_dir($this->getUploadsDirectory())) {
             $this->jobDataDto->setIsUploadsExcluded(true);
             return $this->generateResponse();
@@ -460,9 +460,9 @@ class FilesystemScannerTask extends StagingTask
         return $this->generateResponse();
     }
 
-    /**
-     * Scan wp-content directory (wp-content/) but doesn't scan plugins,mu-plugins,themes,uploads folders.
-     */
+
+
+
     protected function scanWpContentDirectory(): TaskResponseDto
     {
         $dirToScan = $this->directory->getWpContentDirectory();
@@ -481,12 +481,12 @@ class FilesystemScannerTask extends StagingTask
         return $this->generateResponse();
     }
 
-    /**
-     * Scan Extra Directories in WP Root (ABSPATH) except wp-admin, wp-includes, wp-content.
-     */
+
+
+
     protected function scanExtraDirectories(): TaskResponseDto
     {
-        /** @var Sites */
+ 
         $stagingSites     = WPStaging::make(Sites::class);
         $stagingSitesDirs = $stagingSites->getStagingDirectories();
 
@@ -528,12 +528,12 @@ class FilesystemScannerTask extends StagingTask
         return $this->directory->getAbsPath();
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getExcludedDirectories(): array
     {
-        // Only one filter must run: the multisite one on multisite, the normal one otherwise.
+ 
         $useMultisiteFilter = $this->shouldUseMultisiteLegacyExcludedDirectoriesFilter();
         $excludedDirs       = $this->directory->getDefaultExcludedDirectories(!$useMultisiteFilter);
 
@@ -551,9 +551,9 @@ class FilesystemScannerTask extends StagingTask
         return defined('WPSTGPRO_VERSION') && is_multisite();
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getUploadsDirectory(): string
     {
         return $this->directory->getUploadsDirectory();
@@ -572,9 +572,9 @@ class FilesystemScannerTask extends StagingTask
         return $scannerDto;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function updateJobDataDto()
     {
         $scannerDto = $this->filesystemScanner->getFilesystemScannerDto();
@@ -586,15 +586,15 @@ class FilesystemScannerTask extends StagingTask
         $this->jobDataDto->mergeTmpExcludedFullPaths($scannerDto->getFilesExcludedInRequest());
     }
 
-    /**
-     * Pre scan path
-     * This is common method for pre scanning path, but cannot be used for scanning themes folders i.e. because there can be multiple themes folders
-     * @param string $dirToScan
-     * @param string $partIdentifier
-     * @param array $excludeRules
-     * @param bool $processLinks
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     protected function preScanPath(string $dirToScan, string $partIdentifier, array $excludeRules = [], bool $processLinks = false)
     {
         $this->filesystemScanner->setCurrentPathScanning($partIdentifier);

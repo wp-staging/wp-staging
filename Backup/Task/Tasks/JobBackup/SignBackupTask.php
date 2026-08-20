@@ -13,7 +13,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class SignBackupTask extends BackupTask
 {
-    /** @var BackupSigner */
+ 
     protected $backupSigner;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, BackupSigner $backupSigner)
@@ -38,7 +38,7 @@ class SignBackupTask extends BackupTask
         $this->backupSigner->setup($this->jobDataDto);
         $backupFilePath = $this->jobDataDto->getBackupFilePath();
 
-        // Store the "Size" of the Backup in the metadata, which is something we can only do after the backup is final.
+ 
         try {
             $this->backupSigner->signBackup($backupFilePath ?: '');
         } catch (Exception $e) {
@@ -47,7 +47,7 @@ class SignBackupTask extends BackupTask
             return $this->generateResponse();
         }
 
-        // Validate the Signed Backup
+ 
         try {
             $this->backupSigner->validateSignedBackup($backupFilePath ?: '');
         } catch (Exception $e) {

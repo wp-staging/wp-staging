@@ -1,6 +1,6 @@
 <?php
 /** @var string $itemLabel */
-/** @var mixed  $itemValue */
+ 
 ?>
 <div class="wpstg-system-info-item">
     <div class="wpstg-system-info-label"><?php echo esc_html($itemLabel); ?></div>

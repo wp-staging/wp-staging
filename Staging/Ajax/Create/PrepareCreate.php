@@ -15,13 +15,13 @@ use WPStaging\Staging\Sites;
 
 class PrepareCreate extends AbstractAjaxPrepare
 {
-    /** @var string */
+ 
     protected $postDataKey = 'wpstgCreateData';
 
-    /** @var StagingSiteJobsDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var StagingSiteCreate */
+ 
     protected $jobCreate;
 
     protected function postDataSanitization(): array
@@ -43,7 +43,7 @@ class PrepareCreate extends AbstractAjaxPrepare
         $data['nonSiteTables']       = isset($_POST['wpstgCreateData']['nonSiteTables']) ? $this->parseAndSanitizeTables($_POST['wpstgCreateData']['nonSiteTables']) : []; // phpcs:ignore
         $data['excludedDirectories'] = isset($_POST['wpstgCreateData']['excludedDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludedDirectories']) : []; // phpcs:ignore
         $data['extraDirectories']    = isset($_POST['wpstgCreateData']['extraDirectories']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['extraDirectories']) : []; // phpcs:ignore
-        // Exclude rules
+ 
         $data['excludeFileRules']      = isset($_POST['wpstgCreateData']['excludeFileRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeFileRules']) : []; // phpcs:ignore
         $data['excludeFolderRules']    = isset($_POST['wpstgCreateData']['excludeFolderRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeFolderRules']) : []; // phpcs:ignore
         $data['excludeExtensionRules'] = isset($_POST['wpstgCreateData']['excludeExtensionRules']) ? $this->parseAndSanitizeDirectories($_POST['wpstgCreateData']['excludeExtensionRules']) : []; // phpcs:ignore
@@ -54,7 +54,7 @@ class PrepareCreate extends AbstractAjaxPrepare
 
     protected function additionalSanitization(array $data): array
     {
-        // Clone ID
+ 
         $data['cloneId'] = sanitize_text_field($data['cloneId']);
         $data['stagingEngine'] = StagingEngine::ENGINE_NEXT_GEN;
 
@@ -65,16 +65,16 @@ class PrepareCreate extends AbstractAjaxPrepare
         $data['name']          = empty($data['name']) ? $this->generateStagingSiteName($data['cloneId']) : sanitize_text_field($data['name']);
         $data['directoryName'] = $this->sanitizeDirectoryName($data['name'], $data['cloneId']);
 
-        // Included/Excluded tables
+ 
         $data['excludedTables'] = array_map('sanitize_text_field', $data['excludedTables']);
         $data['includedTables'] = array_map('sanitize_text_field', $data['includedTables']);
         $data['nonSiteTables']  = array_map('sanitize_text_field', $data['nonSiteTables']);
 
-        // Extra directories and directories exclusion and rules
+ 
         $data['extraDirectories']    = array_map('sanitize_text_field', $data['extraDirectories']);
         $data['excludedDirectories'] = array_map('sanitize_text_field', $data['excludedDirectories']);
 
-        // Exclude rules
+ 
         $data['excludeSizeGreaterThan'] = sanitize_text_field($data['excludeSizeGreaterThan']);
         $data['excludeFileRules']       = array_map('sanitize_text_field', $data['excludeFileRules']);
         $data['excludeFolderRules']     = array_map('sanitize_text_field', $data['excludeFolderRules']);
@@ -100,7 +100,7 @@ class PrepareCreate extends AbstractAjaxPrepare
             'nonSiteTables'          => [],
             'excludedDirectories'    => [],
             'extraDirectories'       => [],
-            // exclude rules
+ 
             'excludeSizeGreaterThan' => 8,
             'excludeFileRules'       => [],
             'excludeFolderRules'     => [],
@@ -115,12 +115,12 @@ class PrepareCreate extends AbstractAjaxPrepare
 
     protected function validateAndSanitizeAdvanceSettingsData(array $data): array
     {
-        // New admin user
+ 
         $data['useNewAdminAccount'] = false;
         $data['adminEmail']         = '';
         $data['adminPassword']      = '';
 
-        // Database
+ 
         $data['useCustomDatabase'] = false;
         $data['databaseServer']    = '';
         $data['databaseName']      = '';
@@ -129,11 +129,11 @@ class PrepareCreate extends AbstractAjaxPrepare
         $data['databasePrefix']    = '';
         $data['databaseSsl']       = false;
 
-        // Path
+ 
         $data['customPath'] = '';
         $data['customUrl']  = '';
 
-        // Other settings
+ 
         $data['isEmailsAllowed']         = true;
         $data['isUploadsSymlinked']      = false;
         $data['isCronEnabled']           = true;
@@ -144,20 +144,20 @@ class PrepareCreate extends AbstractAjaxPrepare
         return $data;
     }
 
-    /**
-     * @param array|null $sanitizedData
-     * @return array
-     */
+
+
+
+
     protected function setupInitialData($sanitizedData): array
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
         $this->clearCacheFolder();
 
-        // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
+ 
         $services = WPStaging::getInstance()->getContainer();
-        /** @var StagingSiteJobsDataDto */
+ 
         $this->jobDataDto = $services->get(StagingSiteJobsDataDto::class);
-        /** @var StagingSiteCreate */
+ 
         $this->jobCreate  = $services->get($this->getJobClass());
 
         $this->jobDataDto->hydrate($sanitizedData);
@@ -178,29 +178,29 @@ class PrepareCreate extends AbstractAjaxPrepare
         return $sanitizedData;
     }
 
-    /**
-     * Returns the reference to the current Job, if any.
-     *
-     * @return StagingSiteCreate|null The current reference to the Staging Site Create Job, if any.
-     */
+
+
+
+
+
     public function getJob()
     {
         return $this->jobCreate;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getJobClass(): string
     {
         return StagingSiteCreate::class;
     }
 
-    /**
-     * Persists the current Job status.
-     *
-     * @return bool Whether the current Job status was persisted or not.
-     */
+
+
+
+
+
     public function persist(): bool
     {
         if (!$this->jobCreate instanceof StagingSiteCreate) {
@@ -216,15 +216,15 @@ class PrepareCreate extends AbstractAjaxPrepare
     {
         global $wpdb;
 
-        // Find a new prefix that does not already exist in database.
-        // Loop through up to 1000 different possible prefixes should be enough here;)
+ 
+ 
         for ($i = 0; $i <= 10000; $i++) {
             $prefix = 'wpstg' . $i . '_';
 
             $sql    = "SHOW TABLE STATUS LIKE '{$prefix}%'";
             $tables = $wpdb->get_results($sql);
 
-            // Prefix does not exist. We can use it
+ 
             if (!$tables) {
                 return $prefix;
             }
@@ -236,13 +236,13 @@ class PrepareCreate extends AbstractAjaxPrepare
         return WPStaging::make(Sites::class)->generateStagingSiteName($cloneId);
     }
 
-    /**
-     * Convert the site name into the directory/url slug shown in the create modal preview.
-     *
-     * @param string $name
-     * @param string $cloneId
-     * @return string
-     */
+
+
+
+
+
+
+
     protected function sanitizeDirectoryName(string $name, string $cloneId): string
     {
         $name          = preg_replace('#[^\w\s-]+#', '', $name);

@@ -5,35 +5,35 @@ namespace WPStaging\Framework\ThirdParty;
 use WPStaging\Framework\Notices\BooleanNotice;
 use WPStaging\Framework\Notices\Notices;
 
-/**
- * Class WordFence
- *
- * Rename .user.ini to .user.ini.bak and show notice regarding this on staging site
- *
- * @package WPStaging\Framework\ThirdParty
- */
+
+
+
+
+
+
+
 class WordFence extends BooleanNotice
 {
-    /**
-     * The option_name that is stored in the database to check if the freemius notice to be shown
-     * on the staging site
-     */
+
+
+
+
     const NOTICE_OPTION = 'wpstg_wordfence_notice';
 
-    /**
-     * Notice parameter on which wordfence user.ini renamed notice will be dismissed
-     */
+
+
+
     const NOTICE_NAME = 'wordfence_userini_renamed';
 
     const FILTER_ACTIVE_PLUGINS = 'active_plugins';
 
-    /**
-     * Check if .user.ini file exists. If it exists rename it to .user.ini.bak and enable the notice
-     */
+
+
+
     public function renameUserIni()
     {
         $absolutePathToUserIni = ABSPATH . '/.user.ini';
-        // Early bail if not exist
+ 
         if (!file_exists($absolutePathToUserIni)) {
             return;
         }
@@ -43,19 +43,19 @@ class WordFence extends BooleanNotice
             return;
         }
 
-        // Rename by appending .bak to its name
+ 
         rename($absolutePathToUserIni, $absolutePathToUserIni . '.bak');
 
-        // Enable the notice
+ 
         $this->enable();
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function isEnabled(): bool
     {
-        // Early bail if renamed file not exists.
+ 
         if (!file_exists(ABSPATH . '/.user.ini.bak')) {
             return false;
         }
@@ -63,11 +63,11 @@ class WordFence extends BooleanNotice
         return parent::isEnabled();
     }
 
-    /**
-     * Show the notice if the notice flag is enabled
-     *
-     * @param string $viewsNoticesPath
-     */
+
+
+
+
+
     public function showNotice(string $viewsNoticesPath)
     {
         if (Notices::SHOW_ALL_NOTICES || $this->isEnabled()) {
@@ -75,11 +75,11 @@ class WordFence extends BooleanNotice
         }
     }
 
-    /**
-     * The name of option on which the visibility of this notice is stored in db
-     *
-     * @return string
-     */
+
+
+
+
+
     public function getOptionName(): string
     {
         return self::NOTICE_OPTION;

@@ -28,13 +28,13 @@ class StagingSiteUpdate extends AbstractJob
 {
     use WithDataAdjustmentTasks;
 
-    /** @var string */
+ 
     const ACTION_CLONING_COMPLETE = 'wpstg_cloning_complete';
 
-    /** @var StagingSiteJobsDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var array The array of tasks to execute for this job. Populated at init(). */
+ 
     protected $tasks = [];
 
     public static function getJobName()
@@ -77,7 +77,7 @@ class StagingSiteUpdate extends AbstractJob
 
     protected function addDatabaseTasks()
     {
-        // Early return if all tables are excluded
+ 
         if ($this->jobDataDto->getAllTablesExcluded() && empty($this->jobDataDto->getNonSiteTables())) {
             return;
         }

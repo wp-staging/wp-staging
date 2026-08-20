@@ -10,19 +10,19 @@ use WPStaging\Framework\Facades\Hooks;
 
 class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 {
-    /**
-     * Old filter, cannot be renamed to new pattern
-     * @var string
-     */
+
+
+
+
     const FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE = 'wpstg.backup.restore.exclude.other.files';
 
-    /** @var string */
+ 
     const FILTER_REPLACE_EXISTING_OTHER_FILES = 'wpstg.backup.restore.replace_existing_other_files';
 
-    /**
-     * Old filter, cannot be renamed to new pattern
-     * @var string
-     */
+
+
+
+
     const FILTER_KEEP_EXISTING_OTHER_FILES = 'wpstg.backup.restore.keepExistingOtherFiles';
 
     public static function getTaskName(): string
@@ -40,40 +40,40 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         return $this->isBackupPartSkipped(PartIdentifier::WP_CONTENT_PART_IDENTIFIER);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getParts(): array
     {
         return $this->jobDataDto->getBackupMetadata()->getMultipartMetadata()->getOthersParts();
     }
 
-    /**
-     * The most critical step because it has to run in one request
-     * @return void
-     */
+
+
+
+
     protected function buildQueue()
     {
         $this->cleanUpExistingFiles();
         $this->moveBackupFilesToDestination();
     }
 
-    /**
-     * Clean up all files and folders in root level of wp-content folder that do not exist in:
-     * plugins, mu-plugins, uploads, themes
-     *
-     * This is to ensure the restored site is identical to the backup
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
     protected function cleanUpExistingFiles()
     {
-        // Early bail if subsite restore
+ 
         if ($this->isRestoreOnSubsite()) {
             return;
         }
 
-        // Don't delete existing files if filter is set to true
+ 
         if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_OTHER_FILES, false)) {
             return;
         }
@@ -112,15 +112,15 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function moveBackupFilesToDestination()
     {
         try {
             $otherFilesToRestore = $this->getOtherFilesToRestore();
         } catch (\Exception $e) {
-            // Folder does not exist. Likely there are no other files in wp-content to restore.
+ 
             $otherFilesToRestore = [];
         }
 
@@ -135,9 +135,9 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         foreach ($otherFilesToRestore as $relativePath => $absSourcePath) {
             $absDestPath = $destinationDir . $relativePath;
 
-            /**
-             * Scenario: Skip restoring drop-ins whose destination is symlink and the site is hosted on WordPress.com
-             */
+
+
+
             if ($this->isSiteHostedOnWordPressCom && is_link($absDestPath)) {
                 continue;
             }
@@ -146,14 +146,14 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
                 continue;
             }
 
-            // Preserve debug.log and index.php
+ 
             if ($relativePath === 'debug.log' || $relativePath === 'index.php') {
                 continue;
             }
 
-            /**
-             * Scenario: Rename drop-in files if their checksums differ between the existing files and the backup files
-             */
+
+
+
             if (in_array($relativePath, PartIdentifier::DROP_IN_FILES, true) && sha1_file($absSourcePath) !== $this->jobDataDto->getFileChecksum($relativePath)) {
                 $this->logger->warning("$relativePath checksum does not match. Restoring $relativePath as wpstg_bak.$relativePath to avoid issues.");
 
@@ -166,12 +166,12 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             }
 
 
-            /**
-             * Scenario: Restoring a file that already exists
-             * If subsite restore and no filter is used to override the behaviour then preserve existing file
-             * Otherwise:
-             * 1. Replace the file
-             */
+
+
+
+
+
+
             if (array_key_exists($relativePath, $existingOtherFiles)) {
                 if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_OTHER_FILES, false)) {
                     continue;
@@ -181,26 +181,26 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
                 continue;
             }
 
-            /**
-             * Scenario 2: Restoring a other file that does not yet exist
-             */
+
+
+
             $this->enqueueMove($absSourcePath, $absDestPath);
         }
     }
 
-    /**
-     * Skip these files from restoring.
-     * Note: These files will still be cleaned up from the root of wp-content if they already exist while restoring.
-     * @param string $excludedFilePath
-     * @return bool
-     */
+
+
+
+
+
+
     protected function isExcludedOtherFile($excludedFilePath)
     {
         $excludedFiles = apply_filters_deprecated(
-            self::FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE, // filter name
-            [[]], // old args that used to be passed to apply_filters().
-            '5.9.1', // version from which it is deprecated.
-            self::FILTER_EXCLUDE_FILES_DURING_RESTORE, // new filter to use
+            self::FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE, 
+            [[]], 
+            '5.9.1', 
+            self::FILTER_EXCLUDE_FILES_DURING_RESTORE, 
             sprintf('This filter will be removed in the upcoming version, use %s filter instead.', self::FILTER_EXCLUDE_FILES_DURING_RESTORE)
         );
 
@@ -218,9 +218,9 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         return $fileInfo->getBasename() === '.' || $fileInfo->getBasename() === '..';
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     protected function getDefaultWordPressDirectoriesWithLang(): array
     {
         return array_merge(
@@ -233,15 +233,15 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         );
     }
 
-    /**
-     * @return array An array of paths of [other] files found in the root of the temporary extracted wp-content backup folder,
-     *               where the index is the path relative to the wp-content folder, and the value is the absolute path.
-     * @example [
-     *              'debug.log' => '/var/www/single/wp-content/uploads/wp-staging/tmp/restore/655bb61a54f5/wpstg_c_/debug.log',
-     *              'custom-folder/custom-file.png' => '/var/www/single/wp-content/uploads/wp-staging/tmp/restore/655bb61a54f5/wpstg_c_/custom-folder/custom-file.png',
-     *          ]
-     *
-     */
+
+
+
+
+
+
+
+
+
     private function getOtherFilesToRestore(): array
     {
         $path = $this->jobDataDto->getTmpDirectory() . PathIdentifier::IDENTIFIER_WP_CONTENT;
@@ -250,13 +250,13 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         return $this->filesystem->findFilesInDir($path);
     }
 
-    /**
-     * @param string $path
-     * @return array An array of paths of existing other files.
-     */
+
+
+
+
     private function getExistingOtherFiles(string $path): array
     {
-        // If not a restore on subsite then return empty array
+ 
         if (!$this->isRestoreOnSubsite()) {
             return [];
         }
@@ -273,9 +273,9 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
         $iterator = $this->filesystem->get();
 
-        /** @var \SplFileInfo $item */
+ 
         foreach ($iterator as $item) {
-            // Early bail: We don't want dots, links or anything that is not a file.
+ 
             if (!$item->isFile() || $item->isLink()) {
                 continue;
             }

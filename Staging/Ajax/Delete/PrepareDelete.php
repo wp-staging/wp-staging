@@ -12,16 +12,16 @@ use WPStaging\Staging\Jobs\StagingSiteDelete;
 
 class PrepareDelete extends PrepareJob
 {
-    /** @var StagingSiteDeleteDataDto */
+ 
     private $jobDataDto;
 
-    /** @var StagingSiteDelete */
+ 
     private $jobDelete;
 
-    /**
-     * @param array|null $data
-     * @return void
-     */
+
+
+
+
     public function ajaxPrepare($data)
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -29,7 +29,7 @@ class PrepareDelete extends PrepareJob
         }
 
         try {
-            $this->processLock->checkProcessLocked();
+            $this->processLock->lockProcess();
         } catch (ProcessLockedException $e) {
             wp_send_json_error($e->getMessage(), $e->getCode());
         }
@@ -43,10 +43,10 @@ class PrepareDelete extends PrepareJob
         wp_send_json_success();
     }
 
-    /**
-     * @param array|null $data
-     * @return array|\WP_Error
-     */
+
+
+
+
     public function prepare($data = null)
     {
         if (empty($data) && array_key_exists('wpstgDeleteData', $_POST)) {
@@ -69,20 +69,20 @@ class PrepareDelete extends PrepareJob
         return $sanitizedData;
     }
 
-    /**
-     * @param $sanitizedData
-     * @return array
-     */
+
+
+
+
     protected function setupInitialData($sanitizedData): array
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
         $this->clearCacheFolder();
 
-        // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
+ 
         $services = WPStaging::getInstance()->getContainer();
-        /** @var StagingSiteDeleteDataDto */
+ 
         $this->jobDataDto = $services->get(StagingSiteDeleteDataDto::class);
-        /** @var StagingSiteDelete */
+ 
         $this->jobDelete = $services->get(StagingSiteDelete::class);
 
         $this->jobDataDto->hydrate($sanitizedData);
@@ -99,13 +99,13 @@ class PrepareDelete extends PrepareJob
         return $sanitizedData;
     }
 
-    /**
-     * @param $data
-     * @return array
-     */
+
+
+
+
     public function validateAndSanitizeData($data): array
     {
-        // Unset any empty value so that we replace them with the defaults.
+ 
         foreach ($data as $key => $value) {
             if (empty($value)) {
                 unset($data[$key]);
@@ -121,20 +121,20 @@ class PrepareDelete extends PrepareJob
 
         $data = wp_parse_args($data, $defaults);
 
-        // Make sure data has no keys other than the expected ones.
+ 
         $data = array_intersect_key($data, $defaults);
 
-        // Make sure data has all expected keys.
+ 
         foreach ($defaults as $expectedKey => $value) {
             if (!array_key_exists($expectedKey, $data)) {
                 throw new \UnexpectedValueException("Invalid request. Missing '$expectedKey'.");
             }
         }
 
-        // Clone ID
+ 
         $data['cloneId'] = sanitize_text_field($data['cloneId']);
 
-        // What to delete
+ 
         $data['isDeletingFiles']  = $this->jsBoolean($data['isDeletingFiles']);
         $data['isDeletingTables'] = $this->jsBoolean($data['isDeletingTables']);
 
@@ -142,7 +142,7 @@ class PrepareDelete extends PrepareJob
             throw new \UnexpectedValueException('Invalid request. Select at least one item to delete.');
         }
 
-        // Excluded tables
+ 
         $data['excludedTables'] = array_map('sanitize_text_field', $data['excludedTables']);
 
         if (empty($data['cloneId'])) {
@@ -152,21 +152,21 @@ class PrepareDelete extends PrepareJob
         return $data;
     }
 
-    /**
-     * Returns the reference to the current Job, if any.
-     *
-     * @return StagingSiteDelete|null The current reference to the Backup Job, if any.
-     */
+
+
+
+
+
     public function getJob()
     {
         return $this->jobDelete;
     }
 
-    /**
-     * Persists the current Job status.
-     *
-     * @return bool Whether the current Job status was persisted or not.
-     */
+
+
+
+
+
     public function persist(): bool
     {
         if (!$this->jobDelete instanceof StagingSiteDelete) {

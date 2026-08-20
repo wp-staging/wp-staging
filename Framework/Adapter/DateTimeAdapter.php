@@ -1,7 +1,7 @@
 <?php
 
-//TODO PHP7.x; declare(strict_types=1);
-//TODO PHP7.x; type hinting & return types
+ 
+ 
 
 namespace WPStaging\Framework\Adapter;
 
@@ -9,20 +9,20 @@ class DateTimeAdapter
 {
     const DEFAULT_TIME_FORMAT = 'H:i:s';
 
-    /** @var string */
+ 
     private $dateFormat;
 
-    /** @var string */
+ 
     private $timeFormat;
 
-    // TODO PHP5.6 constant
+ 
     private $genericDateFormats = [
-        // WP Suggested formats
+ 
         'F j, Y',
         'Y-m-d',
         'm/d/Y',
         'd/m/Y',
-        // Commonly used formats
+ 
         'd-m-Y',
         'm-d-Y',
         'Y-m-d',
@@ -54,19 +54,19 @@ class DateTimeAdapter
         return $dateFormat . ' ' . $timeFormat;
     }
 
-    /**
-     * @param \DateTime $dateTime
-     * @return string
-     */
+
+
+
+
     public function transformToWpFormat(\DateTime $dateTime)
     {
         return get_date_from_gmt($dateTime->format('Y-m-d H:i:s'), $this->getDateTimeFormat());
     }
 
-    /**
-     * @param string $value
-     * @return \DateTime|null
-     */
+
+
+
+
     public function getDateTime($value)
     {
         $date = null;
@@ -80,11 +80,11 @@ class DateTimeAdapter
         return $date ?: null;
     }
 
-    // TODO
+ 
     private function generateDefaultDateFormats()
     {
         $formats = [
-            'U', // Timestamp
+            'U', 
             $this->getDateTimeFormat(),
             $this->getWPDateTimeFormat(),
         ];

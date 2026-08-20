@@ -1,33 +1,33 @@
 <?php
 
-/**
- * An exception thrown in the context of the Backup execution whose nature is run-time dependant.
- *
- * @package WPStaging\Backup\Exceptions
- */
+
+
+
+
+
 
 namespace WPStaging\Backup\Exceptions;
 
 use WPStaging\Framework\Exceptions\WPStagingException;
 
-/**
- * Class RuntimeException
- *
- * @since   TBD
- *
- * @package WPStaging\Backup\Exceptions
- */
+
+
+
+
+
+
+
 class BackupRuntimeException extends WPStagingException
 {
 
-    /**
-     * Returns an instance of the Exception meant to signal the default, or filtered, Backup directory
-     * cannot be created.
-     *
-     * @param string $dir The absolute path to the filtered Backup directory.
-     *
-     * @return BackupRuntimeException A reference to a ready-to-throw Exception instance.
-     */
+
+
+
+
+
+
+
+
     public static function cannotCreateBackupsDirectory($dir)
     {
         return new self(
@@ -41,14 +41,14 @@ class BackupRuntimeException extends WPStagingException
         );
     }
 
-    /**
-     * Returns an instance of the Exception meant to signal the default, or filtered, Backup directory
-     * is not readable.
-     *
-     * @param string $dir The absolute path to the filtered Backup directory.
-     *
-     * @return BackupRuntimeException A reference to a ready-to-throw Exception instance.
-     */
+
+
+
+
+
+
+
+
     public static function backupsDirectoryNotReadable($dir)
     {
         return new self(
@@ -62,14 +62,14 @@ class BackupRuntimeException extends WPStagingException
         );
     }
 
-    /**
-     * Returns an instance of the Exception meant to signal the default, or filtered, Backup directory
-     * is not writeable.
-     *
-     * @param string $dir The absolute path to the filtered Backup directory.
-     *
-     * @return BackupRuntimeException A reference to a ready-to-throw Exception instance.
-     */
+
+
+
+
+
+
+
+
     public static function backupsDirectoryNotWriteable($dir)
     {
         return new self(

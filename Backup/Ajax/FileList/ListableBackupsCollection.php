@@ -13,31 +13,31 @@ use WPStaging\Framework\Adapter\DateTimeAdapter;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\Urls;
 
-/**
- * Collects and prepares backup files for display in the backup list UI
- *
- * This class is responsible for:
- * - Finding all backup files in the backup directory (both generated and uploaded)
- * - Hydrating backup metadata from .wpstg files
- * - Validating backup integrity (file index, multipart structure, corruption checks)
- * - Converting backup files into ListableBackup entities for UI rendering
- * - Handling legacy .sql backup files
- * - Preventing duplicate listings when files exist in multiple locations
- */
+
+
+
+
+
+
+
+
+
+
+
 class ListableBackupsCollection
 {
     use WithBackupIdentifier;
 
-    /** @var DateTimeAdapter */
+ 
     private $dateTimeAdapter;
 
-    /** @var BackupsFinder */
+ 
     private $backupsFinder;
 
-    /** @var Urls */
+ 
     private $urls;
 
-    /** @var BackupValidator */
+ 
     private $backupValidator;
 
     public function __construct(
@@ -52,9 +52,9 @@ class ListableBackupsCollection
         $this->backupValidator = $backupValidator;
     }
 
-    /**
-     * @return array<ListableBackup>
-     */
+
+
+
     public function getListableBackups()
     {
         $backupFiles = $this->backupsFinder->findBackups();
@@ -67,7 +67,7 @@ class ListableBackupsCollection
 
         $this->clearListedMultipartBackups();
 
-        /** @var SplFileInfo $file */
+ 
         foreach ($backupFiles as $file) {
             $md5Basename = md5($file->getBasename());
 
@@ -96,21 +96,21 @@ class ListableBackupsCollection
         return $backups;
     }
 
-    /**
-     * Get backups sorted by most recent date (newest first)
-     *
-     * Uses the maximum of upload and creation timestamps to handle both
-     * locally created and uploaded backups correctly.
-     *
-     * @return array<ListableBackup>
-     */
+
+
+
+
+
+
+
+
     public function getSortedListableBackups(): array
     {
         $backups = $this->getListableBackups();
 
         usort($backups, function ($a, $b) {
-            /** @var ListableBackup $a */
-            /** @var ListableBackup $b */
+ 
+ 
             $timestampA = max($a->dateUploadedTimestamp, $a->dateCreatedTimestamp);
             $timestampB = max($b->dateUploadedTimestamp, $b->dateCreatedTimestamp);
             return $timestampB - $timestampA;
@@ -225,10 +225,10 @@ class ListableBackupsCollection
         }
     }
 
-    /**
-     * @param BackupMetadata $backupMetadata
-     * @return int
-     */
+
+
+
+
     private function getNetworkSitesCount(BackupMetadata $backupMetadata): int
     {
         if ($backupMetadata->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE) {

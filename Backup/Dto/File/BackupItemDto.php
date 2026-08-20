@@ -4,35 +4,35 @@ namespace WPStaging\Backup\Dto\File;
 
 use WPStaging\Backup\Interfaces\IndexLineInterface;
 
-/**
- * This class is used for representation of item/file in the backup when listing that item/file in the UI.
- *
- * @package WPStaging\Backup\Dto\File
- */
+
+
+
+
+
 class BackupItemDto
 {
-    /**
-     * The offset of the file in the backup
-     * @var int
-     */
+
+
+
+
     private $offset;
 
-    /**
-     * The line index of the file in the backup
-     * @var int
-     */
+
+
+
+
     private $index;
 
-    /** @var string */
+ 
     private $identifiablePath;
 
-    /** @var string */
+ 
     private $path;
 
-    /** @var string */
+ 
     private $size;
 
-    /** @var bool */
+ 
     private $isDatabase;
 
     public function __construct()

@@ -14,17 +14,17 @@ use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * @todo register analytics event and cleaning here
- */
+
+
+
 class RestoreFinishTask extends RestoreTask
 {
     use EventLoggerTrait;
 
-    /** @var ObjectCacheNotice */
+ 
     protected $objectCacheNotice;
 
-    /** @var SiteInfo */
+ 
     protected $siteInfo;
 
     public static function getTaskName()
@@ -58,7 +58,7 @@ class RestoreFinishTask extends RestoreTask
             $this->performRestoreFinishAction();
             $this->clearCacheOnWpCom();
 
-            // Let call logout only at the end of the restore process
+ 
             if ($this->jobDataDto->getBackupMetadata()->getIsExportingDatabase() && !$this->jobDataDto->getIsDatabaseRestoreSkipped()) {
                 wp_logout();
             }
@@ -68,50 +68,50 @@ class RestoreFinishTask extends RestoreTask
             return $this->generateResponse(false);
         }
 
-        /** @var RestoreFinishResponseDto */
+ 
         $response = $this->generateResponse();
         $response->setIsDatabaseRestoreSkipped($this->jobDataDto->getIsDatabaseRestoreSkipped());
 
         return $response;
     }
 
-    /**
-     * Clear cache when restoring on wpcom hosted sites and when restoring database
-     * @return void
-     */
+
+
+
+
     protected function clearCacheOnWpCom()
     {
-        // Early bail: if not wp.com site or database was not restored
+ 
         if (!$this->siteInfo->isHostedOnWordPressCom() || !$this->jobDataDto->getBackupMetadata()->getIsExportingDatabase() || $this->jobDataDto->getIsDatabaseRestoreSkipped()) {
             return;
         }
 
-        /**
-         * @var \wpdb $wpdb
-         * @var \WP_Object_Cache $wp_object_cache
-         */
+
+
+
+
         global $wpdb, $wp_object_cache;
 
-        // Reset cache
+ 
         wp_cache_init();
 
-        // Make sure WordPress does not try to re-use any values fetched from the database thus far.
+ 
         $wpdb->flush();
         $wp_object_cache->flush();
         wp_suspend_cache_addition(true);
     }
 
-    /**
-     * @return RestoreFinishResponseDto
-     */
+
+
+
     protected function getResponseDto(): RestoreFinishResponseDto
     {
         return new RestoreFinishResponseDto();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function performRestoreFinishAction()
     {
         $this->getJobTransientCache()->completeJob();

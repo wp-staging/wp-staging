@@ -5,22 +5,22 @@
  * @see src/views/clone/index.php
  */
 
-/**
- * This view is only called on WordPress.com platform, as it is impossible to host a cloned staging site on WordPress.com on ABSPATH and wp-content/wp-staging-sites
- * due to nginx restriction by WordPress.com
- * We will support this feature in the future but for now we will show a notice to the user that he can use the backup & migration feature instead.
- */
+
+
+
+
+
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 
 $urlToMigrationArticle    = 'https://wp-staging.com/docs/migrate-a-self-hosted-wordpress-website-to-wordpress-com/';
 $urlToWpComStagingArticle = 'https://wp-staging.com/wordpress-com-how-to-create-staging-site/';
-// Show CLI integration notice (includes modal when banner is visible)
+ 
 $cliNotice = WPStaging::make(CliIntegrationNotice::class);
 $cliNotice->maybeShowCliNotice();
 
-// When banner is dismissed but dock CTA should be shown, render modal separately
+ 
 $cliNotice->maybeRenderCliModalForDockCta();
 
 ?>

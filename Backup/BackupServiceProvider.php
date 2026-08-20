@@ -12,12 +12,18 @@ use WPStaging\Backup\Ajax\Restore;
 use WPStaging\Backup\Ajax\ScheduleList;
 use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup;
+use WPStaging\Backup\Ajax\Backup\BackupBeforeUpdateHandler;
 use WPStaging\Backup\Ajax\BackupDownloader;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Ajax\Restore\ReadBackupMetadata;
 use WPStaging\Backup\Request\Logs;
 use WPStaging\Backup\Service\BackupAssets;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\BeforeUpdateRowStatus;
+use WPStaging\Backup\UpdateProtectionPausedNotice;
+use WPStaging\Backup\Service\BeforeUpdateBackupRequest;
+use WPStaging\Backup\Service\UpdateProtectionHealth;
+use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Ajax\BackupSpeedIndex;
@@ -38,7 +44,7 @@ use WPStaging\Framework\Security\Otp\OtpSender;
 
 class BackupServiceProvider extends FeatureServiceProvider
 {
-    /** @var string */
+ 
     const ACTION_BACKUP_ENQUEUE_SCRIPTS = 'wpstg.backup.enqueue_scripts';
 
     public function createBackupsDirectory()
@@ -83,6 +89,26 @@ class BackupServiceProvider extends FeatureServiceProvider
 
     protected function enqueueAjaxListeners()
     {
+        add_action('wp_ajax_wpstg--backup-before-update--save-mode', $this->container->callback(BackupBeforeUpdateHandler::class, 'save')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--plugin-versions', $this->container->callback(BackupBeforeUpdateHandler::class, 'getPluginUpdateVersionInfo')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--intro-seen', $this->container->callback(BackupBeforeUpdateHandler::class, 'markIntroSeen')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--set-enabled', $this->container->callback(BackupBeforeUpdateHandler::class, 'setFeatureEnabled')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--resume', $this->container->callback(BackupBeforeUpdateHandler::class, 'resumeProtection')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--reusable-backup', $this->container->callback(BackupBeforeUpdateHandler::class, 'getReusableBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--start', $this->container->callback(BackupBeforeUpdateHandler::class, 'startBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--progress', $this->container->callback(BackupBeforeUpdateHandler::class, 'getBackupProgress')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+
+ 
+ 
+        add_action(FinishBackupTask::ACTION_BACKUP_CREATED, $this->container->callback(BeforeUpdateBackupRequest::class, 'markCompleted'));
+
+ 
+ 
+        add_action(FinishBackupTask::ACTION_BACKUP_CREATED, $this->container->callback(UpdateProtectionHealth::class, 'recordSuccess'));
+        add_action(PrepareJob::ACTION_JOB_FAILURE, $this->container->callback(BeforeUpdateBackupRequest::class, 'onBackgroundJobFailure'));
+
+        add_action('load-plugins.php', $this->container->callback(BeforeUpdateRowStatus::class, 'registerRowMessages'));
+        add_action('admin_notices', $this->container->callback(UpdateProtectionPausedNotice::class, 'render'));
         add_action('wp_ajax_wpstg--backups--prepare-backup', $this->container->callback(PrepareBackup::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--create', $this->container->callback(Backup::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
@@ -105,10 +131,10 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backups--explore-select-directory', $this->container->callback(Explore::class, 'listDirectoryFiles')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_calculate_backup_speed_index', $this->container->callback(BackupSpeedIndex::class, 'ajaxMaybeShowModal')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        // TODO: move this to JobServiceProvider once the Staging PR: https://github.com/wp-staging/wp-staging-pro/pull/3738 is merged
+ 
         add_action('wp_ajax_wpstg--send--otp', $this->container->callback(OtpSender::class, 'ajaxSendOtp')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        // Nopriv
+ 
         add_action('wp_ajax_nopriv_wpstg--backups--restore', $this->container->callback(Restore::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         add_action(Cron::ACTION_CREATE_CRON_BACKUP, $this->container->callback(BackupScheduler::class, 'createCronBackup'), 10, 1);
@@ -117,7 +143,7 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         add_action("admin_post_wpstg--backups--logs", $this->container->callback(Logs::class, 'download')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        // Event that we can run on daily basis to repair any corrupted backup create cron jobs
+ 
         add_action(Cron::ACTION_DAILY_EVENT, $this->container->callback(BackupScheduler::class, 'reCreateCron'), 10, 0);
         add_action('wp_ajax_wpstg--backups--calculate-backup-size', $this->container->callback(BackupSizeCalculator::class, 'ajaxCalculateBackupPartsSize')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }

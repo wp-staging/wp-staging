@@ -50,7 +50,7 @@ class ReadBackupMetadata
                 throw new \UnexpectedValueException('Missing file', 400);
             }
 
-            // Find the given backup in the filesystem
+ 
             $matchingBackup = array_filter($this->backupsFinder->findBackups(), function (\SplFileInfo $fileInfo) use ($data) {
                 return basename($data['file']) === $fileInfo->getBasename();
             });

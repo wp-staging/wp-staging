@@ -16,239 +16,259 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     use IsExcludingTrait;
     use RemoteUploadTrait;
 
-    /** @var string|null */
+ 
     private $name;
 
-    /** @var array */
+ 
+    private $isBeforeUpdateBackup = false;
+
+ 
     private $excludedDirectories = [];
 
-    /** @var int */
+ 
     private $totalDirectories;
 
-    /** @var int The number of files in the backup index */
+ 
     private $totalFiles;
 
-    /** @var array The number of files in backup parts */
+ 
     private $filesInParts = [];
 
-    /** @var int The number of files the FilesystemScanner discovered */
+ 
     private $discoveredFiles = 0;
 
-    /** @var array The number of files the FilesystemScanner discovered in themes,plugins,muplugins,uploads,others */
+ 
     private $discoveredFilesArray = [];
 
-    /** @var int The number of discovered files couldn't be added to backup */
+ 
     private $invalidFiles = 0;
 
-    /** @var string */
+ 
     private $databaseFile;
 
-    /**
-     * @var int If a file couldn't be processed in a single request,
-     *          this property holds how many bytes were written thus far
-     *          so that the backup can start writing from this byte onwards.
-     */
+
+
+
+
+
     private $fileBeingBackupWrittenBytes;
 
-    /**
-     * @var int If header of a file was written but it couldn't be processed in single requests,
-     */
+
+
+
     private $currentWrittenFileHeaderBytes = 0;
 
-    /**
-     * @var int start offset of the current file being processed,
-     */
+
+
+
     private $currentFileStartOffset = 0;
 
-    /** @var int */
+ 
     private $totalRowsBackup = 0;
 
-    /** @var int */
+ 
     private $tableRowsOffset = 0;
 
-    /** @var string Sql file $sqlWrittenBytes belongs to, since a multipart rotation restarts the byte count */
+ 
     private $sqlCheckpointFile = '';
 
-    /** @var int Length of the sql file when $tableRowsOffset was last set, rewound to on retry */
+ 
     private $sqlWrittenBytes = 0;
 
-    /** @var int */
+ 
     private $totalRowsOfTableBeingBackup = 0;
 
-    /** @var int reset to PHP_INT_MIN for each table */
+ 
     private $lastInsertId = PHP_INT_MIN;
 
-    /** @var array */
+ 
     private $tablesToBackup = [];
 
-    /** @var array */
+ 
     private $nonWpTables = [];
 
-    /** @var int The size in bytes of the database in this backup */
+ 
     private $databaseFileSize = 0;
 
-    /** @var int The size in bytes of the filesystem in this backup */
+ 
     private $filesystemSize = 0;
 
-    /** @var int The number of requests that the Discovering Files task has executed so far */
+ 
     private $discoveringFilesRequests = 0;
 
-    /** @var string The cron to repeat this backup, if scheduled. */
+ 
     private $scheduleRecurrence = '';
 
-    /** @var array The hour and minute to repeat this backup, if scheduled. */
+ 
     private $scheduleTime = [];
 
-    /** @var int How many backups to keep, if scheduled. */
+ 
     private $scheduleRotation = 0;
 
-    /** @var string The absolute path to this .wpstg file */
+ 
     private $backupFilePath = '';
 
-    /** @var string If set, this backup was created as part of this schedule ID. */
+ 
     private $scheduleId = '';
 
-    /** @var bool Should the backup be validated for each file once the backup is created. */
+ 
     private $isValidateBackupFiles = false;
 
-    /** @var bool Should this scheduled backup be created right now. Matters only if this backup is repeated on schedule */
+ 
     private $isCreateScheduleBackupNow = false;
 
-    /** @var bool Should the backup be created in background? */
+ 
     private $isCreateBackupInBackground = false;
 
-    /** @var array Site selected to backup */
+ 
     private $sitesToBackup = [];
 
-    /**
-    * is network subsite or network main site backup
-    * @var bool */
+
+
+
     private $isNetworkSiteBackup = false;
 
-    /**
-     * @var array
-     * Store max index for each category
-     */
+
+
+
+
     private $fileBackupIndices = [];
 
-    /** @var int */
+ 
     private $maxDbPartIndex = 0;
 
-    /**
-     * Persisted cross-AJAX state for the multipart big-file segmenter.
-     * Tracks how many bytes of the source file have already been written across previous
-     * segments / parts so an interrupted backup can resume mid-file.
-     * @var int
-     */
+
+
+
+
+
+
     private $bigFileSourceBytesWritten = 0;
 
-    /**
-     * Persisted cross-AJAX state for the multipart big-file segmenter.
-     * True when the next segment to write must carry REQUIRE_PREVIOUS_PART.
-     * @var bool
-     */
+
+
+
+
+
     private $bigFileIsContinuation = false;
 
-    /** @var int */
+ 
     private $currentMultipartFileInfoIndex = 0;
 
-    /** @var array */
+ 
     private $multipartFilesInfo = [];
 
-    /**
-     * @var array<string, int>
-     * Store total size for each category
-     */
+
+
+
+
     private $categorySizes = [];
 
-    /** @var string */
+ 
     private $backupType = '';
 
-    /** @var int */
+ 
     private $subsiteBlogId = 0;
 
-    /** @var int */
+ 
     private $filePartIndex = 0;
 
-    /** @var bool */
+ 
     private $isContaining2GBFile = false;
 
-    /** @var bool */
+ 
     private $isGlitchInBackup = false;
 
-    /** @var string */
+ 
     private $glitchReason = '';
 
-    /** @var int */
+ 
     private $fileAppendTimeLimit = 10;
 
-    /** @var bool */
+ 
     private $isCompressed = false;
 
-    /**
-     * @var int
-     */
+
+
+
     private $backupSizeUncompressed = 0;
 
-    /**
-     * @var int
-     */
+
+
+
     private $backupSizeCompressed = 0;
 
-    /**
-     * @var int
-     */
+
+
+
     private $totalFilesCompressed = 0;
 
-    /** @var array */
+ 
     private $pushPrepareData = [];
 
-    /**
-     * @return bool Whether this backup was created by a schedule, as opposed to manually.
-     */
+
+
+
     public function isScheduledBackup(): bool
     {
         return $this->getRepeatBackupOnSchedule() || !empty($this->getScheduleId());
     }
 
-    /**
-     * @return string|null
-     */
+
+
+
     public function getName()
     {
         return $this->name;
     }
 
-    /**
-     * Hydrated dynamically.
-     *
-     * @param string|null $name
-     */
+
+
+
+
+
     public function setName($name)
     {
         $this->name = $name;
     }
 
-    /**
-     * @return array
-     */
+
+
+
+    public function getIsBeforeUpdateBackup(): bool
+    {
+        return $this->isBeforeUpdateBackup;
+    }
+
+
+
+
+
+    public function setIsBeforeUpdateBackup(bool $isBeforeUpdateBackup)
+    {
+        $this->isBeforeUpdateBackup = $isBeforeUpdateBackup;
+    }
+
+
+
+
     public function getPushPrepareData(): array
     {
         return $this->pushPrepareData;
     }
 
-    /**
-     * @param array $pushPrepareData
-     * @return void
-     */
+
+
+
+
     public function setPushPrepareData(array $pushPrepareData)
     {
         $this->pushPrepareData = $pushPrepareData;
     }
 
-    /**
-     * @return array|null
-     */
+
+
+
     public function getExcludedDirectories()
     {
         return (array)$this->excludedDirectories;
@@ -259,389 +279,389 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         $this->excludedDirectories = $excludedDirectories;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTotalDirectories()
     {
         return $this->totalDirectories;
     }
 
-    /**
-     * @param int $totalDirectories
-     */
+
+
+
     public function setTotalDirectories($totalDirectories)
     {
         $this->totalDirectories = $totalDirectories;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTotalFiles()
     {
         return $this->totalFiles;
     }
 
-    /**
-     * @param int $totalFiles
-     */
+
+
+
     public function setTotalFiles($totalFiles)
     {
         $this->totalFiles = $totalFiles;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getDiscoveredFiles()
     {
         return $this->discoveredFiles;
     }
 
-    /**
-     * @param int $discoveredFiles
-     */
+
+
+
     public function setDiscoveredFiles($discoveredFiles)
     {
         $this->discoveredFiles = $discoveredFiles;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getInvalidFiles(): int
     {
         return $this->invalidFiles;
     }
 
-    /**
-     * @param int $invalidFiles
-     * @return void
-     */
+
+
+
+
     public function setInvalidFiles(int $invalidFiles)
     {
         $this->invalidFiles = $invalidFiles;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function incrementInvalidFiles()
     {
         $this->invalidFiles++;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getDatabaseFile()
     {
         return $this->databaseFile;
     }
 
-    /**
-     * @param string $databaseFile
-     */
+
+
+
     public function setDatabaseFile($databaseFile)
     {
         $this->databaseFile = $databaseFile;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTableRowsOffset()
     {
         return (int)$this->tableRowsOffset;
     }
 
-    /**
-     * @param int $tableRowsOffset
-     */
+
+
+
     public function setTableRowsOffset($tableRowsOffset)
     {
         $this->tableRowsOffset = (int)$tableRowsOffset;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getSqlCheckpointFile()
     {
         return (string)$this->sqlCheckpointFile;
     }
 
-    /**
-     * @param string $sqlCheckpointFile
-     */
+
+
+
     public function setSqlCheckpointFile($sqlCheckpointFile)
     {
         $this->sqlCheckpointFile = (string)$sqlCheckpointFile;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getSqlWrittenBytes()
     {
         return (int)$this->sqlWrittenBytes;
     }
 
-    /**
-     * @param int $sqlWrittenBytes
-     */
+
+
+
     public function setSqlWrittenBytes($sqlWrittenBytes)
     {
         $this->sqlWrittenBytes = (int)$sqlWrittenBytes;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTotalRowsBackup()
     {
         return (int)$this->totalRowsBackup;
     }
 
-    /**
-     * @param int $totalRowsBackup
-     */
+
+
+
     public function setTotalRowsBackup($totalRowsBackup)
     {
         $this->totalRowsBackup = (int)$totalRowsBackup;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getFileBeingBackupWrittenBytes()
     {
         return (int)$this->fileBeingBackupWrittenBytes;
     }
 
-    /**
-     * @param int $fileBeingBackupWrittenBytes
-     */
+
+
+
     public function setFileBeingBackupWrittenBytes($fileBeingBackupWrittenBytes)
     {
         $this->fileBeingBackupWrittenBytes = (int)$fileBeingBackupWrittenBytes;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getTablesToBackup()
     {
         return (array)$this->tablesToBackup;
     }
 
-    /**
-     * @param array $tablesToBackup
-     */
+
+
+
     public function setTablesToBackup($tablesToBackup)
     {
         $this->tablesToBackup = (array)$tablesToBackup;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getNonWpTables()
     {
         return (array)$this->nonWpTables;
     }
 
-    /**
-     * @param array $nonWpTables
-     */
+
+
+
     public function setNonWpTables($nonWpTables)
     {
         $this->nonWpTables = (array)$nonWpTables;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTotalRowsOfTableBeingBackup()
     {
         return (int)$this->totalRowsOfTableBeingBackup;
     }
 
-    /**
-     * @param int $totalRowsOfTableBeingBackup
-     */
+
+
+
     public function setTotalRowsOfTableBeingBackup($totalRowsOfTableBeingBackup)
     {
         $this->totalRowsOfTableBeingBackup = (int)$totalRowsOfTableBeingBackup;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getDatabaseFileSize()
     {
         return $this->databaseFileSize;
     }
 
-    /**
-     * @param int $databaseFileSize
-     */
+
+
+
     public function setDatabaseFileSize($databaseFileSize)
     {
         $this->databaseFileSize = $databaseFileSize;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getFilesystemSize()
     {
         return $this->filesystemSize;
     }
 
-    /**
-     * @param int $filesystemSize
-     */
+
+
+
     public function setFilesystemSize($filesystemSize)
     {
         $this->filesystemSize = $filesystemSize;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getDiscoveringFilesRequests()
     {
         return $this->discoveringFilesRequests;
     }
 
-    /**
-     * @param int $discoveringFilesRequests
-     */
+
+
+
     public function setDiscoveringFilesRequests($discoveringFilesRequests)
     {
         $this->discoveringFilesRequests = $discoveringFilesRequests;
     }
 
-    /**
-     * @see Cron For WP STAGING cron recurrences.
-     *
-     * @return string A WP STAGING cron schedule
-     */
+
+
+
+
+
     public function getScheduleRecurrence()
     {
         return $this->scheduleRecurrence;
     }
 
-    /**
-     * @param string $scheduleRecurrence
-     */
+
+
+
     public function setScheduleRecurrence($scheduleRecurrence)
     {
         $this->scheduleRecurrence = $scheduleRecurrence;
     }
 
-    /**
-     * @return array H:i time format, expected to be accurate to the site's timezone, example: 00:00
-     */
+
+
+
     public function getScheduleTime()
     {
         return $this->scheduleTime;
     }
 
-    /**
-     * @param array $scheduleTime Hour and Minute ['00', '00']
-     */
+
+
+
     public function setScheduleTime(array $scheduleTime)
     {
         $this->scheduleTime = $scheduleTime;
     }
 
-    /**
-     * @return int How many backups to keep, example: 1
-     */
+
+
+
     public function getScheduleRotation()
     {
         return $this->scheduleRotation;
     }
 
-    /**
-     * @param int $scheduleRotation
-     */
+
+
+
     public function setScheduleRotation($scheduleRotation)
     {
         $this->scheduleRotation = $scheduleRotation;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getBackupFilePath()
     {
         return $this->backupFilePath;
     }
 
-    /**
-     * @param string $backupFilePath
-     */
+
+
+
     public function setBackupFilePath($backupFilePath)
     {
         $this->backupFilePath = $backupFilePath;
     }
 
-    /**
-     * @return string|null
-     */
+
+
+
     public function getScheduleId()
     {
         return $this->scheduleId;
     }
 
-    /**
-     * @param string $scheduleId
-     */
+
+
+
     public function setScheduleId($scheduleId)
     {
         $this->scheduleId = $scheduleId;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsCreateScheduleBackupNow()
     {
         return $this->isCreateScheduleBackupNow;
     }
 
-    /**
-     * @param bool $isCreateScheduleBackupNow
-     */
+
+
+
     public function setIsCreateScheduleBackupNow($isCreateScheduleBackupNow)
     {
         $this->isCreateScheduleBackupNow = (bool)$isCreateScheduleBackupNow;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsCreateBackupInBackground(): bool
     {
         return (bool)$this->isCreateBackupInBackground;
     }
 
-    /**
-     * Cannot strict type it yet, otherwise it might throw error for older scheduled backup
-     * @param bool $isCreateBackupInBackground
-     */
+
+
+
+
     public function setIsCreateBackupInBackground($isCreateBackupInBackground)
     {
         $this->isCreateBackupInBackground = (bool)$isCreateBackupInBackground;
     }
 
-    /**
-     * @return array|null
-     */
+
+
+
     public function getSitesToBackup()
     {
         return (array)$this->sitesToBackup;
@@ -652,26 +672,26 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         $this->sitesToBackup = $sitesToBackup;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getDiscoveredFilesArray()
     {
         return $this->discoveredFilesArray;
     }
 
-    /**
-     * @param array $discoveredFiles
-     */
+
+
+
     public function setDiscoveredFilesArray($discoveredFiles = [])
     {
         $this->discoveredFilesArray = $discoveredFiles;
     }
 
-    /**
-     * @param string $category
-     * @return int
-     */
+
+
+
+
     public function getDiscoveredFilesByCategory($category)
     {
         if (!array_key_exists($category, $this->discoveredFilesArray)) {
@@ -681,36 +701,36 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         return $this->discoveredFilesArray[$category];
     }
 
-    /**
-     * @param string $category
-     * @param int $discoveredFiles
-     */
+
+
+
+
     public function setDiscoveredFilesByCategory($category, $discoveredFiles)
     {
         $this->discoveredFilesArray[$category] = $discoveredFiles;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getFilesInParts()
     {
         return $this->filesInParts;
     }
 
-    /**
-     * @param array $filesInParts
-     */
+
+
+
     public function setFilesInParts($filesInParts = [])
     {
         $this->filesInParts = $filesInParts;
     }
 
-    /**
-     * @param string $category
-     * @param int $categoryIndex
-     * @return int
-     */
+
+
+
+
+
     public function getFilesInPart($category, $categoryIndex)
     {
         if (!array_key_exists($category, $this->filesInParts)) {
@@ -724,11 +744,11 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         return $this->filesInParts[$category][$categoryIndex];
     }
 
-    /**
-     * @param string $category
-     * @param int $categoryIndex
-     * @param int $files
-     */
+
+
+
+
+
     public function setFilesInPart($category, $categoryIndex, $files)
     {
         if (!array_key_exists($category, $this->filesInParts)) {
@@ -738,11 +758,11 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         $this->filesInParts[$category][$categoryIndex] = $files;
     }
 
-    /**
-     * @param string $category
-     * @param int $categoryIndex
-     * @return void
-     */
+
+
+
+
+
     public function incrementFilesInPart(string $category, int $categoryIndex = 0)
     {
         if (!array_key_exists($category, $this->filesInParts)) {
@@ -756,33 +776,33 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         $this->filesInParts[$category][$categoryIndex]++;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getFileBackupIndices()
     {
         return $this->fileBackupIndices;
     }
 
-    /**
-     * @param array $fileBackupIndices
-     */
+
+
+
     public function setFileBackupIndices($fileBackupIndices = [])
     {
         $this->fileBackupIndices = $fileBackupIndices;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getMaxDbPartIndex()
     {
         return $this->maxDbPartIndex;
     }
 
-    /**
-     * @param int $maxDbPartIndex
-     */
+
+
+
     public function setMaxDbPartIndex($maxDbPartIndex)
     {
         $this->maxDbPartIndex = $maxDbPartIndex;
@@ -808,150 +828,150 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         $this->bigFileIsContinuation = $bigFileIsContinuation;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getCurrentMultipartFileInfoIndex()
     {
         return $this->currentMultipartFileInfoIndex;
     }
 
-    /**
-     * @param int $currentMultipartFileInfoIndex
-     */
+
+
+
     public function setCurrentMultipartFileInfoIndex($currentMultipartFileInfoIndex)
     {
         $this->currentMultipartFileInfoIndex = $currentMultipartFileInfoIndex;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getMultipartFilesInfo()
     {
         return $this->multipartFilesInfo;
     }
 
-    /**
-     * @param array $multipartFilesInfo
-     */
+
+
+
     public function setMultipartFilesInfo($multipartFilesInfo)
     {
         $this->multipartFilesInfo = $multipartFilesInfo;
     }
 
-    /**
-     * @param array $multipartFileInfo
-     */
+
+
+
     public function addMultipartFileInfo($multipartFileInfo)
     {
         $this->multipartFilesInfo[] = $multipartFileInfo;
     }
 
-    /**
-     * @param array $multipartFileInfo
-     * @param int   $index
-     */
+
+
+
+
     public function updateMultipartFileInfo($multipartFileInfo, $index)
     {
         $this->multipartFilesInfo[$index] = $multipartFileInfo;
     }
 
-    /**
-     * @param int $lastInsertId
-     */
+
+
+
     public function setLastInsertId($lastInsertId)
     {
         $this->lastInsertId = $lastInsertId;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getLastInsertId()
     {
         return $this->lastInsertId;
     }
 
-    /**
-     * @param array<string, int> $categorySizes
-     */
+
+
+
     public function setCategorySizes($categorySizes)
     {
         $this->categorySizes = $categorySizes;
     }
 
-    /**
-     * @return array<string, int>
-     */
+
+
+
     public function getCategorySizes()
     {
         return $this->categorySizes;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getFilePartIndex(): int
     {
         return $this->filePartIndex;
     }
 
-    /**
-     * @param int $index
-     * @return void
-     */
+
+
+
+
     public function setFilePartIndex(int $index = 0)
     {
         $this->filePartIndex = $index;
     }
 
-    /**
-     * @param bool $isNetworkSiteBackup
-     * @return void
-     */
+
+
+
+
     public function setIsNetworkSiteBackup(bool $isNetworkSiteBackup)
     {
         $this->isNetworkSiteBackup = $isNetworkSiteBackup;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsNetworkSiteBackup(): bool
     {
         return (bool)$this->isNetworkSiteBackup;
     }
 
-    /**
-     * @param string $backupType
-     * @return void
-     */
+
+
+
+
     public function setBackupType(string $backupType)
     {
         $this->backupType = $backupType;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getBackupType(): string
     {
         return $this->backupType;
     }
 
-    /**
-     * @param int|null $subsiteBlogId
-     * @return void
-     */
+
+
+
+
     public function setSubsiteBlogId($subsiteBlogId)
     {
         $this->subsiteBlogId = $subsiteBlogId;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getSubsiteBlogId(): int
     {
         if (empty($this->subsiteBlogId)) {
@@ -961,43 +981,43 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         return (int)$this->subsiteBlogId;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsValidateBackupFiles(): bool
     {
         return (bool)$this->isValidateBackupFiles;
     }
 
-    /**
-     * Cannot strict type it yet, otherwise it might throw error for older scheduled backup
-     * @param bool $isValidateBackupFiles
-     */
+
+
+
+
     public function setIsValidateBackupFiles($isValidateBackupFiles)
     {
         $this->isValidateBackupFiles = (bool)$isValidateBackupFiles;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsBackupFormatV1(): bool
     {
         return Hooks::applyFilters(BackupMetadata::FILTER_BACKUP_FORMAT_V1, false);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsContaining2GBFile(): bool
     {
         return $this->isContaining2GBFile;
     }
 
-    /**
-     * @param bool $isContaining2GBFile
-     * @return void
-     */
+
+
+
+
     public function setIsContaining2GBFile(bool $isContaining2GBFile)
     {
         $this->isContaining2GBFile = $isContaining2GBFile;
@@ -1008,10 +1028,10 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         return $this->isGlitchInBackup;
     }
 
-    /**
-     * @param bool $isGlitchInBackup
-     * @return void
-     */
+
+
+
+
     public function setIsGlitchInBackup(bool $isGlitchInBackup)
     {
         $this->isGlitchInBackup = $isGlitchInBackup;
@@ -1022,27 +1042,27 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         return $this->glitchReason;
     }
 
-    /**
-     * @param string $glitchReason
-     * @return void
-     */
+
+
+
+
     public function setGlitchReason(string $glitchReason)
     {
         $this->glitchReason = $glitchReason;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getCurrentWrittenFileHeaderBytes(): int
     {
         return (int)$this->currentWrittenFileHeaderBytes;
     }
 
-    /**
-     * @param int $currentWrittenFileHeaderBytes
-     * @return void
-     */
+
+
+
+
     public function setCurrentWrittenFileHeaderBytes(int $currentWrittenFileHeaderBytes)
     {
         $this->currentWrittenFileHeaderBytes = (int)$currentWrittenFileHeaderBytes;
@@ -1053,137 +1073,137 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         return $this->currentFileStartOffset;
     }
 
-    /**
-     * @param int $currentFileStartOffset
-     * @return void
-     */
+
+
+
+
     public function setCurrentFileStartOffset(int $currentFileStartOffset)
     {
         $this->currentFileStartOffset = (int)$currentFileStartOffset;
     }
 
-    /**
-     * @param int $timeLimit
-     * @return void
-     */
+
+
+
+
     public function setFileAppendTimeLimit(int $timeLimit)
     {
         $this->fileAppendTimeLimit = $timeLimit;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getFileAppendTimeLimit(): int
     {
         return $this->fileAppendTimeLimit;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function incrementFileAppendTimeLimit()
     {
         $this->fileAppendTimeLimit += 5;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function resetFileAppendTimeLimit()
     {
         $this->fileAppendTimeLimit = 10;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsCompressed(): bool
     {
         return $this->isCompressed;
     }
 
-    /**
-     * @param bool $isCompressed
-     * @return void
-     */
+
+
+
+
     public function setIsCompressed(bool $isCompressed)
     {
         $this->isCompressed = $isCompressed;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getBackupSizeUncompressed(): int
     {
         return $this->backupSizeUncompressed;
     }
 
-    /**
-     * @param int $backupSizeUncompressed
-     * @return void
-     */
+
+
+
+
     public function setBackupSizeUncompressed(int $backupSizeUncompressed)
     {
         $this->backupSizeUncompressed = $backupSizeUncompressed;
     }
 
-    /**
-     * @param int $backupSizeUncompressed
-     * @return void
-     */
+
+
+
+
     public function addBackupSizeUncompressed(int $backupSizeUncompressed)
     {
         $this->backupSizeUncompressed += $backupSizeUncompressed;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getBackupSizeCompressed(): int
     {
         return $this->backupSizeCompressed;
     }
 
-    /**
-     * @param int $backupSizeCompressed
-     * @return void
-     */
+
+
+
+
     public function setBackupSizeCompressed(int $backupSizeCompressed)
     {
         $this->backupSizeCompressed = $backupSizeCompressed;
     }
 
-    /**
-     * @param int $backupSizeCompressed
-     * @return void
-     */
+
+
+
+
     public function addBackupSizeCompressed(int $backupSizeCompressed)
     {
         $this->backupSizeCompressed += $backupSizeCompressed;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTotalFilesCompressed(): int
     {
         return $this->totalFilesCompressed;
     }
 
-    /**
-     * @param int $totalFilesCompressed
-     * @return void
-     */
+
+
+
+
     public function setTotalFilesCompressed(int $totalFilesCompressed)
     {
         $this->totalFilesCompressed = $totalFilesCompressed;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function incrementTotalFilesCompressed()
     {
         $this->totalFilesCompressed++;

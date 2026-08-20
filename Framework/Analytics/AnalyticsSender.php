@@ -17,30 +17,30 @@ class AnalyticsSender
 
     public function maybeSend()
     {
-        // Early bail: Do not run on AJAX requests.
+ 
         if (defined('DOING_AJAX') && DOING_AJAX) {
             return;
         }
 
-        // We store the analytics sending time at "wpstg_settings"
-        // since this runs on every request, and it's an autoloaded option.
-        // Also, the value we need to store in it is small.
+ 
+ 
+ 
         $settings = get_option("wpstg_settings", []);
 
-        // convert settings from type object to array
+ 
         if (is_object($settings)) {
             $settings = json_decode(json_encode($settings), true);
         }
 
-        // If still $settings is not array, bail
+ 
         if (!is_array($settings)) {
             return;
         }
 
-        // Interval to wait before sending events.
+ 
         $interval = ($this->isDev() ? 1 : 15) * MINUTE_IN_SECONDS;
 
-        // Early bail: Sent not so long ago.
+ 
         if (isset($settings['lastAnalyticsSend']) && time() - $settings['lastAnalyticsSend'] - $interval < 0) {
             return;
         }
@@ -54,40 +54,86 @@ class AnalyticsSender
         $this->sendAnalytics();
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function sendNow($event): bool
+    {
+        if (!$this->consent->hasUserConsent()) {
+            return false;
+        }
+
+        if ($this->isDev() && !$this->canDevSendAnalytics()) {
+            return false;
+        }
+
+        $response = wp_remote_post($this->getApiUrl('events'), [
+            'method'      => 'POST',
+            'headers'     => ['Content-Type' => 'application/json; charset=utf-8'],
+            'body'        => wp_json_encode([
+                'events'    => [$event],
+                'site_hash' => $this->getSiteHash(),
+            ]),
+            'data_format' => 'body',
+            'timeout'     => 1,
+            'redirection' => 0,
+            'httpversion' => '1.0',
+            'blocking'    => false,
+            'sslverify'   => false,
+        ]);
+
+        return !is_wp_error($response);
+    }
+
     public function sendAnalytics()
     {
         global $wpdb;
 
         $eventOptions = $wpdb->get_results("SELECT * FROM $wpdb->options WHERE `option_name` LIKE 'wpstg_analytics_event_%' LIMIT 0, 20");
 
-        // Nothing to send.
+ 
         if (empty($eventOptions)) {
             return;
         }
 
-        // Early bail: User has not given consent to send analytics
+ 
         if (!$this->consent->hasUserConsent()) {
             return;
         }
 
-        // Format the events to the expected format
+ 
         $events = array_map(function ($eventOption) {
             return json_decode($eventOption->option_value);
         }, $eventOptions);
 
         $this->setStaleEvents($events);
 
-        // Filter the events to send only those that are ready to be sent
+ 
         $events = array_filter($events, function ($event) {
             return $event->ready_to_send;
         });
 
-        // Early bail: No events ready to be sent
+ 
         if (empty($events)) {
             return;
         }
 
-        // Convert true to 1 and false to 0 for MySQL TinyInt
+ 
         foreach ($events as &$event) {
             foreach ($event as $property => &$value) {
                 if (is_bool($value)) {
@@ -104,15 +150,18 @@ class AnalyticsSender
             }
         }
 
-        // Delete the events, regardless of whether it succeeded or failed to send.
-        // This prevents events from hanging and being sent every time if they are in an invalid format or something goes wrong.
-        $idsToDelete = implode(',', array_map(function ($eventOption) {
-            return $eventOption->option_id;
-        }, $eventOptions));
+ 
+ 
+        $idsToDelete = implode(',', array_map(function ($key) use ($eventOptions) {
+            return $eventOptions[$key]->option_id;
+        }, array_keys($events)));
 
         if (!$wpdb->query("DELETE FROM $wpdb->options WHERE `option_id` IN ($idsToDelete)")) {
             \WPStaging\functions\debug_log('WP STAGING Analytics Delete Sent Events Error: ' . $wpdb->last_error);
         }
+
+ 
+        $events = array_values($events);
 
         $body = wp_json_encode([
             'events'    => $events,
@@ -121,7 +170,7 @@ class AnalyticsSender
 
         $url = $this->getApiUrl('events');
 
-        // Early bail: Do not dispatch events when in dev mode, unless allowed.
+ 
         if ($this->isDev() && !$this->canDevSendAnalytics()) {
             return;
         }
@@ -140,16 +189,16 @@ class AnalyticsSender
 
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
             if (wp_remote_retrieve_response_code($response) == 412) {
-                // The site hash does not exist in the Analytics database. We need to ask for consent again.
+ 
                 if ($this->consent->hasUserConsent()) {
                     try {
                         $this->consent->giveConsent();
                     } catch (\Exception $e) {
-                        // We could not re-validate the consent.
-                        // Don't do anything here.
-                        // E.g. If user gives his consent but wp-staging.com is not reachable
-                        // we should save the setting and fail silently. Next time wp-staging.com is available again we automatically can send usage information.
-                        // No need then to ask again for consent.
+ 
+ 
+ 
+ 
+ 
                     }
                 }
             }
@@ -159,22 +208,33 @@ class AnalyticsSender
         }
     }
 
-    /**
-     * Mark as stale the events that started longer than 1 day ago but isn't ready to send yet
-     *
-     * @param $events
-     */
+
+
+
+
+
     protected function setStaleEvents(&$events)
     {
+        $staleThreshold = time() - 1 * DAY_IN_SECONDS;
+
         foreach ($events as &$event) {
-            // For newer event dtos i.e. remote sync
-            if (!$event->ready_to_send && isset($event->start_at) && $event->start_at < time() - 1 * DAY_IN_SECONDS) {
-                $event->ready_to_send = true;
-                $event->stale_at = time();
+            if ($event->ready_to_send) {
                 continue;
             }
 
-            if (!$event->ready_to_send && $event->start_time < time() - 1 * DAY_IN_SECONDS) {
+ 
+            if (isset($event->start_at)) {
+                if ($event->start_at < $staleThreshold) {
+                    $event->ready_to_send = true;
+                    $event->stale_at = time();
+                }
+
+                continue;
+            }
+
+ 
+ 
+            if (!empty($event->start_time) && $event->start_time < $staleThreshold) {
                 $event->ready_to_send = true;
                 $event->is_stale = true;
             }

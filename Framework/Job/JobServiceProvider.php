@@ -30,7 +30,7 @@ class JobServiceProvider extends FeatureServiceProvider
     {
         $this->enqueueAjaxListeners();
 
-        // This is needed for PHP 8.4 otherwise wordpress sent header and we cannot change it for event streaming.
+ 
         add_filter('rest_pre_dispatch', $this->container->callback(BackgroundLogger::class, 'maybePrepareSseStream'), 10, 3);
         add_action('rest_api_init', [$this, 'registerRestEndpoints']);
     }
@@ -42,7 +42,7 @@ class JobServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--job--cancel', $this->container->callback(Cancel::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_raw_wpstg--login-url', $this->container->callback(LoginUrl::class, 'ajaxLoginUrl')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        // no-priv
+ 
         add_action('wp_ajax_nopriv_raw_wpstg--login-url', $this->container->callback(LoginUrl::class, 'ajaxLoginUrl')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_nopriv_wpstg--job--heartbeat', $this->container->callback(Heartbeat::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
@@ -55,7 +55,7 @@ class JobServiceProvider extends FeatureServiceProvider
                 wp_send_json_success();
             },
             'permission_callback' => function () {
-                /** @var Auth $auth */
+ 
                 $auth = WPStaging::make(Auth::class);
                 if (!$auth->isAuthenticatedRequest()) {
                     return new \WP_Error('rest_forbidden', esc_html__('You are not allowed to access this resource.', 'wp-staging'), ['status' => 403]);

@@ -12,21 +12,21 @@ use WPStaging\Framework\Job\JobTransientCache;
 
 class PrepareCancel extends PrepareJob
 {
-    /**
-     * @var string
-     */
+
+
+
     const ACTION_JOB_CANCEL = 'wpstg.job_cancel';
 
-    /** @var JobCancelDataDto */
+ 
     private $jobDataDto;
 
-    /** @var JobCancel */
+ 
     private $jobCancel;
 
-    /**
-     * @param array|null $data
-     * @return void
-     */
+
+
+
+
     public function ajaxPrepare($data)
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -42,10 +42,10 @@ class PrepareCancel extends PrepareJob
         }
     }
 
-    /**
-     * @param array|null $data
-     * @return array|\WP_Error
-     */
+
+
+
+
     public function prepare($data = null)
     {
         try {
@@ -60,20 +60,20 @@ class PrepareCancel extends PrepareJob
         return $sanitizedData;
     }
 
-    /**
-     * @param array|null $data
-     * @return array
-     */
+
+
+
+
     protected function setupInitialData($data): array
     {
         $sanitizedData = $this->validateAndSanitizeData($data);
         $this->clearCacheFolder();
 
-        // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
+ 
         $services = WPStaging::getInstance()->getContainer();
-        /** @var JobCancelDataDto */
+ 
         $this->jobDataDto = $services->get(JobCancelDataDto::class);
-        /** @var JobCancel */
+ 
         $this->jobCancel = $services->get(JobCancel::class);
 
         $this->jobDataDto->hydrate($sanitizedData);
@@ -88,16 +88,16 @@ class PrepareCancel extends PrepareJob
         return $sanitizedData;
     }
 
-    /**
-     * This is an abstract method and used by BG Processor for preparing cli jobs,
-     * but data is always fixed for canceling jobs, we get it from the transient cache.
-     * So method name here is misleading
-     * @param array|null $data
-     * @return array
-     */
+
+
+
+
+
+
+
     public function validateAndSanitizeData($data): array
     {
-        // data is always fixed for canceling jobs, we get it from the transient cache
+ 
         $jobData = $this->getJobData();
         $data = [
             'type'                => $jobData['type'],
@@ -107,19 +107,19 @@ class PrepareCancel extends PrepareJob
         return $data;
     }
 
-    /**
-     * @return JobCancel|null The current reference to the Cancel Job, if any.
-     */
+
+
+
     public function getJob()
     {
         return $this->jobCancel;
     }
 
-    /**
-     * Persists the current Job Cancel status.
-     *
-     * @return bool Whether the current Job status was persisted or not.
-     */
+
+
+
+
+
     public function persist(): bool
     {
         if (!$this->jobCancel instanceof JobCancel) {
@@ -131,11 +131,11 @@ class PrepareCancel extends PrepareJob
         return true;
     }
 
-    /**
-     * @param JobTransientCache|null $jobTransientCache
-     * @return array
-     * @throws \Exception
-     */
+
+
+
+
+
     private function getJobData($jobTransientCache = null): array
     {
         if ($jobTransientCache === null) {
@@ -164,18 +164,18 @@ class PrepareCancel extends PrepareJob
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function cancelCurrentRunningJob()
     {
-        /**
-         * lazy loaded if we only need it for background jobs
-         * @var JobTransientCache
-         */
+
+
+
+
         $jobTransientCache = WPStaging::make(JobTransientCache::class);
         $jobData           = $this->getJobData($jobTransientCache);
-        // Check if the job is running
+ 
         if ($jobData['status'] !== JobTransientCache::STATUS_RUNNING) {
             return;
         }
@@ -189,9 +189,9 @@ class PrepareCancel extends PrepareJob
             return;
         }
 
-        /**
-         * @var Queue
-         */
+
+
+
         $queue = WPStaging::make(Queue::class);
         $queue->cancelJob($queueId);
     }

@@ -15,45 +15,45 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Tasks\FileAdjustmentTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-/**
- * Updates WordPress constants in the staging site's wp-config.php file.
- *
- * Replacement for WPStaging\Framework\CloningProcess\Data\UpdateWpConfigConstants
- */
+
+
+
+
+
 class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 {
-    /** @var string */
+ 
     const ABSPATH_REGEX = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
 
-    /** @var string */
+ 
     const FILTER_CONSTANTS_REPLACE_OR_ADD = 'wpstg_constants_replace_or_add';
 
-    /**
-     * @var Directory
-     */
+
+
+
     protected $directory;
 
-    /**
-     * @var Jetpack
-     */
+
+
+
     protected $jetpack;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $absPath;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Urls $urls
-     * @param Filesystem $filesystem
-     * @param Directory $directory
-     * @param SiteInfo $siteInfo
-     * @param Jetpack $jetpack
-     */
+
+
+
+
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Urls $urls, Filesystem $filesystem, Directory $directory, SiteInfo $siteInfo, Jetpack $jetpack)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue, $urls, $filesystem, $siteInfo);
@@ -62,25 +62,25 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         $this->absPath   = rtrim($directory->getAbsPath(), '/');
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_update_wp_config_constants';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Adjusting constants in the staging site `wp_config.php` file.';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->logger->info('Adjusting constants in wp-config.php file for staging site');
@@ -107,8 +107,8 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         if (!$isWpContentOutsideAbspath) {
             $replaceOrAdd["UPLOADS"] = sprintf("'%s'", $this->escapeSingleQuotes(untrailingslashit($this->jobDataDto->getStagingSiteUploads())));
-            // For default plugin layouts WordPress derives WP_PLUGIN_URL per-blog from siteurl;
-            // hardcoding it to the main staging URL would break subsites on a network clone.
+ 
+ 
             if (!$isDefaultPluginPath) {
                 $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . $this->getRelativePluginsDir() . '"';
                 $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->jobDataDto->getStagingSiteUrl() . $this->getRelativePluginsDir()));
@@ -136,12 +136,12 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
             $replaceOrAdd["SITE_ID_CURRENT_SITE"] = SITE_ID_CURRENT_SITE;
             $replaceOrAdd["BLOG_ID_CURRENT_SITE"] = BLOG_ID_CURRENT_SITE;
         } else {
-            //It's OK to attempt replacing multi-site constants even in single-site jobs as they will not be present in a single-site wp-config.php
+ 
             $replaceOrSkip["WP_ALLOW_MULTISITE"] = 'false';
             $replaceOrSkip["MULTISITE"]          = 'false';
         }
 
-        // turn off debug constants on staging site
+ 
         $replaceOrAdd['WP_DEBUG']         = 'false';
         $replaceOrAdd['WP_DEBUG_LOG']     = 'false';
         $replaceOrAdd['WP_DEBUG_DISPLAY'] = 'false';
@@ -151,7 +151,7 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         $delete = [];
 
-        // Don't delete custom wp-content path constants
+ 
         if ('wp-content' === trim($this->getRelativeWpContentDir(), '/')) {
             $delete[] = "WP_CONTENT_DIR";
             $delete[] = "WP_CONTENT_URL";
@@ -177,13 +177,13 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
             $delete[] = "WP_CONTENT_URL";
         }
 
-        /**
-         * Allows to filter the constants to be replaced/added.
-         *
-         * @param array $replaceOrAdd The array of constants to be replaced in the staging site's wp-config.php
-         *
-         * @return array The array of constants.
-         */
+
+
+
+
+
+
+
         $replaceOrAdd = (array)apply_filters(self::FILTER_CONSTANTS_REPLACE_OR_ADD, $replaceOrAdd);
 
         $content = $this->readWpConfig();
@@ -205,25 +205,25 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         return $this->generateResponse();
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getRelativeWpContentDir(): string
     {
         return rtrim(str_replace($this->absPath, '', $this->directory->getWpContentDirectory()), '/');
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getRelativePluginsDir(): string
     {
         return rtrim(str_replace($this->absPath, '', $this->directory->getPluginsDirectory()), '/');
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getStagingLangPath(): string
     {
         if ($this->siteInfo->isWpContentOutsideAbspath()) {
@@ -233,13 +233,13 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         return sprintf("__DIR__ . '/%s/languages'", $this->escapeSingleQuotes(trim($this->getRelativeWpContentDir(), '/')));
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return string
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
+
     protected function replaceExistingDefinition(string $constant, string $content, string $newDefinition): string
     {
         $pattern = $this->getDefineRegex($constant);
@@ -252,7 +252,7 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         $replace = sprintf("define('%s', %s);", $constant, $newDefinition);
 
-        // escaping dollar sign in the value
+ 
         $replacementEscapedCharacter = addcslashes($replace, '\\$');
 
         $content = preg_replace([$pattern], $replacementEscapedCharacter, $content);
@@ -265,11 +265,11 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         return $content;
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @return bool
-     */
+
+
+
+
+
     protected function hasDefinition(string $constant, string $content): bool
     {
         preg_match($this->getDefineRegex($constant), $content, $matches);
@@ -277,13 +277,13 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
         return !empty($matches[0]);
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return string
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
+
     protected function addDefinition(string $constant, string $content, string $newDefinition): string
     {
         if (!$this->abspathConstantExists($content)) {
@@ -304,7 +304,7 @@ if ( ! defined( 'ABSPATH' ) )
 EOT;
         }
 
-        // escaping dollar sign
+ 
         $replacementEscaped = addcslashes($replacement, '\\$');
 
         if (($content = preg_replace(self::ABSPATH_REGEX, $replacementEscaped, $content)) === null) {
@@ -315,12 +315,12 @@ EOT;
         return $content;
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @return string
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
     protected function deleteDefinition(string $constant, string $content): string
     {
         $pattern = $this->getDefineRegex($constant);
@@ -339,12 +339,12 @@ EOT;
         return $content;
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return string
-     */
+
+
+
+
+
+
     protected function replaceOrAddDefinition(string $constant, string $content, string $newDefinition)
     {
         if (!$this->hasDefinition($constant, $content)) {
@@ -355,12 +355,12 @@ EOT;
         return $this->replaceExistingDefinition($constant, $content, $newDefinition);
     }
 
-    /**
-     * @param string $constant
-     * @param string $content
-     * @param string $newDefinition
-     * @return bool|string|string[]|null
-     */
+
+
+
+
+
+
     protected function replaceOrSkipDefinition(string $constant, string $content, string $newDefinition)
     {
         if (!$this->hasDefinition($constant, $content)) {
@@ -372,10 +372,10 @@ EOT;
     }
 
 
-    /**
-     * @param string $content string
-     * @return bool
-     */
+
+
+
+
     private function abspathConstantExists(string $content): bool
     {
         preg_match(self::ABSPATH_REGEX, $content, $matches);
@@ -386,23 +386,23 @@ EOT;
         return true;
     }
 
-    /**
-     * Treat certain constants differently because other plugins or themes could declare this constant outside wp-config.php.
-     * E.g. Local by Flywheel does.
-     * We don't add the defined condition to all constants because it would make it
-     * difficult to debug and find out why a staging site breaks if client site overwrites a default constant outside wp-config.php.
-     * So we treat some constants like WP_ENVIRONMENT_TYPE differently.
-     *
-     * @param string $constant string Name of the constant
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
+
     private function maybeAddDefinedCondition(string $constant): bool
     {
         if ($constant === 'WP_ENVIRONMENT_TYPE' || $constant === 'WPSTAGING_DEV_SITE') {
             return true;
         }
 
-        // Staging on playground/wpnow
+ 
         if ($constant === 'WP_SITEURL' || $constant === 'WP_HOME') {
             return true;
         }
@@ -410,14 +410,14 @@ EOT;
         return false;
     }
 
-    /**
-     * Helper function to return a string with single
-     * quotes escaped.
-     *
-     * @param string $string
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
     private function escapeSingleQuotes(string $string): string
     {
         return str_replace("'", "\'", $string);

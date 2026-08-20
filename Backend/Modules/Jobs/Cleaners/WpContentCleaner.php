@@ -9,47 +9,47 @@ use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Core\Utils\Logger;
 
-/**
- * This class is used to delete all uploads, themes and plugins
- * Currently it is used during push process
- * It will delete uploads, themes and plugins according to the options user selected.
- */
+
+
+
+
+
 class WpContentCleaner
 {
-    /**
-     * @var array
-     */
+
+
+
     private $logs = [];
 
-    /**
-     * @var object
-     */
+
+
+
     private $job;
 
-    /**
-     * @param JobExecutable $job
-     */
+
+
+
     public function __construct($job)
     {
         $this->job = $job;
     }
 
-    /**
-     * Return logs of this cleaning process
-     * @return array
-     */
+
+
+
+
     public function getLogs()
     {
         return $this->logs;
     }
 
-    /**
-     * Remove Plugins/Themes/Uploads according to option selected
-     * $directory param used in this method is mainly for mocking purpose but,
-     * can also be used to give path of staging site
-     * @param string $directory Root directory of target WordPress Installation
-     * @return bool
-     */
+
+
+
+
+
+
+
     public function tryCleanWpContent($directory)
     {
         $options = $this->job->getOptions();
@@ -58,7 +58,7 @@ class WpContentCleaner
             return true;
         }
 
-        // Skip cleaning if staging site is broken and not complete
+ 
         if (!is_dir($directory)) {
             return true;
         }
@@ -99,7 +99,7 @@ class WpContentCleaner
 
         $excludePaths = [
             $wpDirectories->getRelativePluginPath(SlashMode::BOTH_SLASHES) . "wp-staging*",
-            $wpDirectories->getRelativeUploadPath(SlashMode::BOTH_SLASHES) . 'wp-staging', // exclude wp-staging from uploads dir too.
+            $wpDirectories->getRelativeUploadPath(SlashMode::BOTH_SLASHES) . 'wp-staging', 
         ];
         $fs = (new Filesystem())
             ->setShouldStop([$this->job, 'isOverThreshold'])

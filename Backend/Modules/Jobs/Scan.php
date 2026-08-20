@@ -16,99 +16,99 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 
-/**
- * Builds the directory tree and related metadata for clone jobs before the staging run starts.
- */
+
+
+
 class Scan extends Job
 {
-    /**
-     * CSS class name to use for WordPress core directories like wp-content, wp-admin, wp-includes
-     * This doesn't contain class selector prefix
-     *
-     * @var string
-     */
+
+
+
+
+
+
     const WP_CORE_DIR = "wpstg-wp-core-dir";
 
-    /**
-     * CSS class name to use for WordPress non core directories
-     * This doesn't contain class selector prefix
-     *
-     * @var string
-     */
+
+
+
+
+
+
     const WP_NON_CORE_DIR = "wpstg-wp-non-core-dir";
 
-    /** @var array */
+ 
     private $directories = [];
 
-    /** @var string|null */
+ 
     private $directoryToScanOnly;
 
-    /**
-     * @var string Path to gif loader for directory loading
-     */
+
+
+
     private $gifLoaderPath;
 
-    /**
-     * @var Strings
-     */
+
+
+
     private $strUtils;
 
-    /**
-     * @var Directory
-     */
+
+
+
     protected $dirAdapter;
 
-    /**
-     * @var Sanitize
-     */
+
+
+
     private $sanitize;
 
-    /**
-     * @var string Path to the info icon
-     */
+
+
+
     private $infoIconPath;
 
-    /**
-     * @var string
-     */
+
+
+
     private $basePath;
 
-    /**
-     * @var string
-     */
+
+
+
     private $pathIdentifier;
 
-    /**
-     * @var TemplateEngine
-     */
+
+
+
     private $templateEngine;
 
-    /** @var PathIdentifier */
+ 
     private $pathAdapter;
 
-    /** @var PathChecker */
+ 
     private $pathChecker;
 
-    /** @var string */
+ 
     protected $absPath = ABSPATH;
 
-    /** @var string */
+ 
     protected $wpContentPath = WP_CONTENT_DIR;
 
-    /**
-     * Job constructor.
-     * @throws Exception
-     */
+
+
+
+
     public function __construct($directoryToScanOnly = null)
     {
-        // Accept both the absolute path or relative path with respect to wp root
-        // Santized the path to make comparing works for windows platform too.
+ 
+ 
         $this->directoryToScanOnly = null;
         if ($directoryToScanOnly !== null) {
             $this->directoryToScanOnly = $directoryToScanOnly;
         }
 
-        // TODO: inject using DI when available
+ 
         $this->strUtils       = new Strings();
         $this->pathAdapter    = WPStaging::make(PathIdentifier::class);
         $this->pathChecker    = WPStaging::make(PathChecker::class);
@@ -118,70 +118,70 @@ class Scan extends Job
         parent::__construct();
     }
 
-    /**
-     * @param string $gifLoaderPath
-     */
+
+
+
     public function setGifLoaderPath(string $gifLoaderPath)
     {
         $this->gifLoaderPath = $gifLoaderPath;
     }
 
-    /**
-     * @param string $infoIconPath
-     */
+
+
+
     public function setInfoIcon(string $infoIconPath)
     {
         $this->infoIconPath = $infoIconPath;
     }
 
-    /**
-     * Return the path of info icon
-     *
-     * @return string
-     */
+
+
+
+
+
     public function getInfoIcon(): string
     {
         return $this->infoIconPath;
     }
 
-    /**
-     * @param string $directoryToScanOnly
-     */
+
+
+
     public function setDirectoryToScanOnly(string $directoryToScanOnly)
     {
         $this->directoryToScanOnly = $directoryToScanOnly;
     }
 
-    /**
-     * @param string $basePath
-     * @todo add typed property `string` and ensure this value is never null
-     */
+
+
+
+
     public function setBasePath($basePath)
     {
         $this->basePath = rtrim(wp_normalize_path($basePath), '/');
     }
 
-    /** @return string */
+ 
     public function getBasePath(): string
     {
         return $this->basePath;
     }
 
-    /** @param string $pathIdentifier */
+ 
     public function setPathIdentifier(string $pathIdentifier)
     {
         $this->pathIdentifier = $pathIdentifier;
     }
 
-    /** @return string */
+ 
     public function getPathIdentifier(): string
     {
         return $this->pathIdentifier;
     }
 
-    /**
-     * Upon class initialization
-     */
+
+
+
     public function initialize()
     {
         $this->options->existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
@@ -198,7 +198,7 @@ class Scan extends Job
         $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
         $this->getDirectories($this->absPath);
 
-        // If wp-content is outside ABSPATH, then scan it too
+ 
         if ($this->isWpContentOutsideAbspath()) {
             $this->setBasePath($this->wpContentPath);
             $this->setPathIdentifier(PathIdentifier::IDENTIFIER_WP_CONTENT);
@@ -208,27 +208,27 @@ class Scan extends Job
         $this->installOptimizer();
     }
 
-    /**
-     * Start Module
-     * @return $this|object
-     * @throws Exception
-     */
+
+
+
+
+
     public function start()
     {
-        // Basic Options
+ 
         $this->options->root         = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, ABSPATH);
         $this->options->current      = null;
         $this->options->currentClone = $this->getCurrentClone();
 
         if ($this->options->currentClone !== null) {
-            // Make sure no warning is shown when updating/resetting an old clone having no exclude rules options
+ 
             $this->options->currentClone['excludeSizeRules']   = $this->options->currentClone['excludeSizeRules'] ?? [];
             $this->options->currentClone['excludeGlobRules']   = $this->options->currentClone['excludeGlobRules'] ?? [];
-            // Make sure no warning is shown when updating/resetting an old clone having no admin account data
+ 
             $this->options->currentClone['useNewAdminAccount'] = $this->options->currentClone['useNewAdminAccount'] ?? false;
             $this->options->currentClone['adminEmail']         = $this->options->currentClone['adminEmail'] ?? '';
             $this->options->currentClone['adminPassword']      = $this->options->currentClone['adminPassword'] ?? '';
-            // Make sure no warning is shown when updating/resetting an old clone without databaseSsl, uploadsSymlinked, isEmailsAllowed and networkClone options
+ 
             $this->options->currentClone['isEmailsAllowed']         = $this->options->currentClone['isEmailsAllowed'] ?? true;
             $this->options->currentClone['databaseSsl']             = $this->options->currentClone['databaseSsl'] ?? false;
             $this->options->currentClone['uploadsSymlinked']        = $this->options->currentClone['uploadsSymlinked'] ?? false;
@@ -238,28 +238,28 @@ class Scan extends Job
             $this->options->currentClone['isAutoUpdatePlugins']     = empty($this->options->currentClone['isAutoUpdatePlugins']) ? false : true;
         }
 
-        // Tables
+ 
         $this->options->clonedTables = [];
 
-        // Files
+ 
         $this->options->totalFiles    = 0;
         $this->options->totalFileSize = 0;
         $this->options->copiedFiles   = 0;
 
 
-        // Directories
+ 
         $this->options->includedDirectories      = [];
         $this->options->includedExtraDirectories = [];
         $this->options->excludedDirectories      = [];
         $this->options->extraDirectories         = [];
         $this->options->scannedDirectories       = [];
 
-        // Job
+ 
         $this->options->currentJob  = "PreserveDataFirstStep";
         $this->options->currentStep = 0;
         $this->options->totalSteps  = 0;
 
-        // Define mainJob to differentiate between cloning, updating and pushing
+ 
         $this->options->mainJob = Job::STAGING;
         $job                    = '';
         if (isset($_POST["job"])) {
@@ -272,7 +272,7 @@ class Scan extends Job
             $this->options->mainJob = Job::UPDATE;
         }
 
-        // Delete previous cached files
+ 
         $this->cloneOptionCache->delete();
         $this->filesIndexCache->delete();
 
@@ -281,24 +281,24 @@ class Scan extends Job
         return $this;
     }
 
-    /**
-     * Make sure the Optimizer mu plugin is installed before cloning or pushing
-     */
+
+
+
     private function installOptimizer()
     {
         $optimizer = new Optimizer();
         $optimizer->installOptimizer();
     }
 
-    /**
-     * @param bool|null $parentChecked  Is parent folder selected
-     * @param bool $forceDefault        Default false. Set it to true,
-     *                                  when default button on ui is clicked,
-     *                                  to ignore previous selected option for UPDATE and RESET process.
-     * @param null|array                $directories to list
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
     public function directoryListing($parentChecked = null, $forceDefault = false, $directories = null): string
     {
         if ($directories === null) {
@@ -314,7 +314,7 @@ class Scan extends Job
             $currentClone        = json_decode(json_encode($this->options->currentClone));
             $extraDirectories    = isset($currentClone->extraDirectories) ? $currentClone->extraDirectories : [];
             $excludedDirectories = isset($currentClone->excludedDirectories) ? array_map(function ($directory) {
-                // Exception is thrown when directory doesn't have identifier, so we will return directory as it is
+ 
                 try {
                     return $this->pathAdapter->transformIdentifiableToPath($directory);
                 } catch (UnexpectedValueException $ex) {
@@ -325,12 +325,12 @@ class Scan extends Job
 
         $output = '';
         foreach ($directories as $dirName => $directory) {
-            // Not a directory, possibly a symlink, therefore we will skip it
+ 
             if (!is_array($directory) || basename($dirName) === "\\") {
                 continue;
             }
 
-            // Need to preserve keys so no array_shift()
+ 
             $data = reset($directory);
             unset($directory[key($directory)]);
 
@@ -340,9 +340,9 @@ class Scan extends Job
         return $output;
     }
 
-    /**
-     * Get Database Tables
-     */
+
+
+
     protected function getTables()
     {
         $db       = WPStaging::getInstance()->get("wpdb");
@@ -357,12 +357,12 @@ class Scan extends Job
         $currentClone = $this->getCurrentClone();
         $networkClone = is_multisite() && is_main_site() && is_array($currentClone) && (array_key_exists('networkClone', $currentClone) ? $this->sanitize->sanitizeBool($currentClone['networkClone']) : false);
 
-        // Reset excluded Tables than loop through all tables
+ 
         $this->options->excludedTables = [];
         foreach ($tables as $table) {
-            // Create array of unchecked tables
-            // On the main website of a multisite installation, do not select network site tables beginning with wp_1_, wp_2_ etc.
-            // (On network sites, the correct tables are selected anyway)
+ 
+ 
+ 
             if (
                 ( ! empty($dbPrefix) && strpos($table->Name, $dbPrefix) !== 0)
                 || (is_multisite() && is_main_site() && !$networkClone && preg_match('/^' . $dbPrefix . '\d+_/', $table->Name))
@@ -381,13 +381,13 @@ class Scan extends Job
         $this->options->tables = json_decode(json_encode($currentTables));
     }
 
-    /**
-     * Get directories and main meta data about given directory path
-     * @param string $dirPath      - Optional - Default ABSPATH
-     * @param bool $shouldReturn - Optional - Default false
-     *
-     * @return void|array            Depend upon value of $shouldReturn
-     */
+
+
+
+
+
+
+
     public function getDirectories(string $dirPath = ABSPATH, bool $shouldReturn = false)
     {
         if (!is_dir($dirPath)) {
@@ -405,7 +405,7 @@ class Scan extends Job
             echo json_encode([
                 'success'     => false,
                 'type'        => '',
-                // TODO: Create a Swal Response Class and Js library to handle that response or, Implement own Swal alternative
+ 
                 'swalOptions' => [
                     'title'             => esc_html__('Error!', 'wp-staging'),
                     'html'              => $errorMessage,
@@ -430,7 +430,7 @@ class Scan extends Job
                 continue;
             }
 
-            // If filename is int, then it is treated as a numeric index in key and start with 0
+ 
             $result[$directory->getFilename()]['metaData'] = [
                 'dirName'  => $directory->getFilename(),
                 "path"     => $fullPath,
@@ -447,28 +447,28 @@ class Scan extends Job
         $this->directories = array_merge($this->directories, $result);
     }
 
-    /**
-     * Get Path from $directory
-     * @param DirectoryIterator $directory
-     * @return bool|string
-     */
+
+
+
+
+
     protected function getPath($directory)
     {
         $basePath = $this->getBasePath();
         $realPath = WPStaging::make('WPSTG_ALLOW_VFS') === true && strpos($directory->getPathname(), 'vfs://') === 0 ? $directory->getPathname() : $directory->getRealPath();
         $realPath = wp_normalize_path($realPath);
 
-        /*
-         * Do not follow root path like src/web/..
-         * This must be done before \SplFileInfo->isDir() is used!
-         * Prevents open base dir restriction fatal errors
-         */
+
+
+
+
+
         if (strpos($realPath, $basePath) !== 0) {
             return false;
         }
 
         $path = str_replace($basePath, '', $realPath);
-        // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
+ 
         if (!$directory->isDir() || (strlen($path) < 1 && $this->pathIdentifier !== PathIdentifier::IDENTIFIER_WP_CONTENT)) {
             return false;
         }
@@ -476,15 +476,15 @@ class Scan extends Job
         return $path;
     }
 
-    /**
-     * @param string $dirName
-     * @param array  $dirInfo contains information about the directory
-     * @param array  $excludedDirectories
-     * @param array  $extraDirectories
-     * @param bool   $parentChecked
-     * @param bool   $forceDefault
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
     protected function getDirectoryHtml($dirName, $dirInfo, $excludedDirectories, $extraDirectories, $parentChecked = false, $forceDefault = false)
     {
         $data     = $dirInfo;
@@ -495,7 +495,7 @@ class Scan extends Job
         $relPath  = str_replace($basePath, '', $path);
         $relPath  = ltrim($relPath, '/');
 
-        // Check if directory name or directory path is not WP core folder
+ 
         $isNotWPCoreDir = $this->isNonWpCoreDirectory($dirName, $path);
 
         $class   = $isNotWPCoreDir ? self::WP_NON_CORE_DIR : self::WP_CORE_DIR;
@@ -518,13 +518,13 @@ class Scan extends Job
             $isScanned = 'true';
         }
 
-        // Make wp-includes and wp-admin directory items not expandable
+ 
         $isNavigatable = 'true';
         if ($this->strUtils->startsWith($path, $basePath . "/wp-admin") !== false || $this->strUtils->startsWith($path, $basePath . "/wp-includes") !== false) {
             $isNavigatable = 'false';
         }
 
-        // Decide if item checkbox is active or not
+ 
         $shouldBeChecked = $parentChecked !== null ? $parentChecked : !$isNotWPCoreDir;
         if (!$forceDefault && $this->isUpdateOrResetJob() && (!$this->isPathInDirectories($path, $excludedDirectories, $basePath))) {
             $shouldBeChecked = true;
@@ -576,25 +576,25 @@ class Scan extends Job
         ]);
     }
 
-    /**
-     * Is the path present is given list of directories
-     * @param string  $path
-     * @param array   $directories List of directories relative to ABSPATH with leading slash
-     * @param ?string $basePath
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     protected function isPathInDirectories(string $path, array $directories, $basePath = null): bool
     {
         return $this->pathChecker->isPathInPathsList($path, $directories, true, $basePath);
     }
 
-    /**
-     * Get clone from $_POST['clone'] and set it as current clone
-     * If clone is not found, then set current clone to null
-     *
-     * @return array|null
-     */
+
+
+
+
+
+
     protected function getCurrentClone()
     {
         $cloneID = isset($_POST["clone"]) ? $this->sanitize->sanitizeString($_POST['clone']) : '';
@@ -607,23 +607,23 @@ class Scan extends Job
         return null;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isWpContentOutsideAbspath()
     {
-        /** @var SiteInfo $siteInfo */
+ 
         $siteInfo = WPStaging::make(SiteInfo::class);
         return $siteInfo->isWpContentOutsideAbspath();
     }
 
-    /**
-     * Check if directory name or directory path is not WP core folder
-     *
-     * @param string $dirname
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
+
+
+
     protected function isNonWpCoreDirectory($dirname, $path)
     {
         $coreDirectories = [
@@ -653,11 +653,11 @@ class Scan extends Job
         return true;
     }
 
-    /**
-     * Resolve the full path for a directory, handling symlinks if present
-     * @param DirectoryIterator $directory
-     * @return string
-     */
+
+
+
+
+
     private function resolveDirectoryPath(DirectoryIterator $directory): string
     {
         if (!is_link($directory->getPathname())) {

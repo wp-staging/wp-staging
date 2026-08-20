@@ -17,110 +17,110 @@ use WPStaging\Notifications\Notifications;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * BackupScheduler - Manages backup scheduling and cron jobs
- *
- * Day-Specific Weekly Schedules:
- * - Weekly schedules support day-specific variants (e.g., wpstg_weekly_1 for Monday, wpstg_weekly_7 for Sunday)
- * - Day numbering uses ISO 8601 standard: 1=Monday, 2=Tuesday, ..., 7=Sunday
- * - This makes it easy to extend to other schedules in the future
- *
- * Backward Compatibility:
- * - Existing plain 'wpstg_weekly' schedules (without day suffix) continue to work
- * - They run every 7 days from their original start time, regardless of day
- * - The system automatically handles both old and new schedule formats
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 class BackupScheduler
 {
-    /** @var string */
+ 
     const OPTION_BACKUP_SCHEDULE_ERROR_REPORT = 'wpstg_backup_schedules_send_error_report';
 
-    /** @var string */
+ 
     const OPTION_BACKUP_SCHEDULE_WARNING_REPORT = 'wpstg_backup_schedules_send_warning_report';
 
-    /** @var string */
+ 
     const OPTION_BACKUP_SCHEDULE_GENERAL_REPORT = 'wpstg_backup_schedules_send_general_report';
 
-    /** @var string */
+ 
     const OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT = 'wpstg_backup_schedules_send_slack_error_report';
 
-    /** @var string */
+ 
     const OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK = 'wpstg_backup_schedules_report_slack_webhook';
 
-    /** @var string */
+ 
     const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
 
-    /** @var string */
+ 
     const OPTION_LAST_BACKUP_FAILURE = 'wpstg_last_backup_failure';
 
-    /** @var string */
+ 
     const CRON_WARNING_TYPE_FAILURE = 'failure';
 
-    /** @var string */
+ 
     const CRON_WARNING_TYPE_OVERDUE = 'overdue';
 
-    /** @var int Seconds a cron task may run late before it counts as overdue. */
+ 
     const OVERDUE_GRACE_PERIOD = 30 * MINUTE_IN_SECONDS;
 
-    /** @var string */
+ 
     const TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT = 'wpstg.backup.schedules.error_report_sent';
 
-    /** @var string */
+ 
     const TRANSIENT_BACKUP_SCHEDULE_WARNING_REPORT_SENT = 'wpstg.backup.schedules.warning_report_sent';
 
-    /** @var string */
+ 
     const TRANSIENT_BACKUP_SCHEDULE_GENERAL_REPORT_SENT = 'wpstg.backup.schedules.general_report_sent';
 
-    /** @var string */
+ 
     const TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT = 'wpstg.backup.schedules.slack_report_sent';
 
-    /** @var string */
+ 
     const REPORT_TYPE_ERROR = 'error';
 
-    /** @var string */
+ 
     const REPORT_TYPE_WARNING = 'warning';
 
-    /** @var string */
+ 
     const REPORT_TYPE_GENERAL = 'general';
 
-    /** @var string */
+ 
     const FILTER_SCHEDULES_BACKUP_INTERVAL = 'wpstg.schedulesBackup.interval';
 
-    /** @var BackupsFinder */
+ 
     protected $backupsFinder;
 
-    /** @var ProcessLock */
+ 
     protected $processLock;
 
-    /** @var BackupDeleter */
+ 
     protected $backupDeleter;
 
-    /**
-     * @var Notifications
-     */
+
+
+
     protected $notifications;
 
-    /** @var int */
+ 
     protected $numberOverdueCronjobs = 0;
 
-    /**
-     * Determines the banner text in the cron-warning-notice view.
-     * @var string
-     */
+
+
+
+
     protected $cronWarningType = '';
 
-    /**
-     * The failure message from the last cron backup failure, if unresolved.
-     * @var string
-     */
+
+
+
+
     protected $lastBackupFailureMessage = '';
 
-    /**
-     * @param BackupsFinder $backupsFinder
-     * @param ProcessLock $processLock
-     * @param BackupDeleter $backupDeleter
-     * @param Notifications $notifications
-     */
+
+
+
+
+
+
     public function __construct(BackupsFinder $backupsFinder, ProcessLock $processLock, BackupDeleter $backupDeleter, Notifications $notifications)
     {
         $this->backupsFinder = $backupsFinder;
@@ -131,9 +131,9 @@ class BackupScheduler
         $this->countOverdueCronjobs();
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getSchedules(): array
     {
         $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
@@ -144,15 +144,15 @@ class BackupScheduler
         return [];
     }
 
-    /**
-     * @param JobBackupDataDto $jobBackupDataDto
-     * @return void
-     */
+
+
+
+
     public function maybeDeleteOldBackups(JobBackupDataDto $jobBackupDataDto)
     {
         $scheduleId = $jobBackupDataDto->getScheduleId();
 
-        // Not a scheduled backup, nothing to do.
+ 
         if (empty($scheduleId)) {
             return;
         }
@@ -174,17 +174,17 @@ class BackupScheduler
 
         $backupFiles = $this->backupsFinder->findBackupByScheduleId($scheduleId);
 
-        // Early bail: Not enough backups to trigger the rotation
+ 
         if (count($backupFiles) < $maxAllowedBackupFiles) {
             return;
         }
 
-        // Sort backups, older first
+ 
         uasort($backupFiles, function ($backup1, $backup2) {
-            /**
-             * @var \SplFileInfo $backup1
-             * @var \SplFileInfo $backup2
-             */
+
+
+
+
             if ($backup1->getMTime() === $backup2->getMTime()) {
                 return 0;
             }
@@ -192,10 +192,10 @@ class BackupScheduler
             return $backup1->getMTime() < $backup2->getMTime() ? -1 : 1;
         });
 
-        // Make sure array indexes are correctly ordered.
+ 
         $backupFiles = array_values($backupFiles);
 
-        // Get exceeding backups, including an extra one for the backup that will be created right now.
+ 
         $backupFiles = array_slice($backupFiles, 0, max(1, count($backupFiles) - $maxAllowedBackupFiles + 1));
 
         array_map(function ($file) {
@@ -208,12 +208,12 @@ class BackupScheduler
         }, $backupFiles);
     }
 
-    /**
-     * @param JobBackupDataDto $jobBackupDataDto
-     * @param string $scheduleId
-     * @return void
-     * @throws \Exception
-     */
+
+
+
+
+
+
     public function scheduleBackup(JobBackupDataDto $jobBackupDataDto, string $scheduleId)
     {
         if (!isset(wp_get_schedules()[$jobBackupDataDto->getScheduleRecurrence()])) {
@@ -232,7 +232,7 @@ class BackupScheduler
             'scheduleId'                     => $scheduleId,
             'schedule'                       => $jobBackupDataDto->getScheduleRecurrence(),
             'backupType'                     => $jobBackupDataDto->getBackupType(),
-            'subsiteBlogId'                  => $jobBackupDataDto->getSubsiteBlogId(), // required for network subsite backup type
+            'subsiteBlogId'                  => $jobBackupDataDto->getSubsiteBlogId(), 
             'time'                           => $time,
             'name'                           => $jobBackupDataDto->getName(),
             'rotation'                       => $jobBackupDataDto->getScheduleRotation(),
@@ -253,7 +253,7 @@ class BackupScheduler
             'isExcludingUnusedThemes'        => $jobBackupDataDto->getIsExcludingUnusedThemes(),
             'isExcludingLogs'                => $jobBackupDataDto->getIsExcludingLogs(),
             'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
-            'isWpCliRequest'                 => true, // should be true otherwise multisite backup will not work
+            'isWpCliRequest'                 => true, 
             'backupExcludedDirectories'      => $jobBackupDataDto->getBackupExcludedDirectories(),
         ];
 
@@ -267,11 +267,11 @@ class BackupScheduler
         $this->reCreateCron();
     }
 
-    /**
-     * Registers a schedule in the Db.
-     * @param array $backupSchedule
-     * @return bool false on error or if nothing would be updated
-     */
+
+
+
+
+
     protected function registerScheduleInDb(array $backupSchedule): bool
     {
         $backupSchedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
@@ -289,15 +289,15 @@ class BackupScheduler
         return true;
     }
 
-    /**
-     * AJAX callback that processes the backup schedule.
-     *
-     * @param array $backupData
-     * @return void
-     */
+
+
+
+
+
+
     public function createCronBackup(array $backupData)
     {
-        // Cron is hell to debug, so let's log everything that happens.
+ 
         $logId = wp_generate_password(4, false);
 
         debug_log(sprintf("[Schedule Backup Cron - %s] Received request to create a backup using Cron. Backup Data: %s", $logId, wp_json_encode($backupData)), 'info', false);
@@ -318,10 +318,10 @@ class BackupScheduler
         }
     }
 
-    /**
-     * Ajax callback to dismiss a schedule.
-     * @return void
-     */
+
+
+
+
     public function dismissSchedule()
     {
         if (!current_user_can((new Capabilities())->manageWPSTG())) {
@@ -344,12 +344,12 @@ class BackupScheduler
         }
     }
 
-    /**
-     * Deletes a backup schedule.
-     *
-     * @param string $scheduleId The schedule ID to delete.
-     * @return void
-     */
+
+
+
+
+
+
     public function deleteSchedule(string $scheduleId, $reCreateCron = true)
     {
         $schedules = $this->getSchedules();
@@ -363,9 +363,9 @@ class BackupScheduler
             throw new \RuntimeException('Could not unschedule event from Db.');
         }
 
-        // When the last schedule is removed there is nothing left to fail, so a
-        // stale failure signal from the deleted schedule must not surface if the
-        // user later creates a new one.
+ 
+ 
+ 
         if (empty($newSchedules)) {
             delete_option(static::OPTION_LAST_BACKUP_FAILURE);
         }
@@ -377,19 +377,19 @@ class BackupScheduler
         $this->reCreateCron();
     }
 
-    /**
-     * @param string|null $scheduleBeingEdit The schedule ID being edited. If this is set, it will be ignored when re-creating the Cron events.
-     * @return bool
-     * @throws \Exception
-     * @see OPTION_BACKUP_SCHEDULES The Db option that is the source of truth for Cron events.
-     *                              The backup schedule cron events are deleted and re-created
-     *                              based on what is in this db option.
-     *
-     *                              This way, we only care about preserving this option on Backup
-     *                              Restore or Push, and we don't have to worry about re-scheduling
-     *                              the Cron events or removing leftover schedules.
-     *
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function reCreateCron($scheduleBeingEdit = null): bool
     {
         $schedules = $this->getSchedules();
@@ -400,9 +400,9 @@ class BackupScheduler
         foreach ($schedules as $schedule) {
             $timeToSchedule = new \DateTime('now', wp_timezone());
 
-            /**
-             * New mechanism for recroning old jobs
-             */
+
+
+
             if (isset(wp_get_schedules()[$schedule['schedule']]) && isset($schedule['firstSchedule']) && ($schedule['scheduleId'] !== $scheduleBeingEdit)) {
                 $this->setNextSchedulingDate($timeToSchedule, $schedule);
             } else {
@@ -410,11 +410,11 @@ class BackupScheduler
                 $this->setUpcomingDateTime($timeToSchedule, $schedule['time'], $dayOfWeek, $schedule['schedule']);
             }
 
-            /** @see BackupServiceProvider::enqueueAjaxListeners */
+ 
             $result = wp_schedule_event($timeToSchedule->format('U'), $schedule['schedule'], Cron::ACTION_CREATE_CRON_BACKUP, [$schedule]);
 
-            // Could not register Cron event.
-            // Log errors but keep trying for the other cron events or all of them will be lost
+ 
+ 
             if ($result === false || $result instanceof \WP_Error) {
                 if ($result instanceof \WP_Error) {
                     $details = $result->get_error_message();
@@ -437,14 +437,14 @@ class BackupScheduler
         return true;
     }
 
-    /**
-     * Re-create scheduled backup cron events only when schedules exist.
-     *
-     * Activation calls this to avoid touching the cron option on installs that do
-     * not have any scheduled backups yet.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function reCreateCronIfSchedulesExist(): bool
     {
         if (empty($this->getSchedules())) {
@@ -454,25 +454,25 @@ class BackupScheduler
         return $this->reCreateCron();
     }
 
-    /**
-     * Removes all backup schedule events from WordPress Cron array.
-     *
-     * This is static so that it can be called from WP STAGING deactivation hook
-     * without having to bootstrap the entire plugin.
-     *
-     * This is a low-level function that can run when WP STAGING has not been
-     * bootstrapped, so there's no autoload nor Container available.
-     */
+
+
+
+
+
+
+
+
+
     public static function removeBackupSchedulesFromCron(): bool
     {
         $cron = get_option('cron');
 
-        // Bail: Unexpected value - should never happen.
+ 
         if (!is_array($cron)) {
             return false;
         }
 
-        // Remove any backup schedules from Cron
+ 
         foreach ($cron as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
@@ -483,9 +483,9 @@ class BackupScheduler
             }
         }
 
-        // After removing the backup schedule events,
-        // we might have timestamps with no events.
-        // So we remove any leftover timestamps that don't have any events.
+ 
+ 
+ 
         $cron = array_filter($cron, function ($timestamps) {
             return !empty($timestamps);
         });
@@ -495,13 +495,13 @@ class BackupScheduler
         return true;
     }
 
-    /**
-     * Whether the scheduled backups look healthy.
-     *
-     * Warns only on a real problem: a failed or overdue scheduled backup. Nothing else warns.
-     *
-     * @return bool True when no warning is shown.
-     */
+
+
+
+
+
+
+
     public function checkCronStatus(): bool
     {
         $this->cronWarningType          = '';
@@ -516,11 +516,11 @@ class BackupScheduler
         return $this->cronWarningType === '';
     }
 
-    /**
-     * Sets the warning type when the last scheduled backup failed or its cron event is overdue.
-     *
-     * @return void
-     */
+
+
+
+
+
     private function detectScheduledBackupWarning()
     {
         $lastFailure = get_option(self::OPTION_LAST_BACKUP_FAILURE);
@@ -535,11 +535,11 @@ class BackupScheduler
         }
     }
 
-    /**
-     * A manual backup must not hide a broken schedule, so only a scheduled success counts.
-     *
-     * @return int Timestamp of the last scheduled success, 0 if none or the last was manual.
-     */
+
+
+
+
+
     private function getLastScheduledBackupSuccessTime(): int
     {
         $lastBackupInfo = $this->getLastBackupInfo();
@@ -555,9 +555,9 @@ class BackupScheduler
         return (int)$lastBackupInfo['endTime'];
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getLastBackupInfo(): array
     {
         $lastBackupInfo = get_option(FinishBackupTask::OPTION_LAST_BACKUP, []);
@@ -565,56 +565,56 @@ class BackupScheduler
         return is_array($lastBackupInfo) ? $lastBackupInfo : [];
     }
 
-    /** @return int */
+ 
     public function getOverdueCronJobsCount(): int
     {
         return $this->numberOverdueCronjobs;
     }
 
-    /** @return bool */
+ 
     public function isWpCronDisabled(): bool
     {
         return defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
     }
 
-    /** @return bool */
+ 
     public function hasOverdueCronJobs(): bool
     {
         return $this->numberOverdueCronjobs > 4;
     }
 
-    /**
-     * @return string One of CRON_WARNING_TYPE_FAILURE, CRON_WARNING_TYPE_OVERDUE, or '' (no warning).
-     */
+
+
+
     public function getWarningType(): string
     {
         return $this->cronWarningType;
     }
 
-    /**
-     * @return string The error message from the last unresolved cron backup failure, or empty string.
-     */
+
+
+
     public function getLastBackupFailureMessage(): string
     {
         return $this->lastBackupFailureMessage;
     }
 
-    /**
-     * @return array An array where the first item is the timestamp, and the second is the backup callback.
-     * @throws \Exception When there is no backup scheduled or one could not be found.
-     */
+
+
+
+
     public function getNextBackupSchedule(): array
     {
         $cron = get_option('cron');
 
-        // Bail: Unexpected value - should never happen.
+ 
         if (!is_array($cron)) {
             throw new \UnexpectedValueException();
         }
 
         ksort($cron, SORT_NUMERIC);
 
-        // Remove any backup schedules from Cron
+ 
         foreach ($cron as $timestamp => &$events) {
             if (is_array($events)) {
                 foreach ($events as $callback => &$args) {
@@ -625,19 +625,19 @@ class BackupScheduler
             }
         }
 
-        // No results found
+ 
         throw new \OutOfBoundsException();
     }
 
-    /**
-     * Set date today or tomorrow for given DateTime object according to time
-     *
-     * @param DateTime $datetime
-     * @param string|array $time
-     * @param int|null $dayOfWeek Day of week (1-7, Monday-Sunday, ISO 8601) for weekly schedules
-     * @param string|null $scheduleRecurrence The schedule recurrence type
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     protected function setUpcomingDateTime(DateTime &$datetime, $time, $dayOfWeek = null, $scheduleRecurrence = null)
     {
         if (is_array($time)) {
@@ -646,18 +646,18 @@ class BackupScheduler
             $hourAndMinute = explode(':', $time);
         }
 
-        // For weekly schedules with a specific day of week
+ 
         $isWeeklySchedule = $scheduleRecurrence === Cron::WEEKLY ||
                            $scheduleRecurrence === Cron::EVERY_TWO_WEEKS ||
                            strpos($scheduleRecurrence, Cron::WEEKLY . '_') === 0;
 
         if ($dayOfWeek !== null && $isWeeklySchedule) {
-            // Use ISO 8601 day numbers: 1 (Monday) through 7 (Sunday)
-            // PHP's date('N') returns the same format
+ 
+ 
             $currentDayOfWeek = (int)$datetime->format('N');
             $targetDayOfWeek  = (int)$dayOfWeek;
 
-            // Convert time to comparable integer HHMM
+ 
             $targetTimeInt    = (int) sprintf('%02d%02d', $hourAndMinute[0], $hourAndMinute[1]);
             $currentTimeInt   = (int) $datetime->format('Hi');
             $daysUntilTarget  = $targetDayOfWeek - $currentDayOfWeek;
@@ -666,17 +666,17 @@ class BackupScheduler
                 $daysUntilTarget += 7;
             }
 
-            // If same day and target time already passed then schedule next week
+ 
             if ($daysUntilTarget === 0 && $targetTimeInt <= $currentTimeInt) {
                 $daysUntilTarget = 7;
             }
 
-            // Apply date shift
+ 
             if ($daysUntilTarget > 0) {
                 $datetime->add(new \DateInterval("P{$daysUntilTarget}D"));
             }
         } else {
-            // The event should be scheduled later today or tomorrow? Compares "Hi (Hourminute)" timestamps to figure out.
+ 
             if ((int)sprintf('%s%s', $hourAndMinute[0], $hourAndMinute[1]) < (int)$datetime->format('Hi')) {
                 $datetime->add(new \DateInterval('P1D'));
             }
@@ -685,13 +685,13 @@ class BackupScheduler
         $datetime->setTime($hourAndMinute[0], $hourAndMinute[1]);
     }
 
-    /**
-     * Set the next scheduling date for the schedule
-     *
-     * @param DateTime $datetime
-     * @param array $schedule
-     * @return void
-     */
+
+
+
+
+
+
+
     protected function setNextSchedulingDate(DateTime &$datetime, array $schedule)
     {
         $next = $schedule['firstSchedule'];
@@ -710,15 +710,15 @@ class BackupScheduler
         $datetime->setTimestamp($next);
     }
 
-    /**
-     * Send an error report email
-     * A Generic title will be used if no title is provided
-     * Internally uses sendEmailReport()
-     *
-     * @param string $message
-     * @param string $title
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
     public function sendErrorReport(string $message, string $title = ''): bool
     {
         if (get_option(self::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) !== 'true') {
@@ -743,15 +743,15 @@ class BackupScheduler
         return true;
     }
 
-    /**
-     * Send a warning report email
-     * A Generic title will be used if no title is provided
-     * Internally uses sendEmailReport()
-     *
-     * @param string $message
-     * @param string $title
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
     public function sendWarningReport(string $message, string $title = ''): bool
     {
         if (get_option(self::OPTION_BACKUP_SCHEDULE_WARNING_REPORT) !== 'true') {
@@ -771,15 +771,15 @@ class BackupScheduler
         return true;
     }
 
-    /**
-     * Send a general report email
-     * A Generic title will be used if no title is provided
-     * Internally uses sendEmailReport()
-     *
-     * @param string $message
-     * @param string $title
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
     public function sendGeneralReport(string $message, string $title = ''): bool
     {
         if (get_option(self::OPTION_BACKUP_SCHEDULE_GENERAL_REPORT) !== 'true') {
@@ -799,14 +799,14 @@ class BackupScheduler
         return true;
     }
 
-    /**
-     * Send a report email
-     * A Generic title will be used if no title is provided
-     *
-     * @param string $message
-     * @param string $title
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function sendEmailReport(string $message, string $title = '', string $reportType = self::REPORT_TYPE_ERROR): bool
     {
         $optionName = $this->getReportOptionName($reportType);
@@ -820,7 +820,7 @@ class BackupScheduler
             return false;
         }
 
-        // Only send the report mail once every 5 minutes
+ 
         $transientName = $this->getReportTransientName($reportType);
         if (get_transient($transientName) !== false) {
             return false;
@@ -834,7 +834,7 @@ class BackupScheduler
             $title = $this->getDefaultReportTitle($reportType);
         }
 
-        // Set the transient to prevent sending the error report mail again for 5 minutes
+ 
         $transientName = $this->getReportTransientName($reportType);
         set_transient($transientName, true, 5 * 60);
 
@@ -845,14 +845,14 @@ class BackupScheduler
         return $this->notifications->sendEmail($reportEmail, $title, $message);
     }
 
-    /**
-     * Send a report slack
-     * A Generic title will be used if no title is provided
-     *
-     * @param string $message
-     * @param string $title
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function sendSlackReport(string $message, string $title = ''): bool
     {
         if (!WPStaging::isPro()) {
@@ -868,7 +868,7 @@ class BackupScheduler
             return false;
         }
 
-        // Only send the error report mail once every 5 minutes
+ 
         if (get_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT) !== false) {
             return false;
         }
@@ -881,17 +881,17 @@ class BackupScheduler
             $title = esc_html__('WP Staging - Backup Report', 'wp-staging');
         }
 
-        // Set the transient to prevent sending the error report mail again for 5 minutes
+ 
         set_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT, true, 5 * 60);
         return $this->notifications->sendSlack($webhook, $title, $message);
     }
 
-    /**
-     * Get the option name for a specific report type
-     *
-     * @param string $reportType
-     * @return string
-     */
+
+
+
+
+
+
     private function getReportOptionName(string $reportType): string
     {
         switch ($reportType) {
@@ -904,12 +904,12 @@ class BackupScheduler
         }
     }
 
-    /**
-     * Get the transient name for a specific report type
-     *
-     * @param string $reportType
-     * @return string
-     */
+
+
+
+
+
+
     private function getReportTransientName(string $reportType): string
     {
         switch ($reportType) {
@@ -923,12 +923,12 @@ class BackupScheduler
         }
     }
 
-    /**
-     * Get the default title for a specific report type
-     *
-     * @param string $reportType
-     * @return string
-     */
+
+
+
+
+
+
     private function getDefaultReportTitle(string $reportType): string
     {
         switch ($reportType) {
@@ -941,9 +941,9 @@ class BackupScheduler
         }
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isSchedulesEmpty(): bool
     {
         $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
@@ -954,9 +954,9 @@ class BackupScheduler
         return false;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getCronJobs(): array
     {
         $cron = get_option('cron');
@@ -976,9 +976,9 @@ class BackupScheduler
         return $cronJobs;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function countOverdueCronjobs()
     {
         $cronJobs = $this->getCronJobs();
@@ -990,14 +990,14 @@ class BackupScheduler
         }
     }
 
-    /**
-     * Listener for the background-job failure hook.
-     * Persists the failure so the cron-warning banner can surface it.
-     * Only acts when the failing job was a scheduled backup.
-     *
-     * @param array $args Keys: jobDataDto, errorMessage
-     * @return void
-     */
+
+
+
+
+
+
+
+
     public function onBackgroundJobFailure(array $args)
     {
         $jobDataDto = isset($args['jobDataDto']) ? $args['jobDataDto'] : null;
@@ -1013,10 +1013,10 @@ class BackupScheduler
         $this->saveBackupFailure($errorMessage);
     }
 
-    /**
-     * @param string $message
-     * @return void
-     */
+
+
+
+
     private function saveBackupFailure(string $message)
     {
         update_option(self::OPTION_LAST_BACKUP_FAILURE, [
@@ -1025,13 +1025,13 @@ class BackupScheduler
         ], false);
     }
 
-    /**
-     * Schedules exist at this point, so a backup cron event that is missing from the queue —
-     * or past due beyond the grace period — means scheduled backups are not executing.
-     * Unlike countOverdueCronjobs(), this checks only our own backup event.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
     private function hasOverdueOrMissingBackupCronJob(): bool
     {
         $eventExists = false;

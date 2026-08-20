@@ -13,44 +13,44 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class FinishStagingSiteDeleteTask extends StagingTask
 {
-    /** @var StagingSiteDeleteDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var Sites */
+ 
     private $sites;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Sites $sites
-     */
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->sites = $sites;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_finish_delete';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Finish Staging Site Delete';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->getJobTransientCache()->completeJob();

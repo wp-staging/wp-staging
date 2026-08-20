@@ -7,9 +7,9 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 class ResetIndexPhp extends FileCloningService
 {
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     protected function internalExecute()
     {
         if (!$this->isSubDir()) {
@@ -20,10 +20,10 @@ class ResetIndexPhp extends FileCloningService
         $this->log("WP installation is in a subdirectory");
         $content = $this->readFile('index.php');
 
-        /*
-         * Before WordPress 5.4: require( dirname( __FILE__ ) . '/wp-blog-header.php' );
-         * Since WordPress 5.4:  require __DIR__ . '/wp-blog-header.php';
-         */
+
+
+
+
         $pattern = "/require(.*)wp-blog-header.php(.*)/";
         if (preg_match($pattern, $content, $matches)) {
             $replace = "require __DIR__ . '/wp-blog-header.php'; // " . $matches[0] . " Changed by WP-Staging";
