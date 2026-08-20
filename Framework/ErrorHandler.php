@@ -7,12 +7,12 @@ use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Logger\SseEventCache;
 
-/**
- * @package WPStaging\Framework
- */
+
+
+
 class ErrorHandler
 {
-    /** @var string */
+ 
     const ERROR_FILE_EXTENSION = '.wpstgerror';
 
     public function registerShutdownHandler()
@@ -30,20 +30,20 @@ class ErrorHandler
             return;
         }
 
-        /**
-         * Requests for which to check for memory exhaustion
-         * Using hardcoded values below to avoid loading all classes
-         * @var array $wpStagingRequests
-         */
+
+
+
+
+
         $wpStagingRequests = [
-            'wpstg_backup', // @see WPStaging\Backup\Ajax\Backup::WPSTG_REQUEST
-            'wpstg_restore', // @see WPStaging\Backup\Ajax\Restore::WPSTG_REQUEST
-            'wpstg_cloning', // @see WPStaging\Backend\Modules\Jobs\Cloning::WPSTG_REQUEST,
-            'wpstg_remote_sync_pull', // @see WPStaging\Pro\RemoteSync\BackgroundProcessing\PreparePull::WPSTG_REQUEST
-            'wpstg_staging_create', // @see WPStaging\Staging\Ajax\Create::WPSTG_REQUEST
-            'wpstg_staging_update', // @see WPStaging\Staging\Ajax\Update::WPSTG_REQUEST
-            'wpstg_staging_reset', // @see WPStaging\Staging\Ajax\Reset::WPSTG_REQUEST
-            'wpstg_staging_push', // @see WPStaging\Pro\Push\Ajax\Push::WPSTG_REQUEST
+            'wpstg_backup', 
+            'wpstg_restore', 
+            'wpstg_cloning', 
+            'wpstg_remote_sync_pull', 
+            'wpstg_staging_create', 
+            'wpstg_staging_update', 
+            'wpstg_staging_reset', 
+            'wpstg_staging_push', 
         ];
 
         $wpStagingRequest = WPSTG_REQUEST;
@@ -62,13 +62,13 @@ class ErrorHandler
 
         preg_match('/Allowed memory size of (\d+) bytes exhausted \(tried to allocate (\d+) bytes\)/', $error['message'], $data);
         if (!is_array($data) || count($data) !== 3) {
-            $data['time'] = date('Y/m/d H:i:s', time()); // @see WPStaging\Core\Utils\Logger::LOG_DATETIME_FORMAT, use hardcoded value to avoid loading class
+            $data['time'] = date('Y/m/d H:i:s', time()); 
             $this->logSseEvent($data, false);
             $this->releaseProcessLock();
             return;
         }
 
-        // Temporary file to store the error message
+ 
         $errorTmpFile = WPSTG_UPLOADS_DIR . $wpStagingRequest . self::ERROR_FILE_EXTENSION;
 
         $fileHandler = fopen($errorTmpFile, 'w');
@@ -80,7 +80,7 @@ class ErrorHandler
             'wpMemoryLimit'       => defined('WP_MEMORY_LIMIT') ? WP_MEMORY_LIMIT : '',
             'allowedMemoryLimit'  => $data[1],
             'exhaustedMemorySize' => $data[2],
-            'time'                => date('Y/m/d H:i:s', time()), // @see WPStaging\Core\Utils\Logger::LOG_DATETIME_FORMAT, use hardcoded value to avoid loading class
+            'time'                => date('Y/m/d H:i:s', time()), 
         ];
 
         if (is_resource($fileHandler)) {
@@ -92,27 +92,27 @@ class ErrorHandler
         $this->releaseProcessLock();
     }
 
-    /**
-     * Release the process lock when a fatal error terminates PHP before the job can clean up.
-     * The kernel would drop the lock anyway once this request's handles are closed, but releasing
-     * it here also clears the record the fallback path reads on filesystems that cannot lock.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
     private function releaseProcessLock()
     {
         try {
             WPStaging::make(ProcessLock::class)->unlockProcess();
         } catch (\Throwable $e) {
-            // No-op: shutdown handler must not throw.
+ 
         }
     }
 
     private function logSseEvent(array $data, bool $isMemoryExhaust = true)
     {
-        /**
-         * @var JobTransientCache $jobTransientCache
-         */
+
+
+
         $jobTransientCache = WPStaging::make(JobTransientCache::class);
 
         $jobId = $jobTransientCache->getJobId();
@@ -147,9 +147,9 @@ class ErrorHandler
         $data['jobId']   = $jobId;
         $data['message'] = $message;
 
-        /**
-         * @var SseEventCache $sseEventCache
-         */
+
+
+
         $sseEventCache = WPStaging::make(SseEventCache::class);
         $sseEventCache->setJobId($jobId);
         $sseEventCache->load();

@@ -4,14 +4,14 @@ namespace WPStaging\Framework\Job\Dto;
 
 class JobCancelDataDto extends JobDataDto
 {
-    /**
-     * @var string
-     */
+
+
+
     private $type = '';
 
-    /**
-     * @var string
-     */
+
+
+
     private $jobIdBeingCancelled = '';
 
     public function getType(): string

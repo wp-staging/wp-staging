@@ -9,19 +9,19 @@ use WPStaging\Backup\Utils\BackupPathResolver;
 
 class BackupDeleter
 {
-    /** @var BackupsFinder */
+ 
     protected $backupsFinder;
 
-    /** @var BackupMetadata */
+ 
     protected $backupMetadata;
 
-    /** @var BackupPathResolver */
+ 
     protected $backupPathResolver;
 
-    /** @var array */
+ 
     protected $errors = [];
 
-    /** @var bool */
+ 
     protected $deletingAutomatedDatabaseOnlyBackup = false;
 
     public function __construct(BackupsFinder $backupsFinder, BackupMetadata $backupMetadata, BackupPathResolver $backupPathResolver)
@@ -31,7 +31,7 @@ class BackupDeleter
         $this->backupPathResolver = $backupPathResolver;
     }
 
-    /** @return array */
+ 
     public function getErrors()
     {
         return $this->errors;
@@ -43,10 +43,10 @@ class BackupDeleter
         $this->deletingAutomatedDatabaseOnlyBackup = false;
     }
 
-    /**
-     * Used by unit test tests/wpunit/Backup/BackupSchedulerTest.php
-     * @return void
-     */
+
+
+
+
     public function deleteAllBackups()
     {
         $this->clearErrors();
@@ -78,10 +78,10 @@ class BackupDeleter
         }
     }
 
-    /**
-     * Delete all automated uploads-only backups
-     * @return void
-     */
+
+
+
+
     public function deleteAllAutomatedUploadsOnlyBackups()
     {
         $this->clearErrors();
@@ -103,10 +103,10 @@ class BackupDeleter
         }
     }
 
-    /**
-     * Delete all automated push backups (database + uploads only)
-     * @return void
-     */
+
+
+
+
     public function deleteAllAutomatedPushBackups()
     {
         $this->clearErrors();
@@ -128,10 +128,10 @@ class BackupDeleter
         }
     }
 
-    /**
-     * @param SplFileInfo $backup
-     * @param BackupMetadata $metadata
-     */
+
+
+
+
     public function deleteBackup($backup, $metadata = null)
     {
         $additionalLog = '';

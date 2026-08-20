@@ -1,7 +1,7 @@
 <?php
 
-// TODO PHP7.x declare(strict_types=1);
-// TODO PHP7.x type-hints & return types
+ 
+ 
 
 namespace WPStaging\Framework\Job\Dto;
 
@@ -16,9 +16,9 @@ abstract class AbstractDto implements JsonSerializable, Serializable, ArrayableI
     use ArrayableTrait;
     use HydrateTrait;
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function serialize()
     {
         return serialize($this->toArray());
@@ -29,9 +29,9 @@ abstract class AbstractDto implements JsonSerializable, Serializable, ArrayableI
         return $this->toArray();
     }
 
-    /**
-     * @inheritDoc
-     */
+
+
+
     public function unserialize($serialized)
     {
         $this->hydrate(unserialize($serialized));
@@ -42,10 +42,10 @@ abstract class AbstractDto implements JsonSerializable, Serializable, ArrayableI
         return $this->hydrate($serialized);
     }
 
-    /**
-     * @inheritDoc
-     *
-     */
+
+
+
+
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {

@@ -25,14 +25,14 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();
 
-/** @var BackupScheduler */
+ 
 $backupScheduler = WPStaging::make(BackupScheduler::class);
 $cronStatus      = $backupScheduler->checkCronStatus();
 
-// Render cron warning notice using modern callout design
+ 
 require WPSTG_VIEWS_DIR . 'notices/cron-warning-notice.php';
 
-// Will show a locked message if the process is locked
+ 
 require WPSTG_VIEWS_DIR . 'job/locked.php';
 
 $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';

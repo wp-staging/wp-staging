@@ -13,9 +13,9 @@ use WPStaging\Staging\Jobs\StagingJobsProvider;
 
 class Status extends AbstractTemplateComponent
 {
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxProcess()
     {
         if (!$this->canRenderAjax()) {
@@ -28,9 +28,9 @@ class Status extends AbstractTemplateComponent
                 'status' => "JOB_CANCEL",
             ]);
 
-            // die is already called by wp_send_json
-            // but we are still calling return here
-            // to ensure no further code is executed
+ 
+ 
+ 
             return;
         }
 
@@ -39,29 +39,29 @@ class Status extends AbstractTemplateComponent
         wp_send_json($job->getJobDataDto());
     }
 
-    /**
-     * Override in PRO
-     *
-     * @return AbstractJob
-     */
+
+
+
+
+
     protected function getPushJob(): AbstractJob
     {
         throw new \Exception('Push is available only in PRO version!');
     }
 
-    /**
-     * Override in PRO
-     *
-     * @return AbstractJob
-     */
+
+
+
+
+
     protected function getRemoteUploadJob(): AbstractJob
     {
         throw new \Exception('Remote Upload is available only in PRO version!');
     }
 
-    /**
-     * @return AbstractJob
-     */
+
+
+
     private function getJobInstance(): AbstractJob
     {
         $jobType = trim($this->getJobType());

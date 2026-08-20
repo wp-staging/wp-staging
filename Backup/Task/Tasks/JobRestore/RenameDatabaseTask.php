@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
+use RuntimeException;
 use stdClass;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
@@ -29,48 +30,51 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
+
+
+
 class RenameDatabaseTask extends RestoreTask
 {
     use SerializeTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const HOOK_KEEP_OPTIONS = 'wpstg.backup.restore.keep_options';
 
-    /** @var string */
+ 
     const FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS = 'wpstg.backup.import.database.postDatabaseRestoreActions';
 
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_EXCLUDE_TABLES_DURING_RESTORE = 'wpstg.backup.restore.exclude.tables';
 
-    /** @var TableService */
+ 
     private $tableService;
 
-    /** @var TablesRenamer */
+ 
     private $tablesRenamer;
 
-    /** @var TableViewsRenamer */
+ 
     private $tableViewsRenamer;
 
-    /** @var AccessToken */
+ 
     private $accessToken;
 
-    /** @var SiteInfo */
+ 
     private $siteInfo;
 
-    /** @var array An structured array of options to keep */
+ 
     protected $optionsToKeep = [];
 
-    /** @var array Options to remove */
+ 
     protected $optionsToRemove = [];
 
-    /** @var ViewDDLOrder */
+ 
     protected $viewDDLOrder;
 
-    /** @var RenameDatabaseTaskDto */
+ 
     protected $currentTaskDto;
 
     public function __construct(SiteInfo $siteinfo, TablesRenamer $tablesRenamer, ViewDDLOrder $viewDDLOrder, TableService $tableService, TableViewsRenamer $tableViewsRenamer, AccessToken $accessToken, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -94,9 +98,9 @@ class RenameDatabaseTask extends RestoreTask
         return 'Renaming Database Tables';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute(): TaskResponseDto
     {
         if ($this->jobDataDto->getIsDatabaseRestoreSkipped()) {
@@ -131,15 +135,15 @@ class RenameDatabaseTask extends RestoreTask
         return $this->generateResponse();
     }
 
-    /** @return string */
+ 
     protected function getCurrentTaskType(): string
     {
         return RenameDatabaseTaskDto::class;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupTableRenamer()
     {
         $this->tablesRenamer->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
@@ -149,19 +153,26 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setShortNamedTablesToDrop($this->jobDataDto->getShortNamesTablesToDrop());
         $this->tablesRenamer->setRenameViews(true);
         $this->tablesRenamer->setThresholdCallable([$this, 'isMaxExecutionThreshold']);
-        // Tables to not restore in the site
+ 
         $excludedTables = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME];
         $excludedTables = array_merge($excludedTables, Hooks::applyFilters(self::FILTER_EXCLUDE_TABLES_DURING_RESTORE, []));
         $this->tablesRenamer->setExcludedTables($excludedTables);
 
         $tablesToPreserve = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME];
+        $this->tablesRenamer->setDestinationSubsiteBlogIds([]);
 
         if ($this->isSubsiteRestore()) {
-            $this->tablesRenamer->setProductionTableBasePrefix($this->tableService->getDatabase()->getBasePrefix());
+            $database   = $this->tableService->getDatabase();
+            $basePrefix = $database->getBasePrefix();
+            $this->tablesRenamer->setProductionTableBasePrefix($basePrefix);
+            if (strcasecmp($database->getPrefix(), $basePrefix) === 0) {
+                $this->tablesRenamer->setDestinationSubsiteBlogIds($this->getExistingDestinationSubsiteBlogIds());
+            }
+
             $tablesToPreserve = array_merge($tablesToPreserve, [
                 'blogs',
                 'blogmeta',
-                'blog_versions', // old multisite table
+                'blog_versions', 
                 'registration_log',
                 'signups',
                 'site',
@@ -172,14 +183,14 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setTablesToPreserve($tablesToPreserve);
     }
 
-    /**
-     * This is an adaptation of wp_load_alloptions(), the difference is that it
-     * fetches only the "option_name" from the database, not the values, to save memory.
-     *
-     * @return array An array of option names that are autoloaded.
-     * @see wp_load_alloptions()
-     *
-     */
+
+
+
+
+
+
+
+
     protected function getAutoloadedOptions()
     {
         global $wpdb;
@@ -195,36 +206,36 @@ class RenameDatabaseTask extends RestoreTask
         return $allOptions;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function keepOptions()
     {
         $allOptions = $this->getAutoloadedOptions();
 
-        // Backups do not include staging sites, so we need to keep the original ones after restoring.
-        // For version 2.x to 4.0.2
+ 
+ 
         $this->optionsToKeep[] = [
             'name'     => 'wpstg_existing_clones_beta',
             'value'    => get_option('wpstg_existing_clones_beta'),
             'autoload' => in_array('wpstg_existing_clones_beta', $allOptions),
         ];
 
-        // For version > 4.0.3
+ 
         $this->optionsToKeep[] = [
             'name'     => Sites::STAGING_SITES_OPTION,
             'value'    => get_option(Sites::STAGING_SITES_OPTION),
             'autoload' => in_array(Sites::STAGING_SITES_OPTION, $allOptions),
         ];
 
-        // Keep the original WP STAGING settings intact upon restoring.
+ 
         $this->optionsToKeep[] = [
             'name'     => 'wpstg_settings',
             'value'    => get_option('wpstg_settings'),
             'autoload' => in_array('wpstg_settings', $allOptions),
         ];
 
-        // Keep the current license data to avoid replacing or removing it from imported backups.
+ 
         $this->optionsToKeep[] = [
             'name'     => 'wpstg_license_key',
             'value'    => get_option('wpstg_license_key'),
@@ -237,28 +248,28 @@ class RenameDatabaseTask extends RestoreTask
             'autoload' => in_array('wpstg_license_status', $allOptions),
         ];
 
-        // If this is a staging site, keep the staging site status after restore.
+ 
         $this->optionsToKeep[] = [
             'name'     => 'wpstg_is_staging_site',
             'value'    => get_option('wpstg_is_staging_site'),
             'autoload' => in_array('wpstg_is_staging_site', $allOptions),
         ];
 
-        // Preserve backup schedules
+ 
         $this->optionsToKeep[] = [
             'name'     => BackupScheduler::OPTION_BACKUP_SCHEDULES,
             'value'    => get_option(BackupScheduler::OPTION_BACKUP_SCHEDULES),
             'autoload' => in_array(BackupScheduler::OPTION_BACKUP_SCHEDULES, $allOptions),
         ];
 
-        // Preserve existing blog_public value.
+ 
         $this->optionsToKeep[] = [
             'name'     => 'blog_public',
             'value'    => get_option('blog_public'),
             'autoload' => in_array('blog_public', $allOptions),
         ];
 
-        // Last Backup option
+ 
         $this->optionsToKeep[] = [
             'name'     => FinishBackupTask::OPTION_LAST_BACKUP,
             'value'    => get_option(FinishBackupTask::OPTION_LAST_BACKUP),
@@ -284,9 +295,9 @@ class RenameDatabaseTask extends RestoreTask
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupRemoveOptions()
     {
         if (!$this->siteInfo->isStagingSite()) {
@@ -294,17 +305,17 @@ class RenameDatabaseTask extends RestoreTask
         }
     }
 
-    /**
-     * @return void
-     * @throws Exception
-     */
+
+
+
+
     protected function preDatabaseRenameActions()
     {
         $tmpPrefix = $this->jobDataDto->getTmpDatabasePrefix();
         $this->setupTableRenamer();
         $this->setCurrentTaskDto($this->tablesRenamer->setupRenamer());
 
-        // Store some information to re-add after we restore the database.
+ 
         $accessToken              = $this->accessToken->getToken();
         $isNetworkActivatedPlugin = is_plugin_active_for_network(WPSTG_PLUGIN_FILE);
 
@@ -316,7 +327,7 @@ class RenameDatabaseTask extends RestoreTask
 
         if ($totalTablesToRename === 0) {
             $this->logger->critical('Could not find any database table to restore. Backup seems to be corrupt. Contact support@wp-staging.com.');
-            throw new Exception("Could not find any databse table to restore. Backup seems to be corrupt.");
+            throw new Exception("Could not find any database table to restore. Backup seems to be corrupt.");
         }
 
         $this->jobDataDto->setTotalTablesToRename($totalTablesToRename);
@@ -358,17 +369,17 @@ class RenameDatabaseTask extends RestoreTask
         $this->logger->info(sprintf('Found %d tables to restore.', $this->jobDataDto->getTotalTablesToRename()));
     }
 
-    /**
-     * @return bool
-     * @throws Exception
-     */
+
+
+
+
     protected function performDatabaseRename(): bool
     {
         $this->setupTableRenamer();
         $this->tablesRenamer->setTaskDto($this->currentTaskDto);
 
-        // We will try restoring non conflicting tables first,
-        // If there are no non-conflicting tables renamed, we will stop the restore process.
+ 
+ 
         $result = $this->tablesRenamer->renameNonConflictingTables();
         if ($result === false) {
             if ($this->tablesRenamer->getRenamedTables() === 0) {
@@ -382,7 +393,7 @@ class RenameDatabaseTask extends RestoreTask
             return false;
         }
 
-        // This condition is only fulfilled if all existing non-conflicting tables have been renamed in this current request and no other non-conflicting tables needs to be renamed.
+ 
         if ($this->tablesRenamer->getIsNonConflictingTablesRenamingTaskExecuted()) {
             $this->currentTaskDto->nonConflictingTablesRenamed = $this->tablesRenamer->getNonConflictingTablesRenamed();
             $this->logger->info(sprintf('Restored %d/%d tables.', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
@@ -412,16 +423,16 @@ class RenameDatabaseTask extends RestoreTask
         return true;
     }
 
-    /**
-     * Executes actions after a database has been restored.
-     * @return void
-     */
+
+
+
+
     protected function postDatabaseRenameActions()
     {
-        /**
-         * @var \wpdb $wpdb
-         * @var \WP_Object_Cache $wp_object_cache
-         */
+
+
+
+
         global $wpdb, $wp_object_cache;
 
         $databaseData = $this->jobDataDto->getDatabaseDataToPreserve();
@@ -431,12 +442,12 @@ class RenameDatabaseTask extends RestoreTask
         $originalAccessToken      = $databaseData['accessToken'];
         $isNetworkActivatedPlugin = $databaseData['isNetworkActivatedPlugin'];
 
-        // Otherwise wp.com might throw a private site error, stopping restore to continue further.
+ 
         if (!$this->siteInfo->isHostedOnWordPressCom()) {
-            // Reset cache
+ 
             wp_cache_init();
 
-            // Make sure WordPress does not try to re-use any values fetched from the database thus far.
+ 
             $wpdb->flush();
             $wp_object_cache->flush();
             wp_suspend_cache_addition(true);
@@ -463,10 +474,10 @@ class RenameDatabaseTask extends RestoreTask
         update_option('wpstg.restore.justRestored', 'yes');
         update_option('wpstg.restore.justRestored.metadata', wp_json_encode($this->jobDataDto->getBackupMetadata()));
 
-        // Re-set the Access Token as it was before restoring the database, so the requests remain authenticated
+ 
         $this->accessToken->setToken($originalAccessToken);
 
-        // Force direct activation of this plugin in the database by bypassing activate_plugin at a low-level.
+ 
         $activeWpstgPlugin = plugin_basename(trim(WPSTG_PLUGIN_FILE));
 
         $this->tablesRenamer->resetErrors();
@@ -474,7 +485,7 @@ class RenameDatabaseTask extends RestoreTask
         if ($isNetworkActivatedPlugin && !$this->isSubsiteRestore()) {
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $activeWpstgPlugin);
         } elseif (is_multisite() && !$this->isSubsiteRestore()) {
-            // Don't activate any wp staging plugin if it is not network activated on current site
+ 
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $wpstgPluginToActivate = '');
         }
 
@@ -485,24 +496,24 @@ class RenameDatabaseTask extends RestoreTask
             }
         }
 
-        /**
-         * Let flush the object cache again after updating the active plugins!
-         * Otherwise some object-cache plugins will only keep wp-staging(s) plugins active
-         * Issue: https://github.com/wp-staging/wp-staging-pro/issues/4283
-         * Skip on wp.com: Otherwise wp.com might throw a private site error, stopping restore to continue further.
-         */
+
+
+
+
+
+
         if (!$this->siteInfo->isHostedOnWordPressCom()) {
             $wp_object_cache->flush();
         }
 
-        // Upgrade database if need be
+ 
         if (file_exists(trailingslashit(ABSPATH) . 'wp-admin/includes/upgrade.php')) {
             global $wpdb, $wp_db_version, $wp_current_db_version;
             require_once trailingslashit(ABSPATH) . 'wp-admin/includes/upgrade.php';
 
             $wp_current_db_version = (int)__get_option('db_version');
             if ($wp_db_version !== $wp_current_db_version) {
-                // WP upgrade isn't too fussy about generating MySQL warnings such as "Duplicate key name" during an upgrade so suppress.
+ 
                 $wpdb->suppress_errors();
 
                 wp_upgrade();
@@ -518,19 +529,19 @@ class RenameDatabaseTask extends RestoreTask
         Hooks::doAction(self::FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS);
     }
 
-    /**
-     * @param mixed $value
-     * @param bool $rejected
-     * @return mixed
-     */
+
+
+
+
+
     private function decodePreservedOptionValue($value, &$rejected = false)
     {
         return $this->safeMaybeUnserialize($value, [stdClass::class], $rejected);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function renameViewReferences()
     {
         $views = $this->tablesRenamer->getViewsToBeRenamed();
@@ -545,12 +556,12 @@ class RenameDatabaseTask extends RestoreTask
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupTask()
     {
-        // We don't need to check for capabilities if this is a sync request for access token
+ 
         $this->accessToken->setIsCheckCapabilities(!$this->jobDataDto->getIsSyncRequest());
         if ($this->stepsDto->getTotal() > 0) {
             return;
@@ -559,9 +570,9 @@ class RenameDatabaseTask extends RestoreTask
         $this->stepsDto->setTotal(3);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isSubsiteRestore(): bool
     {
         if (!is_multisite()) {
@@ -571,9 +582,32 @@ class RenameDatabaseTask extends RestoreTask
         return $this->jobDataDto->getBackupMetadata()->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE;
     }
 
-    /**
-     * @return void
-     */
+
+
+
+    protected function getExistingDestinationSubsiteBlogIds(): array
+    {
+        $database   = $this->tableService->getDatabase();
+        $basePrefix = $database->getBasePrefix();
+        $wpdb       = $database->getWpdba()->getClient();
+        $rows       = $wpdb->get_results("SELECT blog_id FROM `{$basePrefix}blogs` WHERE blog_id > 1", ARRAY_A);
+        if (!is_array($rows) || $wpdb->last_error !== '') {
+            throw new RuntimeException('Unable to read destination subsite IDs before renaming database tables.');
+        }
+
+        $blogIds = [];
+        foreach ($rows as $row) {
+            if (isset($row['blog_id'])) {
+                $blogIds[] = (int) $row['blog_id'];
+            }
+        }
+
+        return $blogIds;
+    }
+
+
+
+
     protected function preserveTransientOptions()
     {
         $transientToPreserve = [

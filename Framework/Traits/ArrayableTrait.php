@@ -1,32 +1,32 @@
 <?php
 
-// TODO PHP7.x; declare(strict_types=1);
+ 
 
 namespace WPStaging\Framework\Traits;
 
 trait ArrayableTrait
 {
-    /**
-     * @return array
-     * @noinspection PhpDocMissingThrowsInspection
-     */
+
+
+
+
     public function toArray()
     {
-        /** @noinspection PhpUnhandledExceptionInspection */
+ 
         $reflection = new \ReflectionClass($this);
         $props = $reflection->getProperties(
             \ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED | \ReflectionProperty::IS_PRIVATE
         );
 
         $data = [];
-        /** @var \ReflectionProperty $prop */
+ 
         foreach ($props as $prop) {
             $propName = $prop->getName();
             if ($propName === 'excludeHydrate') {
                 continue;
             }
 
-            // setAccessible is true by default and has no effect since PHP 8.1 and is deprecated since 8.5
+ 
             if (PHP_VERSION_ID < 80100) {
                 $prop->setAccessible(true);
             }

@@ -18,9 +18,9 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
 
 $showFileDestination = isset($showFileDestination) ? $showFileDestination : true;
 $hasRules = $scanner->isUpdateOrResetJob() && (!empty($stagingSiteDto->getExcludeSizeRules()) || !empty($stagingSiteDto->getExcludeGlobRules()));
-// The redesigned reset modal reuses the shared update-style selection chrome
-// (.wpstg-update-selection--files in update.scss restyles the tree and hides the
-// exclude-rules panel), so reset, update and create all render the same panel.
+ 
+ 
+ 
 $wrapperClass          = 'wpstg-selection-panel';
 $directoryListingClass = '';
 $directoryHeaderClass  = 'wpstg-selection-header';

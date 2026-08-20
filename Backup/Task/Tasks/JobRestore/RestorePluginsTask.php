@@ -9,24 +9,24 @@ use WPStaging\Framework\Facades\Hooks;
 
 class RestorePluginsTask extends FileRestoreTask
 {
-    /**
-     * Old filter, cannot be renamed to new pattern
-     * @var string
-     */
+
+
+
+
     const FILTER_REPLACE_EXISTING_PLUGINS = 'wpstg.backup.restore.replace_existing_plugins';
 
-    /**
-     * Old filter, cannot be renamed to new pattern
-     * @var string
-     */
+
+
+
+
     const FILTER_KEEP_EXISTING_PLUGINS = 'wpstg.backup.restore.keepExistingPlugins';
 
-    /** @var string */
+ 
     const FILTER_IMPORT_PLUGINS_DEST_DIR = 'wpstg.import.plugins.destDir';
 
-    /**
-     * @var string
-     */
+
+
+
     const SLUG_W3_TOTAL_CACHE = 'w3-total-cache';
 
     public static function getTaskName()
@@ -44,9 +44,9 @@ class RestorePluginsTask extends FileRestoreTask
         return $this->isBackupPartSkipped(PartIdentifier::PLUGIN_PART_IDENTIFIER);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getParts(): array
     {
         return $this->jobDataDto->getBackupMetadata()->getMultipartMetadata()->getPluginsParts();
@@ -57,7 +57,7 @@ class RestorePluginsTask extends FileRestoreTask
         try {
             $pluginsToRestore = $this->getPluginsToRestore();
         } catch (\Exception $e) {
-            // Folder does not exist. Likely there are no plugins to restore.
+ 
             $pluginsToRestore = [];
         }
 
@@ -72,13 +72,13 @@ class RestorePluginsTask extends FileRestoreTask
         }
 
         $defaultExcluded = [
-            $destDir . 'wp-staging' // Skip wp staging plugin, e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1.
+            $destDir . 'wp-staging' 
         ];
 
         foreach ($pluginsToRestore as $pluginSlug => $pluginPath) {
-            /**
-             * Scenario: Skip restoring a plugin whose destination is symlink and the site is hosted on WordPress.com
-             */
+
+
+
             if ($this->isSiteHostedOnWordPressCom && is_link("{$destDir}{$pluginSlug}")) {
                 continue;
             }
@@ -87,14 +87,14 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
-            /**
-             * Scenario: Restoring a plugin that already exists
-             * If subsite restore and no filter is used to override the behavior then preserve existing plugin
-             * Otherwise:
-             * 1. Backup old plugin
-             * 2. Restore new plugin
-             * 3. Delete backup
-             */
+
+
+
+
+
+
+
+
             if (array_key_exists($pluginSlug, $existingPlugins)) {
                 if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_PLUGINS, false)) {
                     continue;
@@ -106,23 +106,23 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
-            /**
-             * Scenario 2: Restoring a plugin that does not yet exist
-             */
+
+
+
             $this->enqueueMove($pluginsToRestore[$pluginSlug], "{$destDir}{$pluginSlug}");
         }
 
-        // Don't delete existing files if restore on subsite
+ 
         if ($this->isRestoreOnSubsite()) {
             return;
         }
 
-        // Don't delete existing files if filter is set to true
+ 
         if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_PLUGINS, false)) {
             return;
         }
 
-        // Remove plugins which are not in the backup
+ 
         foreach ($existingPlugins as $pluginSlug => $pluginPath) {
             if ($this->isExcludedFile($pluginPath, $defaultExcluded)) {
                 continue;
@@ -138,9 +138,9 @@ class RestorePluginsTask extends FileRestoreTask
         }
     }
 
-    /**
-     * @return array An array of paths of plugins to restore.
-     */
+
+
+
     private function getPluginsToRestore()
     {
         $tmpDir = $this->jobDataDto->getTmpDirectory() . PathIdentifier::IDENTIFIER_PLUGINS;
@@ -148,9 +148,9 @@ class RestorePluginsTask extends FileRestoreTask
         return $this->findPluginsInDir($tmpDir);
     }
 
-    /**
-     * @return array An array of paths of existing plugins.
-     */
+
+
+
     private function getExistingPlugins()
     {
         $destDir = $this->directory->getPluginsDirectory();
@@ -160,24 +160,24 @@ class RestorePluginsTask extends FileRestoreTask
         return $this->findPluginsInDir($destDir);
     }
 
-    /**
-     * @param string $path Folder to look for plugins, eg: '/var/www/wp-content/plugins'
-     *
-     * @example [
-     *              'foo' => '/var/www/wp-content/plugins/foo',
-     *              'foo.php' => '/var/www/wp-content/plugins/foo.php',
-     *          ]
-     *
-     * @return array An array of paths of plugins found in the root of given directory,
-     *               where the index is the name of the plugin, and the value it's path.
-     */
+
+
+
+
+
+
+
+
+
+
+
     private function findPluginsInDir($path)
     {
         $it = @new \DirectoryIterator($path);
 
         $plugins = [];
 
-        /** @var \DirectoryIterator $fileInfo */
+ 
         foreach ($it as $fileInfo) {
             if ($fileInfo->isDot()) {
                 continue;
@@ -193,7 +193,7 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
-            // wp-content/plugins/foo.php
+ 
             if ($fileInfo->isFile() && $fileInfo->getExtension() === 'php' && $fileInfo->getBasename() !== 'index.php') {
                 $plugins[$fileInfo->getBasename()] = $fileInfo->getPathname();
 
@@ -204,10 +204,10 @@ class RestorePluginsTask extends FileRestoreTask
         return $plugins;
     }
 
-    /**
-     * @param array $dropInFiles
-     * @return void
-     */
+
+
+
+
     private function mayBeDeleteDropInFiles(array $dropInFiles = PartIdentifier::DROP_IN_FILES)
     {
         $destinationDir = $this->directory->getWpContentDirectory();

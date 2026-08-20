@@ -10,7 +10,7 @@
 
 use WPStaging\Framework\Onboarding\OnboardingJourney;
 
-$size = empty($iconSize) ? 22 : (int)$iconSize;
+$size = (string)(empty($iconSize) ? 22 : (int)$iconSize);
 ?>
 <svg width="<?php echo esc_attr($size); ?>" height="<?php echo esc_attr($size); ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
     <?php if ($capability === OnboardingJourney::CAPABILITY_STAGING) : ?>

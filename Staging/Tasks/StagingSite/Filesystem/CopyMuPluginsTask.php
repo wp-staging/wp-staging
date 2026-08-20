@@ -27,7 +27,7 @@ class CopyMuPluginsTask extends FileCopierTask
         return 'mu-plugins';
     }
 
-    /** @return bool */
+ 
     protected function getIsWpContent(): bool
     {
         return true;

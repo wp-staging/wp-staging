@@ -63,7 +63,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                 <div id="wpstg-clone-id-error" class="wpstg-callout wpstg-create-name-message wpstg-mt-3" style="display:none;" role="alert" aria-live="polite"><div class="wpstg-text-sm" id="wpstg-clone-id-error-msg"></div></div>
             </section>
             <?php $stagingSetup->renderNetworkCloneSettings(); ?>
-            <?php // Create only: the main card holds both the review card and the shared customize <section> below; its closing </div> is emitted after that section (see the matching endif). ?>
+            <?php  ?>
             <div class="wpstg-create-main-card">
                 <div data-wpstg-create-review-mode>
                     <?php $renderer->readyCard('', '', '', '', true, '', '', '', '', 'shield', [], !$isProLicenseActive, true); ?>
@@ -138,7 +138,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
             </div>
         </section>
         <?php if ($isCreate) : ?>
-            </div><?php // Closes .wpstg-create-main-card opened before the review card above. ?>
+            </div><?php  ?>
         <?php endif; ?>
     </main>
 

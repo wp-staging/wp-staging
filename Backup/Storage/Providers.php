@@ -14,49 +14,49 @@ use WPStaging\Pro\Backup\Storage\Wasabi\Auth as WasabiAuth;
 use WPStaging\Pro\Backup\Storage\PCloud\Auth as PCloudAuth;
 use WPStaging\Backup\Storage\Traits\StorageIdNormalizerTrait;
 
-/**
- * Registry of remote-storage providers (Google Drive, Amazon S3, Dropbox, etc.)
- * available to the plugin for backup upload targets.
- *
- * Owns the canonical list of storage definitions (id, display name, auth class,
- * settings URL) and the legacy-to-current identifier mapping used to migrate
- * old option names to the new hyphenated format.
- */
+
+
+
+
+
+
+
+
 class Providers
 {
     use StorageIdNormalizerTrait;
 
-    /** @var string */
+ 
     const IDENTIFIER_GOOGLE_DRIVE = 'google-drive';
 
-    /** @var string */
+ 
     const IDENTIFIER_AMAZON_S3 = 'amazon-s3';
 
-    /** @var string */
+ 
     const IDENTIFIER_DROPBOX = 'dropbox';
 
-    /** @var string */
+ 
     const IDENTIFIER_ONE_DRIVE = 'one-drive';
 
-    /** @var string */
+ 
     const IDENTIFIER_PCLOUD = 'pcloud';
 
-    /** @var string */
+ 
     const IDENTIFIER_SFTP = 'sftp';
 
-    /** @var string */
+ 
     const IDENTIFIER_DIGITALOCEAN_SPACES = 'digitalocean-spaces';
 
-    /** @var string */
+ 
     const IDENTIFIER_WASABI_S3 = 'wasabi-s3';
 
-    /** @var string */
+ 
     const IDENTIFIER_GENERIC_S3 = 'generic-s3';
 
-    /**
-     * Map of legacy storage IDs to new hyphenated format for backward compatibility.
-     * Includes legacy storage IDs (camelCase) and legacy identifiers (lowercase).
-     */
+
+
+
+
     const LEGACY_ID_MAP = [
         'googleDrive' => self::IDENTIFIER_GOOGLE_DRIVE,
         'amazonS3'    => self::IDENTIFIER_AMAZON_S3,
@@ -64,22 +64,22 @@ class Providers
         'amazons3'    => self::IDENTIFIER_AMAZON_S3,
     ];
 
-    /**
-     * Map of new hyphenated storage IDs to legacy lowercase identifiers.
-     * Used for backward compatibility with option names (e.g. wpstg_googledrive, wpstg_amazons3).
-     */
+
+
+
+
     const REVERSE_LEGACY_ID_MAP = [
         self::IDENTIFIER_GOOGLE_DRIVE => 'googledrive',
         self::IDENTIFIER_AMAZON_S3    => 'amazons3',
     ];
 
-    /** Maps hyphenated identifiers to their legacy wpstg_* option names for backward compatibility. */
+ 
     const LEGACY_OPTION_MAP = [
         self::IDENTIFIER_GOOGLE_DRIVE => 'wpstg_googledrive',
         self::IDENTIFIER_AMAZON_S3    => 'wpstg_amazons3',
     ];
 
-    /** Maps hyphenated identifiers to legacy camelCase property names stored in wpstg_tmp_data. */
+ 
     const LEGACY_PROPERTY_MAP = [
         self::IDENTIFIER_GOOGLE_DRIVE        => 'googleDrive',
         self::IDENTIFIER_AMAZON_S3           => 'amazonS3',
@@ -90,7 +90,7 @@ class Providers
         self::IDENTIFIER_PCLOUD              => 'pCloud',
     ];
 
-    /** Maps hyphenated identifiers to their display names, used for logging. */
+ 
     const STORAGE_LABELS = [
         self::IDENTIFIER_GOOGLE_DRIVE        => 'Google Drive',
         self::IDENTIFIER_AMAZON_S3           => 'Amazon S3',
@@ -105,13 +105,13 @@ class Providers
 
     protected $storages = [];
 
-    /**
-     * Build the static storage-provider registry used across the plugin.
-     *
-     * Each entry exposes the storage id, CLI slug, display name, an "enabled"
-     * flag, the auth class (filtered so Free builds never reference Pro-only
-     * auth implementations), and the admin settings page URL.
-     */
+
+
+
+
+
+
+
     public function __construct()
     {
         $this->storages = [
@@ -190,14 +190,14 @@ class Providers
         ];
     }
 
-    /**
-     * @param null|bool $isEnabled. Default null
-     *                  Use null for all storages,
-     *                  Use true for enabled storages,
-     *                  Use false for disabled storages
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
+
     public function getStorageIds($isEnabled = null)
     {
         return array_map(function ($storage) {
@@ -205,14 +205,14 @@ class Providers
         }, $this->getStorages($isEnabled));
     }
 
-    /**
-     * @param null|bool $isEnabled. Default null
-     *                  Use null for all storages,
-     *                  Use true for enabled storages,
-     *                  Use false for disabled storages
-     *
-     * @return array
-     */
+
+
+
+
+
+
+
+
     public function getStorages($isEnabled = null)
     {
         if ($isEnabled === null) {
@@ -224,16 +224,16 @@ class Providers
         });
     }
 
-    /**
-     * @param string $id
-     * @param string $property
-     * @param null|bool $isEnabled. Default null
-     *                  Use null for all storages,
-     *                  Use true for enabled storages,
-     *                  Use false for disabled storages
-     *
-     * @return mixed
-     */
+
+
+
+
+
+
+
+
+
+
     public function getStorageProperty($id, $property, $isEnabled = null)
     {
         foreach ($this->getStorages($isEnabled) as $storage) {
@@ -247,25 +247,25 @@ class Providers
         return false;
     }
 
-    /**
-     * @param string $class
-     * @return bool
-     */
+
+
+
+
     public function isActivated($class)
     {
         if (empty($class)) {
             return false;
         }
 
-        /** @see WPStaging\Backup\Storage\AbstractStorage */
+ 
         $storage = WPStaging::make($class);
         return $storage->isAuthenticated();
     }
 
-    /**
-     * @param string $id
-     * @return string
-     */
+
+
+
+
     protected function filterAuthClassForPro($id)
     {
         if (empty($id) || !WPStaging::isPro()) {
@@ -280,26 +280,26 @@ class Providers
         return admin_url('admin.php?page=wpstg-settings&tab=remote-storages&sub-tab=' . $storageTab);
     }
 
-    /**
-     * Rename each remote-storage wp_options entry from its legacy camelCase or
-     * lowercase key to the current hyphenated key (e.g. wpstg_googleDrive and
-     * wpstg_googledrive -> wpstg_google-drive, wpstg_amazonS3 and wpstg_amazons3
-     * -> wpstg_amazon-s3).
-     *
-     * Idempotent and safe to re-run:
-     * - Skips any storage whose new-format option already exists (even if the
-     *   stored value is empty, e.g. after the user revoked credentials) so we
-     *   never resurrect old credentials on top of an intentionally cleared one.
-     * - Tracks already-handled new ids in a local map so multi-entry legacy
-     *   mappings (camelCase + lowercase pointing at the same new id) only
-     *   migrate the first non-empty legacy option found.
-     * - Uses autoload = false when writing the migrated option.
-     *
-     * Called once per install from the Upgrade dispatchers, gated by the
-     * `remote_storage_option_names_migrated` feature flag in UpgradeFlags.
-     *
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function migrateRemoteStorageOptions()
     {
         $migrated = [];
@@ -310,8 +310,8 @@ class Providers
 
             $newOptionName = 'wpstg_' . $newId;
 
-            // Check if the new option already exists (even if empty, e.g. after revoking credentials).
-            // Only migrate when the option is truly missing, to avoid resurrecting old credentials.
+ 
+ 
             $newValue = get_option($newOptionName);
             if ($newValue !== false) {
                 $migrated[$newId] = true;

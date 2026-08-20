@@ -6,15 +6,15 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsGenericEvent;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\Sanitize;
 
-/**
- * Handles the AJAX endpoint for logging generic analytics events
- */
+
+
+
 class AnalyticsGenericEventHandler
 {
-    /** @var Auth */
+ 
     private $auth;
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
     public function __construct(Auth $auth, Sanitize $sanitize)
@@ -49,15 +49,15 @@ class AnalyticsGenericEventHandler
         wp_send_json_success();
     }
 
-    /**
-     * @param array $data
-     * @return array<string, string>
-     */
+
+
+
+
     private function sanitizeCustomData(array $data): array
     {
         $sanitized = [];
 
-        // Hard cap processed payload size to keep this endpoint lightweight.
+ 
         $data = array_slice($data, 0, 20, true);
 
         foreach ($data as $key => $value) {

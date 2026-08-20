@@ -2,12 +2,12 @@
 
 namespace WPStaging\Framework\Traits;
 
-/**
- * Provide own implementation on trailingslashit and untrailingslashit functions
- * Useful in standalone tool
- * Trait SlashTrait
- * @package WPStaging\Framework\Traits
- */
+
+
+
+
+
+
 trait SlashTrait
 {
     protected function untrailingslashit(string $string): string

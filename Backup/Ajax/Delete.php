@@ -17,10 +17,10 @@ use function WPStaging\functions\debug_log;
 
 class Delete extends AbstractTemplateComponent
 {
-    /** @var BackupsFinder */
+ 
     private $backupsFinder;
 
-    /** @var BackupPathResolver */
+ 
     private $backupPathResolver;
 
     public function __construct(BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver, TemplateEngine $templateEngine)
@@ -47,7 +47,7 @@ class Delete extends AbstractTemplateComponent
 
         $backups = $this->backupsFinder->findBackups();
 
-        // Early bail: No backups found, nothing to delete
+ 
         if (empty($backups)) {
             wp_send_json([
                 'error'   => true,
@@ -62,10 +62,10 @@ class Delete extends AbstractTemplateComponent
         }
     }
 
-    /**
-     * @param SplFileInfo $backup
-     * @throws BackupRuntimeException
-     */
+
+
+
+
     protected function deleteBackup($backup)
     {
         if (!$this->deleteSplitBackupParts($backup)) {
@@ -90,11 +90,11 @@ class Delete extends AbstractTemplateComponent
         }
     }
 
-    /**
-     * @param SplFileInfo $backup
-     * @return bool
-     * @throws BackupRuntimeException
-     */
+
+
+
+
+
     protected function deleteSplitBackupParts($backup)
     {
         clearstatcache();
@@ -104,13 +104,13 @@ class Delete extends AbstractTemplateComponent
             $backupMetadata = new BackupMetadata();
             $backupMetadata = $backupMetadata->hydrateByFile($file);
         } catch (Exception $e) {
-            // Couldn't read backup metadata, continue deleting the main file but log error
+ 
             debug_log('WP STAGING: User tried to delete backup but "unlink" returned false on deleting backup parts. Backup that couldn\'t be deleted: ' . $backup->getRealPath());
 
             return true;
         }
 
-        // Early bail: Not a split backup
+ 
         if (!$backupMetadata->getIsMultipartBackup()) {
             return true;
         }

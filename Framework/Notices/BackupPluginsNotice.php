@@ -10,47 +10,47 @@ use WPStaging\Framework\Facades\Hooks;
 
 class BackupPluginsNotice
 {
-    /**
-     * @var string
-     */
+
+
+
     const OPTION_BACKUP_NOTICE_IS_CLOSED = 'wpstg_backup_notice_is_closed';
 
-    /**
-     * @var string
-     */
+
+
+
     const OPTION_BACKUP_NOTICE_REMINDER = 'wpstg_backup_notice_remind_me';
 
-    /**
-     * @var string
-     */
+
+
+
     const FILTER_HIDE_BACKUP_NOTICE = 'wpstg.notice.hide_backup_notice';
 
-    /**
-     * @var Notices
-     */
+
+
+
     private $notices;
 
-    /**
-     * @var Auth
-     */
+
+
+
     private $auth;
 
-    /**
-     * @var BackupPluginsDetector
-     */
+
+
+
     private $detector;
 
-    /**
-     * @var FreeOnboarding
-     */
+
+
+
     private $onboarding;
 
-    /**
-     * @param Auth $auth
-     * @param Notices $notices
-     * @param BackupPluginsDetector $detector
-     * @param FreeOnboarding $onboarding
-     */
+
+
+
+
+
+
     public function __construct(Auth $auth, Notices $notices, BackupPluginsDetector $detector, FreeOnboarding $onboarding)
     {
         $this->notices    = $notices;
@@ -59,9 +59,9 @@ class BackupPluginsNotice
         $this->onboarding = $onboarding;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function maybeShowBackupNotice()
     {
         if (!$this->notices->isWPStagingAdminPage()) {
@@ -76,7 +76,7 @@ class BackupPluginsNotice
             return;
         }
 
-        // The task selector carries the competitor message inside the backup card instead.
+ 
         if ($this->onboarding->isTaskSelector()) {
             return;
         }
@@ -104,9 +104,9 @@ class BackupPluginsNotice
         include $notice;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxBackupPluginNoticeClose()
     {
         if (!$this->auth->isAuthenticatedRequest('', 'manage_options')) {
@@ -117,9 +117,9 @@ class BackupPluginsNotice
         wp_send_json_success();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxBackupPluginNoticeRemindMe()
     {
         if (!$this->auth->isAuthenticatedRequest('', 'manage_options')) {

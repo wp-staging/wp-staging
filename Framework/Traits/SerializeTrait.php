@@ -6,12 +6,12 @@ use __PHP_Incomplete_Class;
 
 trait SerializeTrait
 {
-    /**
-     * @param mixed $data
-     * @param array $allowedClasses
-     * @param bool $rejected Deliberately untyped. Any non-nullable hint throws a TypeError when a caller passes an undeclared variable.
-     * @return mixed
-     */
+
+
+
+
+
+
     protected function safeMaybeUnserialize($data, array $allowedClasses = [], &$rejected = false)
     {
         $rejected = false;
@@ -37,12 +37,12 @@ trait SerializeTrait
         return $value;
     }
 
-    /**
-     * @param string $data
-     * @param array $allowedClasses
-     * @param bool $failed
-     * @return mixed
-     */
+
+
+
+
+
+
     private function unserializeQuietly(string $data, array $allowedClasses, &$failed = false)
     {
         $failed = false;
@@ -59,11 +59,11 @@ trait SerializeTrait
         }
     }
 
-    /**
-     * @param mixed $value
-     * @param int $remainingDepth
-     * @return bool
-     */
+
+
+
+
+
     protected function containsForbiddenClass($value, int $remainingDepth = 20): bool
     {
         if ($value instanceof __PHP_Incomplete_Class) {
@@ -91,10 +91,10 @@ trait SerializeTrait
         return false;
     }
 
-    /**
-     * @see https://developer.wordpress.org/reference/functions/is_serialized/
-     * @return bool
-     */
+
+
+
+
     protected function isSerialized(string $data, bool $strict = true): bool
     {
         if (!is_string($data)) {
@@ -145,7 +145,7 @@ trait SerializeTrait
                 } elseif (function_exists('str_contains') && !str_contains($data, '"') || strpos($data, '"') === false) {
                     return false;
                 }
-                // Or else fall through.
+ 
             case 'a':
             case 'O':
             case 'E':

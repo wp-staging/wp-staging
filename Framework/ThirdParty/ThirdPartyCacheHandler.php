@@ -2,13 +2,13 @@
 
 namespace WPStaging\Framework\ThirdParty;
 
-/**
- * Class ThirdPartyCacheHandler
- *
- * This class handles third party cache system
- *
- * @package WPStaging\Framework\ThirdParty;
- */
+
+
+
+
+
+
+
 class ThirdPartyCacheHandler
 {
     public function purgeEnduranceCache()

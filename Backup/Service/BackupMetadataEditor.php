@@ -7,10 +7,10 @@ use WPStaging\Backup\Entity\BackupMetadata;
 
 class BackupMetadataEditor
 {
-    /**
-     * @param FileObject     $backupFile It must be opened with File::MODE_APPEND
-     * @param BackupMetadata $newMetadata
-     */
+
+
+
+
     public function setBackupMetadata(FileObject $backupFile, BackupMetadata $newMetadata)
     {
         $backupMetadataReader     = new BackupMetadataReader($backupFile);
@@ -20,7 +20,7 @@ class BackupMetadataEditor
 
         $maybeMetadataLine = $backupFile->readAndMoveNext();
 
-        // Validate metadata position
+ 
         if (!is_array($backupMetadataReader->extractMetadata($maybeMetadataLine))) {
             throw new \UnexpectedValueException('Could not find the existing metadata from the backup.');
         }

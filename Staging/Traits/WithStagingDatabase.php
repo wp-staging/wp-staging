@@ -11,10 +11,10 @@ use WPStaging\Staging\Dto\StagingSiteDto;
 
 trait WithStagingDatabase
 {
-    /** @var Database */
+ 
     protected $stagingDb = null;
 
-    /** @var TableService */
+ 
     protected $tableService = null;
 
     public function initStagingDatabase(StagingSiteDto $stagingSiteDto)
@@ -43,10 +43,10 @@ trait WithStagingDatabase
         $this->stagingDb   = new Database($wpdb);
     }
 
-    /**
-     * @param string $prefix
-     * @return TableDto[]|Collection|null
-     */
+
+
+
+
     public function getStagingTablesStatus(string $prefix)
     {
         if ($this->tableService === null) {
@@ -56,10 +56,10 @@ trait WithStagingDatabase
         return $this->tableService->findTableStatusStartsWith($prefix);
     }
 
-    /**
-     * @param string $prefix
-     * @return string[]
-     */
+
+
+
+
     public function getStagingTables(string $prefix)
     {
         if ($this->tableService === null) {
@@ -69,10 +69,10 @@ trait WithStagingDatabase
         return $this->tableService->findTableNamesStartWith($prefix);
     }
 
-    /**
-     * @param string $prefix
-     * @return string[]
-     */
+
+
+
+
     public function getStagingViews(string $prefix)
     {
         if ($this->tableService === null) {

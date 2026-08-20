@@ -25,8 +25,8 @@ $isCreate  = $setupMode === 'create';
 $isUpdate  = $setupMode === 'update';
 $isReset   = $setupMode === 'reset';
 $isPro      = WPStaging::isPro();
-// Pro advanced settings stay locked unless the Pro build also has a valid/active
-// license; an unlicensed Pro install is gated exactly like the free build.
+ 
+ 
 $isProLicenseActive = $stagingSetup->isProLicenseActive();
 
 $productionSiteUrl  = home_url('/');
@@ -94,9 +94,9 @@ $runtimeSummaryTooltips = [
     $stagingSiteDisplay = preg_replace('#^https?://#', '', untrailingslashit($stagingSiteUrl));
     $hasSavedSelection  = !empty($stagingSiteDto->getIncludedTables()) || !empty($stagingSiteDto->getExcludedDirectories());
 
-    // Advanced options surfaced from the (previously hidden) runtime/cleanup
-    // config. Defaults, ids and the free Pro-lock mirror the runtime section so
-    // the update payload stays byte-for-byte identical.
+ 
+ 
+ 
     $advOptionDisabled = !$isProLicenseActive;
     $advNotifyOptions  = [
         ['id' => 'wpstg_allow_emails', 'icon' => 'mail', 'label' => __('Allow Emails Sending', 'wp-staging'), 'checked' => $isProLicenseActive, 'sumLabel' => __('Emails', 'wp-staging'), 'tip' => __('Let the staging site send real emails after the update. Keep off so test activity never reaches real users.', 'wp-staging')],
@@ -112,7 +112,7 @@ $runtimeSummaryTooltips = [
         ['id' => 'wpstg-clean-uploads', 'label' => __('Clean Uploads', 'wp-staging'), 'checked' => false, 'disabled' => $stagingSiteDto->getUploadsSymlinked(), 'sumLabel' => __('Clean uploads', 'wp-staging'), 'desc' => $stagingSiteDto->getUploadsSymlinked() ? __('Disabled because uploads are symlinked.', 'wp-staging') : __('Remove staging uploads before copying uploads from the live site.', 'wp-staging')],
     ];
 
-    // Summary mirrors only the enabled options (cleanup flagged as destructive).
+ 
     $advSummaryOptions = [];
     foreach ($advNotifyOptions as $advOption) {
         $advSummaryOptions[] = ['id' => $advOption['id'], 'icon' => $advOption['icon'], 'sumLabel' => $advOption['sumLabel'], 'checked' => $advOption['checked'], 'risk' => false];

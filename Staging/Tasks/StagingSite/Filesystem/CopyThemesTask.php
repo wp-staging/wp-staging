@@ -22,7 +22,7 @@ class CopyThemesTask extends FileCopierTask
         return PartIdentifier::THEME_PART_IDENTIFIER;
     }
 
-    /** @return bool */
+ 
     protected function getIsWpContent(): bool
     {
         return true;

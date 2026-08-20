@@ -10,15 +10,15 @@ use WPStaging\Framework\Utils\Sanitize;
 
 abstract class BaseFileList extends AbstractTemplateComponent
 {
-    /** @var ListableBackupsCollection */
+ 
     protected $listableBackupsCollection;
 
-    /** @var Sanitize */
+ 
     protected $sanitize;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $urlAssets;
 
     public function __construct(ListableBackupsCollection $listableBackupsCollection, TemplateEngine $templateEngine, Sanitize $sanitize)
@@ -29,9 +29,9 @@ abstract class BaseFileList extends AbstractTemplateComponent
         $this->urlAssets                 = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getBackups(): array
     {
         try {
@@ -45,31 +45,31 @@ abstract class BaseFileList extends AbstractTemplateComponent
             return [];
         }
 
-        // Ensure backups are indexed in natural order
+ 
         return array_values($backups);
     }
 
-    /**
-     * @param array $listableBackups
-     * @return array
-     */
+
+
+
+
     protected function sortBackups(array $listableBackups): array
     {
         usort($listableBackups, function ($item, $nextItem) {
-            /**
-             * @var ListableBackup $item
-             * @var ListableBackup $nextItem
-             */
+
+
+
+
             return (max($nextItem->dateUploadedTimestamp, $nextItem->dateCreatedTimestamp)) - (max($item->dateUploadedTimestamp, $item->dateCreatedTimestamp));
         });
 
         return $listableBackups;
     }
 
-    /**
-     * @param array $backups
-     * @return string
-     */
+
+
+
+
     protected function renderBackups(array $backups): string
     {
         $output = '';

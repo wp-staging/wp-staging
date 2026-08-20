@@ -18,24 +18,24 @@ use WPStaging\Framework\Filesystem\Filesystem;
 
 class CleanupTmpFilesTask extends AbstractTask
 {
-    /** @var Filesystem */
+ 
     private $filesystem;
 
-    /** @var Directory */
+ 
     private $directory;
 
-    /** @var PathIdentifier */
+ 
     private $pathIdentifier;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param Filesystem $filesystem
-     * @param Directory $directory
-     * @param SeekableQueueInterface $taskQueue
-     * @param PathIdentifier $pathIdentifier
-     */
+
+
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, Filesystem $filesystem, Directory $directory, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -44,25 +44,25 @@ class CleanupTmpFilesTask extends AbstractTask
         $this->pathIdentifier = $pathIdentifier;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName(): string
     {
         return 'cancel_cleanup_files';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle(): string
     {
         return esc_html__('Cleaning up temporary files…', 'wp-staging');
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute(): TaskResponseDto
     {
         $this->prepareCleanupRestoreTask();
@@ -73,7 +73,7 @@ class CleanupTmpFilesTask extends AbstractTask
 
         $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($tmpRestoreDir, true));
 
-        // Early bail: Path to Clean does not exist
+ 
         if (!file_exists($tmpRestoreDir)) {
             return $this->generateResponse();
         }
@@ -96,7 +96,7 @@ class CleanupTmpFilesTask extends AbstractTask
         }
 
         if ($deleted) {
-            // Successfully deleted
+ 
             $this->logger->info(sprintf(
                 '%s: Path "%s" successfully cleaned up.',
                 static::getTaskTitle(),
@@ -110,12 +110,12 @@ class CleanupTmpFilesTask extends AbstractTask
 
             return $this->generateResponse();
         } else {
-            /*
-             * Not successfully deleted.
-             * This can happen if the folder to delete is too large
-             * to be deleted in a single request. We continue
-             * deleting it in the next request...
-             */
+
+
+
+
+
+
             $response = $this->generateResponse(false);
             $response->setIsRunning(true);
 
@@ -127,15 +127,15 @@ class CleanupTmpFilesTask extends AbstractTask
                 $relativePathForLogging
             ));
 
-            // Early bail: Response modified for repeating
+ 
             return $response;
         }
     }
 
-    /**
-     * @return void
-     * @throws FilesystemExceptions
-     */
+
+
+
+
     protected function cleanPluginWpContentDir()
     {
         $pluginWpContentDir = $this->directory->getPluginWpContentDirectory();
@@ -153,25 +153,25 @@ class CleanupTmpFilesTask extends AbstractTask
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function prepareCleanupRestoreTask()
     {
-        // We only cleanup database file for RestoreTask
+ 
         if (!$this instanceof RestoreTask) {
             return;
         }
 
-        // Early bail: Already prepared
+ 
         if ($this->stepsDto->getTotal() === 1) {
             return;
         }
 
-        /** @var JobRestoreDataDto */
+ 
         $jobDataDto = $this->jobDataDto;
 
-        // Clear the .sql file used during the restore, if this backup includes a database.
+ 
         $databaseFile = $jobDataDto->getBackupMetadata()->getDatabaseFile();
 
         if ($databaseFile) {

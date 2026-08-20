@@ -32,7 +32,7 @@ $renderer->accordionSection([
     'panelId'     => $panelId,
     'title'       => __('Staging isolation', 'wp-staging'),
 ], function () use ($renderer, $isCreate, $isProLicenseActive, $showWooSchedulerSettings, $stagingSiteDto, $runtimeSummaryTooltips) {
-    // Treat an unlicensed Pro install like the free build: lock the options.
+ 
     $isPro                      = $isProLicenseActive;
     $isCreateFreeOptionDisabled = $isCreate && !$isPro;
     $isUpdateFreeOptionDisabled = !$isCreate && !$isPro;
@@ -50,9 +50,9 @@ $renderer->accordionSection([
             </div>
             <div class="wpstg-create-option-stack" data-wpstg-advanced-settings-panel>
                 <?php
-                // The three isolation rows always render in the free build so the
-                // expanded section mirrors the sidebar and the Pro upsell card,
-                // even on sites where WooCommerce is not active.
+ 
+ 
+ 
                 $renderer->proControlRow('wpstg_allow_emails', true, esc_html__('Email delivery', 'wp-staging'), esc_html__('Pro lets you disable outgoing emails from staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'email_delivery');
                 $renderer->proControlRow('wpstg_enable_cron', true, esc_html__('WordPress cron', 'wp-staging'), esc_html__('Pro lets you stop scheduled tasks from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'wordpress_cron');
                 $renderer->proControlRow('wpstg_woo_scheduler_enabled', true, esc_html__('WooCommerce actions', 'wp-staging'), esc_html__('Pro lets you prevent WooCommerce background actions from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'woocommerce_actions');

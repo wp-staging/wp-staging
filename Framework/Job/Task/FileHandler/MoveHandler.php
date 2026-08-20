@@ -4,11 +4,11 @@ namespace WPStaging\Framework\Job\Task\FileHandler;
 
 class MoveHandler extends FileHandler
 {
-    /**
-     * @param string $source
-     * @param string $destination
-     * @return void
-     */
+
+
+
+
+
     public function handle($source, $destination)
     {
         $parentDirectory = dirname($destination);

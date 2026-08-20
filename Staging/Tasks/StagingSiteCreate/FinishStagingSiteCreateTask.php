@@ -20,44 +20,44 @@ use function WPStaging\functions\debug_log;
 
 class FinishStagingSiteCreateTask extends StagingTask
 {
-    /** @var StagingSiteJobsDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var Sites */
+ 
     private $sites;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Sites $sites
-     */
+
+
+
+
+
+
+
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->sites = $sites;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_site_create_finish';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Finishing Staging Site Creation';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->getJobTransientCache()->completeJob();
@@ -97,9 +97,9 @@ class FinishStagingSiteCreateTask extends StagingTask
         return new FinishStagingSiteResponseDto();
     }
 
-    /**
-     * @return FinishStagingSiteResponseDto|TaskResponseDto
-     */
+
+
+
     private function overrideGenerateResponse()
     {
         add_filter(self::FILTER_TASK_RESPONSE, function ($response) {

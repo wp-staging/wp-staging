@@ -20,68 +20,68 @@ class FilesystemScanner extends AbstractFilesystemScanner
 {
     use LegacyFileRulesTrait;
 
-    /** @var SeekableQueueInterface */
+ 
     protected $filesystemQueue;
 
-    /** @var SeekableQueueInterface */
+ 
     protected $taskQueue;
 
-    /** @var LoggerInterface */
+ 
     protected $logger;
 
-    /** @var FilesystemScannerDto */
+ 
     protected $scannerDto;
 
-    /** @var string */
+ 
     protected $logTitle = '';
 
-    /** @var string */
+ 
     protected $queueCacheName = '';
 
-    /** @var int */
+ 
     protected $ignoreFileBiggerThan = 0;
 
-    /** @var array */
+ 
     protected $ignoreFileExtensions = [];
 
-    /** @var array */
+ 
     protected $ignoreFileExtensionFilesBiggerThan = [];
 
-    /** @var bool */
+ 
     protected $isSiteHostedOnWordPressCom = false;
 
-    /** @var array */
+ 
     protected $folderNameRules = [];
 
-    /** @var array */
+ 
     protected $fileNameRules = [];
 
-    /**
-     * Glob path rules that must prune directories during the deferred recursive walk.
-     * Per-part exclude rules only apply to the non-recursive top-level pre-scan, so nested
-     * patterns (e.g. WP Staging's own node_modules) need this persistent channel to be honored.
-     *
-     * @var PathFilterHelper|null
-     */
+
+
+
+
+
+
+
     protected $recursiveExcludeFilter = null;
 
-    /**
-     * When true, recursivePathScanning enqueues a directory entry for any subtree with no discovered files.
-     * Staging needs this so empty folders are recreated on the clone; backup callers typically don't want it
-     * because the archive format pairs a dir header with its files.
-     *
-     * @var bool
-     */
+
+
+
+
+
+
+
     protected $enqueueEmptyDirectories = false;
 
-    /**
-     * @param Directory $directory
-     * @param PathIdentifier $pathIdentifier
-     * @param Filesystem $filesystem
-     * @param PluginInfo $pluginInfo
-     * @param SiteInfo $siteInfo
-     * @param SeekableQueueInterface $filesystemQueue
-     */
+
+
+
+
+
+
+
+
     public function __construct(
         Directory $directory,
         PathIdentifier $pathIdentifier,
@@ -95,12 +95,12 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $this->filesystemQueue            = $filesystemQueue;
     }
 
-    /**
-     * @param int $ignoreFileBiggerThan
-     * @param array $ignoreFileExtensions
-     * @param array $ignoreFileExtensionFilesBiggerThan
-     * @return void
-     */
+
+
+
+
+
+
     public function setFilters(int $ignoreFileBiggerThan, array $ignoreFileExtensions, array $ignoreFileExtensionFilesBiggerThan)
     {
         $this->ignoreFileBiggerThan               = $ignoreFileBiggerThan;
@@ -108,26 +108,26 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $this->ignoreFileExtensionFilesBiggerThan = $ignoreFileExtensionFilesBiggerThan;
     }
 
-    /**
-     * Set the rules to exclude folders and files according to their names.
-     *
-     * @param array $folderNameRules
-     * @param array $fileNameRules
-     */
+
+
+
+
+
+
     public function setNameExcludeRules(array $folderNameRules, array $fileNameRules)
     {
         $this->folderNameRules = $folderNameRules;
         $this->fileNameRules   = $fileNameRules;
     }
 
-    /**
-     * Set glob path rules that prune matching directories during the recursive walk.
-     * Unlike per-part exclude rules, these survive into the deferred queue processing so nested
-     * patterns are actually honored.
-     *
-     * @param array $rules
-     * @return void
-     */
+
+
+
+
+
+
+
+
     public function setRecursiveExcludeRules(array $rules)
     {
         if (empty($rules)) {
@@ -141,10 +141,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $this->recursiveExcludeFilter = $filter;
     }
 
-    /**
-     * @param string $rootPath
-     * @return void
-     */
+
+
+
+
     public function setRootPath(string $rootPath)
     {
         parent::setRootPath($rootPath);
@@ -153,48 +153,48 @@ class FilesystemScanner extends AbstractFilesystemScanner
         }
     }
 
-    /**
-     * @param bool $enqueueEmptyDirectories
-     * @return void
-     */
+
+
+
+
     public function setEnqueueEmptyDirectories(bool $enqueueEmptyDirectories)
     {
         $this->enqueueEmptyDirectories = $enqueueEmptyDirectories;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setupFilesystemQueue()
     {
         $fileBackupQueueCacheName = $this->queueCacheName . '_' . $this->currentPathScanning;
         $this->filesystemQueue->setup($fileBackupQueueCacheName, SeekableQueueInterface::MODE_WRITE);
     }
 
-    /**
-     * @param string $logTitle
-     * @return void
-     */
+
+
+
+
     public function setLogTitle(string $logTitle)
     {
         $this->logTitle = $logTitle;
     }
 
-    /**
-     * @param string $queueCacheName
-     * @return void
-     */
+
+
+
+
     public function setQueueCacheName(string $queueCacheName)
     {
         $this->queueCacheName = $queueCacheName;
     }
 
-    /**
-     * @param LoggerInterface $logger
-     * @param SeekableQueueInterface $taskQueue
-     * @param FilesystemScannerDto $scannerDto
-     * @return void
-     */
+
+
+
+
+
+
     public function inject(LoggerInterface $logger, SeekableQueueInterface $taskQueue, FilesystemScannerDto $scannerDto)
     {
         $this->logger     = $logger;
@@ -207,19 +207,19 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return $this->scannerDto;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function unlockQueue()
     {
         $this->filesystemQueue->shutdown();
     }
 
-    /**
-     * @return void
-     * @throws FinishedQueueException
-     * @throws DiskNotWritableException
-     */
+
+
+
+
+
     public function processQueue()
     {
         try {
@@ -235,7 +235,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
             } catch (DiskNotWritableException $e) {
                 throw $e;
             } catch (RuntimeException $e) {
-                // soft error, no action needed, but log
+ 
                 $this->logger->debug($e->getMessage());
             }
 
@@ -247,20 +247,20 @@ class FilesystemScanner extends AbstractFilesystemScanner
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function preRecursivePathScanningStep()
     {
         $this->setupFilesystemQueue();
     }
 
-    /**
-     * @param SplFileInfo $file
-     * @param string $linkPath
-     * @return void
-     * @throws FinishedQueueException
-     */
+
+
+
+
+
+
     protected function processFile(SplFileInfo $file, string $linkPath = '')
     {
         $normalizedPath = $this->filesystem->normalizePath($file->getPathname(), !$file->isFile());
@@ -274,7 +274,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
             return;
         }
 
-        // Exclude wp-content/debug.log to prevent checksum failures caused by new log entries during backup
+ 
         $normalizedDebugPath = $this->filesystem->normalizePath($this->contentPath . '/debug.log');
         if ($normalizedPath === $normalizedDebugPath) {
             $this->scannerDto->addFileExcludedInRequest($relativePath);
@@ -341,20 +341,20 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $this->filesystemQueue->enqueue(rtrim($relativePath, '/'));
     }
 
-    /**
-     * @param string $normalizedPath
-     * @return string
-     */
+
+
+
+
     private function computeRelativePathFromRoot(string $normalizedPath): string
     {
         return str_replace($this->filesystem->normalizePath($this->rootPath, true), '', $normalizedPath);
     }
 
-    /**
-     * @param SplFileInfo $dir
-     * @param SplFileInfo|null $link
-     * @return void
-     */
+
+
+
+
+
     protected function processDirectory(SplFileInfo $dir, $link = null)
     {
         if ($this->isUploadsYearMonthDirectory($dir)) {
@@ -383,16 +383,16 @@ class FilesystemScanner extends AbstractFilesystemScanner
             return;
         }
 
-        // we need to know
+ 
         $this->taskQueue->enqueue($this->currentPathScanning . self::PATH_SEPARATOR . $normalizedPath);
     }
 
-    /**
-     * Prune a directory during the recursive walk when it matches a persistent recursive exclude rule.
-     *
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
+
+
     protected function isExcludedByRecursiveRule(string $path): bool
     {
         if ($this->recursiveExcludeFilter === null) {
@@ -402,10 +402,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return $this->recursiveExcludeFilter->isMatched(new SplFileInfo($path));
     }
 
-    /**
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
     protected function isExcludedDirectory(string $path): bool
     {
         $normalizedPath = $this->filesystem->normalizePath($path, true);
@@ -425,10 +425,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return false;
     }
 
-    /**
-     * RecursivePathScanning method extended to include exclude filter and directory increment
-     * @inheritdoc
-     */
+
+
+
+
     protected function recursivePathScanning(string $path, string $link = '')
     {
         if ($this->isExcludedDirectory($path) || $this->isExcludedByRecursiveRule($path)) {
@@ -442,8 +442,8 @@ class FilesystemScanner extends AbstractFilesystemScanner
             return;
         }
 
-        // Enqueue subtrees that yielded no files so the copier preserves empty directories on the
-        // staging site instead of silently dropping them.
+ 
+ 
         $discoveredFilesBefore = $this->scannerDto->getDiscoveredFiles();
 
         parent::recursivePathScanning($path, $link);
@@ -453,13 +453,13 @@ class FilesystemScanner extends AbstractFilesystemScanner
         }
     }
 
-    /**
-     * preScanPath() only enqueues a directory's children, so an empty scan root is never enqueued itself.
-     * Call this first for a single user-selected root and skip preScanPath() when it returns true.
-     *
-     * @param string $path
-     * @return bool True when the directory was empty and got enqueued as such.
-     */
+
+
+
+
+
+
+
     public function maybeEnqueueAsEmptyDirectory(string $path): bool
     {
         if (!$this->enqueueEmptyDirectories || !is_dir($path)) {
@@ -477,14 +477,14 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return true;
     }
 
-    /**
-     * Enqueue an empty directory using the same root-relative queue format as files.
-     * Increment discovered counters so the copier total includes this queue item.
-     *
-     * @param string $path
-     * @param string $link
-     * @return void
-     */
+
+
+
+
+
+
+
+
     protected function enqueueEmptyDirectory(string $path, string $link = '')
     {
         $normalizedPath = $this->filesystem->normalizePath($path, true);
@@ -505,10 +505,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $this->filesystemQueue->enqueue(rtrim($relativePath, '/'));
     }
 
-    /**
-     * @param \SplFileInfo $dir
-     * @return bool
-     */
+
+
+
+
     protected function isUploadsYearMonthDirectory(SplFileInfo $dir): bool
     {
         if ($this->currentPathScanning !== PartIdentifier::UPLOAD_PART_IDENTIFIER) {
@@ -524,12 +524,12 @@ class FilesystemScanner extends AbstractFilesystemScanner
             return false;
         }
 
-        /**
-         * This is a default WordPress year-month uploads folder.
-         *
-         * Here we break down the uploads folder by months, considering it's often the largest folder in a website,
-         * and we need to be able to scan each folder in one request.
-         */
+
+
+
+
+
+
         return is_numeric($dir->getBasename()) && $dir->getBasename() > 1970 && $dir->getBasename() < 2100;
     }
 
@@ -577,10 +577,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return false;
     }
 
-    /**
-     * @param string $fileExtension
-     * @return bool
-     */
+
+
+
+
     private function canExcludeLogFile(string $fileExtension): bool
     {
         if ($fileExtension !== 'log') {
@@ -594,10 +594,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return true;
     }
 
-    /**
-     * @param string $fileExtension
-     * @return bool
-     */
+
+
+
+
     private function canExcludeCacheFile(string $fileExtension): bool
     {
         if ($fileExtension !== 'cache') {
@@ -611,10 +611,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return true;
     }
 
-    /**
-     * @param SplFileInfo $dir
-     * @return bool
-     */
+
+
+
+
     private function canExcludeCacheDir(SplFileInfo $dir): bool
     {
         if (!$dir->isDir()) {
@@ -638,12 +638,12 @@ class FilesystemScanner extends AbstractFilesystemScanner
         return true;
     }
 
-    /**
-     * Check if "cache" is one of the directory names.
-     *
-     * @param string $path
-     * @return bool
-     */
+
+
+
+
+
+
     private function isPathContainsCache(string $path): bool
     {
         $pathParts = explode(DIRECTORY_SEPARATOR, $path);

@@ -6,45 +6,45 @@ use wpdb;
 
 class WpDbInfo implements iDbInfo
 {
-    /**
-     * Default version to use when the version cannot be determined.
-     * @var int
-     */
+
+
+
+
     const DEFAULT_VERSION = -1;
 
-    /**
-     * @var wpdb
-     */
+
+
+
     protected $wpdb;
 
-    /**
-     * @param wpdb $wpdb
-     */
+
+
+
     public function __construct(wpdb $wpdb)
     {
         $this->wpdb = $wpdb;
     }
 
-    /**
-     * Get the database default collation: collation_database
-     * @return string
-     */
+
+
+
+
     public function getDbCollation(): string
     {
         return $this->getVariableByName('collation_database');
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getDbEngine(): string
     {
         return $this->getVariableByName('default_storage_engine');
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getMySqlServerVersion(): int
     {
         if (!is_null($this->wpdb->dbh)) {
@@ -56,9 +56,9 @@ class WpDbInfo implements iDbInfo
         return is_null($value) ? self::DEFAULT_VERSION : $this->versionToInt($value);
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getMySqlClientVersion(): int
     {
         if (!is_null($this->wpdb->dbh)) {
@@ -68,34 +68,34 @@ class WpDbInfo implements iDbInfo
         return self::DEFAULT_VERSION;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getServerIp(): string
     {
         return $this->getVariableByName('hostname');
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getServerPort(): int
     {
         return (int)$this->getVariableByName('port');
     }
 
-    /**
-     * Return the server name and port as server:port
-     * @return string
-     */
+
+
+
+
     public function getServer(): string
     {
         return $this->getServerIp() . ':' . $this->getServerPort();
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function toArray(): array
     {
         return [
@@ -106,11 +106,11 @@ class WpDbInfo implements iDbInfo
         ];
     }
 
-    /**
-     * Fetch the database variable value by name.
-     * @param string $varName
-     * @return string
-     */
+
+
+
+
+
     protected function getVariableByName(string $varName): string
     {
         $query = "SHOW VARIABLES WHERE Variable_name = '" . $varName . "';";
@@ -119,12 +119,12 @@ class WpDbInfo implements iDbInfo
         return is_null($value) ? '' : $value;
     }
 
-    /**
-     * Convert version string to integer.
-     *
-     * @param string $version MySQL server version
-     * @return int
-     */
+
+
+
+
+
+
     protected static function versionToInt(string $version): int
     {
         $match = explode('.', $version);

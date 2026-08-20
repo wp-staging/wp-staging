@@ -54,10 +54,10 @@ $wpstgBorlabsAllowedHtml = [
 </div>
 <?php
 // Permanent, subtle "Compare Free vs Pro" discovery link. It is intentionally
-// independent of the dashboard Pro card's 90-day snooze, so Free users can
-// always find the comparison even after dismissing that card. Shown on every
-// Free-build admin page (unlike the dashboard card, it is not suppressed when
-// Pro is merely installed-but-inactive); never a top banner or large upsell.
+ 
+ 
+ 
+ 
 if (!\WPStaging\Core\WPStaging::isPro()) :
     $compareUrl = \WPStaging\Framework\Language\Language::addClientAttribution(\WPStaging\Framework\Language\Language::localizeUrl('https://wp-staging.com/pro-features/?utm_source=wp-admin&utm_medium=footer&utm_campaign=compare_card'));
     ?>

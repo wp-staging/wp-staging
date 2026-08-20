@@ -9,9 +9,9 @@ use WPStaging\Framework\Filesystem\Filesystem;
 
 class UpdateWpConfig extends FileCloningService
 {
-    /**
-     * @inheritDoc
-     */
+
+
+
     protected function internalExecute()
     {
         $path   = $this->dto->getDestinationDir() . "wp-config.php";
@@ -26,8 +26,8 @@ class UpdateWpConfig extends FileCloningService
         $content = $this->readWpConfig();
         $oldUrl  = (!$this->dto->isMultisite()) ? $this->dto->getHomeUrl() : $this->dto->getBaseUrl();
 
-        // Don't update the table prefix if the line starts with //, /* or * (ignoring space before them),
-        // Otherwise replace table prefix
+ 
+ 
         $pattern = '/^\s*((?!\/\/|\/\*|\*))\$table_prefix\s*=\s*(.*)/m';
         $replacement = '$table_prefix = \'' . $prefix . '\'; // Changed by WP STAGING';
         $content = preg_replace($pattern, $replacement, $content);
@@ -36,7 +36,7 @@ class UpdateWpConfig extends FileCloningService
             throw new FatalException("Failed to update table_prefix in {$path}. Regex error");
         }
 
-        // Replace URLs
+ 
         $content = str_replace($oldUrl, $this->dto->getStagingSiteUrl(), $content);
 
         $this->writeWpConfig($content);
@@ -44,11 +44,11 @@ class UpdateWpConfig extends FileCloningService
         return true;
     }
 
-    /**
-     * Modify wp-config.php to add staging site information
-     * @param string $filePath
-     * @return boolean
-     */
+
+
+
+
+
     protected function writeFileHeader($filePath)
     {
         if (($content = file_get_contents($filePath)) === false) {
@@ -69,7 +69,7 @@ class UpdateWpConfig extends FileCloningService
  * Read more    : https://wp-staging.com/docs/create-a-staging-site-clone-wordpress/
  */\r\n";
 
-        // Check if the text already exists
+ 
         if (strpos($content, $marker) !== false) {
             return true;
         }

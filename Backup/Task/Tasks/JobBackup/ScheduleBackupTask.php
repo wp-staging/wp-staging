@@ -1,8 +1,8 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-// TODO PHP7.1; constant visibility
+ 
+ 
+ 
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
@@ -34,10 +34,10 @@ class ScheduleBackupTask extends BackupTask
         return 'Creating Backup Plan';
     }
 
-    /**
-     * @return \WPStaging\Framework\Job\Dto\TaskResponseDto
-     * @throws \Exception
-     */
+
+
+
+
     public function execute()
     {
         $scheduleId = wp_generate_password(12, false);
@@ -54,7 +54,7 @@ class ScheduleBackupTask extends BackupTask
 
     protected function setDefaultBasicScheduleOptions()
     {
-        $this->jobDataDto->setScheduleTime(["0", "0"]); // 00:00 - 12 AM Midnight
+        $this->jobDataDto->setScheduleTime(["0", "0"]); 
         $this->jobDataDto->setScheduleRotation(1);
         $this->jobDataDto->setScheduleRecurrence(Cron::BASIC_DAILY);
     }

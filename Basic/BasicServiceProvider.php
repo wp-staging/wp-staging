@@ -10,19 +10,19 @@ use WPStaging\Framework\Job\Ajax\Status;
 use WPStaging\Framework\Language\Language as FrameworkLanguage;
 use WPStaging\Frontend\FrontendServiceProvider;
 
-/**
- * Class BasicServiceProvider
- *
- * A Service Provider to tell which services to register/bootstrap for the Basic feature.
- * Called at the start of bootstrapping process to make some feature available to the plugin.
- *
- * @package WPStaging\Basic
- */
+
+
+
+
+
+
+
+
 class BasicServiceProvider extends ServiceProvider
 {
-    /**
-     * @return void
-     */
+
+
+
     public function registerServiceProvider()
     {
         $this->container->register(BootstrapServiceProvider::class);
@@ -32,23 +32,23 @@ class BasicServiceProvider extends ServiceProvider
         add_action('wp_ajax_nopriv_wpstg--job--status', $this->container->callback(Status::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
-    /**
-     * Enqueue hooks.
-     *
-     * @return void
-     */
+
+
+
+
+
     protected function addHooks()
     {
         Hooks::registerInternalHook(WPStaging::HOOK_BOOTSTRAP_SERVICES, [$this, 'registerServiceProvider']);
         Hooks::registerInternalHook(FrameworkLanguage::HOOK_LOAD_MO_FILES, $this->container->callback(Language::class, 'loadLanguage'));
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function registerClasses()
     {
-        // This is to tell the container to use the BASIC feature
+ 
         $this->container->setVar('WPSTG_BASIC', true);
     }
 }

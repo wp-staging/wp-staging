@@ -25,7 +25,7 @@ use WPStaging\Framework\Filesystem\PartIdentifier;
 
 class DatabaseBackupTask extends BackupTask
 {
-    /** @var Directory */
+ 
     protected $directory;
 
     public function __construct(Directory $directory, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -44,22 +44,22 @@ class DatabaseBackupTask extends BackupTask
         return 'Backup Database';
     }
 
-    /**
-     * @return object|TaskResponseDto
-     * @throws Exception
-     */
+
+
+
+
     public function execute()
     {
         $this->setupDatabaseFilePathName();
 
-        // Tables to exclude without prefix
+ 
         $tablesToExclude = [
             'wpstg_queue',
             'wpstg_settings',
             'wpr_rucss_used_css',
         ];
 
-        // Exclude these tables for main network site backups
+ 
         if (is_multisite() && $this->jobDataDto->getIsNetworkSiteBackup() && is_main_site($this->jobDataDto->getSubsiteBlogId())) {
             $tablesToExclude[] = 'blogmeta';
             $tablesToExclude[] = 'blogs';
@@ -75,9 +75,9 @@ class DatabaseBackupTask extends BackupTask
             $subsites = $this->jobDataDto->getSitesToBackup();
         }
 
-        // First request: Create DDL
+ 
         if (!$this->stepsDto->getTotal()) {
-            /** @var DDLExporter $ddlExporter */
+ 
             $ddlExporter = WPStaging::make(DDLExporterProvider::class)->getExporter();
             $ddlExporter->setIsNetworkSiteBackup($this->jobDataDto->getIsNetworkSiteBackup());
             $ddlExporter->setSubsiteBlogId($this->jobDataDto->getSubsiteBlogId());
@@ -91,22 +91,22 @@ class DatabaseBackupTask extends BackupTask
 
             $this->stepsDto->setTotal(count($this->jobDataDto->getTablesToBackup()));
 
-            // Early bail: DDL created, do not increase step, so that the next request can start backing up rows from the first table.
+ 
             return $this->generateResponse(false);
         }
 
-        // Safety check: Check that the DDL was successfully created
+ 
         if (empty($this->jobDataDto->getTablesToBackup())) {
             $this->logger->critical('Could not create the tables DDL.');
             throw new Exception('Could not create the tables DDL.');
         }
 
-        // Action hook for internal use only: used during memory exhaust test
+ 
         Hooks::doAction('wpstg.tests.backup.export_database.before_rows_export');
 
         $useMemoryExhaustFix = $this->isMemoryExhaustFixEnabled();
-        // Lazy instantiation
-        /** @var RowsExporter $rowsExporter */
+ 
+ 
         $rowsExporter = WPStaging::make(RowsExporterProvider::class)->getExporter();
         $rowsExporter->setSubsites($subsites);
         $rowsExporter->setIsNetworkSiteBackup($this->jobDataDto->getIsNetworkSiteBackup());
@@ -137,11 +137,11 @@ class DatabaseBackupTask extends BackupTask
                 $this->jobDataDto->setTableAverageRowLength(0);
                 $this->stepsDto->incrementCurrentStep();
 
-                /*
-                 * Persist the steps dto, so that if memory blows while processing
-                 * the next table, the next request will continue from there.
-                 * The job data goes with it, or the next table starts on this table's offset.
-                 */
+
+
+
+
+
                 $this->persistStepsDto();
                 $this->persistJobDataDto();
                 continue;
@@ -150,7 +150,7 @@ class DatabaseBackupTask extends BackupTask
             $rowsExporter->setTableRowsOffset($this->jobDataDto->getTableRowsOffset());
             $rowsExporter->setTotalRowsExported($this->jobDataDto->getTotalRowsBackup());
 
-            // Maybe lock the table
+ 
             $tableLocked = false;
             $hasNumericIncrementalPk = false;
 
@@ -161,15 +161,15 @@ class DatabaseBackupTask extends BackupTask
                 $tableLocked = $rowsExporter->lockTable();
             }
 
-            // Count rows once per table
+ 
             if ($this->jobDataDto->getTableRowsOffset() === 0) {
                 $this->jobDataDto->setTotalRowsOfTableBeingBackup($rowsExporter->countTotalRows());
 
                 if ($hasNumericIncrementalPk) {
-                    /*
-                     * We set the offset to the lowest number possible, so that we can start fetching
-                     * rows even if their primary key values are a negative integer or zero.
-                     */
+
+
+
+
                     $rowsExporter->setTableRowsOffset(-PHP_INT_MAX);
                 }
             }
@@ -191,8 +191,8 @@ class DatabaseBackupTask extends BackupTask
                 throw $e;
             }
 
-            // Measured before the row progress moves, so a failure here cannot leave the job
-            // holding an offset past the checkpoint it was persisted with.
+ 
+ 
             $writtenBytes = $this->measureCheckpoint($rowsExporter);
 
             $this->stepsDto->setCurrent($rowsExporter->getTableIndex());
@@ -218,20 +218,20 @@ class DatabaseBackupTask extends BackupTask
                 $this->jobDataDto->getLastQueryInfoJSON()
             ));
 
-            // Done with this table.
+ 
             if ($rowsLeftToBackup === 0) {
                 $this->jobDataDto->setTotalRowsBackup(0);
                 $this->jobDataDto->setTableRowsOffset(0);
                 $this->jobDataDto->setTableAverageRowLength(0);
-                // Reset for each table
+ 
                 $this->jobDataDto->setLastInsertId(-PHP_INT_MAX);
                 $this->stepsDto->incrementCurrentStep();
 
-                /*
-                 * Persist the steps dto, so that if memory blows while processing
-                 * the next table, the next request will continue from there.
-                 * The job data goes with it, or the next table starts on this table's offset.
-                 */
+
+
+
+
+
                 $this->persistStepsDto();
                 $this->persistJobDataDto();
             }
@@ -245,9 +245,9 @@ class DatabaseBackupTask extends BackupTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupDatabaseFilePathName()
     {
         global $wpdb;
@@ -264,14 +264,14 @@ class DatabaseBackupTask extends BackupTask
         $this->jobDataDto->setDatabaseFile($this->directory->getCacheDirectory() . $basename);
     }
 
-    /**
-     * @param wpdb $wpdb
-     * @param int $partIndex
-     * @param bool $useCache If true, the filename will be retrieved from the job data dto if it exist,
-     *                       otherwise a new name will be generated.
-     *                       Use false to always generate a new name.
-     * @return string
-     */
+
+
+
+
+
+
+
+
     protected function getDatabaseFilename(wpdb $wpdb, int $partIndex = 0, bool $useCache = false): string
     {
         if ($useCache) {
@@ -297,10 +297,10 @@ class DatabaseBackupTask extends BackupTask
         );
     }
 
-    /**
-     * @param int $partIndex
-     * @return string
-     */
+
+
+
+
     protected function getCachedDatabaseFilenameForPart(int $partIndex): string
     {
         return '';
@@ -308,25 +308,25 @@ class DatabaseBackupTask extends BackupTask
 
     protected function setupMultipartDatabaseFilePathName(wpdb $wpdb)
     {
-        // no-op
+ 
     }
 
-    /**
-     * Drop rows a previous request wrote but never accounted for.
-     *
-     * Rows reach the sql file during the request, while the offset tracking them only
-     * reaches the cache on `shutdown`. A request killed in between leaves rows no offset
-     * covers, so the retry exports them twice and the restore fails with MySQL error 1062.
-     *
-     * @param RowsExporter $rowsExporter
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
+
     private function discardRowsWrittenAfterLastCheckpoint(RowsExporter $rowsExporter)
     {
         $databaseFile = $this->jobDataDto->getDatabaseFile();
 
-        // A rotated multipart file restarts the byte count, and the first request after the
-        // DDL has no checkpoint yet. Neither may be truncated.
+ 
+ 
         if ($this->jobDataDto->getSqlCheckpointFile() !== $databaseFile) {
             $writtenBytes = $this->measureCheckpoint($rowsExporter);
 
@@ -346,8 +346,8 @@ class DatabaseBackupTask extends BackupTask
         $result = $rowsExporter->truncateTo($checkpoint);
 
         if ($result === AbstractExporter::TRUNCATE_FAILED) {
-            // Carrying on would leave the rows the offset no longer accounts for in the export,
-            // which is exactly the duplicate-key failure this checkpoint exists to prevent.
+ 
+ 
             throw new RuntimeException(sprintf('Backup database: Could not discard %s of unaccounted rows from a request that did not finish.', size_format($writtenBytes - $checkpoint)));
         }
 
@@ -361,16 +361,16 @@ class DatabaseBackupTask extends BackupTask
         ));
     }
 
-    /**
-     * Measuring is the only step that can fail, so it runs before anything is written to the
-     * dto. A failure after the row offset moved would be persisted by the job as an offset
-     * that accounts for rows the checkpoint does not cover, and the retry would truncate them
-     * away and resume past them.
-     *
-     * @param RowsExporter $rowsExporter
-     * @return int
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
+
+
+
+
     private function measureCheckpoint(RowsExporter $rowsExporter): int
     {
         $writtenBytes = $rowsExporter->getWrittenBytes();
@@ -382,23 +382,23 @@ class DatabaseBackupTask extends BackupTask
         return $writtenBytes;
     }
 
-    /**
-     * Checkpoint and offset are only consistent when written together, and now rather than
-     * on `shutdown`: the steps dto is persisted mid-request too, so a stale checkpoint would
-     * truncate away a table that is already marked done.
-     *
-     * @param int $writtenBytes
-     * @return void
-     */
+
+
+
+
+
+
+
+
     private function commitCheckpoint(int $writtenBytes)
     {
         $this->jobDataDto->setSqlWrittenBytes($writtenBytes);
         $this->persistJobDataDto();
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isMemoryExhaustFixEnabled(): bool
     {
         return defined('WPSTG_MEMORY_EXHAUST_FIX') && (constant('WPSTG_MEMORY_EXHAUST_FIX') === true);

@@ -11,12 +11,12 @@
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 
-// Settings Enabled by default
+ 
 use WPStaging\Framework\Facades\UI\Checkbox;
 
 $settingsEnabled = true;
 $isCronEnabled     = true;
-// If plugin is not pro disable this Option
+ 
 if (!$isPro) {
     $settingsEnabled = false;
 }?>

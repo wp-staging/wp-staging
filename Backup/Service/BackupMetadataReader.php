@@ -6,13 +6,13 @@ use WPStaging\Framework\Filesystem\FileObject;
 
 class BackupMetadataReader
 {
-    /** @var string */
+ 
     const FILTER_MAX_BACKUP_METADATA_SIZE = 'wpstg_max_backup_metadata_size';
 
-    /** @var int */
+ 
     private $existingMetadataPosition;
 
-    /** @var FileObject */
+ 
     private $fileObject;
 
     public function __construct(FileObject $fileObject)
@@ -20,20 +20,20 @@ class BackupMetadataReader
         $this->fileObject = $fileObject;
     }
 
-    /**
-     * @return array The backup metadata array
-     * @throws \RuntimeException
-     */
+
+
+
+
     public function readBackupMetadata(): array
     {
-        // Default max size 128KB for backup metadata
+ 
         $maxBackupMetadataSize = $this->getExpectedMaxBackupMetadataSize();
-        // Make sure the max size is never above 1MB
+ 
         $negativeOffset = min($maxBackupMetadataSize, 1 * MB_IN_BYTES);
-        // Make sure the max size is never below 32KB
+ 
         $negativeOffset = max($negativeOffset, 32 * KB_IN_BYTES);
 
-        // Set the pointer to the end of the file, minus the negative offset for which to start looking for the backup metadata.
+ 
         $this->fileObject->fseek(max($this->fileObject->getSize() - $negativeOffset, 0), SEEK_SET);
 
         $backupMetadata = null;
@@ -66,10 +66,10 @@ class BackupMetadataReader
         return empty($json) ? [] : $json;
     }
 
-    /**
-     * @param string $line
-     * @return bool
-     */
+
+
+
+
     public function isValidMetadata(string $line): bool
     {
         if ($this->fileObject->isSqlFile() && substr($line, 3, 1) !== '{') {
@@ -84,7 +84,7 @@ class BackupMetadataReader
             return false;
         }
 
-        // We only have one network, pop it to check for blogs.
+ 
         $network = array_pop($maybeMetadata['networks']);
         if (!is_array($network) || !array_key_exists('blogs', $network) || !is_array($network['blogs'])) {
             return false;

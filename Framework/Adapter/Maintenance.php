@@ -7,10 +7,10 @@ use WPStaging\Framework\Filesystem\Filesystem;
 
 class Maintenance
 {
-    /** @var string */
+ 
     const FILTER_ENABLE_MAINTENANCE = 'enable_maintenance_mode';
 
-    /** @var string */
+ 
     const FILE_NAME = '.maintenance';
 
     public function isMaintenance()
@@ -23,7 +23,7 @@ class Maintenance
         $maintenanceFile = $this->findMaintenanceFilePath();
         $fileExists = $this->isMaintenance();
         if ($isMaintenance && !$fileExists) {
-            // Perhaps maintenance.php in WP_CONTENT?
+ 
             (new FileObject($maintenanceFile, FileObject::MODE_WRITE))->fwriteSafe('<?php $upgrading = time() ?>');
             return;
         }

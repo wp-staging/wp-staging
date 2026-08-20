@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Extracts files from backup archives during WordPress site restoration
- *
- * Manages the file extraction process across multiple requests, handling large files,
- * disk space validation, and progress tracking while restoring WordPress files.
- */
+
+
+
+
+
+
 
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
@@ -29,19 +29,19 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 
 class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
 {
-    /** @var Extractor */
+ 
     protected $extractorService;
 
-    /** @var float */
+ 
     protected $start;
 
-    /** @var int */
+ 
     protected $totalFiles;
 
-    /** @var BackupMetadata */
+ 
     protected $metadata;
 
-    /** @var ExtractFilesTaskDto */
+ 
     protected $currentTaskDto;
 
     public function __construct(Extractor $extractor, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -81,12 +81,12 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
             $this->logger->warning($e->getMessage());
             $this->currentTaskDto->fromExtractorDto($this->extractorService->getExtractorDto());
             $this->setCurrentTaskDto($this->currentTaskDto);
-            // No-op, just stop execution
+ 
             throw $e;
         } catch (FinishedQueueException $e) {
             $this->currentTaskDto->fromExtractorDto($this->extractorService->getExtractorDto());
             $this->extractionFinishedLog();
-            // Force the completion to avoid a loop in case not all file extracted i.e. due to filter.
+ 
             $this->currentTaskDto->totalFilesExtracted = $this->stepsDto->getTotal();
         }
 
@@ -117,9 +117,9 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function persistDto(ExtractorDto $extractorDto)
     {
         $this->currentTaskDto->fromExtractorDto($extractorDto);
@@ -139,9 +139,9 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         return size_format($bytesPerSecond) . '/s';
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function prepareTask()
     {
         $this->metadata   = $this->jobDataDto->getBackupMetadata();
@@ -154,36 +154,36 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         $this->setupExtractor();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupExtractor()
     {
         $this->stepsDto->setTotal($this->totalFiles);
         $this->extractorService->setup($this->currentTaskDto->toExtractorDto(), $this->jobDataDto->getFile(), $this->jobDataDto->getTmpDirectory());
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setNextBackupToExtract()
     {
-        // no-op
+ 
     }
 
-    /** @return string */
+ 
     protected function getCurrentTaskType(): string
     {
         return ExtractFilesTaskDto::class;
     }
 
-    /**
-     * We have a bug in v6.0.0 - v6.1.3 and v4.0.0 - v4.1.3 where the backup can have multiple file headers for big files.
-     * @return bool
-     */
+
+
+
+
     protected function canHaveMultipleHeadersIssue(): bool
     {
-        // Early bail: v1 backup doesn't have this issue
+ 
         if ($this->metadata->getIsBackupFormatV1()) {
             return false;
         }
@@ -201,9 +201,9 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         return false;
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     private function getExcludedIdentifiers(): array
     {
         $excludedParts = Hooks::applyFilters(RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS, []);
@@ -211,11 +211,11 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
             return [];
         }
 
-        /** @var PathIdentifier */
+ 
         $pathIdentifier      = WPStaging::make(PathIdentifier::class);
         $excludedIdentifiers = [];
         foreach ($excludedParts as $part) {
-            // we need to handle the database part separately, as it's not a part of the PathIdentifier
+ 
             if ($part === PartIdentifier::DATABASE_PART_IDENTIFIER) {
                 $excludedIdentifiers[] = PartIdentifier::DATABASE_PART_IDENTIFIER;
                 continue;
@@ -231,9 +231,9 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         return $excludedIdentifiers;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function extractionFinishedLog()
     {
         $totalFilesProcessed = $this->currentTaskDto->totalFilesExtracted + $this->currentTaskDto->totalFilesSkipped;

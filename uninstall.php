@@ -28,10 +28,10 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
  */
 class Uninstall
 {
-    /**
-     * Options we want to preserve.
-     * These should remain until we have a staging site deletion routine.
-     */
+
+
+
+
     private $preserveOptions = [
         'wpstg_existing_clones',
         'wpstg_existing_clones_beta',
@@ -42,20 +42,20 @@ class Uninstall
     public function __construct()
     {
         if (!is_multisite()) {
-            $this->runForSingleSite(); // Normal single-site uninstall
+            $this->runForSingleSite(); 
             return;
         }
 
         if ($this->isNetworkUninstall()) {
-            $this->runForNetwork(); // Full cleanup across all sites + network data
+            $this->runForNetwork(); 
         } else {
-            $this->runForSingleSite(); // Only clean current subsite
+            $this->runForSingleSite(); 
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function runForNetwork()
     {
         $siteIds = get_sites(['fields' => 'ids']);
@@ -68,9 +68,9 @@ class Uninstall
         $this->deleteNetworkOptions();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function runForSingleSite()
     {
         $settings = $this->getSettings();
@@ -79,34 +79,34 @@ class Uninstall
             return;
         }
 
-        // If Pro is installed, no matter if active or not, and we're uninstalling Basic, do nothing to preserve all data.
-        // This is to make sure pro version still works once user installs free version again in case he only temporary uninstalled it.
+ 
+ 
         if ($this->isProInstalled() && $this->isUninstallingBasic()) {
             return;
         }
 
-        // If Basic is installed, and we're uninstalling Pro, remove only Pro data
+ 
         if ($this->isBasicInstalled() && $this->isUninstallingPro()) {
             $this->deleteOptions($this->getProOptions());
             return;
         }
 
-        // If Basic not installed, and we're uninstalling Pro, remove all data
+ 
         if (!$this->isBasicInstalled() && $this->isUninstallingPro()) {
             $this->performCompleteCleanup(true);
             return;
         }
 
-        // If Pro not installed, and we're uninstalling Basic, remove all data
+ 
         if (!$this->isProInstalled() && $this->isUninstallingBasic()) {
             $this->performCompleteCleanup(false);
         }
     }
 
-    /**
-     * @param bool $isPro
-     * @return void
-     */
+
+
+
+
     private function performCompleteCleanup(bool $isPro)
     {
         $this->deleteOptions($this->getBasicOptions());
@@ -122,9 +122,9 @@ class Uninstall
         $this->cleanupWpStagingDirectories();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function dropWpStagingSettingsTable()
     {
         global $wpdb;
@@ -137,52 +137,52 @@ class Uninstall
         $wpdb->query("DROP TABLE IF EXISTS `{$tableName}`");
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isNetworkUninstall(): bool
     {
         return (is_multisite() && is_network_admin());
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isUninstallingBasic(): bool
     {
         $pluginDirs = ['wp-staging', 'wp-staging-1'];
         return $this->isUninstallingPlugin($pluginDirs);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isUninstallingPro(): bool
     {
         $pluginDirs = ['wp-staging-pro', 'wp-staging-pro-1'];
         return $this->isUninstallingPlugin($pluginDirs);
     }
 
-    /**
-     * @param array $pluginDirs
-     * @return bool
-     */
+
+
+
+
     private function isUninstallingPlugin(array $pluginDirs): bool
     {
         return in_array(basename(__DIR__), $pluginDirs);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isProInstalled(): bool
     {
-        // First try header-based detection (more robust)
+ 
         if ($this->isProInstalledByHeaders()) {
             return true;
         }
 
-        // Fallback to file-based detection for backward compatibility
+ 
         $plugins = [
             'wp-staging-pro-1/wp-staging-pro.php',
             'wp-staging-pro/wp-staging-pro.php',
@@ -196,17 +196,17 @@ class Uninstall
         return false;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isBasicInstalled(): bool
     {
-        // First try header-based detection (more robust)
+ 
         if ($this->isBasicInstalledByHeaders()) {
             return true;
         }
 
-        // Fallback to file-based detection for backward compatibility
+ 
         $plugins = [
             'wp-staging-1/wp-staging.php',
             'wp-staging/wp-staging.php',
@@ -220,19 +220,19 @@ class Uninstall
         return false;
     }
 
-    /**
-     * @param $pluginName
-     * @return bool
-     */
+
+
+
+
     private function isPluginInstalled($pluginName): bool
     {
         return file_exists( WP_PLUGIN_DIR . '/' . $pluginName );
     }
 
-    /**
-     * @param array $identifiers
-     * @return bool
-     */
+
+
+
+
     private function findPluginByIdentifiers(array $identifiers): bool
     {
         if (!function_exists('get_plugins')) {
@@ -263,9 +263,9 @@ class Uninstall
         return false;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isBasicInstalledByHeaders(): bool
     {
         return $this->findPluginByIdentifiers([
@@ -275,9 +275,9 @@ class Uninstall
         ]);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isProInstalledByHeaders(): bool
     {
         return $this->findPluginByIdentifiers([
@@ -287,21 +287,25 @@ class Uninstall
         ]);
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getSettings(): array
     {
         return json_decode(json_encode(get_option('wpstg_settings', [])), true) ?? [];
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     private function getBasicOptions(): array
     {
         return [
             'wpstg_settings',
+            'wpstg_backup_before_update_mode',
+            'wpstg_backup_before_update_intro_seen',
+            'wpstg_backup_before_update_request',
+            'wpstg_update_protection_health',
             'wpstg_clone_settings',
             'wpstg_free_install_date',
             'wpstg_installDate',
@@ -356,11 +360,11 @@ class Uninstall
         ];
     }
 
-    /**
-     * Per-user meta keys written by the Free/shared code, removed for every user.
-     *
-     * @return string[]
-     */
+
+
+
+
+
     private function getBasicUserMeta(): array
     {
         return [
@@ -368,9 +372,9 @@ class Uninstall
         ];
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     private function getProOptions(): array
     {
         return [
@@ -381,17 +385,17 @@ class Uninstall
             'wpstg_license_key',
             'wpstg_license_status',
             'wpstg_pro_latest_version',
-            'wpstg_googledrive', //Legacy
+            'wpstg_googledrive', 
             'wpstg_google-drive',
             'wpstg_dropbox',
             'wpstg_one-drive',
             'wpstg_pcloud',
-            'wpstg_amazons3', //Legacy
+            'wpstg_amazons3', 
             'wpstg_amazon-s3',
             'wpstg_sftp',
-            'wpstg_digitalocean', //Legacy
+            'wpstg_digitalocean', 
             'wpstg_digitalocean-spaces',
-            'wpstg_wasabi', //Legacy
+            'wpstg_wasabi', 
             'wpstg_wasabi-s3',
             'wpstg_generic-s3',
             'wpstg_backup_schedules',
@@ -405,13 +409,14 @@ class Uninstall
         ];
     }
 
-    /**
-     * @return string[]
-     */
+
+
+
     private function getAllTransients(): array
     {
         return [
             'wpstg_current_job',
+            'wpstg_deactivation_reason',
             'wpstg_rest_url',
             'wpstg.run_daily',
             'wpstg_show_login_notice',
@@ -442,14 +447,14 @@ class Uninstall
         ];
     }
 
-    /**
-     * @param array $optionNames
-     * @return void
-     */
+
+
+
+
     private function deleteOptions(array $optionNames)
     {
         foreach ($optionNames as $optionName) {
-            // Skip if this option should be preserved
+ 
             if (in_array($optionName, $this->preserveOptions, true)) {
                 continue;
             }
@@ -458,12 +463,12 @@ class Uninstall
         }
     }
 
-    /**
-     * Delete the given user meta keys for every user on the site.
-     *
-     * @param string[] $metaKeys
-     * @return void
-     */
+
+
+
+
+
+
     private function deleteUserMeta(array $metaKeys)
     {
         foreach ($metaKeys as $metaKey) {
@@ -471,9 +476,9 @@ class Uninstall
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function deleteTransients()
     {
         $transients = $this->getAllTransients();
@@ -482,19 +487,19 @@ class Uninstall
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function cleanupEmptyPreserveOptions()
     {
         $this->cleanupEmptyOptions($this->preserveOptions);
     }
 
-    /**
-     * @param array $options
-     * @param bool $isSiteOptions
-     * @return void
-     */
+
+
+
+
+
     private function cleanupEmptyOptions(array $options, bool $isSiteOptions = false)
     {
         foreach ($options as $option) {
@@ -505,18 +510,18 @@ class Uninstall
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function clearCronEvents()
     {
-        // @see WPStaging\Core\Cron\Cron::ACTION_WEEKLY_EVENT
+ 
         wp_clear_scheduled_hook('wpstg_weekly_event');
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function cleanupWpStagingDirectories()
     {
         $uploadsBase        = $this->getUploadsDirectory() . 'wp-staging/';
@@ -524,7 +529,7 @@ class Uninstall
             $this->getWpContentDirectory() . 'wp-staging',
         ];
 
-        // Delete wp-staging uploads dir if it does not contain .wpstg files
+ 
         if (!$this->isDirectoryContainsWpstgFiles($uploadsBase . 'backups')) {
             $directoriesToClean[] = $uploadsBase;
         } else {
@@ -538,10 +543,10 @@ class Uninstall
         }
     }
 
-    /**
-     * @param string $directory
-     * @return void
-     */
+
+
+
+
     private function deleteDirectoryRecursively(string $directory)
     {
         if (!is_dir($directory)) {
@@ -569,9 +574,9 @@ class Uninstall
         @rmdir($directory);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function deleteNetworkOptions()
     {
         delete_site_option('wpstg_license_key');
@@ -580,27 +585,27 @@ class Uninstall
         $this->cleanupEmptyOptions($this->preserveOptions, true);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getUploadsDirectory(): string
     {
         $uploadDir = wp_upload_dir();
         return trailingslashit($uploadDir['basedir']);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getWpContentDirectory(): string
     {
         return trailingslashit(WP_CONTENT_DIR);
     }
 
-    /**
-     * @param string $backupsDir
-     * @return bool
-     */
+
+
+
+
     private function isDirectoryContainsWpstgFiles(string $backupsDir): bool
     {
         if (!is_dir($backupsDir)) {

@@ -31,16 +31,16 @@ $renderer->accordionSection([
     'panelId'      => 'wpstg-destination-advanced-settings',
     'title'        => __('Destination and advanced options', 'wp-staging'),
 ], function () use ($renderer, $isProLicenseActive, $isProBuild, $isCreate, $stagingSetup, $defaultPathBase, $defaultSiteName, $productionSiteUrl) {
-    // Treat an unlicensed Pro install like the free build: lock the advanced
-    // destination controls (custom path/url, external DB, new admin, symlink).
+ 
+ 
     $isPro                 = $isProLicenseActive;
     $isDestinationDisabled = !$isPro;
     $advancedSectionStyle  = (!$isProBuild && $isCreate) || $stagingSetup->getIsOpenDisabledSettingsSectionByDefault() ? '' : ' style="display: none;"';
 
-    // Locked controls in the free build carry the same "Available in Pro"
-    // badge as the Staging isolation section, so the gating reads the same way.
-    // Each badge links to the pricing page with a unique utm_campaign so the
-    // upgrade click can be attributed to the exact control in Matomo.
+ 
+ 
+ 
+ 
     $renderProBadge = function ($context, $extraClass = '') use ($renderer) {
         $pricingUrl = Language::getUpgradeUrl($context);
         ?><a class="wpstg-badge-amber <?php echo esc_attr($extraClass); ?>" href="<?php echo esc_url($pricingUrl); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Requires WP STAGING Pro', 'wp-staging'); ?>"><?php $renderer->icon('lock', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('Available in Pro', 'wp-staging'); ?></a><?php
@@ -102,11 +102,11 @@ $renderer->accordionSection([
                 </div>
             </dl>
             <?php
-            // The read-only Destination Path / Target Hostname fields are
-            // redundant once the path/URL rows carry their own (disabled)
-            // Customize affordance, so only render the editable fields for a
-            // licensed Pro install. Free create defaults to the standard
-            // location and never reads these inputs.
+ 
+ 
+ 
+ 
+ 
             if ($isPro) : ?>
                 <div id="wpstg-clone-directory" class="wpstg-advanced-settings-expanded-section"<?php echo $advancedSectionStyle; // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped ?>>
                     <div class="wpstg-advanced-settings-expanded-fields wpstg-py-1">

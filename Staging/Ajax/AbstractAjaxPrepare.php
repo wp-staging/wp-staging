@@ -11,13 +11,13 @@ use WPStaging\Staging\Service\StagingEngine;
 
 abstract class AbstractAjaxPrepare extends PrepareJob
 {
-    /** @var string */
+ 
     protected $postDataKey = '';
 
-    /**
-     * @param array|null $data
-     * @return void
-     */
+
+
+
+
     public function ajaxPrepare($data)
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -29,7 +29,7 @@ abstract class AbstractAjaxPrepare extends PrepareJob
         }
 
         try {
-            $this->processLock->checkProcessLocked();
+            $this->processLock->lockProcess();
         } catch (ProcessLockedException $e) {
             wp_send_json_error($e->getMessage(), $e->getCode());
         }
@@ -43,10 +43,10 @@ abstract class AbstractAjaxPrepare extends PrepareJob
         wp_send_json_success();
     }
 
-    /**
-     * @param array|null $data
-     * @return array|\WP_Error
-     */
+
+
+
+
     public function prepare($data = null)
     {
         if (empty($this->postDataKey)) {
@@ -68,17 +68,17 @@ abstract class AbstractAjaxPrepare extends PrepareJob
         return $sanitizedData;
     }
 
-    /**
-     * @param array|null $data
-     * @return array
-     */
+
+
+
+
     public function validateAndSanitizeData($data): array
     {
         if (empty($data)) {
             $data = [];
         }
 
-        // Unset any empty value so that we replace them with the defaults.
+ 
         foreach ($data as $key => $value) {
             if ($value === '' || $value === null) {
                 unset($data[$key]);
@@ -89,10 +89,10 @@ abstract class AbstractAjaxPrepare extends PrepareJob
 
         $data = wp_parse_args($data, $defaults);
 
-        // Make sure data has no keys other than the expected ones.
+ 
         $data = array_intersect_key($data, $defaults);
 
-        // Make sure data has all expected keys.
+ 
         foreach ($defaults as $expectedKey => $value) {
             if (!array_key_exists($expectedKey, $data)) {
                 throw new \UnexpectedValueException("Invalid request. Missing '$expectedKey'.");
@@ -119,8 +119,8 @@ abstract class AbstractAjaxPrepare extends PrepareJob
 
     protected function parseAndSanitizeDirectories(string $directories): array
     {
-        // JS posts values encodeURIComponent-wrapped, so the separator comma arrives as %2C. Decode
-        // first, otherwise explode() never splits the list and path matching silently fails.
+ 
+ 
         $directories = $directories === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode(Sanitize::sanitizeString($directories)));
 
         return array_map('sanitize_text_field', $directories);

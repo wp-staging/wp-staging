@@ -7,19 +7,19 @@ use WPStaging\Staging\Dto\Service\BigFileDto;
 
 class FileCopierTaskDto extends AbstractTaskDto
 {
-    /** @var string */
+ 
     public $filePath = '';
 
-    /** @var string */
+ 
     public $destinationPath = '';
 
-    /** @var string */
+ 
     public $indexPath = '';
 
-    /** @var int */
+ 
     public $writtenBytesTotal = 0;
 
-    /** @var int */
+ 
     public $fileSize = 0;
 
     public function getBigFileDto(): BigFileDto
@@ -34,12 +34,12 @@ class FileCopierTaskDto extends AbstractTaskDto
         return $bigFileDto;
     }
 
-    /**
-     * Set properties from a BigFileDto object or reset if null.
-     *
-     * @param BigFileDto|null $bigFileDto The DTO to set from, or null to reset.
-     * @return void
-     */
+
+
+
+
+
+
     public function setBigFileDto($bigFileDto)
     {
         if ($bigFileDto === null) {

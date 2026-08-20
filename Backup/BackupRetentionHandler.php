@@ -8,38 +8,38 @@ class BackupRetentionHandler
 {
     use StorageIdNormalizerTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const OPTION_BACKUPS_RETENTION = 'wpstg_backups_retention';
 
-    /**
-     * @var array
-     */
+
+
+
     protected $backupsRetention;
 
-    /**
-     * @param  array $backups
-     * @return bool
-     */
+
+
+
+
     public function updateBackupsRetentionOptions(array $backups): bool
     {
         $backups = $this->normalizeStorageIds($backups);
         return update_option(self::OPTION_BACKUPS_RETENTION, $backups);
     }
 
-    /**
-     * @param string|bool $storage if it is empty string('') all backups retention will be returned!
-     *
-     * @return array
-     *
-     * An array of arrays containing backup information:
-     *    - 'backupId': An array with backup details.
-     *        - 'createdDate': A string representing the date and time of backup creation.
-     *        - 'storages': An array of storage types used for the backup.
-     *        - 'backupSize': An integer representing the size of the backup.
-     *        - 'isMultipart': A boolean indicating whether the backup is multipart.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     public function getBackupsRetention($storage = ''): array
     {
         if ($storage === false) {
@@ -50,12 +50,12 @@ class BackupRetentionHandler
         $originalBackups = $backups;
         $backups = $this->normalizeStorageIds($backups);
 
-        // Persist normalized storage IDs for future lookups
+ 
         if ($backups !== $originalBackups) {
             update_option(self::OPTION_BACKUPS_RETENTION, $backups);
         }
 
-        // Normalize the storage parameter as well
+ 
         $storage = $this->normalizeStorageId($storage);
 
         if ($storage) {
@@ -67,16 +67,16 @@ class BackupRetentionHandler
         return $backups;
     }
 
-    /**
-     * @param  string $backupId
-     * @param  string $storageToRemove
-     * @return bool
-     */
+
+
+
+
+
     public function unsetStorageFromBackupsRetention(string $backupId, string $storageToRemove): bool
     {
         $this->backupsRetention = $this->getBackupsRetention();
 
-        // Normalize the storage to remove
+ 
         $storageToRemove = $this->normalizeStorageId($storageToRemove);
 
         if (!isset($this->backupsRetention[$backupId])) {
@@ -96,12 +96,12 @@ class BackupRetentionHandler
         unset($currentBackup['storages'][$storageToRemoveKey]);
         $this->backupsRetention[$backupId] = $currentBackup;
 
-        // Don't hold backup without storage.
+ 
         if (empty($currentBackup['storages'])) {
             unset($this->backupsRetention[$backupId]);
         }
 
-        // Don't hold backup with only localStorage.
+ 
         if (count($currentBackup['storages']) === 1 && reset($currentBackup['storages']) === 'localStorage') {
             unset($this->backupsRetention[$backupId]);
         }
@@ -111,13 +111,13 @@ class BackupRetentionHandler
         return true;
     }
 
-    /**
-     * Normalize storage IDs in backups array for backward compatibility
-     * Converts legacy storage IDs to new hyphenated identifiers (e.g. googleDrive -> google-drive)
-     *
-     * @param array $backups
-     * @return array
-     */
+
+
+
+
+
+
+
     private function normalizeStorageIds(array $backups): array
     {
         foreach ($backups as $backupId => &$backup) {

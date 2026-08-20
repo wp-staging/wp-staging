@@ -10,10 +10,10 @@ use WPStaging\Staging\Tasks\StagingSiteDelete\FinishStagingSiteDeleteTask;
 
 class StagingSiteDelete extends AbstractJob
 {
-    /** @var StagingSiteDeleteDataDto $jobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var array The array of tasks to execute for this job. Populated at init(). */
+ 
     private $tasks = [];
 
     public static function getJobName()

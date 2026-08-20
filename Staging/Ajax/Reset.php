@@ -13,14 +13,14 @@ class Reset extends AbstractTemplateComponent
     use JobResponseTrait;
     use MemoryExhaustTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_REQUEST = 'wpstg_staging_reset';
 
-    /**
-     * @return void
-     */
+
+
+
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -35,9 +35,9 @@ class Reset extends AbstractTemplateComponent
         $this->sendJobResponse($jobReset);
     }
 
-    /**
-     * @return StagingSiteReset
-     */
+
+
+
     protected function getResetJob()
     {
         return WPStaging::make(StagingSiteReset::class);

@@ -8,7 +8,7 @@ use WPStaging\Framework\Facades\Hooks;
 
 class UpdateWpOptionsTablePrefix extends DBCloningService
 {
-    /** @var string */
+ 
     const FILTER_DATA_EXCLUDED_ROWS = 'wpstg_data_excl_rows';
 
     protected function internalExecute()
@@ -17,7 +17,7 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
         $stagingDb = $this->dto->getStagingDb();
         $productionDb = $this->dto->getProductionDb();
 
-        // Skip, prefixes are identical. No change needed
+ 
         if ($productionDb->prefix === $stagingPrefix) {
             $this->log("Prefix already the same - skipping");
             return true;
@@ -30,12 +30,12 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
         return $this->updateOptionsTable('options', $stagingPrefix, $productionDb->prefix, $stagingDb);
     }
 
-    /**
-     * @param string $stagingPrefix
-     * @param \wpdb  $productionDb
-     * @param \wpdb  $stagingDb
-     * @return boolean
-     */
+
+
+
+
+
+
     private function updateAllOptionsTables($stagingPrefix, $productionDb, $stagingDb)
     {
         $basePrefix = $productionDb->base_prefix;
@@ -48,15 +48,15 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
         return true;
     }
 
-    /**
-     * @param string $tableName
-     * @param string $stagingPrefix
-     * @param string $productionPrefix
-     * @param \wpdb  $stagingDb
-     * @return boolean
-     *
-     * @throws FatalException
-     */
+
+
+
+
+
+
+
+
+
     private function updateOptionsTable($tableName, $stagingPrefix, $productionPrefix, $stagingDb)
     {
         $this->log("Updating db prefix in {$stagingPrefix}{$tableName}.");
@@ -65,7 +65,7 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
             return true;
         }
 
-        // Filter the rows below. Do not update them!
+ 
         $filters = [
             'wp_mail_smtp',
             'wp_mail_smtp_version',

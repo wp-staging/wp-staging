@@ -17,7 +17,7 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 
-/** @var CliIntegrationNotice $cliNotice */
+ 
 $cliNotice = WPStaging::make(CliIntegrationNotice::class);
 $hasDeveloperLicense = $cliNotice->isDeveloperOrHigherLicense();
 

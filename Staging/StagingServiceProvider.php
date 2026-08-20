@@ -30,9 +30,9 @@ use WPStaging\Staging\Jobs\StagingSiteReset;
 use WPStaging\Staging\Jobs\StagingSiteUpdate;
 use WPStaging\Staging\Tasks\StagingSite\CleanupStagingTablesTask;
 
-/**
- * Registers staging services and AJAX endpoints.
- */
+
+
+
 class StagingServiceProvider extends FeatureServiceProvider
 {
     protected function registerClasses()

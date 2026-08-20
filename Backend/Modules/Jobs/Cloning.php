@@ -24,67 +24,67 @@ use WPStaging\Staging\Sites;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class Cloning
- * @package WPStaging\Backend\Modules\Jobs
- */
+
+
+
+
 class Cloning extends Job
 {
     use TablePrefixValidator;
 
-    /**
-     * @var string
-     */
+
+
+
     const WPSTG_REQUEST = 'wpstg_cloning';
 
-    /** @var string */
+ 
     const FILTER_CLONE_EXCLUDED_FILES_FULL_PATH = 'wpstg.clone.excluded_files_full_path';
 
-    /** @var string */
+ 
     const FILTER_CLONE_EXCLUDED_FILES = 'wpstg_clone_excluded_files';
 
-    /**
-     * @var object
-     */
+
+
+
     private $db;
 
-    /**
-     * @var WpDefaultDirectories
-     */
+
+
+
     private $dirUtils;
 
-    /**
-     * @var Sites
-     */
+
+
+
     private $sitesHelper;
 
-    /**
-     * @var string
-     */
+
+
+
     private $errorMessage;
 
-    /**
-     * @var Sanitize
-     */
+
+
+
     protected $sanitize;
 
-    /**
-     * @var Urls
-     */
+
+
+
     private $urls;
 
-    /** @var Directory */
+ 
     private $dirAdapter;
 
-    /** @var PathIdentifier */
+ 
     private $pathIdentifier;
 
-    /** @var Strings */
+ 
     protected $strUtil;
 
-    /**
-     * Initialize is called in \Job
-     */
+
+
+
     public function initialize()
     {
         $this->db             = WPStaging::getInstance()->get("wpdb");
@@ -102,11 +102,11 @@ class Cloning extends Job
         return $this->errorMessage;
     }
 
-    /**
-     * Save Chosen Cloning Settings
-     * @return bool
-     * @throws \Exception
-     */
+
+
+
+
+
     public function save(): bool
     {
         if (!isset($_POST) || !isset($_POST["cloneID"])) {
@@ -114,28 +114,28 @@ class Cloning extends Job
             return false;
         }
 
-        // Delete files index cache file
+ 
         $this->filesIndexCache->delete();
 
-        // Generate Options
+ 
         $this->options->root         = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, ABSPATH);
         $this->options->current      = null;
         $this->options->currentClone = null;
 
-        // Clone ID -> timestamp (time at which this clone creation initiated)
+ 
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
 
-        // Clone Name -> Site name that user input
+ 
         if (isset($_POST["cloneName"])) {
             $this->options->cloneName = sanitize_text_field($_POST["cloneName"]);
         }
 
-        // If it's empty or it's a clone Id, try setting it to a random human-friendly name
+ 
         if (empty($this->options->cloneName) || $this->options->cloneName === $this->options->clone) {
             $this->options->cloneName = $this->maybeGenerateFriendlyName();
         }
 
-        // The slugified version of Clone Name (to use in directory creation)
+ 
         $this->options->cloneDirectoryName = $this->sitesHelper->sanitizeDirectoryName($this->options->cloneName);
         $result                            = $this->sitesHelper->isCloneExists($this->options->cloneDirectoryName);
         if ($result !== false) {
@@ -156,9 +156,9 @@ class Cloning extends Job
             'desktop.ini',
             '.gitignore',
             '*.log',
-            'web.config', // Important: Windows IIS configuration file. Must not be in the staging site!
-            '.wp-staging', // Determines if a site is a staging site
-            '.wp-staging-cloneable', // File that makes the staging site cloneable.
+            'web.config', 
+            '.wp-staging', 
+            '.wp-staging-cloneable', 
         ]);
 
         $excludedFilesFullPath = [
@@ -179,18 +179,18 @@ class Cloning extends Job
 
         $this->options->currentStep = 0;
 
-        // Job
+ 
         $this->options->job = new \stdClass();
         $this->loadLegacyExistingClones();
 
-        // Check if clone data already exists and use that one
+ 
         if (isset($this->options->existingClones[$this->options->clone])) {
             $existingClone              = (array)$this->options->existingClones[$this->options->clone];
             $this->options->cloneNumber = isset($existingClone['number']) ? (int)$existingClone['number'] : 1;
             $this->options->prefix      = !empty($existingClone['prefix']) && is_string($existingClone['prefix']) ? $existingClone['prefix'] : $this->setStagingPrefix();
 
-        // Clone does not exist but there are other clones in db
-        // Get data and increment it
+ 
+ 
         } elseif (!empty($this->options->existingClones)) {
             $this->options->cloneNumber = count($this->options->existingClones) + 1;
         }
@@ -200,7 +200,7 @@ class Cloning extends Job
             $this->options->networkClone = isset($_POST['networkClone']) && $this->sanitize->sanitizeBool($_POST['networkClone']);
         }
 
-        // Included Tables / Prefixed Table - Excluded Tables
+ 
         $includedTables              = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
         $excludedTables              = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
         $selectedTablesWithoutPrefix = isset($_POST['selectedTablesWithoutPrefix']) ? $this->sanitize->sanitizeString($_POST['selectedTablesWithoutPrefix']) : '';
@@ -208,13 +208,13 @@ class Cloning extends Job
         $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $this->sanitize->sanitizeBool($_POST['allTablesExcluded']));
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
 
-        // Exclude File Size Rules
+ 
         $this->options->excludeGlobRules = [];
         if (!empty($_POST["excludeGlobRules"])) {
             $this->options->excludeGlobRules = $this->sanitize->sanitizeExcludeRules($_POST["excludeGlobRules"]);
         }
 
-        // Exclude Glob Rules
+ 
         $this->options->excludeSizeRules = [];
         if (!empty($_POST["excludeSizeRules"])) {
             $this->options->excludeSizeRules = $this->sanitize->sanitizeExcludeRules($_POST["excludeSizeRules"]);
@@ -224,17 +224,17 @@ class Cloning extends Job
 
         $pluginWpContentDir = rtrim($this->dirAdapter->getPluginWpContentDirectory(), '/\\');
 
-        /**
-         * @see /WPStaging/Framework/CloningProcess/ExcludedPlugins.php to exclude plugins
-         * Only add other directories here
-         */
+
+
+
+
         $excludedDirectories = [
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'cache',
-            $this->pathIdentifier->transformPathToIdentifiable($pluginWpContentDir), // wp-content/wp-staging
-            PathIdentifier::IDENTIFIER_WP_CONTENT . WPSTG_PLUGIN_DOMAIN, // Extra caution if pluginWpContentDir changed later
+            $this->pathIdentifier->transformPathToIdentifiable($pluginWpContentDir), 
+            PathIdentifier::IDENTIFIER_WP_CONTENT . WPSTG_PLUGIN_DOMAIN, 
         ];
 
-        // Go Daddy related exclusions
+ 
         if (is_dir(trailingslashit($this->dirAdapter->getMuPluginsDirectory()) . 'gd-system-plugin')) {
             $excludedDirectories[] = PathIdentifier::IDENTIFIER_MUPLUGINS . 'gd-system-plugin';
             $excludedDirectories[] = PathIdentifier::IDENTIFIER_MUPLUGINS . 'vendor';
@@ -243,7 +243,7 @@ class Cloning extends Job
             $this->options->tmpExcludedGoDaddyFiles[] = $muPluginsDir . 'vendor';
         }
 
-        // Add upload folder to list of excluded directories for push if symlink option is enabled
+ 
         if ($this->options->uploadsSymlinked) {
             $excludedDirectories[] = PathIdentifier::IDENTIFIER_UPLOADS;
         }
@@ -253,30 +253,30 @@ class Cloning extends Job
 
         $this->options->excludedDirectories = array_merge($excludedDirectories, $excludedDirectoriesRequest);
 
-        // Extra Directories
+ 
         if (isset($_POST["extraDirectories"])) {
             $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, $this->sanitize->sanitizeString($_POST["extraDirectories"]));
         }
 
-        // New Admin Account
+ 
         $this->options->useNewAdminAccount = false;
         $this->options->adminEmail         = '';
         $this->options->adminPassword      = '';
 
-        // External Database
+ 
         $this->options->databaseServer   = 'localhost';
         $this->options->databaseUser     = '';
         $this->options->databasePassword = '';
         $this->options->databaseDatabase = '';
-        // Keep the connected database prefix only when the clone targets an external database.
+ 
         $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
         $this->options->databaseSsl    = false;
 
-        // Custom Hosts
+ 
         $this->options->cloneDir      = '';
         $this->options->cloneHostname = '';
 
-        // Default options for FREE version
+ 
         $this->options->isEmailsAllowed         = true;
         $this->options->isCronEnabled           = true;
         $this->options->isWooSchedulerEnabled   = true;
@@ -289,13 +289,13 @@ class Cloning extends Job
 
         $this->options->homeHostname = $this->urls->getHomeUrlWithoutScheme();
 
-        // Process lock state
+ 
         $this->options->isRunning = true;
         $this->initializeLegacyStagingRun(Job::STAGING);
 
-        // id of the user creating the clone
+ 
         $this->options->ownerId = get_current_user_id();
-        // Save Clone data
+ 
         $this->saveClone();
 
         if (!$this->saveOptions()) {
@@ -307,13 +307,13 @@ class Cloning extends Job
         return true;
     }
 
-    /**
-     * Save clone data initially
-     * @return void
-     */
+
+
+
+
     private function saveClone()
     {
-        // Save new clone data
+ 
         $this->debugLog("Cloning: {$this->options->clone}'s clone job's data is not in database, generating data");
 
         $this->options->existingClones[$this->options->clone] = [
@@ -356,10 +356,10 @@ class Cloning extends Job
         }
     }
 
-    /**
-     * Get destination Hostname depending on whether WP has been installed in sub dir or not
-     * @return string
-     */
+
+
+
+
     private function getDestinationUrl(): string
     {
         if (!empty($this->options->cloneHostname)) {
@@ -369,10 +369,10 @@ class Cloning extends Job
         return trailingslashit(get_site_url()) . $this->options->cloneDirectoryName;
     }
 
-    /**
-     * Return target hostname
-     * @return string
-     */
+
+
+
+
     private function getDestinationHostname(): string
     {
         if (empty($this->options->cloneHostname)) {
@@ -382,33 +382,33 @@ class Cloning extends Job
         return $this->getHostnameWithoutScheme($this->options->cloneHostname);
     }
 
-    /**
-     * Return Hostname without scheme
-     * @param string $string
-     * @return string
-     */
+
+
+
+
+
     private function getHostnameWithoutScheme(string $string): string
     {
         return preg_replace('#^https?://#', '', rtrim($string, '/'));
     }
 
-    /**
-     * Get Destination Directory including staging subdirectory
-     * @return string
-     */
+
+
+
+
     private function getDestinationDir(): string
     {
-        // Throw fatal error
+ 
         if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === trailingslashit(WPStaging::getWPpath()))) {
             $this->returnException('Error: Target path must be different from the root of the production website.');
         }
 
-        // custom destination has been set
+ 
         if (!empty($this->options->cloneDir)) {
             return trailingslashit($this->options->cloneDir);
         }
 
-        // No custom destination so default path will be in a subfolder of root or inside wp-content
+ 
         $cloneDestinationPath = $this->dirAdapter->getAbsPath() . $this->options->cloneDirectoryName;
 
         if (!is_writable($this->dirAdapter->getAbsPath())) {
@@ -428,13 +428,13 @@ class Cloning extends Job
         return $this->options->cloneDir;
     }
 
-    /**
-     * Create a new staging prefix that does not exist in database
-     */
+
+
+
     private function setStagingPrefix()
     {
-        // Find a new prefix that does not already exist in database.
-        // Loop through up to 1000 different possible prefixes should be enough here;)
+ 
+ 
         for ($i = 0; $i <= 10000; $i++) {
             $this->options->prefix = !empty($this->options->existingClones) && $this->options->existingClones instanceof Countable
                 ? 'wpstg' . (count($this->options->existingClones) + $i) . '_'
@@ -443,7 +443,7 @@ class Cloning extends Job
             $sql    = "SHOW TABLE STATUS LIKE '{$this->options->prefix}%'";
             $tables = $this->db->get_results($sql);
 
-            // Prefix does not exist. We can use it
+ 
             if (!$tables) {
                 return $this->options->prefix;
             }
@@ -455,10 +455,10 @@ class Cloning extends Job
     }
 
 
-    /**
-     * Start the cloning job
-     * @throws JobNotFoundException
-     */
+
+
+
+
     public function start()
     {
         if (!is_object($this->options)) {
@@ -498,19 +498,19 @@ class Cloning extends Job
             $this->returnException($this->getReservedPrefixErrorMessage($this->options->databasePrefix));
         }
 
-        // Call the job
+ 
         return $this->{$methodName}();
     }
 
-    /**
-     * @param object $response
-     * @param string $nextJob
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
+
     private function handleJobResponse($response, string $nextJob)
     {
-        // Job is not done
+ 
         if ($response->status !== true) {
             return $response;
         }
@@ -520,17 +520,17 @@ class Cloning extends Job
         $this->options->currentStep = 0;
         $this->options->totalSteps  = 0;
 
-        // Save options
+ 
         $this->saveOptions();
 
         return $response;
     }
 
-    /**
-     * Copy data from staging site to temporary column to use it later
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobPreserveDataFirstStep()
     {
         $this->writeJobSpecificLogStartHeader();
@@ -539,82 +539,82 @@ class Cloning extends Job
         return $this->handleJobResponse($preserve->start(), 'database');
     }
 
-    /**
-     * Clone Database
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobDatabase()
     {
         $database = new Database();
         return $this->handleJobResponse($database->start(), "SearchReplace");
     }
 
-    /**
-     * Search & Replace
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobSearchReplace()
     {
         $searchReplace = new SearchReplace();
         return $this->handleJobResponse($searchReplace->start(), "PreserveDataSecondStep");
     }
 
-    /**
-     * Copy tmp data back to staging site
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobPreserveDataSecondStep()
     {
         $preserve = new PreserveDataSecondStep();
         return $this->handleJobResponse($preserve->start(), 'directories');
     }
 
-    /**
-     * Get All Files From Selected Directories Recursively Into a File
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobDirectories()
     {
         $directories = new Directories();
         return $this->handleJobResponse($directories->start(), "files");
     }
 
-    /**
-     * Copy Files
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobFiles()
     {
         $files = new Files();
         return $this->handleJobResponse($files->start(), "data");
     }
 
-    /**
-     * Replace Data
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobData()
     {
         $dataJob = $this->getDataJob();
         return $this->handleJobResponse($dataJob->start(), "finish");
     }
 
-    /**
-     * Save Clone Data
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
     public function jobFinish()
     {
-        // Re-generate the token when the Clone is complete.
-        // Todo: Consider adding a do_action() on jobFinish to hook here.
-        // Todo: Inject using DI
+ 
+ 
+ 
         $accessToken = new AccessToken();
         $accessToken->generateNewToken();
 
@@ -622,25 +622,25 @@ class Cloning extends Job
         return $this->handleJobResponse($finish->start(), '');
     }
 
-    /**
-     * @return Data
-     */
+
+
+
     public function getDataJob(): Data
     {
         return new Data();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setAdvancedCloningOptions()
     {
-        // no-op
+ 
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function writeJobSpecificLogStartHeader()
     {
 
@@ -672,13 +672,13 @@ class Cloning extends Job
         $this->addJobSettingsToLogs($jobName);
     }
 
-    /**
-     * @return string The generated friendly name or clone Id by default
-     * @throws WPStagingException
-     */
+
+
+
+
     private function maybeGenerateFriendlyName(): string
     {
-        // List of predefined names to choose from
+ 
         $nameList = [
             "enterprise",
             "voyager",
@@ -705,36 +705,36 @@ class Cloning extends Job
             "protostar",
         ];
 
-        // Randomly shuffle the list of names
+ 
         shuffle($nameList);
 
-        // Get the list of staging sites
+ 
         $stagingSites = $this->sitesHelper->tryGettingStagingSites();
         foreach ($nameList as $name) {
-            // Sanitize the name to ensure it is safe for use
+ 
             $name    = sanitize_text_field($name);
             $dirPath = ABSPATH . $name;
-            // Check if the directory exists
+ 
             if (file_exists($dirPath)) {
                 continue;
             }
 
-            // If the directory is free, then check the database
+ 
             if (!$this->isStagingSiteNameExists($name, $stagingSites)) {
                 return $name;
             }
         }
 
-        // If all predefined names are taken, return a clone Id
+ 
         return (string)$this->options->clone;
     }
 
-    /**
-     * Check if the name already exists in the staging sites $stagingSites
-     * @param string $name
-     * @param array $stagingSites
-     * @return bool
-     */
+
+
+
+
+
+
     private function isStagingSiteNameExists(string $name, array $stagingSites): bool
     {
         foreach ($stagingSites as $site) {

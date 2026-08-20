@@ -26,31 +26,31 @@ class BackupRequirementsCheckTask extends BackupTask
 {
     use RenameTmpDirectoryTrait;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var DiskWriteCheck */
+ 
     protected $diskWriteCheck;
 
-    /** @var AnalyticsBackupCreate */
+ 
     protected $analyticsBackupCreate;
 
-    /** @var BackupScheduler */
+ 
     protected $backupScheduler;
 
-    /** @var Archiver */
+ 
     private $archiver;
 
-    /** @var SystemInfo */
+ 
     protected $systemInfo;
 
-    /** @var Providers */
+ 
     protected $providers;
 
-    /** @var ZlibCompressor */
+ 
     protected $zlibCompressor;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
     public function __construct(
@@ -96,9 +96,9 @@ class BackupRequirementsCheckTask extends BackupTask
             $this->stepsDto->setTotal(1);
         }
 
-        // Action hook for internal use only: used during error propagation tests.
-        // Must fire AFTER setTotal(1) so that generateResponse(false) sees total=1
-        // and correctly marks the task as "not finished" when an exception is thrown.
+ 
+ 
+ 
         Hooks::doAction('wpstg.tests.backup.requirements_check.before');
 
         try {
@@ -118,11 +118,19 @@ class BackupRequirementsCheckTask extends BackupTask
             $this->checkFilesystemPermissions();
             $this->cleanupValidationDirs();
         } catch (RuntimeException $e) {
-            // todo: Set the requirement check fail reason
-            $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+ 
+            if (!$this->jobDataDto->getIsSyncRequest()) {
+                $this->analyticsBackupCreate->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
+                $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+            }
+
             $this->logger->critical($e->getMessage());
 
             return $this->generateResponse(false);
+        }
+
+        if (!$this->jobDataDto->getIsSyncRequest()) {
+            $this->analyticsBackupCreate->enqueueStartEvent($this->jobDataDto->getId(), $this->jobDataDto);
         }
 
         $this->addBackupSettingsToLogs();
@@ -181,9 +189,9 @@ class BackupRequirementsCheckTask extends BackupTask
         }
     }
 
-    /**
-     * @throws RuntimeException When PHP does not have enough permission to a required directory.
-     */
+
+
+
     protected function checkFilesystemPermissions()
     {
         clearstatcache();
@@ -233,12 +241,12 @@ class BackupRequirementsCheckTask extends BackupTask
 
     protected function maybeCreateMainIndexFile()
     {
-        // Early Bail: No need to create a index file it is only a schedule
+ 
         if ($this->jobDataDto->getRepeatBackupOnSchedule() && !$this->jobDataDto->getIsCreateScheduleBackupNow()) {
             return;
         }
 
-        // Early Bail: if not split backup
+ 
         if (!$this->jobDataDto->getIsMultipartBackup()) {
             return;
         }
@@ -246,9 +254,9 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function addBackupSettingsToLogs()
     {
         $this->logger->info('Backup Settings');
@@ -266,9 +274,9 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->writeCloudServiceSettingsToLogs();
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getBackupContents(): array
     {
         return [
@@ -282,9 +290,9 @@ class BackupRequirementsCheckTask extends BackupTask
         ];
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getSmartExclusion(): array
     {
         $smartExclusion = [
@@ -305,9 +313,9 @@ class BackupRequirementsCheckTask extends BackupTask
         return $smartExclusion;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getBackupScheduleOptions(): array
     {
         $scheduleOptions = [
@@ -326,10 +334,10 @@ class BackupRequirementsCheckTask extends BackupTask
         return $scheduleOptions;
     }
 
-    /**
-     * @param array $data
-     * @return void
-     */
+
+
+
+
     private function logInformation(array $data)
     {
         foreach ($data as $key => $value) {
@@ -341,9 +349,9 @@ class BackupRequirementsCheckTask extends BackupTask
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function writeCloudServiceSettingsToLogs()
     {
         foreach ($this->jobDataDto->getStorages() as $storage) {
@@ -362,10 +370,10 @@ class BackupRequirementsCheckTask extends BackupTask
         }
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     private function cleanupValidationDirs()
     {
         $validationDir = $this->directory->getTmpDirectory();

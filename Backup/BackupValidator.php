@@ -11,23 +11,23 @@ use WPStaging\Framework\Utils\Strings;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Validates backup file integrity and structure
- *
- * This class performs comprehensive validation checks on backup files including:
- * - File index validation (verifying the list of files in the backup matches metadata)
- * - Multipart backup validation (checking all parts exist with correct sizes)
- * - Backup version compatibility checks
- * - Detection of missing or corrupted backup parts
- * - Verification of file index first line format
- *
- * The validator maintains lists of validation issues (missing parts, size mismatches)
- * that can be retrieved for display to users. It works with BackupMetadata to access
- * backup structure information and ensures backups are restorable before restoration attempts.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class BackupValidator
 {
-    /** @var string[] */
+ 
     const LINE_BREAKS = [
         "\r",
         "\n",
@@ -36,25 +36,25 @@ class BackupValidator
         PHP_EOL,
     ];
 
-    /** @var array */
+ 
     protected $missingPartIssues = [];
 
-    /** @var array */
+ 
     protected $partSizeIssues = [];
 
-    /** @var string */
+ 
     protected $backupFilename = '';
 
-    /** @var array  */
+ 
     protected $existingParts = [];
 
-    /** @var string */
+ 
     protected $error = '';
 
-    /** @var Strings */
+ 
     private $strings;
 
-    /** @var BackupPathResolver */
+ 
     private $backupPathResolver;
 
     public function __construct(Strings $strings, BackupPathResolver $backupPathResolver)
@@ -65,32 +65,32 @@ class BackupValidator
         $this->backupPathResolver = $backupPathResolver;
     }
 
-    /** @return array */
+ 
     public function getMissingPartIssues()
     {
         return $this->missingPartIssues;
     }
 
-    /** @return array */
+ 
     public function getPartSizeIssues()
     {
         return $this->partSizeIssues;
     }
 
-    /** @return string */
+ 
     public function getErrorMessage()
     {
         return $this->error;
     }
 
-    /**
-     * @param FileObject $file
-     * @param BackupMetadata $metadata
-     * @return bool
-     */
+
+
+
+
+
     public function validateFileIndex(FileObject $file, BackupMetadata $metadata)
     {
-        // Early bail if not wpstg file
+ 
         if ($file->getExtension() !== 'wpstg') {
             return true;
         }
@@ -146,11 +146,11 @@ class BackupValidator
         return true;
     }
 
-    /**
-     * @param  FileObject $file
-     * @param  BackupMetadata $metadata
-     * @return bool
-     */
+
+
+
+
+
     public function validateFileIndexFirstLine(FileObject $file, BackupMetadata $metadata): bool
     {
         $version = $metadata->getBackupVersion();
@@ -167,7 +167,7 @@ class BackupValidator
 
         $line = $file->readAndMoveNext();
         if (in_array($line, self::LINE_BREAKS)) {
-            $line = $file->readAndMoveNext(); // first line is break line, that's fine, move to next then!
+            $line = $file->readAndMoveNext(); 
         }
 
         $backupFile = $this->strings->maskBackupFilename($file->getFilename());
@@ -182,18 +182,18 @@ class BackupValidator
         return true;
     }
 
-    /**
-     * @param BackupMetadata $metadata
-     * @param string $backupFilename Filename of the backup the listed parts must belong to.
-     * @return bool
-     * @throws BackupRuntimeException
-     */
+
+
+
+
+
+
     public function checkIfSplitBackupIsValid(BackupMetadata $metadata, string $backupFilename): bool
     {
         $this->partSizeIssues    = [];
         $this->missingPartIssues = [];
 
-        // Early bail if not split backup
+ 
         if (!$metadata->getIsMultipartBackup()) {
             return true;
         }
@@ -221,10 +221,10 @@ class BackupValidator
         return empty($this->partSizeIssues) && empty($this->missingPartIssues);
     }
 
-    /**
-     * @param BackupMetadata $metadata
-     * @return bool
-     */
+
+
+
+
     public function isUnsupportedBackupVersion(BackupMetadata $metadata): bool
     {
         $isCreatedOnPro = $metadata->getCreatedOnPro();
@@ -236,11 +236,11 @@ class BackupValidator
         return version_compare($version, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT_PRO, '<');
     }
 
-    /**
-     * @param string $part
-     * @param string $type
-     * @return void
-     */
+
+
+
+
+
     private function validatePart(string $part, string $type)
     {
         $path = $this->backupPathResolver->resolveBackupPartPath($part, $this->backupFilename);

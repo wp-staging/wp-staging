@@ -2,33 +2,33 @@
 
 namespace WPStaging\Staging\Service;
 
-/**
- * Stores and validates the preferred staging engine for staging jobs.
- */
+
+
+
 class StagingEngine
 {
-    /** @var string */
+ 
     const OPTION_NAME = 'wpstg_staging_engine_preference';
 
-    /** @var string */
+ 
     const LEGACY_OPTION_NAME = 'wpstg_staging_engine_preferences';
 
-    /** @var string */
+ 
     const ENGINE_LEGACY = 'legacy';
 
-    /** @var string */
+ 
     const ENGINE_NEXT_GEN = 'next_gen';
 
-    /**
-     * Master switch for the Next-Gen engine. Temporarily disabled while the
-     * data-corruption issue #5346 is fixed. Flip to true to re-enable it
-     * everywhere (UI, runtime routing and the prepare AJAX endpoints).
-     *
-     * @var bool
-     */
+
+
+
+
+
+
+
     const NEXT_GEN_ENABLED = false;
 
-    /** @var string[] */
+ 
     const ENGINES = [
         self::ENGINE_LEGACY,
         self::ENGINE_NEXT_GEN,
@@ -39,10 +39,10 @@ class StagingEngine
         return self::NEXT_GEN_ENABLED;
     }
 
-    /**
-     * Effective engine used at runtime. Coerces Next-Gen to Classic while the
-     * Next-Gen engine is disabled so all routing falls back to the Classic path.
-     */
+
+
+
+
     public function getEngine(): string
     {
         $engine = $this->getStoredEngine();
@@ -53,10 +53,10 @@ class StagingEngine
         return $engine;
     }
 
-    /**
-     * Raw engine preference as saved by the user, ignoring the master switch.
-     * Used by the upgrade routine to detect Next-Gen users before reverting them.
-     */
+
+
+
+
     public function getStoredEngine(): string
     {
         $stored = get_option(self::OPTION_NAME, null);
@@ -85,9 +85,9 @@ class StagingEngine
         return is_string($engine) && in_array($engine, self::ENGINES, true);
     }
 
-    /**
-     * @param mixed $stored
-     */
+
+
+
     private function resolveEngine($stored): string
     {
         if ($this->isValidEngine($stored)) {

@@ -4,6 +4,8 @@ namespace WPStaging\Framework\Assets;
 
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Backup\Service\UpdateProtectionHealth;
+use WPStaging\Backup\Service\UpdateProtectionSettings;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Language\Language;
@@ -12,6 +14,8 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Nonce;
+use WPStaging\Framework\Security\Capabilities;
+use WPStaging\Framework\Traits\PagesTrait;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
@@ -27,34 +31,37 @@ use WPStaging\Staging\Service\StagingEngine;
 class Assets
 {
     use ResourceTrait;
+    use PagesTrait;
 
-    /**
-     * Default admin bar background color for staging site
-     * @var string
-     */
+
+
+
+
     const DEFAULT_ADMIN_BAR_BG = "#ff8d00";
 
-    /** @var string */
+ 
     const FILTER_BACKUP_STATUS_REQUEST_INTERVAL = 'wpstg.backup.interval.status_request';
 
-    /** @var string */
+ 
     const FILTER_STAGING_SITE_TITLE = 'wpstg_staging_site_title';
 
     const FILTER_TESTS_MAXIMUM_RETRIES = 'wpstg.tests.maximum_retries';
 
-    /** @var string */
+ 
     const TRANSIENT_REST_URL = 'wpstg_rest_url';
 
     private $accessToken;
 
+ 
     protected $settings;
 
+ 
     private $analyticsConsent;
 
-    /** @var I18n */
+ 
     private $i18n;
 
-    /** @var Providers */
+ 
     private $providers;
 
     public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent, I18n $i18n, Providers $providers)
@@ -66,25 +73,25 @@ class Assets
         $this->providers        = $providers;
     }
 
-    /**
-     * Prepend the URL to the assets to the given file
-     *
-     * @param string $assetsFile optional
-     * @return string
-     */
+
+
+
+
+
+
     public function getAssetsUrl($assetsFile = '')
     {
         return WPSTG_PLUGIN_URL . "assets/$assetsFile";
     }
 
-    /**
-     * Get minified or non minified css file name based on debug mode
-     * @param string $cssFileNameWithoutExtension path without extension relative to wpstgPluginDir/assets/css/dist/
-     * @return string
-     */
+
+
+
+
+
     public function getCssAssetsFileName(string $cssFileNameWithoutExtension): string
     {
-        // If in debug mode, get non-minified css file name if it exists
+ 
         $nonMinCssFile = $this->getAssetsPath("css/dist/$cssFileNameWithoutExtension.css");
         if ($this->isDebugOrDevMode() && file_exists($nonMinCssFile)) {
             return "css/dist/$cssFileNameWithoutExtension.css";
@@ -93,14 +100,14 @@ class Assets
         return "css/dist/$cssFileNameWithoutExtension.min.css";
     }
 
-    /**
-     * Get minified or non minified js file name based on debug mode
-     * @param string $jsFileNameWithoutExtension path without extension relative to wpstgPluginDir/assets/js/dist/
-     * @return string
-     */
+
+
+
+
+
     public function getJsAssetsFileName(string $jsFileNameWithoutExtension): string
     {
-        // If in debug mode, get non-minified js file name if it exists
+ 
         $nonMinJsFile = $this->getAssetsPath("js/dist/$jsFileNameWithoutExtension.js");
         if ($this->isDebugOrDevMode() && file_exists($nonMinJsFile)) {
             return "js/dist/$jsFileNameWithoutExtension.js";
@@ -109,13 +116,13 @@ class Assets
         return "js/dist/$jsFileNameWithoutExtension.min.js";
     }
 
-    /**
-     * Get the version the given file. Use for caching
-     *
-     * @param string $assetsFile
-     * @param string $assetsVersion use WPStaging::getVersion() instead if not given
-     * @return string
-     */
+
+
+
+
+
+
+
     public function getAssetsUrlWithVersion($assetsFile, $assetsVersion = '')
     {
         $url = $this->getAssetsUrl($assetsFile);
@@ -123,24 +130,24 @@ class Assets
         return $url . '?v=' . $ver;
     }
 
-    /**
-     * Prepend the Path to the assets to the given file
-     *
-     * @param string $assetsFile optional
-     * @return string
-     */
+
+
+
+
+
+
     public function getAssetsPath($assetsFile = '')
     {
         return WPSTG_PLUGIN_DIR . "assets/$assetsFile";
     }
 
-    /**
-     * Get the version the given file. Use for caching
-     *
-     * @param string $assetsFile
-     * @param string $assetsVersion Optional, use WPStaging::getVersion() instead if not given
-     * @return string|int
-     */
+
+
+
+
+
+
+
     public function getAssetsVersion($assetsFile, $assetsVersion = '')
     {
         $filename  = $this->getAssetsPath($assetsFile);
@@ -153,24 +160,24 @@ class Assets
         }
     }
 
-    /**
-     * @action admin_enqueue_scripts 100 1
-     * @action wp_enqueue_scripts 100 1
-     */
+
+
+
+
     public function enqueueElements($hook)
     {
         $this->loadGlobalAssets($hook);
 
         add_action(Notices::ACTION_INJECT_ANALYTICS_CONSENT_ASSETS, [$this, 'enqueueAnalyticsConsentAssets'], 10, 0);
 
-        // Load this css file on frontend and backend on all pages if current site is a staging site
+ 
         if ((new SiteInfo())->isStagingSite()) {
             wp_register_style('wpstg-admin-bar', false);
             wp_enqueue_style('wpstg-admin-bar');
             wp_add_inline_style('wpstg-admin-bar', $this->getStagingAdminBarColor());
         }
 
-        // Load feedback form js file on page plugins.php in free version or in free dev version
+ 
         if (!WPStaging::isPro() && $this->isPluginsPage()) {
             $asset = $this->getJsAssetsFileName('wpstg-admin-plugins');
             wp_enqueue_script(
@@ -190,7 +197,7 @@ class Assets
             );
         }
 
-        // Load js file on admin pages for pro version
+ 
         if (WPStaging::isPro() && is_admin()) {
             $asset = $this->getJsAssetsFileName('pro/wpstg-admin-all-pages');
             wp_enqueue_script(
@@ -210,12 +217,16 @@ class Assets
             );
         }
 
-        // Load below assets only on WP Staging admin pages
+        if ($this->isWordPressUpdatePage() && WPStaging::make(UpdateProtectionSettings::class)->isEnabled()) {
+            $this->enqueueBackupBeforeUpdateAssets();
+        }
+
+ 
         if ($this->isNotWPStagingAdminPage($hook)) {
             return;
         }
 
-        // Load wpstg js files
+ 
         $asset = $this->getJsAssetsFileName('wpstg');
         wp_enqueue_script(
             "wpstg-common",
@@ -225,7 +236,7 @@ class Assets
             $this->getScriptLoadingStrategy()
         );
 
-        // Load admin js files
+ 
         $asset = $this->getJsAssetsFileName('wpstg-admin');
         wp_enqueue_script(
             "wpstg-admin-script",
@@ -235,7 +246,7 @@ class Assets
             $this->getScriptLoadingStrategy()
         );
 
-        // Load SolidJS bundle if it exists
+ 
         $solidAsset = $this->getJsAssetsFileName('wpstg-solid');
         $solidAssetPath = $this->getAssetsPath($solidAsset);
         if (file_exists($solidAssetPath)) {
@@ -248,7 +259,7 @@ class Assets
             );
         }
 
-        // Load settings page js file
+ 
         if (is_admin() && isset($_GET['page']) && $_GET['page'] === 'wpstg-settings') {
             $asset = $this->getJsAssetsFileName('wpstg-admin-settings');
             wp_enqueue_script(
@@ -260,7 +271,7 @@ class Assets
             );
         }
 
-        // Sweet Alert
+ 
         $asset = $this->getJsAssetsFileName('wpstg-sweetalert2');
         wp_enqueue_script(
             'wpstg-admin-sweetalerts',
@@ -278,7 +289,7 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
-        // Notyf Toast Notification
+ 
         $asset = 'js/vendor/notyf.min.js';
         wp_enqueue_script(
             'wpstg-admin-notyf',
@@ -296,13 +307,13 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
-        // Internal hook to enqueue backup scripts, used by the backup addon
+ 
         Hooks::doAction(BackupServiceProvider::ACTION_BACKUP_ENQUEUE_SCRIPTS);
 
-        // Load storage array to js for show/hide the badge-pill
+ 
         wp_localize_script('wpstg-backup', 'wpstgAllStorages', $this->providers->getStorages(true));
 
-        // Load admin js pro files
+ 
         if (WPStaging::isPro()) {
             $asset = $this->getJsAssetsFileName('pro/wpstg-admin-pro');
             wp_enqueue_script(
@@ -314,7 +325,7 @@ class Assets
             );
         }
 
-        // Load admin css files
+ 
         $asset = $this->getCssAssetsFileName('wpstg-admin');
         wp_enqueue_style(
             "wpstg-admin",
@@ -325,7 +336,7 @@ class Assets
 
         $wpstgConfig = [
             "delayReq"                          => 0,
-            // The interval in milliseconds between each request of backup status
+ 
             'backupStatusInterval'              => Hooks::applyFilters(self::FILTER_BACKUP_STATUS_REQUEST_INTERVAL, 8000),
             "settings"                          => (object)[
                 "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR,
@@ -365,9 +376,9 @@ class Assets
             'stagingEnginePreference'           => WPStaging::make(StagingEngine::class)->getEngine(),
         ];
 
-        // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well
+ 
         wp_localize_script("wpstg-common", "wpstg", $wpstgConfig);
-        // Add test mode body class if WPSTG_TEST is defined
+ 
         if (defined('WPSTG_TEST') && WPSTG_TEST) {
             add_filter('admin_body_class', function ($classes) {
                 return $classes . ' wpstg-test-mode';
@@ -395,12 +406,12 @@ class Assets
         );
     }
 
-    /**
-     * Load js vars globally but NOT on WP Staging admin pages or frontend
-     *
-     * @param string $pageSlug
-     * @return void
-     */
+
+
+
+
+
+
     private function loadGlobalAssets($pageSlug)
     {
         if (!$this->isNotWPStagingAdminPage($pageSlug) || !is_admin()) {
@@ -417,9 +428,9 @@ class Assets
         wp_localize_script("wpstg-global", "wpstg", $vars);
     }
 
-    /**
-     * @return int The max upload size for a file.
-     */
+
+
+
     protected function getMaxUploadChunkSize()
     {
         $lowerLimit = 64 * KB_IN_BYTES;
@@ -428,25 +439,25 @@ class Assets
         $maxPostSize       = wp_convert_hr_to_bytes(ini_get('post_max_size'));
         $uploadMaxFileSize = wp_convert_hr_to_bytes(ini_get('upload_max_filesize'));
 
-        // The real limit, read from the PHP context.
+ 
         $limit = min($maxPostSize, $uploadMaxFileSize) * 0.90;
 
-        // Do not allow going over upper limit.
+ 
         $limit = min($limit, $upperLimit);
 
-        // Do not allow going under lower limit.
+ 
         $limit = max($lowerLimit, $limit);
 
         return (int)$limit;
     }
 
-    /**
-     * @return array|null
-     */
+
+
+
     private function getNewsfeedDataForJs()
     {
         try {
-            /** @var NewsfeedProvider $provider */
+ 
             $provider = WPStaging::make(NewsfeedProvider::class);
             return $provider->getNewsfeedData();
         } catch (\Exception $e) {
@@ -454,16 +465,16 @@ class Assets
         }
     }
 
-    /**
-     * Whether this is a brand-new install that has never been upgraded from a
-     * previous version. The "what's new" modal is meant to inform existing users
-     * what an update brings, so it must not greet new users on their first visit.
-     *
-     * The "upgraded from" option is empty on a fresh install and holds the prior
-     * version once a real upgrade has happened, which cleanly tells the two apart.
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
+
     private function isNewUser(): bool
     {
         $upgradedFromOption = WPStaging::isPro() ? 'wpstgpro_version_upgraded_from' : 'wpstg_version_upgraded_from';
@@ -471,9 +482,9 @@ class Assets
         return empty(get_option($upgradedFromOption, ''));
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isValidProLicense(): bool
     {
         if (!class_exists('\WPStaging\Pro\License\Licensing')) {
@@ -487,9 +498,9 @@ class Assets
         }
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getLicenseUpgradeUrl(): string
     {
         if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
@@ -497,7 +508,7 @@ class Assets
         }
 
         try {
-            /** @var \WPStaging\Pro\License\Licensing $licensing */
+ 
             $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
             return $licensing->getUpgradeToDevUrl();
         } catch (\Exception $e) {
@@ -505,9 +516,9 @@ class Assets
         }
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getLicenseRenewalUrl(): string
     {
         if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
@@ -527,13 +538,13 @@ class Assets
         }
     }
 
-    /**
-     * Get the script loading args for wp_enqueue_script's 5th parameter.
-     * On WP 6.5+: uses defer strategy (loads in head, downloads in parallel, executes after parsing).
-     * On older WP: loads in footer as fallback to avoid render-blocking.
-     *
-     * @return array|bool
-     */
+
+
+
+
+
+
+
     public function getScriptLoadingStrategy()
     {
         if (function_exists('wp_register_script_module')) {
@@ -543,13 +554,13 @@ class Assets
         return true;
     }
 
-    /**
-     * Check given slug is not WP Staging admin page
-     *
-     * @param string $slug slug of the current page
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
     private function isNotWPStagingAdminPage($slug)
     {
         if (WPStaging::isPro() || WPStaging::isDevBasic()) {
@@ -562,8 +573,8 @@ class Assets
                 "wp-staging-pro_page_wpstg-tools",
                 "wp-staging-pro_page_wpstg-license",
                 "wp-staging-pro_page_wpstg-restorer",
-                // DevBasic mode uses the basic dist plugin (wp-staging/) with WPSTG_DEV_BASIC constant,
-                // so WordPress generates wp-staging_page_* slugs instead of wp-staging-pro_page_*
+ 
+ 
                 "wp-staging_page_wpstg_clone",
                 "wp-staging_page_wpstg_backup",
                 "wp-staging_page_wpstg-settings",
@@ -584,33 +595,75 @@ class Assets
         return !in_array($slug, $availableSlugs);
     }
 
-    /**
-     * Remove heartbeat api and user login check
-     *
-     * @action admin_enqueue_scripts 100 1
-     * @see AssetServiceProvider.php
-     *
-     * @param string $hook
-     */
+
+
+
+
+
+
+
+
     public function removeWPCoreJs($hook)
     {
         if ($this->isNotWPStagingAdminPage($hook)) {
             return;
         }
 
-        // Disable user login status check
-        // Todo: Can we remove this now that we have AccessToken?
+ 
+ 
         remove_action('admin_enqueue_scripts', 'wp_auth_check_load');
 
-        // Disable heartbeat check for cloning and pushing
+ 
         wp_deregister_script('heartbeat');
     }
 
-    /**
-     * Check if current page is plugins.php
-     * @global array $pagenow
-     * @return bool
-     */
+
+
+
+
+
+    private function enqueueBackupBeforeUpdateAssets()
+    {
+        if (!current_user_can(WPStaging::make(Capabilities::class)->manageWPSTG())) {
+            return;
+        }
+
+        $css = $this->getCssAssetsFileName('wpstg-update-pages');
+        wp_enqueue_style('wpstg-update-pages', $this->getAssetsUrl($css), [], $this->getAssetsVersion($css));
+
+        $token              = (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken();
+        $translations       = $this->i18n->getTranslations();
+        $protectionSettings = WPStaging::make(UpdateProtectionSettings::class);
+        wp_add_inline_script(
+            'wpstg-global',
+            'window.wpstg = Object.assign(window.wpstg || {}, ' . wp_json_encode([
+                'accessToken'                  => $token,
+                'ajaxUrl'                      => admin_url('admin-ajax.php'),
+                'settingsUrl'                  => admin_url('admin.php?page=wpstg-settings'),
+                'loaderUrl'                    => $this->getAssetsUrl('img/wpstg-loader.gif'),
+                'logoUrl'                      => $this->getAssetsUrl('img/logo.svg'),
+                'backupBeforeUpdateMode'       => $protectionSettings->getMode(),
+                'backupBeforeUpdateIntrosSeen' => $protectionSettings->getIntrosSeen(),
+                'updateProtectionPaused'       => WPStaging::make(UpdateProtectionHealth::class)->isPaused(),
+                'i18n'                         => ['backup_before_update' => $translations['backup_before_update'] ?? []],
+            ]) . ');',
+            'after'
+        );
+
+        $solidAsset = $this->getJsAssetsFileName('wpstg-solid');
+        if (file_exists($this->getAssetsPath($solidAsset)) && !wp_script_is('wpstg-solid', 'registered') && !wp_script_is('wpstg-solid', 'enqueued')) {
+            wp_enqueue_script('wpstg-solid', $this->getAssetsUrl($solidAsset), ['wpstg-global'], $this->getAssetsVersion($solidAsset), $this->getScriptLoadingStrategy());
+        }
+
+        $js = $this->getJsAssetsFileName('backup/before-update');
+        wp_enqueue_script('wpstg-before-update', $this->getAssetsUrl($js), ['wpstg-solid'], $this->getAssetsVersion($js), $this->getScriptLoadingStrategy());
+    }
+
+
+
+
+
+
     private function isPluginsPage()
     {
         global $pagenow;
@@ -618,9 +671,9 @@ class Assets
         return ($pagenow === 'plugins.php');
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getStagingAdminBarColor()
     {
         $barColor = $this->settings->getAdminBarColor();
@@ -631,22 +684,22 @@ class Assets
         return "#wpadminbar { background-color: {$barColor} !important; }";
     }
 
-    /**
-     * Check whether app is in debug mode or in dev mode
-     *
-     * @return bool
-     */
+
+
+
+
+
     private function isDebugOrDevMode()
     {
         return ($this->settings->isDebugMode() || (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV === true) || (defined('WPSTG_DEBUG') && WPSTG_DEBUG === true));
     }
 
-    /**
-     * Change admin_bar site_name
-     *
-     * @return void
-     * @global object $wp_admin_bar
-     */
+
+
+
+
+
+
     public function changeSiteName()
     {
         if (!(new SiteInfo())->isStagingSite()) {
@@ -672,10 +725,10 @@ class Assets
         );
     }
 
-    /**
-     * @param string $hook
-     * @return void
-     */
+
+
+
+
     public function dequeueNonWpstgElements($hook)
     {
         if ($this->isNotWPStagingAdminPage($hook)) {
@@ -697,11 +750,11 @@ class Assets
         }
     }
 
-    /**
-     * @param string $iconName
-     * @param string $class
-     * @return void
-     */
+
+
+
+
+
     public function renderSvg(string $iconName, string $class = '')
     {
         $fullPath = WPSTG_PLUGIN_DIR . '/assets/svg/' . $iconName . '.svg';

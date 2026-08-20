@@ -16,7 +16,7 @@ if (!isset($urlAssets)) {
     $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 }
 
-/** @var Strings $strings */
+ 
 $strings = WPStaging::make(Strings::class);
 
 ?>

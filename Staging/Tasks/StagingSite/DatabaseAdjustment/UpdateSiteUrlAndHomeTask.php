@@ -5,31 +5,31 @@ namespace WPStaging\Staging\Tasks\StagingSite\DatabaseAdjustment;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
 
-/**
- * Partial Replacement for WPStaging\Framework\CloningProcess\Data\UpdateSiteUrlAndHome
- * This doesn't handle any multisite specific logic
- */
+
+
+
+
 class UpdateSiteUrlAndHomeTask extends DatabaseAdjustmentTask
 {
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_update_site_url_and_home';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Update site URL and home';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->setup();

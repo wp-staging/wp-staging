@@ -4,16 +4,16 @@ namespace WPStaging\Core\Forms\Elements;
 
 use WPStaging\Core\Forms\ElementsWithOptions;
 
-/**
- * Class Radio
- * @package WPStaging\Core\Forms\Elements
- */
+
+
+
+
 class Radio extends ElementsWithOptions
 {
 
-    /**
-     * @return string
-     */
+
+
+
     protected function prepareOutput()
     {
         $output = '';
@@ -30,9 +30,9 @@ class Radio extends ElementsWithOptions
         return $output;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function render()
     {
         return ($this->renderFile) ? @file_get_contents($this->renderFile) : $this->prepareOutput();

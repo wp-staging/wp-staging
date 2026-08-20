@@ -18,6 +18,7 @@
  * @var string $stagingSiteUrl       Empty unless a staging site exists.
  * @var array  $backupDetails        `name` and `size` of the backup this run created, if any.
  * @var string $adminUrl
+ * @var bool   $isNextCapabilityAvailable False when the offered capability cannot run on this site.
  */
 
 use WPStaging\Framework\Onboarding\OnboardingJourney;
@@ -56,31 +57,31 @@ if (!isset($confirmations[$completedCapability])) {
     return;
 }
 
-// Nothing left to offer: this capability is the second one, and finishing it
-// finishes the first run. It still gets a state of its own rather than handing
-// the moment back to the success modal the rest of the journey replaced.
+ 
+ 
+ 
 $isFinale = $nextCapability === '';
 $offer    = $isFinale ? [] : $offers[$nextCapability];
 
 $confirmation = $confirmations[$completedCapability];
 $hasStagingSite = $completedCapability === OnboardingJourney::CAPABILITY_STAGING;
 
-// A backup parked behind the staging site is already running on the server, so
-// this state confirms it and releases the user instead of describing a wait.
+ 
+ 
 $isBackgroundBackup = !$isNextStepOffered && $isBackupInBackground;
 $backupDone         = $confirmations[OnboardingJourney::CAPABILITY_BACKUP];
 $background         = [
     'title'   => __('Your backup has started', 'wp-staging'),
     'text'    => __('It will continue in the background. You can open your staging site or return to WP STAGING now — there’s no need to wait here.', 'wp-staging'),
-    // Shown once the wait stops looking momentary. A server that cannot call
-    // itself leaves the request queued for a while before anything picks it up,
-    // and a bar with no explanation reads as a stall rather than a queue.
+ 
+ 
+ 
     'waiting' => __('Waiting for the server to pick it up…', 'wp-staging'),
 ];
 
-// Opening the new site is the thing to do the moment it exists, so it takes the
-// primary action and the capability offer steps down to secondary. Without a
-// site to open there is nothing to outrank the offer.
+ 
+ 
+ 
 $offerButtonClass = $hasStagingSite ? 'wpstg-btn-outline' : 'wpstg-btn-primary';
 ?>
 <div
@@ -130,7 +131,7 @@ $offerButtonClass = $hasStagingSite ? 'wpstg-btn-outline' : 'wpstg-btn-primary';
         <?php include WPSTG_VIEWS_DIR . 'onboarding/open-staging-site.php'; ?>
     <?php endif; ?>
 
-    <?php if (!$isFinale) : ?>
+    <?php if (!$isFinale && $isNextCapabilityAvailable) : ?>
         <div
             class="wpstg-onboarding-next__offer"
             <?php if ($isBackgroundBackup) : ?>
@@ -153,17 +154,17 @@ $offerButtonClass = $hasStagingSite ? 'wpstg-btn-outline' : 'wpstg-btn-primary';
                 <p class="wpstg-onboarding-next__offer-text" data-wpstg-onboarding-backup-text><?php echo esc_html($background['text']); ?></p>
 
                 <?php
-                // Stands in until there is a job to report on. A released backup
-                // waits for background processing to pick it up, which on a server
-                // whose loopback is slow is most of the wait — and the whole point
-                // of this state is that the wait is never silent.
+ 
+ 
+ 
+ 
                 ?>
                 <span class="wpstg-onboarding-progress__bar wpstg-onboarding-next__waiting" data-wpstg-onboarding-backup-bar aria-hidden="true"></span>
                 <p class="wpstg-onboarding-next__waiting-note" data-wpstg-onboarding-backup-waiting hidden><?php echo esc_html($background['waiting']); ?></p>
 
                 <?php
-                // The panel the rest of WP STAGING shows for a job it watches
-                // rather than drives. It renders itself only once one is running.
+ 
+ 
                 require WPSTG_VIEWS_DIR . 'job/locked.php';
                 ?>
             <?php elseif (!$isNextStepOffered) : ?>

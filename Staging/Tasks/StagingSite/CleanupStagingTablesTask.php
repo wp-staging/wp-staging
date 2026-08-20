@@ -19,13 +19,13 @@ class CleanupStagingTablesTask extends StagingTask
 {
     use WithStagingDatabase;
 
-    /** @var array An array with the name of all existing tables. */
+ 
     protected $tables = [];
 
-    /** @var array An array with the name of all existing views. */
+ 
     protected $views = [];
 
-    /** @var DatabaseInterface */
+ 
     protected $productionDb;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, DatabaseInterface $productionDb, SeekableQueueInterface $taskQueue)
@@ -44,9 +44,9 @@ class CleanupStagingTablesTask extends StagingTask
         return 'Cleaning Up Staging Site Tables';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $stagingPrefix = $this->prepareCleanupTask();
@@ -61,7 +61,7 @@ class CleanupStagingTablesTask extends StagingTask
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             $tableOrViewName = $this->taskQueue->dequeue();
 
-            // Double-check we are deleting a temporary table just to be extra-careful.
+ 
             if (strpos($tableOrViewName, $stagingPrefix) !== 0) {
                 $this->logger->warning(sprintf(
                     '%s: Staging site table "%s" did not start with staging prefix "%s" and was skipped.',
@@ -108,7 +108,7 @@ class CleanupStagingTablesTask extends StagingTask
         }
 
         if ($this->stepsDto->isFinished()) {
-            // Successfully deleted
+ 
             $this->logger->info(sprintf(
                 '%s: Tables with staging site prefix "%s" successfully cleaned up.',
                 static::getTaskTitle(),
@@ -120,22 +120,22 @@ class CleanupStagingTablesTask extends StagingTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function prepareCleanupTask(): string
     {
         if (!$this->jobDataDto instanceof StagingSiteDtoInterface) {
             throw new Exception('Clone ID not found in job data.');
         }
 
-        /** @var StagingSiteDtoInterface */
+ 
         $jobDataDto  = $this->jobDataDto;
 
         $this->initStagingDatabase($this->getStagingSiteDto($this->jobDataDto->getCloneId()));
         $this->tableService = new TableService($this->stagingDb);
 
-        // Early bail: Already prepared
+ 
         if ($this->stepsDto->getTotal() > 0) {
             return $jobDataDto->getStagingSite()->getUsedPrefix();
         }

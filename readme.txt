@@ -6,8 +6,8 @@ License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
-Tested up to: 7.0
-Stable tag: 4.10.0
+Tested up to: 7.1
+Stable tag: 4.11.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,43 +283,94 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.10.0 =
-* New: Add an A/B experiment framework and run the first experiment on the WP STAGING Free first-run experience. #5522
-* Enh: Add a Remote Sync sidebar menu item for quicker access to syncing from a remote site. #5323
-* Enh: Add a target domain field to the restore tool so a backup can be restored for another domain than the one the tool is opened from. #5453
-* Enh: New installations can start a staging site, a backup or WP STAGING Desktop straight from a first-action selector. #5522
-* Enh: Offer a full backup during staging creation that starts automatically once the staging site is ready. #5522
-* Enh: Offer the same deferred backup during any staging creation, for sites without an established backup workflow. #5522
-* Enh: Rewrite the analytics consent question to name every category WP STAGING actually sends. It no longer asks for permission to collect a name and email address, which it never collected. #5522
-* Enh: Show lifetime licences correctly on the licence page: the plan they bought, "Never" as the expiration date, the premium support period, and no upgrade offer. #5418
-* Fix: Don't show the "Scheduled backups may not run" warning when scheduled backups demonstrably work, e.g. when WP-Cron is executed by an external server cron job. #5403
-* Fix: Keep preserved options and cron jobs intact when a value fails safe unserialization. #5463
-* Fix: Only run the WordPress.com restore task when the site is actually hosted on WordPress.com. #5463
-* Fix: Prevent a successful Remote Sync from ending with a "No response" error when the job log file name is not set. #5483
-* Fix: Prevent duplicate primary keys in database backups when a request is retried, which made the restore fail with MySQL error 1062. #5450
-* Fix: Prevent interrupted database restores from failing when resuming. #5470
-* Fix: Prevent staging, backup, and remote sync from running two workers on the same job at once (which could corrupt the operation) by acquiring the background process lock atomically. #5327
-* Fix: Report the HTTP status and server response when a backup request fails, instead of only guessing at a PHP fatal error. #5503
-* Fix: Require an authenticated request before a cancelled job resets the first-run state. #5522
-* Fix: Resolve Remote Sync Pull failing with a 404 error when downloading data from a source site hosted on IIS. #5488
-* Fix: Resolve the Remote Sync connection key "Copy" button not working in Microsoft Edge. #5488
-* Fix: Restore a backup again after an interrupted restore left the site stuck, where every new attempt stopped at the same table. #5460
-* Fix: Restore the data on servers that do not report their maximum query size, where every row was skipped as too large and the restore finished with empty tables. #5470
-* Fix: Resume a database restore at a byte offset so large restores no longer stall and fail with "Cannot increase execution time". #5486
-* Fix: Show an accurate error when magic login is unavailable on the staging site instead of always suggesting a plugin update. (Pro) #5438
-* Fix: State the deferred backup offer as a choice, so it is no longer mistaken for a job already running. #5522
-* Fix: Stop deleting the oldest backup on the remote storage when its backup listing fails during an upload. (Pro) #5434
-* Fix: Stop logging a false cron update failure when the backup schedule rows are unchanged. #5463
-* Fix: Stop the dark theme from overriding the text colour of every WP STAGING design-system button. #5522
-* Fix: The Delete buttons for the WP Staging logs and PHP debug log on the System Info page now reliably remove the log file and show a clear success or error message. #5375
-* Fix: Warn instead of failing silently when the background session check gets a malformed server response. #4479
-* Dev: Allow gh api POST so review replies need no approval, keep PATCH denied. #5534
-* Dev: Fire wpstg_background_job_failure as a WordPress action as well as an internal hook, so more than one listener can observe a failed background job. #5522
-* Dev: Ignore qemu crash dumps so they stop accumulating in the working tree. #5533
-* Dev: Prevent intermittent failures when building distributable plugins in parallel. #5270
-* Dev: Reduce duplication in BackgroundLogger token verification tests. #5130
-* Dev: Report translation catalogue lines of code in the pull request breakdown. #5531
-* Dev: Speed up "make reset" by preparing WordPress once and setting up all test sites at the same time. #5482
+= 4.11.0 =
+* New: Show backup prompt before updating plugins, themes, or WordPress core. The recovery backup then runs in the background, and further updates queue behind it instead of asking again. #4028
+* Enh: Allow the free version to back up other folders in the WordPress root directory. #5532
+* Enh: Log the source and the destination table name while copying database tables, so the clone log no longer reads as if it copies staging tables. #5536
+* Enh: Record a stable error code alongside the translated message so failure causes can be counted reliably. #5510
+* Enh: Record whether a site still has WP STAGING, by noting in the anonymous usage data when the plugin is switched on or off, together with the reason given when switching it off. #5586
+* Enh: Show the selected table count against the site prefix total when creating a staging site, so a plugin-heavy site no longer looks like it copies every database table. #5536
+* Enh: Show the task-selector first run to every new single-site WP STAGING Free installation. #5646
+* Fix: Correct partSize in the Windows multipart backup signer snapshot, missed when the metadata gained a field. #5772
+* Fix: Correct the Windows backup signer snapshots, which kept the byte size from before the metadata gained a field. #5766
+* Fix: Drop the plugin dependencies from the shipped autoload classmap, which listed them at paths the build deletes. #5693
+* Fix: Guard the second lock handle in the job ownership test before locking it. #5647
+* Fix: Hide the "Create a Staging Site" onboarding card and post-backup offer on WordPress.com-hosted sites, which do not support staging. #5709
+* Fix: Pass a string to esc_attr in the onboarding capability icon. #5562
+* Fix: Preserve unrelated subsite tables and user metadata during network site restores. (Pro) #5653
+* Fix: Push summary now reflects the configured file-size limit instead of always showing 8 MB. #5560
+* Fix: Refuse a second start that arrives while another request is already initializing a job, instead of letting both overwrite each other. #5516
+* Fix: Report a cancelled test run as cancelled, so stopping a run no longer marks the pull request as failed. #5707
+* Fix: Save the built plugin under the cache key CI actually looks it up by, so the build is reused instead of repeated. #5692
+* Fix: Scheduled backups are now included in the usage statistics, which previously only counted backups started by hand. #5507
+* Fix: Show a notice instead of a critical error when the selected backup items contain no files. #5515
+* Fix: Stop ci-watch.sh from treating a gh API error body as the head commit. #5626
+* Fix: Stop emitting a deprecation notice on PHP 8.4 and 8.5 for parameters that accept null. #5758
+* Fix: Stop sending Remote Sync analytics events before the job finishes, which left most syncs recorded without an outcome. #5504
+* Fix: Stop the Network Admin staging page from getting stuck on unresolved analytics consent. #5628
+* Fix: Type the database rows WordPress 7.1 now describes precisely, so static analysis passes again. #5754
+* Dev: Add a fix-pr-reviews skill that triages PR review feedback in an isolated worktree and covers every regression with a test. #5594
+* Dev: Add a per-PR fast-test path that runs on two containers instead of the whole dev stack. #5556
+* Dev: Add a pr-issue-titles skill so the PR title, the issue title and the changelog line describe the same change in the same words. #5582
+* Dev: Add a reproducible reading of the free_onboarding_v1 onboarding experiment — query runners for the analytics and Matomo servers, a committed query pack, an onboarding-report skill and the first dated report. #5557
+* Dev: Add a review-pr skill that checks a pull request out in its own worktree, runs the simplifier, review and security agents over it, and runs the tests. #5587
+* Dev: Add a unit-test-wave skill for orchestrating test writing across parallel agents. #5601
+* Dev: Add the 2026-08-12 reading of the free_onboarding_v1 experiment, which attributes the sample ratio skew to registration lag, and make the sample-ratio check read closed consent days. #5569
+* Dev: Add the test-classification step to the unit-test-wave skill. #5700
+* Dev: Add unit tests for pure-logic classes in Framework, Backup and Pro. #5589
+* Dev: Add unit tests for the Backup DTOs and their traits. #5627
+* Dev: Carry the console errors a restore causes for every test that can restore, stop the auth check reporting an unreachable server as an error, and let a release round report every failing test instead of the first. #5747
+* Dev: Drop the fixed deprecation test from the failing-test manifest and add the multisite backup one. #5763
+* Dev: Extend the wpfree group so the multisite run stops repeating pure-logic tests. #5689
+* Dev: Fail Playwright e2e tests when browser console errors occur. #3280
+* Dev: Fail the build when the committed workflows are not what the generator produces. #5719
+* Dev: Fail the cron warning test with the server error when seeding its options fails, instead of on a banner that hides the cause. #5769
+* Dev: Filter our own test and CI installations out of the onboarding reports with the site.is_internal flag instead of matching host names in every query. #5564
+* Dev: Fix flaky cron-warning-notice Playwright tests by driving cron state through a pre_option_cron filter immune to the wp-cron loopback race. #5560
+* Dev: Fix two flaky BackupScheduler cron tests that failed on the scheduled minute. #5385
+* Dev: Give Composer a cache directory it can actually write, and carry it between CI jobs. #5676
+* Dev: Give each CI run its own remote folder in the cloud storage integration tests, so concurrent runs no longer delete each other's test backups. #5490
+* Dev: Keep the CI test database in RAM so concurrent fast-test jobs stop contending on disk. #5681
+* Dev: Keep the Composer cache directory in one place, and compare Makefile targets without reading workspace state. #5712
+* Dev: Keep the Matomo tracking exclusions for our own development and CI traffic in a script rather than only in the insights.wp-staging.com UI. #5560
+* Dev: Let the backup-restore cancel E2E test declare the aborted request it causes, so the console guard stops failing it. #5615
+* Dev: Make the review-pr skill report blocking issues only, without a tail of notes that need no action. #5742
+* Dev: Make the work-on-issue skill link the issue in every PR description, so merging the PR closes the issue. #5714
+* Dev: Open every pull request through one create-pr skill, which carries the issue labels onto the PR. #5717
+* Dev: Optimise the storage sign-in SVGs so the packages carry less dead precision. #5620
+* Dev: Poll the fallback forge every 15 seconds instead of every two, so an idle runner fleet costs it almost nothing. #5722
+* Dev: Pre-register the decision plan for the free_onboarding_v1 experiment — primary metric, guardrail, a returners-only sensitivity cut and a stop date — before any 7-day window closes. #5580
+* Dev: Print only the non-secret environment variables when installing the test sites, so credentials no longer end up in the CI logs. #5584
+* Dev: Raise the fast-test job timeout so a growing unit suite is not cut mid-run. #5649
+* Dev: Record a blocking review with the changes-required label, and define who applies and clears it. #5724
+* Dev: Release from the Gitea fallback when GitHub is unavailable, shipping pro to wp-staging.com and free to wordpress.org. #5698
+* Dev: Remove three unused images from the plugin package. #5541
+* Dev: Render the CI workflows for Gitea as well, so a GitHub Actions outage no longer stops development. #5686
+* Dev: Request a developer review when a PR is marked ready. #5731
+* Dev: Require every PR that is ready for review to carry the ready-for-review label, define what ready means, and treat the label as a point in time that a later red CI run does not remove. #5567
+* Dev: Require every test run in the fix-pr-reviews skill to go through make tests, so a hand-rolled Compose command cannot report another branch's results as this PR's. #5608
+* Dev: Restore the built plugin in the fast-test cache after it was removed by mistake. #5706
+* Dev: Restore the built plugin in the fast-test version jobs instead of relying on runner leftovers. #5663
+* Dev: Run only the currently failing tests, locally and in CI, instead of a whole release round. #5760
+* Dev: Run the XSS/input security sniffs (phpcs_xss) via make tests on the fast-test stack. #5666
+* Dev: Run the fast tests on every pushed commit instead of only when the fast-tests label is applied, so a pull request can no longer sit green on a matrix that never executed. #5764
+* Dev: Run the fast-test PHP versions in parallel behind a shared preparation job. #5655
+* Dev: Run the job ownership and process lock tests on macOS by putting the lock file where flock is honoured, instead of skipping them. #5607
+* Dev: Run the label-triggered basic E2E suite on Blacksmith again, so it no longer queues behind the fast tests on the self-hosted fleet. #5412
+* Dev: Seed the scheduled-backup dto in a form PHP 7.0 and 7.2 can read, so the cron warning test stops failing on those versions. #5771
+* Dev: Serialise the shared WordPress core template so two site setups can no longer copy a half-downloaded WordPress. #5750
+* Dev: Skip the WordPress-free unit tests in the multisite run. #5671
+* Dev: Stop ResourceTraitTest from setting a runtime memory limit with no room left above it. #5604
+* Dev: Stop the backup E2E jobs failing on a fixture plugin PHP 7.4 needs, on console noise the restore specs cause by design, and on a click raced against the modal animation. #5735
+* Dev: Stop the create-pr and fix-pr-reviews skills telling you to apply the fast-tests label, which now only starts a second redundant run. #5774
+* Dev: Stop the job ownership unit test from failing on macOS, where the Docker mount does not enforce file locks. #5598
+* Dev: Stop the login form snapshots depending on the plugin directory. #5660
+* Dev: Strip comments from the dist packages at build time. #5541
+* Dev: Teach the review-pr skill how to work a review off — fix the cause, prefer deleting over adding, and measure the round in production code. #5595
+* Dev: Teach the wave skill how wpfree classification actually fails. #5727
+* Dev: Trim duplicated and derivable guidance from CLAUDE.md and move task-specific workflows into on-demand skills. #5535
+* Dev: Wait for a Windows file lock only when a unit test cleanup delete actually fails, instead of on every call. #5549
+* Dev: Wait for the Pro PHP matrix in the release test phase instead of only dispatching it. #5744
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

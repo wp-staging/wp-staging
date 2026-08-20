@@ -6,21 +6,21 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Backup\Storage\Providers;
 
-/**
- * System Info Parser
- * Parses system info text into structured data for display
- */
+
+
+
+
 class SystemInfoParser
 {
     use SerializeTrait;
 
-    /** @var string */
+ 
     const SECTION_STORAGE_PROVIDERS = 'WP Staging - Storage Providers';
 
-    /**
-     * Section definitions - single source of truth for IDs, names and subtitles
-     * @var array<string, array{id: string, name: string, subtitle: string}>
-     */
+
+
+
+
     const SECTIONS = [
         'SERVER_AND_OS'               => ['id' => 'server_and_os', 'name' => 'Server & Operating System', 'subtitle' => 'Server software and system architecture'],
         'DATABASE_MYSQL_MARIADB'      => ['id' => 'database_mysql_mariadb', 'name' => 'Database (MySQL / MariaDB)', 'subtitle' => 'Database configuration and connection details'],
@@ -49,19 +49,19 @@ class SystemInfoParser
         'MULTISITE'                   => ['id' => 'multisite', 'name' => 'Multisite', 'subtitle' => 'WordPress multisite network configuration'],
     ];
 
-    /**
-     * @param mixed $data
-     */
+
+
+
     public function isSerializedData($data): bool
     {
         return $this->isSerialized($data);
     }
 
-    /**
-     * Get storage providers from canonical source with system info mappings
-     *
-     * @return array Storage provider configurations with option names and titles
-     */
+
+
+
+
+
     public function getStorageProvidersForSystemInfo(): array
     {
         if (!class_exists('WPStaging\Backup\Storage\Providers')) {
@@ -85,12 +85,12 @@ class SystemInfoParser
         return $storages;
     }
 
-    /**
-     * Get storage provider ID by provider name
-     *
-     * @param string $name Provider name (e.g., "Google Drive")
-     * @return string Provider ID or empty string if not found
-     */
+
+
+
+
+
+
     public function getStorageProviderIdByName($name): string
     {
         $providers = $this->getStorageProvidersForSystemInfo();
@@ -101,13 +101,13 @@ class SystemInfoParser
         return !empty($found) ? reset($found)['id'] : '';
     }
 
-    /**
-     * Get section ID from section name
-     *
-     * @param string $sectionName Section name
-     * @param array $navItems Navigation items
-     * @return string Section ID
-     */
+
+
+
+
+
+
+
     public function getSectionId($sectionName, $navItems)
     {
         foreach ($navItems as $navItem) {
@@ -119,19 +119,19 @@ class SystemInfoParser
         return sanitize_title($sectionName);
     }
 
-    /**
-     * Get navigation items ordered by content appearance
-     *
-     * @param array $sections Parsed sections
-     * @return array Ordered navigation items
-     */
+
+
+
+
+
+
     public function getOrderedNavigationItems($sections): array
     {
         $allNavItems     = $this->getAllNavigationItems();
         $orderedNavItems = [];
         $sectionOrder    = array_keys($sections);
 
-        // First, add items in the order they appear in sections
+ 
         foreach ($sectionOrder as $sectionName) {
             foreach ($allNavItems as $navItem) {
                 if (in_array($sectionName, $navItem['sections']) && !in_array($navItem['id'], array_column($orderedNavItems, 'id'))) {
@@ -141,7 +141,7 @@ class SystemInfoParser
             }
         }
 
-        // Add items that weren't found in sections (like logs)
+ 
         foreach ($allNavItems as $navItem) {
             if (!in_array($navItem['id'], array_column($orderedNavItems, 'id'))) {
                 $orderedNavItems[] = $navItem;
@@ -151,15 +151,15 @@ class SystemInfoParser
         return $orderedNavItems;
     }
 
-    /**
-     * Get section subtitle by section name
-     *
-     * @param string $sectionName Display name of the section
-     * @return string Section subtitle or empty string
-     */
+
+
+
+
+
+
     public function getSectionSubtitle($sectionName): string
     {
-        // Iterate through section IDs to find matching display name
+ 
         foreach (self::SECTIONS as $sectionId) {
             if (self::getDisplayName($sectionId) === $sectionName) {
                 return self::getSubtitle($sectionId);
@@ -169,35 +169,35 @@ class SystemInfoParser
         return '';
     }
 
-    /**
-     * Check if section is the storage providers section
-     *
-     * @param string $sectionName Section name to check
-     * @return bool True if storage providers section
-     */
+
+
+
+
+
+
     public function isStorageProvidersSection($sectionName): bool
     {
         return $sectionName === self::SECTION_STORAGE_PROVIDERS;
     }
 
-    /**
-     * Check if label is a staging sites label
-     *
-     * @param string $label Label to check
-     * @return bool True if staging sites label
-     */
+
+
+
+
+
+
     public function isStagingSitesLabel(string $label = ''): bool
     {
         $labelLower = strtolower(trim($label));
         return strpos($labelLower, 'wpstg_staging_sites') !== false;
     }
 
-    /**
-     * Find storage provider by label
-     *
-     * @param string $label Label to search for
-     * @return array|null Provider data or null if not found
-     */
+
+
+
+
+
+
     private function findStorageProviderByLabel(string $label)
     {
         $label     = strtolower(trim($label));
@@ -212,35 +212,35 @@ class SystemInfoParser
         return null;
     }
 
-    /**
-     * Check if label is a storage provider label
-     *
-     * @param string $label Label to check
-     * @return bool True if storage provider label
-     */
+
+
+
+
+
+
     public function isStorageProviderLabel($label): bool
     {
         return $this->findStorageProviderByLabel($label) !== null;
     }
 
-    /**
-     * Get storage provider name from label
-     *
-     * @param string $label Label containing provider name
-     * @return string Provider name or empty string
-     */
+
+
+
+
+
+
     public function getStorageProviderName($label): string
     {
         $provider = $this->findStorageProviderByLabel($label);
         return $provider !== null ? $provider['name'] : '';
     }
 
-    /**
-     * Process structured data into display-ready sections
-     *
-     * @param array $structuredData Raw structured data from SystemInfo
-     * @return array Processed sections with categorized items
-     */
+
+
+
+
+
+
     public function processStructuredData($structuredData): array
     {
         $processedSections = [];
@@ -257,7 +257,7 @@ class SystemInfoParser
             $storageProviderItems      = [];
             $isStorageProvidersSection = $this->isStorageProvidersSection($sectionName);
 
-            // Process items
+ 
             foreach ($sectionItems as $item) {
                 $processedItem = $this->processItem($item, $stagingSites, $processedStagingSites, $storageProviderItems, $isStorageProvidersSection);
                 if ($processedItem !== null) {
@@ -265,14 +265,14 @@ class SystemInfoParser
                 }
             }
 
-            // Handle storage providers section - group collected items
+ 
             if ($isStorageProvidersSection && !empty($storageProviderItems)) {
                 $storageProviders = $this->groupStorageProviders($storageProviderItems);
             }
 
             $processedSections[] = [
                 'sectionName'      => $sectionName,
-                'infoItems'        => array_values($infoItems), // Re-index array
+                'infoItems'        => array_values($infoItems), 
                 'stagingSites'     => $stagingSites,
                 'storageProviders' => $storageProviders,
             ];
@@ -281,11 +281,11 @@ class SystemInfoParser
         return $processedSections;
     }
 
-    /**
-     * Get field configuration for staging site display
-     *
-     * @return array Field definitions with labels and display options
-     */
+
+
+
+
+
     public function getStagingSiteFields(): array
     {
         return [
@@ -367,10 +367,10 @@ class SystemInfoParser
         $currentProvider        = null;
         $providerId             = null;
         $currentProviderData    = [];
-        $processedProviders     = []; // Track processed providers to avoid duplicates
+        $processedProviders     = []; 
         $hasCurrentProviderData = false;
 
-        // Closure to add the current provider to the collection if valid and not already added
+ 
         $addProvider = function () use (&$storageProviders, &$currentProvider, &$providerId, &$currentProviderData, &$hasCurrentProviderData, &$processedProviders) {
             if ($currentProvider === null || !$hasCurrentProviderData) {
                 return;
@@ -394,13 +394,13 @@ class SystemInfoParser
             if ($this->isStorageProviderLabel($item['label'])) {
                 $addProvider();
 
-                // Start new provider
+ 
                 $currentProvider        = $this->getStorageProviderName($item['label']);
                 $providerId             = $this->getStorageProviderIdByName($currentProvider);
                 $currentProviderData    = [];
                 $hasCurrentProviderData = false;
             } elseif ($currentProvider !== null) {
-                // Add setting to current provider (skip empty header values)
+ 
                 if ($item['value'] !== '') {
                     $hasCurrentProviderData = true;
                     $currentProviderData[]  = [
@@ -411,61 +411,61 @@ class SystemInfoParser
             }
         }
 
-        // Add the last provider to the collection
+ 
         $addProvider();
 
         return $storageProviders;
     }
 
-    /**
-     * Process a single item and categorize it
-     *
-     * @param array $item
-     * @param array $stagingSites
-     * @param array $processedStagingSites
-     * @param array $storageProviderItems
-     * @param bool $isStorageProvidersSection
-     * @return array|null Returns processed item or null if skipped
-     */
+
+
+
+
+
+
+
+
+
+
     private function processItem($item, &$stagingSites, &$processedStagingSites, &$storageProviderItems, $isStorageProvidersSection = false)
     {
         $label = $item['label'];
         $value = $item['value'];
 
-        // Handle serialized data
+ 
         if (is_string($value) && $this->isSerializedData($value)) {
             $unserialized = @unserialize($value);
             if ($unserialized === false || !is_array($unserialized)) {
                 return ['type' => 'regular', 'label' => $label, 'value' => $value];
             }
 
-            // Handle staging sites
+ 
             if ($this->isStagingSitesLabel($label)) {
                 $stagingSites = array_merge($stagingSites, $this->processStagingSites($unserialized, $processedStagingSites));
-                return null; // Skip this item from display
+                return null; 
             }
 
             return ['type' => 'serialized', 'label' => $label, 'value' => $unserialized];
         }
 
-        // Handle storage provider items - collect them separately in storage providers section
-        // In storage providers section, all items are provider-related, so collect all of them
-        // This prevents duplicates by removing them from regular infoItems display
+ 
+ 
+ 
         if ($isStorageProvidersSection) {
             $storageProviderItems[] = $item;
-            return null; // Skip from regular display to avoid duplicates
+            return null; 
         }
 
         return ['type' => 'regular', 'label' => $label, 'value' => $value];
     }
 
-     /**
-     * Process serialized staging sites data
-     *
-     * @param array $unserialized
-     * @param array $processedStagingSites
-     * @return array
-     */
+
+
+
+
+
+
+
     private function processStagingSites($unserialized, &$processedStagingSites): array
     {
         $stagingSites = [];
@@ -484,12 +484,12 @@ class SystemInfoParser
         return $stagingSites;
     }
 
-    /**
-     * Get section metadata by section ID (from SECTIONS['KEY']['id'])
-     *
-     * @param string $sectionId The section ID (e.g., 'server_and_os')
-     * @return array ['name' => string, 'subtitle' => string]
-     */
+
+
+
+
+
+
     public static function getSectionMetadata(string $sectionId): array
     {
         foreach (self::SECTIONS as $section) {
@@ -504,12 +504,12 @@ class SystemInfoParser
         return ['name' => $sectionId, 'subtitle' => ''];
     }
 
-    /**
-     * Get display name for section definition or section ID
-     *
-     * @param array|string $section Section definition array or section ID string
-     * @return string Display name for the section
-     */
+
+
+
+
+
+
     public static function getDisplayName($section): string
     {
         if (is_array($section)) {
@@ -520,12 +520,12 @@ class SystemInfoParser
         return $metadata['name'];
     }
 
-    /**
-     * Get subtitle for section definition or section ID
-     *
-     * @param array|string $section Section definition array or section ID string
-     * @return string Subtitle for the section
-     */
+
+
+
+
+
+
     public static function getSubtitle($section): string
     {
         if (is_array($section)) {

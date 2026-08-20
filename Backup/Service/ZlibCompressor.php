@@ -9,13 +9,13 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class ZlibCompressor
 {
-    /** @var string */
+ 
     const FILTER_ZLIB_COMPRESSION_ENABLED = 'wpstg.backup.compression.zlib.enabled';
 
-    /** @var string */
+ 
     const HOOK_CAN_USE_COMPRESSION = 'wpstg.can_use_compression';
 
-    /** @var CompressionInterface */
+ 
     protected $service;
 
     public function __construct(CompressionInterface $service)
@@ -23,18 +23,18 @@ class ZlibCompressor
         $this->service  = $service;
     }
 
-    /**
-     * @return bool Whether the server supports compression.
-     */
+
+
+
     public function supportsCompression(): bool
     {
         return function_exists('gzcompress') && function_exists('gzuncompress');
     }
 
-    /**
-     * @see \WPStaging\Backup\BackupServiceProvider::registerClasses For the filter.
-     * @return bool Whether the user can use compression.
-     */
+
+
+
+
     public function canUseCompression(): bool
     {
         static $canUseCompression = null;
@@ -43,7 +43,7 @@ class ZlibCompressor
             return $canUseCompression;
         }
 
-        // Early bail if it is a basic version.
+ 
         if (WPStaging::isBasic()) {
             return false;
         }
@@ -53,12 +53,12 @@ class ZlibCompressor
         return $canUseCompression;
     }
 
-    /**
-     * @return bool True if compression is enabled, false if not.
-     */
+
+
+
     public function isCompressionEnabled(): bool
     {
-        // We don't support (database) compression when multipart backup is enabled.
+ 
         if (Hooks::applyFilters(JobDataDto::FILTER_IS_MULTIPART_BACKUP, false)) {
             return false;
         }

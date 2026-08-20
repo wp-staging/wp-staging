@@ -8,19 +8,19 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 trait BenchmarkTrait
 {
-    /** @var LoggerInterface To store the benchmark results. */
+ 
     private $benchmarkLogger;
 
-    /** @var float Timestamp when the benchmark started. */
+ 
     private $benchmarkStart = 0;
 
     protected function startBenchmark()
     {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            /** @var Logger */
+ 
             $this->benchmarkLogger = WPStaging::make(Logger::class);
 
-            // Eg: JobSiteBackup_Benchmark
+ 
             $filename = sanitize_file_name(sprintf(
                 '%s_benchmark',
                 (new \ReflectionClass($this))->getShortName()
@@ -31,10 +31,10 @@ trait BenchmarkTrait
         }
     }
 
-    /**
-     * @param $context string Write a meaningful context of the benchmark, like a function name that is measured.
-     * @return void
-     */
+
+
+
+
     protected function finishBenchmark($context)
     {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG && $this->benchmarkLogger instanceof Logger) {

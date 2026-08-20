@@ -22,7 +22,7 @@ class CopyUploadsTask extends FileCopierTask
         return PartIdentifier::UPLOAD_PART_IDENTIFIER;
     }
 
-    /** @return bool */
+ 
     protected function getIsWpContent(): bool
     {
         return true;

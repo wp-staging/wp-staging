@@ -2,11 +2,11 @@
 
 namespace WPStaging\Backend\Pluginmeta;
 
-/*
- *  Admin Meta Data
- */
 
-// No Direct Access
+
+
+
+ 
 if (!defined("WPINC")) {
     die;
 }

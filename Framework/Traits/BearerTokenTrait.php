@@ -4,9 +4,9 @@ namespace WPStaging\Framework\Traits;
 
 use RuntimeException;
 
-/**
- * Provide method to get bearer tokens.
- */
+
+
+
 trait BearerTokenTrait
 {
     protected function getBearerToken(): string
@@ -21,10 +21,10 @@ trait BearerTokenTrait
 
     protected function getAuthTokenFromPluginHeader(): string
     {
-        /**
-         * Some hosts strip the Authorization header before PHP gets it.
-         * We accept a plugin-specific fallback header that is set by WP STAGING clients.
-         */
+
+
+
+
         $token = sanitize_text_field($_SERVER['HTTP_X_WPSTG_REQUEST'] ?? ''); // phpcs:ignore
         if (empty($token) || !preg_match('/^[a-f0-9]{12,}$/i', $token)) {
             throw new RuntimeException('Authorization header not found or invalid.', 401);
@@ -51,9 +51,9 @@ trait BearerTokenTrait
         return $authHeader;
     }
 
-    /**
-     * @param array<string, mixed> $headers
-     */
+
+
+
     private function extractAuthorizationHeader(array $headers): string
     {
         foreach ($headers as $headerName => $headerValue) {

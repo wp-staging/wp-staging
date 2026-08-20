@@ -4,68 +4,68 @@ namespace WPStaging\Core\Forms;
 
 use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElement;
 
-/**
- * Class Elements
- * @package WPStaging\Core\Forms
- */
+
+
+
+
 abstract class Elements implements InterfaceElement
 {
 
-    /**
-     * @var null|string
-     */
+
+
+
     protected $name;
 
-    /**
-     * @var null|string
-     */
+
+
+
     protected $id;
 
-    /**
-     * @var array
-     */
+
+
+
     protected $attributes = [];
 
-    /**
-     * @var null|string
-     */
+
+
+
     protected $label;
 
-    /**
-     * @var null|string|array
-     */
+
+
+
     protected $default;
 
-    /**
-     * @var array
-     */
+
+
+
     protected $filters = [];
 
-    /**
-     * @var array
-     */
+
+
+
     protected $validations = [];
 
-    /**
-     * @var string
-     */
+
+
+
     protected $renderFile;
 
-    /**
-     * Elements constructor.
-     * @param string $name
-     * @param array $attributes
-     */
+
+
+
+
+
     public function __construct($name, $attributes)
     {
         $this->setName($name);
         $this->setAttributes($attributes);
     }
 
-    /**
-     * @param string $name
-     * @return $this
-     */
+
+
+
+
     public function setName($name)
     {
         $this->name = $name;
@@ -73,19 +73,19 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return null|string
-     */
+
+
+
     public function getName()
     {
         return $this->name;
     }
 
-    /**
-     * @param string $name
-     * @param string $value
-     * @return $this
-     */
+
+
+
+
+
     public function setAttribute($name, $value)
     {
         $this->attributes[$name] = $value;
@@ -93,10 +93,10 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @param array $attributes
-     * @return $this
-     */
+
+
+
+
     public function setAttributes($attributes)
     {
         foreach ($attributes as $name => $value) {
@@ -106,17 +106,17 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getAttributes()
     {
         return $this->attributes;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function prepareAttributes()
     {
         $attributes = '';
@@ -131,9 +131,9 @@ abstract class Elements implements InterfaceElement
         return rtrim($attributes, ' ');
     }
 
-    /**
-     * @return $this
-     */
+
+
+
     public function setId(string $id)
     {
         $this->id = $id;
@@ -141,18 +141,18 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getId()
     {
         return $this->id ?? '';
     }
 
-    /**
-     * @param string $label
-     * @return $this
-     */
+
+
+
+
     public function setLabel($label)
     {
         $this->label = $label;
@@ -160,26 +160,26 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return null|string
-     */
+
+
+
     public function getLabel()
     {
         return $this->label;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function prepareLabel()
     {
         return "<label for='{$this->getId()}'>{$this->label}</label>";
     }
 
-    /**
-     * @param array|string $filters
-     * @return $this
-     */
+
+
+
+
     public function setFilters($filters)
     {
         if (is_string($filters)) {
@@ -191,18 +191,18 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getFilters()
     {
         return $this->filters;
     }
 
-    /**
-     * @param string|array $value
-     * @return $this
-     */
+
+
+
+
     public function setDefault($value)
     {
         $this->default = $value;
@@ -210,18 +210,18 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return null|string|array
-     */
+
+
+
     public function getDefault()
     {
         return $this->default;
     }
 
-    /**
-     * @param object $validation
-     * @return $this
-     */
+
+
+
+
     public function addValidation($validation)
     {
         $this->validations[] = $validation;
@@ -229,18 +229,18 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getValidations()
     {
         return $this->validations;
     }
 
-    /**
-     * @param string $file
-     * @return $this
-     */
+
+
+
+
     public function setRenderFile($file)
     {
         if (file_exists($file) && is_readable($file)) {
@@ -250,29 +250,29 @@ abstract class Elements implements InterfaceElement
         return $this;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getRenderFile()
     {
         return $this->renderFile;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function __toString()
     {
         return $this->render();
     }
 
-    /**
-     * @return string
-     */
+
+
+
     abstract protected function prepareOutput();
 
-    /**
-     * @return string
-     */
+
+
+
     abstract public function render();
 }

@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Base class for individual tasks that execute within a multi-step job
- *
- * Provides common functionality for task execution including progress tracking,
- * logging, caching, and response generation for long-running operations.
- */
+
+
+
+
+
+
 
 namespace WPStaging\Framework\Job\Task;
 
@@ -30,71 +30,71 @@ abstract class AbstractTask
 {
     use ResourceTrait;
 
-    /** @var string */
+ 
     const FILTER_TASK_RESPONSE = 'wpstg.task.response';
 
-    /** @var string */
+ 
     const FILTER_REMOTE_STORAGES_CHUNK_SIZE = 'wpstg.remoteStorages.chunkSize';
 
-    /** @var string */
+ 
     const FILTER_REMOTE_STORAGES_DELAY_BETWEEN_REQUESTS = 'wpstg.remoteStorages.delayBetweenRequests';
 
-    /** @var string */
+ 
     const FILTER_CHUNK_DOWNLOAD_CLOUD_FILE_TO_FOLDER_CHUNK_SIZE = 'wpstg.chunkDownloadCloudFileToFolder.chunkSize';
 
-    /**
-     * Action called when a task response is generated.
-     * @var string
-     */
+
+
+
+
     const ACTION_TASK_RESPONSE = 'wpstg_task_response';
 
-    /**
-     * Max threshold in seconds to stop a wait task to avoid resource holding in shared hosting.
-     * We start with 1 seconds and once the max threshold is reached we stop the task.
-     * @var int
-     */
+
+
+
+
+
     const MAX_WAIT_TASK_THRESHOLD_SECONDS = 15;
 
-    /** @var Logger */
+ 
     protected $logger;
 
-    /** @var Cache */
+ 
     protected $cache;
 
-    /** @var bool */
+ 
     protected $prepared;
 
-    // TODO RPoC
-    /** @var string|null */
+ 
+ 
     protected $jobName;
 
-    /** @var int|null */
+ 
     protected $jobId;
 
-    /** @var bool */
+ 
     protected $debug;
 
-    /** @var StepsDto */
+ 
     protected $stepsDto;
 
-    /** @var JobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var AbstractJob */
+ 
     protected $job;
 
-    /** @var AbstractTaskDto */
+ 
     protected $currentTaskDto;
 
-    /** @var SeekableQueueInterface */
+ 
     protected $taskQueue;
 
-    /** @var bool Whether this task is a wait task or not. */
+ 
     protected $isWaitTask = false;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
-        /** @var Logger logger */
+ 
         $this->logger    = $logger; // @phpstan-ignore-line
         $this->cache     = $cache;
         $this->stepsDto  = $stepsDto;
@@ -103,33 +103,33 @@ abstract class AbstractTask
         $this->init();
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     abstract public function execute();
 
-    /**
-     * @example 'backup_site_restore_themes'
-     * @return string
-     */
+
+
+
+
     public static function getTaskName()
     {
         throw new WPStagingException('Any extending class MUST override the getTaskName method.');
     }
 
-    /**
-     * @example 'Restoring Themes From Backup'
-     * @return string
-     */
+
+
+
+
     public static function getTaskTitle()
     {
         throw new WPStagingException('Any extending class MUST override the getTaskTitle method.');
     }
 
-    /**
-     * @param AbstractJob $job
-     * @return void
-     */
+
+
+
+
     public function setJobContext(AbstractJob $job)
     {
         $this->cache->setLifetime(HOUR_IN_SECONDS);
@@ -151,10 +151,10 @@ abstract class AbstractTask
         $this->job = $job;
     }
 
-    /**
-     * @param JobDataDto $jobDataDto
-     * @return void
-     */
+
+
+
+
     public function setJobDataDto(JobDataDto $jobDataDto)
     {
         $this->jobDataDto = $jobDataDto;
@@ -163,20 +163,20 @@ abstract class AbstractTask
         $this->setupCurrentTaskDto();
     }
 
-    /**
-     * @var bool $incrementStep Whether to increment the step when generating a response or not.
-     *                          This might be false when you want to generate a response and still be
-     *                          able to retry the same step in the next request.
-     *
-     * @return TaskResponseDto
-     */
+
+
+
+
+
+
+
     public function generateResponse($incrementStep = true): TaskResponseDto
     {
         if ($incrementStep) {
             $this->stepsDto->incrementCurrentStep();
         }
 
-        // TODO Hydrate
+ 
         $response = $this->getResponseDto();
         $response->setIsRunning(!$this->stepsDto->isFinished());
         $response->setPercentage($this->stepsDto->getPercentage());
@@ -222,60 +222,60 @@ abstract class AbstractTask
         return $response;
     }
 
-    /**
-     * Save StepsDto to disk.
-     * This happens automatically during the shutdown process,
-     * but it can also be called manually.
-     * @return void
-     */
+
+
+
+
+
+
     public function persistStepsDto()
     {
         $this->cache->save($this->stepsDto->toArray(), true);
     }
 
-    /**
-     * @return string|null
-     */
+
+
+
     public function getJobName()
     {
         return $this->jobName;
     }
 
-    /**
-     * @param string|null $jobName
-     */
+
+
+
     public function setJobName($jobName)
     {
         $this->jobName = $jobName;
     }
 
-    /**
-     * @return string|int|null
-     */
+
+
+
     public function getJobId()
     {
         return $this->jobId;
     }
 
-    /**
-     * @param string|int|null $jobId
-     */
+
+
+
     public function setJobId($jobId)
     {
         $this->jobId = $jobId;
     }
 
-    /**
-     * @param bool $debug
-     */
+
+
+
     public function setDebug($debug)
     {
         $this->debug = (bool)$debug;
     }
 
-    /**
-     * @return Logger
-     */
+
+
+
     public function getLogger(): Logger
     {
         return $this->logger;
@@ -288,18 +288,18 @@ abstract class AbstractTask
         }
     }
 
-    /**
-     * @return SeekableQueueInterface
-     */
+
+
+
     public function getQueue(): SeekableQueueInterface
     {
         return $this->taskQueue;
     }
 
-    /**
-     * @param AbstractTaskDto $taskDto
-     * @return void
-     */
+
+
+
+
     public function setCurrentTaskDto(AbstractTaskDto $taskDto)
     {
         $this->currentTaskDto = $taskDto;
@@ -318,17 +318,17 @@ abstract class AbstractTask
         return $this->job->getTransientCache();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function persistJobDataDto()
     {
         $this->job->persistJobDataDto();
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     protected function getResponseDto()
     {
         return new TaskResponseDto();
@@ -344,15 +344,15 @@ abstract class AbstractTask
         }
     }
 
-    /** @return string */
+ 
     protected function getCurrentTaskType(): string
     {
         return '';
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupCurrentTaskDto()
     {
         $currentTaskType = $this->getCurrentTaskType();
@@ -370,7 +370,7 @@ abstract class AbstractTask
 
     protected function init()
     {
-        // no-op, can be overridden in child classes
+ 
     }
 
     protected function addLogMessageToResponse(TaskResponseDto $response)
@@ -378,9 +378,9 @@ abstract class AbstractTask
         $response->addMessage($this->logger->getLastLogMsg());
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function updateJob()
     {
         $this->job->setJobDataDto($this->jobDataDto);

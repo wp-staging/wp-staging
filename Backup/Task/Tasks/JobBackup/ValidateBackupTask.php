@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Validates the integrity and completeness of created backup archives
- *
- * Performs validation checks on backup files by extracting and verifying file entries,
- * ensuring the backup is complete and can be successfully restored.
- */
+
+
+
+
+
+
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
@@ -30,27 +30,27 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
 {
-    /**
-     * Whether if the file backup task gracefully shuts down
-     */
+
+
+
     const TRANSIENT_GRACEFUL_SHUTDOWN = 'wpstg_backup_validation_task';
 
-    /** @var Extractor */
+ 
     protected $backupExtractor;
 
-    /** @var BackupValidator */
+ 
     protected $backupValidator;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var ExtractFilesTaskDto */
+ 
     protected $currentTaskDto;
 
-    /** @var BackupMetadata */
+ 
     protected $metadata;
 
-    /** @var string */
+ 
     protected $currentBackupFile;
 
     public function __construct(LoggerInterface $logger, Directory $directory, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Extractor $backupExtractor, BackupValidator $backupValidator)
@@ -77,11 +77,11 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
         try {
             $this->prepareTask();
         } catch (MissingFileException $ex) {
-            // throw error
+ 
         }
 
         set_transient(self::TRANSIENT_GRACEFUL_SHUTDOWN, '1', 60);
-        // If the backup is in old format, we don't need to validate it.
+ 
         if ($this->jobDataDto->getIsBackupFormatV1()) {
             $this->validateOldBackup();
             $this->stepsDto->finish();
@@ -93,13 +93,13 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
             $this->currentTaskDto->fromExtractorDto($this->backupExtractor->getExtractorDto());
         } catch (DiskNotWritableException $e) {
             $this->logger->warning($e->getMessage() . '.');
-            // No-op, just stop execution
+ 
             throw $e;
         } catch (FinishedQueueException $e) {
             $this->currentTaskDto->fromExtractorDto($this->backupExtractor->getExtractorDto());
             $totalFilesProcessed = $this->currentTaskDto->totalFilesExtracted + $this->currentTaskDto->totalFilesSkipped;
             if ($totalFilesProcessed !== $this->stepsDto->getTotal()) {
-                // Unexpected finish.
+ 
                 $this->logger->error(sprintf(
                     'Expected to validate %d files in Backup, but processed %d instead (extracted: %d, skipped: %d).',
                     $this->stepsDto->getTotal(),
@@ -141,9 +141,9 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function persistDto(ExtractorDto $extractorDto)
     {
         $this->currentTaskDto->fromExtractorDto($extractorDto);
@@ -151,9 +151,9 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
         $this->persistJobDataDto();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function prepareTask()
     {
         if ($this->stepsDto->getTotal() > 0) {
@@ -171,9 +171,9 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
         $this->prepareCurrentBackupFileValidation();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function prepareCurrentBackupFileValidation()
     {
         $this->currentBackupFile = $this->jobDataDto->getBackupFilePath();
@@ -181,24 +181,24 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
         $this->backupExtractor->setup($this->currentTaskDto->toExtractorDto(), $this->currentBackupFile, '');
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setNextBackupToValidate()
     {
-        // no-op
+ 
     }
 
-    /** @return string */
+ 
     protected function getCurrentTaskType(): string
     {
         return ExtractFilesTaskDto::class;
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function validateOldBackup()
     {
         $file     = new FileObject($this->currentBackupFile, FileObject::MODE_APPEND_AND_READ);
@@ -217,7 +217,7 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
     protected function checkIfLastRequestGracefulShutdown()
     {
         $transient = get_transient(self::TRANSIENT_GRACEFUL_SHUTDOWN);
-        // empty that mean it was graceful shutdown
+ 
         if (empty($transient)) {
             return;
         }

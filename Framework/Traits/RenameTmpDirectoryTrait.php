@@ -8,15 +8,15 @@ use WPStaging\Backend\Modules\SystemInfo;
 
 trait RenameTmpDirectoryTrait
 {
-    /**
-     * Renames a temporary directory by appending a timestamp to its name.
-     *
-     * @param string $validationDir The path of the temporary directory to rename.
-     *
-     * @return bool True on success.
-     *
-     * @throws \RuntimeException If the directory could not be renamed.
-     */
+
+
+
+
+
+
+
+
+
     public function renameTmpDirectory(string $validationDir)
     {
         $filesystem = WPStaging::make(Filesystem::class);

@@ -10,12 +10,12 @@ class AnalyticsCleanup
 
         $results = $wpdb->get_results("SELECT `option_id`, `option_name` FROM $wpdb->options WHERE `option_name` LIKE 'wpstg_analytics_event_%' ORDER BY `option_id` ASC");
 
-        // No site should have more than 100 events in the database.
+ 
         if (count($results) < 100) {
             return;
         }
 
-        // If they do, we will delete the first 20 events.
+ 
         $idsToDelete = array_map(function ($option) {
             return $option->option_id;
         }, array_slice($results, 0, 20));

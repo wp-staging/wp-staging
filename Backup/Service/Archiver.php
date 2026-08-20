@@ -1,6 +1,6 @@
 <?php
 
-// TODO PHP7.1; constant visibility
+ 
 
 namespace WPStaging\Backup\Service;
 
@@ -32,95 +32,95 @@ use WPStaging\Vendor\lucatume\DI52\NotFoundException;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * This class is responsible for archiving files and creating backups.
- */
+
+
+
 class Archiver
 {
     use EndOfLinePlaceholderTrait;
 
-    /**
-     * @var string
-     */
+
+
+
     const BACKUP_EXTENSION = 'wpstg';
 
-    /**
-     * Used during push and pull jobs
-     * @var string
-     */
+
+
+
+
     const TMP_BACKUP_EXTENSION = 'wpstgtmp';
 
-    /**
-     * After this number of failed requests, we will extend the execution time by 5s for file append.
-     * @var int
-     */
+
+
+
+
     const MAX_RETRIES_BEFORE_EXTENDING_TIME_LIMIT = 1;
 
-    /**
-     * The maximum execution time limit allowed (in seconds), even if PHP is configured
-     * * with a higher value or unlimited (0 or -1).
-     */
+
+
+
+
     const MAX_ALLOWED_PHP_TIME_LIMIT = 60;
 
-    /**
-     * The minimum execution time limit (in seconds) enforced when the server configuration
-     * * sets a very low value for max_execution_time below this threshold.
-    */
+
+
+
+
     const MIN_ALLOWED_PHP_TIME_LIMIT = 10;
 
-    /**
-     * The fraction (percentage) of the allowed PHP time limit to use.
-     * This ensures some buffer time remains before reaching the actual limit.
-     * @var float
-     */
+
+
+
+
+
     const PHP_TIME_LIMIT_IN_FRACTION = 0.8;
 
-    /** @var string */
+ 
     const BACKUP_DIR_NAME = 'backups';
 
-    /** @var bool */
+ 
     const CREATE_BINARY_HEADER = true;
 
-    /** @var BufferedCache */
+ 
     protected $tempBackupIndex;
 
-    /** @var BufferedCache */
+ 
     protected $tempBackup;
 
-    /** @var ArchiverDto */
+ 
     protected $archiverDto;
 
-    /** @var PathIdentifier */
+ 
     protected $pathIdentifier;
 
-    /** @var int */
+ 
     protected $archivedFileSize = 0;
 
-    /** @var JobDataDto */
+ 
     protected $jobDataDto;
 
-    /** @var PhpAdapter */
+ 
     protected $phpAdapter;
 
-    /** @var bool */
+ 
     protected $isLocalBackup = false;
 
-    /** @var int */
+ 
     protected $bytesWrittenInThisRequest = 0;
 
-    /** @var FileHeader */
+ 
     protected $fileHeader;
 
-    /** @var BackupHeader */
+ 
     protected $backupHeader;
 
-    /** @var BackupFileIndex */
+ 
     protected $backupFileIndex;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var bool */
+ 
     protected $isTempBackup = false;
 
     public function __construct(
@@ -147,43 +147,43 @@ class Archiver
         $this->filesystem      = $filesystem;
     }
 
-    /**
-     * @param int $fileAppendTimeLimit
-     * @return void
-     */
+
+
+
+
     public function setFileAppendTimeLimit(int $fileAppendTimeLimit)
     {
         $this->tempBackup->setFileAppendTimeLimit($fileAppendTimeLimit);
         $this->tempBackupIndex->setFileAppendTimeLimit($fileAppendTimeLimit);
     }
 
-    /**
-     * @param bool $isTempBackup
-     * @return void
-     */
+
+
+
+
     public function setIsTempBackup(bool $isTempBackup)
     {
         $this->isTempBackup = $isTempBackup;
     }
 
-    /**
-     * @param bool $isCreateBinaryHeader
-     * @return void
-     */
+
+
+
+
     public function createArchiveFile(bool $isCreateBinaryHeader = false)
     {
         $this->setupTmpBackupFile();
 
         if ($isCreateBinaryHeader && !$this->tempBackup->isValid()) {
-            // Create temp file with binary header
+ 
             $this->tempBackup->save($this->isBackupFormatV1() ? $this->backupHeader->getV1FormatHeader() : $this->backupHeader->getHeader() . "\n");
         }
     }
 
-    /**
-     * Setup temp backup file and temp files index file for the given job id,
-     * @return void
-     */
+
+
+
+
     public function setupTmpBackupFile()
     {
         $this->tempBackup->setFilename('temp_wpstg_backup_' . $this->jobDataDto->getId());
@@ -194,65 +194,65 @@ class Archiver
         $this->tempBackupIndex->setLifetime(DAY_IN_SECONDS);
     }
 
-    /**
-     * @var bool $isLocalBackup
-     */
+
+
+
     public function setIsLocalBackup(bool $isLocalBackup)
     {
         $this->isLocalBackup = $isLocalBackup;
     }
 
-    /**
-     * @return ArchiverDto
-     */
+
+
+
     public function getDto(): ArchiverDto
     {
         return $this->archiverDto;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getBytesWrittenInThisRequest(): int
     {
         return $this->bytesWrittenInThisRequest;
     }
 
-    /**
-     * @return BufferedCache
-     */
+
+
+
     public function getTempBackupIndex(): BufferedCache
     {
         return $this->tempBackupIndex;
     }
 
-    /**
-     * @return BufferedCache
-     */
+
+
+
     public function getTempBackup(): BufferedCache
     {
         return $this->tempBackup;
     }
 
-    /**
-     * @param string $fullFilePath
-     * @param string $indexPath
-     *
-     * `true` -> finished
-     * `false` -> not finished
-     *
-     * @throws DiskNotWritableException
-     * @throws RuntimeException
-     * @throws BackupSkipItemException Skip this file don't do anything
-     * @throws ThresholdException
-     *
-     * @return bool
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function appendFileToBackup(string $fullFilePath, string $indexPath = ''): bool
     {
-        // We can use evil '@' as we don't check is_file || file_exists to speed things up.
-        // Since in this case speed > anything else
-        // However if @ is not used, depending on if file exists or not this can throw E_WARNING.
+ 
+ 
+ 
         $resource = @fopen($fullFilePath, 'rb');
         if (!$resource) {
             debug_log("appendFileToBackup(): Can't open file {$fullFilePath} for reading");
@@ -280,7 +280,7 @@ class Archiver
         try {
             $writtenBytesTotal = $this->appendToArchiveFile($resource, $fullFilePath);
         } catch (ThresholdException $ex) {
-            // Let close the file resource before re-throwing the exception
+ 
             fclose($resource);
             $resource = null;
             $this->maybeIncrementFileAppendTimeLimit();
@@ -326,11 +326,11 @@ class Archiver
         return $isFinished;
     }
 
-    /**
-     * @param string $filePath
-     * @param array $fileStats
-     * @param bool
-     */
+
+
+
+
+
     public function initiateDtoByFilePath(string $filePath, array $fileStats = []): bool
     {
         if (empty($filePath) || ($filePath === $this->archiverDto->getFilePath() && $fileStats['size'] === $this->archiverDto->getFileSize())) {
@@ -342,16 +342,16 @@ class Archiver
         return true;
     }
 
-    /**
-     * Combines index and archive file, renames / moves it to destination
-     *
-     * This function is called only once, so performance improvements has no impact here.
-     *
-     * @param int $backupSizeBeforeAddingIndex
-     * @param string $finalFileNameOnRename
-     *
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
+
     public function generateBackupMetadata(int $backupSizeBeforeAddingIndex = 0, string $finalFileNameOnRename = ''): string
     {
         clearstatcache();
@@ -362,7 +362,7 @@ class Archiver
         $backupMetadata->setHeaderEnd($backupSizeAfterAddingIndex);
 
         if ($this->jobDataDto instanceof JobBackupDataDto) {
-            /** @var JobBackupDataDto */
+ 
             $jobDataDto = $this->jobDataDto;
             $this->setBackupMetadataCategoryInfo($backupMetadata, $jobDataDto);
         }
@@ -378,7 +378,7 @@ class Archiver
         return $this->renameBackup($finalFileNameOnRename);
     }
 
-    /** @return int */
+ 
     public function addFileIndex(): int
     {
         clearstatcache();
@@ -407,15 +407,15 @@ class Archiver
         $lastLine     = $this->tempBackup->readLastLine();
         $writtenBytes = $this->archiverDto->getWrittenBytesTotal();
         if ($lastLine !== PHP_EOL && $writtenBytes === 0) {
-            $this->tempBackup->append(''); // ensure that file index start from new line. See https://github.com/wp-staging/wp-staging-pro/issues/2861
+            $this->tempBackup->append(''); 
         }
 
         clearstatcache();
         $backupSizeBeforeAddingIndex = filesize($this->tempBackup->getFilePath());
         $backupIndexFileSize         = filesize($this->tempBackupIndex->getFilePath());
 
-        // Write the index to the backup file, regardless of resource limits threshold
-        // @throws Exception
+ 
+ 
         $writtenBytes = $this->appendToArchiveFile($indexResource, $this->tempBackupIndex->getFilePath());
         $this->archiverDto->setWrittenBytesTotal($writtenBytes);
 
@@ -425,7 +425,7 @@ class Archiver
             $this->jobDataDto->setRetries(0);
         }
 
-        // close the index file handle to make it deletable for Windows where PHP < 7.3
+ 
         fclose($indexResource);
 
         if ($this->jobDataDto->getRetries() > 3) {
@@ -455,9 +455,9 @@ class Archiver
         return $backupSizeBeforeAddingIndex;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getDestinationPath(): string
     {
         return sprintf(
@@ -469,11 +469,11 @@ class Archiver
         );
     }
 
-    /**
-     * @param string $renameFileTo
-     * @param bool $isLocalBackup
-     * @return string
-     */
+
+
+
+
+
     public function getFinalPath(string $renameFileTo = '', bool $isLocalBackup = true): string
     {
         $backupsDirectory = $this->getFinalBackupParentDirectory($isLocalBackup);
@@ -493,11 +493,11 @@ class Archiver
         return WPStaging::make(Directory::class)->getCacheDirectory();
     }
 
-    /**
-     * @param string $filePath
-     * @param string $indexPath
-     * @return int
-     */
+
+
+
+
+
     protected function writeFileHeader(string $filePath, string $indexPath): int
     {
         $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->filesystem->maybeNormalizePath($indexPath));
@@ -506,12 +506,12 @@ class Archiver
         return $this->tempBackup->append($this->fileHeader->getFileHeader());
     }
 
-    /**
-     * Get delay in milliseconds for retry according to retry number
-     *
-     * @param int $retry
-     * @return float
-     */
+
+
+
+
+
+
     protected function getDelayForRetry(int $retry): float
     {
         $delay = 0.1;
@@ -522,45 +522,45 @@ class Archiver
         return $delay * 1000;
     }
 
-    /**
-     * @param BackupMetadata $backupMetadata
-     * @param JobBackupDataDto $jobBackupDataDto
-     * @return void
-     */
+
+
+
+
+
     protected function setBackupMetadataCategoryInfo(BackupMetadata $backupMetadata, JobBackupDataDto $jobBackupDataDto)
     {
         $backupMetadata->setIndexPartSize($jobBackupDataDto->getCategorySizes());
     }
 
-    /**
-     * @param JobBackupDataDto $jobBackupDataDto
-     * @return void
-     */
+
+
+
+
     protected function incrementFilesCount(JobBackupDataDto $jobBackupDataDto)
     {
         $jobBackupDataDto->setTotalFiles($jobBackupDataDto->getTotalFiles() + 1);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setIndexPositionCreated()
     {
         $this->archiverDto->setIndexPositionCreated(true);
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     protected function isIndexPositionCreated(): bool
     {
         return $this->archiverDto->isIndexPositionCreated();
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     protected function maybeIncrementFileAppendTimeLimit()
     {
         $this->jobDataDto->incrementNumberOfRetries();
@@ -568,7 +568,7 @@ class Archiver
             return;
         }
 
-        /** @var JobBackupDataDto */
+ 
         $jobDataDto = $this->jobDataDto;
         $jobDataDto->incrementFileAppendTimeLimit();
         if ($jobDataDto->getFileAppendTimeLimit() > $this->getMaxPhpTimeLimitAllowed()) {
@@ -591,12 +591,12 @@ class Archiver
         return (int)Hooks::applyFilters(JobDataDto::FILTER_RESOURCES_EXECUTION_TIME_LIMIT, $maxAllowedPhpTimeLimit);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function resetFileAppendTimeLimitAndRetries()
     {
-        /** @var JobBackupDataDto */
+ 
         $jobDataDto = $this->jobDataDto;
 
         $jobDataDto->resetFileAppendTimeLimit();
@@ -613,15 +613,15 @@ class Archiver
         return $this->tempBackupIndex->append($this->fileHeader->getIndexHeader());
     }
 
-    /**
-     * @param resource $resource
-     * @param string $filePath
-     *
-     * @return int Bytes written
-     * @throws DiskNotWritableException
-     * @throws RuntimeException
-     * @throws ThresholdException
-     */
+
+
+
+
+
+
+
+
+
     protected function appendToArchiveFile($resource, string $filePath): int
     {
         try {
@@ -635,13 +635,13 @@ class Archiver
         }
     }
 
-    /**
-     * Upgrade a generic write-failure exception to the disk-full variant when
-     * disk_free_space() can confirm the cause. Falls back to the original
-     * exception when the check is disabled, errors, or reports enough space —
-     * so unreliable disk_free_space() results never produce a false disk-full
-     * message.
-     */
+
+
+
+
+
+
+
     protected function reclassifyDiskFailure(DiskNotWritableException $original): DiskNotWritableException
     {
         try {
@@ -656,18 +656,18 @@ class Archiver
         } catch (DiskNotWritableException $diskFull) {
             return $diskFull;
         } catch (RuntimeException $cannotDetermine) {
-            // Disk space could not be determined — keep original error.
+ 
         }
 
         return $original;
     }
 
-    /**
-     * @throws RuntimeException
-     *
-     * @param string $renameFileTo
-     * @return string
-     */
+
+
+
+
+
+
     private function renameBackup(string $renameFileTo = ''): string
     {
         if ($renameFileTo === '') {
@@ -686,14 +686,14 @@ class Archiver
         return $destination;
     }
 
-    /**
-     * @param int $writtenBytesTotal
-     * @param int $newBytesAdded
-     * @return int
-     * @throws \WPStaging\Framework\Exceptions\IOException
-     * @throws LogicException
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
+
+
     private function addIndex(int $writtenBytesTotal, int $newBytesAdded = 0): int
     {
         clearstatcache();
@@ -705,7 +705,7 @@ class Archiver
 
         $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->archiverDto->getIndexPath());
 
-        // Old backup format
+ 
         if ($this->isBackupFormatV1() && $this->isIndexPositionCreated()) {
             return $this->updateIndexInformationForAlreadyAddedIndex($writtenBytesTotal);
         }
@@ -728,17 +728,17 @@ class Archiver
 
         $this->addIndexPartSize($identifiablePath, $writtenBytesTotal);
 
-        /**
-         * We require JobDataDto in the constructor because it is wired in the DI container
-         * to the current job DTO instance. However, here we need to make sure this DTO
-         * is the jobBackupDataDto.
-         */
+
+
+
+
+
         if (!$this->phpAdapter->isCallable([$this->jobDataDto, 'setTotalFiles']) || !$this->phpAdapter->isCallable([$this->jobDataDto, 'getTotalFiles'])) {
             debug_log('This method can only be called from the context of Backup');
             throw new LogicException('This method can only be called from the context of Backup');
         }
 
-        /** @var JobBackupDataDto $jobBackupDataDto */
+ 
         $jobBackupDataDto = $this->jobDataDto;
         if ($this->archiverDto->getFileSize() >= 2 * GB_IN_BYTES) {
             $jobBackupDataDto->setIsContaining2GBFile(true);
@@ -749,20 +749,20 @@ class Archiver
         return $bytesWritten;
     }
 
-    /**
-     * @param string $identifiablePath
-     * @param int    $newBytesWritten
-     *
-     * @return void
-     */
+
+
+
+
+
+
     protected function addIndexPartSize(string $identifiablePath, int $newBytesWritten)
     {
-        // Early bail if jobDataDto is not instance of jobBackupDataDto
+ 
         if (!$this->jobDataDto instanceof JobBackupDataDto) {
             return;
         }
 
-        /** @var JobBackupDataDto $jobDataDto */
+ 
         $jobDataDto = $this->jobDataDto;
 
         $collectPartSize = $jobDataDto->getCategorySizes();
@@ -810,7 +810,7 @@ class Archiver
             return;
         }
 
-        // If identifier not in array yet
+ 
         if (!isset($collectPartSize[$partName])) {
             $collectPartSize[$partName] = 0;
         }
@@ -819,13 +819,13 @@ class Archiver
         $jobDataDto->setCategorySizes($collectPartSize);
     }
 
-    /**
-     * Used in v1 Backup Format
-     * At the moment this is used when processing adding of big file which is not done in a single request
-     * @param int $writtenBytesTotal
-     * @return int
-     * @throws RuntimeException
-     */
+
+
+
+
+
+
+
     private function updateIndexInformationForAlreadyAddedIndex(int $writtenBytesTotal): int
     {
         $lastLine = $this->tempBackupIndex->readLines(1, null, BufferedCache::POSITION_BOTTOM);
@@ -854,7 +854,7 @@ class Archiver
 
         $this->setIndexPositionCreated();
 
-        // We only need to increment newly added bytes
+ 
         $this->addIndexPartSize($identifiablePath, $writtenBytesTotal - (int)$writtenPreviously);
 
         return $bytesWritten;
@@ -862,7 +862,7 @@ class Archiver
 
     private function isBackupFormatV1(): bool
     {
-        /** @var JobBackupDataDto */
+ 
         $jobDataDto = $this->jobDataDto;
         return $jobDataDto->getIsBackupFormatV1();
     }

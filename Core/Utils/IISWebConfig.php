@@ -4,23 +4,23 @@ namespace WPStaging\Core\Utils;
 
 use WPStaging\Framework\Filesystem\Filesystem;
 
-// No Direct Access
+ 
 if (!defined("WPINC")) {
     die;
 }
 
-/**
- * Description of IISWEbConfig
- *
- * @author IronMan
- */
+
+
+
+
+
 class IISWebConfig
 {
 
-    /**
-     *
-     * @var object
-     */
+
+
+
+
     private $filesystem;
 
     public function __construct()
@@ -28,12 +28,12 @@ class IISWebConfig
         $this->filesystem = new Filesystem();
     }
 
-    /**
-     * Create web.config file
-     *
-     * @param  string  $path Path to file
-     * @return boolean
-     */
+
+
+
+
+
+
     public function create($path)
     {
         return $this->filesystem->create($path, implode(PHP_EOL, [

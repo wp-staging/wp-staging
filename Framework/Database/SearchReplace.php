@@ -7,45 +7,45 @@ use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Framework\Traits\UrlTrait;
 
-/**
- * Handles search and replace operations on database values,
- * including serialized data and WP Bakery base64-encoded content.
- */
+
+
+
+
 class SearchReplace
 {
     use DebugLogTrait;
     use SerializeTrait;
     use UrlTrait;
 
-    /**
-     * Filter applied after standard search/replace in replaceExtended().
-     * Allows custom decode/replace/encode logic for encoded database values (e.g. base64 JSON).
-     *
-     * @param string $data    The column value after standard search/replace
-     * @param array  $search  The search strings
-     * @param array  $replace The replacement strings
-     */
+
+
+
+
+
+
+
+
     const FILTER_REPLACE_EXTENDED_DATA = 'wpstg.database.searchreplace.replace_extended_data';
 
-    /** @var array */
+ 
     private $search;
 
-    /** @var array */
+ 
     private $replace;
 
-    /** @var array */
+ 
     private $exclude;
 
-    /** @var bool */
+ 
     private $caseSensitive;
 
-    /** @var string */
+ 
     private $currentSearch;
 
-    /** @var string */
+ 
     private $currentReplace;
 
-    /** @var bool */
+ 
     private $isWpBakeryActive;
 
     protected $smallerReplacement = PHP_INT_MAX;
@@ -59,9 +59,9 @@ class SearchReplace
         $this->isWpBakeryActive = false;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getSmallerSearchLength()
     {
         if ($this->smallerReplacement < PHP_INT_MAX) {
@@ -77,10 +77,10 @@ class SearchReplace
         return $this->smallerReplacement;
     }
 
-    /**
-     * @param array|object|string $data
-     * @return array|object|string
-     */
+
+
+
+
     public function replace($data)
     {
         if (defined('DISABLE_WPSTG_SEARCH_REPLACE') && (bool)DISABLE_WPSTG_SEARCH_REPLACE) {
@@ -112,13 +112,13 @@ class SearchReplace
         return $data;
     }
 
-    /**
-     * Extended replace that also handles WP Bakery base64 content
-     * and fires a filter for custom encoded-value replacement.
-     *
-     * @param string $data
-     * @return string
-     */
+
+
+
+
+
+
+
     public function replaceExtended($data)
     {
         if (defined('DISABLE_WPSTG_SEARCH_REPLACE') && (bool)DISABLE_WPSTG_SEARCH_REPLACE) {
@@ -157,16 +157,16 @@ class SearchReplace
         return $this;
     }
 
-    /**
-     * Append a single search-replace pair to the existing lists
-     *
-     * Resets the smallerReplacement cache so that the new pair
-     * is taken into account during subsequent replace operations.
-     *
-     * @param string $search  The string to search for
-     * @param string $replace The replacement string
-     * @return $this
-     */
+
+
+
+
+
+
+
+
+
+
     public function appendSearchReplacePair(string $search, string $replace)
     {
         $this->search[] = $search;
@@ -187,21 +187,21 @@ class SearchReplace
         return $this;
     }
 
-    /**
-     * Set whether WP Bakery active
-     *
-     * @return self
-     */
+
+
+
+
+
     public function setWpBakeryActive($isActive = true)
     {
         $this->isWpBakeryActive = $isActive;
         return $this;
     }
 
-    /**
-     * @param string|array|object $data
-     * @return string|array|object|bool|int|float|null
-     */
+
+
+
+
     private function walker($data)
     {
         switch (gettype($data)) {
@@ -216,31 +216,31 @@ class SearchReplace
         return $data;
     }
 
-    /**
-     * @param string $data
-     * @return string|array|object|bool|int|float|null
-     */
+
+
+
+
     private function replaceString($data)
     {
         if (!$this->isSerialized($data)) {
             return $this->strReplace($data);
         }
 
-        // PDO instances can not be serialized or unserialized
+ 
         if (strpos($data, 'O:3:"PDO":0:') !== false) {
             return $data;
         }
 
-        // DateTime object can not be unserialized.
-        // Would throw PHP Fatal error:  Uncaught Error: Invalid serialization data for DateTime object in
-        // Bug PHP https://bugs.php.net/bug.php?id=68889&thanks=6 and https://github.com/WP-Staging/wp-staging-pro/issues/74
+ 
+ 
+ 
         if (strpos($data, 'O:8:"DateTime":0:') !== false) {
             return $data;
         }
 
-        // If the string has an object format, check if it has a stdClass, otherwise, return the original data.
-        // The logic here, we can't serialize unserialized data that has an instance of a class in the object.
-        // This may lead to "class not found" or will replaced with "__PHP_Incomplete_Class_Name" if the class hasn't been initialized yet.
+ 
+ 
+ 
         if (strpos($data, 'O:') !== false && preg_match_all('@O:\d+:"([^"]+)"@', $data, $match) && !empty($match) && !empty($match[1])) {
             foreach ($match[1] as $value) {
                 if ($value !== 'stdClass') {
@@ -276,9 +276,9 @@ class SearchReplace
 
     private function replaceObject($data)
     {
-        // This is not reliable as JsonSerializable and Serializable interfaces can record data into database
-        // but get_object_vars won't be able to fetch them to replace
-        // TODO use reflection to make sure even protected and private properties are searched and replaced
+ 
+ 
+ 
         $props = get_object_vars($data);
         if (!empty($props['__PHP_Incomplete_Class_Name'])) {
             return $data;
@@ -299,7 +299,7 @@ class SearchReplace
     {
         $regexExclude = '';
         foreach ($this->exclude as $excludeString) {
-            //TODO: I changed (FAIL) to (*FAIL) because that's what tutorials say is the right syntax. This may need testing
+ 
             $regexExclude .= $excludeString . '(*SKIP)(*FAIL)|';
         }
 

@@ -5,30 +5,30 @@ namespace WPStaging\Staging\Tasks\StagingSite\FileAdjustment;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Staging\Tasks\FileAdjustmentTask;
 
-/**
- * Replacement for WPStaging\Framework\CloningProcess\Data\CopyWpConfig
- */
+
+
+
 class VerifyWpConfigTask extends FileAdjustmentTask
 {
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskName()
     {
         return 'staging_verify_wp_config';
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public static function getTaskTitle()
     {
         return 'Verifying staging site `wp-config.php` file';
     }
 
-    /**
-     * @return TaskResponseDto
-     */
+
+
+
     public function execute()
     {
         $this->logger->info('Verifying wp-config.php file for staging site...');
@@ -38,7 +38,7 @@ class VerifyWpConfigTask extends FileAdjustmentTask
         }
 
         $destination = trailingslashit($this->jobDataDto->getStagingSitePath()) . 'wp-config.php';
-        // Check if there is already a valid wp-config.php in root of staging site
+ 
         if ($this->isValidWpConfig($destination)) {
             $this->logger->info('wp-config.php file exists in staging site.');
             return $this->generateResponse();
@@ -46,9 +46,9 @@ class VerifyWpConfigTask extends FileAdjustmentTask
 
         $this->logger->warning('wp-config.php file doesn\'t exists in staging site. Checking if wp-config exists outside of ABSPATH path...');
         $source = trailingslashit(dirname(ABSPATH)) . 'wp-config.php';
-        // Check if there is a valid wp-config.php outside root of wp production site
+ 
         if ($this->isValidWpConfig($source)) {
-            // Copy it to staging site
+ 
             $this->logger->info('wp-config.php file found outside ABSPATH.');
             if ($this->filesystem->copy($source, $destination)) {
                 $this->logger->info("Successfully copied wp-config.php file from source {$source} to {$destination}.");
@@ -58,7 +58,7 @@ class VerifyWpConfigTask extends FileAdjustmentTask
             }
         }
 
-        // No valid wp-config.php found so let's copy wp stagings default wp-config.php to staging site
+ 
         $source = trailingslashit(WPSTG_RESOURCES_DIR) . "helpers/wp-config.php";
         $this->logger->info("Will try copying default wp-config.php file from source {$source} to {$destination}.");
 
@@ -79,11 +79,11 @@ class VerifyWpConfigTask extends FileAdjustmentTask
         return $this->generateResponse();
     }
 
-    /**
-     * Make sure wp-config.php contains correct db credentials
-     * @param string $source
-     * @return bool
-     */
+
+
+
+
+
     protected function alterWpConfig(string $source): bool
     {
         if (($content = file_get_contents($source)) === false) {
@@ -114,11 +114,11 @@ define( 'DB_COLLATE', '" . (defined('DB_COLLATE') ? DB_COLLATE : '') . "' );\r\n
         return true;
     }
 
-    /**
-     * Check if wp-config.php contains important constants
-     * @param string $source
-     * @return bool
-     */
+
+
+
+
+
     protected function isValidWpConfig(string $source): bool
     {
         if (!is_file($source) && !is_link($source)) {
@@ -132,7 +132,7 @@ define( 'DB_COLLATE', '" . (defined('DB_COLLATE') ? DB_COLLATE : '') . "' );\r\n
             return false;
         }
 
-        //Check whether constants are present in wp-config.php
+ 
         $constants = [
             'DB_NAME',
             'DB_USER',

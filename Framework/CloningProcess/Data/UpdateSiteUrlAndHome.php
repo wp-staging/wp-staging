@@ -8,11 +8,11 @@ use WPStaging\Pro\Staging\Multisite\SubsitesDomainPathAndUrlsUpdater;
 
 class UpdateSiteUrlAndHome extends DBCloningService
 {
-    /**
-     * Replace "siteurl" and "home"
-     * If it is a complete network clone also update "domain" and "path" in "blogs" and "site" table
-     * @return bool
-     */
+
+
+
+
+
     protected function internalExecute(): bool
     {
         if (!$this->isNetworkClone()) {
@@ -23,19 +23,19 @@ class UpdateSiteUrlAndHome extends DBCloningService
             throw new FatalException("SubsitesDomainPathAndUrlsUpdater class not found.");
         }
 
-        /** @var SubsitesDomainPathAndUrlsUpdater $subsitesDomainPathAndUrlsUpdater */
+ 
         $subsitesDomainPathAndUrlsUpdater = WPStaging::make(SubsitesDomainPathAndUrlsUpdater::class);
         $subsitesDomainPathAndUrlsUpdater->setup($this->dto, [$this, 'updateOptionsTable'], [$this, 'skipTable']);
         return $subsitesDomainPathAndUrlsUpdater->updateSubsitesDomainPathAndUrls();
     }
 
-    /**
-     * @param string $tableName
-     * @param string $siteUrl
-     * @return bool
-     *
-     * @throws FatalException
-     */
+
+
+
+
+
+
+
     public function updateOptionsTable(string $tableName, string $siteUrl): bool
     {
         if ($this->skipTable($tableName)) {
@@ -44,7 +44,7 @@ class UpdateSiteUrlAndHome extends DBCloningService
         }
 
         $this->log("Updating siteurl and homeurl in {$this->dto->getPrefix()}{$tableName} to " . $siteUrl);
-        // Replace URLs
+ 
         $result = $this->dto->getStagingDb()->query(
             $this->dto->getStagingDb()->prepare(
                 "UPDATE {$this->dto->getPrefix()}{$tableName} SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'",
@@ -61,12 +61,12 @@ class UpdateSiteUrlAndHome extends DBCloningService
         return true;
     }
 
-    /**
-     * @param string $tableName
-     * @param string $siteUrl
-     * @return void
-     * @throws FatalException
-     */
+
+
+
+
+
+
     private function validateRequiredOptions(string $tableName, string $siteUrl)
     {
         $optionsTable = $this->dto->getPrefix() . $tableName;

@@ -35,8 +35,8 @@ if (!isset($states[$activeCapability])) {
 
 $state = $states[$activeCapability];
 
-// Until the job reports a start there is nothing to describe the progress of,
-// so the state says what it is doing rather than how long it will take.
+ 
+ 
 $isStarted = $runningCapability !== '';
 $title     = $isStarted ? $state['title'] : $state['starting'];
 $text      = $isStarted ? $state['text'] : __('This only takes a moment.', 'wp-staging');

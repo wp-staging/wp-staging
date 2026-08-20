@@ -3,34 +3,42 @@
 namespace WPStaging;
 
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Framework\Analytics\Actions\PluginLifecycle;
 use WPStaging\Framework\BackgroundProcessing\BackgroundProcessingServiceProvider;
 use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
 
-/**
- * Actions to perform when we deactivate WP Staging Plugin
- */
+
+
+
 class Deactivate
 {
-    /**
-     * @var string
-     */
+
+
+
     private $currentPluginFile;
 
-    /**
-     * @param string $currentPluginFile
-     */
+
+
+
     public function __construct($currentPluginFile)
     {
         $this->currentPluginFile = $currentPluginFile;
 
-        // Early bail
-        // This filter hook is for internal use only
+ 
+ 
         if (apply_filters('wpstg.deactivation_hook.skip_mu_delete', false)) {
             return;
         }
 
-        // Only delete MU plugin when no other wp staging plugin is activated
+
+
+
+
+
+        PluginLifecycle::recordDeactivation();
+
+ 
         if (!$this->isOtherWPStagingPluginActivated()) {
             $this->deleteMuPlugin();
         }
@@ -39,11 +47,11 @@ class Deactivate
         $this->deleteOtherCron();
     }
 
-    /**
-     * Check if any other WP Staging Plugin is activated other than current one
-     *
-     * @return boolean
-     */
+
+
+
+
+
     private function isOtherWPStagingPluginActivated()
     {
         foreach (wp_get_active_and_valid_plugins() as $activePlugin) {
@@ -59,9 +67,9 @@ class Deactivate
         return false;
     }
 
-    /**
-     * delete MuPlugin
-     */
+
+
+
     private function deleteMuPlugin()
     {
         $muDir = (defined('WPMU_PLUGIN_DIR')) ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
@@ -84,7 +92,7 @@ class Deactivate
             require_once __DIR__ . '/Backup/BackupScheduler.php';
         }
 
-        // Ensure Cron class is loaded before calling removeBackupSchedulesFromCron
+ 
         if (!class_exists('\WPStaging\Core\Cron\Cron')) {
             require_once __DIR__ . '/Core/Cron/Cron.php';
         }
@@ -92,9 +100,9 @@ class Deactivate
         \WPStaging\Backup\BackupScheduler::removeBackupSchedulesFromCron();
     }
 
-    /**
-     * delete Other Cron
-     */
+
+
+
     private function deleteOtherCron()
     {
         $hooks = [

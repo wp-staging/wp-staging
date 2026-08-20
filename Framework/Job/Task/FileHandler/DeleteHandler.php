@@ -27,7 +27,7 @@ class DeleteHandler extends FileHandler
 
         $this->unlock();
 
-        // Don't enqueue if the folder is empty
+ 
         if (!$deleted && $this->filesystem->isEmptyDir($destination)) {
             $this->logger->warning(sprintf(
                 __('%s: PHP does not have permission to delete %s! This folder might still be in your filesystem, please clear it manually.', 'wp-staging'),

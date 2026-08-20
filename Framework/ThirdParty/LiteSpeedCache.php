@@ -8,27 +8,27 @@ use function WPStaging\functions\debug_log;
 
 class LiteSpeedCache
 {
-    /**
-     * @var string
-     */
+
+
+
     const TRANSIENT_PURGE_LITESPEED_CACHE = "wpstg_purge_litespeed_cache";
 
-    /**
-     * @var WpAdapter
-     */
+
+
+
     protected $wpAdapter;
 
-    /**
-     * @param WpAdapter $wpAdapter
-     */
+
+
+
     public function __construct(WpAdapter $wpAdapter)
     {
         $this->wpAdapter = $wpAdapter;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function maybePurgeLiteSpeedCache()
     {
         if (!$this->isLiteSpeedCacheActive()) {
@@ -45,11 +45,11 @@ class LiteSpeedCache
         delete_transient(self::TRANSIENT_PURGE_LITESPEED_CACHE);
     }
 
-    /**
-     * Check if LiteSpeed Cache plugin is active
-     *
-     * @return bool
-     */
+
+
+
+
+
     private function isLiteSpeedCacheActive(): bool
     {
         return $this->wpAdapter->isPluginActive('litespeed-cache/litespeed-cache.php');

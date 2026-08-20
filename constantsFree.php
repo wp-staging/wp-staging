@@ -1,11 +1,11 @@
 <?php
 
-// WP STAGING version number
+ 
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '4.10.0');
+    define('WPSTG_VERSION', '4.11.0');
 }
 
-// Compatible up to WordPress Version
+ 
 if (!defined('WPSTG_COMPATIBLE')) {
-    define('WPSTG_COMPATIBLE', '7.0.3');
+    define('WPSTG_COMPATIBLE', '7.1.0');
 }

@@ -8,9 +8,9 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Sites;
 
-/**
- * Prepares the legacy staging options cache for unified setup screens.
- */
+
+
+
 class LegacyOptionsCache
 {
     public function prepare(string $mainJob, string $cloneId = '')

@@ -11,44 +11,44 @@
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 
-// Settings Enabled by default
+ 
 use WPStaging\Framework\Facades\UI\Checkbox;
 
 $settingsEnabled = true;
-// New staging site. Mails Sending is checked by default.
+ 
 $isEmailsAllowed         = true;
 $isEmailsReminderEnabled = false;
-// If plugin is not pro disable this Option
+ 
 if (!$isPro) {
     $settingsEnabled = false;
 }
 
-// Only change default check status when clone options exists and plugin is PRO
+ 
 if ($isPro && !empty($options->current)) {
-    /**
-     * Existing staging site.
-     * We read the site configuration. If none set, default to checked, since not having the setting
-     * to allow the email in the database means it was not disabled.
-     */
-    // To support staging site created with older version of this feature,
-    // Invert it's value if it is present
-    // Can be removed when we are sure that all staging sites have been updated.
-    /**
-     * @todo Seems it can be removed, not sure it is even still used?
-     */
+
+
+
+
+
+ 
+ 
+ 
+
+
+
     $defaultEmailsSending = true;
     if (isset($options->existingClones[$options->current]['emailsDisabled'])) {
         $defaultEmailsSending = !((bool)$options->existingClones[$options->current]['emailsDisabled']);
     }
 
     $isEmailsAllowed         = empty($options->existingClones[$options->current]['isEmailsAllowed']) ? false : true;
-    // fallback for older clones where this option did not exist and 'emailsAllowed' was used
+ 
     if (!isset($options->existingClones[$options->current]['isEmailsAllowed']) && isset($options->existingClones[$options->current]['emailsAllowed'])) {
         $isEmailsAllowed = (bool)$options->existingClones[$options->current]['emailsAllowed'];
     }
 
     $isEmailsReminderEnabled = empty($options->existingClones[$options->current]['isEmailsReminderEnabled']) ? false : true;
-    // Fallback for older clones where this option did not exist and 'emailsReminderAllowed' was used
+ 
     if (!isset($options->existingClones[$options->current]['isEmailsReminderEnabled']) && isset($options->existingClones[$options->current]['emailsReminderAllowed'])) {
         $isEmailsReminderEnabled = (bool)$options->existingClones[$options->current]['emailsReminderAllowed'];
     }

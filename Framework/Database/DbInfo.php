@@ -5,44 +5,44 @@ namespace WPStaging\Framework\Database;
 use wpdb;
 use WPStaging\Framework\Adapter\Database\DatabaseException;
 
-/**
- * Creates database metadata access for an external WordPress database.
- */
+
+
+
 class DbInfo extends WpDbInfo
 {
-    /**
-     * @var string
-     */
+
+
+
     protected $server;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $user;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $password;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $database;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $useSsl;
 
-    /**
-     * @param string $hostServer
-     * @param string $user
-     * @param string $password
-     * @param string $database
-     * @param bool $useSsl
-     * @throws DatabaseException
-     */
+
+
+
+
+
+
+
+
     public function __construct(string $hostServer, string $user, string $password, string $database, bool $useSsl = false)
     {
         $this->server   = $hostServer;
@@ -54,10 +54,10 @@ class DbInfo extends WpDbInfo
         parent::__construct($this->connect());
     }
 
-    /**
-     * @return wpdb
-     * @throws DatabaseException
-     */
+
+
+
+
     public function connect()
     {
         (new ExternalDatabaseConfiguration())->validateConnectionTarget([
@@ -80,7 +80,7 @@ class DbInfo extends WpDbInfo
 
         try {
             if ($this->useSsl) {
-                // wpdb requires this constant for SSL use
+ 
                 if (!defined('MYSQL_CLIENT_FLAGS')) {
                     // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
                     define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);

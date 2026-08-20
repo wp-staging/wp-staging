@@ -6,9 +6,9 @@ use WPStaging\Framework\Interfaces\ArrayableInterface;
 
 class JsonDoublyLinkedList extends \SplDoublyLinkedList implements \JsonSerializable, ArrayableInterface
 {
-    /**
-     * @param string $jsonData A JSON string previously returned by jsonSerialize.
-     */
+
+
+
     public function hydrate($jsonData)
     {
         foreach (json_decode($jsonData, true) as &$item) {

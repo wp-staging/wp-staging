@@ -8,18 +8,18 @@ use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 
-/**
- * Handles AJAX requests for validating staging site destinations
- *
- * Validates that the target directory for staging site creation is writable,
- * checking both the root path and the wp-content fallback location.
- */
+
+
+
+
+
+
 class StagingSiteDataChecker
 {
-    /** @var Auth */
+ 
     private $auth;
 
-    /** @var Directory */
+ 
     private $dirAdapter;
 
     public function __construct(Auth $auth, Directory $directory)
@@ -28,9 +28,9 @@ class StagingSiteDataChecker
         $this->dirAdapter = $directory;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function ajaxIsWritableCloneDestinationDir()
     {
         if (!$this->auth->isAuthenticatedRequest()) {

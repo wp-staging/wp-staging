@@ -8,14 +8,14 @@ use WPStaging\Pro\License\LicenseCapabilities;
 use WPStaging\Pro\License\Licensing;
 use WPStaging\Staging\Service\StagingSetup;
 
-/**
- * Adds common staging requirement log sections.
- */
+
+
+
 trait WithStagingRequirementLogs
 {
-    /**
-     * @return void
-     */
+
+
+
     protected function writeAdvancedSettingsToLogs()
     {
         $settingsToLog = $this->getAdvancedSettingsToLog();
@@ -30,9 +30,9 @@ trait WithStagingRequirementLogs
         }
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
+
+
+
     private function getAdvancedSettingsToLog(): array
     {
         if (!$this->isProRequirementLog() || !method_exists($this->jobDataDto, 'getJobType')) {
@@ -51,9 +51,9 @@ trait WithStagingRequirementLogs
         return [];
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
+
+
+
     private function getCreateAdvancedSettingsToLog(): array
     {
         $settingsToLog = [
@@ -85,9 +85,9 @@ trait WithStagingRequirementLogs
         return $settingsToLog;
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
+
+
+
     private function getUpdateAdvancedSettingsToLog(): array
     {
         return [
@@ -99,9 +99,9 @@ trait WithStagingRequirementLogs
         ];
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
+
+
+
     private function getPushAdvancedSettingsToLog(): array
     {
         return [
@@ -112,10 +112,10 @@ trait WithStagingRequirementLogs
         ];
     }
 
-    /**
-     * @param array<string, mixed> $setting
-     * @return void
-     */
+
+
+
+
     private function writeAdvancedSettingToLogs(array $setting)
     {
         switch ($setting['type']) {
@@ -131,11 +131,11 @@ trait WithStagingRequirementLogs
         }
     }
 
-    /**
-     * @param string $label
-     * @param string|string[] $methods
-     * @return array<string, mixed>
-     */
+
+
+
+
+
     private function stringSetting(string $label, $methods): array
     {
         return [
@@ -145,11 +145,11 @@ trait WithStagingRequirementLogs
         ];
     }
 
-    /**
-     * @param string $label
-     * @param string|string[] $methods
-     * @return array<string, mixed>
-     */
+
+
+
+
+
     private function sensitiveStringSetting(string $label, $methods): array
     {
         return [
@@ -159,11 +159,11 @@ trait WithStagingRequirementLogs
         ];
     }
 
-    /**
-     * @param string $label
-     * @param string|string[] $methods
-     * @return array<string, mixed>
-     */
+
+
+
+
+
     private function booleanSetting(string $label, $methods): array
     {
         return [
@@ -173,17 +173,17 @@ trait WithStagingRequirementLogs
         ];
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isProRequirementLog(): bool
     {
         return strpos(static::class, '\\Pro\\') !== false;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     private function isWooSchedulerSettingRendered(): bool
     {
         if (!class_exists(Licensing::class)) {
@@ -193,11 +193,11 @@ trait WithStagingRequirementLogs
         return WPStaging::make(Licensing::class)->licenseAllows(LicenseCapabilities::WOO_SCHEDULER);
     }
 
-    /**
-     * @param string $label
-     * @param string|string[] $methods
-     * @return void
-     */
+
+
+
+
+
     private function writeStringSettingToLogs(string $label, $methods)
     {
         $value = $this->getLogSettingValue((array)$methods);
@@ -208,11 +208,11 @@ trait WithStagingRequirementLogs
         $this->logger->add(sprintf('- %s : %s', $label, $value !== '' ? $value : 'Not Set'), Logger::TYPE_INFO_SUB);
     }
 
-    /**
-     * @param string $label
-     * @param string|string[] $methods
-     * @return void
-     */
+
+
+
+
+
     private function writeSensitiveStringSettingToLogs(string $label, $methods)
     {
         $value = $this->getLogSettingValue((array)$methods);
@@ -225,11 +225,11 @@ trait WithStagingRequirementLogs
         $this->logger->add(sprintf('- %s : %s', $label, $value), Logger::TYPE_INFO_SUB);
     }
 
-    /**
-     * @param string $label
-     * @param string|string[] $methods
-     * @return void
-     */
+
+
+
+
+
     private function writeBooleanSettingToLogs(string $label, $methods)
     {
         $value = $this->getLogSettingValue((array)$methods);
@@ -242,10 +242,10 @@ trait WithStagingRequirementLogs
         $this->logger->add(sprintf('- %s : %s', $label, $value), Logger::TYPE_INFO_SUB);
     }
 
-    /**
-     * @param string[] $methods
-     * @return mixed|null
-     */
+
+
+
+
     private function getLogSettingValue(array $methods)
     {
         $fallbackValue = null;
@@ -267,9 +267,9 @@ trait WithStagingRequirementLogs
         return $fallbackValue;
     }
 
-    /**
-     * @return object[]
-     */
+
+
+
     private function getLogSettingSources(): array
     {
         return [$this->jobDataDto];

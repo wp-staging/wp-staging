@@ -19,10 +19,10 @@ use WPStaging\Staging\Service\StagingSetup;
 <?php
 do_action("wpstg_scanning_db");
 
-/**
- * WordPress core tables (without prefix). Excluding any of these from a staging
- * site can break it, so the modal surfaces a warning when one is deselected.
- */
+
+
+
+
 $wpCoreTableSuffixes = [
     'commentmeta',
     'comments',
@@ -38,9 +38,9 @@ $wpCoreTableSuffixes = [
     'users',
 ];
 
-// The redesigned reset modal reuses the shared update-style selection chrome
-// (.wpstg-update-selection in update.scss restyles these rows), so reset, update
-// and create all render the same panel; per-modal CSS handles the rest.
+ 
+ 
+ 
 $wrapperClass = 'wpstg-selection-panel';
 $headerClass  = 'wpstg-selection-header';
 $listClass    = 'wpstg-table-selection-list wpstg-selection-list';
@@ -70,7 +70,7 @@ $listClass    = 'wpstg-table-selection-list wpstg-selection-list';
 
     <select multiple="multiple" id="wpstg_select_tables_cloning" class="wpstg-hidden" aria-hidden="true">
         <?php
-        /** @var TableDto $table */
+ 
         foreach ($tables as $table) :
             $tableName  = $table->getName();
             $tableSize  = size_format($table->getSize(), 2);
@@ -101,7 +101,7 @@ $listClass    = 'wpstg-table-selection-list wpstg-selection-list';
             $isCoreTable     = in_array($tableSuffix, $wpCoreTableSuffixes, true);
             $checkboxClasses = $isCoreTable ? 'wpstg-db-table-checkbox wpstg-core-table' : 'wpstg-db-table-checkbox';
 
-            // Critical-table chip: wp_options drives settings, wp_users drives logins/accounts.
+ 
             $tableChip = '';
             if ($stagingSetup->isUpdateOrResetJob()) {
                 if ($tableSuffix === 'options') {

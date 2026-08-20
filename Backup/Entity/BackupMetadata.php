@@ -9,31 +9,31 @@ use WPStaging\Framework\Utils\Times;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\Facades\Hooks;
 
-/**
- * Class BackupMetadata
- *
- * Initialize Backup Metadata with reasonable defaults.
- *
- * @package WPStaging\Backup\Entity
- */
+
+
+
+
+
+
+
 class BackupMetadata extends AbstractBackupMetadata
 {
-    /**
-     * 1.0.4 was the last backup version in v1 format
-     * Lets bump it and use that for creating backup when filter is used for v1 format!
-     * @var string
-     */
+
+
+
+
+
     const LAST_BACKUP_VERSION_V1 = '1.0.5';
 
-    /**
-     * BackupMetadata constructor.
-     *
-     * Sets reasonable defaults.
-     */
+
+
+
+
+
     public function __construct()
     {
         $time      = WPStaging::make(Times::class);
-        /** @var SiteInfo */
+ 
         $siteInfo  = WPStaging::make(SiteInfo::class);
         $wpAdapter = WPStaging::make(WpAdapter::class);
 
@@ -79,9 +79,9 @@ class BackupMetadata extends AbstractBackupMetadata
         return Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, $result);
     }
 
-    /**
-     * @return string
-     */
+
+
+
     private function getDefaultVersion(): string
     {
         $isBackupFormatV1 = Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, false);

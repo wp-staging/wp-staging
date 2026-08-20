@@ -1,11 +1,11 @@
 <?php
 
-/**
- * Extracts files from WP Staging backup archives to restore sites
- *
- * Handles the extraction process for both compressed and uncompressed backups,
- * including validation, disk space checks, and file restoration with proper permissions.
- */
+
+
+
+
+
+
 
 namespace WPStaging\Backup\Service;
 
@@ -39,28 +39,28 @@ class Extractor extends AbstractExtractor
     use ResourceTrait;
     use RestoreFileExclusionTrait;
 
-    /** @var LoggerInterface */
+ 
     protected $logger;
 
-    /** @var DiskWriteCheck */
+ 
     protected $diskWriteCheck;
 
-    /** @var BackupValidator */
+ 
     protected $backupValidator;
 
-    /** @var ZlibCompressor */
+ 
     protected $zlibCompressor;
 
-    /** @var ExtractorTaskInterface */
+ 
     protected $extractorTask;
 
-    /** @var bool */
+ 
     protected $isRepairMultipleHeadersIssue = false;
 
-    /** @var bool */
+ 
     protected $isFastPerformanceMode = true;
 
-    /** @var bool */
+ 
     protected $isLastRequestGracefulShutdown = true;
 
     public function __construct(
@@ -78,10 +78,10 @@ class Extractor extends AbstractExtractor
         $this->diskWriteCheck  = $diskWriteCheck;
     }
 
-    /**
-     * @param bool $isBackupFormatV1
-     * @return void
-     */
+
+
+
+
     public function setIsBackupFormatV1(bool $isBackupFormatV1)
     {
         $this->isBackupFormatV1 = $isBackupFormatV1;
@@ -92,10 +92,10 @@ class Extractor extends AbstractExtractor
         }
     }
 
-    /**
-     * @param bool $isRepairMultipleHeadersIssue
-     * @return void
-     */
+
+
+
+
     public function setIsRepairMultipleHeadersIssue(bool $isRepairMultipleHeadersIssue)
     {
         $this->isRepairMultipleHeadersIssue = $isRepairMultipleHeadersIssue;
@@ -111,21 +111,21 @@ class Extractor extends AbstractExtractor
         $this->isLastRequestGracefulShutdown = $isLastRequestGracefulShutdown;
     }
 
-    /**
-     * @param ExtractorTaskInterface $extractorTask
-     * @param LoggerInterface $logger
-     * @return void
-     */
+
+
+
+
+
     public function inject(ExtractorTaskInterface $extractorTask, LoggerInterface $logger)
     {
         $this->extractorTask = $extractorTask;
         $this->logger        = $logger;
     }
 
-    /**
-     * @param bool $isValidateOnly
-     * @return void
-     */
+
+
+
+
     public function setIsValidateOnly(bool $isValidateOnly)
     {
         $this->isValidateOnly = $isValidateOnly;
@@ -134,17 +134,17 @@ class Extractor extends AbstractExtractor
         }
     }
 
-    /**
-     * @return void
-     * @throws DiskNotWritableException
-     */
+
+
+
+
     public function execute()
     {
         while (!$this->isThreshold()) {
             try {
                 $this->findFileToExtract();
             } catch (OutOfRangeException $e) {
-                // Done processing, or failed
+ 
                 $this->logger->warning('OutOfRangeException. Error: ' .  $e->getMessage());
                 return;
             } catch (RuntimeException $e) {
@@ -181,11 +181,11 @@ class Extractor extends AbstractExtractor
         }
     }
 
-    /**
-     * @param Exception $ex
-     * @param string $filePath
-     * @return void
-     */
+
+
+
+
+
     protected function throwMissingFileException(Exception $ex, string $filePath)
     {
         throw new MissingFileException(sprintf("Following backup part missing: %s", $filePath), 0, $ex);
@@ -208,24 +208,24 @@ class Extractor extends AbstractExtractor
             return;
         }
 
-        // Continuation segment of a multipart-split upload file — the existing bytes on disk
-        // are the previous parts' segments and must be preserved so the file can be stitched.
+ 
+ 
         if ($this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsPreviousPartRequired()) {
             return;
         }
 
         if (file_exists($this->extractingFile->getBackupPath())) {
-            // Delete the original upload file
+ 
             if (!unlink($this->extractingFile->getBackupPath())) {
                 throw new \RuntimeException(sprintf(__('Could not delete original media library file %s. Skipping restore of it...', 'wp-staging'), $this->extractingFile->getRelativePath()));
             }
         }
     }
 
-    /**
-     * Fixes issue https://github.com/wp-staging/wp-staging-pro/issues/2861
-     * @return void
-     */
+
+
+
+
     protected function maybeRemoveLastAccidentalCharFromLastExtractedFile()
     {
         if ($this->backupMetadata->getTotalFiles() !== $this->extractorDto->getTotalFilesExtracted()) {
@@ -252,10 +252,10 @@ class Extractor extends AbstractExtractor
         return $this->dirRestore . $identifier;
     }
 
-    /**
-     * @return void
-     * @throws DiskNotWritableException
-     */
+
+
+
+
     private function processCurrentFile()
     {
         $destinationFilePath = $this->extractingFile->getBackupPath();
@@ -280,7 +280,7 @@ class Extractor extends AbstractExtractor
             && Hooks::applyFilters(JobDataDto::FILTER_BACKUP_USE_INMEMORY_EXTRACTION, true);
         try {
             if ($this->isThreshold()) {
-                // Prevent considering a file as big just because we start extracting at the threshold
+ 
                 return;
             }
 
@@ -291,13 +291,13 @@ class Extractor extends AbstractExtractor
 
             $this->extractFileToDisk();
         } catch (DiskNotWritableException $e) {
-            // Re-throw
+ 
             throw $e;
         } catch (OutOfRangeException $e) {
-            // Backup header, should be ignored silently
+ 
             $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
         } catch (Exception $e) {
-            // Set this file as "written", so that we can skip to the next file.
+ 
             $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
 
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
@@ -312,11 +312,11 @@ class Extractor extends AbstractExtractor
         $this->extractorTask->persistDto($this->extractorDto);
     }
 
-    /**
-     * @return void
-     * @throws DiskNotWritableException
-     * @throws \WPStaging\Framework\Filesystem\FilesystemExceptions
-     */
+
+
+
+
+
     private function fileBatchWrite()
     {
         $destinationFilePath = $this->extractingFile->getBackupPath();
@@ -328,14 +328,14 @@ class Extractor extends AbstractExtractor
         $this->maybeResetFilePointerAfterInMemoryFallback();
         wp_mkdir_p(dirname($destinationFilePath));
 
-        /**
-         * On some servers, it is required to create empty file first, so we will create empty files.
-         * On some servers, touch doesn't work consistently, so we will use fwrite, see the reason below.
-         * On sites hosted on SiteGround, creating files using file_puts_contents uses a lot of memory,
-         * so by default we will use fwrite to create the empty file.
-         * If creating the empty file using fwrite fails, let try creating it using file_put_contents
-         * @see https://github.com/wp-staging/wp-staging-pro/issues/3272 why it was needed.
-         */
+
+
+
+
+
+
+
+
         if (!$this->createEmptyFile($destinationFilePath)) {
             file_put_contents($destinationFilePath, '');
         }
@@ -346,11 +346,11 @@ class Extractor extends AbstractExtractor
             throw new Exception("Can not extract file $destinationFilePath");
         }
 
-        /**
-         * When last request is not graceful shutdown and it is not fast performance mode (i.e. safe performance mode),
-         * we need to set the file pointer to the correct position in the backup file to continue extraction from where it left off.
-         * But this solution only works for non-compressed backups
-         */
+
+
+
+
+
         if (!$this->isLastRequestGracefulShutdown && !$this->isFastPerformanceMode && !$this->extractingFile->getIsCompressed()) {
             $fileSize = $this->getRecoverableCurrentSegmentBytes($destinationFilePath);
             $this->wpstgFile->fseek($this->extractingFile->getStart() + $fileSize);
@@ -400,10 +400,10 @@ class Extractor extends AbstractExtractor
         $this->extractorTask->persistDto($this->extractorDto);
     }
 
-    /**
-     * @return void
-     * @throws Exception
-     */
+
+
+
+
     private function extractFileToDisk()
     {
         $this->fileBatchWrite();
@@ -418,11 +418,11 @@ class Extractor extends AbstractExtractor
         $this->validateExtractedFileAndMoveNext();
     }
 
-    /**
-     * @return string|null
-     * @throws DiskNotWritableException
-     * @throws Exception
-     */
+
+
+
+
+
     private function readAndPrepareChunk()
     {
         try {
@@ -438,9 +438,9 @@ class Extractor extends AbstractExtractor
         return $chunk;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function updateProgressTracking(int $processedChunks, string &$lastDebugMessage)
     {
         if ($processedChunks % 200 === 0 || $processedChunks === $this->extractorDto->getTotalChunks()) {
@@ -448,12 +448,12 @@ class Extractor extends AbstractExtractor
         }
     }
 
-    /**
-     * @param resource $fileResource
-     * @param string $chunk
-     * @return int
-     * @throws DiskNotWritableException
-     */
+
+
+
+
+
+
     private function writeChunkToFile($fileResource, string $chunk): int
     {
         $writtenBytes = fwrite($fileResource, $chunk, (int)$this->getScriptMemoryLimit());
@@ -482,9 +482,9 @@ class Extractor extends AbstractExtractor
         return max(0, min($this->extractingFile->getTotalBytes(), $writtenBytes));
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function trackChunkProgress(int $readBytesBefore, int $chunkSize)
     {
         $readBytesAfter = $this->wpstgFile->ftell() - $readBytesBefore;
@@ -492,10 +492,10 @@ class Extractor extends AbstractExtractor
         $this->extractingFile->addWrittenBytes($chunkSize);
     }
 
-    /**
-     * @return void
-     * @throws FileValidationException
-     */
+
+
+
+
     private function validateFileContent(string $fileContent, string $pathForErrorLogging)
     {
         $actualSize   = strlen($fileContent);
@@ -513,7 +513,7 @@ class Extractor extends AbstractExtractor
 
         if (!$this->extractingFile->areHeaderBytesRemoved()) {
             $crc32Checksum = hash(FileHeader::CRC32_CHECKSUM_ALGO, $fileContent);
-            /** @var FileHeader $fileHeader */
+ 
             $fileHeader       = $this->indexLineDto;
             $expectedChecksum = $fileHeader->getCrc32Checksum();
             if ($expectedChecksum !== $crc32Checksum) {
@@ -531,9 +531,9 @@ class Extractor extends AbstractExtractor
         }
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function switchFromInMemoryToDiskExtraction(string $pathForErrorLogging)
     {
         $this->logger->debug(sprintf(
@@ -544,11 +544,11 @@ class Extractor extends AbstractExtractor
         $this->extractingFile->setWrittenBytes(0);
     }
 
-    /**
-     * @return void
-     * @throws FileValidationException
-     * @throws Exception
-     */
+
+
+
+
+
     private function extractAndValidateInMemory()
     {
         $pathForErrorLogging = $this->pathIdentifier->transformIdentifiableToPath($this->indexLineDto->getIdentifiablePath());
@@ -575,10 +575,10 @@ class Extractor extends AbstractExtractor
         $this->moveToNextFile();
     }
 
-    /**
-     * @return void
-     * @throws RuntimeException
-     */
+
+
+
+
     private function maybeResetFilePointerAfterInMemoryFallback()
     {
         if ($this->extractingFile->getWrittenBytes() !== 0 || $this->extractingFile->getReadBytes() === 0) {

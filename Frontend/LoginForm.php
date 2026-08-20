@@ -7,18 +7,18 @@ use WPStaging\Framework\Utils\Sanitize;
 
 class LoginForm
 {
-    /** @var array $args */
+ 
     private $args = [];
 
-    /**
-     * @var string
-     * Read in src/views/frontend/loginForm.php
-     * Important! Keep the empty string assignment to prevent login issues.
-     * See https://github.com/wp-staging/wp-staging-pro/issues/2804
-     */
+
+
+
+
+
+
     private $error = '';
 
-    /** @var Sanitize */
+ 
     private $sanitize;
 
     public function __construct()
@@ -27,9 +27,9 @@ class LoginForm
         $this->login();
     }
 
-    /**
-     * @return false
-     */
+
+
+
     private function login(): bool
     {
         if (is_user_logged_in()) {
@@ -47,10 +47,10 @@ class LoginForm
         }
 
         $username = $this->sanitize->sanitizeString($_POST['wpstg-username']);
-        // Try to find user by username
+ 
         $user_data = get_user_by('login', $username);
 
-        // Try to find user by email address
+ 
         if (!$user_data) {
             $user_data = get_user_by('email', $username);
         }
@@ -67,7 +67,7 @@ class LoginForm
             return false;
         }
 
-        // Validate provided password and login
+ 
         $password = isset($_POST['wpstg-pass']) ? $this->sanitize->sanitizePassword($_POST['wpstg-pass']) : '';
         if (wp_check_password($password, $user_data->user_pass, $user_data->ID)) {
             $rememberme = isset($_POST['rememberme']) ? true : false;
@@ -96,10 +96,10 @@ class LoginForm
         return false;
     }
 
-    /**
-     * @param array $args
-     * @return void
-     */
+
+
+
+
     public function renderForm(array $args = [])
     {
         $this->args = $args;
@@ -108,63 +108,63 @@ class LoginForm
         $this->getFooter();
     }
 
-    /**
-     * @return void
-     */
+
+
+
     private function getHeader()
     {
         require_once WPSTG_VIEWS_DIR . 'frontend/header.php';
     }
 
-    /**
-     * Add footer
-     * @return void
-     */
+
+
+
+
     private function getFooter()
     {
         require_once WPSTG_VIEWS_DIR . 'frontend/footer.php';
     }
 
-    /**
-     * Provides a simple login form for use anywhere within WordPress.
-     *
-     * The login format HTML is echoed by default. Pass a false value for `$echo` to return it instead.
-     *
-     * @param array $args {
-     *     Optional. Array of options to control the form output. Default empty array.
-     *
-     * @type bool $echo Whether to display the login form or return the form HTML code.
-     *                                  Default true (echo).
-     * @type string $redirect URL to redirect to. Must be absolute, as in "https://example.com/mypage/".
-     *                                  Default is to redirect back to the request URI.
-     * @type string $form_id ID attribute value for the form. Default 'loginform'.
-     * @type string $label_username Label for the username or email address field. Default 'Username or Email Address'.
-     * @type string $label_password Label for the password field. Default 'Password'.
-     * @type string $label_remember Label for the remember field. Default 'Remember Me'.
-     * @type string $label_log_in Label for the submit button. Default 'Log In'.
-     * @type string $id_username ID attribute value for the username field. Default 'user_login'.
-     * @type string $id_password ID attribute value for the password field. Default 'user_pass'.
-     * @type string $id_remember ID attribute value for the remember field. Default 'rememberme'.
-     * @type string $id_submit ID attribute value for the submit button. Default 'wp-submit'.
-     * @type bool $remember Whether to display the "rememberme" checkbox in the form.
-     * @type string $value_username Default value for the username field. Default empty.
-     * @type bool $value_remember Whether the "Remember Me" checkbox should be checked by default.
-     *                                  Default false (unchecked).
-     *
-     * }
-     * @return string|void String when retrieving.
-     * @since 3.0.0
-     *
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private function getLoginForm()
     {
         $args = empty($this->args) ? $this->getDefaultArguments() : $this->args;
 
-        // Don't delete! This is used in the views below
+ 
         $notice     = __('Enter your administrator credentials to access this site. (This message will be displayed only once!)', 'wp-staging');
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
 
-        // Detect if wordfence is active and 2fa enabled
+ 
         $isCustomLogin2faEnabled = class_exists('wordfence', false) && get_option('wordfenceActivated');
 
         $loginFileView = WPSTG_VIEWS_DIR . 'frontend/loginForm.php';
@@ -178,28 +178,28 @@ class LoginForm
         }
     }
 
-    /**
-     * set error to show
-     * @param string $error Error message to set
-     * @return void
-     */
+
+
+
+
+
     public function setError(string $error)
     {
         $this->error = $error;
     }
 
-    /**
-     * Returns the default set of arguments used to render the Login Form.
-     *
-     * @param array<string,mixed> $overrides A set of values to override the default ones.
-     *
-     * @return array<string,mixed> The default set of arguments used to render the login form.
-     * @since TBD
-     *
-     */
+
+
+
+
+
+
+
+
+
     public function getDefaultArguments(array $overrides = []): array
     {
-        // Default 'redirect' value takes the user back to the request URI.
+ 
         $httpHost        = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
         $requestURI      = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
         $redirect        = $this->sanitize->sanitizeUrl((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
@@ -221,7 +221,7 @@ class LoginForm
                 'id_submit'         => 'wp-submit',
                 'remember'          => true,
                 'value_username'    => '',
-                // Set 'value_remember' to true to default the "Remember me" checkbox to checked.
+ 
                 'value_remember'    => false,
             ]
         );

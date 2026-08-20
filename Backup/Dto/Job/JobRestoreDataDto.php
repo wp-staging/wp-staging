@@ -7,141 +7,141 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class JobRestoreDataDto extends JobDataDto
 {
-    /** @var string */
+ 
     protected $file;
 
-    /** @var bool */
+ 
     protected $isDataDownloaded = false;
 
-    /** @var BackupMetadata|null */
+ 
     protected $backupMetadata;
 
-    /** @var string */
+ 
     protected $tmpDirectory;
 
-    /** @var int Number of extracted files */
+ 
     protected $extractorFilesExtracted = 0;
 
-    /** @var int Byte offset the database restore reached, paired with the steps DTO's current line. */
+ 
     protected $databaseFileOffset = 0;
 
-    /** @var int Line $databaseFileOffset was taken at, so a half-written checkpoint is detectable. */
+ 
     protected $databaseFileOffsetLine = 0;
 
-    /** @var int Number of written bytes to process the current files */
+ 
     protected $extractorFileWrittenBytes = 0;
 
     protected $extractorMetadataIndexPosition = 0;
 
-    /** @var string Database table prefix to use while restoring the backup */
+ 
     protected $tmpDatabasePrefix;
 
-    /** @var string Table being inserted during restore. */
+ 
     protected $tableToRestore;
 
-    /** @var bool Whether a transaction is started. */
+ 
     protected $transactionStarted;
 
-    /** @var array<string, string> Store short names tables to drop */
+ 
     protected $shortNamesTablesToDrop = [];
 
-    /** @var array<string, string> Store short names tables to restore */
+ 
     protected $shortNamesTablesToRestore = [];
 
-    /** @var bool */
+ 
     protected $requireShortNamesForTablesToDrop = false;
 
-    /** @var bool */
+ 
     protected $requireShortNamesForTablesToRestore = false;
 
-    /** @var int */
+ 
     protected $databasePartIndex = 0;
 
-    /** @var int */
+ 
     protected $filePartIndex = 0;
 
-    /** @var bool */
+ 
     protected $isSameSiteBackupRestore = false;
 
-    /** @var bool */
+ 
     protected $isUrlSchemeMatched = false;
 
-    /** @var bool */
+ 
     protected $isMissingDatabaseFile = false;
 
-    /** @var int */
+ 
     protected $currentFileHeaderStart = 0;
 
-    /** @var array */
+ 
     protected $databaseDataToPreserve = [];
 
-    /** @var int */
+ 
     protected $totalTablesToRename = 0;
 
-    /** @var int */
+ 
     protected $totalTablesRenamed = 0;
 
-    /**
-     * Store checksum of some important files in the form of key value format i.e. file path => checksum
-     *
-     * @var array
-     */
+
+
+
+
+
     protected $filesChecksum = [];
 
-    /** @var bool */
+ 
     protected $objectCacheSkipped = false;
 
-    /** @var bool */
+ 
     protected $isDatabaseRestoreSkipped = false;
 
-    /**
-     * @return string The .wpstg backup file being restored.
-     */
+
+
+
     public function getFile(): string
     {
         return $this->file;
     }
 
-    /**
-     * Called dynamically
-     * @param string $file
-     * @return void
-     * @see \WPStaging\Backup\Ajax\Restore\PrepareRestore::setupInitialData
-     */
+
+
+
+
+
+
     public function setFile(string $file)
     {
         $this->file = untrailingslashit(wp_normalize_path($file));
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsDataDownloaded(): bool
     {
         return $this->isDataDownloaded;
     }
 
-    /**
-     * @param bool $isDataDownloaded
-     * @return void
-     */
+
+
+
+
     public function setIsDataDownloaded(bool $isDataDownloaded)
     {
         $this->isDataDownloaded = $isDataDownloaded;
     }
 
-    /**
-     * @return BackupMetadata|null
-     */
+
+
+
     public function getBackupMetadata()
     {
         return $this->backupMetadata;
     }
 
-    /**
-     * @param BackupMetadata|array $backupMetadata
-     * @return void
-     */
+
+
+
+
     public function setBackupMetadata($backupMetadata)
     {
         if ($backupMetadata instanceof BackupMetadata) {
@@ -166,436 +166,436 @@ class JobRestoreDataDto extends JobDataDto
         $this->backupMetadata = null;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getTmpDirectory(): string
     {
         return $this->tmpDirectory;
     }
 
-    /**
-     * @param string|null $tmpPath
-     * @return void
-     */
+
+
+
+
     public function setTmpDirectory($tmpPath)
     {
         $this->tmpDirectory = is_null($tmpPath) ? null : trailingslashit(wp_normalize_path($tmpPath));
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getExtractorFilesExtracted(): int
     {
         return $this->extractorFilesExtracted;
     }
 
-    /**
-     * @param int $extractorFilesExtracted
-     * @return void
-     */
+
+
+
+
     public function setExtractorFilesExtracted(int $extractorFilesExtracted)
     {
         $this->extractorFilesExtracted = $extractorFilesExtracted;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function incrementExtractorFilesExtracted()
     {
         $this->extractorFilesExtracted++;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getExtractorFileWrittenBytes(): int
     {
         return $this->extractorFileWrittenBytes;
     }
 
-    /**
-     * @param int $fileWrittenBytes
-     * @return void
-     */
+
+
+
+
     public function setExtractorFileWrittenBytes(int $fileWrittenBytes)
     {
         $this->extractorFileWrittenBytes = $fileWrittenBytes;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getExtractorMetadataIndexPosition(): int
     {
         return $this->extractorMetadataIndexPosition;
     }
 
-    /**
-     * @param int $extractorMetadataIndexPosition
-     * @return void
-     */
+
+
+
+
     public function setExtractorMetadataIndexPosition(int $extractorMetadataIndexPosition)
     {
         $this->extractorMetadataIndexPosition = $extractorMetadataIndexPosition;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getDatabaseFileOffset(): int
     {
         return $this->databaseFileOffset;
     }
 
-    /**
-     * @param int $databaseFileOffset
-     * @return void
-     */
+
+
+
+
     public function setDatabaseFileOffset(int $databaseFileOffset)
     {
         $this->databaseFileOffset = $databaseFileOffset;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getDatabaseFileOffsetLine(): int
     {
         return $this->databaseFileOffsetLine;
     }
 
-    /**
-     * @param int $databaseFileOffsetLine
-     * @return void
-     */
+
+
+
+
     public function setDatabaseFileOffsetLine(int $databaseFileOffsetLine)
     {
         $this->databaseFileOffsetLine = $databaseFileOffsetLine;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getTmpDatabasePrefix(): string
     {
         return $this->tmpDatabasePrefix;
     }
 
-    /**
-     * @param string $tmpDatabasePrefix
-     * @return void
-     */
+
+
+
+
     public function setTmpDatabasePrefix(string $tmpDatabasePrefix)
     {
         $this->tmpDatabasePrefix = $tmpDatabasePrefix;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     public function getTableToRestore()
     {
         return $this->tableToRestore;
     }
 
-    /**
-     * @param string|null $tableToRestore
-     */
+
+
+
     public function setTableToRestore($tableToRestore)
     {
         $this->tableToRestore = $tableToRestore;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getTransactionStarted(): bool
     {
         return $this->transactionStarted;
     }
 
-    /**
-     * @param bool|null $transactionStarted
-     * @return void
-     */
+
+
+
+
     public function setTransactionStarted($transactionStarted)
     {
         $this->transactionStarted = $transactionStarted;
     }
 
-    /**
-     * @return array<string, string>
-     */
+
+
+
     public function getShortNamesTablesToDrop(): array
     {
         return $this->shortNamesTablesToDrop;
     }
 
-    /**
-     * @param array<string, string> $tables
-     * @return void
-     */
+
+
+
+
     public function setShortNamesTablesToDrop(array $tables = [])
     {
         $this->shortNamesTablesToDrop = $tables;
     }
 
-    /**
-     * @param string $originalName
-     * @param string $shorterName
-     * @return void
-     */
+
+
+
+
+
     public function addShortNameTableToDrop(string $originalName, string $shorterName)
     {
         $this->shortNamesTablesToDrop[$shorterName] = $originalName;
     }
 
-    /**
-     * @return array<string, string>
-     */
+
+
+
     public function getShortNamesTablesToRestore(): array
     {
         return $this->shortNamesTablesToRestore;
     }
 
-    /**
-     * @param array<string, string> $tables
-     * @return void
-     */
+
+
+
+
     public function setShortNamesTablesToRestore(array $tables = [])
     {
         $this->shortNamesTablesToRestore = $tables;
     }
 
-    /**
-     * @param string $originalName
-     * @param string $shorterName
-     * @return void
-     */
+
+
+
+
+
     public function addShortNameTableToRestore(string $originalName, string $shorterName)
     {
         $this->shortNamesTablesToRestore[$shorterName] = $originalName;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getRequireShortNamesForTablesToRestore(): bool
     {
         return $this->requireShortNamesForTablesToRestore;
     }
 
-    /**
-     * @param bool $require
-     * @return void
-     */
+
+
+
+
     public function setRequireShortNamesForTablesToRestore(bool $require = false)
     {
         $this->requireShortNamesForTablesToRestore = $require;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getRequireShortNamesForTablesToDrop(): bool
     {
         return $this->requireShortNamesForTablesToDrop;
     }
 
-    /**
-     * @param bool $require
-     * @return void
-     */
+
+
+
+
     public function setRequireShortNamesForTablesToDrop(bool $require = false)
     {
         $this->requireShortNamesForTablesToDrop = $require;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getDatabasePartIndex(): int
     {
         return $this->databasePartIndex;
     }
 
-    /**
-     * @param int $index
-     * @return void
-     */
+
+
+
+
     public function setDatabasePartIndex(int $index = 0)
     {
         $this->databasePartIndex = $index;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsSameSiteBackupRestore(): bool
     {
         return $this->isSameSiteBackupRestore;
     }
 
-    /**
-     * @param bool $sameSite
-     * @return void
-     */
+
+
+
+
     public function setIsSameSiteBackupRestore(bool $sameSite)
     {
         $this->isSameSiteBackupRestore = $sameSite;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsUrlSchemeMatched(): bool
     {
         return $this->isUrlSchemeMatched;
     }
 
-    /**
-     * @param bool $matched
-     * @return void
-     */
+
+
+
+
     public function setIsUrlSchemeMatched(bool $matched)
     {
         $this->isUrlSchemeMatched = $matched;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsMissingDatabaseFile(): bool
     {
         return $this->isMissingDatabaseFile;
     }
 
-    /**
-     * @param bool $missingFile
-     * @return void
-     */
+
+
+
+
     public function setIsMissingDatabaseFile(bool $missingFile)
     {
         $this->isMissingDatabaseFile = $missingFile;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getFilePartIndex(): int
     {
         return $this->filePartIndex;
     }
 
-    /**
-     * @param int $index
-     * @return void
-     */
+
+
+
+
     public function setFilePartIndex(int $index = 0)
     {
         $this->filePartIndex = $index;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getCurrentFileHeaderStart(): int
     {
         return $this->currentFileHeaderStart;
     }
 
-    /**
-     * @param int|null $headerStart
-     * @return void
-     */
+
+
+
+
     public function setCurrentFileHeaderStart($headerStart = 0)
     {
         $this->currentFileHeaderStart = $headerStart;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     public function getDatabaseDataToPreserve(): array
     {
         return $this->databaseDataToPreserve;
     }
 
-    /**
-     * @param array $databaseDataToPreserve
-     * @return void
-     */
+
+
+
+
     public function setDatabaseDataToPreserve(array $databaseDataToPreserve)
     {
         $this->databaseDataToPreserve = $databaseDataToPreserve;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTotalTablesToRename(): int
     {
         return $this->totalTablesToRename;
     }
 
-    /**
-     * @param int $totalTablesToRename
-     * @return void
-     */
+
+
+
+
     public function setTotalTablesToRename(int $totalTablesToRename)
     {
         $this->totalTablesToRename = $totalTablesToRename;
     }
 
-    /**
-     * @return int
-     */
+
+
+
     public function getTotalTablesRenamed(): int
     {
         return $this->totalTablesRenamed;
     }
 
-    /**
-     * @param int $totalTablesRenamed
-     * @return void
-     */
+
+
+
+
     public function setTotalTablesRenamed(int $totalTablesRenamed)
     {
         $this->totalTablesRenamed = $totalTablesRenamed;
     }
 
-    /**
-     * @return array<string, string>
-     */
+
+
+
     public function getFilesChecksum(): array
     {
         return $this->filesChecksum;
     }
 
-    /**
-     * @param array<string, string> $filesChecksum
-     */
+
+
+
     public function setFilesChecksum(array $filesChecksum)
     {
         $this->filesChecksum = $filesChecksum;
     }
 
-    /**
-     * @param string $filePath
-     * @param string $checksum
-     */
+
+
+
+
     public function addFileChecksum(string $filePath, string $checksum)
     {
         $this->filesChecksum[$filePath] = $checksum;
     }
 
-    /**
-     * @param string $filePath
-     * @return string
-     */
+
+
+
+
     public function getFileChecksum(string $filePath): string
     {
         if (array_key_exists($filePath, $this->filesChecksum)) {
@@ -605,56 +605,56 @@ class JobRestoreDataDto extends JobDataDto
         return '';
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getObjectCacheSkipped(): bool
     {
         return $this->objectCacheSkipped;
     }
 
-    /**
-     * @param bool $objectCacheSkipped
-     * @return void
-     */
+
+
+
+
     public function setObjectCacheSkipped(bool $objectCacheSkipped)
     {
         $this->objectCacheSkipped = $objectCacheSkipped;
     }
 
-    /**
-     * @return bool
-     */
+
+
+
     public function getIsDatabaseRestoreSkipped(): bool
     {
         return $this->isDatabaseRestoreSkipped;
     }
 
-    /**
-     * @param bool $isDatabaseRestoreSkipped
-     * @return void
-     */
+
+
+
+
     public function setIsDatabaseRestoreSkipped(bool $isDatabaseRestoreSkipped)
     {
         $this->isDatabaseRestoreSkipped = $isDatabaseRestoreSkipped;
     }
 
-    /**
-     * Check if the backup is from the same site and set it
-     * Also set URL scheme accordingly
-     * @return void
-     */
+
+
+
+
+
     public function determineIsSameSiteRestore()
     {
         $this->setIsUrlSchemeMatched(true);
 
-        // Exclusive check for multisite subdomain installs
+ 
         if (is_multisite() && is_subdomain_install() !== $this->backupMetadata->getSubdomainInstall()) {
             $this->setIsSameSiteBackupRestore(false);
             return;
         }
 
-        // If ABSPATH is different
+ 
         if (ABSPATH !== $this->backupMetadata->getAbsPath()) {
             $this->setIsSameSiteBackupRestore(false);
             return;

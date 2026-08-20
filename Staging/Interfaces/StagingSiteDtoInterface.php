@@ -10,14 +10,14 @@ interface StagingSiteDtoInterface
 
     public function getCloneId(): string;
 
-    /**
-     * @param StagingSiteDto|null $stagingSite
-     * @return void
-     */
+
+
+
+
     public function setStagingSite($stagingSite);
 
-    /**
-     * @return StagingSiteDto|null
-     */
+
+
+
     public function getStagingSite();
 }

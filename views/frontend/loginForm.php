@@ -12,7 +12,7 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 
-/* When 'wpstg_user_logged_in_status' is true, it means the credentials are correct, but login might be blocked by a security plugin or active OTP or 2FA authentication */
+ 
 $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
 ?>
 <main class="wp-staging-login" >
@@ -28,9 +28,9 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
         <?php if (get_transient('wpstg_auto_login_failed')) : ?>
             <p class="error-msg">
                 <?php
-                // @see \WPStaging\Pro\Staging\AutoLogin\LoginAuthenticator::TRANSIENT_AUTO_LOGIN_FAILED
+ 
                 delete_transient('wpstg_auto_login_failed');
-                // @see \WPStaging\Pro\Staging\AutoLogin\LoginAuthenticator::TRANSIENT_AUTO_LOGIN_FAILED_REASON
+ 
                 $failedReason = get_transient('wpstg_auto_login_failed_reason');
                 echo esc_html($failedReason);
                 ?>

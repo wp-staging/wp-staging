@@ -7,48 +7,48 @@ use WPStaging\Framework\Facades\Sanitize;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class MailSender
- * This class is responsible for sending email notifications during WPStaging jobs by white-listing all plugins for our internal use
- * The wpstg_action parameter is set to bypass_optimizer to bypass the optimizer and allow the email to be sent.
- * @package WPStaging\Framework\Mails
- */
+
+
+
+
+
+
 class MailSender
 {
-    /**
-     * @var string
-     */
+
+
+
     const TRANSIENT_EMAIL_NOTIFICATION_ACCESS_TOKEN = 'wpstg_email_notification_access_token';
 
-    /**
-     * @var Notifications
-     */
+
+
+
     protected $notifications;
 
-    /**
-     * @var array
-     */
+
+
+
     protected $attachments;
 
-    /**
-     * @var string
-     */
+
+
+
     protected $recipient;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $addFooter;
 
-    /**
-     * @var Sanitize
-     */
+
+
+
     protected $sanitize;
 
-    /**
-     * @param Notifications $notifications
-     * @param Sanitize $sanitize
-     */
+
+
+
+
     public function __construct(Notifications $notifications, Sanitize $sanitize)
     {
         $this->notifications = $notifications;
@@ -58,41 +58,41 @@ class MailSender
         $this->sanitize      = $sanitize;
     }
 
-    /**
-     * @param array $attachments
-     * @return void
-     */
+
+
+
+
     public function setAttachments(array $attachments)
     {
         $this->attachments = $attachments;
     }
 
-    /**
-     * @param string $recipient
-     * @return void
-     */
+
+
+
+
     public function setRecipient(string $recipient)
     {
         $this->recipient = $recipient;
     }
 
-    /**
-     * @param bool $addFooter
-     * @return void
-     */
+
+
+
+
     public function setAddFooter(bool $addFooter)
     {
         $this->addFooter = $addFooter;
     }
 
-    /**
-     * This function sends a request to the server to send an email notification even if the optimizer is enabled by whitelisting all plugins for our internal use
-     * The wpstg_action parameter is set to bypass_optimizer to bypass the optimizer and allow the email to be sent.
-     * @param string $subject
-     * @param string $body
-     * @param array $details
-     * @return bool
-     */
+
+
+
+
+
+
+
+
     public function sendRequestForEmailNotification(string $subject, string $body, array $details = []): bool
     {
         if (empty($subject) || empty($body)) {
@@ -148,11 +148,11 @@ class MailSender
         return $responseBody['success'];
     }
 
-    /**
-     * This method is called when the wpstg_send_mail_notification action is triggered
-     * It sends an email notification to the report email address
-     * @return void
-     */
+
+
+
+
+
     public function ajaxSendEmailNotification()
     {
         $accessToken = isset($_POST['access_token']) ? sanitize_text_field($_POST['access_token']) : '';
@@ -233,10 +233,10 @@ class MailSender
         return $attachments;
     }
 
-    /**
-     * @param array $attachments
-     * @return void
-     */
+
+
+
+
     private function cleanupAttachments(array $attachments)
     {
         foreach ($attachments as $attachment) {

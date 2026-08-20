@@ -55,9 +55,9 @@ try {
             <span class="wpstg-linear-loader-item"></span>
         </div>
         <?php
-        /**
-         * @var string $urlAssets
-         */
+
+
+
         ?>
         <div class="wpstg--modal--backup--upload">
             <div id="wpstg-upload-select">

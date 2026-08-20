@@ -11,7 +11,7 @@ abstract class StagingTask extends AbstractTask
 {
     protected function getStagingSiteDto(string $cloneId): StagingSiteDto
     {
-        /** @var Sites */
+ 
         $sites = WPStaging::make(Sites::class);
         return $sites->getStagingSiteDtoByCloneId($cloneId);
     }

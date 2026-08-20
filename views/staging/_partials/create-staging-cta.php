@@ -10,7 +10,7 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 
-/** @var CliIntegrationNotice $cliNotice */
+ 
 $cliNotice = WPStaging::make(CliIntegrationNotice::class);
 ?>
 <div class="wpstg-staging-actions !wpstg-inline-flex">

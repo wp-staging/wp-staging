@@ -4,22 +4,22 @@ namespace WPStaging\Framework\Database\QueryBuilder;
 
 class SelectQuery
 {
-    /**
-     * Prepared values to make sure query is safe from sql injection
-     *
-     * @var array
-     */
+
+
+
+
+
     private $preparedValues = [];
 
-    /**
-     * Build Select Query
-     *
-     * @param string $tableName
-     * @param string $whereClause
-     * @param integer $limit
-     * @param integer $offset
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
     public function getQuery($tableName, $whereClause = '', $limit = 0, $offset = 0)
     {
         $limitations = '';
@@ -35,22 +35,22 @@ class SelectQuery
         return "SELECT `$tableName`.* FROM `$tableName`$where$limitations;";
     }
 
-    /**
-     * Prepare parameterized wp filtered select query for data copying.
-     *
-     * @param string $tableName
-     * @param integer $limit
-     * @param integer $offset
-     * @param string $hook
-     *
-     * @return string
-     *
-     * @throws Exception
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     public function prepareQueryWithFilter($tableName, $limit = 0, $offset = 0, $hook = 'cloning')
     {
         $this->preparedValues = [];
-        // TODO: the hook is not implemented for 'backup' for now
+ 
         if (!in_array($hook, ['cloning', 'pushing', 'backups'])) {
             throw new \Exception("Hook '$hook' not supported for filter row. Please use between 'cloning', 'pushing' or 'backup'");
         }
@@ -72,27 +72,27 @@ class SelectQuery
         return $this->getQuery($tableName, $where, $limit, $offset);
     }
 
-    /**
-     * Get prepared statement values
-     *
-     * @return array
-     */
+
+
+
+
+
     public function getPreparedValues()
     {
         return $this->preparedValues;
     }
 
-    /**
-     * Build Select Query
-     * Support joining with other tables
-     *
-     * @param string $tableName
-     * @param array $joinInfo
-     * @param integer $limit
-     * @param integer $offset
-     * @param string $hook
-     * @return string
-     */
+
+
+
+
+
+
+
+
+
+
+
     private function prepareJoinQuery($tableName, $joinInfo, $limit = 0, $offset = 0, $hook = 'cloning')
     {
         $joinTable = $joinInfo['table'];
@@ -124,13 +124,13 @@ class SelectQuery
             $where$limitations;";
     }
 
-    /**
-     * Get prepare clause for Select Query
-     *
-     * @param array $filters
-     * @param string $prefix
-     * @return array
-     */
+
+
+
+
+
+
+
     private function prepareWhereClause($filters, $prefix = '')
     {
         $whereClause = [];
@@ -149,12 +149,12 @@ class SelectQuery
         return $whereClause;
     }
 
-    /**
-     * @param  array|string $value
-     * @param  string $field
-     * @param  string $prefix
-     * @return string
-     */
+
+
+
+
+
+
     private function writeWhereClauseStatement($value, $field, $prefix)
     {
         if (!is_array($value)) {

@@ -9,28 +9,28 @@ use WPStaging\Framework\SiteInfo;
 
 use function WPStaging\functions\debug_log;
 
-/**
- * Class Frontend
- * @package WPStaging\Frontend
- */
+
+
+
+
 class Frontend
 {
-    /** @var string */
+ 
     const FILTER_FRONTEND_SHOW_LOGIN_FORM = 'wpstg.frontend.showLoginForm';
 
-    /**
-     * @var object
-     */
+
+
+
     protected $settings;
 
-    /**
-     * @var bool
-     */
+
+
+
     protected $accessDenied = false;
 
-    /**
-     * @var LoginForm
-     */
+
+
+
     protected $loginForm;
 
     public function __construct()
@@ -42,10 +42,10 @@ class Frontend
         $this->loginForm = WPStaging::make(LoginForm::class);
     }
 
-    /**
-     * Check permissions for the page to decide whether to disable the page
-     * @return void
-     */
+
+
+
+
     public function checkPermissions()
     {
         $this->resetPermaLinks();
@@ -64,10 +64,10 @@ class Frontend
         }
     }
 
-    /**
-     * Define Hooks
-     * @return void
-     */
+
+
+
+
     private function defineHooks()
     {
         static $isRegistered = false;
@@ -81,32 +81,32 @@ class Frontend
         $isRegistered = true;
     }
 
-    /**
-     * Show a login form if user is not authorized
-     * @return bool
-     */
+
+
+
+
     protected function showLoginForm(): bool
     {
         $this->accessDenied = false;
 
-        // Don't show login form if it is a cron job
+ 
         if (defined('DOING_CRON') && DOING_CRON) {
             return false;
         }
 
-        // Don't show login form if from wp-cli
+ 
         if ('cli' === PHP_SAPI && defined('WP_CLI')) {
             return false;
         }
 
-        // Don't show login form if showLoginForm filter is set to false. Used by Real Cookie Banner plugin
+ 
         if (Hooks::applyFilters(self::FILTER_FRONTEND_SHOW_LOGIN_FORM, false)) {
             return false;
         }
 
-        // Don't show login form for rest requests
+ 
 
-        /** @var Rest $rest */
+ 
         $rest = WPStaging::make(Rest::class);
         if ($rest->isRestUrl()) {
             return false;
@@ -120,7 +120,7 @@ class Frontend
             return false;
         }
 
-        // Allow access for administrator
+ 
         if (current_user_can('manage_options')) {
             return false;
         }
@@ -128,37 +128,37 @@ class Frontend
         return (!isset($this->settings->disableAdminLogin) || $this->settings->disableAdminLogin !== '1');
     }
 
-    /**
-     * Check if it is a staging site
-     * @return bool
-     */
+
+
+
+
     protected function isStagingSite(): bool
     {
         return (new SiteInfo())->isStagingSite();
     }
 
-    /**
-     * Check if it is the login page
-     * @return bool
-     */
+
+
+
+
     protected function isLoginPage(): bool
     {
         return ($GLOBALS["pagenow"] === "wp-login.php");
     }
 
-    /**
-     * Reset permalink structure of the clone to default; index.php?p=123
-     */
+
+
+
     protected function resetPermaLinks()
     {
         if (!$this->isStagingSite() || get_option("wpstg_rmpermalinks_executed") === "true") {
             return;
         }
 
-        // $wp_rewrite is not available before the init hook. So we need to use the global variable
+ 
         global $wp_rewrite;
 
-        // @see https://developer.wordpress.org/reference/classes/wp_rewrite/set_permalink_structure/
+ 
         $wp_rewrite->set_permalink_structure('');
 
         flush_rewrite_rules();
@@ -166,9 +166,9 @@ class Frontend
         update_option("wpstg_rmpermalinks_executed", "true");
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function resavePermalinks()
     {
         if (!$this->isStagingSite() || get_option("wpstg_resave_permalinks_executed") === "true") {
@@ -176,7 +176,7 @@ class Frontend
         }
 
         try {
-            include_once(ABSPATH . 'wp-admin/includes/misc.php'); // Include `misc.php` to ensure `save_mod_rewrite_rules` is available when `flush_rules` is executed.
+            include_once(ABSPATH . 'wp-admin/includes/misc.php'); 
             global $wp_rewrite;
             $wp_rewrite->init();
             $wp_rewrite->flush_rules(true);

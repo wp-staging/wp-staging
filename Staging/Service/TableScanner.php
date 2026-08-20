@@ -8,45 +8,45 @@ use WPStaging\Framework\Database\TableDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
-/**
- * Scans database tables available for staging setup selection.
- */
+
+
+
 class TableScanner
 {
-    /** @var string */
+ 
     const STAGING_TABLE_PREFIX = 'wpstg';
 
-    /** @var string */
+ 
     const FILTER_SHOW_STAGING_TABLES = 'wpstg_show_staging_tables_in_staging_setup';
 
-    /**
-     * @var TemplateEngine
-     */
+
+
+
     protected $templateEngine;
 
-    /**
-     * @var Database
-     */
+
+
+
     protected $database;
 
-    /**
-     * @var TableService
-     */
+
+
+
     protected $tableService;
 
-    /**
-     * @var AbstractStagingSetup
-     */
+
+
+
     protected $stagingSetup;
 
-    /**
-     * @var string[]
-     */
+
+
+
     protected $excludedTables = [];
 
-    /**
-     * @var TableDto[]
-     */
+
+
+
     protected $currentTables = [];
 
     public function __construct(TemplateEngine $templateEngine, Database $database, TableService $tableService)
@@ -56,9 +56,9 @@ class TableScanner
         $this->tableService   = $tableService;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function setStagingSetup(AbstractStagingSetup $stagingSetup)
     {
         $this->stagingSetup = $stagingSetup;
@@ -78,19 +78,19 @@ class TableScanner
         echo $result; // phpcs:ignore
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function scanTables()
     {
-        /**
-         * @var Collection|TableDto[] $tables
-         */
+
+
+
         $tables            = $this->tableService->findAllTableStatus();
         $dbPrefix          = $this->database->getPrefix();
         $showStagingTables = $this->shouldShowStagingTables($dbPrefix);
 
-        // reset the excluded tables
+ 
         $this->excludedTables = [];
         $this->currentTables  = [];
 
@@ -100,9 +100,9 @@ class TableScanner
                 continue;
             }
 
-            // Create array of unchecked tables
-            // On the main website of a multisite installation, do not select network site tables beginning with wp_1_, wp_2_ etc.
-            // (On network sites, the correct tables are selected anyway)
+ 
+ 
+ 
             if ($this->isTableExcluded($dbPrefix, $tableName)) {
                 $this->excludedTables[] = $tableName;
             }

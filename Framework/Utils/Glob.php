@@ -2,9 +2,9 @@
 
 namespace WPStaging\Framework\Utils;
 
-/**
- * This is a port of Symfony\Component\Finder\Glob.
- */
+
+
+
 
 /**
  * Glob matches globbing patterns against text.
@@ -30,16 +30,16 @@ namespace WPStaging\Framework\Utils;
  */
 class Glob
 {
-    /**
-     * Returns a regexp which is the equivalent of the glob pattern.
-     *
-     * @param string $glob                The glob pattern
-     * @param bool   $strictLeadingDot
-     * @param bool   $strictWildcardSlash
-     * @param string $delimiter           Optional delimiter
-     *
-     * @return string regex The regexp
-     */
+
+
+
+
+
+
+
+
+
+
     public static function toRegex($glob, $strictLeadingDot = \true, $strictWildcardSlash = \true, $delimiter = '#')
     {
         $firstByte = \true;

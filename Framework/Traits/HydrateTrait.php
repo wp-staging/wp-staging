@@ -6,24 +6,24 @@ use WPStaging\Framework\Adapter\DateTimeAdapter;
 
 trait HydrateTrait
 {
-    /** @var string[] */
+ 
     protected $excludeHydrate = [];
 
-    /**
-     * @param array $data
-     * @return $this
-     * @noinspection PhpDocMissingThrowsInspection
-     */
+
+
+
+
+
     public function hydrate(array $data = [])
     {
         foreach ($data as $key => $value) {
-            // Let the child class decide which properties to exclude including the excludeHydrate property itself.
+ 
             $propertiesToExclude = array_merge($this->excludeHydrate, ['excludeHydrate']);
             if (in_array($key, $propertiesToExclude, true)) {
                 continue;
             }
 
-            /** @noinspection PhpUnhandledExceptionInspection */
+ 
             try {
                 $this->hydrateByMethod('set' . ucfirst($key), $value);
             } catch (\TypeError $e) {
@@ -36,12 +36,12 @@ trait HydrateTrait
         return $this;
     }
 
-    /**
-     * Use to hydrate public properties
-     * @param array $data
-     * @return $this
-     * @noinspection PhpDocMissingThrowsInspection
-     */
+
+
+
+
+
+
     public function hydrateProperties(array $data = [])
     {
         foreach ($data as $key => $value) {
@@ -56,10 +56,10 @@ trait HydrateTrait
         return $this;
     }
 
-    /**
-     * @param string $message
-     * @return void
-     */
+
+
+
+
     protected function debugLog(string $message)
     {
         if (!function_exists('\WPStaging\functions\debug_log')) {
@@ -73,13 +73,13 @@ trait HydrateTrait
         \WPStaging\functions\debug_log($message);
     }
 
-    /**
-     * @param string $method
-     * @param mixed $value
-     * @return void
-     *
-     * @throws \ReflectionException
-     */
+
+
+
+
+
+
+
     private function hydrateByMethod(string $method, $value)
     {
         if (!method_exists($this, $method)) {
@@ -90,7 +90,7 @@ trait HydrateTrait
             throw new \Exception(sprintf("Trying to hydrate DTO with value that does not exist. %s::%s(%s)", get_class($this), $method, $value));
         }
 
-        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
+ 
         $method = new \ReflectionMethod($this, $method);
 
         $params = $method->getParameters();
@@ -116,16 +116,16 @@ trait HydrateTrait
             return;
         }
 
-        /** @noinspection PhpUnhandledExceptionInspection */
+ 
         $method->invoke($this, $this->getClassAsValue($class, $value));
     }
 
-    /**
-     * @param \ReflectionClass $class
-     * @param mixed $value
-     * @return object
-     * @throws \Exception
-     */
+
+
+
+
+
+
     private function getClassAsValue(\ReflectionClass $class, $value)
     {
         $className = $class->getName();

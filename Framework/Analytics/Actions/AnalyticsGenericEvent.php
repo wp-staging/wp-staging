@@ -2,42 +2,44 @@
 
 namespace WPStaging\Framework\Analytics\Actions;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
+use WPStaging\Framework\Analytics\AnalyticsSender;
 
-/**
- * Lightweight, single-shot analytics event for tracking generic actions
- * that don't follow the job lifecycle (start → finish/error/cancel).
- *
- * @example
- * AnalyticsGenericEvent::logEvent('feature_used', 'backup', ['source' => 'toolbar']);
- */
+
+
+
+
+
+
+
 class AnalyticsGenericEvent extends AnalyticsEventDto
 {
-    /** @var string */
+ 
     public $event_name;
 
-    /** @var string */
+ 
     public $group_name;
 
-    /** @var array<string, scalar> */
+ 
     public $custom;
 
-    /** @var int UNIX timestamp when the event was created. */
+ 
     public $created_at;
 
-    /**
-     * @return string
-     */
+
+
+
     public function getEventAction()
     {
         return 'event_generic';
     }
 
-    /**
-     * Serialize only the generic-event fields required by analytics.
-     *
-     * @return array
-     */
+
+
+
+
+
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
@@ -66,19 +68,19 @@ class AnalyticsGenericEvent extends AnalyticsEventDto
         return $data;
     }
 
-    /**
-     * Log a generic analytics event immediately in database for later sending.
-     *
-     * Queued regardless of consent, like every other event type. Consent is
-     * enforced once, at dispatch, by {@see \WPStaging\Framework\Analytics\AnalyticsSender},
-     * which leaves the queue untouched until it is granted — so a user who
-     * agrees later is reported from the beginning rather than from the moment
-     * they agreed.
-     *
-     * @param string $eventName The event name (e.g. 'feature_used')
-     * @param string $groupName Optional grouping label (e.g. 'backup')
-     * @param array<string, scalar> $custom Optional key/value custom data
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     public static function logEvent(string $eventName, string $groupName = '', array $custom = [])
     {
         $event = new self();
@@ -102,6 +104,45 @@ class AnalyticsGenericEvent extends AnalyticsEventDto
         } catch (\Exception $e) {
             \WPStaging\functions\debug_log(
                 "WP STAGING: Could not save generic analytics event '$eventName'.",
+                'debug',
+                false
+            );
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    public static function logEventNow(string $eventName, string $groupName = '', array $custom = [])
+    {
+        try {
+            $event = new self();
+
+            $event->event_name    = $eventName;
+            $event->event_hash    = microtime(true) . rand();
+            $event->created_at    = time();
+            $event->ready_to_send = true;
+
+            if ($groupName !== '') {
+                $event->group_name = $groupName;
+            }
+
+            if (!empty($custom)) {
+                $event->custom = $custom;
+            }
+
+            WPStaging::make(AnalyticsSender::class)->sendNow($event);
+        } catch (\Throwable $e) {
+            \WPStaging\functions\debug_log(
+                "WP STAGING: Could not send analytics event '$eventName'.",
                 'debug',
                 false
             );

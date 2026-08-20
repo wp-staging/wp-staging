@@ -12,13 +12,13 @@ trait WithAnalyticsSiteInfo
     {
         global $wpdb, $wp_version, $wp_db_version;
 
-        /**
-         * @var string $wp_version
-         * @var int    $wp_db_version
-         */
+
+
+
+
         include ABSPATH . WPINC . '/version.php';
 
-        // eg: 10.4.19-MariaDB-1:10.4.19+maria~focal
+ 
         $mysqlInfo = $wpdb->get_var('SELECT VERSION();');
 
         preg_match('/^[0-9.]+/', $mysqlInfo, $mySqlVersionNumber);
@@ -29,7 +29,7 @@ trait WithAnalyticsSiteInfo
             $mySqlVersionNumber = 'UNDEFINED';
         }
 
-        // Normalized engine name, allows us to query them regardless of the raw format.
+ 
         if (stripos($mysqlInfo, 'mysql')) {
             $engine = 'MYSQL';
         } elseif (stripos($mysqlInfo, 'mariadb')) {
@@ -55,7 +55,7 @@ trait WithAnalyticsSiteInfo
         }
 
         $plugins  = $this->getActivePlugins();
-        /** @var SiteInfo */
+ 
         $siteInfo = WPStaging::make(SiteInfo::class);
 
         $systemInfo = [
@@ -69,7 +69,7 @@ trait WithAnalyticsSiteInfo
             'max_file_size'                 => !empty($wpstgSettings['maxFileSize']) ? $wpstgSettings['maxFileSize'] : null,
             'optimizer'                     => !empty($wpstgSettings['optimizer']) ? $wpstgSettings['optimizer'] : null,
 
-            // WP STAGING Settings that are null by default, if they are not present, they are evaluated as FALSY/EMPTY:
+ 
             'keep_permalinks'               => !empty($wpstgSettings['keepPermalinks']) ? $wpstgSettings['keepPermalinks'] : false,
             'disable_admin_login'           => !empty($wpstgSettings['disableAdminLogin']) ? $wpstgSettings['disableAdminLogin'] : false,
             'delay_between_requests'        => 0,
@@ -127,7 +127,7 @@ trait WithAnalyticsSiteInfo
         $wpPluginDir = wp_normalize_path(WP_PLUGIN_DIR);
         $wpmuPluginDir = wp_normalize_path(WPMU_PLUGIN_DIR);
 
-        // plugins
+ 
         add_filter('pre_site_option_active_sitewide_plugins', $callback);
 
         $plugins = $this->getPlugins();
@@ -148,7 +148,7 @@ trait WithAnalyticsSiteInfo
 
         remove_filter('pre_site_option_active_sitewide_plugins', $callback);
 
-        // mu-plugins
+ 
         foreach (get_mu_plugins() ?: [] as $activeMuPlugin => $pluginData) {
             $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : $undefinedString;
             $name = str_replace($wpmuPluginDir, '', wp_normalize_path($activeMuPlugin));
@@ -157,7 +157,7 @@ trait WithAnalyticsSiteInfo
             $plugins['muPlugins'][$name] = $version;
         }
 
-        // networkwide plugins
+ 
         if (function_exists('wp_get_active_network_plugins')) {
             foreach (wp_get_active_network_plugins() ?: [] as $activePlugin) {
                 $name = str_replace($wpPluginDir, '', wp_normalize_path($activePlugin));
@@ -181,14 +181,14 @@ trait WithAnalyticsSiteInfo
 
     protected function getPhpExtensions()
     {
-        // Early bail: Not callable
+ 
         if (!is_callable('get_loaded_extensions')) {
             return [];
         }
 
         $phpExtensions = @get_loaded_extensions();
 
-        // Early bail: Unexpected value
+ 
         if (!is_array($phpExtensions)) {
             return [];
         }
@@ -196,11 +196,11 @@ trait WithAnalyticsSiteInfo
         return $phpExtensions;
     }
 
-    /**
-     * Use this special method to get the list of active plugins, instead of using a core method like wp_get_active_and_valid_plugins() because
-     * wp_get_active_and_valid_plugins() does not deliver a result because our mu-plugin wp-staging-optimizer.php filters the active plugins.
-     * @return array
-     */
+
+
+
+
+
     protected function getPlugins()
     {
         global $wpdb;

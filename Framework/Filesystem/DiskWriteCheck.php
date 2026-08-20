@@ -8,10 +8,10 @@ use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 
 class DiskWriteCheck
 {
-    /** @var string */
+ 
     const OPTION_DISK_WRITABLE_FAILED = 'wpstg_disk_writable_check_failed';
 
-    /** @var string */
+ 
     const FILTER_FILESYSTEM_DISABLED_DISK_FREE_SPACE_CHECK = 'wpstg.filesystem.disableDiskFreeSpaceCheck';
 
     protected $directory;
@@ -24,25 +24,25 @@ class DiskWriteCheck
     {
         $this->directory = $directory;
         $this->filesystem = $filesystem;
-        // 1kb
+ 
         $this->reservedMemory = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     }
 
-    /**
-     * @param string    $path         An absolute path to check for free disk space.
-     * @param int|float $bytesToStore The number of bytes intended to be written.
-     *
-     * @throws \RuntimeException When something happened that prevented us from checking if there's enough free disk space.
-     * @throws DiskNotWritableException When disk_free_space reports there's not enough disk space to store this amount of bytes.
-     */
+
+
+
+
+
+
+
     public function checkPathCanStoreEnoughBytes($path, $bytesToStore)
     {
-        // Early bail: Disabled by filter
+ 
         if (Hooks::applyFilters(self::FILTER_FILESYSTEM_DISABLED_DISK_FREE_SPACE_CHECK, false)) {
             throw new \RuntimeException();
         }
 
-        // Early bail: disk_free_space might have been disabled using php.ini "disable_functions"
+ 
         if (!function_exists('disk_free_space')) {
             throw new \RuntimeException('The disk_free_space function is not available.');
         }
@@ -84,9 +84,9 @@ class DiskWriteCheck
         }
     }
 
-    /**
-     * @throws DiskNotWritableException If a previous disk write test has failed.
-     */
+
+
+
     public function hasDiskWriteTestFailed()
     {
         if (get_option(self::OPTION_DISK_WRITABLE_FAILED) === 'fail') {
@@ -94,11 +94,11 @@ class DiskWriteCheck
         }
     }
 
-    /**
-     * @return bool
-     * @throws DiskNotWritableException
-     * @throws FilesystemExceptions
-     */
+
+
+
+
+
     public function testDiskIsWriteable()
     {
         $destination = $this->directory->getPluginUploadsDirectory() . '.wpstgDiskWriteCheck';
@@ -107,7 +107,7 @@ class DiskWriteCheck
             unlink($destination);
         }
 
-        // Early bail: Disk writeable check pass
+ 
         if (@file_put_contents($destination, $this->reservedMemory)) {
             unlink($destination);
 
@@ -116,19 +116,19 @@ class DiskWriteCheck
             return true;
         }
 
-        // First try, this might fail as the disk is full.
+ 
         $result = $this->setLowLevelDiskFullFlag();
 
         $this->filesystem->delete($this->directory->getCacheDirectory());
 
-        // Second try, this might succeed if the first failed as we freed up a few kb of data.
+ 
         if (!$result) {
             $result = $this->setLowLevelDiskFullFlag();
         }
 
         $this->filesystem->delete($this->directory->getTmpDirectory());
 
-        // Third try, this should succeed if the second failed, but it's the tmp directory can be very big and the request might timeout before getting here.
+ 
         if (!$result) {
             $result = $this->setLowLevelDiskFullFlag();
 

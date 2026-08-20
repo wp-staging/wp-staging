@@ -2,17 +2,17 @@
 
 namespace WPStaging\Staging\Service;
 
-/**
- * @package WPStaging\Staging\Service
- */
+
+
+
 class StagingSetup extends AbstractStagingSetup
 {
-    /**
-     * @return void
-     */
+
+
+
     public function renderNetworkCloneSettings()
     {
-        // no-op for free version
+ 
     }
 
     public function getAdvanceSettingsTitle(): string
@@ -20,23 +20,26 @@ class StagingSetup extends AbstractStagingSetup
         return esc_html__("Advanced Settings (Requires Pro Version)", "wp-staging");
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function renderAdvanceSettingsHeader()
     {
         echo $this->templateEngine->render('staging/_partials/advance-settings-header.php'); // phpcs:ignore
     }
 
-    public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', string $tooltip = null)
+
+
+
+    public function renderAdvanceSettings(string $name, string $label, string $description, bool $checked = false, string $additionalClasses = '', string $dataId = '', string $summary = '', string $content = '', $tooltip = null)
     {
-        // We disable the settings by default on FREE version.
+ 
         $this->renderSettings($name, $label, $description, $checked, true, $additionalClasses, $dataId, $summary, $content, $tooltip);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function renderNewAdminSettings()
     {
         $fields = [
@@ -64,9 +67,9 @@ class StagingSetup extends AbstractStagingSetup
         $this->renderSettingsFields($fields);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function renderCustomDirectorySettings()
     {
         $fields = [
@@ -93,12 +96,12 @@ class StagingSetup extends AbstractStagingSetup
         $this->renderSettingsFields($fields);
     }
 
-    /**
-     * Avoid renaming the 'wpstg-db-user' field to 'wpstg-db-username' or simply 'username',
-     * and 'wpstg-db-pass' to 'wpstg-db-password' or 'password'.
-     * Renaming may lead to unintended autofill behavior if the fields are disabled.
-     * @return void
-     */
+
+
+
+
+
+
     public function renderExternalDatabaseSettings()
     {
         $fields = [
@@ -161,11 +164,11 @@ class StagingSetup extends AbstractStagingSetup
         $this->renderSettingsFields($fields);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     public function renderEnableWooSchedulerSettings()
     {
-        // no-op for free version
+ 
     }
 }

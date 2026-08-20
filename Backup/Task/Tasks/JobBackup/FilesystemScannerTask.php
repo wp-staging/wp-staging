@@ -1,12 +1,15 @@
 <?php
 
-// TODO PHP7.1; constant visibility
+ 
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use WPStaging\Backup\Ajax\BackupSizeCalculator;
+use WPStaging\Backup\Exceptions\NothingToBackupException;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Backup\Task\FileBackupTask;
+use WPStaging\Core\WPStaging;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\Facades\Hooks;
@@ -26,65 +29,65 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class FilesystemScannerTask extends BackupTask
 {
-    /** @var int */
+ 
     const STEP_BACKUP_OTHER_WP_CONTENT_FILES = 0;
 
-    /** @var int */
+ 
     const STEP_BACKUP_PLUGINS_FILES = 1;
 
-    /** @var int */
+ 
     const STEP_BACKUP_MU_PLUGINS_FILES = 2;
 
-    /** @var int */
+ 
     const STEP_BACKUP_THEMES_FILES = 3;
 
-    /** @var int */
+ 
     const STEP_BACKUP_UPLOADS_FILES = 4;
 
-    /** @var int */
+ 
     const STEP_BACKUP_OTHER_WP_ROOT_FILES = 5;
 
-    /**
-     * 6 steps for scanning each identifier and the last step to deep scan non-scanned directories
-     * @var int
-     */
+
+
+
+
     const TOTAL_STEPS = 7;
 
-    /** @var Directory */
+ 
     protected $directory;
 
-    /** @var Filesystem */
+ 
     protected $filesystem;
 
-    /** @var PluginInfo */
+ 
     private $pluginInfo;
 
-    /** @var FilesystemScanner */
+ 
     protected $filesystemScanner;
 
-    /** @var array */
+ 
     protected $ignoreFileExtensions = [];
 
-    /** @var int */
+ 
     protected $ignoreFileBiggerThan = 0;
 
-    /** @var array */
+ 
     protected $ignoreFileExtensionFilesBiggerThan = [];
 
-    /** @var bool */
+ 
     protected $isSiteHostedOnWordPressCom = false;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param Cache $cache
-     * @param StepsDto $stepsDto
-     * @param SeekableQueueInterface $taskQueue
-     * @param Directory $directory
-     * @param Filesystem $filesystem
-     * @param PluginInfo $pluginInfo
-     * @param SiteInfo $siteInfo
-     * @param FilesystemScanner $filesystemScanner
-     */
+
+
+
+
+
+
+
+
+
+
+
     public function __construct(
         LoggerInterface $logger,
         Cache $cache,
@@ -105,28 +108,29 @@ class FilesystemScannerTask extends BackupTask
         $this->filesystemScanner          = $filesystemScanner;
     }
 
-    /**
-     * @return string
-     * @example 'backup_site_restore_themes'
-     */
+
+
+
+
     public static function getTaskName(): string
     {
         return 'backup_filesystem_scan';
     }
 
-    /**
-     * @return string
-     * @example 'Restoring Themes From Backup'
-     */
+
+
+
+
     public static function getTaskTitle(): string
     {
         return 'Discovering Files';
     }
 
-    /**
-     * @inheritDoc
-     * @throws DiskNotWritableException
-     */
+
+
+
+
+
     public function execute(): TaskResponseDto
     {
         $this->setupFilters();
@@ -169,19 +173,20 @@ class FilesystemScannerTask extends BackupTask
         if ($this->stepsDto->isFinished()) {
             $this->stepsDto->setManualPercentage(100);
             $this->logger->info(sprintf('Finished discovering Files. (%d files)', $this->jobDataDto->getDiscoveredFiles()));
+            $this->throwIfNothingToBackup();
         } else {
             $this->jobDataDto->setDiscoveringFilesRequests($this->jobDataDto->getDiscoveringFilesRequests() + 1);
 
-            // The manual percentage increments 30% per request, until it hits 90%, point of which it increments 1%
+ 
             if ($this->jobDataDto->getDiscoveringFilesRequests() <= 3) {
-                // 30%, 60%, 90%...
+ 
                 $manualPercentage = $this->jobDataDto->getDiscoveringFilesRequests() * 30;
             } elseif ($this->jobDataDto->getDiscoveringFilesRequests() >= 4 && $this->jobDataDto->getDiscoveringFilesRequests() <= 14) {
-                // 91%, 92%, 93%...
+ 
                 $manualPercentage = 90;
                 $manualPercentage += $this->jobDataDto->getDiscoveringFilesRequests() - 3;
             } else {
-                // 99%
+ 
                 $manualPercentage = 99;
             }
 
@@ -192,39 +197,60 @@ class FilesystemScannerTask extends BackupTask
         return $this->generateResponse(false);
     }
 
-    /**
-     * @return void
-     */
+
+
+
+
+
+
+
+
+    protected function throwIfNothingToBackup()
+    {
+        if ($this->jobDataDto->getIsSyncRequest()) {
+            return;
+        }
+
+        if ($this->jobDataDto->getDiscoveredFiles() > 0 || $this->jobDataDto->getIsExportingDatabase()) {
+            return;
+        }
+
+        throw new NothingToBackupException(esc_html__('Nothing to backup. The items you selected contain no files.', 'wp-staging'));
+    }
+
+
+
+
     protected function setupFilters()
     {
-        /**
-         * Allow user to exclude certain file extensions from being backup.
-         */
+
+
+
         $this->ignoreFileExtensions = (array)Hooks::applyFilters(BackupSizeCalculator::FILTER_EXPORT_FILES_IGNORE_FILE_EXTENSIONS, [
-            'wpstg', // WP STAGING backup files
+            'wpstg', 
             'gz',
             'tmp',
         ]);
 
-        /**
-         * Allow user to exclude files larger than given size from being backup.
-         */
+
+
+
         $this->ignoreFileBiggerThan = (int)Hooks::applyFilters(BackupSizeCalculator::FILTER_EXPORT_FILES_IGNORE_FILE_BIGGER_THAN, 200 * MB_IN_BYTES);
 
-        /**
-         * Allow user to exclude files with extension larger than given size from being backup.
-         */
+
+
+
         $this->ignoreFileExtensionFilesBiggerThan = (array)Hooks::applyFilters(BackupSizeCalculator::FILTER_EXPORT_FILES_IGNORE_LARGE_FILES_BY_EXTENSION, [
             'zip' => 50 * MB_IN_BYTES,
         ]);
 
-        // Allows us to use isset for performance
+ 
         $this->ignoreFileExtensions = array_flip($this->ignoreFileExtensions);
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function setupFilesystemScanner()
     {
         if (empty($this->stepsDto->getTotal())) {
@@ -240,16 +266,16 @@ class FilesystemScannerTask extends BackupTask
 
         $this->filesystemScanner->setFilters($this->ignoreFileBiggerThan, $this->ignoreFileExtensions, $this->ignoreFileExtensionFilesBiggerThan);
         $this->filesystemScanner->setRecursiveExcludeRules([
-            '**/wp-staging*/**/node_modules', // skip WP Staging plugins' node_modules during the deep scan
+            '**/wp-staging*/**/node_modules', 
         ]);
         $this->filesystemScanner->setLogTitle(static::getTaskTitle());
         $this->filesystemScanner->setQueueCacheName(FileBackupTask::getTaskName());
         $this->filesystemScanner->inject($this->logger, $this->taskQueue, $this->getScannerDto());
     }
 
-    /**
-     * Scan wp-content directory(wp-content/) but doesn't scan sub folders.
-     */
+
+
+
     protected function scanWpContentDirectory(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingOtherWpContentFiles()) {
@@ -266,9 +292,9 @@ class FilesystemScannerTask extends BackupTask
         return $this->generateResponse();
     }
 
-    /**
-     * Scan plugins directory(wp-content/plugins) but doesn't scan sub folders.
-     */
+
+
+
     protected function scanPluginsDirectories(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingPlugins()) {
@@ -283,16 +309,16 @@ class FilesystemScannerTask extends BackupTask
         return $this->generateResponse();
     }
 
-    /**
-     * Scan mu-plugins directory(wp-content/mu-plugins) but doesn't scan sub folders.
-     */
+
+
+
     protected function scanMuPluginsDirectory(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingMuPlugins()) {
             return $this->generateResponse();
         }
 
-        // Early bail: mu-plugins directory doesn't exist
+ 
         if (!is_dir($this->directory->getMuPluginsDirectory())) {
             return $this->generateResponse();
         }
@@ -307,9 +333,9 @@ class FilesystemScannerTask extends BackupTask
         return $this->generateResponse();
     }
 
-    /**
-     * Scan themes directory(wp-content/themes) but doesn't scan sub folders.
-     */
+
+
+
     protected function scanThemesDirectory(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingThemes()) {
@@ -322,7 +348,7 @@ class FilesystemScannerTask extends BackupTask
         $this->filesystemScanner->setRootPath($this->getRootPath());
         $this->filesystemScanner->setExcludeRules($excludeRules);
         foreach ($this->directory->getAllThemesDirectories() as $themesDirectory) {
-            // Only process links if site hosted on wp.com
+ 
             $this->filesystemScanner->preScanPath($themesDirectory, $this->isSiteHostedOnWordPressCom);
         }
 
@@ -338,7 +364,7 @@ class FilesystemScannerTask extends BackupTask
             return $this->generateResponse();
         }
 
-        // Early bail: Uploads directory doesn't exist
+ 
         if (!is_dir($this->getUploadsDirectory())) {
             return $this->generateResponse();
         }
@@ -360,17 +386,43 @@ class FilesystemScannerTask extends BackupTask
         return $this->directory->getAbsPath();
     }
 
-    /**
-     * Scan WP root directory(ABSPATH) but doesn't scan sub folders. (Used in pro)
-     */
+
+
+
+
+
+
+
+
     protected function scanWpRootDirectory(): TaskResponseDto
     {
+        if (!$this->jobDataDto->getIsExportingOtherWpRootFiles()) {
+            return $this->generateResponse();
+        }
+
+ 
+        $stagingSites     = WPStaging::make(Sites::class);
+        $stagingSitesDirs = $stagingSites->getStagingDirectories();
+
+        $dirsToSkip = $this->directory->getWpDefaultRootDirectories();
+        $dirsToSkip = array_merge($dirsToSkip, $stagingSitesDirs);
+        $dirsToSkip = array_merge($dirsToSkip, $this->directory->getWpStagingRestoreDirs());
+        $dirsToSkip = array_unique(array_merge($dirsToSkip, $this->jobDataDto->getBackupExcludedDirectories()));
+        $dirsToSkip = array_map(function ($path) {
+            return rtrim($path, "/");
+        }, $dirsToSkip);
+
+        $dirToScan  = $this->directory->getAbsPath();
+
+        $this->filesystemScanner->setOnlyDirectories();
+        $this->preScanPath($dirToScan, PartIdentifier::OTHER_WP_ROOT_PART_IDENTIFIER, $dirsToSkip);
+
         return $this->generateResponse();
     }
 
-    /**
-     * @return array
-     */
+
+
+
     protected function getExcludedDirectories(): array
     {
         $excludedDirs = [];
@@ -380,51 +432,51 @@ class FilesystemScannerTask extends BackupTask
         $excludedDirs[] = $this->directory->getPluginWpContentDirectory();
         $excludedDirs[] = trailingslashit(WP_CONTENT_DIR) . 'cache';
 
-        // @see BackupUploadsDir::BACKUP_UPLOADS_DIR_POSTFIX
+ 
         $backupUploadsDirPostFix = '.wpstg_backup';
 
-        // Old uploads backup folder created by WP STAGING during push e.g. wp-content/uploads.wpstg_backup
+ 
         $excludedDirs[] = untrailingslashit($this->directory->getUploadsDirectory()) . $backupUploadsDirPostFix;
-        // Just extra caution if someone changed uploads directory afterwards. Exclude this directory as well.
+ 
         $backupUploadsDir = trailingslashit(WP_CONTENT_DIR) . 'uploads' . $backupUploadsDirPostFix;
         if (!in_array($backupUploadsDir, $excludedDirs)) {
             $excludedDirs[] = $backupUploadsDir;
         }
 
-        /**
-         * @see https://wordpress.org/plugins/all-in-one-wp-migration/
-         *      This folder contains backups generated by All In One WP Migration.
-         */
+
+
+
+
         $excludedDirs[] = trailingslashit(WP_CONTENT_DIR) . 'ai1wm-backups';
 
-        /**
-         * @see https://wordpress.org/plugins/robin-image-optimizer/
-         *      This folder contains a duplicate of the uploads folder, for optimized images.
-         *      It can be manually re-generated from the existing media library later.
-         */
+
+
+
+
+
         $excludedDirs[] = $this->directory->getUploadsDirectory() . 'wio_backup';
 
-        /**
-         * This is default directory that contains staging sites created by WP STAGING when ABSPATH is not writable.
-         * There is no need to backup the staging sites directory
-         */
+
+
+
+
         $excludedDirs[] = $this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false);
 
-        /**
-         * Allow user to filter the excluded directories in a site backup.
-         *
-         * @param array $excludedDirectories
-         *
-         * @return array An array of directories to exclude.
-         */
+
+
+
+
+
+
+
         $excludedDirs = (array)apply_filters(BackupSizeCalculator::FILTER_BACKUP_EXCLUDED_DIRECTORIES, $excludedDirs);
 
         return $excludedDirs;
     }
 
-    /**
-     * @return string
-     */
+
+
+
     protected function getUploadsDirectory(): string
     {
         return $this->directory->getUploadsDirectory();
@@ -445,9 +497,9 @@ class FilesystemScannerTask extends BackupTask
         return $scannerDto;
     }
 
-    /**
-     * @return void
-     */
+
+
+
     protected function updateJobDataDto()
     {
         $scannerDto = $this->filesystemScanner->getFilesystemScannerDto();
@@ -458,15 +510,15 @@ class FilesystemScannerTask extends BackupTask
         $this->jobDataDto->setTotalDirectories($scannerDto->getTotalDirectories());
     }
 
-    /**
-     * Pre scan path
-     * This is common method for pre scanning path, but cannot be used for scanning themes folders i.e. because there can be multiple themes folders
-     * @param string $dirToScan
-     * @param string $partIdentifier
-     * @param array $excludeRules
-     * @param bool $processLinks
-     * @return void
-     */
+
+
+
+
+
+
+
+
+
     protected function preScanPath(string $dirToScan, string $partIdentifier, array $excludeRules = [], bool $processLinks = false)
     {
         $this->filesystemScanner->setCurrentPathScanning($partIdentifier);
@@ -497,17 +549,17 @@ class FilesystemScannerTask extends BackupTask
         return $excludeRules;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getActiveThemes(): array
     {
-        // Not multisite
+ 
         if (!is_multisite()) {
             return $this->pluginInfo->getActiveThemes();
         }
 
-        // Multisite but only current site is being backup
+ 
         if ($this->jobDataDto->getIsNetworkSiteBackup()) {
             return $this->pluginInfo->getActiveThemes();
         }
@@ -530,7 +582,7 @@ class FilesystemScannerTask extends BackupTask
 
         foreach ($activePlugins as $plugin) {
             $pluginDir = dirname($plugin);
-            // Single file plugin
+ 
             if ($pluginDir === $pluginsDir) {
                 $excludeRules[] = "!" . $plugin;
                 continue;
@@ -542,25 +594,25 @@ class FilesystemScannerTask extends BackupTask
         return $excludeRules;
     }
 
-    /**
-     * @return array
-     */
+
+
+
     private function getActivePlugins(): array
     {
-        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+ 
         remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
-        // Not multisite
+ 
         if (!is_multisite()) {
             return wp_get_active_and_valid_plugins();
         }
 
-        // Multisite but only current site is being backup
+ 
         if ($this->jobDataDto->getIsNetworkSiteBackup()) {
             return wp_get_active_and_valid_plugins();
         }
 
-        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+ 
         remove_all_filters(WpAdapter::FILTER_SITE_OPTION_ACTIVE_SITEWIDE_PLUGINS);
 
         return array_merge(wp_get_active_network_plugins(), $this->pluginInfo->getAllActivePluginsInSubsites());

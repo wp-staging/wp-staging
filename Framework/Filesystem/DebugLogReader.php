@@ -7,25 +7,25 @@ use WPStaging\Framework\Adapter\Directory;
 
 class DebugLogReader extends LogFiles
 {
-    /**
-     * @var Filesystem
-     */
+
+
+
     protected $filesystem;
 
-    /**
-     * @param Filesystem $filesystem
-     * @param Directory $logsDirectory
-     */
+
+
+
+
     public function __construct(Filesystem $filesystem, Directory $logsDirectory)
     {
         parent::__construct($logsDirectory);
         $this->filesystem = $filesystem;
     }
 
-    /**
-     * Deletes a log file if requested.
-     * Used by WPStaging\Framework\CommonServiceProvider::registerClasses()
-     */
+
+
+
+
     public function listenDeleteLogRequest()
     {
         if (!isset($_GET['deleteLog']) || !isset($_GET['deleteLogNonce'])) {
@@ -46,7 +46,7 @@ class DebugLogReader extends LogFiles
             $deleted = $this->deletePhpDebugLogFile();
         }
 
-        // Redirect so a page refresh does not delete the log again.
+ 
         $redirectUrl = add_query_arg([
             'page'            => 'wpstg-tools',
             'tab'             => 'system-info',
@@ -57,17 +57,17 @@ class DebugLogReader extends LogFiles
         exit;
     }
 
-    /**
-     * @return bool True if the log file was deleted, false otherwise.
-     */
+
+
+
     public function deletePhpDebugLogFile(): bool
     {
         return $this->deleteLogFile((string)ini_get('error_log'));
     }
 
-    /**
-     * @return bool True if the log file was deleted, false otherwise.
-     */
+
+
+
     public function deleteWpStagingDebugLogFile(): bool
     {
         if (!defined('WPSTG_DEBUG_LOG_FILE')) {
@@ -77,13 +77,13 @@ class DebugLogReader extends LogFiles
         return $this->deleteLogFile(WPSTG_DEBUG_LOG_FILE);
     }
 
-    /**
-     * Deletion depends on the folder being writable, not the log file itself, so
-     * a log created by another user can still be removed.
-     *
-     * @param string $path
-     * @return bool True if the file was deleted, false otherwise.
-     */
+
+
+
+
+
+
+
     private function deleteLogFile(string $path): bool
     {
         if ($path === '' || !file_exists($path)) {
@@ -97,13 +97,13 @@ class DebugLogReader extends LogFiles
         return $this->filesystem->delete($path);
     }
 
-    /**
-     * @param int $maxSizeEach Max size in bytes to fetch from each log.
-     * @param bool $withWpstgDebugLog Whether to include WP STAGING custom log entries.
-     * @param bool $withPhpDebugLog Whether to include PHP error_log entries.
-     *
-     * @return string A formatted text with the last log entries from the debug log files.
-     */
+
+
+
+
+
+
+
     public function getLastLogEntries(int $maxSizeEach, bool $withWpstgDebugLog = true, bool $withPhpDebugLog = true): string
     {
         $content = '';
@@ -137,7 +137,7 @@ class DebugLogReader extends LogFiles
         }
 
         if ($withPhpDebugLog) {
-            /** @see \wp_debug_mode to understand why it uses ini_get() */
+ 
             $phpDebugLogFile = ini_get('error_log');
 
             if ($this->filesystem->isReadableFile($phpDebugLogFile)) {
@@ -165,11 +165,11 @@ class DebugLogReader extends LogFiles
         return $content;
     }
 
-    /**
-     * @param $debugLogPath
-     * @param $maxSize
-     * @return string
-     */
+
+
+
+
+
     protected function getDebugLogLines($debugLogPath, $maxSize): string
     {
         if (!is_file($debugLogPath) || !is_readable($debugLogPath)) {
@@ -181,7 +181,7 @@ class DebugLogReader extends LogFiles
 
             $negativeOffset = $maxSize;
 
-            // Set the pointer to the end of the file, minus the negative offset for which to start looking for errors.
+ 
             $debugFile->fseek(max($debugFile->getSize() - $negativeOffset, 0), SEEK_SET);
 
             $debugLines = [];
@@ -199,9 +199,9 @@ class DebugLogReader extends LogFiles
         }
     }
 
-   /**
-    * @return string
-    */
+
+
+
     public function maybeFixHtmlEntityDecode(string $content): string
     {
         if (empty($content)) {
