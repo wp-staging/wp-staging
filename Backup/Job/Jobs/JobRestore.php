@@ -78,8 +78,19 @@ class JobRestore extends AbstractJob
 
         try {
             $response = $this->getResponse($this->currentTask->execute());
+            $this->jobDataDto->setCaughtExceptionRetries(0);
         } catch (\Exception $e) {
             $this->currentTask->getLogger()->critical($e->getMessage());
+
+            $retries = $this->jobDataDto->getCaughtExceptionRetries() + 1;
+            $this->jobDataDto->setCaughtExceptionRetries($retries);
+
+            if ($retries >= $this->maxRetries) {
+                $this->deleteJobDataCache();
+
+                return $this->getJobFailResponse($e->getMessage());
+            }
+
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
 

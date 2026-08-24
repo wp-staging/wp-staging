@@ -126,6 +126,9 @@ class TablesRenamer
     protected $logEachRename = false;
 
  
+    protected $stopOnRenameFailure = false;
+
+ 
     protected $logger = null;
 
  
@@ -237,6 +240,16 @@ class TablesRenamer
     public function setLogEachRename(bool $logEachRename): TablesRenamer
     {
         $this->logEachRename = $logEachRename;
+        return $this;
+    }
+
+
+
+
+
+    public function setStopOnRenameFailure(bool $stopOnRenameFailure): TablesRenamer
+    {
+        $this->stopOnRenameFailure = $stopOnRenameFailure;
         return $this;
     }
 
@@ -524,50 +537,49 @@ class TablesRenamer
             return true;
         }
 
-        $this->tableService->getDatabase()->exec('START TRANSACTION;');
-        for ($i = $this->conflictingTablesRenamed; $i < count($conflictingTablesWithoutPrefix); $i++) {
-            $conflictingTableWithoutPrefix = $conflictingTablesWithoutPrefix[$i];
-            if ($this->isExcludedTable($conflictingTableWithoutPrefix)) {
-                $this->tablesRenamed++;
-                $this->conflictingTablesRenamed++;
-                continue;
+        $database = $this->tableService->getDatabase();
+        $database->exec('START TRANSACTION;');
+
+        try {
+            for ($i = $this->conflictingTablesRenamed; $i < count($conflictingTablesWithoutPrefix); $i++) {
+                $conflictingTableWithoutPrefix = $conflictingTablesWithoutPrefix[$i];
+                if ($this->isExcludedTable($conflictingTableWithoutPrefix)) {
+                    $this->tablesRenamed++;
+                    $this->conflictingTablesRenamed++;
+                    continue;
+                }
+
+                if ($this->isTableToPreserve($conflictingTableWithoutPrefix)) {
+                    $this->tablesRenamed++;
+                    $this->nonConflictingTablesRenamed++;
+                    continue;
+                }
+
+                if ($this->isAlreadyRenamed($conflictingTableWithoutPrefix)) {
+                    $this->tablesRenamed++;
+                    $this->conflictingTablesRenamed++;
+                    continue;
+                }
+
+                $currentTable = $this->getCurrentSiteTable($conflictingTableWithoutPrefix);
+                $tableToDrop  = $this->getTableShortName($currentTable, $this->dropPrefix);
+                if ($tableToDrop === false) {
+                    $tableToDrop = $this->dropPrefix . $conflictingTableWithoutPrefix;
+                }
+
+                if ($this->tableExists($currentTable)) {
+                    $this->renameTableOrFail($currentTable, $tableToDrop);
+                }
+
+                $this->renameTable($conflictingTableWithoutPrefix, $this->conflictingTablesRenamed);
+
+                if ($this->isThresholdReached()) {
+                    return false;
+                }
             }
-
-            if ($this->isTableToPreserve($conflictingTableWithoutPrefix)) {
-                $this->tablesRenamed++;
-                $this->nonConflictingTablesRenamed++;
-                continue;
-            }
-
-            $currentTable = $this->getCurrentSiteTable($conflictingTableWithoutPrefix);
-            $tableToDrop  = $this->getTableShortName($currentTable, $this->dropPrefix);
-            if ($tableToDrop === false) {
-                $tableToDrop = $this->dropPrefix . $conflictingTableWithoutPrefix;
-            }
-
- 
-            $result = $this->tableService->getDatabase()->exec(sprintf(
-                "RENAME TABLE `%s` TO `%s`;",
-                $currentTable,
-                $tableToDrop
-            ));
-
-            if ($result === false && ($this->logEachRename && $this->logger instanceof Logger)) {
- 
-                $wpdb  = $this->tableService->getDatabase()->getWpdba()->getClient();
-                $error = $wpdb->last_error;
-                $this->logger->warning("DB Rename: Unable to rename table {$currentTable} to {$tableToDrop}. Error: " . $error);
-            }
-
-            $this->renameTable($conflictingTableWithoutPrefix, $this->conflictingTablesRenamed);
-
-            if ($this->isThresholdReached()) {
-                $this->tableService->getDatabase()->exec('COMMIT;');
-                return false;
-            }
+        } finally {
+            $database->exec('COMMIT;');
         }
-
-        $this->tableService->getDatabase()->exec('COMMIT;');
 
         return true;
     }
@@ -589,31 +601,41 @@ class TablesRenamer
             return true;
         }
 
-        $this->tableService->getDatabase()->exec('START TRANSACTION;');
-        for ($i = $this->nonConflictingTablesRenamed; $i < count($nonConflictingTables); $i++) {
-            $nonConflictingTable = $nonConflictingTables[$i];
-            if ($this->isExcludedTable($nonConflictingTable)) {
-                $this->tablesRenamed++;
-                $this->nonConflictingTablesRenamed++;
-                continue;
-            }
+        $database = $this->tableService->getDatabase();
+        $database->exec('START TRANSACTION;');
 
-            if ($this->isTableToPreserve($nonConflictingTable)) {
-                $this->tablesRenamed++;
-                $this->nonConflictingTablesRenamed++;
-                continue;
-            }
+        try {
+            for ($i = $this->nonConflictingTablesRenamed; $i < count($nonConflictingTables); $i++) {
+                $nonConflictingTable = $nonConflictingTables[$i];
+                if ($this->isExcludedTable($nonConflictingTable)) {
+                    $this->tablesRenamed++;
+                    $this->nonConflictingTablesRenamed++;
+                    continue;
+                }
 
-            $this->renameTable($nonConflictingTable, $this->nonConflictingTablesRenamed);
-            $this->isNonConflictingTablesRenamingTaskExecuted = true;
+                if ($this->isTableToPreserve($nonConflictingTable)) {
+                    $this->tablesRenamed++;
+                    $this->nonConflictingTablesRenamed++;
+                    continue;
+                }
 
-            if ($this->isThresholdReached()) {
-                $this->tableService->getDatabase()->exec('COMMIT;');
-                return false;
+                if ($this->isAlreadyRenamed($nonConflictingTable)) {
+                    $this->tablesRenamed++;
+                    $this->nonConflictingTablesRenamed++;
+                    $this->isNonConflictingTablesRenamingTaskExecuted = true;
+                    continue;
+                }
+
+                $this->renameTable($nonConflictingTable, $this->nonConflictingTablesRenamed);
+                $this->isNonConflictingTablesRenamingTaskExecuted = true;
+
+                if ($this->isThresholdReached()) {
+                    return false;
+                }
             }
+        } finally {
+            $database->exec('COMMIT;');
         }
-
-        $this->tableService->getDatabase()->exec('COMMIT;');
 
         return true;
     }
@@ -671,11 +693,24 @@ class TablesRenamer
                 $tableToDrop = $this->dropPrefix . $table;
             }
 
-            $this->tableService->getDatabase()->exec(sprintf(
+            $result = $this->tableService->getDatabase()->exec(sprintf(
                 "RENAME TABLE `%s` TO `%s`;",
                 $fullTableName,
                 $tableToDrop
             ));
+
+            if ($result !== false) {
+                continue;
+            }
+
+            if ($this->logger instanceof Logger) {
+                $this->logger->warning(sprintf(
+                    'DB Rename: Unable to move the table %s aside to %s. Error: %s. That table is not part of the backup and has been left in place.',
+                    $fullTableName,
+                    $tableToDrop,
+                    $this->tableService->getLastWpdbError()
+                ));
+            }
         }
     }
 
@@ -979,39 +1014,80 @@ class TablesRenamer
 
     protected function renameTable(string $tableWithoutPrefix, int &$tablesRenamed)
     {
-        $tmpDatabasePrefix = $this->tmpPrefix;
-        $tableToRename     = $tmpDatabasePrefix . $tableWithoutPrefix;
-        $tmpName           = $this->getTableShortName($tableToRename, $tmpDatabasePrefix);
+        $tableToRename     = $this->getTmpTable($tableWithoutPrefix);
         $tableAfterRenamed = $this->getCurrentSiteTable($tableWithoutPrefix);
 
-        if ($tmpName !== false) {
-            $tableToRename = $tmpName;
+        if (!$this->renameTableOrFail($tableToRename, $tableAfterRenamed)) {
+            return;
         }
 
- 
-        $database = $this->tableService->getDatabase();
-        $result   = $database->exec(sprintf(
+        $this->tablesRenamed++;
+        $tablesRenamed++;
+
+        if ($this->logEachRename && $this->logger instanceof Logger) {
+            $this->logger->info("DB Rename: Renamed table {$tableToRename} to {$tableAfterRenamed}.");
+        }
+    }
+
+
+
+
+
+
+
+    protected function renameTableOrFail(string $tableToRename, string $tableAfterRenamed): bool
+    {
+        $result = $this->tableService->getDatabase()->exec(sprintf(
             "RENAME TABLE `%s` TO `%s`;",
             $tableToRename,
             $tableAfterRenamed
         ));
 
         if ($result !== false) {
-            $this->tablesRenamed++;
-            $tablesRenamed++;
+            return true;
+        }
+
+        $message = sprintf(
+            'DB Rename: Unable to rename table %s to %s. Error: %s',
+            $tableToRename,
+            $tableAfterRenamed,
+            $this->tableService->getLastWpdbError()
+        );
+
+        if (!$this->stopOnRenameFailure) {
             if ($this->logEachRename && $this->logger instanceof Logger) {
-                $this->logger->info("DB Rename: Renamed table {$tableToRename} to {$tableAfterRenamed}.");
+                $this->logger->warning($message);
             }
 
-            return;
+            return false;
         }
 
-        if ($this->logEachRename && $this->logger instanceof Logger) {
- 
-            $wpdb  = $database->getWpdba()->getClient();
-            $error = $wpdb->last_error;
-            $this->logger->warning("DB Rename: Unable to rename table {$tableToRename} to {$tableAfterRenamed}. Error: " . $error);
+        if ($this->logger instanceof Logger) {
+            $this->logger->critical($message);
         }
+
+        throw new \RuntimeException($message);
+    }
+
+
+
+
+
+    protected function isAlreadyRenamed(string $tableWithoutPrefix): bool
+    {
+        return !$this->tableExists($this->getTmpTable($tableWithoutPrefix));
+    }
+
+
+
+
+
+    protected function getTmpTable(string $tableWithoutPrefix): string
+    {
+        $tmpTable  = $this->tmpPrefix . $tableWithoutPrefix;
+        $shortName = $this->getTableShortName($tmpTable, $this->tmpPrefix);
+
+        return $shortName === false ? $tmpTable : $shortName;
     }
 
 

@@ -94,6 +94,9 @@ class JobRestoreDataDto extends JobDataDto
  
     protected $isDatabaseRestoreSkipped = false;
 
+ 
+    protected $caughtExceptionRetries = 0;
+
 
 
 
@@ -637,6 +640,23 @@ class JobRestoreDataDto extends JobDataDto
     public function setIsDatabaseRestoreSkipped(bool $isDatabaseRestoreSkipped)
     {
         $this->isDatabaseRestoreSkipped = $isDatabaseRestoreSkipped;
+    }
+
+
+
+
+    public function getCaughtExceptionRetries(): int
+    {
+        return $this->caughtExceptionRetries;
+    }
+
+
+
+
+
+    public function setCaughtExceptionRetries(int $caughtExceptionRetries)
+    {
+        $this->caughtExceptionRetries = $caughtExceptionRetries;
     }
 
 

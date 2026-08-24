@@ -6,6 +6,7 @@ use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsGenericEvent;
 use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
+use WPStaging\Framework\Job\Ajax\PrepareCancel;
 use WPStaging\Framework\Job\JobTransientCache;
 
 use function WPStaging\functions\debug_log;
@@ -187,6 +188,32 @@ abstract class AbstractBackgroundBackupRequest
 
 
 
+
+
+
+
+
+
+    protected function cancelRunningBackup(): bool
+    {
+        if ($this->getStatus() !== self::STATUS_RUNNING || !$this->isOwnBackupJob()) {
+            return false;
+        }
+
+        $response = WPStaging::make(PrepareCancel::class)->prepare([]);
+
+        if ($response instanceof \WP_Error) {
+            debug_log($this->getLogContext() . ': could not cancel the running backup. ' . $response->get_error_message(), 'debug', false);
+
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+
     public function clear()
     {
         $this->state = [];
@@ -357,7 +384,7 @@ abstract class AbstractBackgroundBackupRequest
 
 
 
-    private function isOwnBackupJob($reporter = null): bool
+    protected function isOwnBackupJob($reporter = null): bool
     {
         $state = $this->read();
         if (empty($state['backup_job_id'])) {

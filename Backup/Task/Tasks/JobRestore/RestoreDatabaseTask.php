@@ -110,6 +110,7 @@ class RestoreDatabaseTask extends RestoreTask
         $this->setupExecutionTime();
         $this->restoreDatabase();
         $this->updateTaskDtos();
+        $this->setCurrentTaskDto($this->currentTaskDto);
 
         $newQueriesExecuted = $this->stepsDto->getCurrent();
 
@@ -154,6 +155,7 @@ class RestoreDatabaseTask extends RestoreTask
     {
         $metadata = $this->jobDataDto->getBackupMetadata();
 
+        $this->databaseImporterDto->setSubsiteId($this->currentTaskDto->subsiteId);
         $this->databaseImporterDto->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
         $this->databaseImporterDto->setShortTables($this->jobDataDto->getShortNamesTablesToRestore(), $this->jobDataDto->getTmpDatabasePrefix());
         $this->databaseImporterDto->setShortTables($this->jobDataDto->getShortNamesTablesToDrop(), DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP);

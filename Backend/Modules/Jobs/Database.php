@@ -167,7 +167,13 @@ class Database extends CloningProcess
  
         $tableService = new TableService(new DatabaseAdapter($this->stagingDb));
         $tableService->setShouldStop([$this, 'isOverThreshold']);
-        if (!$tableService->deleteTablesStartWith($this->getStagingPrefix())) {
+        $tableService->deleteTablesStartWith($this->getStagingPrefix());
+
+        foreach ($tableService->getErrors() as $error) {
+            $this->log($error, Logger::TYPE_ERROR);
+        }
+
+        if ($tableService->hasRefusedProductionTable()) {
             return false;
         }
 

@@ -20,6 +20,7 @@ use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Database\TablesRenamer;
@@ -153,6 +154,11 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setShortNamedTablesToDrop($this->jobDataDto->getShortNamesTablesToDrop());
         $this->tablesRenamer->setRenameViews(true);
         $this->tablesRenamer->setThresholdCallable([$this, 'isMaxExecutionThreshold']);
+        $this->tablesRenamer->setStopOnRenameFailure(true);
+        if ($this->logger instanceof Logger) {
+            $this->tablesRenamer->setLogger($this->logger);
+        }
+
  
         $excludedTables = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME];
         $excludedTables = array_merge($excludedTables, Hooks::applyFilters(self::FILTER_EXCLUDE_TABLES_DURING_RESTORE, []));

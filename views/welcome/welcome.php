@@ -7,7 +7,8 @@ use WPStaging\Framework\Language\Language;
 // Two paths lead here — the redirect that follows activation, and the sidebar
  
  
-$upgradeUrl = Language::getUpgradeUrl(Welcome::getUpgradeContext());
+$upgradeContext = Welcome::getUpgradeContext();
+$upgradeUrl     = Language::getUpgradeUrl($upgradeContext);
 
 ?>
 <div class="" id="wpstg-welcome">
@@ -30,7 +31,7 @@ $upgradeUrl = Language::getUpgradeUrl(Welcome::getUpgradeContext());
         <li><strong><?php esc_html_e('Authentication', 'wp-staging'); ?></strong> - <?php esc_html_e('Cloned sites are available to authenticated users only.', 'wp-staging'); ?></li>
         <li><strong><?php esc_html_e('High Performance', 'wp-staging'); ?></strong> - <?php esc_html_e('WP STAGING is one of the fastest backup and migration plugins. Compare yourself.', 'wp-staging'); ?></li>
         <li><strong><?php esc_html_e('Secure', 'wp-staging'); ?></strong> - <?php esc_html_e('WP STAGING is no cloud service. Your data belongs to you only.', 'wp-staging'); ?></li>
-        <a href="<?php echo esc_url($upgradeUrl); ?>" target="_blank" class="wpstg-button--big wpstg-button--blue"><?php esc_html_e('Buy WP Staging Pro', 'wp-staging'); ?></a>
+        <a href="<?php echo esc_url($upgradeUrl); ?>" target="_blank" rel="noreferrer noopener" data-wpstg-upgrade-cta="<?php echo esc_attr($upgradeContext); ?>" class="wpstg-button--big wpstg-button--blue"><?php esc_html_e('Buy WP Staging Pro', 'wp-staging'); ?></a>
         <a href="<?php echo esc_url(admin_url()); ?>admin.php?page=wpstg_clone" target="_self" class="wpstg-primary-color wpstg-ml-30px"><?php esc_html_e('Skip & Start WP Staging', 'wp-staging'); ?></a>
         <div class="wpstg-footer"> <?php esc_html_e('Comes with our money back guarantee * You need to give us chance to resolve your issue first.', 'wp-staging'); ?></div>
     </div>

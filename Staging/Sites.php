@@ -53,7 +53,7 @@ class Sites
 
 
 
-    const STAGING_EXCLUDED_GD_FILES_OPTION = 'wpstg_clone_excluded_gd_files_list';
+    const STAGING_EXCLUDED_HOSTING_FILES_OPTION = 'wpstg_clone_excluded_hosting_files';
 
 
 

@@ -577,7 +577,7 @@ class Notices
  
             $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
             $excludedFiles              = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
-            $excludedGoDaddyFiles       = get_option(Sites::STAGING_EXCLUDED_GD_FILES_OPTION, []);
+            $excludedHostingFiles       = get_option(Sites::STAGING_EXCLUDED_HOSTING_FILES_OPTION, []);
  
  
             require $this->viewsNoticesPath . "disabled-items-notice.php";

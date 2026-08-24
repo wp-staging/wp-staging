@@ -110,11 +110,14 @@ class Updating extends Job
             '.wp-staging-cloneable', 
         ];
 
-        $this->options->excludedFilesFullPath = [
+        $hostingExclusions                      = $this->getHostingProviderExclusions();
+        $this->options->tmpExcludedHostingFiles = $hostingExclusions['absolutePaths'];
+
+        $this->options->excludedFilesFullPath = array_merge([
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'db.php',
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'object-cache.php',
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'advanced-cache.php',
-        ];
+        ], $hostingExclusions['files']);
 
  
         $this->options->mainJob = $this->mainJob;
@@ -181,9 +184,9 @@ class Updating extends Job
 
 
 
-        $excludedDirectories = [
+        $excludedDirectories = array_merge([
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'cache',
-        ];
+        ], $hostingExclusions['directories']);
 
  
         if ($this->options->uploadsSymlinked) {

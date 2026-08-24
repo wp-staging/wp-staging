@@ -326,7 +326,9 @@ class Uninstall
             'wpstg_emails_disabled',
             'wpstg_woo_scheduler_disabled',
             'wpstg_clone_excluded_files_list',
+ 
             'wpstg_clone_excluded_gd_files_list',
+            'wpstg_clone_excluded_hosting_files',
             'wpstg_freemius_notice',
             'wpstg_queue_table_structure_version',
             'wpstg_settings_table_version',

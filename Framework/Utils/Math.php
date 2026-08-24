@@ -14,6 +14,9 @@ class Math
 
 
 
+
+
+
     public function convertUnitToMB($fileSize)
     {
         $units = [
@@ -24,13 +27,11 @@ class Math
             'TB' => 1024 * 1024, 
         ];
 
-        if (preg_match('/^(\d+)\s*(B|KB|MB|GB|TB)$/i', $fileSize, $matches)) {
+        if (preg_match('/^(\d+)\s*(B|KB|MB|GB|TB)?$/i', $fileSize, $matches)) {
             $size = (float) $matches[1];
-            $unit = strtoupper($matches[2]);
+            $unit = empty($matches[2]) ? 'B' : strtoupper($matches[2]);
 
-            if (!empty($units[$unit])) {
-                return $size * $units[$unit];
-            }
+            return $size * $units[$unit];
         }
 
         return 0;

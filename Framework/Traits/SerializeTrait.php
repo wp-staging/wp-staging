@@ -12,17 +12,18 @@ trait SerializeTrait
 
 
 
-    protected function safeMaybeUnserialize($data, array $allowedClasses = [], &$rejected = false)
+
+    protected function safeMaybeUnserialize($data, array $allowedClasses = [], &$rejected = false, &$failedToParse = false)
     {
-        $rejected = false;
+        $rejected      = false;
+        $failedToParse = false;
 
         if (!is_string($data) || !$this->isSerialized($data)) {
             return $data;
         }
 
-        $data          = trim($data);
-        $failedToParse = false;
-        $value         = $this->unserializeQuietly($data, $allowedClasses, $failedToParse);
+        $data  = trim($data);
+        $value = $this->unserializeQuietly($data, $allowedClasses, $failedToParse);
 
         if ($value === false && $failedToParse) {
             $rejected = true;
@@ -64,27 +65,33 @@ trait SerializeTrait
 
 
 
-    protected function containsForbiddenClass($value, int $remainingDepth = 20): bool
+    protected function containsForbiddenClass($value, int $maxDepth = 256): bool
     {
-        if ($value instanceof __PHP_Incomplete_Class) {
-            return true;
-        }
+        $pending = [[$value, 0]];
 
-        if (is_object($value)) {
-            $value = (array)$value;
-        }
+        while ($pending !== []) {
+            list($current, $depth) = array_pop($pending);
 
-        if (!is_array($value)) {
-            return false;
-        }
-
-        if ($remainingDepth < 1) {
-            return true;
-        }
-
-        foreach ($value as $item) {
-            if ($this->containsForbiddenClass($item, $remainingDepth - 1)) {
+            if ($current instanceof __PHP_Incomplete_Class) {
                 return true;
+            }
+
+            if (is_object($current)) {
+                $current = (array)$current;
+            }
+
+            if (!is_array($current)) {
+                continue;
+            }
+
+            if ($depth >= $maxDepth) {
+                return true;
+            }
+
+            foreach ($current as $item) {
+                if (is_array($item) || is_object($item)) {
+                    $pending[] = [$item, $depth + 1];
+                }
             }
         }
 
