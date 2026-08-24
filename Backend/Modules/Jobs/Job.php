@@ -9,8 +9,10 @@ use stdClass;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Database\ExcludedTables;
 use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Math;
@@ -110,6 +112,9 @@ abstract class Job implements ShutdownableInterface
     protected $systemInfo;
 
  
+    protected $directoryAdapter;
+
+ 
     protected $externalDatabaseConfiguration;
 
 
@@ -125,9 +130,10 @@ abstract class Job implements ShutdownableInterface
 
  
  
-        $this->logger     = WPStaging::getInstance()->get("logger");
-        $this->systemInfo = WPStaging::make(SystemInfo::class);
-        $this->identifier = WPStaging::make(UniqueIdentifier::class);
+        $this->logger           = WPStaging::getInstance()->get("logger");
+        $this->systemInfo       = WPStaging::make(SystemInfo::class);
+        $this->identifier       = WPStaging::make(UniqueIdentifier::class);
+        $this->directoryAdapter = WPStaging::make(Directory::class);
 
         $this->setupCacheFiles();
 
@@ -595,6 +601,44 @@ abstract class Job implements ShutdownableInterface
 
         $this->writeAdvancedSettingsToLogs();
         $this->logger->writeGlobalSettingsToLogs();
+    }
+
+
+
+
+
+
+
+    protected function getHostingProviderExclusions(): array
+    {
+        $muPluginsDirectory = trailingslashit($this->directoryAdapter->getMuPluginsDirectory());
+        $exclusions         = [
+            'files'         => [],
+            'directories'   => [],
+            'absolutePaths' => [],
+        ];
+
+        if (file_exists($muPluginsDirectory . 'gd-system-plugin.php')) {
+            $exclusions['files'][]         = PathIdentifier::IDENTIFIER_MUPLUGINS . 'gd-system-plugin.php';
+            $exclusions['absolutePaths'][] = $muPluginsDirectory . 'gd-system-plugin.php';
+        }
+
+        if (!is_dir($muPluginsDirectory . 'gd-system-plugin')) {
+            return $exclusions;
+        }
+
+        $exclusions['directories'][]   = PathIdentifier::IDENTIFIER_MUPLUGINS . 'gd-system-plugin';
+        $exclusions['absolutePaths'][] = $muPluginsDirectory . 'gd-system-plugin';
+
+ 
+        if (!is_dir($muPluginsDirectory . 'vendor')) {
+            return $exclusions;
+        }
+
+        $exclusions['directories'][]   = PathIdentifier::IDENTIFIER_MUPLUGINS . 'vendor';
+        $exclusions['absolutePaths'][] = $muPluginsDirectory . 'vendor';
+
+        return $exclusions;
     }
 
 

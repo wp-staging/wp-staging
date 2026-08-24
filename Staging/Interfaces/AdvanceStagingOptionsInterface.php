@@ -80,7 +80,7 @@ interface AdvanceStagingOptionsInterface
 
     public function setTmpExcludedFullPaths(array $tmpExcludedFullPaths);
 
-    public function getTmpExcludedGoDaddyFiles(): array;
+    public function getTmpExcludedHostingFiles(): array;
 
-    public function setTmpExcludedGoDaddyFiles(array $tmpExcludedGoDaddyFiles);
+    public function setTmpExcludedHostingFiles(array $tmpExcludedHostingFiles);
 }

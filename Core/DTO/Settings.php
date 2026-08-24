@@ -202,6 +202,14 @@ class Settings
 
 
 
+    public function getMaxFileSize()
+    {
+        return isset($this->maxFileSize) ? $this->maxFileSize : '8';
+    }
+
+
+
+
     public function setFileLimit($fileLimit)
     {
         $this->fileLimit = $fileLimit;

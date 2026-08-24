@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Service;
 
+use WPStaging\Backup\BackupHeader;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Backup\Entity\BackupMetadata;
 
@@ -33,6 +34,24 @@ class BackupMetadataEditor
             $prepandForSql = '-- ';
         }
 
-        $backupFile->fwrite($prepandForSql . json_encode($newMetadata) . "\n");
+        $backupFile->fwrite($prepandForSql . json_encode($newMetadata) . BackupHeader::LINE_TERMINATOR);
+    }
+
+
+
+
+
+
+
+    public function getLineTerminatorOverhead(FileObject $backupFile): int
+    {
+        $existingMetadataPosition = (new BackupMetadataReader($backupFile))->getExistingMetadataPosition();
+
+        $backupFile->fseek($existingMetadataPosition);
+        $existingLine = $backupFile->readAndMoveNext();
+
+        $existingTerminatorLength = strlen($existingLine) - strlen(rtrim($existingLine, "\r\n"));
+
+        return $existingTerminatorLength - strlen(BackupHeader::LINE_TERMINATOR);
     }
 }

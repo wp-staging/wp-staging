@@ -101,6 +101,7 @@ class Edit extends AbstractTemplateComponent
 
                     $backupSize = $metaData->getBackupSize();
                     $backupSize = $backupSize + $increment - strlen($metaData->getName()) - $oldNoteLength;
+                    $backupSize = $backupSize - $this->backupMetadataEditor->getLineTerminatorOverhead($file);
 
                     $metaData->setName($name);
                     $metaData->setNote($notes);
@@ -148,6 +149,7 @@ class Edit extends AbstractTemplateComponent
             }
 
             $partSize = $partSize + $incrementSize - strlen($partMetadata->getName()) - $oldNoteLength;
+            $partSize = $partSize - $this->backupMetadataEditor->getLineTerminatorOverhead($partFile);
             $backupSize += $partSize;
             $backupParts[] = [
                 'metadata' => $partMetadata,

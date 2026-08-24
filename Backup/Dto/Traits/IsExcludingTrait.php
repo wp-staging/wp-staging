@@ -168,8 +168,14 @@ trait IsExcludingTrait
 
 
 
-    public function getIsSmartExclusion(): bool
+
+
+    public function getIsSmartExclusion($checkLicense = true): bool
     {
+        if ($checkLicense) {
+            return WPStaging::isPro() && $this->isSmartExclusion;
+        }
+
         return $this->isSmartExclusion;
     }
 

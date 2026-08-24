@@ -74,7 +74,8 @@ class CleanupTmpTablesTask extends AbstractTask
                 continue;
             }
 
-            $label = 'table';
+            $label         = 'table';
+            $errorsBefore  = count($this->tableService->getErrors());
 
             if (in_array($tableOrViewName, $this->views)) {
                 $label = 'view';
@@ -95,12 +96,13 @@ class CleanupTmpTablesTask extends AbstractTask
                     esc_html($tableOrViewName)
                 ));
             } else {
-                $this->logger->warning(sprintf(
-                    '%s: Temporary %s "%s" was not successfully cleaned up.',
+                $this->logger->warning(trim(sprintf(
+                    '%s: Temporary %s "%s" was not successfully cleaned up. %s',
                     static::getTaskTitle(),
                     esc_html($label),
-                    esc_html($tableOrViewName)
-                ));
+                    esc_html($tableOrViewName),
+                    esc_html(implode(' ', array_slice($this->tableService->getErrors(), $errorsBefore)))
+                )));
             }
         }
 

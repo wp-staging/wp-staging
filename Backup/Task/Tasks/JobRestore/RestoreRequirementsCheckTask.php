@@ -41,6 +41,9 @@ class RestoreRequirementsCheckTask extends RestoreTask
     const BETA_VERSION_LIMIT_PRO = '4';
 
  
+    const MAX_LEFTOVER_TABLES_TO_NAME = 10;
+
+ 
     protected $analyticsBackupRestore;
 
 
@@ -109,6 +112,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->cannotRestoreIfBackupGeneratedOnNewerBackupVersion();
             $this->cannotRestoreIfBackupGeneratedOnNewerWPDbVersion();
             $this->cannotRestoreIfAnyTemporaryPrefixIsCurrentSitePrefix();
+            $this->cannotRestoreOverLeftoverBackupTables();
             $this->cannotRestoreBackupCreatedBeforeMVP();
             $this->cannotRestoreIfInvalidSiteOrHomeUrl();
             $this->cannotRestoreCompressedBackup();
@@ -210,6 +214,33 @@ class RestoreRequirementsCheckTask extends RestoreTask
         if (($basePrefix === $this->jobDataDto->getTmpDatabasePrefix() || $basePrefix === DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP)) {
             throw new RuntimeException("Can not proceed. The production site database table prefix uses \"$basePrefix\" which is used for temporary tables by WP STAGING. Please, feel free to reach out to WP STAGING support for assistance.");
         }
+    }
+
+
+
+
+
+    protected function cannotRestoreOverLeftoverBackupTables()
+    {
+        $backupMetadata = $this->jobDataDto->getBackupMetadata();
+        if (!$backupMetadata instanceof BackupMetadata || !$backupMetadata->getIsExportingDatabase()) {
+            return;
+        }
+
+        $leftoverTables = $this->tableService->findTableNamesStartWith(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP);
+        if (empty($leftoverTables)) {
+            return;
+        }
+
+        $listedTables = implode(', ', array_slice($leftoverTables, 0, self::MAX_LEFTOVER_TABLES_TO_NAME));
+        if (count($leftoverTables) > self::MAX_LEFTOVER_TABLES_TO_NAME) {
+            $listedTables .= sprintf(' and %d more', count($leftoverTables) - self::MAX_LEFTOVER_TABLES_TO_NAME);
+        }
+
+        throw new RuntimeException(sprintf(
+            'Can not proceed. These temporary tables could not be removed from the database and would keep this restore from replacing the tables they belong to: %s. Drop them manually, or ask WP STAGING support for assistance, and start the restore again.',
+            $listedTables
+        ));
     }
 
     protected function cannotHaveTableThatWillExceedLength()

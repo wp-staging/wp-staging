@@ -397,7 +397,7 @@ class Archiver
                 $isFirstInsert   = true;
                 $insertSeparator = "\n--\n-- SQL DATA END\n--\n";
                 $this->tempBackup->append($insertSeparator);
-                $this->tempBackup->deleteBottomBytes(strlen(PHP_EOL));
+                $this->tempBackup->deleteBottomBytes(strlen(BackupHeader::LINE_TERMINATOR));
             }
         }
 
@@ -406,7 +406,7 @@ class Archiver
 
         $lastLine     = $this->tempBackup->readLastLine();
         $writtenBytes = $this->archiverDto->getWrittenBytesTotal();
-        if ($lastLine !== PHP_EOL && $writtenBytes === 0) {
+        if ($lastLine !== BackupHeader::LINE_TERMINATOR && $writtenBytes === 0) {
             $this->tempBackup->append(''); 
         }
 
@@ -450,7 +450,7 @@ class Archiver
             $this->backupHeader->updateHeader($this->tempBackup->getFilePath());
         }
 
-        $this->tempBackup->append(PHP_EOL);
+        $this->tempBackup->append(BackupHeader::LINE_TERMINATOR);
 
         return $backupSizeBeforeAddingIndex;
     }

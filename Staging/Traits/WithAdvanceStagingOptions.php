@@ -62,7 +62,7 @@ trait WithAdvanceStagingOptions
     private $tmpExcludedFullPaths = [];
 
  
-    private $tmpExcludedGoDaddyFiles = [];
+    private $tmpExcludedHostingFiles = [];
 
 
 
@@ -384,16 +384,16 @@ trait WithAdvanceStagingOptions
 
 
 
-    public function setTmpExcludedGoDaddyFiles(array $tmpExcludedGoDaddyFiles)
+    public function setTmpExcludedHostingFiles(array $tmpExcludedHostingFiles)
     {
-        $this->tmpExcludedGoDaddyFiles = $tmpExcludedGoDaddyFiles;
+        $this->tmpExcludedHostingFiles = $tmpExcludedHostingFiles;
     }
 
 
 
 
-    public function getTmpExcludedGoDaddyFiles(): array
+    public function getTmpExcludedHostingFiles(): array
     {
-        return $this->tmpExcludedGoDaddyFiles;
+        return $this->tmpExcludedHostingFiles;
     }
 }

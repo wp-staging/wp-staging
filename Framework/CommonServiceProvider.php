@@ -117,6 +117,7 @@ class CommonServiceProvider extends ServiceProvider
  
  
         add_action('wp_ajax_wpstg_cancel_clone', $this->container->callback(OnboardingJourney::class, 'abandonActionOnRequest'), 2); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in abandonActionOnRequest()
+        add_action('wp_ajax_wpstg--job--cancel', $this->container->callback(QueuedBackup::class, 'discardOnStagingRequest'), 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in discardOnStagingRequest()
         add_action('wp_ajax_wpstg--job--cancel', $this->container->callback(OnboardingJourney::class, 'abandonActionOnRequest'), 2); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in abandonActionOnRequest()
         add_action('wp_ajax_wpstg_staging_job_error', $this->container->callback(QueuedBackup::class, 'discardOnStagingRequest'), 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Authorization checked in discardOnStagingRequest()
     }

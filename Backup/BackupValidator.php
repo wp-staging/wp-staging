@@ -33,7 +33,6 @@ class BackupValidator
         "\n",
         "\r\n",
         "\n\r",
-        PHP_EOL,
     ];
 
  

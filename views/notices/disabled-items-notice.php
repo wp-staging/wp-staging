@@ -9,7 +9,7 @@
  * @var bool  $isJetpackStagingModeActive
  * @var array $excludedPlugins
  * @var array $excludedFiles
- * @var array $excludedGoDaddyFiles
+ * @var array $excludedHostingFiles
  */
 
 use WPStaging\Framework\Notices\Notices;
@@ -118,18 +118,18 @@ if (empty(get_option('permalink_structure'))) {
             ?>
         </li>
         <?php endif; ?>
-        <?php if (is_array($excludedGoDaddyFiles) && count($excludedGoDaddyFiles) > 0) : ?>
+        <?php if (is_array($excludedHostingFiles) && count($excludedHostingFiles) > 0) : ?>
         <li>
             <?php
             echo sprintf(
                 esc_html__('%s were excluded and not copied to the staging site:', 'wp-staging'),
-                '<a href="#" id="wpstg-excluded-godaddy-files-link">' . esc_html__('These GoDaddy files/folders', 'wp-staging') . '</a>'
+                '<a href="#" id="wpstg-excluded-hosting-files-link">' . esc_html__('These hosting provider files/folders', 'wp-staging') . '</a>'
             );
             ?>
             <br>
-            <ul id="wpstg-excluded-godaddy-files-list" class="wpstg-disable-item-notice-excluded-files-ul">
-                <?php foreach ($excludedGoDaddyFiles as $excludedGoDaddyFile) : ?>
-                    <li><span class="wpstg-disable-item-notice-files-font">➜</span> <?php echo esc_html($excludedGoDaddyFile); ?></li>
+            <ul id="wpstg-excluded-hosting-files-list" class="wpstg-disable-item-notice-excluded-files-ul">
+                <?php foreach ($excludedHostingFiles as $excludedHostingFile) : ?>
+                    <li><span class="wpstg-disable-item-notice-files-font">➜</span> <?php echo esc_html($excludedHostingFile); ?></li>
                 <?php endforeach; ?>
             </ul>
             <?php echo esc_html__('Excluding these files/folders allows you to connect to this staging site and update WordPress without errors.', 'wp-staging'); ?>
@@ -145,30 +145,31 @@ if (empty(get_option('permalink_structure'))) {
       ) ?>
     </p>
     <script>
-        jQuery(document).ready(function ($) {
-            //display or hide excluded files list
-            const el = $('#wpstg-excluded-files-list');
-            el.hide();
-            $('#wpstg-excluded-files-link').click(function(e) {
-            e.preventDefault();
-            if (el.is(':visible')) {
-                el.hide('slow');
-                return;
-            }
-            el.show('slow');
+        (function() {
+            const toggles = {
+                'wpstg-excluded-files-link': 'wpstg-excluded-files-list',
+                'wpstg-excluded-hosting-files-link': 'wpstg-excluded-hosting-files-list',
+            };
+
+            Object.values(toggles).forEach(function(listId) {
+                const list = document.getElementById(listId);
+                if (list) {
+                    list.style.display = 'none';
+                }
             });
 
-            //display or hide excluded godaddy files list
-            const goElement = $('#wpstg-excluded-godaddy-files-list');
-            goElement.hide();
-            $('#wpstg-excluded-godaddy-files-link').click(function(e) {
-                e.preventDefault();
-                if (goElement.is(':visible')) {
-                    goElement.hide('slow');
+            document.addEventListener('click', function(event) {
+                const link = event.target.closest('a[id]');
+                if (!link || !toggles[link.id]) {
                     return;
                 }
-                goElement.show('slow');
+
+                event.preventDefault();
+                const list = document.getElementById(toggles[link.id]);
+                if (list) {
+                    list.style.display = list.style.display === 'none' ? '' : 'none';
+                }
             });
-        });
+        })();
     </script>
 </div>

@@ -6,6 +6,9 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Facades\Hooks;
 
+
+
+
 class UpdateWpOptionsTablePrefix extends DBCloningService
 {
  
@@ -65,19 +68,18 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
             return true;
         }
 
- 
-        $filters = [
-            'wp_mail_smtp',
-            'wp_mail_smtp_version',
-            'wp_mail_smtp_debug',
-            'db_version',
+        $where      = "";
+        $parameters = [
+            $productionPrefix,
+            $stagingPrefix,
+            $productionPrefix . "%",
         ];
 
-        $filters = Hooks::applyFilters(self::FILTER_DATA_EXCLUDED_ROWS, $filters);
-
-        $where = "";
+ 
+        $filters = $this->getExcludedOptionNames();
         foreach ($filters as $filter) {
-            $where .= " AND option_name <> '" . $filter . "'";
+            $where        .= " AND option_name <> %s";
+            $parameters[] = $filter;
         }
 
         $this->debugLog("Skipping the option_names (custom filtered):  {$where}", Logger::TYPE_INFO);
@@ -85,9 +87,7 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
         $updateOptions = $stagingDb->query(
             $stagingDb->prepare(
                 "UPDATE IGNORE {$stagingPrefix}{$tableName} SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where,
-                $productionPrefix,
-                $stagingPrefix,
-                $productionPrefix . "%"
+                $parameters
             )
         );
 
@@ -97,5 +97,29 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
         }
 
         return true;
+    }
+
+
+
+
+    private function getExcludedOptionNames()
+    {
+        $defaultFilters = [
+            'wp_mail_smtp',
+            'wp_mail_smtp_version',
+            'wp_mail_smtp_debug',
+            'db_version',
+        ];
+
+        $filters = Hooks::applyFilters(self::FILTER_DATA_EXCLUDED_ROWS, $defaultFilters);
+        if (!is_array($filters)) {
+            return $defaultFilters;
+        }
+
+        $filters = array_filter($filters, function ($filter) {
+            return is_string($filter) && trim($filter) !== '';
+        });
+
+        return array_values(array_unique($filters));
     }
 }

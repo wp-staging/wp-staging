@@ -677,7 +677,7 @@ class BackupScheduler
             }
         } else {
  
-            if ((int)sprintf('%s%s', $hourAndMinute[0], $hourAndMinute[1]) < (int)$datetime->format('Hi')) {
+            if ((int)sprintf('%02d%02d', $hourAndMinute[0], $hourAndMinute[1]) <= (int)$datetime->format('Hi')) {
                 $datetime->add(new \DateInterval('P1D'));
             }
         }

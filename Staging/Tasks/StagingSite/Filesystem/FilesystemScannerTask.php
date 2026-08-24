@@ -18,6 +18,7 @@ use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
+use WPStaging\Framework\SiteInfo;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\FileCopierTask;
@@ -95,6 +96,9 @@ class FilesystemScannerTask extends StagingTask
     protected $pathChecker;
 
  
+    protected $siteInfo;
+
+ 
     protected $ignoreFileExtensions = [];
 
  
@@ -119,6 +123,7 @@ class FilesystemScannerTask extends StagingTask
 
 
 
+
     public function __construct(
         LoggerInterface $logger,
         Cache $cache,
@@ -127,7 +132,8 @@ class FilesystemScannerTask extends StagingTask
         Directory $directory,
         Filesystem $filesystem,
         FilesystemScanner $filesystemScanner,
-        PathChecker $pathChecker
+        PathChecker $pathChecker,
+        SiteInfo $siteInfo
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
@@ -135,6 +141,7 @@ class FilesystemScannerTask extends StagingTask
         $this->filesystem        = $filesystem;
         $this->filesystemScanner = $filesystemScanner;
         $this->pathChecker       = $pathChecker;
+        $this->siteInfo          = $siteInfo;
     }
 
 
@@ -403,7 +410,7 @@ class FilesystemScannerTask extends StagingTask
             return $this->generateResponse();
         }
 
-        $excludeRules = [];
+        $excludeRules = $this->getHostingProviderExcludedMuPluginFiles();
 
         $this->preScanPath($dirToScan, PartIdentifier::MU_PLUGIN_PART_IDENTIFIER, $excludeRules);
 
@@ -536,6 +543,7 @@ class FilesystemScannerTask extends StagingTask
  
         $useMultisiteFilter = $this->shouldUseMultisiteLegacyExcludedDirectoriesFilter();
         $excludedDirs       = $this->directory->getDefaultExcludedDirectories(!$useMultisiteFilter);
+        $excludedDirs       = array_merge($excludedDirs, $this->getHostingProviderExcludedDirectories());
 
         if ($useMultisiteFilter) {
             $excludedDirs = (array) apply_filters(Directory::FILTER_CLONE_MU_EXCLUDED_FOLDERS, $excludedDirs);
@@ -544,6 +552,48 @@ class FilesystemScannerTask extends StagingTask
         $excludedDirs = (array) apply_filters(self::FILTER_EXCLUDE_DIRECTORIES, $excludedDirs);
 
         return $this->directory->ensureWpStagingDataDirectoriesExcluded($excludedDirs);
+    }
+
+
+
+
+
+
+    protected function getHostingProviderExcludedDirectories(): array
+    {
+        if (!$this->siteInfo->isGoDaddyHosting()) {
+            return [];
+        }
+
+        $muPluginsDirectory = trailingslashit($this->directory->getMuPluginsDirectory());
+        if (!is_dir($muPluginsDirectory . 'gd-system-plugin')) {
+            return [];
+        }
+
+        $excludedDirs = [$muPluginsDirectory . 'gd-system-plugin'];
+
+ 
+        if (is_dir($muPluginsDirectory . 'vendor')) {
+            $excludedDirs[] = $muPluginsDirectory . 'vendor';
+        }
+
+        return $excludedDirs;
+    }
+
+
+
+
+    protected function getHostingProviderExcludedMuPluginFiles(): array
+    {
+        if (!$this->siteInfo->isGoDaddyHosting()) {
+            return [];
+        }
+
+        if (!file_exists(trailingslashit($this->directory->getMuPluginsDirectory()) . 'gd-system-plugin.php')) {
+            return [];
+        }
+
+        return ['gd-system-plugin.php'];
     }
 
     protected function shouldUseMultisiteLegacyExcludedDirectoriesFilter(): bool

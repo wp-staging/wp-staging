@@ -416,4 +416,19 @@ class SiteInfo
     {
         return is_multisite();
     }
+
+
+
+
+
+    public function isGoDaddyHosting(): bool
+    {
+        if (!defined('WPMU_PLUGIN_DIR')) {
+            return false;
+        }
+
+        $muPluginsDirectory = trailingslashit(WPMU_PLUGIN_DIR);
+
+        return file_exists($muPluginsDirectory . 'gd-system-plugin.php') || is_dir($muPluginsDirectory . 'gd-system-plugin');
+    }
 }

@@ -133,8 +133,8 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
             $updateOrInsert[Sites::STAGING_EXCLUDED_FILES_OPTION] = serialize(array_unique($this->jobDataDto->getTmpExcludedFullPaths()));
         }
 
-        if (!empty($this->jobDataDto->getTmpExcludedGoDaddyFiles())) {
-            $updateOrInsert[Sites::STAGING_EXCLUDED_GD_FILES_OPTION] = serialize(array_unique($this->jobDataDto->getTmpExcludedGoDaddyFiles()));
+        if (!empty($this->jobDataDto->getTmpExcludedHostingFiles())) {
+            $updateOrInsert[Sites::STAGING_EXCLUDED_HOSTING_FILES_OPTION] = serialize(array_unique($this->jobDataDto->getTmpExcludedHostingFiles()));
         }
 
         $this->updateOrInsertOptions($updateOrInsert);

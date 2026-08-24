@@ -369,7 +369,7 @@ class OnboardingJourney
 
         delete_option(self::OPTION_STATE);
         delete_option(self::OPTION_RESTARTED);
-        delete_option(QueuedBackup::OPTION_STATE);
+        WPStaging::make(QueuedBackup::class)->clearUnlessPending();
         $this->state = null;
     }
 
@@ -386,7 +386,7 @@ class OnboardingJourney
         delete_option(self::OPTION_COMPLETED);
         delete_option(self::OPTION_STATE);
         delete_option(FreeOnboarding::OPTION_EXPOSURE);
-        delete_option(QueuedBackup::OPTION_STATE);
+        WPStaging::make(QueuedBackup::class)->clearUnlessPending();
         update_option(self::OPTION_RESTARTED, (string)time(), false);
 
         $this->state            = null;

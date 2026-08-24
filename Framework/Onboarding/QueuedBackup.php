@@ -33,9 +33,15 @@ class QueuedBackup extends AbstractBackgroundBackupRequest
 
 
 
+
+
+
+
+
+
     public function queue(string $stagingJobId): bool
     {
-        if ($this->isPending()) {
+        if ($this->isPendingFor($stagingJobId) || $this->getStatus() === self::STATUS_RUNNING) {
             return false;
         }
 
@@ -57,7 +63,6 @@ class QueuedBackup extends AbstractBackgroundBackupRequest
 
 
 
-
     public function getReportedStatus(): string
     {
         if ($this->isPending()) {
@@ -67,6 +72,27 @@ class QueuedBackup extends AbstractBackgroundBackupRequest
         $reason = WPStaging::make(OnboardingJourney::class)->getCompletionReason();
 
         return $reason === OnboardingJourney::REASON_TWO_CAPABILITIES ? self::STATUS_COMPLETED : $this->getStatus();
+    }
+
+
+
+
+
+
+
+
+
+
+
+    public function isPendingFor(string $stagingJobId): bool
+    {
+        if (!$this->isPending()) {
+            return false;
+        }
+
+        $state = $this->read();
+
+        return isset($state['staging_job_id']) && $state['staging_job_id'] === $stagingJobId;
     }
 
 
@@ -106,9 +132,19 @@ class QueuedBackup extends AbstractBackgroundBackupRequest
 
 
 
+
+
+
+
+
+
     public function discard()
     {
-        if ($this->getStatus() !== self::STATUS_QUEUED) {
+        if (!$this->isPending()) {
+            return;
+        }
+
+        if ($this->getStatus() === self::STATUS_RUNNING && !$this->cancelRunningBackup()) {
             return;
         }
 
@@ -123,6 +159,18 @@ class QueuedBackup extends AbstractBackgroundBackupRequest
     protected function getOptionName(): string
     {
         return self::OPTION_STATE;
+    }
+
+
+
+
+    public function clearUnlessPending()
+    {
+        if ($this->isPending()) {
+            return;
+        }
+
+        $this->clear();
     }
 
 

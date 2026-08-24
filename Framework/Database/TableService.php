@@ -15,6 +15,12 @@ use WPStaging\Framework\Utils\Strings;
 class TableService
 {
  
+    const DROP_LOCK_WAIT_SECONDS = 3;
+
+ 
+    const DROP_ATTEMPTS = 3;
+
+ 
     private $database;
 
  
@@ -25,6 +31,9 @@ class TableService
 
  
     private $errors = [];
+
+ 
+    private $hasRefusedProductionTable = false;
 
  
     private $strHelper;
@@ -49,6 +58,14 @@ class TableService
     public function getErrors()
     {
         return $this->errors;
+    }
+
+
+
+
+    public function hasRefusedProductionTable(): bool
+    {
+        return $this->hasRefusedProductionTable;
     }
 
 
@@ -300,22 +317,106 @@ class TableService
             $this->client->query("SET FOREIGN_KEY_CHECKS = 0");
         }
 
+        $lockWaitTimeout = $this->boundLockWait();
+
+        try {
+            return $this->dropTables($tables);
+        } finally {
+            $this->restoreLockWait($lockWaitTimeout);
+            if ($isForeignKeyCheckEnabled === "1") {
+                $this->client->query("SET FOREIGN_KEY_CHECKS = 1");
+            }
+        }
+    }
+
+
+
+
+    private function boundLockWait(): string
+    {
+        if ($this->isSqlLite) {
+            return '';
+        }
+
+        $lockWait = $this->client->query("SELECT @@SESSION.lock_wait_timeout AS lock_wait");
+        if ($lockWait === false) {
+            return '';
+        }
+
+        $result = $this->client->fetchAssoc($lockWait);
+        if (empty($result['lock_wait'])) {
+            return '';
+        }
+
+        $this->client->query("SET SESSION lock_wait_timeout = " . self::DROP_LOCK_WAIT_SECONDS);
+
+        return (string)$result['lock_wait'];
+    }
+
+
+
+
+
+    private function restoreLockWait(string $lockWaitTimeout)
+    {
+        if ($lockWaitTimeout === '') {
+            return;
+        }
+
+        $this->client->query("SET SESSION lock_wait_timeout = " . (int)$lockWaitTimeout);
+    }
+
+
+
+
+
+    private function dropTables(array $tables): bool
+    {
+        $isDeleted = true;
         foreach ($tables as $table) {
  
             if ($this->isProductionSiteTableOrView($table)) {
-                $this->errors[] = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
+                $this->errors[]                  = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
+                $this->hasRefusedProductionTable = true;
 
                 return false;
             }
 
-            $this->client->query("DROP TABLE `{$table}`;");
+            if ($this->dropTableWithRetries($table)) {
+                continue;
+            }
+
+            $isDeleted = false;
         }
 
-        if ($isForeignKeyCheckEnabled === "1") {
-            $this->client->query("SET FOREIGN_KEY_CHECKS = 1");
+        return $isDeleted;
+    }
+
+
+
+
+
+
+
+    private function dropTableWithRetries(string $table): bool
+    {
+        $lastError = '';
+        for ($attempt = 1; $attempt <= self::DROP_ATTEMPTS; $attempt++) {
+            if ($this->client->query("DROP TABLE `{$table}`;") !== false) {
+                return true;
+            }
+
+            $lastError = $this->client->error();
         }
 
-        return true;
+        $this->errors[] = sprintf(
+            'Could not delete the table %s after %d attempts. Error: %s',
+            $table,
+            self::DROP_ATTEMPTS,
+            $lastError
+        );
+
+        return false;
     }
 
 
@@ -326,18 +427,40 @@ class TableService
 
     public function deleteViews($views): bool
     {
+        $lockWaitTimeout = $this->boundLockWait();
+
+        try {
+            return $this->dropViews($views);
+        } finally {
+            $this->restoreLockWait($lockWaitTimeout);
+        }
+    }
+
+
+
+
+
+    private function dropViews(array $views): bool
+    {
+        $isDeleted = true;
         foreach ($views as $view) {
  
             if ($this->isProductionSiteTableOrView($view)) {
-                $this->errors[] = sprintf(__("Fatal Error: Trying to delete view %s of main WP installation!", 'wp-staging'), $view);
+                $this->errors[]                  = sprintf(__("Fatal Error: Trying to delete view %s of main WP installation!", 'wp-staging'), $view);
+                $this->hasRefusedProductionTable = true;
 
                 return false;
             }
 
-            $this->database->getWpdba()->exec("DROP VIEW {$view};");
+            if ($this->database->getWpdba()->exec("DROP VIEW {$view};") !== false) {
+                continue;
+            }
+
+            $this->errors[] = sprintf('Could not delete the view %s. Error: %s', $view, $this->getLastWpdbError());
+            $isDeleted      = false;
         }
 
-        return true;
+        return $isDeleted;
     }
 
 

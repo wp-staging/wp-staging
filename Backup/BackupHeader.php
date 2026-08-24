@@ -24,6 +24,12 @@ class BackupHeader
 
 
 
+    const LINE_TERMINATOR = "\n";
+
+
+
+
+
     const HEADER_SIZE = 512;
 
 
@@ -410,6 +416,9 @@ class BackupHeader
         return false;
     }
 
+
+
+
     public function getV1FormatHeader(): string
     {
         $wpstgBackupHeaderFile = WPSTG_RESOURCES_DIR . 'wpstgBackupHeader.txt';
@@ -418,7 +427,12 @@ class BackupHeader
             return "";
         }
 
-        return file_get_contents($wpstgBackupHeaderFile);
+        $content = file_get_contents($wpstgBackupHeaderFile);
+        if ($content === false) {
+            return "";
+        }
+
+        return str_replace("\r\n", self::LINE_TERMINATOR, $content);
     }
 
     private function getHeaderInUseSize(): int
