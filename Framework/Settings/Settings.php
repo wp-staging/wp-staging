@@ -94,8 +94,18 @@ class Settings
 
 
 
-    public function sanitizeOptions(array $data = []): array
+
+
+
+
+
+    public function sanitizeOptions($data = []): array
     {
+        if (!is_array($data) && !is_object($data)) {
+            return (array)get_option('wpstg_settings', []);
+        }
+
+        $data                              = $this->toArrayDeep($data);
         $isFormSubmission                  = $this->isSettingsFormSubmission();
         $showErrorToggleStagingSiteCloning = false;
 
@@ -230,6 +240,29 @@ class Settings
         }
 
         wp_send_json_success(['message' => esc_html__('Connection successful! Background tasks will be able to reach wp-admin.', 'wp-staging')]);
+    }
+
+
+
+
+
+    private function toArrayDeep($data): array
+    {
+        if (is_object($data)) {
+            $data = get_object_vars($data);
+        }
+
+        if (!is_array($data)) {
+            return [];
+        }
+
+        foreach ($data as $key => $value) {
+            if (is_object($value) || is_array($value)) {
+                $data[$key] = $this->toArrayDeep($value);
+            }
+        }
+
+        return $data;
     }
 
 

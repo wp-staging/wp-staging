@@ -28,7 +28,18 @@ class JobTransientCache
 
 
 
+    const LAST_JOB_OUTCOME_EXPIRY = 5 * 60;
+
+
+
+
+
     const TRANSIENT_CURRENT_JOB = 'wpstg_current_job';
+
+
+
+
+    const TRANSIENT_LAST_JOB_OUTCOME = 'wpstg_last_job_outcome';
 
 
 
@@ -267,6 +278,29 @@ class JobTransientCache
 
 
 
+
+    public function findJobById(string $jobId)
+    {
+        if ($jobId === '') {
+            return null;
+        }
+
+        $job = $this->getJob();
+        if (!empty($job['jobId']) && hash_equals((string) $job['jobId'], $jobId)) {
+            return $job;
+        }
+
+        $lastFinishedJob = get_transient(self::TRANSIENT_LAST_JOB_OUTCOME);
+        if (!empty($lastFinishedJob['jobId']) && hash_equals((string) $lastFinishedJob['jobId'], $jobId)) {
+            return $lastFinishedJob;
+        }
+
+        return null;
+    }
+
+
+
+
     public function update()
     {
         $jobData = $this->getJob();
@@ -306,5 +340,11 @@ class JobTransientCache
  
         delete_transient(self::TRANSIENT_CURRENT_JOB);
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY_ON_COMPLETE);
+
+        if (empty($jobData['jobId'])) {
+            return;
+        }
+
+        set_transient(self::TRANSIENT_LAST_JOB_OUTCOME, $jobData, self::LAST_JOB_OUTCOME_EXPIRY);
     }
 }

@@ -1,0 +1,11 @@
+#adminmenu #toplevel_page_wpstg_clone > a,
+#adminmenu #toplevel_page_wpstg_backup > a{overflow:hidden}#adminmenu #toplevel_page_wpstg_clone .wp-menu-name,
+#adminmenu #toplevel_page_wpstg_clone .wp-submenu a,
+#adminmenu #toplevel_page_wpstg_backup .wp-menu-name,
+#adminmenu #toplevel_page_wpstg_backup .wp-submenu a{display:block;position:relative;white-space:nowrap}#adminmenu #toplevel_page_wpstg_clone .wp-submenu a,
+#adminmenu #toplevel_page_wpstg_backup .wp-submenu a{overflow:hidden}#adminmenu #toplevel_page_wpstg_clone .update-plugins,
+#adminmenu #toplevel_page_wpstg_backup .update-plugins{line-height:18px;overflow:hidden;position:absolute;right:4px;top:50%;transform:translateY(-50%)}#adminmenu #toplevel_page_wpstg_clone:hover > a .update-plugins, #adminmenu #toplevel_page_wpstg_clone.wp-has-current-submenu > a .update-plugins, #adminmenu #toplevel_page_wpstg_clone.wp-menu-open > a .update-plugins,
+#adminmenu #toplevel_page_wpstg_backup:hover > a .update-plugins,
+#adminmenu #toplevel_page_wpstg_backup.wp-has-current-submenu > a .update-plugins,
+#adminmenu #toplevel_page_wpstg_backup.wp-menu-open > a .update-plugins{display:none}#adminmenu #toplevel_page_wpstg_clone .wp-submenu .wp-submenu-head .update-plugins,
+#adminmenu #toplevel_page_wpstg_backup .wp-submenu .wp-submenu-head .update-plugins{display:none}

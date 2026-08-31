@@ -292,7 +292,7 @@ class Uninstall
 
     private function getSettings(): array
     {
-        return json_decode(json_encode(get_option('wpstg_settings', [])), true) ?? [];
+        return (array)get_option('wpstg_settings', []);
     }
 
 
@@ -418,6 +418,7 @@ class Uninstall
     {
         return [
             'wpstg_current_job',
+            'wpstg_last_job_outcome',
             'wpstg_deactivation_reason',
             'wpstg_rest_url',
             'wpstg.run_daily',
@@ -430,6 +431,10 @@ class Uninstall
             'wpstg_otp_consecutive_failures',
             'wpstg_otp_locked',
             'wpstg_redirect_url',
+            'wpstg_oauth_state_dropbox',
+            'wpstg_oauth_state_google-drive',
+            'wpstg_oauth_state_one-drive',
+            'wpstg_oauth_state_pcloud',
             'wpstg_remote_sync_session',
             'wpstg_remote_sync_session_data',
             'wpstg_remote_sync_session_events_offset',

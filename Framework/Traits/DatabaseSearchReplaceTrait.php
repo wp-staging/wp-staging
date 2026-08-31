@@ -18,6 +18,8 @@ use WPStaging\Staging\Sites;
 
 trait DatabaseSearchReplaceTrait
 {
+    use WordPressOptionNameTrait;
+
     private $excludedStrings = [
         'Admin_custome_login_Slidshow',
         'Admin_custome_login_Social',
@@ -37,16 +39,11 @@ trait DatabaseSearchReplaceTrait
         'wpstg_tmp_data',
         'siteurl',
         'home',
- 
- 
- 
-        'wp_force_deactivated_plugins',
-        'wp_page_for_privacy_policy',
     ];
 
     public function excludedStrings()
     {
-        return $this->excludedStrings;
+        return array_merge($this->excludedStrings, $this->getPrefixIndependentWordPressOptionNames());
     }
 
 

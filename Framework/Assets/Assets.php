@@ -197,6 +197,16 @@ class Assets
             );
         }
 
+        if (is_admin()) {
+            $asset = $this->getCssAssetsFileName('wpstg-admin-menu-badge');
+            wp_enqueue_style(
+                "wpstg-admin-menu-badge-style",
+                $this->getAssetsUrl($asset),
+                [],
+                $this->getAssetsVersion($asset)
+            );
+        }
+
  
         if (WPStaging::isPro() && is_admin()) {
             $asset = $this->getJsAssetsFileName('pro/wpstg-admin-all-pages');

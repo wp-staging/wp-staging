@@ -37,7 +37,7 @@ class Frontend
     {
         $this->defineHooks();
 
-        $this->settings = json_decode(json_encode(get_option("wpstg_settings", [])));
+        $this->settings = (object)get_option("wpstg_settings", []);
 
         $this->loginForm = WPStaging::make(LoginForm::class);
     }

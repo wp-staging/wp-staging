@@ -3,6 +3,7 @@
 namespace WPStaging\Backend;
 
 use WPStaging\Backend\Modules\Jobs\Job;
+use WPStaging\Backup\AdminMenuBadge;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Settings\Settings as SettingsService;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
@@ -44,6 +45,7 @@ use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Pro\License\Licensing;
+use function WPStaging\functions\debug_log;
 
 
 
@@ -312,6 +314,10 @@ class Administrator
             [$this, $secondaryPageCallback]
         );
 
+        if (!is_network_admin()) {
+            $this->addBackupFailureBadge();
+        }
+
  
  
         $canUseRemoteSync = defined('WPSTGPRO_VERSION')
@@ -420,6 +426,21 @@ class Administrator
                 "wpstg-license",
                 [$this, "getLicensePage"]
             );
+        }
+    }
+
+
+
+
+
+
+
+    private function addBackupFailureBadge()
+    {
+        try {
+            WPStaging::make(AdminMenuBadge::class)->maybeAddBadge();
+        } catch (\Throwable $e) {
+            debug_log('AdminMenuBadge::maybeAddBadge failed: ' . $e->getMessage());
         }
     }
 

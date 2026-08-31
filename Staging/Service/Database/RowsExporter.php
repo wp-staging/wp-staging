@@ -139,8 +139,6 @@ class RowsExporter extends AbstractRowsExporter
 
         $search    = $this->generateHostnamePatterns($this->getSourceHostname());
         $replace   = $this->generateHostnamePatterns($this->getHostnameWithoutScheme($this->jobDataDto->getStagingSiteUrl()));
-        $search[]  = $this->getPrefix();
-        $replace[] = $this->getFinalPrefix();
 
         return [
             'search'  => $search,

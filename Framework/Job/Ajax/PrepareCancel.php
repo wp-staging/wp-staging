@@ -46,10 +46,13 @@ class PrepareCancel extends PrepareJob
 
 
 
+
     public function prepare($data = null)
     {
+        $data = is_array($data) ? $data : [];
+
         try {
-            $this->cancelCurrentRunningJob();
+            $data          = $this->cancelCurrentRunningJob($data);
             $sanitizedData = $this->setupInitialJob($data);
         } catch (\Exception $e) {
             return new \WP_Error(400, $e->getMessage());
@@ -95,8 +98,19 @@ class PrepareCancel extends PrepareJob
 
 
 
+
+
+
+
     public function validateAndSanitizeData($data): array
     {
+        if (is_array($data) && !empty($data['jobIdBeingCancelled'])) {
+            return [
+                'type'                => isset($data['type']) ? $data['type'] : '',
+                'jobIdBeingCancelled' => $data['jobIdBeingCancelled'],
+            ];
+        }
+
  
         $jobData = $this->getJobData();
         $data = [
@@ -167,7 +181,15 @@ class PrepareCancel extends PrepareJob
 
 
 
-    private function cancelCurrentRunningJob()
+
+
+
+
+
+
+
+
+    private function cancelCurrentRunningJob(array $data): array
     {
 
 
@@ -175,18 +197,21 @@ class PrepareCancel extends PrepareJob
 
         $jobTransientCache = WPStaging::make(JobTransientCache::class);
         $jobData           = $this->getJobData($jobTransientCache);
- 
-        if ($jobData['status'] !== JobTransientCache::STATUS_RUNNING) {
-            return;
-        }
+
+        $this->assertTargetsExpectedJob($jobData, $data);
 
         Hooks::callInternalHook(self::ACTION_JOB_CANCEL, [
             'jobTransientCache' => $jobTransientCache,
         ]);
 
+        if (empty($data['jobIdBeingCancelled'])) {
+            $data['type']                = $jobData['type'];
+            $data['jobIdBeingCancelled'] = $jobData['jobId'];
+        }
+
         $queueId = $jobData['queueId'];
         if (empty($queueId)) {
-            return;
+            return $data;
         }
 
 
@@ -194,5 +219,28 @@ class PrepareCancel extends PrepareJob
 
         $queue = WPStaging::make(Queue::class);
         $queue->cancelJob($queueId);
+
+        return $data;
+    }
+
+
+
+
+
+
+
+    private function assertTargetsExpectedJob(array $jobData, array $data)
+    {
+        foreach (['jobId' => 'expectedJobId', 'queueId' => 'expectedQueueId'] as $jobKey => $expectedKey) {
+            $expected = isset($data[$expectedKey]) ? (string)$data[$expectedKey] : '';
+            if ($expected === '') {
+                continue;
+            }
+
+            $running = isset($jobData[$jobKey]) ? (string)$jobData[$jobKey] : '';
+            if ($running !== $expected) {
+                throw new \Exception('Cancellation target changed; nothing cancelled.');
+            }
+        }
     }
 }

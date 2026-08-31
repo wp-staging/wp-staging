@@ -24,9 +24,7 @@ class StagingEngine
 
 
 
-
-
-    const NEXT_GEN_ENABLED = false;
+    const NEXT_GEN_ENABLED = true;
 
  
     const ENGINES = [

@@ -35,31 +35,18 @@ class Rest
             return false;
         }
 
-        $requestPath = trim($this->sanitize->sanitizeUrl($_SERVER['REQUEST_URI']), '/');
-
-        $originalUrl = trailingslashit(get_home_url(get_current_blog_id(), ''));
-
-        $url               = add_query_arg('rest_route', '/', $originalUrl);
-        $restPath          = $this->getApiRequestURI($url);
-        $requestPathApiURI = $this->getApiRequestURI($requestPath);
-        if (!empty($restPath) && strpos($requestPathApiURI, $restPath) === 0) {
+        if ($this->hasRestRouteQueryParam()) {
             return true;
         }
 
- 
- 
-        if ('index.php/' !== substr($originalUrl, -10)) {
-            $urlWithIndex      = add_query_arg('rest_route', '/', $originalUrl . 'index.php');
-            $restPathWithIndex = $this->getApiRequestURI($urlWithIndex);
-            if (!empty($restPathWithIndex) && strpos($requestPathApiURI, $restPathWithIndex) === 0) {
-                return true;
-            }
-        }
+        $requestUri = $this->sanitize->sanitizeUrl($_SERVER['REQUEST_URI']);
 
  
         if (!function_exists('rest_url')) {
             return false;
         }
+
+        $requestPath = trim($requestUri, '/');
 
         $baseRestURL = get_rest_url(get_current_blog_id(), '/');
         $restPath    = $this->getApiRequestURI($baseRestURL);
@@ -70,6 +57,27 @@ class Rest
         }
 
         return strpos($requestPath, $restPath) === 0;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private function hasRestRouteQueryParam(): bool
+    {
+        if (!array_key_exists('rest_route', $_GET) || !is_string($_GET['rest_route'])) {
+            return false;
+        }
+
+        return $_GET['rest_route'] !== '' && $_GET['rest_route'] !== '0';
     }
 
     private function getApiRequestURI($url)

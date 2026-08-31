@@ -391,23 +391,22 @@ class Settings
             empty($this->maxFileSize) ||
             empty($this->fileLimit)
         ) {
-            $settings = (object)json_decode(json_encode($this->_raw));
-            $settings->queryLimit = "10000";
-            $settings->querySRLimit = "20000";
+            $settings                 = (array)$this->_raw;
+            $settings['queryLimit']   = "10000";
+            $settings['querySRLimit'] = "20000";
 
             if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) {
-                $settings->fileLimit = "500";
-                $settings->cpuLoad = 'high';
+                $settings['fileLimit'] = "500";
+                $settings['cpuLoad']   = 'high';
             } else {
-                $settings->fileLimit = "50";
-                $settings->cpuLoad = 'low';
+                $settings['fileLimit'] = "50";
+                $settings['cpuLoad']   = 'low';
             }
 
-            $settings->batchSize = "2";
-            $settings->maxFileSize = "8";
-            $settings->optimizer = "1";
- 
-            update_option('wpstg_settings', json_decode(json_encode($settings), true));
+            $settings['batchSize']   = "2";
+            $settings['maxFileSize'] = "8";
+            $settings['optimizer']   = "1";
+            update_option('wpstg_settings', $settings);
 
             return $this->hydrate($settings)->_raw;
         }

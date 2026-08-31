@@ -9,7 +9,7 @@ abstract class AbstractTaskDto extends AbstractDto
 
     public function unserialize($serialized)
     {
-        $this->hydrateProperties(unserialize($serialized));
+        $this->hydrateProperties((array)unserialize($serialized, ['allowed_classes' => [\stdClass::class]]));
     }
 
     public function __unserialize($serialized)

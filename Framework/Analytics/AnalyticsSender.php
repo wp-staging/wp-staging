@@ -26,10 +26,8 @@ class AnalyticsSender
  
  
         $settings = get_option("wpstg_settings", []);
-
- 
         if (is_object($settings)) {
-            $settings = json_decode(json_encode($settings), true);
+            $settings = (array)$settings;
         }
 
  

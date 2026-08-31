@@ -94,7 +94,8 @@ class Upgrade
         $this->upgrade3_0_7();
         $this->upgrade3_8_1();
         $this->migrateRemoteStorageOptionNames();
-        $this->revertNextGenStagingEngine();
+        $this->maybeWarnAboutAffectedNextGenStagingSites();
+        $this->normalizeSettingsShape();
 
         $this->setVersion();
     }
@@ -108,7 +109,8 @@ class Upgrade
 
 
 
-    private function revertNextGenStagingEngine()
+
+    private function maybeWarnAboutAffectedNextGenStagingSites()
     {
         if ($this->upgradeFlags->has('next_gen_engine_disabled')) {
             return;
@@ -116,7 +118,9 @@ class Upgrade
 
         $stagingEngine = WPStaging::make(StagingEngine::class);
         if ($stagingEngine->getStoredEngine() === StagingEngine::ENGINE_NEXT_GEN) {
-            $stagingEngine->saveEngine(StagingEngine::ENGINE_LEGACY);
+            if (!$stagingEngine->isNextGenEnabled()) {
+                $stagingEngine->saveEngine(StagingEngine::ENGINE_LEGACY);
+            }
 
             $hasStagingSites = !empty(get_option(Sites::STAGING_SITES_OPTION, []))
                 || !empty(get_option(Sites::OLD_STAGING_SITES_OPTION, []));
@@ -375,7 +379,22 @@ class Upgrade
         add_option('wpstg_installDate', date('Y-m-d h:i:s')); 
         add_option(self::OPTION_INSTALL_DATE, date('Y-m-d h:i:s'));
         $this->settings->optimizer = "1";
-        update_option('wpstg_settings', $this->settings);
+        update_option('wpstg_settings', (array)$this->settings);
+    }
+
+
+
+
+
+
+    private function normalizeSettingsShape()
+    {
+        $settings = get_option('wpstg_settings');
+        if (!is_object($settings)) {
+            return;
+        }
+
+        update_option('wpstg_settings', (array)$settings);
     }
 
 

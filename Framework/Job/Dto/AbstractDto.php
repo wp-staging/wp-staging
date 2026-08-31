@@ -34,7 +34,7 @@ abstract class AbstractDto implements JsonSerializable, Serializable, ArrayableI
 
     public function unserialize($serialized)
     {
-        $this->hydrate(unserialize($serialized));
+        $this->hydrate((array)unserialize($serialized, ['allowed_classes' => [\stdClass::class]]));
     }
 
     public function __unserialize($serialized)
