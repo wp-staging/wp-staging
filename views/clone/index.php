@@ -47,8 +47,6 @@ $isNextStepVisible = $nextStepMarkup !== '';
 
 $isFocusMode = $isPreConsent || $journeyStep !== '';
 
- 
- 
 $isFirstRunOffer = $showBackupNext && $journey !== null && $journey->getNextCapability() !== OnboardingJourney::CAPABILITY_STAGING;
  
  

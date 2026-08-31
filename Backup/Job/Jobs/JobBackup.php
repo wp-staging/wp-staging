@@ -10,6 +10,7 @@
 namespace WPStaging\Backup\Job\Jobs;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
+use WPStaging\Backup\Exceptions\MissingBackupPartException;
 use WPStaging\Backup\Exceptions\NothingToBackupException;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupMuPluginsTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupOtherFilesTask;
@@ -62,21 +63,49 @@ class JobBackup extends AbstractJob
 
         try {
             $response = $this->getResponse($this->currentTask->execute());
+        } catch (MissingBackupPartException $e) {
+            return $this->getMissingPartFailResponse($e);
         } catch (NothingToBackupException $e) {
             return $this->getNothingToBackupResponse($e->getMessage());
         } catch (\Exception $e) {
-            $title = $this->currentTask->getTaskTitle();
-            if (empty($title)) {
-                $title = 'Backup job';
-            }
-
-            $this->currentTask->getLogger()->critical($title . ' failed! Error: ' . $e->getMessage());
+            $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage());
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
 
  
 
         return $response;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    protected function getMissingPartFailResponse(MissingBackupPartException $e): TaskResponseDto
+    {
+        $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage());
+
+        return $this->getJobFailResponse($e->getMessage());
+    }
+
+
+
+
+    protected function getCurrentTaskTitle(): string
+    {
+        $title = $this->currentTask->getTaskTitle();
+
+        return empty($title) ? 'Backup job' : $title;
     }
 
 

@@ -18,10 +18,10 @@ $articleUrl = 'https://wp-staging.com/next-gen-cloning-engine-known-issue/';
         <?php esc_html_e('Only staging sites created with the Next-Gen (BETA) cloning engine can contain corrupted data.', 'wp-staging'); ?>
     </p>
     <p>
-        <?php esc_html_e('The Next-Gen (BETA) cloning engine has been temporarily disabled because it could corrupt data on the staging sites it creates. Your staging engine has been switched back to the Classic engine automatically.', 'wp-staging'); ?>
+        <?php esc_html_e('The Next-Gen (BETA) cloning engine has been fixed in the current version. Staging sites created with affected earlier versions can still contain corrupted data.', 'wp-staging'); ?>
     </p>
     <p>
-        <?php esc_html_e('If you created any staging site with the Next-Gen engine, do not rely on it: it may contain corrupted content. Please delete that staging site and create a new one with the Classic engine.', 'wp-staging'); ?>
+        <?php esc_html_e('If you created any staging site with the Next-Gen engine before this fix, do not rely on it: delete that staging site and create a new one with the current WP STAGING version.', 'wp-staging'); ?>
     </p>
     <p>
         <a href="<?php echo esc_url($articleUrl); ?>" target="_blank" rel="noopener noreferrer">

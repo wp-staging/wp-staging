@@ -6,6 +6,8 @@ use WPStaging\Backup\Exceptions\StorageException;
 
 trait HttpRequestTrait
 {
+    use ThrottledResponseTrait;
+
 
 
 
@@ -44,7 +46,7 @@ trait HttpRequestTrait
             'method'      => 'GET',
         ];
         $args         = wp_parse_args($args, $defaults);
-        $response     = wp_remote_request($url, $args);
+        $response     = $this->requestUntilNotThrottled($url, $args);
         $responseCode = wp_remote_retrieve_response_code($response);
 
         if (is_wp_error($response) || (!in_array($responseCode, [200, 201, 202, 204, 206, 302, 308]))) {

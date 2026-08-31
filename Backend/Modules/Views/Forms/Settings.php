@@ -66,7 +66,7 @@ class Settings
     {
         $this->form["general"] = new Form();
 
-        $settings = json_decode(json_encode(get_option("wpstg_settings", [])));
+        $settings = (object)get_option("wpstg_settings", []);
 
  
         $element = new Numerical(

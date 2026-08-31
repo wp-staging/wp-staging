@@ -603,6 +603,17 @@ class BackupScheduler
 
 
 
+
+
+    public function shouldShowMenuBadge(): bool
+    {
+        return !$this->checkCronStatus();
+    }
+
+
+
+
+
     public function getNextBackupSchedule(): array
     {
         $cron = get_option('cron');

@@ -96,12 +96,8 @@ class PluginLifecycle
 
     private static function willRemoveDataOnUninstall(): bool
     {
-        $settings = get_option('wpstg_settings', []);
+        $settings = (array)get_option('wpstg_settings', []);
 
-        if (is_object($settings)) {
-            $settings = json_decode(json_encode($settings), true);
-        }
-
-        return is_array($settings) && !empty($settings['unInstallOnDelete']);
+        return !empty($settings['unInstallOnDelete']);
     }
 }

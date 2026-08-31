@@ -21,32 +21,8 @@ trait WithAnalyticsSiteInfo
  
         $mysqlInfo = $wpdb->get_var('SELECT VERSION();');
 
-        preg_match('/^[0-9.]+/', $mysqlInfo, $mySqlVersionNumber);
-
-        if (!empty($mySqlVersionNumber)) {
-            $mySqlVersionNumber = array_shift($mySqlVersionNumber);
-        } else {
-            $mySqlVersionNumber = 'UNDEFINED';
-        }
-
- 
-        if (stripos($mysqlInfo, 'mysql')) {
-            $engine = 'MYSQL';
-        } elseif (stripos($mysqlInfo, 'mariadb')) {
-            $engine = 'MARIADB';
-        } elseif (stripos($mysqlInfo, 'azure')) {
-            $engine = 'AZURE';
-        } elseif (stripos($mysqlInfo, 'postgre')) {
-            $engine = 'POSTGRE';
-        } elseif (stripos(preg_replace('[^\w]', '', $mysqlInfo), 'microsoftsqlserver')) {
-            $engine = 'MICROSOFTSQLSERVER';
-        } elseif (stripos($mysqlInfo, 'percona')) {
-            $engine = 'PERCONA';
-        } elseif (stripos($mysqlInfo, 'oracle')) {
-            $engine = 'ORACLE';
-        } else {
-            $engine = 'UNDEFINED';
-        }
+        $mySqlVersionNumber = $this->getDatabaseVersionNumber((string)$mysqlInfo);
+        $engine             = $this->getNormalizedDatabaseEngine((string)$mysqlInfo, $mySqlVersionNumber);
 
         $wpstgSettings = get_option('wpstg_settings', []);
 
@@ -104,6 +80,61 @@ trait WithAnalyticsSiteInfo
         ];
 
         return $systemInfo;
+    }
+
+
+
+
+
+
+
+    protected function getDatabaseVersionNumber(string $mysqlInfo): string
+    {
+        preg_match('/^[0-9.]+/', $mysqlInfo, $matches);
+
+        return empty($matches) ? 'UNDEFINED' : array_shift($matches);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    protected function getNormalizedDatabaseEngine(string $mysqlInfo, string $mySqlVersionNumber): string
+    {
+        $namedEngines = [
+            'mariadb'     => 'MARIADB',
+            'azure'       => 'AZURE',
+            'postgre'     => 'POSTGRE',
+            'percona'     => 'PERCONA',
+            'oracle'      => 'ORACLE',
+            'tidb'        => 'TIDB',
+            'vitess'      => 'VITESS',
+            'singlestore' => 'SINGLESTORE',
+            'starrocks'   => 'STARROCKS',
+            'doris'       => 'DORIS',
+            'mysql'       => 'MYSQL',
+        ];
+
+        foreach ($namedEngines as $marker => $engine) {
+            if (stripos($mysqlInfo, $marker) !== false) {
+                return $engine;
+            }
+        }
+
+        if (stripos(preg_replace('/[^\w]/', '', $mysqlInfo), 'microsoftsqlserver') !== false) {
+            return 'MICROSOFTSQLSERVER';
+        }
+
+        return preg_match('/^\d+\.\d+/', $mySqlVersionNumber) === 1 ? 'MYSQL' : 'UNDEFINED';
     }
 
     protected function getActivePlugins()

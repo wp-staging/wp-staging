@@ -19,6 +19,7 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Exceptions\MissingBackupPartException;
 use WPStaging\Backup\Service\BackupMetadataEditor;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -163,29 +164,37 @@ class FinalizeBackupTask extends BackupTask
 
     protected function prepareSetup()
     {
-        if ($this->stepsDto->getTotal() > 0) {
+        if ($this->jobDataDto->getIsMultipartBackup()) {
+            if ($this->stepsDto->getTotal() > 0) {
+                return;
+            }
+
+            $this->jobDataDto->setCurrentMultipartFileInfoIndex(0);
+            $this->stepsDto->setTotal(count($this->jobDataDto->getMultipartFilesInfo()));
+
+            return;
+        }
+
+ 
+ 
+ 
+ 
+        if ($this->stepsDto->getTotal() > 0 && $this->hasMultipartFileInfoForCurrentIndex()) {
             return;
         }
 
         $this->jobDataDto->setCurrentMultipartFileInfoIndex(0);
-
-        if (!$this->jobDataDto->getIsMultipartBackup()) {
-            $this->stepsDto->setTotal(1);
-            $this->jobDataDto->setMultipartFilesInfo([
-                [
-                    'category'              => '',
-                    'index'                 => null,
-                    'filePath'              => null,
-                    'destination'           => null,
-                    'status'                => 'Pending',
-                    'sizeBeforeAddingIndex' => 0,
-                ],
-            ]);
-
-            return;
-        }
-
-        $this->stepsDto->setTotal(count($this->jobDataDto->getMultipartFilesInfo()));
+        $this->stepsDto->setTotal(1);
+        $this->jobDataDto->setMultipartFilesInfo([
+            [
+                'category'              => '',
+                'index'                 => null,
+                'filePath'              => null,
+                'destination'           => null,
+                'status'                => 'Pending',
+                'sizeBeforeAddingIndex' => 0,
+            ],
+        ]);
     }
 
 
@@ -193,11 +202,39 @@ class FinalizeBackupTask extends BackupTask
 
     protected function prepareArchiver()
     {
-        $multipartFilesInfo     = $this->jobDataDto->getMultipartFilesInfo();
         $this->currentFileIndex = $this->jobDataDto->getCurrentMultipartFileInfoIndex();
-        $this->currentFileInfo  = $multipartFilesInfo[$this->currentFileIndex];
+        $this->currentFileInfo  = $this->getCurrentMultipartFileInfo();
         $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER);
         $this->archiver->setIsLocalBackup($this->jobDataDto->isLocalBackup());
+    }
+
+
+
+
+    protected function hasMultipartFileInfoForCurrentIndex(): bool
+    {
+        $multipartFilesInfo = $this->jobDataDto->getMultipartFilesInfo();
+
+        return isset($multipartFilesInfo[$this->jobDataDto->getCurrentMultipartFileInfoIndex()]);
+    }
+
+
+
+
+
+
+
+
+    protected function getCurrentMultipartFileInfo(): array
+    {
+        $multipartFilesInfo = $this->jobDataDto->getMultipartFilesInfo();
+        $currentIndex       = $this->jobDataDto->getCurrentMultipartFileInfoIndex();
+
+        if (!isset($multipartFilesInfo[$currentIndex])) {
+            throw MissingBackupPartException::forPartIndex($currentIndex);
+        }
+
+        return $multipartFilesInfo[$currentIndex];
     }
 
 

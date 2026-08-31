@@ -11,7 +11,6 @@ namespace WPStaging\Framework\Notices;
 
 
 
-
 class NextGenEngineNotice extends BooleanNotice
 {
 

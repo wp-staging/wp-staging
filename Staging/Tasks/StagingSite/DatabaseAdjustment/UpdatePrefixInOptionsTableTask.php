@@ -4,6 +4,7 @@ namespace WPStaging\Staging\Tasks\StagingSite\DatabaseAdjustment;
 
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Traits\WordPressOptionNameTrait;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
 
 
@@ -11,6 +12,8 @@ use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
 
 class UpdatePrefixInOptionsTableTask extends DatabaseAdjustmentTask
 {
+    use WordPressOptionNameTrait;
+
 
 
 
@@ -49,33 +52,30 @@ class UpdatePrefixInOptionsTableTask extends DatabaseAdjustmentTask
     {
         $optionsTableName = $this->getOptionsTableName();
         $this->logger->info("Updating database prefix in {$optionsTableName}.");
-        if ($this->isTableExcluded('usermeta')) {
+        if ($this->isTableExcluded('options')) {
             $this->logger->warning("Table {$optionsTableName} is excluded. Skipping.");
             return true;
         }
 
- 
-        $optionsToIgnore = [
-            'wp_mail_smtp',
-            'wp_mail_smtp_version',
-            'wp_mail_smtp_debug',
-            'db_version',
-        ];
-
-        $optionsToIgnore = array_merge($optionsToIgnore, Hooks::applyFilters('wpstg_data_excl_rows', []));
+        $optionsToIgnore = $this->getOptionsToIgnore();
 
         $where = "";
+        $parameters = [
+            $currentPrefix,
+            $stagingPrefix,
+            $currentPrefix . "%",
+        ];
+
         foreach ($optionsToIgnore as $optionName) {
-            $where .= " AND option_name <> '" . $optionName . "'";
+            $where .= " AND option_name <> %s";
+            $parameters[] = $optionName;
         }
 
         $this->logger->debug("SQL: UPDATE IGNORE {$optionsTableName} SET option_name = replace(option_name, {$currentPrefix}, {$stagingPrefix}) WHERE option_name LIKE {$currentPrefix}%{$where}");
 
         $update = $this->executeQuery(
             "UPDATE IGNORE `{$optionsTableName}` SET `option_name` = replace(option_name, %s, %s) WHERE `option_name` LIKE %s{$where};",
-            $currentPrefix,
-            $stagingPrefix,
-            $currentPrefix . "%"
+            ...$parameters
         );
 
         if ($update === false) {
@@ -85,5 +85,21 @@ class UpdatePrefixInOptionsTableTask extends DatabaseAdjustmentTask
 
         $this->logger->info("Database prefix successfully updated from `{$currentPrefix}` to `{$stagingPrefix}` in {$optionsTableName}.");
         return true;
+    }
+
+    protected function getOptionsToIgnore(): array
+    {
+        $optionsToIgnore = [
+            'wp_mail_smtp',
+            'wp_mail_smtp_version',
+            'wp_mail_smtp_debug',
+            'db_version',
+        ];
+
+        return array_merge(
+            $optionsToIgnore,
+            $this->getPrefixIndependentWordPressOptionNames(),
+            Hooks::applyFilters('wpstg_data_excl_rows', [])
+        );
     }
 }

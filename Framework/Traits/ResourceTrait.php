@@ -400,7 +400,7 @@ trait ResourceTrait
     {
  
         if (!isset($this->resourceTraitSettings)) {
-            $this->resourceTraitSettings = json_decode(json_encode(get_option('wpstg_settings', [])));
+            $this->resourceTraitSettings = (object)get_option('wpstg_settings', []);
         }
 
         if ($cpuLoadSetting === null) {

@@ -1,6 +1,6 @@
 <?php
 
-$settings      = json_decode(json_encode(get_option('wpstg_settings', [])));
+$settings      = (object)get_option('wpstg_settings', []);
 $maxFileSizeMb = isset($settings->maxFileSize) ? $settings->maxFileSize : '8';
 ?>
 <div class="wpstg-callout wpstg-callout-info wpstg-mt-4 wpstg-rounded-lg wpstg-px-4 wpstg-py-3">

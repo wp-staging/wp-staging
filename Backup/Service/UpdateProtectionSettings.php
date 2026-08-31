@@ -54,7 +54,11 @@ class UpdateProtectionSettings
 
     public function setEnabled(bool $isEnabled)
     {
-        $settings = json_decode(json_encode(get_option('wpstg_settings', [])), true);
+        $settings = get_option('wpstg_settings', []);
+        if (is_object($settings)) {
+            $settings = (array)$settings;
+        }
+
         if (!is_array($settings)) {
             $settings = [];
         }

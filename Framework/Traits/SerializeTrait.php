@@ -2,8 +2,6 @@
 
 namespace WPStaging\Framework\Traits;
 
-use __PHP_Incomplete_Class;
-
 trait SerializeTrait
 {
 
@@ -72,7 +70,7 @@ trait SerializeTrait
         while ($pending !== []) {
             list($current, $depth) = array_pop($pending);
 
-            if ($current instanceof __PHP_Incomplete_Class) {
+            if ($current instanceof \__PHP_Incomplete_Class) {
                 return true;
             }
 

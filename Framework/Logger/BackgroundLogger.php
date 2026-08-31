@@ -6,6 +6,7 @@ use WP_REST_Request;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Rest\Rest;
+use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Traits\SetTimeLimitTrait;
 
 
@@ -29,6 +30,11 @@ class BackgroundLogger
 
 
 
+    private $auth;
+
+
+
+
 
     const STALE_JOB_THRESHOLD_SECONDS = 60;
 
@@ -42,10 +48,11 @@ class BackgroundLogger
 
     private $lastTaskTitle = '';
 
-    public function __construct(SseEventCache $sseEventCache, JobTransientCache $jobTransientCache)
+    public function __construct(SseEventCache $sseEventCache, JobTransientCache $jobTransientCache, Auth $auth)
     {
         $this->sseEventCache     = $sseEventCache;
         $this->jobTransientCache = $jobTransientCache;
+        $this->auth              = $auth;
     }
 
 
@@ -84,6 +91,50 @@ class BackgroundLogger
         }
 
         return true;
+    }
+
+
+
+
+    public function ajaxCheckJobOutcome()
+    {
+        if (!$this->auth->isAuthenticatedRequest()) {
+            wp_send_json_error(null, 401);
+            return;
+        }
+
+        $token = isset($_POST['token']) ? sanitize_text_field($_POST['token']) : '';
+        $job   = $this->jobTransientCache->findJobById($token);
+        if ($job === null) {
+            wp_send_json(['status' => 'unknown']);
+            return;
+        }
+
+        $status = isset($job['status']) ? (string)$job['status'] : '';
+
+        wp_send_json([
+            'status'   => $status,
+            'message'  => $this->getOutcomeMessage($status, $job),
+            'severity' => isset($job['severity']) ? (string)$job['severity'] : '',
+        ]);
+    }
+
+
+
+
+
+
+    private function getOutcomeMessage(string $status, array $job): string
+    {
+        if ($status === JobTransientCache::STATUS_SUCCESS) {
+            return esc_html__('Job completed successfully', 'wp-staging');
+        }
+
+        if ($status !== JobTransientCache::STATUS_FAILED) {
+            return '';
+        }
+
+        return !empty($job['message']) ? esc_html((string)$job['message']) : esc_html__('Job failed', 'wp-staging');
     }
 
 

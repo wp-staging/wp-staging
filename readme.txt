@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.11.1
+Stable tag: 4.11.2
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,62 +283,42 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.11.1 =
-* New: Show backup prompt before updating plugins, themes, or WordPress core. The recovery backup then runs in the background, and further updates queue behind it instead of asking again. #4028
-* Enh: Allow the free version to back up other folders in the WordPress root directory. #5532
-* Enh: Log the source and the destination table name while copying database tables, so the clone log no longer reads as if it copies staging tables. #5536
-* Enh: Record a generic analytics event when an upgrade CTA is clicked, so the plugin side of the upgrade funnel can be compared with the website arrivals it produces. #5640
-* Enh: Record a stable error code alongside the translated message so failure causes can be counted reliably. #5510
-* Enh: Record whether a site still has WP STAGING, by noting in the anonymous usage data when the plugin is switched on or off, together with the reason given when switching it off. #5586
-* Enh: Show the selected table count against the site prefix total when creating a staging site, so a plugin-heavy site no longer looks like it copies every database table. #5536
-* Enh: Show the task-selector first run to every new single-site WP STAGING Free installation. #5646
-* Fix: A backup request left over from a staging site that never finished no longer blocks the backup offer on the next staging site you create. #5618
-* Fix: A backup schedule saved during the very minute it is set for now waits for its next occurrence, instead of being registered for a time that has just passed. #5617
-* Fix: A backup that was still waiting or running when the first-run setup finished now starts and is reported as completed. #5577
-* Fix: Cancel the backup scheduled after a staging site when that staging site creation is cancelled. #5737
-* Fix: Convert a raw byte count to megabytes so the backup speed index is no longer always zero. #5590
-* Fix: Drop the plugin dependencies from the shipped autoload classmap, which listed them at paths the build deletes. #5693
-* Fix: Fail the restore when a database table rename fails, instead of reporting success on a half-swapped database. #5756
-* Fix: Harden Classic staging row-exclusion filter values before SQL use. #5790
-* Fix: Hide the "Create a Staging Site" onboarding card and post-backup offer on WordPress.com-hosted sites, which do not support staging. #5709
-* Fix: Leave the hosting provider's own must-use plugin files out of the staging site when creating, updating and resetting it. #5643
-* Fix: Pass a string to esc_attr in the onboarding capability icon. #5562
-* Fix: Preserve unrelated subsite tables and user metadata during network site restores. (Pro) #5653
-* Fix: Prevent an error when opening Push Changes with legacy settings. (Pro) #5829
-* Fix: Provision a fresh test environment again when the WordPress template is a mounted folder. #5802
-* Fix: Push summary now reflects the configured file-size limit instead of always showing 8 MB. #5560
-* Fix: Refuse a second start that arrives while another request is already initializing a job, instead of letting both overwrite each other. #5516
-* Fix: Reject non-stdClass serialized objects in the Pro search-replace routine to prevent PHP object injection, and add a sniff requiring an allowed_classes option on unserialize(). #5668
-* Fix: Report a temporary or backup table that could not be dropped during cleanup, instead of logging it as deleted. #5756
-* Fix: Report smart exclusions as switched off in WP Staging Free, where they never run, instead of on with nothing excluded. #5635
-* Fix: Restore each multisite subsite with its own URLs instead of always the main site. #5633
-* Fix: Restore the light icon when dark mode requests a dark variant that does not exist. #5739
-* Fix: Retry a table drop that a lock blocked, and give the lock a bounded wait instead of holding the request open. #5756
-* Fix: Scheduled backups are now included in the usage statistics, which previously only counted backups started by hand. #5507
-* Fix: Show a notice instead of a critical error when the selected backup items contain no files. #5515
-* Fix: Show the backup creation button in the Next-Gen staging site creation process modal and make the Pro Next-Gen engine release a queued backup once the staging site is created. #5776
-* Fix: Skip the commit-lookup guardrail when the API does not answer, rather than failing it. #5673
-* Fix: Stop a restore before it imports the database when tables of an earlier restore could not be removed. #5756
-* Fix: Stop emitting a deprecation notice on PHP 8.4 and 8.5 for parameters that accept null. #5758
-* Fix: Stop renaming a backup created on Windows from reporting it as damaged. #5768
-* Fix: Stop sending Remote Sync analytics events before the job finishes, which left most syncs recorded without an outcome. #5504
-* Fix: Stop the Network Admin staging page from getting stuck on unresolved analytics consent. #5628
-* Fix: Stop the release publish phases from losing a successful prepare run. #5779
-* Fix: Type the database rows WordPress 7.1 now describes precisely, so static analysis passes again. #5754
-* Fix: Write one line terminator in the backup format on every platform, so a backup created on Windows matches the one created on Linux. #5768
-* Dev: Add a shutdown-worktree skill that stops the containers before removing the folder. #5798
-* Dev: Add the 2026-08-14 reading of the free_onboarding_v1 experiment with a D1 cut that matures before the 7-day windows close, and make the reading a one-command daily job. #5609
-* Dev: Cancel a Fast tests run when a newer push supersedes it, and keep PHP 8.0 and 8.1 for the full matrix. #5786
-* Dev: Fold the four cheap fast-test jobs into a single static_checks job. #5792
-* Dev: Give the Playwright E2E jobs enough time to finish when the runner has to pull its Docker images first. #5824
-* Dev: Give the Windows unit tests back the time they need to finish. #5806
-* Dev: Keep the deploy API mu-plugin only in the wp-staging.com repo, so a copy carrying the object-cache flush that broke the 6.11.0 release cannot be uploaded to production again. #5741
-* Dev: Move the skills to .agents so every agent can read them, not only Claude. #5733
-* Dev: Raise the release pre-flight floor for the deploy API to 1.4.0, so a production rollback to a mu-plugin without the changelog-anchor guard blocks the release instead of corrupting the changelog page. #5799
-* Dev: Raise the self-hosted GitHub Actions fleet on xsimulator.net from eight runners to twelve. #5789
-* Dev: Say what make tests_guardrails checks, and cover the Makefile baseline comparison with its own test. #5780
-* Dev: Stop running environment-independent e2e tests once per environment, and split the longest pro jobs. #5833
-* Dev: Work through the classes the wpfree sieves deferred, and drop the transient users. #5703
+= 4.11.2 =
+* New: Add notification badge to admin sidebar when a scheduled backup fails or is missed #1579
+* Fix: Always store the WP STAGING settings as an array, so a stored object can no longer break saving, restoring or pushing. #5863
+* Fix: Cancel only the Remote Sync pull the request verified, never a job that replaced it. #5797
+* Fix: Clean up the temporary files and tables of a cancelled onboarding backup. #5796
+* Fix: End a background cancellation that cannot be prepared cleanly instead of with a PHP error. #5797
+* Fix: End a remote storage upload the provider refuses instead of retrying it on every request. #5822
+* Fix: Generate temporary-login link IDs server-side with a secure random generator and throttle the login-link path, so links can no longer be guessed from a predictable timestamp or brute-forced. #5810
+* Fix: Preserve WordPress metadata keys when cloning with the Next-Gen engine. #5354
+* Fix: Prevent duplicate processing when running consecutive staging site pushes. (Pro) #5364
+* Fix: Reject cloud storage OAuth callbacks that were not started from the plugin. #5809
+* Fix: Reject nested legacy object payloads during search-replace and stop a rest_route parameter from bypassing the staging site login form. #5625
+* Fix: Report MySQL as the database engine in usage analytics instead of leaving it undefined. #5508
+* Fix: Report a pCloud upload that the remote refused as failed instead of finished. #5822
+* Fix: Require administrator rights to complete Google Drive API authentication, so a low-privileged user can no longer trigger the OAuth token exchange. #5812
+* Fix: Retry a backup upload the storage provider refused for rate limiting instead of failing it, and stop reporting a throttled Google Drive as a full one. #5848
+* Fix: Safely handle custom excluded option names during Next-Gen cloning. #5354
+* Fix: Show the backup creation offer in Free and Pro staging modals. #5775
+* Fix: Stop BackgroundLogger showing a false "Something went wrong" error for background jobs that already finished successfully. #5777
+* Fix: Stop a superseded push setup response from replacing the open push modal. #5874
+* Fix: Stop the backup finalize step from writing an unsigned, corrupted backup after an interrupted request. #5374
+* Fix: Stop the browser console error guard from failing E2E tests on console noise it does not own. #5853
+* Fix: Stop the corner update-protection modal from swallowing clicks on the rest of the page. #5882
+* Dev: Add PHP 8.5 to the fast tests suite. #5497
+* Dev: Add a browsable, testable worktree. #5875
+* Dev: Describe in the release docs what a rollback restores and what it leaves behind. #5840
+* Dev: Extend work-on-issue and defer human review requests. #5865
+* Dev: Extract the self-review rule into a review-own-diff skill the other skills invoke, and prove any deletion a review agent proposes against the merge-base. #5866
+* Dev: Fail the guardrails when a file the standalone restorer bundles relies on a top-level import. #5818
+* Dev: Prove the rest_route staging bypass over HTTP instead of against a stub of WordPress core. #5878
+* Dev: Record in the PR workflow that Copilot reviews first and is answered before a human is asked. #5842
+* Dev: Remove the ready-to-merge label when a review finds blocking issues. #5890
+* Dev: Report any new direct read of the wpstg_settings option, so no reader can assume its stored shape unnoticed. #5835
+* Dev: Run the release suite's cloud storage stage three PHP versions at a time instead of one, within the providers' documented rate limits. #5848
+* Dev: Stop an unrelated label from cancelling the fast-tests run it was added beside. #5820
+* Dev: Stop the fast tests label claiming a full pass on a two-version run. #5872
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

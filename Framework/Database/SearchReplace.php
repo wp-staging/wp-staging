@@ -2,7 +2,7 @@
 
 namespace WPStaging\Framework\Database;
 
-use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Traits\ApplyFiltersTrait;
 use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Framework\Traits\UrlTrait;
@@ -13,6 +13,7 @@ use WPStaging\Framework\Traits\UrlTrait;
 
 class SearchReplace
 {
+    use ApplyFiltersTrait;
     use DebugLogTrait;
     use SerializeTrait;
     use UrlTrait;
@@ -135,7 +136,7 @@ class SearchReplace
             return $data;
         }
 
-        return Hooks::applyFilters(self::FILTER_REPLACE_EXTENDED_DATA, $data, $this->search, $this->replace);
+        return $this->applyFilters(self::FILTER_REPLACE_EXTENDED_DATA, $data, $this->search, $this->replace);
     }
 
     public function replaceWpBakeryValues($matched)
@@ -226,43 +227,14 @@ class SearchReplace
             return $this->strReplace($data);
         }
 
- 
-        if (strpos($data, 'O:3:"PDO":0:') !== false) {
+        $rejected     = false;
+        $unserialized = $this->safeMaybeUnserialize($data, [\stdClass::class], $rejected);
+
+        if ($rejected || $unserialized === false) {
             return $data;
         }
 
- 
- 
- 
-        if (strpos($data, 'O:8:"DateTime":0:') !== false) {
-            return $data;
-        }
-
- 
- 
- 
-        if (strpos($data, 'O:') !== false && preg_match_all('@O:\d+:"([^"]+)"@', $data, $match) && !empty($match) && !empty($match[1])) {
-            foreach ($match[1] as $value) {
-                if ($value !== 'stdClass') {
-                    return $data;
-                }
-            }
-
-            unset($match);
-        }
-
-        $unserialized = false;
-        try {
-            $unserialized = @unserialize($data);
-        } catch (\Throwable $e) {
-            $this->debugLog('replaceString. Can not unserialize data. Error: ' . $e->getMessage() . ' Data: ' . $data);
-        }
-
-        if ($unserialized !== false) {
-            return serialize($this->walker($unserialized));
-        }
-
-        return $data;
+        return serialize($this->walker($unserialized));
     }
 
     private function replaceArray(array $data)
