@@ -24,7 +24,6 @@ use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 use WPStaging\Framework\Rest\Rest;
-use WPStaging\Backup\Storage\Providers;
 use WPStaging\Framework\Settings\DarkMode;
 use WPStaging\Staging\Service\StagingEngine;
 
@@ -61,16 +60,12 @@ class Assets
  
     private $i18n;
 
- 
-    private $providers;
-
-    public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent, I18n $i18n, Providers $providers)
+    public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent, I18n $i18n)
     {
         $this->accessToken      = $accessToken;
         $this->settings         = $settings;
         $this->analyticsConsent = $analyticsConsent;
         $this->i18n             = $i18n;
-        $this->providers        = $providers;
     }
 
 
@@ -319,9 +314,6 @@ class Assets
 
  
         Hooks::doAction(BackupServiceProvider::ACTION_BACKUP_ENQUEUE_SCRIPTS);
-
- 
-        wp_localize_script('wpstg-backup', 'wpstgAllStorages', $this->providers->getStorages(true));
 
  
         if (WPStaging::isPro()) {

@@ -22,37 +22,26 @@ $extensionsList     = implode(', ', $extensionsFormatted);
 $maxFileSizeDisplay = size_format($maxFileSize);
 $zipMaxSizeDisplay  = isset($extensionMaxSizes['zip']) ? size_format((int)$extensionMaxSizes['zip']) : false;
 ?>
-<div class="wpstg-callout wpstg-callout-info" style="margin: 20px 0 0;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-    <div class="wpstg-text-sm" style="flex: 1;">
-        <div class="wpstg-backup-filters-toggle" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
-            <span class="wpstg-m-0 wpstg-text-sm"><?php echo esc_html__('Some files are excluded from backups by default.', 'wp-staging'); ?></span>
-            <svg class="wpstg-backup-filters-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-left: 8px; transition: transform 0.15s ease;"><path d="m6 9 6 6 6-6"/></svg>
-        </div>
-        <div class="wpstg-backup-filters-details" style="display: none;">
-            <ul class="wpstg-m-0 wpstg-mt-1" style="list-style: none; padding: 0; font-size: inherit;">
-                <li><?php echo wp_kses_post(sprintf(__('&bull; Files with these extensions: %s', 'wp-staging'), $extensionsList)); ?></li>
-                <li><?php echo wp_kses_post(sprintf(__('&bull; Files larger than <strong>%s</strong>', 'wp-staging'), esc_html($maxFileSizeDisplay))); ?></li>
-                <?php if ($zipMaxSizeDisplay) : ?>
-                    <li><?php echo wp_kses_post(sprintf(__('&bull; <code style="font-size:inherit">.zip</code> files larger than <strong>%s</strong>', 'wp-staging'), esc_html($zipMaxSizeDisplay))); ?></li>
-                <?php endif; ?>
-            </ul>
-            <p class="wpstg-m-0 wpstg-mt-2">
-                <a href="https://wp-staging.com/docs/actions-and-filters/#Exclude_a_file_extension_from_backup" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('Customize these settings', 'wp-staging'); ?></a>
-            </p>
-        </div>
+<div class="wpstg-backup-filters-note wpstg-mt-2.5">
+    <button type="button" class="dark:hover:wpstg-text-slate-200 dark:wpstg-text-slate-400 focus-visible:wpstg-outline-none focus-visible:wpstg-ring-2 hover:wpstg-text-gray-700 wpstg-backup-filters-toggle wpstg-bg-transparent wpstg-border-0 wpstg-cursor-pointer wpstg-flex wpstg-gap-1.5 wpstg-items-start wpstg-p-0 wpstg-text-[12px] wpstg-text-left wpstg-w-full" aria-expanded="false">
+        <span class="wpstg-backup-filters-icon wpstg-relative wpstg-top-px wpstg-shrink-0 wpstg-text-gray-400 dark:wpstg-text-slate-500" aria-hidden="true">
+            <svg class="dark:wpstg-text-slate-500 wpstg-h-4 wpstg-w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4"/>
+                <path d="M12 8h.01"/>
+            </svg>
+        </span>
+        <span class="dark:wpstg-text-gray-400 wpstg-items-center wpstg-leading-5 wpstg-text-gray-400"><?php echo esc_html__('Default exclusions: cache files, logs, temporary files, and backup archives are skipped.', 'wp-staging'); ?></span>
+        <svg class="wpstg-backup-filters-chevron wpstg-ml-auto wpstg-mt-px wpstg-shrink-0 wpstg-text-slate-450 wpstg-transition-transform dark:wpstg-text-slate-500" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="wpstg-backup-filters-details wpstg-ml-5 wpstg-mt-2 wpstg-text-xs wpstg-leading-5 wpstg-text-slate-550 dark:wpstg-text-slate-400 [&_a]:wpstg-text-blue-600 dark:[&_a]:wpstg-text-blue-300" hidden>
+        <ul class="wpstg-mb-1.5 wpstg-mt-0 wpstg-pl-4">
+            <li><?php echo wp_kses_post(sprintf(__('Files with these extensions: %s', 'wp-staging'), $extensionsList)); ?></li>
+            <li><?php echo wp_kses_post(sprintf(__('Files larger than <strong>%s</strong>', 'wp-staging'), esc_html($maxFileSizeDisplay))); ?></li>
+            <?php if ($zipMaxSizeDisplay) : ?>
+                <li><?php echo wp_kses_post(sprintf(__('<code style="font-size:inherit">.zip</code> files larger than <strong>%s</strong>', 'wp-staging'), esc_html($zipMaxSizeDisplay))); ?></li>
+            <?php endif; ?>
+        </ul>
+        <a href="https://wp-staging.com/docs/actions-and-filters/#Exclude_a_file_extension_from_backup" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('Customize these settings', 'wp-staging'); ?></a>
     </div>
 </div>
-<script>
-document.addEventListener('click', function(e) {
-    var toggle = e.target.closest('.wpstg-backup-filters-toggle');
-    if (!toggle) return;
-    var details = toggle.nextElementSibling;
-    var chevron = toggle.querySelector('.wpstg-backup-filters-chevron');
-    if (details && details.classList.contains('wpstg-backup-filters-details')) {
-        var isHidden = details.style.display === 'none';
-        details.style.display = isHidden ? 'block' : 'none';
-        if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
-    }
-});
-</script>

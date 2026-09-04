@@ -2,7 +2,7 @@
 
 namespace WPStaging\Staging\Tasks\StagingSite\DatabaseAdjustment;
 
-use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Database\OptionNameExclusions;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Traits\WordPressOptionNameTrait;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
@@ -89,17 +89,11 @@ class UpdatePrefixInOptionsTableTask extends DatabaseAdjustmentTask
 
     protected function getOptionsToIgnore(): array
     {
-        $optionsToIgnore = [
-            'wp_mail_smtp',
-            'wp_mail_smtp_version',
-            'wp_mail_smtp_debug',
-            'db_version',
-        ];
-
-        return array_merge(
-            $optionsToIgnore,
-            $this->getPrefixIndependentWordPressOptionNames(),
-            Hooks::applyFilters('wpstg_data_excl_rows', [])
+        $optionNames = array_merge(
+            OptionNameExclusions::getFilteredOptionNames(),
+            $this->getPrefixIndependentWordPressOptionNames()
         );
+
+        return array_values(array_unique($optionNames));
     }
 }

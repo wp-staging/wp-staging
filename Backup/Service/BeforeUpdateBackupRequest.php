@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Service;
 
+use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Job\JobTransientCache;
 
@@ -139,6 +140,25 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
         $this->markFailed();
 
         return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
+    protected function jobDataIdentifiesOwnBackup($jobDataDto, $job): bool
+    {
+        if (!$jobDataDto instanceof JobBackupDataDto || !$jobDataDto->getIsBeforeUpdateBackup()) {
+            return false;
+        }
+
+        return $job === null;
     }
 
 

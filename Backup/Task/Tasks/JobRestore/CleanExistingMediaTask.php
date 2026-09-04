@@ -55,12 +55,30 @@ class CleanExistingMediaTask extends RestoreTask
 
     public function prepareCleaningMedia()
     {
-        if ($this->stepsDto->getTotal() === 0) {
-            $this->taskQueue->seek(0);
+        if ($this->stepsDto->getTotal() !== 0) {
+            return;
+        }
+
+        $this->announceDeletion();
+
+        $this->taskQueue->seek(0);
 
  
-            $this->stepsDto->setTotal(100);
-        }
+        $this->stepsDto->setTotal(100);
+    }
+
+
+
+
+
+
+    protected function announceDeletion()
+    {
+        $this->logger->info(sprintf(
+            esc_html__('%s: Deleting all files and folders in %s. This cannot be undone.', 'wp-staging'),
+            static::getTaskTitle(),
+            $this->filesystem->getPathRelativeToAbspath($this->directory->getUploadsDirectory())
+        ));
     }
 
     public function execute()

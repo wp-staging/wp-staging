@@ -325,6 +325,7 @@ class Uninstall
             'wpstg_execute',
             'wpstg_emails_disabled',
             'wpstg_woo_scheduler_disabled',
+            'wpstg_optimizer_disabled_after_fatal',
             'wpstg_clone_excluded_files_list',
  
             'wpstg_clone_excluded_gd_files_list',
@@ -355,6 +356,8 @@ class Uninstall
             'wpstg_cli_notice_hidden_forever',
             'wpstg_cli_dock_cta_shown',
             'wpstg_cli_notice_dismissed_until',
+            'wpstg_backup_notice_is_closed',
+            'wpstg_backup_notice_remind_me',
             'wpstg_completed_upgrades',
             'wpstg_next_gen_engine_notice',
             'wpstg_staging_engine_preference',
@@ -443,6 +446,7 @@ class Uninstall
             'wpstg_permalinks_do_purge',
             'wpstg_purge_litespeed_cache',
             'wpstg_activation_redirect',
+            'wpstg_optimizer_check_secret',
             'wpstg_pro_activation_redirect',
             'wpstg_weekly_version_update',
             'wpstg_rate_limit_update_check',
@@ -451,6 +455,7 @@ class Uninstall
             'wpstg_email_notification_access_token',
             'wpstg.directory_listing.last_checked',
             'wpstg_push_size_cache',
+            'wpstg_magic_login_check_failures',
         ];
     }
 

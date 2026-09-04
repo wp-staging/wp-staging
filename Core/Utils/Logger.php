@@ -9,6 +9,7 @@
 namespace WPStaging\Core\Utils;
 
 use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\WpAdapter;
@@ -226,7 +227,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $log = [
             "type"    => $type,
             "date"    => current_time(self::LOG_DATETIME_FORMAT),
-            "message" => html_entity_decode(wp_kses($message, [])),
+            "message" => str_replace('<', '&lt;', html_entity_decode((string)$message, ENT_QUOTES, 'UTF-8')),
         ];
 
         $this->messages[] = $log;
@@ -499,8 +500,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $this->add(sprintf('- File Copy Limit : %s', ($globalSettings->fileLimit ?? 'Not Set')), Logger::TYPE_INFO_SUB);
         $this->add(sprintf('- Maximum File Size : %s', ($globalSettings->maxFileSize ?? 'Not Set')), Logger::TYPE_INFO_SUB);
         $this->add(sprintf('- File Copy Batch Size : %s', ($globalSettings->batchSize ?? 'Not Set')), Logger::TYPE_INFO_SUB);
-        $isOptimizerActive = isset($globalSettings->optimizer) ? (bool)$globalSettings->optimizer : false;
-        $this->add(sprintf('- Optimizer Active : %s', ($isOptimizerActive ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        $this->add(sprintf('- Optimizer Active : %s', $this->getOptimizerStatus($globalSettings)), Logger::TYPE_INFO_SUB);
     }
 
 
@@ -654,5 +654,21 @@ class Logger implements LoggerInterface, ShutdownableInterface
                 $this->add(sprintf("- %s : %s", $theme->get('Name'), $theme->get('Version')), self::TYPE_INFO_SUB);
             }
         }
+    }
+
+
+
+
+
+
+
+
+    private function getOptimizerStatus($globalSettings): string
+    {
+        if (get_option(Optimizer::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL) === '1') {
+            return 'False (disabled after a plugin conflict)';
+        }
+
+        return isset($globalSettings->optimizer) && $globalSettings->optimizer ? 'True' : 'False';
     }
 }

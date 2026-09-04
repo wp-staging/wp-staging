@@ -38,6 +38,11 @@ class MailSender
 
 
 
+    protected $replyTo;
+
+
+
+
     protected $addFooter;
 
 
@@ -54,6 +59,7 @@ class MailSender
         $this->notifications = $notifications;
         $this->attachments   = [];
         $this->recipient     = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        $this->replyTo       = '';
         $this->addFooter     = false;
         $this->sanitize      = $sanitize;
     }
@@ -74,6 +80,15 @@ class MailSender
     public function setRecipient(string $recipient)
     {
         $this->recipient = $recipient;
+    }
+
+
+
+
+
+    public function setReplyTo(string $replyTo)
+    {
+        $this->replyTo = $replyTo;
     }
 
 
@@ -117,6 +132,7 @@ class MailSender
                     'subject'      => $subject,
                     'body'         => $body,
                     'recipient'    => $this->recipient,
+                    'reply_to'     => $this->replyTo,
                     'attachments'  => implode(',', $attachments),
                     'footer'       => $this->addFooter,
                     'details'      => $details,
@@ -178,12 +194,13 @@ class MailSender
         }
 
         $attachments = $this->getPreparedAttachments();
+        $replyTo     = isset($_POST['reply_to']) ? sanitize_email($_POST['reply_to']) : '';
         $result      = false;
         try {
             if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
-                $result = $this->notifications->sendEmailAsHTML(sanitize_email($_POST['recipient']), $subject, $body, '', $details, $attachments);
+                $result = $this->notifications->sendEmailAsHTML(sanitize_email($_POST['recipient']), $subject, $body, '', $details, $attachments, $replyTo);
             } else {
-                $result = $this->notifications->sendEmail(sanitize_email($_POST['recipient']), $subject, $body, '', $attachments, $footer);
+                $result = $this->notifications->sendEmail(sanitize_email($_POST['recipient']), $subject, $body, '', $attachments, $footer, $replyTo);
             }
 
             $this->cleanupAttachments($attachments);

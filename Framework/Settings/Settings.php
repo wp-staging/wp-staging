@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Settings;
 
+use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\DTO\Settings as SettingsDTO;
 use WPStaging\Framework\Facades\Sanitize as SanitizeFacade;
@@ -114,6 +115,13 @@ class Settings
         }
 
         $sanitized = $this->sanitizeData($data);
+
+ 
+        if ($isFormSubmission && !empty($sanitized['optimizer']) && get_option(Optimizer::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL) === '1') {
+ 
+            $optimizer = WPStaging::make(Optimizer::class);
+            $optimizer->clearDisabledAfterFatalFlag();
+        }
 
         if ($isFormSubmission && function_exists('add_settings_error')) {
             if ($showErrorToggleStagingSiteCloning) {

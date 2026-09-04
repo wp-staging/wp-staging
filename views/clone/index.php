@@ -9,7 +9,6 @@
 
 use WPStaging\Backup\BackupNextOffer;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Facades\Escape;
@@ -20,8 +19,7 @@ use WPStaging\Framework\Onboarding\OnboardingJourney;
 use WPStaging\Framework\Onboarding\QueuedBackup;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
-$backupNotice = WPStaging::make(BackupPluginsNotice::class);
-$notice       = WPStaging::make(Notices::class);
+$notice = WPStaging::make(Notices::class);
 
 $onboarding = FreeOnboarding::resolve();
 

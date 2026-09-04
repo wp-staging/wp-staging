@@ -222,11 +222,9 @@ class BackupScheduler
             return;
         }
 
-        $firstSchedule = new \DateTime('now', wp_timezone());
         $time          = $jobBackupDataDto->getScheduleTime();
         $recurrence    = $jobBackupDataDto->getScheduleRecurrence();
-        $dayOfWeek     = Cron::extractDayFromSchedule($recurrence);
-        $this->setUpcomingDateTime($firstSchedule, $time, $dayOfWeek, $recurrence);
+        $firstSchedule = $this->getUpcomingScheduleTime(implode(':', $time), $recurrence);
 
         $backupSchedule = [
             'scheduleId'                     => $scheduleId,
@@ -245,7 +243,7 @@ class BackupScheduler
             'isExportingDatabase'            => $jobBackupDataDto->getIsExportingDatabase(),
             'sitesToBackup'                  => $jobBackupDataDto->getSitesToBackup(),
             'storages'                       => $jobBackupDataDto->getStorages(),
-            'firstSchedule'                  => $firstSchedule->getTimestamp(),
+            'firstSchedule'                  => $firstSchedule,
             'isSmartExclusion'               => $jobBackupDataDto->getIsSmartExclusion(),
             'isExcludingSpamComments'        => $jobBackupDataDto->getIsExcludingSpamComments(),
             'isExcludingPostRevision'        => $jobBackupDataDto->getIsExcludingPostRevision(),
@@ -638,6 +636,23 @@ class BackupScheduler
 
  
         throw new \OutOfBoundsException();
+    }
+
+
+
+
+
+
+
+
+
+    public function getUpcomingScheduleTime(string $time, string $scheduleRecurrence): int
+    {
+        $dayOfWeek = Cron::extractDayFromSchedule($scheduleRecurrence);
+        $datetime  = new \DateTime('now', wp_timezone());
+        $this->setUpcomingDateTime($datetime, $time, $dayOfWeek, $scheduleRecurrence);
+
+        return $datetime->getTimestamp();
     }
 
 

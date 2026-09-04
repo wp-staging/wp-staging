@@ -77,6 +77,11 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
 
     protected $isSiteHostedOnWordPressCom = false;
 
+
+
+
+    private $movedAsideDestinations = [];
+
     public function __construct(
         LoggerInterface $logger,
         Cache $cache,
@@ -260,10 +265,16 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
 
     public function enqueueMove(string $source, string $destination)
     {
+        $destination = wp_normalize_path($destination);
+
+        if ($this->hasOriginalSuffix($destination)) {
+            $this->movedAsideDestinations[] = untrailingslashit($destination);
+        }
+
         $this->enqueue([
             'action'      => 'move',
             'source'      => wp_normalize_path($source),
-            'destination' => wp_normalize_path($destination),
+            'destination' => $destination,
         ]);
     }
 
@@ -277,11 +288,46 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
             return;
         }
 
+        $path = wp_normalize_path($path);
+
+        $this->announceQueuedDeletion($path);
+
         $this->enqueue([
             'action'      => 'delete',
             'source'      => '',
-            'destination' => wp_normalize_path($path),
+            'destination' => $path,
         ]);
+    }
+
+
+
+
+
+
+
+
+    protected function announceQueuedDeletion(string $path)
+    {
+        if (in_array(untrailingslashit($path), $this->movedAsideDestinations, true)) {
+            return;
+        }
+
+        $this->logger->info(sprintf(
+            esc_html__('%s: Deleting %s', 'wp-staging'),
+            static::getTaskTitle(),
+            $this->filesystem->getPathRelativeToAbspath($path)
+        ));
+    }
+
+
+
+
+
+    private function hasOriginalSuffix(string $path): bool
+    {
+        $suffix = $this->getOriginalSuffix();
+
+        return substr(untrailingslashit($path), -strlen($suffix)) === $suffix;
     }
 
 

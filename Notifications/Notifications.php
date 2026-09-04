@@ -71,13 +71,15 @@ class Notifications
 
 
 
-    public function sendEmail(string $to, string $subject, string $message, string $from = '', array $attachments = [], bool $isAddFooterMessage = self::ENABLE_FOOTER_MESSAGE): bool
+
+    public function sendEmail(string $to, string $subject, string $message, string $from = '', array $attachments = [], bool $isAddFooterMessage = self::ENABLE_FOOTER_MESSAGE, string $replyTo = ''): bool
     {
         if (empty($this->transporter->emailNotification) || !is_object($this->transporter->emailNotification)) {
             return false;
         }
 
         $this->transporter->emailNotification->setSender($from)
+            ->setReplyTo($replyTo)
             ->setRecipient($to)
             ->setSubject($subject)
             ->setAttachment($attachments)
@@ -115,7 +117,8 @@ class Notifications
 
 
 
-    public function sendEmailAsHTML(string $to, string $subject, string $message = '', string $from = '', array $details = [], array $attachments = []): bool
+
+    public function sendEmailAsHTML(string $to, string $subject, string $message = '', string $from = '', array $details = [], array $attachments = [], string $replyTo = ''): bool
     {
         if (empty($this->transporter->emailNotification) || !is_object($this->transporter->emailNotification)) {
             return false;
@@ -130,6 +133,6 @@ class Notifications
             ->setDetails($details)
             ->generate();
 
-        return $this->sendEmail($to, $subject, $emailTemplate, $from, $attachments, false);
+        return $this->sendEmail($to, $subject, $emailTemplate, $from, $attachments, false, $replyTo);
     }
 }

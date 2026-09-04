@@ -54,7 +54,7 @@ if (!defined('WPSTG_PLUGIN_URL')) {
 
  
 if (!defined('WPSTG_OPTIMIZER_MUVERSION')) {
-    define('WPSTG_OPTIMIZER_MUVERSION', '1.6.2');
+    define('WPSTG_OPTIMIZER_MUVERSION', '1.6.3');
 }
 
  
