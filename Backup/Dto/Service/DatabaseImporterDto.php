@@ -114,14 +114,20 @@ class DatabaseImporterDto
 
     public function addShortNameTable(string $table, string $prefix): string
     {
-        $shortName = uniqid($prefix) . str_pad((string)rand(0, 999999), 6, '0');
+        $shortName = uniqid($prefix) . str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
         if ($prefix === $this->tmpPrefix) {
             $this->shortTablesToRestore[$shortName] = $table;
-        } elseif ($prefix === DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) {
-            $this->shortTablesToDrop[$shortName] = $table;
+
+            return $shortName;
         }
 
-        return $shortName;
+        if ($prefix === DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) {
+            $this->shortTablesToDrop[$shortName] = $table;
+
+            return $shortName;
+        }
+
+        throw new \RuntimeException(sprintf('Cannot shorten table %s: the prefix %s belongs to neither the restore nor the drop set.', $table, $prefix), DatabaseImporter::SHORT_NAME_MISSING_EXCEPTION_CODE);
     }
 
     public function getShortNameTable(string $table, string $prefix): string
@@ -133,7 +139,12 @@ class DatabaseImporterDto
             $shortTables = $this->shortTablesToDrop;
         }
 
-        return (string)array_search($table, $shortTables);
+        $shortName = array_search($table, $shortTables);
+        if ($shortName === false) {
+            throw new \RuntimeException(sprintf('No shortened name was stored for table %s under prefix %s.', $table, $prefix), DatabaseImporter::SHORT_NAME_MISSING_EXCEPTION_CODE);
+        }
+
+        return (string)$shortName;
     }
 
     public function getFullNameTableFromShortName(string $table, string $prefix): string

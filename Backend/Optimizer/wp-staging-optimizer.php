@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.6.2
+ * Version: 1.6.3
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
  
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.6.2');
+    define('WPSTG_OPTIMIZER_VERSION', '1.6.3');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -45,15 +45,135 @@ if (!function_exists('wpstgIsEnabledOptimizer')) {
 
 
 
+
+
     function wpstgIsEnabledOptimizer(): bool
     {
         $status = (object)get_option('wpstg_settings');
 
-        if ($status && isset($status->optimizer) && $status->optimizer == 1) {
-            return true;
+        if (!isset($status->optimizer) || $status->optimizer != 1) {
+            return false;
+        }
+
+ 
+        return get_option('wpstg_optimizer_disabled_after_fatal') !== '1';
+    }
+}
+
+if (!function_exists('wpstgIsMissingCodeFatal')) {
+
+
+
+
+
+    function wpstgIsMissingCodeFatal(string $message): bool
+    {
+        $patterns = [
+            '/\bCall to undefined (function|method)\b/i',
+            '/\b(class|interface|trait|enum)\s+[\'"“”][^\'"“”]+[\'"“”]\s+not found\b/i',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $message) === 1) {
+                return true;
+            }
         }
 
         return false;
+    }
+}
+
+if (!function_exists('wpstgDisableOptimizerOnFatal')) {
+
+
+
+
+
+    function wpstgDisableOptimizerOnFatal()
+    {
+        wpstgDisableOptimizerForError(error_get_last());
+    }
+
+    register_shutdown_function('wpstgDisableOptimizerOnFatal');
+}
+
+if (!function_exists('wpstgDisableOptimizerForError')) {
+
+
+
+
+    function wpstgDisableOptimizerForError($error)
+    {
+ 
+        if (empty($GLOBALS['wpstgOptimizerEngaged'])) {
+            return;
+        }
+
+        if ($error === null || ($error['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)) === 0) {
+            return;
+        }
+
+        if (!wpstgIsMissingCodeFatal($error['message'])) {
+            return;
+        }
+
+ 
+        $isSwitched = wpstgSwitchToOptimizerBlog();
+
+        if (get_option('wpstg_optimizer_disabled_after_fatal') === '1') {
+            wpstgRestoreBlogAfterOptimizer($isSwitched);
+            return;
+        }
+
+        update_option('wpstg_optimizer_disabled_after_fatal', '1');
+
+        $action  = (isset($_REQUEST['action']) && is_string($_REQUEST['action'])) ? preg_replace('/[^A-Za-z0-9_\-]/', '', sanitize_text_field($_REQUEST['action'])) : '(none)';
+        $message = sprintf(
+            'Optimizer disabled after a fatal error during action "%s": %s in %s:%d',
+            $action,
+            $error['message'],
+            $error['file'],
+            $error['line']
+        );
+
+        if (function_exists('WPStaging\functions\debug_log')) {
+            \WPStaging\functions\debug_log($message, 'error');
+        } else {
+            error_log('WP STAGING: ' . $message);
+        }
+
+        wpstgRestoreBlogAfterOptimizer($isSwitched);
+    }
+}
+
+if (!function_exists('wpstgSwitchToOptimizerBlog')) {
+
+
+
+    function wpstgSwitchToOptimizerBlog(): bool
+    {
+        $blogId = isset($GLOBALS['wpstgOptimizerEngagedBlogId']) ? (int)$GLOBALS['wpstgOptimizerEngagedBlogId'] : 0;
+
+        if ($blogId < 1 || !is_multisite() || get_current_blog_id() === $blogId) {
+            return false;
+        }
+
+        switch_to_blog($blogId);
+
+        return true;
+    }
+}
+
+if (!function_exists('wpstgRestoreBlogAfterOptimizer')) {
+
+
+
+
+    function wpstgRestoreBlogAfterOptimizer(bool $isSwitched)
+    {
+        if ($isSwitched) {
+            restore_current_blog();
+        }
     }
 }
 
@@ -116,6 +236,13 @@ if (!function_exists('wpstgExcludePlugins')) {
             return $plugins;
         }
 
+        $GLOBALS['wpstgOptimizerEngaged'] = true;
+
+ 
+        if (!isset($GLOBALS['wpstgOptimizerEngagedBlogId'])) {
+            $GLOBALS['wpstgOptimizerEngagedBlogId'] = get_current_blog_id();
+        }
+
         foreach ($plugins as $key => $plugin) {
  
             if (strpos($plugin, 'wp-staging') !== false || wpstgIsExcludedPlugin($plugin)) {
@@ -148,6 +275,13 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
 
         if (!wpstgIsOptimizerRequest()) {
             return $plugins;
+        }
+
+        $GLOBALS['wpstgOptimizerEngaged'] = true;
+
+ 
+        if (!isset($GLOBALS['wpstgOptimizerEngagedBlogId'])) {
+            $GLOBALS['wpstgOptimizerEngagedBlogId'] = get_current_blog_id();
         }
 
         foreach ($plugins as $plugin => $timestamp) {

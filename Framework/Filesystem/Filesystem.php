@@ -937,6 +937,25 @@ class Filesystem extends FilterableDirectoryIterator
 
 
 
+    public function getPathRelativeToAbspath(string $path): string
+    {
+        $normalizedPath = $this->normalizePath($path);
+        $rootPath       = $this->normalizePath(ABSPATH, true);
+
+        if (strpos($normalizedPath, $rootPath) !== 0) {
+            return $normalizedPath;
+        }
+
+        return substr($normalizedPath, strlen($rootPath));
+    }
+
+
+
+
+
+
+
+
     public function handleMkdirError(int $errno, string $errstr, string $errfile = '', int $errline = 0): bool
     {
         $this->logs[] = "Unable to create directory. Reason: " . $errstr;

@@ -54,7 +54,7 @@ class UpdateStagingOptionsTable extends DBCloningService
                 continue;
             }
 
-            $this->updateOptionsTable(is_main_site($site->blog_id));
+            $this->updateOptionsTable(is_main_site($site->blog_id), (int)$site->blog_id);
         }
 
         return true;
@@ -65,7 +65,8 @@ class UpdateStagingOptionsTable extends DBCloningService
 
 
 
-    private function updateOptionsTable($isMainSite = false)
+
+    private function updateOptionsTable($isMainSite = false, $sourceBlogId = null)
     {
         $updateOrInsert = [
             'wpstg_is_staging_site'       => 'true',
@@ -137,7 +138,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         }
 
         if ($this->dto->getMainJob() === MainJob::STAGING) {
-            $activePluginsToUpdate = $this->getActivePluginsToUpdate();
+            $activePluginsToUpdate = $this->getActivePluginsToUpdate($sourceBlogId);
             if (is_array($activePluginsToUpdate)) {
                 $update['active_plugins'] = serialize($activePluginsToUpdate);
             }
@@ -216,7 +217,7 @@ class UpdateStagingOptionsTable extends DBCloningService
 
 
 
-    protected function getActivePluginsToUpdate()
+    protected function getActivePluginsToUpdate($sourceBlogId = null)
     {
         $excludedTable = $this->dto->getPrefix() . 'options';
         if (!in_array($excludedTable, $this->dto->getTables())) {
@@ -226,7 +227,11 @@ class UpdateStagingOptionsTable extends DBCloningService
  
         remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
-        $activePlugins = get_option('active_plugins');
+        if ($sourceBlogId === null) {
+            $activePlugins = get_option('active_plugins');
+        } else {
+            $activePlugins = get_blog_option($sourceBlogId, 'active_plugins');
+        }
         if (!is_array($activePlugins)) {
             $activePlugins = [];
         }

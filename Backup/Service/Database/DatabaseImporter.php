@@ -30,6 +30,14 @@ class DatabaseImporter
  
     const RETRY_EXCEPTION_CODE = 2003;
 
+
+
+
+
+
+
+    const SHORT_NAME_MISSING_EXCEPTION_CODE = 2004;
+
  
     const CUSTOM_TMP_PREFIX_FILTER = 'wpstg.restore.tmp_database_prefix';
 

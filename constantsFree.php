@@ -2,7 +2,7 @@
 
  
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '4.11.2');
+    define('WPSTG_VERSION', '4.12.0');
 }
 
  
