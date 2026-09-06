@@ -135,7 +135,7 @@ class AccessToken
             return false;
         }
 
-        return $tokenToValidate === $savedToken;
+        return hash_equals($savedToken, $tokenToValidate);
     }
 
 

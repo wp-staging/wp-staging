@@ -260,38 +260,4 @@ trait WithQueueAwareness
             debug_log('[BG Queue] fire mode -> blocking (consecutive silent failures=' . $newFailures . ')', 'info', false);
         }
     }
-
-
-
-
-
-
-
-
-
-
-    private function getLoginRelatedCookies(): array
-    {
-        if (empty($_COOKIE) || !is_array($_COOKIE)) {
-            return [];
-        }
-
-        $allowed = [];
-        foreach ($_COOKIE as $name => $value) {
-            if (!is_string($name)) {
-                continue;
-            }
-
- 
-            if (!preg_match('/^wordpress_(?:logged_in_|sec_)?[a-f0-9]{32}$/', $name)) {
-                continue;
-            }
-
-            if (is_scalar($value)) {
-                $allowed[$name] = (string)$value;
-            }
-        }
-
-        return $allowed;
-    }
 }

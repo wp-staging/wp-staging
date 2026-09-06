@@ -11,6 +11,7 @@ use WPStaging\Core\Forms\Elements\Text;
 use WPStaging\Core\Forms\Elements\Toggle;
 use WPStaging\Core\Forms\Form;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
+use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Hooks;
@@ -199,9 +200,15 @@ class Settings
             ['1' => ""]
         );
 
+ 
+        $isOptimizerOn = isset($settings->optimizer) ? $settings->optimizer : null;
+        if (get_option(Optimizer::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL) === '1') {
+            $isOptimizerOn = null;
+        }
+
         $this->form["general"]->add(
             $element->setLabel(__("Optimizer", "wp-staging"))
-            ->setDefault((isset($settings->optimizer)) ? $settings->optimizer : null),
+            ->setDefault($isOptimizerOn),
             'wpstg-settings-optimizer'
         );
 

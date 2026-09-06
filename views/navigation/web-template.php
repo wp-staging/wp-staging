@@ -5,7 +5,6 @@
  * @see views/clone/index.php
  * @var bool $isBackupPage
  * @var bool $isStagingPage
- * @var object $backupNotice
  * @var object $license
  * @var bool $isCalledFromIndex
  */
@@ -115,11 +114,6 @@ if (defined('WPSTGPRO_VERSION') && ((!empty($license->license) && $license->lice
                         <span class="wpstg--red-warning"><?php echo esc_html($tab['tab']); ?> </span>
                     <?php endif; ?>
                 </a>
-                <?php
-                if ($tabKey === 'tab-backup') {
-                    $backupNotice->maybeShowBackupNotice();
-                }
-                ?>
             </li>
         <?php endforeach; ?>
         <?php if ($showNewsfeedBadge) : ?>

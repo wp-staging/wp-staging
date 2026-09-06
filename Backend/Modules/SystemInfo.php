@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules;
 
+use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Backend\Upgrade\Upgrade;
 use WPStaging\Backup\Ajax\FileList\ListableBackupsCollection;
 use WPStaging\Core\Utils\Browser;
@@ -386,7 +387,7 @@ class SystemInfo
         $output .= $this->info("File Copy Batch Size:", $this->getSettingValue($settings, 'batchSize'));
         $cpuLoad = $this->getSettingValue($settings, 'cpuLoad');
         $output .= $this->info("CPU Load Priority:", $cpuLoad !== self::NOT_SET_LABEL ? ucfirst(strtolower($cpuLoad)) : $cpuLoad);
-        $output .= $this->info("Optimizer Enabled:", isset($settings->optimizer) && $settings->optimizer ? 'Yes' : 'No');
+        $output .= $this->info("Optimizer Enabled:", $this->getOptimizerStatus($settings));
         $output .= $this->info("Backup Compression:", isset($settings->enableCompression) ? ($settings->enableCompression ? 'On' : 'Off') : self::NOT_SET_LABEL);
         $output .= $this->info("Debug Mode Enabled:", isset($settings->debugMode) && $settings->debugMode ? 'Yes' : 'No');
  
@@ -1014,6 +1015,22 @@ class SystemInfo
         $output .= $this->info("Total Backups Size:", esc_html((string)size_format($totalBackupSize, 2)));
 
         return $output;
+    }
+
+
+
+
+
+
+
+
+    private function getOptimizerStatus($settings): string
+    {
+        if (get_option(Optimizer::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL) === '1') {
+            return 'No (disabled after a plugin conflict)';
+        }
+
+        return isset($settings->optimizer) && $settings->optimizer ? 'Yes' : 'No';
     }
 
 

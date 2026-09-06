@@ -242,10 +242,7 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
  
         remove_all_filters(WpAdapter::FILTER_OPTION_ACTIVE_PLUGINS);
 
-        $activePlugins = get_option('active_plugins');
-        if (!is_array($activePlugins)) {
-            $activePlugins = [];
-        }
+        $activePlugins = $this->getActivePlugins();
 
         $activePlugins = Hooks::applyFilters(self::FILTER_CLONING_UPDATE_ACTIVE_PLUGINS, $activePlugins);
         if (!is_array($activePlugins)) {
@@ -253,6 +250,13 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         }
 
         return $activePlugins;
+    }
+
+    protected function getActivePlugins(): array
+    {
+        $activePlugins = get_option('active_plugins');
+
+        return is_array($activePlugins) ? $activePlugins : [];
     }
 
 

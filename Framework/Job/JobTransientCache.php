@@ -206,6 +206,10 @@ class JobTransientCache
     public function updateTitle(string $title)
     {
         $jobData = $this->getJob();
+        if ($jobData === null) {
+            return;
+        }
+
         $jobData['title']     = $title;
         $jobData['updatedAt'] = time();
 
@@ -304,6 +308,10 @@ class JobTransientCache
     public function update()
     {
         $jobData = $this->getJob();
+        if ($jobData === null) {
+            return;
+        }
+
         $jobData['updatedAt'] = time();
 
         delete_transient(self::TRANSIENT_CURRENT_JOB);
@@ -319,6 +327,10 @@ class JobTransientCache
     private function stopJob(string $status, string $title = '', string $message = '', string $severity = '')
     {
         $jobData = $this->getJob();
+        if ($jobData === null) {
+            return;
+        }
+
         $jobData['status']    = $status;
         $jobData['updatedAt'] = time();
         if (!empty($title)) {
@@ -340,10 +352,6 @@ class JobTransientCache
  
         delete_transient(self::TRANSIENT_CURRENT_JOB);
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY_ON_COMPLETE);
-
-        if (empty($jobData['jobId'])) {
-            return;
-        }
 
         set_transient(self::TRANSIENT_LAST_JOB_OUTCOME, $jobData, self::LAST_JOB_OUTCOME_EXPIRY);
     }

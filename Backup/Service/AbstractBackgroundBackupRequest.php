@@ -140,13 +140,32 @@ abstract class AbstractBackgroundBackupRequest
 
 
 
-    public function markCompleted()
+
+    public function markCompleted($jobDataDto = null)
     {
-        if ($this->getStatus() !== self::STATUS_RUNNING || !$this->isOwnBackupJob()) {
+        if ($this->getStatus() !== self::STATUS_RUNNING) {
+            return;
+        }
+
+        $job = WPStaging::make(JobTransientCache::class)->getJob();
+
+        if (!$this->jobDataIdentifiesOwnBackup($jobDataDto, $job) && !$this->isOwnJob($job)) {
             return;
         }
 
         $this->transition(self::STATUS_COMPLETED, 'completed_at', $this->getEventName('completed'));
+    }
+
+
+
+
+
+
+
+
+    protected function jobDataIdentifiesOwnBackup($jobDataDto, $job): bool
+    {
+        return false;
     }
 
 
@@ -393,13 +412,28 @@ abstract class AbstractBackgroundBackupRequest
 
     protected function isOwnBackupJob($reporter = null): bool
     {
+        $cache = $reporter instanceof JobTransientCache ? $reporter : WPStaging::make(JobTransientCache::class);
+
+        return $this->isOwnJob($cache->getJob());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    protected function isOwnJob($job): bool
+    {
         $state = $this->read();
         if (empty($state['backup_job_id'])) {
             return false;
         }
-
-        $cache = $reporter instanceof JobTransientCache ? $reporter : WPStaging::make(JobTransientCache::class);
-        $job   = $cache->getJob();
 
         return is_array($job) && isset($job['queueId']) && $job['queueId'] === $state['backup_job_id'];
     }

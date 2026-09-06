@@ -6,6 +6,7 @@ use Exception;
 use wpdb;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
+use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
@@ -430,9 +431,13 @@ class Notices
 
 
 
-
     private function noticeOptimizerIsDisabled()
     {
+ 
+        if (get_option(Optimizer::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL) === '1') {
+            return;
+        }
+
         $wpstgSettings = (object)$this->settings;
         if (self::SHOW_ALL_NOTICES || empty($wpstgSettings->optimizer)) {
             require_once $this->viewsNoticesPath . "disabled-optimizer-notice.php";

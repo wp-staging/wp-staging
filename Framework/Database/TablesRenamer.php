@@ -26,6 +26,9 @@ class TablesRenamer
     const PLUGIN_BASE_SLUG = 'wp-staging';
 
  
+    const PLUGIN_FILE_NAMES = ['wp-staging.php', 'wp-staging-pro.php'];
+
+ 
     private $tableService;
 
 
@@ -783,7 +786,7 @@ class TablesRenamer
         }
 
         $wpstgActivePlugins = array_filter($wpstgActivePlugins, function ($pluginSlug) {
-            return is_string($pluginSlug) && strpos($pluginSlug, self::PLUGIN_BASE_SLUG) === 0;
+            return $this->isWpstgPluginSlug($pluginSlug);
         });
 
         $wpstgActivePlugins = serialize($wpstgActivePlugins);
@@ -820,7 +823,7 @@ class TablesRenamer
         }
 
         $wpstgActivePlugins = array_filter($wpstgActivePlugins, function ($pluginSlug) {
-            return is_string($pluginSlug) && strpos($pluginSlug, self::PLUGIN_BASE_SLUG) === 0;
+            return $this->isWpstgPluginSlug($pluginSlug);
         }, ARRAY_FILTER_USE_KEY); 
 
         $wpstgActivePlugins = serialize($wpstgActivePlugins);
@@ -861,20 +864,10 @@ class TablesRenamer
         }
 
         $preservedPlugins = array_filter($preservedPlugins, function ($pluginSlug) {
-            if (!is_string($pluginSlug)) {
-                return false;
-            }
-
- 
-            if (strpos($pluginSlug, self::PLUGIN_BASE_SLUG) !== false) {
-                return false;
-            }
-
-            return true;
+            return is_string($pluginSlug) && !$this->isWpstgPluginSlug($pluginSlug);
         });
 
- 
-        $preservedPlugins[] = $activeWpstgPlugin;
+        $preservedPlugins = array_merge($preservedPlugins, $this->getWpstgPluginsToReactivate($activeWpstgPlugin));
         sort($preservedPlugins);
 
         return $this->updateOptionValue($productionOptionsTable, self::OPTION_ACTIVE_PLUGINS, serialize($preservedPlugins));
@@ -1312,5 +1305,43 @@ class TablesRenamer
         }
 
         return $this->productionTableBasePrefix . $tableWithoutPrefix;
+    }
+
+
+
+
+
+
+
+
+    private function isWpstgPluginSlug($pluginSlug): bool
+    {
+        return is_string($pluginSlug) && in_array(basename($pluginSlug), self::PLUGIN_FILE_NAMES, true);
+    }
+
+
+
+
+
+
+
+    private function getWpstgPluginsToReactivate(string $activeWpstgPlugin): array
+    {
+        $currentPlugins = $this->safeMaybeUnserialize(
+            $this->getOptionValue($this->productionTablePrefix . 'options', self::OPTION_ACTIVE_PLUGINS)
+        );
+
+        $wpstgPlugins = [];
+        if (is_array($currentPlugins)) {
+            $wpstgPlugins = array_filter($currentPlugins, function ($pluginSlug) {
+                return $this->isWpstgPluginSlug($pluginSlug);
+            });
+        }
+
+        if ($activeWpstgPlugin !== '') {
+            $wpstgPlugins[] = $activeWpstgPlugin;
+        }
+
+        return array_values(array_unique($wpstgPlugins));
     }
 }

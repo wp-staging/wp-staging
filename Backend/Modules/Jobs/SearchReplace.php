@@ -39,6 +39,9 @@ class SearchReplace extends CloningProcess
  
     const FILTER_CLONE_SEARCH_REPLACE_PARAMS = 'wpstg_clone_searchreplace_params';
 
+ 
+    const MAX_CELL_SIZE = 5000000;
+
 
 
 
@@ -368,7 +371,7 @@ class SearchReplace extends CloningProcess
             }
 
  
-            if (isset($row['option_value']) && strlen($row['option_value']) >= 5000000) {
+            if (isset($row['option_value']) && strlen($row['option_value']) >= self::MAX_CELL_SIZE) {
                 continue;
             }
 
@@ -383,7 +386,7 @@ class SearchReplace extends CloningProcess
 
  
                 $size = strlen($dataRow);
-                if ($size >= 5000000) {
+                if ($size >= self::MAX_CELL_SIZE) {
                     continue;
                 }
 
@@ -405,6 +408,15 @@ class SearchReplace extends CloningProcess
                 $searchReplace->setWpBakeryActive($siteInfo->isWpBakeryActive());
                 $dataRow = $searchReplace->replaceExtended($dataRow);
 
+                $sizeAfterReplace = strlen($dataRow);
+                if ($sizeAfterReplace >= self::MAX_CELL_SIZE) {
+                    $this->log(
+                        sprintf('Skipped column %s of row %d in %s: search & replace grew it to %d bytes', $column, $currentRow, $table, $sizeAfterReplace),
+                        Logger::TYPE_WARNING
+                    );
+                    continue;
+                }
+
  
                 if ($row[$column] !== $dataRow) {
                     $updateSql[] = $column . " = '" . WPStaging::make(Escape::class)->mysqlRealEscapeString($dataRow) . "'";
@@ -421,9 +433,8 @@ class SearchReplace extends CloningProcess
                 $result = $this->stagingDb->query($sql);
 
                 if ($result === false) {
-                    $partialQuery = substr($sql, 0, 100);
                     $this->log(
-                        "Error updating row {$currentRow} SQL: {$partialQuery}",
+                        sprintf('Error updating row %d of table %s: %s', $currentRow, $table, $this->stagingDb->last_error),
                         Logger::TYPE_ERROR
                     );
                 }

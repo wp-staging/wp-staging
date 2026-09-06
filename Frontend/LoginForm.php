@@ -2,11 +2,26 @@
 
 namespace WPStaging\Frontend;
 
+use WP_Error;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
 
 class LoginForm
 {
+ 
+    const CREDENTIAL_ERROR_CODES = [
+        'authentication_failed',
+        'empty_password',
+        'empty_username',
+        'incorrect_password',
+        'invalid_email',
+        'invalid_username',
+    ];
+
+ 
+    const TRANSIENT_USER_LOGGED_IN_STATUS = 'wpstg_user_logged_in_status';
+
  
     private $args = [];
 
@@ -21,9 +36,13 @@ class LoginForm
  
     private $sanitize;
 
+ 
+    private $siteInfo;
+
     public function __construct()
     {
         $this->sanitize = WPStaging::make(Sanitize::class);
+        $this->siteInfo = WPStaging::make(SiteInfo::class);
         $this->login();
     }
 
@@ -40,60 +59,65 @@ class LoginForm
             return false;
         }
 
+        if (!$this->siteInfo->isStagingSite()) {
+            return false;
+        }
 
         if (isset($_POST['wpstg-submit']) && (empty($_POST['wpstg-username']) || empty($_POST['wpstg-pass']))) {
             $this->error = 'No username or password given!';
             return false;
         }
 
-        $username = $this->sanitize->sanitizeString($_POST['wpstg-username']);
- 
-        $user_data = get_user_by('login', $username);
+        $user = wp_signon([
+            'user_login'    => $this->sanitize->sanitizeString($_POST['wpstg-username']),
+            'user_password' => $this->sanitize->sanitizePassword($_POST['wpstg-pass']),
+            'remember'      => !empty($_POST['rememberme']),
+        ]);
 
- 
-        if (!$user_data) {
-            $user_data = get_user_by('email', $username);
-        }
-
-        $guideLink = esc_url('https://wp-staging.com/docs/can-not-login-to-staging-website/#Disable_WP_STAGING_Login_Form_or_Allow_Specific_Users_to_Pass_it');
-        if (!$user_data) {
-            $msg = sprintf(__('Incorrect credentials! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
-
-            if (defined('WPSTGPRO_VERSION')) {
-                $msg = sprintf(__('Incorrect credentials! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
-            }
-
-            $this->error = $msg;
+        if (is_wp_error($user)) {
+            $this->setFailedLoginError($user);
             return false;
         }
 
- 
-        $password = isset($_POST['wpstg-pass']) ? $this->sanitize->sanitizePassword($_POST['wpstg-pass']) : '';
-        if (wp_check_password($password, $user_data->user_pass, $user_data->ID)) {
-            $rememberme = isset($_POST['rememberme']) ? true : false;
+        wp_set_current_user($user->ID, $user->user_login);
+        set_transient(self::TRANSIENT_USER_LOGGED_IN_STATUS, true, 5);
 
-            wp_set_auth_cookie($user_data->ID, $rememberme);
-            wp_set_current_user($user_data->ID, $username);
-            do_action('wp_login', $username, get_userdata($user_data->ID));
-
-            if (!empty($_POST['redirect_to'])) {
-                $redirectUrl = $this->sanitize->sanitizeUrl($_POST['redirect_to']);
-            }
-
-            set_transient('wpstg_user_logged_in_status', true, 5);
-
-            header('Location:' . $redirectUrl);
-        } else {
-            $msg = sprintf(__('Login not possible! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
-
-            if (defined('WPSTGPRO_VERSION')) {
-                $msg = sprintf(__('Login not possible! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
-            }
-
-            $this->error = $msg;
+        $redirectUrl = !empty($_POST['redirect_to']) ? $this->sanitize->sanitizeUrl($_POST['redirect_to']) : '';
+        if (!empty($redirectUrl)) {
+            wp_safe_redirect($redirectUrl);
+            exit;
         }
 
         return false;
+    }
+
+
+
+
+
+    private function setFailedLoginError(WP_Error $error)
+    {
+        if (in_array($error->get_error_code(), self::CREDENTIAL_ERROR_CODES, true)) {
+            $this->error = $this->getLoginErrorMessage();
+            return;
+        }
+
+        set_transient(self::TRANSIENT_USER_LOGGED_IN_STATUS, true, 5);
+        $this->error = $error->get_error_message();
+    }
+
+
+
+
+    private function getLoginErrorMessage(): string
+    {
+        $guideLink = esc_url('https://wp-staging.com/docs/can-not-login-to-staging-website/#Disable_WP_STAGING_Login_Form_or_Allow_Specific_Users_to_Pass_it');
+
+        if (defined('WPSTGPRO_VERSION')) {
+            return sprintf(__('Incorrect credentials! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
+        }
+
+        return sprintf(__('Incorrect credentials! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
     }
 
 

@@ -17,6 +17,11 @@ class EmailNotification implements NotificationsInterface
 
 
 
+    private $replyTo = '';
+
+
+
+
     private $recipient = '';
 
 
@@ -80,6 +85,16 @@ class EmailNotification implements NotificationsInterface
 
 
 
+    public function setReplyTo(string $replyTo)
+    {
+        $this->replyTo = $replyTo;
+        return $this;
+    }
+
+
+
+
+
     public function setRecipient(string $recipient)
     {
         $this->recipient = $recipient;
@@ -132,6 +147,7 @@ class EmailNotification implements NotificationsInterface
     public function reset()
     {
         $this->sender             = '';
+        $this->replyTo            = '';
         $this->recipient          = '';
         $this->attachments        = [];
         $this->headers            = [];
@@ -182,7 +198,11 @@ class EmailNotification implements NotificationsInterface
 
         if (!empty($this->sender)) {
             $headers[] = 'From: ' . $this->sender;
-            $headers[] = 'Reply-To: ' . $this->sender;
+        }
+
+        $replyTo = !empty($this->replyTo) ? $this->replyTo : $this->sender;
+        if (!empty($replyTo)) {
+            $headers[] = 'Reply-To: ' . $replyTo;
         }
 
         if ($this->isUseHtml) {

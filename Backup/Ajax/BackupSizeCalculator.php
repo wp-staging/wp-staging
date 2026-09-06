@@ -9,6 +9,7 @@ use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Filesystem\AbstractFilesystemScanner;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScannerDto;
+use WPStaging\Framework\Filesystem\Filters\PathFilterHelper;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Security\Auth;
@@ -73,6 +74,13 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
  
     protected $scannerDto;
+
+
+
+
+
+
+    protected $globalExcludeFilter;
 
  
     private $isNetworkSiteBackup = false;
@@ -162,6 +170,9 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
         $this->scannerDto->setIsExcludingLogs($this->isExcludingLogs);
         $this->scannerDto->setIsExcludingCaches($this->isExcludingCaches);
         $this->scannerDto->setExcludedDirectories($this->excludedDirectories);
+        $this->setGlobalExcludeFilter([
+            '**/wp-staging*/**/node_modules', 
+        ]);
 
         if ($backupPart === 'includePluginsInBackup') {
             $this->calculatePluginsSize();
@@ -387,6 +398,25 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
 
 
+
+
+
+    protected function setGlobalExcludeFilter(array $rules)
+    {
+        if (empty($rules)) {
+            $this->globalExcludeFilter = null;
+            return;
+        }
+
+        $filter = new PathFilterHelper();
+        $filter->setWpRootPath($this->rootPath);
+        $filter->categorizeRules($rules);
+        $this->globalExcludeFilter = $filter;
+    }
+
+
+
+
     protected function preRecursivePathScanningStep()
     {
         $this->scannerDto->setFilesystemSize(0);
@@ -502,6 +532,10 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
     {
         if (empty($path)) {
             return false;
+        }
+
+        if ($this->globalExcludeFilter !== null && $this->globalExcludeFilter->isMatched(new SplFileInfo($path))) {
+            return true;
         }
 
         $normalizedPath = $this->filesystem->normalizePath($path, true);

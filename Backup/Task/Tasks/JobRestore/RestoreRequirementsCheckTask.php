@@ -276,7 +276,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
             if (strlen($unprefixedName) + strlen(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) > 64) {
                 $requireShortNamesForTablesToDrop = true;
-                $shortName = uniqid(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) . str_pad((string)rand(0, 999999), 6, '0');
+                $shortName = uniqid(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) . str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
                 $this->jobDataDto->addShortNameTableToDrop($table->getName(), $shortName);
                 $this->logger->warning("MySQL has a limit of 64 characters for table names. One of your tables, combined with the temporary prefix used by the backup restore, would exceed this limit, therefore the backup will be restored with a shorter name and change it back to original name if restoration fails otherwise drop it along with other backups table. The table with the extra-long name is: \"{$table->getName()}\". It will be backup with the name: \"{$shortName}\", So in case anything goes wrong you can restore it back.");
             }
@@ -494,14 +494,19 @@ class RestoreRequirementsCheckTask extends RestoreTask
     protected function cannotRestoreOnMultisite()
     {
         if (is_multisite()) {
-            throw new RuntimeException('Cannot restore! Free Version doesn\'t support restore of multisite backups. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
+            throw new RuntimeException('Cannot restore! Free Version doesn\'t support restore of multisite backups. <a href="' . Language::getUpgradeUrl('restore_multisite') . '" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
         }
     }
 
     protected function cannotMigrate()
     {
         if (!$this->jobDataDto->getIsUrlSchemeMatched()) {
-            throw new RuntimeException(sprintf("Cannot Restore this backup! This backup has different URL scheme (%s) than your current site scheme (%s). <a href='https://wp-staging.com' target='_blank'>Get WP Staging Pro</a> to restore this backup on this website.", esc_html($this->getUrlScheme($this->jobDataDto->getBackupMetadata()->getSiteUrl())), esc_html($this->getUrlScheme(site_url()))));
+            throw new RuntimeException(sprintf(
+                "Cannot Restore this backup! This backup has different URL scheme (%s) than your current site scheme (%s). <a href='%s' target='_blank'>Get WP Staging Pro</a> to restore this backup on this website.",
+                esc_html($this->getUrlScheme($this->jobDataDto->getBackupMetadata()->getSiteUrl())),
+                esc_html($this->getUrlScheme(site_url())),
+                Language::getUpgradeUrl('restore_url_scheme')
+            ));
         }
 
  
@@ -510,18 +515,28 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
 
         if ($this->jobDataDto->getBackupMetadata()->getSiteUrl() !== site_url()) {
-            throw new RuntimeException(sprintf('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.', esc_url($this->jobDataDto->getBackupMetadata()->getSiteUrl()), esc_url(site_url())));
+            throw new RuntimeException(sprintf(
+                'Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="%s" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.',
+                esc_url($this->jobDataDto->getBackupMetadata()->getSiteUrl()),
+                esc_url(site_url()),
+                Language::getUpgradeUrl('restore_migration_url')
+            ));
         }
 
         if ($this->jobDataDto->getBackupMetadata()->getAbsPath() !== ABSPATH) {
-            throw new RuntimeException(sprintf('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.', esc_url($this->jobDataDto->getBackupMetadata()->getAbsPath()), esc_url(ABSPATH)));
+            throw new RuntimeException(sprintf(
+                'Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="%s" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.',
+                esc_url($this->jobDataDto->getBackupMetadata()->getAbsPath()),
+                esc_url(ABSPATH),
+                Language::getUpgradeUrl('restore_migration_path')
+            ));
         }
     }
 
     protected function cannotRestoreMultipartBackup()
     {
         if ($this->jobDataDto->getBackupMetadata()->getIsMultipartBackup()) {
-            throw new RuntimeException('Cannot restore! Free Version doesn\'t support restore of multipart backups. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this multipart backup on this website.');
+            throw new RuntimeException('Cannot restore! Free Version doesn\'t support restore of multipart backups. <a href="' . Language::getUpgradeUrl('restore_multipart') . '" target="_blank">Get WP Staging Pro</a> to restore this multipart backup on this website.');
         }
     }
 

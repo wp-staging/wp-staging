@@ -28,6 +28,7 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Settings\SettingsTable;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\RestoresPreservedOptionsTrait;
 use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -36,6 +37,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RenameDatabaseTask extends RestoreTask
 {
+    use RestoresPreservedOptionsTrait;
     use SerializeTrait;
 
 
@@ -468,7 +470,7 @@ class RenameDatabaseTask extends RestoreTask
                 continue;
             }
 
-            update_option($optionToKeep['name'], $value, $optionToKeep['autoload']);
+            $this->restorePreservedOption($optionToKeep['name'], $value, (bool)$optionToKeep['autoload']);
         }
 
         foreach ($this->optionsToRemove as $optionToRemove) {

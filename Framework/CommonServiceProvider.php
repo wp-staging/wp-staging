@@ -12,7 +12,6 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\LogCleanup;
 use WPStaging\Framework\Mails\MailSender;
-use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\Notices\WpVersionCompatNotice;
 use WPStaging\Framework\Onboarding\FreeOnboarding;
@@ -21,9 +20,11 @@ use WPStaging\Framework\Onboarding\OnboardingJourney;
 use WPStaging\Framework\Onboarding\QueuedBackup;
 use WPStaging\Framework\Performance\MemoryExhaust;
 use WPStaging\Framework\Security\Otp\Otp;
+use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Staging\Jobs\StagingSiteCreate;
 use WPStaging\Framework\Settings\DarkMode;
 use WPStaging\Framework\Traits\EventLoggerTrait;
+use WPStaging\Framework\Traits\NoticesTrait;
 use WPStaging\Framework\Utils\DBPermissions;
 use WPStaging\Staging\Ajax\StagingSiteDataChecker;
 
@@ -37,6 +38,7 @@ use WPStaging\Staging\Ajax\StagingSiteDataChecker;
 class CommonServiceProvider extends ServiceProvider
 {
     use EventLoggerTrait;
+    use NoticesTrait;
 
     protected function registerClasses()
     {
@@ -46,6 +48,14 @@ class CommonServiceProvider extends ServiceProvider
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupLogs'], 25, 0);
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupAnalytics'], 25, 0);
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupExpiredOtps'], 25, 0);
+
+ 
+        add_action('wp_ajax_wpstg_can_use_optimizer', $this->container->callback(Optimizer::class, 'ajaxCanUseOptimizer')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+
+ 
+        if ($this->canStartOptimizerSafetyCheck()) {
+            add_action('admin_init', $this->container->callback(Optimizer::class, 'maybeRunSafetyCheck'), 1);
+        }
 
  
  
@@ -76,8 +86,6 @@ class CommonServiceProvider extends ServiceProvider
         add_action("wp_ajax_wpstg_check_user_permissions", $this->container->callback(DBPermissions::class, 'ajaxCheckDBPermissions')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_check_user_is_authenticated", [$this, "ajaxIsUserAuthenticated"]);// phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_nopriv_wpstg_check_user_is_authenticated", [$this, "ajaxIsUserAuthenticated"]);// phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg_backup_plugin_notice_close', $this->container->callback(BackupPluginsNotice::class, 'ajaxBackupPluginNoticeClose')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg_backup_plugin_notice_remind_me', $this->container->callback(BackupPluginsNotice::class, 'ajaxBackupPluginNoticeRemindMe')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_cli_notice_close', $this->container->callback(CliIntegrationNotice::class, 'ajaxCliNoticeClose')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_cli_notice_hide_forever', $this->container->callback(CliIntegrationNotice::class, 'ajaxCliNoticeHideForever')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_cli_get_backup_list', $this->container->callback(CliIntegrationNotice::class, 'ajaxGetCliBackupList')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -172,5 +180,21 @@ class CommonServiceProvider extends ServiceProvider
         }
 
         wp_send_json(['wpAuthCheck' => true]);
+    }
+
+
+
+
+
+
+
+    private function canStartOptimizerSafetyCheck(): bool
+    {
+        if (!$this->isWPStagingAdminPageWithoutAjax()) {
+            return false;
+        }
+
+        return get_option(Optimizer::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL, null) === null
+            && empty(get_transient(Optimizer::TRANSIENT_CHECK_SECRET));
     }
 }

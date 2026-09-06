@@ -4,7 +4,7 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;
-use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Database\OptionNameExclusions;
 
 
 
@@ -12,7 +12,7 @@ use WPStaging\Framework\Facades\Hooks;
 class UpdateWpOptionsTablePrefix extends DBCloningService
 {
  
-    const FILTER_DATA_EXCLUDED_ROWS = 'wpstg_data_excl_rows';
+    const FILTER_DATA_EXCLUDED_ROWS = OptionNameExclusions::FILTER_DATA_EXCLUDED_ROWS;
 
     protected function internalExecute()
     {
@@ -104,22 +104,6 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
 
     private function getExcludedOptionNames()
     {
-        $defaultFilters = [
-            'wp_mail_smtp',
-            'wp_mail_smtp_version',
-            'wp_mail_smtp_debug',
-            'db_version',
-        ];
-
-        $filters = Hooks::applyFilters(self::FILTER_DATA_EXCLUDED_ROWS, $defaultFilters);
-        if (!is_array($filters)) {
-            return $defaultFilters;
-        }
-
-        $filters = array_filter($filters, function ($filter) {
-            return is_string($filter) && trim($filter) !== '';
-        });
-
-        return array_values(array_unique($filters));
+        return OptionNameExclusions::getFilteredOptionNames();
     }
 }

@@ -139,6 +139,8 @@ class ImportDatabaseRowsTask extends StagingTask
  
             } elseif ($e->getCode() === DatabaseImporter::RETRY_EXCEPTION_CODE) {
                 $this->databaseImporter->retryQuery();
+            } elseif ($e->getCode() === DatabaseImporter::SHORT_NAME_MISSING_EXCEPTION_CODE) {
+                $this->logger->critical(substr($e->getMessage(), 0, 1000));
             } else {
                 $this->databaseImporter->updateIndex();
                 $this->logger->critical(substr($e->getMessage(), 0, 1000));

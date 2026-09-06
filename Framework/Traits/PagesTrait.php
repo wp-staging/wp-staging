@@ -18,14 +18,21 @@ trait PagesTrait
 
     public function isWPStagingAdminPage(): bool
     {
-        if (is_admin()) {
-            $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
-            if (!empty($currentPage) && in_array($currentPage, Administrator::ADMIN_PAGE_SLUGS, true)) {
-                return true;
-            }
+        if (is_admin() && $this->isWPStagingPageSlug()) {
+            return true;
         }
 
         return $this->isWPStagingAjaxAction();
+    }
+
+
+
+
+
+
+    public function isWPStagingAdminPageWithoutAjax(): bool
+    {
+        return is_admin() && !wp_doing_ajax() && $this->isWPStagingPageSlug();
     }
 
 
@@ -93,5 +100,15 @@ trait PagesTrait
         $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
 
         return $currentPage === 'wpstg-welcome';
+    }
+
+
+
+
+    private function isWPStagingPageSlug(): bool
+    {
+        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+
+        return !empty($currentPage) && in_array($currentPage, Administrator::ADMIN_PAGE_SLUGS, true);
     }
 }
