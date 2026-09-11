@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Modules;
 use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Backend\Upgrade\Upgrade;
 use WPStaging\Backup\Ajax\FileList\ListableBackupsCollection;
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Multisite;
@@ -960,12 +961,19 @@ class SystemInfo
 
     private function removeCredentials($key, $value)
     {
-        $protectedFields = ['accessToken', 'refreshToken', 'accessKey', 'secretKey', 'password', 'passphrase'];
-        if (!empty($value) && in_array($key, $protectedFields)) {
+        if (empty($value)) {
+            return self::NOT_SET_LABEL;
+        }
+
+        if (in_array($key, Providers::SENSITIVE_OPTION_KEYS, true)) {
             return self::REMOVED_LABEL;
         }
 
-        return empty($value) ? self::NOT_SET_LABEL : $value;
+        if (!is_scalar($value)) {
+            return self::REMOVED_LABEL;
+        }
+
+        return $value;
     }
 
 
@@ -1165,7 +1173,7 @@ class SystemInfo
             }
 
             foreach ($settings as $key => $value) {
-                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
+                $output .= $this->info($key, $this->removeCredentials($key, $value));
             }
         }
 

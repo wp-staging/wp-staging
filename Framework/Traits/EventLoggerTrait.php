@@ -296,10 +296,11 @@ trait EventLoggerTrait
         $this->sanitize        = WPStaging::make(Sanitize::class);
         $this->auth            = WPStaging::make(Auth::class);
         $this->processPrefixes = [
-            'backup'  => EventLoggerConst::PROCESS_PREFIX_BACKUP,
-            'restore' => EventLoggerConst::PROCESS_PREFIX_RESTORE,
-            'clone'   => EventLoggerConst::PROCESS_PREFIX_CLONE,
-            'push'    => EventLoggerConst::PROCESS_PREFIX_PUSH,
+            'backup'        => EventLoggerConst::PROCESS_PREFIX_BACKUP,
+            'backup_upload' => EventLoggerConst::PROCESS_PREFIX_BACKUP_UPLOAD,
+            'restore'       => EventLoggerConst::PROCESS_PREFIX_RESTORE,
+            'clone'         => EventLoggerConst::PROCESS_PREFIX_CLONE,
+            'push'          => EventLoggerConst::PROCESS_PREFIX_PUSH,
         ];
     }
 }

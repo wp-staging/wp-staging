@@ -5,8 +5,8 @@
  *
  * Deliberately not a card: it is not a fourth thing to choose, only a sentence
  * saying the feature is already on before the user meets it on the plugins
- * screen. Rendering it also counts as the modal's introduction, so the same
- * explanation is not repeated the first time an update is intercepted.
+ * screen. Rendering it also counts as the feature having introduced itself, so
+ * the same explanation is not repeated the first time an update is intercepted.
  *
  * @see \WPStaging\Backup\Service\UpdateProtectionSettings
  */
@@ -15,7 +15,11 @@ use WPStaging\Backup\Service\UpdateProtectionSettings;
 use WPStaging\Core\WPStaging;
 
 $updateProtection = WPStaging::make(UpdateProtectionSettings::class);
-$updateProtection->markIntroSeen('modal');
+if (!$updateProtection->isAvailableHere()) {
+    return;
+}
+
+$updateProtection->markIntroSeen('notice');
 
 $isProtectionEnabled = $updateProtection->isEnabled();
 ?>

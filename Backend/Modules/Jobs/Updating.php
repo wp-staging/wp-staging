@@ -10,7 +10,6 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Traits\ValueGetterTrait;
 
 
@@ -35,11 +34,6 @@ class Updating extends Job
 
 
 
-    private $dirUtils;
-
-
-
-
     private $sanitize;
 
 
@@ -53,7 +47,6 @@ class Updating extends Job
     public function initialize()
     {
         $this->mainJob  = Job::UPDATE;
-        $this->dirUtils = new WpDefaultDirectories();
         $this->sanitize = WPStaging::make(Sanitize::class);
         $this->urls     = WPStaging::make(Urls::class);
     }
@@ -244,7 +237,7 @@ class Updating extends Job
 
  
         $excludedDirectoriesRequest         = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
-        $excludedDirectoriesRequest         = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
+        $excludedDirectoriesRequest         = $this->directoryAdapter->getExcludedDirectories($excludedDirectoriesRequest);
         $this->options->excludedDirectories = array_merge($this->options->excludedDirectories, $excludedDirectoriesRequest);
  
         if (isset($_POST["extraDirectories"])) {

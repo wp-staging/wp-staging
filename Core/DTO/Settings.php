@@ -12,6 +12,7 @@ class Settings
 
 
 
+
     const OPTION_BACKUP_BEFORE_UPDATE_MODE = 'wpstg_backup_before_update_mode';
 
 

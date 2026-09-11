@@ -49,7 +49,7 @@ class UpdateProtectionPausedNotice
             return;
         }
 
-        if (!$this->settings->isEnabled() || !$this->health->isPaused()) {
+        if (!$this->settings->isActive() || !$this->health->isPaused()) {
             return;
         }
 

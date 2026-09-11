@@ -42,6 +42,24 @@ trait DbRowsGeneratorTrait
 
 
 
+    protected $rowsMemoryFactor = 4;
+
+
+
+
+
+    public $rowsBatchSize = 0;
+
+
+
+
+
+    protected $tableAverageRowLengths = [];
+
+
+
+
+
 
 
     protected function getNumericPrimaryKey()
@@ -143,9 +161,9 @@ trait DbRowsGeneratorTrait
 
         $rows = [];
         $processed = 0;
- 
-        $batchSize = $limit / 5;
-        $batchSize = ceil($batchSize);
+        $batchSize = $this->rowsBatchSize > 0
+            ? min($this->rowsBatchSize, $this->getMaximumBatchSizeForQueryLimit($limit))
+            : $this->calculateBatchSizeForTable($table, $limit, $db);
         $lastFetch = false;
 
         do {
@@ -216,6 +234,67 @@ SQL;
             $processed++;
         } while (!$this->isThreshold() && $processed < $limit);
 
+ 
+        $batchWasLeftUnprocessed = !empty($rows) && $processed < $batchSize;
+        $this->rowsBatchSize     = $batchWasLeftUnprocessed ? max(1, (int)floor($batchSize / 2)) : $batchSize;
+
         $db->suppress_errors($suppressErrorsOriginal);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    protected function calculateBatchSizeForTable($table, $limit, \wpdb $db)
+    {
+        $maximumBatchSize = $this->getMaximumBatchSizeForQueryLimit($limit);
+        $averageRowLength = $this->getTableAverageRowLength($table, $db);
+
+        if ($averageRowLength < 1) {
+            return $maximumBatchSize;
+        }
+
+        $freeMemory = $this->getScriptMemoryLimit() - $this->getMemoryUsage();
+        $batchSize  = (int)floor(($freeMemory / $averageRowLength) / $this->rowsMemoryFactor);
+
+        return (int)max(1, min($maximumBatchSize, $batchSize));
+    }
+
+
+
+
+
+
+
+    protected function getMaximumBatchSizeForQueryLimit($limit)
+    {
+        return (int)max(1, ceil($limit / 5));
+    }
+
+
+
+
+
+
+
+
+    protected function getTableAverageRowLength($table, \wpdb $db)
+    {
+        if (array_key_exists($table, $this->tableAverageRowLengths)) {
+            return $this->tableAverageRowLengths[$table];
+        }
+
+        $averageRowLength = $db->get_var($db->prepare(
+            'SELECT AVG_ROW_LENGTH FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s',
+            $table
+        ));
+
+        return $this->tableAverageRowLengths[$table] = is_numeric($averageRowLength) ? (int)$averageRowLength : 0;
     }
 }

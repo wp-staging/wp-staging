@@ -46,6 +46,7 @@ abstract class AbstractTask
 
 
 
+
     const ACTION_TASK_RESPONSE = 'wpstg_task_response';
 
 
@@ -126,13 +127,19 @@ abstract class AbstractTask
         throw new WPStagingException('Any extending class MUST override the getTaskTitle method.');
     }
 
+ 
+    protected function getStepsCacheLifetime(): int
+    {
+        return HOUR_IN_SECONDS;
+    }
+
 
 
 
 
     public function setJobContext(AbstractJob $job)
     {
-        $this->cache->setLifetime(HOUR_IN_SECONDS);
+        $this->cache->setLifetime($this->getStepsCacheLifetime());
         $this->cache->setFilename('task_steps_' . static::getTaskName());
 
         $stepsData = $this->cache->get([
@@ -170,7 +177,8 @@ abstract class AbstractTask
 
 
 
-    public function generateResponse($incrementStep = true): TaskResponseDto
+
+    public function generateResponse($incrementStep = true, bool $deferCompletion = false): TaskResponseDto
     {
         if ($incrementStep) {
             $this->stepsDto->incrementCurrentStep();
@@ -178,7 +186,8 @@ abstract class AbstractTask
 
  
         $response = $this->getResponseDto();
-        $response->setIsRunning(!$this->stepsDto->isFinished());
+        $isFinished = $this->stepsDto->isFinished() && !$deferCompletion;
+        $response->setIsRunning(!$isFinished);
         $response->setPercentage($this->stepsDto->getPercentage());
         $response->setTotal($this->stepsDto->getTotal());
         $response->setStep($this->stepsDto->getCurrent());
@@ -199,7 +208,7 @@ abstract class AbstractTask
             $this->getJobId()
         ));
 
-        if ($this->stepsDto->isFinished()) {
+        if ($isFinished) {
             $this->taskQueue->seek(0);
             $this->jobDataDto->setQueueOffset(0);
             $response->setPercentage(0);
@@ -212,9 +221,9 @@ abstract class AbstractTask
 
         $this->job->getTransientCache()->update();
         Hooks::callInternalHook(self::ACTION_TASK_RESPONSE, [
-            'jobDataDto'        => $this->jobDataDto,
-            'jobTransientCache' => $this->job->getTransientCache(),
-            'isWaitTask'        => $this->isWaitTask,
+            $this->jobDataDto,
+            $this->job->getTransientCache(),
+            $this->isWaitTask,
         ]);
 
         $response = Hooks::applyFilters(self::FILTER_TASK_RESPONSE, $response);

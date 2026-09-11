@@ -4,6 +4,7 @@ namespace WPStaging\Backup\Service;
 
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\SiteInfo;
 
 
 
@@ -16,6 +17,38 @@ class UpdateProtectionSettings
  
     const INTRO_SURFACES = ['modal', 'notice'];
 
+ 
+    private $siteInfo;
+
+
+
+
+    public function __construct(SiteInfo $siteInfo)
+    {
+        $this->siteInfo = $siteInfo;
+    }
+
+
+
+
+    public function isActive(): bool
+    {
+        return $this->isAvailableHere() && $this->isEnabled();
+    }
+
+
+
+
+
+
+
+
+    public function isAvailableHere(): bool
+    {
+        return !$this->siteInfo->isStagingSite();
+    }
+
+
 
 
 
@@ -27,21 +60,19 @@ class UpdateProtectionSettings
 
 
 
-    public function getMode(): string
+
+
+
+
+
+    public function adoptLegacyMode()
     {
         $mode = (string)get_option(Settings::OPTION_BACKUP_BEFORE_UPDATE_MODE, '');
 
-        return $mode === '' ? 'ask' : $mode;
-    }
+        if ($mode === 'never') {
+            $this->setEnabled(false);
+        }
 
-
-
-
-
-
-
-    public function forgetMode()
-    {
         delete_option(Settings::OPTION_BACKUP_BEFORE_UPDATE_MODE);
     }
 
@@ -65,10 +96,6 @@ class UpdateProtectionSettings
 
         $settings['enableBackupBeforeUpdate'] = $isEnabled ? '1' : '0';
         update_option('wpstg_settings', $settings);
-
-        if (!$isEnabled) {
-            $this->forgetMode();
-        }
     }
 
 

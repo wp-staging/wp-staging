@@ -22,6 +22,7 @@ use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\BeforeUpdateRowStatus;
 use WPStaging\Backup\UpdateProtectionPausedNotice;
 use WPStaging\Backup\Service\BeforeUpdateBackupRequest;
+use WPStaging\Backup\Service\StagingUpdateBackupClient;
 use WPStaging\Backup\Service\UpdateProtectionHealth;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
@@ -89,7 +90,6 @@ class BackupServiceProvider extends FeatureServiceProvider
 
     protected function enqueueAjaxListeners()
     {
-        add_action('wp_ajax_wpstg--backup-before-update--save-mode', $this->container->callback(BackupBeforeUpdateHandler::class, 'save')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backup-before-update--plugin-versions', $this->container->callback(BackupBeforeUpdateHandler::class, 'getPluginUpdateVersionInfo')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backup-before-update--intro-seen', $this->container->callback(BackupBeforeUpdateHandler::class, 'markIntroSeen')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backup-before-update--set-enabled', $this->container->callback(BackupBeforeUpdateHandler::class, 'setFeatureEnabled')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -97,6 +97,8 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backup-before-update--reusable-backup', $this->container->callback(BackupBeforeUpdateHandler::class, 'getReusableBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backup-before-update--start', $this->container->callback(BackupBeforeUpdateHandler::class, 'startBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backup-before-update--progress', $this->container->callback(BackupBeforeUpdateHandler::class, 'getBackupProgress')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backup-before-update--cancel', $this->container->callback(BackupBeforeUpdateHandler::class, 'cancelBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action(StagingUpdateBackupClient::ACTION_MONITOR, $this->container->callback(StagingUpdateBackupClient::class, 'monitor'), 10, 1);
 
  
  

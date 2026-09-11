@@ -2,16 +2,21 @@
 
 namespace WPStaging\Framework\Job\Task\FileHandler;
 
+
+
+
 class DeleteHandler extends FileHandler
 {
     public function handle($source, $destination)
     {
+        $thresholdReached = false;
         $this->lock($destination);
         try {
             $deleted = $this->filesystem
                 ->setRecursive(true)
-                ->setShouldStop(function () {
-                    return $this->fileTask->isThreshold();
+                ->setShouldStop(function () use (&$thresholdReached) {
+                    $thresholdReached = $this->fileTask->isThreshold();
+                    return $thresholdReached;
                 })
                 ->delete($destination, true, true);
         } catch (\Exception $e) {
@@ -27,8 +32,7 @@ class DeleteHandler extends FileHandler
 
         $this->unlock();
 
- 
-        if (!$deleted && $this->filesystem->isEmptyDir($destination)) {
+        if (!$deleted && !$thresholdReached && $this->filesystem->isEmptyDir($destination)) {
             $this->logger->warning(sprintf(
                 __('%s: PHP does not have permission to delete %s! This folder might still be in your filesystem, please clear it manually.', 'wp-staging'),
                 call_user_func([$this->fileTask, 'getTaskTitle']),

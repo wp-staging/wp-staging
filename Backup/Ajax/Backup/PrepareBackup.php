@@ -20,6 +20,7 @@ use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\Urls;
 
+ 
 class PrepareBackup extends PrepareJob
 {
  
@@ -290,8 +291,8 @@ class PrepareBackup extends PrepareJob
             $data['backupExcludedDirectories'] = $this->directory->getExcludedDirectories($data['backupExcludedDirectories'], SlashMode::BOTH_SLASHES);
         }
 
- 
-        $data['isCreateBackupInBackground'] = $this->jsBoolean($data['isCreateBackupInBackground']);
+        $isOnlySchedule = $data['repeatBackupOnSchedule'] && !$data['isCreateScheduleBackupNow'];
+        $data['isCreateBackupInBackground'] = !$isOnlySchedule && $this->jsBoolean($data['isCreateBackupInBackground']);
 
         if (!is_array($data['pushPrepareData'])) {
             $data['pushPrepareData'] = [];

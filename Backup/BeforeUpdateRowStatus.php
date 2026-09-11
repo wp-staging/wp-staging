@@ -50,7 +50,7 @@ class BeforeUpdateRowStatus
 
     public function registerRowMessages()
     {
-        if (!$this->settings->isEnabled()) {
+        if (!$this->settings->isActive()) {
             return;
         }
 

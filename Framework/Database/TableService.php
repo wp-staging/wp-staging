@@ -10,10 +10,13 @@ use UnexpectedValueException;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Collection\Collection;
+use WPStaging\Framework\Traits\SqlIdentifierTrait;
 use WPStaging\Framework\Utils\Strings;
 
 class TableService
 {
+    use SqlIdentifierTrait;
+
  
     const DROP_LOCK_WAIT_SECONDS = 3;
 
@@ -37,6 +40,9 @@ class TableService
 
  
     private $strHelper;
+
+ 
+    private $customTmpPrefix = '';
 
     private $isSqlLite = false;
 
@@ -83,6 +89,18 @@ class TableService
     public function setShouldStop($shouldStop = null)
     {
         $this->shouldStop = $shouldStop;
+        return $this;
+    }
+
+
+
+
+
+
+
+    public function setCustomTmpPrefix(string $customTmpPrefix): TableService
+    {
+        $this->customTmpPrefix = $customTmpPrefix;
         return $this;
     }
 
@@ -306,14 +324,9 @@ class TableService
 
     public function deleteTables($tables): bool
     {
-        $isForeignKeyCheckEnabled = "0";
+        $foreignKeyChecksWereOn = $this->foreignKeyChecksAreOn();
 
-        $result = $this->client->fetchAssoc($this->client->query("SELECT @@FOREIGN_KEY_CHECKS AS fk_check"));
-        if (!empty($result)) {
-            $isForeignKeyCheckEnabled = empty($result['fk_check']) ? "0" : $result['fk_check'];
-        }
-
-        if ($isForeignKeyCheckEnabled === "1") {
+        if ($foreignKeyChecksWereOn) {
             $this->client->query("SET FOREIGN_KEY_CHECKS = 0");
         }
 
@@ -323,10 +336,32 @@ class TableService
             return $this->dropTables($tables);
         } finally {
             $this->restoreLockWait($lockWaitTimeout);
-            if ($isForeignKeyCheckEnabled === "1") {
+            if ($foreignKeyChecksWereOn) {
                 $this->client->query("SET FOREIGN_KEY_CHECKS = 1");
             }
         }
+    }
+
+
+
+
+    private function foreignKeyChecksAreOn(): bool
+    {
+        if ($this->isSqlLite) {
+            return false;
+        }
+
+        $foreignKeyChecks = $this->client->query("SELECT @@FOREIGN_KEY_CHECKS AS fk_check");
+        if ($foreignKeyChecks === false) {
+            return true;
+        }
+
+        $result = $this->client->fetchAssoc($foreignKeyChecks);
+        if (!isset($result['fk_check'])) {
+            return true;
+        }
+
+        return (string)$result['fk_check'] !== "0";
     }
 
 
@@ -374,11 +409,7 @@ class TableService
     {
         $isDeleted = true;
         foreach ($tables as $table) {
- 
-            if ($this->isProductionSiteTableOrView($table)) {
-                $this->errors[]                  = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
-                $this->hasRefusedProductionTable = true;
-
+            if ($this->refusesToDropProductionTable($table)) {
                 return false;
             }
 
@@ -398,11 +429,29 @@ class TableService
 
 
 
+    private function refusesToDropProductionTable(string $table): bool
+    {
+        if (!$this->isProductionSiteTableOrView($table)) {
+            return false;
+        }
+
+        $this->errors[]                  = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
+        $this->hasRefusedProductionTable = true;
+
+        return true;
+    }
+
+
+
+
+
+
+
     private function dropTableWithRetries(string $table): bool
     {
         $lastError = '';
         for ($attempt = 1; $attempt <= self::DROP_ATTEMPTS; $attempt++) {
-            if ($this->client->query("DROP TABLE `{$table}`;") !== false) {
+            if ($this->client->query("DROP TABLE {$this->quoteSqlIdentifier($table)};") !== false) {
                 return true;
             }
 
@@ -452,7 +501,7 @@ class TableService
                 return false;
             }
 
-            if ($this->database->getWpdba()->exec("DROP VIEW {$view};") !== false) {
+            if ($this->database->getWpdba()->exec("DROP VIEW {$this->quoteSqlIdentifier($view)};") !== false) {
                 continue;
             }
 
@@ -479,19 +528,15 @@ class TableService
     {
         $wpdb   = $this->database->getWpdb();
         $tables = $wpdb->get_results(
-            $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($likeCondition) . '%')
+            $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($likeCondition) . '%'),
+            ARRAY_A
         );
 
         if (!$tables) {
             return false;
         }
 
-        foreach ($tables as $tableObj) {
-            $tableName = current($tableObj);
-            $wpdb->query("DROP TABLE IF EXISTS `$tableName`");
-        }
-
-        return true;
+        return $this->dropFoundTables($tables);
     }
 
 
@@ -510,9 +555,27 @@ class TableService
             return true;
         }
 
-        foreach ($tables as $tableObj) {
-            $tableName = current($tableObj);
-            $wpdb->query("DROP TABLE IF EXISTS `$tableName`");
+        return $this->dropFoundTables($tables);
+    }
+
+
+
+
+
+    private function dropFoundTables(array $rows): bool
+    {
+        $wpdb = $this->database->getWpdb();
+        foreach ($rows as $row) {
+            $tableName = current($row);
+            if ($tableName === false) {
+                continue;
+            }
+
+            if ($this->refusesToDropProductionTable($tableName)) {
+                return false;
+            }
+
+            $wpdb->query("DROP TABLE IF EXISTS {$this->quoteSqlIdentifier($tableName)}");
         }
 
         return true;
@@ -527,9 +590,9 @@ class TableService
     {
  
         $result = $this->client->query(sprintf(
-            "RENAME TABLE `%s` TO `%s`;",
-            $sourceTable,
-            $destinationTable
+            "RENAME TABLE %s TO %s;",
+            $this->quoteSqlIdentifier($sourceTable),
+            $this->quoteSqlIdentifier($destinationTable)
         ));
 
         return $result !== false;
@@ -677,6 +740,88 @@ class TableService
 
 
 
+
+
+    public function dropForeignKeys(string $tableName, array $constraintNames): bool
+    {
+        if ($this->isSqlLite || $constraintNames === []) {
+            return true;
+        }
+
+ 
+        if ($this->isProductionSiteTableOrView($tableName)) {
+            $this->errors[] = sprintf('Trying to drop the foreign keys of table %s of the main WP installation!', $tableName);
+
+            return false;
+        }
+
+        $isDropped = true;
+        $lastError = '';
+        foreach ($constraintNames as $constraintName) {
+            $result = $this->client->query(sprintf(
+                "ALTER TABLE `%s` DROP FOREIGN KEY `%s`;",
+                str_replace('`', '``', $tableName),
+                str_replace('`', '``', $constraintName)
+            ));
+
+            if ($result !== false) {
+                continue;
+            }
+
+            $isDropped = false;
+            $lastError = $this->client->error();
+        }
+
+        if (!$isDropped) {
+            $this->errors[] = sprintf('Could not drop the foreign keys of the table %s. Error: %s', $tableName, $lastError);
+        }
+
+        return $isDropped;
+    }
+
+
+
+
+
+
+
+
+    public function getForeignKeysByTable(string $prefix): array
+    {
+        if ($this->isSqlLite) {
+            return [];
+        }
+
+        $wpdb = $this->database->getWpdba()->getClient();
+
+ 
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT DISTINCT TABLE_NAME, CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+                 WHERE TABLE_SCHEMA = %s AND TABLE_NAME LIKE %s AND REFERENCED_TABLE_NAME IS NOT NULL",
+                $wpdb->dbname,
+                $this->database->escapeSqlPrefixForLIKE($prefix) . '%'
+            ),
+            ARRAY_A
+        );
+
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $foreignKeys = [];
+        foreach ($rows as $row) {
+            $foreignKeys[$row['TABLE_NAME']][] = $row['CONSTRAINT_NAME'];
+        }
+
+        return $foreignKeys;
+    }
+
+
+
+
+
+
     public function replaceTableOptions(string $input): string
     {
         $search = [
@@ -758,14 +903,15 @@ class TableService
 
 
 
-    private function isProductionSiteTableOrView($tableOrView): bool
+    public function isProductionSiteTableOrView($tableOrView): bool
     {
  
         if ($this->database->isExternal()) {
             return false;
         }
 
-        $productionPrefix = $this->database->getProductionPrefix();
+        $tableOrView      = $this->database->normalizeTableNameCase($tableOrView);
+        $productionPrefix = $this->database->normalizeTableNameCase($this->database->getProductionPrefix());
 
  
         $result = $this->strHelper->startsWith($tableOrView, $productionPrefix);
@@ -773,10 +919,7 @@ class TableService
             return false;
         }
 
-        $tmpPrefixes = [
-            DatabaseImporter::TMP_DATABASE_PREFIX,
-            DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP,
-        ];
+        $tmpPrefixes = $this->getTmpPrefixes($productionPrefix);
 
         if (in_array($productionPrefix, $tmpPrefixes)) {
             return true;
@@ -789,6 +932,30 @@ class TableService
         }
 
         return true;
+    }
+
+
+
+
+
+
+
+
+    private function getTmpPrefixes(string $productionPrefix): array
+    {
+        $tmpPrefixes = [
+            DatabaseImporter::TMP_DATABASE_PREFIX,
+            DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP,
+        ];
+
+        $customTmpPrefix = $this->database->normalizeTableNameCase($this->customTmpPrefix);
+        if ($customTmpPrefix === '' || $customTmpPrefix === $productionPrefix || in_array($customTmpPrefix, $tmpPrefixes)) {
+            return $tmpPrefixes;
+        }
+
+        $tmpPrefixes[] = $customTmpPrefix;
+
+        return $tmpPrefixes;
     }
 
 

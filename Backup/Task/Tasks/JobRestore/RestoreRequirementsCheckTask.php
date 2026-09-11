@@ -26,6 +26,9 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
+
+
+
 class RestoreRequirementsCheckTask extends RestoreTask
 {
  
@@ -94,6 +97,8 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
 
         try {
+            $this->cannotRunOnUnsupportedPhpVersion();
+
  
             $this->shouldWarnIfRestoringBackupWithShortOpenTags();
             $this->shouldWarnIfRunning32Bits();
@@ -151,6 +156,13 @@ class RestoreRequirementsCheckTask extends RestoreTask
             if (!$shortTagsEnabledInThisSite) {
                 $this->logger->warning(__('This backup was generated on a server with PHP ini directive "short_open_tags" enabled, which is disabled in this server. This might cause errors after Restore.', 'wp-staging'));
             }
+        }
+    }
+
+    protected function cannotRunOnUnsupportedPhpVersion(string $phpVersion = PHP_VERSION)
+    {
+        if (!wpstgIsPhpVersionSupportedForBackupAndRestore($phpVersion)) {
+            throw new RuntimeException(wpstgGetUnsupportedPhpVersionMessage($phpVersion));
         }
     }
 
@@ -526,8 +538,8 @@ class RestoreRequirementsCheckTask extends RestoreTask
         if ($this->jobDataDto->getBackupMetadata()->getAbsPath() !== ABSPATH) {
             throw new RuntimeException(sprintf(
                 'Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="%s" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.',
-                esc_url($this->jobDataDto->getBackupMetadata()->getAbsPath()),
-                esc_url(ABSPATH),
+                esc_html($this->jobDataDto->getBackupMetadata()->getAbsPath()),
+                esc_html(ABSPATH),
                 Language::getUpgradeUrl('restore_migration_path')
             ));
         }

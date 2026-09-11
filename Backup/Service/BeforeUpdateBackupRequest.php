@@ -3,8 +3,6 @@
 namespace WPStaging\Backup\Service;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
-use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Job\JobTransientCache;
 
 
 
@@ -18,14 +16,6 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
 {
  
     const OPTION_STATE = 'wpstg_backup_before_update_request';
-
-
-
-
-
-
-
-    const STALL_GRACE_IN_SECONDS = 5 * MINUTE_IN_SECONDS;
 
  
     const MAX_REPORTED_MESSAGE_LENGTH = 200;
@@ -99,17 +89,20 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
 
 
 
-    public function queuePlugin(string $pluginFile)
-    {
-        $waiting = $this->getPendingPluginFiles();
 
-        if ($pluginFile === '' || !$this->isPending() || in_array($pluginFile, $waiting, true)) {
-            return;
+    public function cancel(): bool
+    {
+        if (!$this->isPending()) {
+            return false;
         }
 
-        $waiting[] = $pluginFile;
+        if ($this->getStatus() === self::STATUS_RUNNING && !$this->cancelRunningBackup()) {
+            return false;
+        }
 
-        $this->write(array_merge($this->read(), ['plugin_files' => $waiting]));
+        $this->clear();
+
+        return true;
     }
 
 
@@ -122,24 +115,17 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
 
 
 
-
-
-
-
-    public function failIfStalled(): bool
+    public function queuePlugin(string $pluginFile)
     {
-        if ($this->getStatus() !== self::STATUS_RUNNING || !$this->isOlderThanStallGrace()) {
-            return false;
+        $waiting = $this->getPendingPluginFiles();
+
+        if ($pluginFile === '' || !$this->isPending() || in_array($pluginFile, $waiting, true)) {
+            return;
         }
 
-        if ($this->isBackupJobStillKnown()) {
-            return false;
-        }
+        $waiting[] = $pluginFile;
 
-        $this->failureReason = UpdateProtectionHealth::REASON_STALLED;
-        $this->markFailed();
-
-        return true;
+        $this->write(array_merge($this->read(), ['plugin_files' => $waiting]));
     }
 
 
@@ -237,6 +223,14 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
 
 
 
+    protected function beforeMarkedStalled()
+    {
+        $this->failureReason = UpdateProtectionHealth::REASON_STALLED;
+    }
+
+
+
+
 
 
 
@@ -249,37 +243,5 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
             'reason'  => $this->failureReason !== '' ? $this->failureReason : $this->health->classify($reason),
             'message' => substr($reason, 0, self::MAX_REPORTED_MESSAGE_LENGTH),
         ];
-    }
-
-
-
-
-    private function isOlderThanStallGrace(): bool
-    {
-        $state     = $this->read();
-        $startedAt = isset($state['started_at']) ? (int)$state['started_at'] : 0;
-
-        return $startedAt > 0 && $startedAt < time() - self::STALL_GRACE_IN_SECONDS;
-    }
-
-
-
-
-    private function isBackupJobStillKnown(): bool
-    {
-        $state = $this->read();
-        if (empty($state['backup_job_id'])) {
-            return false;
-        }
-
-        try {
-            $job = WPStaging::make(JobTransientCache::class)->getJob();
-        } catch (\Throwable $e) {
- 
- 
-            return true;
-        }
-
-        return is_array($job) && isset($job['queueId']) && $job['queueId'] === $state['backup_job_id'];
     }
 }

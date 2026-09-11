@@ -1,4 +1,4 @@
-=== WP STAGING - WordPress Backups, Restore, Migration & Clone ===
+=== WP STAGING - Backups & Restore, Migration & Clone Plugin - Cloud Backups, Scheduled Backups ===
 
 Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, lucasbustamante, alaasalama, fayyazfayzi
 Donate link: https://wp-staging.com/backup-wordpress
@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.12.0
+Stable tag: 4.13.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,52 +283,8 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.12.0 =
-* Enh: Redesign backup creation modal with Full Site / Custom Backup. #4924
-* Fix: Close the placeholder tab when magic login fails. (Pro) #5553
-* Fix: Editing a backup schedule no longer reverts to the old time after a later re-cron. (Pro) #5616
-* Fix: End the Update Protection wait when the backup it started finishes, instead of leaving the popup stuck on a backup that already completed. #5909
-* Fix: Fail a restore loudly when a shortened table name is missing instead of writing broken SQL. #5634
-* Fix: Harden the staging site email reminder - its disable link is now authorised by a secret unique to that staging site, and secret tokens are compared in constant time. #5813
-* Fix: Include a reply-to address and site context in the corrupted staging sites report email. (Pro) #5893
-* Fix: Keep the restore alive when a preserved option is stored in a shape its sanitize callback rejects. #5857
-* Fix: Log which folders a backup restore deletes before it deletes them. #4418
-* Fix: Pad the random suffix of a shortened table name leftwards, so two different draws no longer collide. #5634
-* Fix: Preserve each subsite's domain and active plugins in network clones. (Pro) #5977
-* Fix: Prevent a critical error when opening WP Staging pages on hosting setups where another plugin conflicts with the optimizer. #5404
-* Fix: Prevent the staging login form from being processed on production sites, and improve compatibility with login security plugins. #5794
-* Fix: Reactivate every WP STAGING plugin after a restore, so Pro is not left disabled by its missing free plugin. #5857
-* Fix: Remember a failed magic login availability check for a minute. (Pro) #5553
-* Fix: Remove the competitor backup plugin notice that could get stuck on screen. #5923
-* Fix: Render process log messages as text so stored markup cannot run script in wp-admin. #5884
-* Fix: Require the Wasabi custom region to be filled in before the storage settings can be saved. (Pro) #5918
-* Fix: Restore the 15 second timeout of the magic login availability check. (Pro) #5553
-* Fix: Run a backup explorer search typed while the file list is still loading, instead of ignoring it. #6029
-* Fix: Safely handle wpstg_data_excl_rows filter values in Next-Gen cloning. #5845
-* Fix: Send the WordPress.com upgrade link to the localized pricing page with campaign tracking. #5939
-* Fix: Send the upgrade links shown when a backup cannot be restored to the pricing page in your own language. #5941
-* Fix: Show every backup stored on Dropbox, not only the first ones, so the backup list and the automatic clean-up of old backups both see all of them. (Pro) #5910
-* Fix: Show the memory exhaustion help in the process log as readable text with a link. #5884
-* Fix: Switching SFTP to FTPS no longer leaves the password field blurred and unclickable. #5919
-* Fix: Translate the hosting provider exclusion notice, the temporary login error, the reminder disable message, the admin footer links and the backup modal's cloud storage description, which were shown in English on non-English sites. #5929
-* Fix: Treat a 503 from the staging site as unavailable, not rate-limited. (Pro) #5553
-* Ux: Calculate the estimated backup size automatically when the backup window opens, and again whenever the selection changes. #5899
-* Dev: Allow Playwright to use a worktree's runtime URL. #5948
-* Dev: Announce each release in the WordPress.org support forum as a step of the release procedure. #5944
-* Dev: Assign every new pull request to its author. #5902
-* Dev: Diagnose a failed CI run before re-running it, and treat a *-failed label beside ready-for-review as a test to fix. #5904
-* Dev: Keep PR titles aligned with the issue they answer by pointing create-pr and work-on-issue at the pr-issue-titles skill. #5968
-* Dev: Keep the code review and simplifier passes running under Claude Code 2.1.219, and ship the post-push CI hook with the repository instead of one developer's home directory. #5930
-* Dev: Make code reviews blocking-only and give non-blocking findings somewhere to go. #5911
-* Dev: Point the review-pr skill at review-own-diff for the merge-base rule instead of restating it. #5933
-* Dev: Print a compact summary while tests pass and the full report only when one fails. #5980
-* Dev: Run PHP 8.5 fast tests only in the full matrix. #5894
-* Dev: Set the naming standard for methods and variables, and stop the review skills from dropping names that misdescribe what they name. #5974
-* Dev: Skip the reviewer request on rene-hermenau's own skill and infrastructure PRs; every other author still gets one. #5972
-* Dev: Stop a cancelled fast-test run from overwriting the verdict of the run that replaced it. #5988
-* Dev: Stop the Remote Sync tests putting their own license back on the remote site, which made a push look as if it had overwritten the license there. #5979
-* Dev: Stop the restore requirements test faking multisite on a single site, which crashed the whole single-site unit suite. #5952
-* Dev: Stop the review-pr skill from reviewing a pull request another reviewer was already asked to review. #5936
+= 4.13.0 =
+* Dev: Let the process log and update notification specs wait for the page they drive. #6120
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

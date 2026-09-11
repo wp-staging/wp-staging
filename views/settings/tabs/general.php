@@ -11,6 +11,7 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Notifications\Notifications;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Backup\Service\UpdateProtectionSettings;
 
 $directory = WPStaging::make(Directory::class);
 ?>
@@ -255,20 +256,22 @@ $directory = WPStaging::make(Directory::class);
                                     </div>
                                 </div>
                             <?php endif; ?>
-                            <div class="wpstg-settings-field wpstg-settings-has-toggle">
-                                <div>
-                                    <div class="wpstg-settings-field-header">
-                                        <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[enableBackupBeforeUpdate]"); ?></span>
-                                        <span class="wpstg-settings-field-badge wpstg-recommended"><?php esc_html_e('Recommended', 'wp-staging'); ?></span>
+                            <?php if (WPStaging::make(UpdateProtectionSettings::class)->isAvailableHere()) : ?>
+                                <div class="wpstg-settings-field wpstg-settings-has-toggle">
+                                    <div>
+                                        <div class="wpstg-settings-field-header">
+                                            <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[enableBackupBeforeUpdate]"); ?></span>
+                                            <span class="wpstg-settings-field-badge wpstg-recommended"><?php esc_html_e('Recommended', 'wp-staging'); ?></span>
+                                        </div>
+                                        <div class="wpstg-settings-field-description">
+                                            <?php esc_html_e('Create a recovery backup before installing plugin, theme, WordPress core or staging site updates. Plugin updates start straight away and WP STAGING reports them in the corner of the screen.', 'wp-staging'); ?>
+                                        </div>
                                     </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php esc_html_e('Prompt to create a backup before installing plugin, theme, or WordPress core updates. Turn this off and on again to reset your saved choice for future updates.', 'wp-staging'); ?>
+                                    <div class="wpstg-settings-field-input">
+                                        <?php $form->renderInput("wpstg_settings[enableBackupBeforeUpdate]"); ?>
                                     </div>
                                 </div>
-                                <div class="wpstg-settings-field-input">
-                                    <?php $form->renderInput("wpstg_settings[enableBackupBeforeUpdate]"); ?>
-                                </div>
-                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <!-- /Backups Settings -->

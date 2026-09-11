@@ -12,6 +12,14 @@ use WPStaging\Framework\Security\Auth;
 
 class DBPermissions
 {
+    const REQUIRED_GRANTS = ['CREATE', 'UPDATE', 'INSERT', 'DROP'];
+
+
+
+
+
+    const ACTIONS_NEEDING_ALTER = ['push', 'restore'];
+
  
     protected $wpdb;
 
@@ -34,17 +42,14 @@ class DBPermissions
         }
 
         $type          = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
-        $grantsToCheck = ['CREATE', 'UPDATE', 'INSERT', 'DROP'];
-        if ($type === 'push') {
-            $grantsToCheck[] = 'ALTER';
-        }
+        $action        = !empty($type) ? $type : 'restore';
+        $grantsToCheck = $this->getRequiredGrants($action);
 
         if ($this->isAllowed(['ALL PRIVILEGES']) || $this->isAllowed($grantsToCheck)) {
             wp_send_json_success();
         }
 
-        $action = !empty($type) ? $type : 'restore';
-        $permissions = $action === 'push' ? 'CREATE, UPDATE, ALTER, INSERT, DROP' : 'CREATE, UPDATE, INSERT, DROP';
+        $permissions = implode(', ', $grantsToCheck);
 
         $message = sprintf(
             __("The database user might not have sufficient permissions to use the %s action. Continue the process anyway by clicking the 'Proceed' button or change the user's DB permissions and resume the process.<br/><br/> Required permissions are: %s.", 'wp-staging'),
@@ -60,6 +65,20 @@ class DBPermissions
         wp_send_json_error([
             'message' => wp_kses_post($message),
         ]);
+    }
+
+
+
+
+
+    public function getRequiredGrants(string $action): array
+    {
+        $grants = self::REQUIRED_GRANTS;
+        if (in_array($action, self::ACTIONS_NEEDING_ALTER)) {
+            $grants[] = 'ALTER';
+        }
+
+        return $grants;
     }
 
 

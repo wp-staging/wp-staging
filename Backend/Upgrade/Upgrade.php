@@ -19,6 +19,7 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Framework\Notices\NextGenEngineNotice;
 use WPStaging\Framework\Upgrade\UpgradeFlags;
+use WPStaging\Backup\Service\UpdateProtectionSettings;
 
  
 if (!defined("WPINC")) {
@@ -94,10 +95,28 @@ class Upgrade
         $this->upgrade3_0_7();
         $this->upgrade3_8_1();
         $this->migrateRemoteStorageOptionNames();
+        $this->adoptLegacyUpdateProtectionMode();
         $this->maybeWarnAboutAffectedNextGenStagingSites();
         $this->normalizeSettingsShape();
 
         $this->setVersion();
+    }
+
+
+
+
+
+
+
+
+    private function adoptLegacyUpdateProtectionMode()
+    {
+        if ($this->upgradeFlags->has('update_protection_mode_adopted')) {
+            return;
+        }
+
+        WPStaging::make(UpdateProtectionSettings::class)->adoptLegacyMode();
+        $this->upgradeFlags->mark('update_protection_mode_adopted');
     }
 
 

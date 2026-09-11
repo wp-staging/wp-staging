@@ -7,6 +7,10 @@ namespace WPStaging\Backup\Dto\Interfaces;
 
 interface RemoteUploadDtoInterface
 {
+    public function getRemoteUploadRetry(): array;
+
+    public function setRemoteUploadRetry(array $state);
+
     public function getIsAutomatedBackup(): bool;
 
     public function setIsAutomatedBackup(bool $isAutomatedBackup);

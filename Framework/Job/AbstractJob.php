@@ -37,6 +37,9 @@ abstract class AbstractJob implements ShutdownableInterface
     private $jobDataCache;
 
  
+    private $uploadWaitResponse;
+
+ 
     private $hasPersisted = false;
 
  
@@ -87,7 +90,7 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->filesystem   = $filesystem;
         $this->directory    = $directory;
 
-        $this->jobDataCache->setLifetime(HOUR_IN_SECONDS);
+        $this->jobDataCache->setLifetime($jobDataDto instanceof \WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface ? -1 : HOUR_IN_SECONDS);
         $this->jobDataCache->setFilename('jobCache_' . $this::getJobName());
 
         $this->processLock   = $processLock;
@@ -274,6 +277,10 @@ abstract class AbstractJob implements ShutdownableInterface
                 return $this->getJobFailResponse($ex->getMessage());
             }
 
+            if ($this->uploadWaitResponse !== null) {
+                return $this->uploadWaitResponse;
+            }
+
             $this->registerShutdownBackstop();
 
  
@@ -288,7 +295,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
             $nextTask = $this->jobDataDto->getCurrentTask();
 
-            if (is_subclass_of($nextTask, AbstractTask::class)) {
+            if ($response->getRetryAt() === 0 && is_subclass_of($nextTask, AbstractTask::class)) {
                 $response->setStatusTitle(call_user_func("$nextTask::getTaskTitle"));
             }
 
@@ -424,6 +431,11 @@ abstract class AbstractJob implements ShutdownableInterface
             throw new \RuntimeException('Internal error: Next task of queue job is null or invalid.');
         }
 
+        $this->uploadWaitResponse = $this->getUploadWaitResponse();
+        if ($this->uploadWaitResponse !== null) {
+            return;
+        }
+
  
         $this->currentTask = WPStaging::getInstance()->get($this->currentTaskName);
 
@@ -445,6 +457,31 @@ abstract class AbstractJob implements ShutdownableInterface
  
         $this->jobDataDto->setTaskHealthName($this->currentTaskName);
         $this->jobDataDto->setTaskHealthResponded(false);
+    }
+
+ 
+    private function getUploadWaitResponse()
+    {
+        if (!$this->jobDataDto instanceof \WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface) {
+            return null;
+        }
+
+        $state = $this->jobDataDto->getRemoteUploadRetry();
+        $now = WPStaging::make(\WPStaging\Framework\Utils\Times::class)->getCurrentTimestamp();
+        if (empty($state['retryAt']) || $state['retryAt'] <= $now) {
+            return null;
+        }
+
+        $response = new TaskResponseDto();
+        $response->setIsRunning(true);
+        $response->setJobId($this->jobDataDto->getId());
+        $response->setStatusTitle($state['statusTitle']);
+        $response->setRetryAt($state['retryAt']);
+        $response->setRetryDelay($state['retryAt'] - $now);
+        $response->setPercentage($state['percentage'] ?? 0);
+        $response->setStep($state['step'] ?? 0);
+        $response->setTotal($state['total'] ?? 0);
+        return $response;
     }
 
     public function commitLogs()
@@ -549,6 +586,10 @@ abstract class AbstractJob implements ShutdownableInterface
 
     protected function getJobCancelResponse(): TaskResponseDto
     {
+        if ($this->jobDataDto instanceof \WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface) {
+            $this->jobDataDto->setRemoteUploadRetry([]);
+        }
+
         $response = new TaskResponseDto();
         $response->setIsRunning(false);
         $response->setJobStatus('JOB_CANCEL');

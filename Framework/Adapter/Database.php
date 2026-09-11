@@ -35,6 +35,9 @@ class Database implements DatabaseInterface
  
     private $mysqlVersion;
 
+ 
+    private $foldsTableNameCase;
+
 
 
 
@@ -55,10 +58,11 @@ class Database implements DatabaseInterface
             $this->wpdb = $wpDatabase;
         }
 
-        $this->mysqlVersion     = null;
-        $this->productionPrefix = $wpdb->prefix;
-        $this->wpdba            = new WpDbAdapter($this->wpdb);
-        $this->client           = $this->findClient();
+        $this->mysqlVersion       = null;
+        $this->foldsTableNameCase = null;
+        $this->productionPrefix   = $wpdb->prefix;
+        $this->wpdba              = new WpDbAdapter($this->wpdb);
+        $this->client             = $this->findClient();
     }
 
     public function getClient(): InterfaceDatabaseClient
@@ -78,16 +82,32 @@ class Database implements DatabaseInterface
 
 
 
-
-
-
     public function getPrefix(): string
     {
-        if (WPStaging::isWindowsOs() || $this->getLowerTablesNameSettings() === '1') {
-            return strtolower($this->wpdb->prefix);
+        return $this->normalizeTableNameCase($this->wpdb->prefix);
+    }
+
+
+
+
+
+
+    public function foldsTableNameCase(): bool
+    {
+        if ($this->foldsTableNameCase === null) {
+            $this->foldsTableNameCase = WPStaging::isWindowsOs() || in_array($this->getLowerTablesNameSettings(), ['1', '2'], true);
         }
 
-        return $this->wpdb->prefix;
+        return $this->foldsTableNameCase;
+    }
+
+
+
+
+
+    public function normalizeTableNameCase(string $tableName): string
+    {
+        return $this->foldsTableNameCase() ? strtolower($tableName) : $tableName;
     }
 
 

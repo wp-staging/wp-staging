@@ -18,9 +18,9 @@ trait HttpRequestTrait
 
 
 
-    protected function getRequestBody(string $url, array $args = [], bool $decodeBody = true)
+    protected function getRequestBody(string $url, array $args = [], bool $decodeBody = true, bool $deferUpload = false)
     {
-        $response = $this->getRemoteRequest($url, $args);
+        $response = $this->getRemoteRequest($url, $args, $deferUpload);
         $body     = wp_remote_retrieve_body($response);
         if ($decodeBody) {
             return json_decode($body, true);
@@ -37,7 +37,7 @@ trait HttpRequestTrait
 
 
 
-    protected function getRemoteRequest(string $url, array $args = []): array
+    protected function getRemoteRequest(string $url, array $args = [], bool $deferUpload = false): array
     {
         $defaults = [
             'timeout'     => 40,
@@ -46,7 +46,7 @@ trait HttpRequestTrait
             'method'      => 'GET',
         ];
         $args         = wp_parse_args($args, $defaults);
-        $response     = $this->requestUntilNotThrottled($url, $args);
+        $response     = $this->requestUntilNotThrottled($url, $args, $deferUpload);
         $responseCode = wp_remote_retrieve_response_code($response);
 
         if (is_wp_error($response) || (!in_array($responseCode, [200, 201, 202, 204, 206, 302, 308]))) {

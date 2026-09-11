@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Language;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Utils\Env;
 
@@ -249,6 +250,36 @@ class Language
 
 
 
+
+
+
+
+
+
+    public static function getInstallSource(): string
+    {
+        if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
+            return 'wp-staging-free';
+        }
+
+        $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
+
+        if (!$licensing->isValidOrExpiredLicenseKey()) {
+            return 'wp-staging-free';
+        }
+
+        $plan = preg_replace('/[^a-z0-9_]/', '', strtolower($licensing->getEntitlements()->effectiveTier()));
+
+        if ($plan === '' || $plan === 'basic') {
+            return 'wp-staging-free';
+        }
+
+        return 'wp-staging-' . str_replace('_', '-', $plan);
+    }
+
+
+
+
     public static function getDesktopUrl(string $context = ''): string
     {
         $url     = self::localizeUrl('https://wp-staging.com/desktop/');
@@ -258,7 +289,7 @@ class Language
             return $url;
         }
 
-        return $url . '?' . self::buildUtmQuery($context, 'wp-staging-free');
+        return $url . '?' . self::buildUtmQuery($context, self::getInstallSource());
     }
 
 

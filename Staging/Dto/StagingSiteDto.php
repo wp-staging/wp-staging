@@ -2,6 +2,7 @@
 
 namespace WPStaging\Staging\Dto;
 
+use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use WPStaging\Framework\Traits\ArrayableTrait;
 use WPStaging\Framework\Traits\HydrateTrait;
 
@@ -15,7 +16,9 @@ use WPStaging\Framework\Traits\HydrateTrait;
 class StagingSiteDto implements \JsonSerializable
 {
     use HydrateTrait;
-    use ArrayableTrait;
+    use ArrayableTrait {
+        toArray as private propertiesToArray;
+    }
 
 
 
@@ -56,6 +59,9 @@ class StagingSiteDto implements \JsonSerializable
 
  
     protected $databaseUser = '';
+
+ 
+    protected $useCustomDatabase = null;
 
  
     protected $databasePassword = '';
@@ -645,9 +651,28 @@ class StagingSiteDto implements \JsonSerializable
         return empty($this->cloneName) ? $this->directoryName : $this->cloneName;
     }
 
+    public function toArray(): array
+    {
+        $data = $this->propertiesToArray();
+        if ($this->useCustomDatabase === null) {
+            unset($data['useCustomDatabase']);
+        }
+
+        return $data;
+    }
+
+
+
+
+
+    public function setUseCustomDatabase($useCustomDatabase)
+    {
+        $this->useCustomDatabase = filter_var($useCustomDatabase, FILTER_VALIDATE_BOOLEAN);
+    }
+
     public function getIsCustomDatabaseConnection(): bool
     {
-        return !empty($this->databaseDatabase) && !empty($this->databaseUser);
+        return (new ExternalDatabaseConfiguration())->isEnabled($this->toArray());
     }
 
     public function getIsExternalDatabase(): bool
@@ -687,10 +712,9 @@ class StagingSiteDto implements \JsonSerializable
 
 
 
-
     public function getUsedPrefix(): string
     {
-        return $this->getIsExternalDatabase() ? $this->getDatabasePrefix() : $this->getPrefix();
+        return (new ExternalDatabaseConfiguration())->getTablePrefix($this->toArray());
     }
 
 

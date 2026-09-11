@@ -132,7 +132,7 @@ class SizeCalculator extends AbstractTemplateComponent
     {
         $absPath             = $this->directory->getAbsPath();
         $selectedDirectories = $this->wpDefaultDirectories->getWpCoreDirectories();
-        $excludedDirectories = $this->wpDefaultDirectories->getExcludedDirectories($excludedDirectories);
+        $excludedDirectories = $this->directory->getExcludedDirectories($excludedDirectories);
 
         if ($isUploadsSymlinked) {
             $uploadDirectory = rtrim(str_replace($absPath, PathIdentifier::IDENTIFIER_ABSPATH, $this->directory->getMainSiteUploadsDirectory()), '/');

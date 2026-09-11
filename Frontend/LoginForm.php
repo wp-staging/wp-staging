@@ -7,6 +7,8 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
 
+use function WPStaging\functions\debug_log;
+
 class LoginForm
 {
  
@@ -43,7 +45,29 @@ class LoginForm
     {
         $this->sanitize = WPStaging::make(Sanitize::class);
         $this->siteInfo = WPStaging::make(SiteInfo::class);
-        $this->login();
+    }
+
+
+
+
+
+
+
+    public function authenticate()
+    {
+        try {
+            $this->login();
+        } catch (\Throwable $e) {
+            debug_log(sprintf(
+                'LoginForm: Authentication raised %s: %s in %s:%d',
+                get_class($e),
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ));
+
+            $this->error = __('The login could not be completed because another plugin raised an error. The WP STAGING debug log of this site holds the details.', 'wp-staging');
+        }
     }
 
 

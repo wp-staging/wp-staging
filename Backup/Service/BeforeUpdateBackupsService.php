@@ -4,8 +4,8 @@ namespace WPStaging\Backup\Service;
 
 use SplFileInfo;
 use Throwable;
+use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Utils\BackupPathResolver;
 use WPStaging\Framework\Facades\Hooks;
 
 use function WPStaging\functions\debug_log;
@@ -19,6 +19,14 @@ use function WPStaging\functions\debug_log;
 
 class BeforeUpdateBackupsService
 {
+    use WithBackupIdentifier;
+
+ 
+    const STAGING_UPDATE_SCHEDULE_PREFIX = 'wpstg-staging-update-';
+
+ 
+    const KEEP_PER_STAGING_SITE = 1;
+
 
 
 
@@ -55,19 +63,14 @@ class BeforeUpdateBackupsService
     private $backupsFinder;
 
  
-    private $backupPathResolver;
-
- 
     private $backups = null;
 
 
 
 
-
-    public function __construct(BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver)
+    public function __construct(BackupsFinder $backupsFinder)
     {
-        $this->backupsFinder      = $backupsFinder;
-        $this->backupPathResolver = $backupPathResolver;
+        $this->backupsFinder = $backupsFinder;
     }
 
 
@@ -83,6 +86,10 @@ class BeforeUpdateBackupsService
         $oldest = $now - $this->getReuseWindow();
 
         foreach ($this->findBackups() as $backup) {
+            if ($backup['isStagingUpdate']) {
+                continue;
+            }
+
             if ($backup['dateCreated'] < $oldest) {
                 return [];
             }
@@ -128,9 +135,83 @@ class BeforeUpdateBackupsService
 
     public function prune(int $roomFor = 0): int
     {
-        $keep = max(0, $this->getKeepCount() - $roomFor);
+        return $this->pruneMatching(max(0, $this->getKeepCount() - $roomFor), function (array $backup): bool {
+            return !$backup['isStagingUpdate'];
+        });
+    }
 
-        $backups = $this->findBackups();
+
+
+
+
+
+
+
+
+    public function pruneForSchedule(string $scheduleId): int
+    {
+        if (strpos($scheduleId, self::STAGING_UPDATE_SCHEDULE_PREFIX) !== 0) {
+            return 0;
+        }
+
+        return $this->pruneMatching(self::KEEP_PER_STAGING_SITE, $this->matchesSchedule($scheduleId));
+    }
+
+
+
+
+
+
+
+
+
+    public function pruneForScheduleInDirectory(string $scheduleId, string $backupDirectory): int
+    {
+        $backupDirectory = realpath($backupDirectory);
+        if (strpos($scheduleId, self::STAGING_UPDATE_SCHEDULE_PREFIX) !== 0 || $backupDirectory === false || !is_dir($backupDirectory)) {
+            return 0;
+        }
+
+        $backups = $this->findBackupsInDirectory($backupDirectory);
+
+        return $this->pruneMatching(self::KEEP_PER_STAGING_SITE, $this->matchesSchedule($scheduleId), $backups);
+    }
+
+
+
+
+
+    private function matchesSchedule(string $scheduleId)
+    {
+        return function (array $backup) use ($scheduleId): bool {
+            return $backup['scheduleId'] === $scheduleId;
+        };
+    }
+
+
+
+
+
+
+
+
+
+    public static function getStagingUpdateScheduleId(string $cloneId, string $url, string $path): string
+    {
+        return self::STAGING_UPDATE_SCHEDULE_PREFIX . substr(hash('sha256', $cloneId . '|' . untrailingslashit($url) . '|' . untrailingslashit($path)), 0, 24);
+    }
+
+
+
+
+
+
+
+    private function pruneMatching(int $keep, $matches, $backups = null): int
+    {
+        $usesCachedBackups = $backups === null;
+        $backups           = array_values(array_filter($usesCachedBackups ? $this->findBackups() : $backups, $matches));
+
         if (count($backups) <= $keep) {
             return 0;
         }
@@ -142,7 +223,9 @@ class BeforeUpdateBackupsService
             }
         }
 
-        $this->backups = null;
+        if ($usesCachedBackups) {
+            $this->backups = null;
+        }
 
         return $deleted;
     }
@@ -156,19 +239,47 @@ class BeforeUpdateBackupsService
             return $this->backups;
         }
 
+        $this->backups = $this->describeBackups($this->backupsFinder->findBackups());
+
+        return $this->backups;
+    }
+
+
+
+
+
+    private function findBackupsInDirectory(string $directory): array
+    {
+        return $this->describeBackups($this->backupsFinder->findBackupsIn($directory));
+    }
+
+
+
+
+
+    private function describeBackups(array $files): array
+    {
         $backups = [];
-        foreach ($this->backupsFinder->findBackups() as $splFileInfo) {
+        foreach ($files as $splFileInfo) {
             $metadata = $this->readMetadata($splFileInfo);
-            if ($metadata === null || !$metadata->getIsBeforeUpdateBackup()) {
+            if ($metadata === null) {
+                continue;
+            }
+
+            $scheduleId      = (string)$metadata->getScheduleId();
+            $isStagingUpdate = strpos($scheduleId, self::STAGING_UPDATE_SCHEDULE_PREFIX) === 0;
+            if (!$metadata->getIsBeforeUpdateBackup() && !$isStagingUpdate) {
                 continue;
             }
 
             $backups[] = [
-                'file'        => $splFileInfo,
-                'name'        => $metadata->getName(),
-                'dateCreated' => (int)$metadata->getDateCreated(),
-                'parts'       => $this->getParts($metadata),
-                'scope'       => [
+                'file'            => $splFileInfo,
+                'name'            => $metadata->getName(),
+                'dateCreated'     => (int)$metadata->getDateCreated(),
+                'parts'           => $this->getParts($metadata),
+                'scheduleId'      => $scheduleId,
+                'isStagingUpdate' => $isStagingUpdate,
+                'scope'           => [
                     'isExportingPlugins'             => $metadata->getIsExportingPlugins(),
                     'isExportingMuPlugins'           => $metadata->getIsExportingMuPlugins(),
                     'isExportingThemes'              => $metadata->getIsExportingThemes(),
@@ -183,8 +294,6 @@ class BeforeUpdateBackupsService
         usort($backups, function ($left, $right) {
             return $right['dateCreated'] - $left['dateCreated'];
         });
-
-        $this->backups = $backups;
 
         return $backups;
     }
@@ -225,7 +334,7 @@ class BeforeUpdateBackupsService
     private function delete(SplFileInfo $backup, array $parts): bool
     {
         foreach ($parts as $part) {
-            $partPath = $this->backupPathResolver->resolveBackupPartPath($part, $backup->getFilename());
+            $partPath = $this->resolvePartPath($part, $backup);
             if ($partPath === '' || !file_exists($partPath)) {
                 continue;
             }
@@ -237,6 +346,13 @@ class BeforeUpdateBackupsService
             }
         }
 
+ 
+ 
+ 
+        if (!file_exists($backup->getPathname())) {
+            return true;
+        }
+
         if (!unlink($backup->getPathname())) {
             debug_log('WP STAGING: Could not delete backup while pruning backup-before-update backups: ' . $backup->getPathname());
 
@@ -244,6 +360,34 @@ class BeforeUpdateBackupsService
         }
 
         return true;
+    }
+
+
+
+
+
+
+    private function resolvePartPath(string $part, SplFileInfo $backup): string
+    {
+        if ($part === '' || $part !== wp_basename($part) || !$this->isBackupPart($part)) {
+            return '';
+        }
+
+        if ($this->extractBackupIdFromFilename($part) !== $this->extractBackupIdFromFilename($backup->getFilename())) {
+            return '';
+        }
+
+        $backupDirectory = realpath($backup->getPath());
+        if ($backupDirectory === false) {
+            return '';
+        }
+
+        $partPath = trailingslashit($backupDirectory) . $part;
+        if (!file_exists($partPath) || is_link($partPath)) {
+            return '';
+        }
+
+        return $partPath;
     }
 
 

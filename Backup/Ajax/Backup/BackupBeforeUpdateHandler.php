@@ -2,25 +2,24 @@
 
 namespace WPStaging\Backup\Ajax\Backup;
 
+use WPStaging\Backup\Service\BackgroundBackupProgress;
 use WPStaging\Backup\Service\BeforeUpdateBackupRequest;
 use WPStaging\Backup\Service\BeforeUpdateBackupsService;
+use WPStaging\Backup\Service\StagingUpdateBackupClient;
 use WPStaging\Backup\Service\UpdateProtectionHealth;
 use WPStaging\Backup\Service\UpdateProtectionSettings;
-use WPStaging\Core\DTO\Settings;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
-use WPStaging\Framework\Job\JobTransientCache;
-use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Capabilities;
-
-use function WPStaging\functions\debug_log;
+use WPStaging\Framework\Traits\AuthorizedRequestTrait;
 
 
 
 
 class BackupBeforeUpdateHandler
 {
+    use AuthorizedRequestTrait;
+
  
     private $accessToken;
 
@@ -34,13 +33,17 @@ class BackupBeforeUpdateHandler
     private $backupRequest;
 
  
-    private $sseEventCache;
+    private $backupProgress;
 
  
     private $updateProtectionSettings;
 
  
     private $health;
+
+ 
+    private $stagingUpdateBackupClient;
+
 
 
 
@@ -56,57 +59,19 @@ class BackupBeforeUpdateHandler
         Capabilities $capabilities,
         BeforeUpdateBackupsService $beforeUpdateBackups,
         BeforeUpdateBackupRequest $backupRequest,
-        SseEventCache $sseEventCache,
+        BackgroundBackupProgress $backupProgress,
         UpdateProtectionSettings $updateProtectionSettings,
-        UpdateProtectionHealth $health
+        UpdateProtectionHealth $health,
+        StagingUpdateBackupClient $stagingUpdateBackupClient
     ) {
         $this->accessToken              = $accessToken;
         $this->capabilities             = $capabilities;
         $this->beforeUpdateBackups      = $beforeUpdateBackups;
         $this->backupRequest            = $backupRequest;
-        $this->sseEventCache            = $sseEventCache;
+        $this->backupProgress           = $backupProgress;
         $this->updateProtectionSettings = $updateProtectionSettings;
         $this->health                   = $health;
-    }
-
-
-
-
-
-
-
-    private function requireAuthorizedRequest()
-    {
-        if (!$this->accessToken->requestHasValidToken()) {
-            wp_send_json_error(['message' => esc_html__('Unauthorized', 'wp-staging')], 401);
-        }
-
-        if (!current_user_can($this->capabilities->manageWPSTG())) {
-            wp_send_json_error(['message' => esc_html__('Forbidden', 'wp-staging')], 403);
-        }
-    }
-
-
-
-
-    public function save()
-    {
-        $this->requireAuthorizedRequest();
-
-        $allowed = ['ask', 'always', 'never'];
-        $mode    = isset($_POST['mode']) ? Sanitize::sanitizeString($_POST['mode']) : 'ask';
-        if (!in_array($mode, $allowed, true)) {
-            $mode = 'ask';
-        }
-
-        $optionName = Settings::OPTION_BACKUP_BEFORE_UPDATE_MODE;
-        if (!update_option($optionName, $mode) && get_option($optionName) !== $mode) {
-            debug_log('Failed to save backup-before-update mode: update_option returned false', 'error');
-            wp_send_json_error(['message' => esc_html__('Failed to save preference.', 'wp-staging')], 500);
-            return;
-        }
-
-        wp_send_json_success();
+        $this->stagingUpdateBackupClient = $stagingUpdateBackupClient;
     }
 
 
@@ -153,18 +118,50 @@ class BackupBeforeUpdateHandler
 
 
 
+
+
+    public function cancelBackup()
+    {
+        $this->requireAuthorizedRequest();
+
+        wp_send_json_success(['cancelled' => $this->backupRequest->cancel()]);
+    }
+
+
+
+
+
+
+
+
     public function getReusableBackup()
     {
         $this->requireAuthorizedRequest();
 
         $updateType = isset($_POST['updateType']) ? Sanitize::sanitizeString($_POST['updateType']) : 'plugin';
+        $cloneId    = isset($_POST['cloneId']) ? Sanitize::sanitizeString($_POST['cloneId']) : '';
 
-        $reusable          = $this->beforeUpdateBackups->findReusableBackup($this->getBackupData($updateType, ''));
+        if ($updateType === 'staging') {
+            $this->sendResult($this->stagingUpdateBackupClient->request('reusable', $cloneId));
+            return;
+        }
+
+        $this->sendResult($this->getReusableBackupOnThisSite($updateType));
+    }
+
+
+
+
+
+    private function getReusableBackupOnThisSite(string $updateType): array
+    {
+        $backupData        = $this->getBackupData($updateType, '');
+        $reusable          = $this->beforeUpdateBackups->findReusableBackup($backupData);
         $willTakeNewBackup = empty($reusable);
 
         $this->beforeUpdateBackups->prune($willTakeNewBackup ? 1 : 0);
 
-        wp_send_json_success($reusable);
+        return ['success' => true, 'data' => $reusable];
     }
 
 
@@ -183,6 +180,12 @@ class BackupBeforeUpdateHandler
         $updateType = isset($_POST['updateType']) ? Sanitize::sanitizeString($_POST['updateType']) : 'plugin';
         $slug       = isset($_POST['slug']) ? Sanitize::sanitizeString($_POST['slug']) : '';
         $pluginFile = isset($_POST['pluginFile']) ? Sanitize::sanitizeString($_POST['pluginFile']) : '';
+        $cloneId    = isset($_POST['cloneId']) ? Sanitize::sanitizeString($_POST['cloneId']) : '';
+
+        if ($updateType === 'staging') {
+            $this->sendResult($this->stagingUpdateBackupClient->request('start', $cloneId));
+            return;
+        }
 
         if (isset($_POST['join']) && Sanitize::sanitizeString($_POST['join']) === '1') {
             $this->backupRequest->queuePlugin($pluginFile);
@@ -190,22 +193,36 @@ class BackupBeforeUpdateHandler
             wp_send_json_success(['status' => $this->backupRequest->getStatus()]);
         }
 
+        $this->sendResult($this->startBackupOnThisSite($updateType, $slug, $pluginFile));
+    }
+
+
+
+
+
+
+
+    private function startBackupOnThisSite(string $updateType, string $slug, string $pluginFile): array
+    {
         $outcome = $this->backupRequest->startForUpdate($this->getBackupData($updateType, $slug), $pluginFile);
 
         if ($outcome === BeforeUpdateBackupRequest::OUTCOME_ALREADY_RUNNING) {
-            wp_send_json_error(['message' => esc_html__('A backup is already running.', 'wp-staging'), 'code' => 'already_running']);
+            return ['success' => false, 'data' => ['message' => esc_html__('A backup is already running.', 'wp-staging'), 'code' => 'already_running']];
         }
 
         if ($outcome === BeforeUpdateBackupRequest::OUTCOME_FAILED) {
-            wp_send_json_error([
-                'message'        => esc_html__('The backup could not be started.', 'wp-staging'),
-                'code'           => 'start_failed',
-                'failureReason'  => $this->health->getReason(),
-                'failureDetails' => $this->health->getMessage(),
-            ]);
+            return [
+                'success' => false,
+                'data'    => [
+                    'message'        => esc_html__('The backup could not be started.', 'wp-staging'),
+                    'code'           => 'start_failed',
+                    'failureReason'  => $this->health->getReason(),
+                    'failureDetails' => $this->health->getMessage(),
+                ],
+            ];
         }
 
-        wp_send_json_success(['status' => $this->backupRequest->getStatus()]);
+        return ['success' => true, 'data' => ['status' => $this->backupRequest->getStatus()]];
     }
 
 
@@ -218,20 +235,40 @@ class BackupBeforeUpdateHandler
     {
         $this->requireAuthorizedRequest();
 
- 
- 
+        $updateType = isset($_POST['updateType']) ? Sanitize::sanitizeString($_POST['updateType']) : '';
+        $cloneId    = isset($_POST['cloneId']) ? Sanitize::sanitizeString($_POST['cloneId']) : '';
+
+        if ($updateType === 'staging') {
+            $this->sendResult($this->stagingUpdateBackupClient->request('progress', $cloneId));
+            return;
+        }
+
+        $this->sendResult($this->getBackupProgressOnThisSite());
+    }
+
+
+
+
+    private function getBackupProgressOnThisSite(): array
+    {
         $this->backupRequest->failIfStalled();
         $this->backupRequest->runWaitingWork();
 
         $status = $this->backupRequest->getStatus();
 
-        wp_send_json_success(array_merge([
-            'status'         => $status,
-            'pluginFiles'    => $this->backupRequest->getPendingPluginFiles(),
-            'failureReason'  => $status === BeforeUpdateBackupRequest::STATUS_FAILED ? $this->health->getReason() : '',
-            'failureDetails' => $status === BeforeUpdateBackupRequest::STATUS_FAILED ? $this->health->getMessage() : '',
-            'isPaused'       => $this->health->isPaused(),
-        ], $this->getLastTask()));
+        return [
+            'success' => true,
+            'data'    => array_merge(
+                [
+                    'status'         => $status,
+                    'pluginFiles'    => $this->backupRequest->getPendingPluginFiles(),
+                    'failureReason'  => $status === BeforeUpdateBackupRequest::STATUS_FAILED ? $this->health->getReason() : '',
+                    'failureDetails' => $status === BeforeUpdateBackupRequest::STATUS_FAILED ? $this->health->getMessage() : '',
+                    'isPaused'       => $this->health->isPaused(),
+                ],
+                $this->backupProgress->getLastTask('WP STAGING Backup Before Update')
+            ),
+        ];
     }
 
 
@@ -262,15 +299,15 @@ class BackupBeforeUpdateHandler
 
     private function getBackupData(string $updateType, string $slug): array
     {
-        $isCore = $updateType === 'core';
+        $isWholeSite = $updateType === 'core';
 
         return [
             'name'                           => $this->getBackupName($updateType, $slug),
-            'isExportingPlugins'             => $isCore || $updateType === 'plugin',
-            'isExportingMuPlugins'           => $isCore,
-            'isExportingThemes'              => $isCore || $updateType === 'theme',
-            'isExportingUploads'             => $isCore,
-            'isExportingOtherWpContentFiles' => $isCore,
+            'isExportingPlugins'             => $isWholeSite || $updateType === 'plugin',
+            'isExportingMuPlugins'           => $isWholeSite,
+            'isExportingThemes'              => $isWholeSite || $updateType === 'theme',
+            'isExportingUploads'             => $isWholeSite,
+            'isExportingOtherWpContentFiles' => $isWholeSite,
             'isExportingOtherWpRootFiles'    => false,
             'isExportingDatabase'            => true,
             'isBeforeUpdateBackup'           => true,
@@ -307,40 +344,14 @@ class BackupBeforeUpdateHandler
 
 
 
-
-
-
-
-
-    private function getLastTask(): array
+    private function sendResult(array $result)
     {
-        $nothing = ['title' => '', 'percentage' => 0];
-
-        try {
-            $jobId = WPStaging::make(JobTransientCache::class)->getJobId();
-            if (empty($jobId)) {
-                return $nothing;
-            }
-
-            $this->sseEventCache->setJobId($jobId);
-            $this->sseEventCache->load();
-            $events = $this->sseEventCache->getEvents();
-        } catch (\Throwable $e) {
-            debug_log('WP STAGING Backup Before Update: could not read backup progress. ' . $e->getMessage(), 'debug', false);
-
-            return $nothing;
+        if ($result['success']) {
+            wp_send_json_success($result['data']);
+            return;
         }
 
-        foreach (array_reverse((array)$events) as $event) {
-            if (is_array($event) && isset($event['type'], $event['data']['title']) && $event['type'] === SseEventCache::EVENT_TYPE_TASK) {
-                return [
-                    'title'      => (string)$event['data']['title'],
-                    'percentage' => isset($event['data']['percentage']) ? (int)$event['data']['percentage'] : 0,
-                ];
-            }
-        }
-
-        return $nothing;
+        wp_send_json_error($result['data']);
     }
 
 

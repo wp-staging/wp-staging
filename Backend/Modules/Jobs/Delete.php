@@ -10,7 +10,9 @@ use wpdb;
 use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Database\DatabaseException;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
@@ -62,6 +64,19 @@ class Delete extends Job
 
 
 
+    private $productionDb;
+
+
+
+
+    private $connectedToProductionDatabase;
+
+ 
+    private $lowerCaseTableNames;
+
+
+
+
     private $isExternalDb;
 
  
@@ -105,8 +120,12 @@ class Delete extends Job
  
         $this->cache->setFilename($this->getJobCacheFileName());
 
+        $this->productionDb                 = WPStaging::getInstance()->get("wpdb");
+        $this->connectedToProductionDatabase = null;
+        $this->lowerCaseTableNames           = null;
+
         if (!$this->isExternalDatabase()) {
-            $this->wpdb = WPStaging::getInstance()->get("wpdb");
+            $this->wpdb = $this->productionDb;
             $this->getTableRecords();
             return true;
         }
@@ -195,14 +214,9 @@ class Delete extends Job
     {
         $stagingPrefix = $this->getStagingPrefix();
 
- 
-        $prefix = $this->strings->replaceLastMatch('_', '\_', $stagingPrefix);
+        $escapedPrefix = str_replace(['_', '%'], ['\_', '\%'], $stagingPrefix);
 
-        if ($this->isExternalDatabase()) { 
-            $tables = $this->wpdb->get_results("SHOW TABLE STATUS");
-        } else {
-            $tables = $this->wpdb->get_results("SHOW TABLE STATUS LIKE '$prefix%'");
-        }
+        $tables = $this->wpdb->get_results("SHOW TABLE STATUS LIKE '$escapedPrefix%'");
 
         $this->tables = [];
 
@@ -225,8 +239,23 @@ class Delete extends Job
 
     private function getStagingPrefix(): string
     {
+        $this->clone->prefix = $this->readStagingPrefix();
+
+        if ($this->stagingPrefixOverlapsProductionPrefix($this->clone->prefix)) {
+            $message = "Fatal Error: Can not delete staging site. Prefix '{$this->clone->prefix}' overlaps the production table prefix. Stopping for security reasons. Go to Sites > Actions > Edit Data and correct the table prefix or contact us.";
+            $this->log($message);
+            $this->returnException($message);
+        }
+
+        return $this->clone->prefix;
+    }
+
+
+
+
+    private function readStagingPrefix(): string
+    {
         if ($this->isExternalDatabase() && !empty($this->clone->databasePrefix)) {
-            $this->clone->prefix = $this->clone->databasePrefix;
             return $this->clone->databasePrefix;
         }
 
@@ -251,13 +280,27 @@ class Delete extends Job
             $this->returnException("Fatal Error: Can not delete staging site. Can not find table prefix. Contact support@wp-staging.com");
         }
 
- 
-        if (empty($this->options->databaseUser) && $this->wpdb->prefix === $this->clone->prefix) {
-            $this->log("Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the production site. Stopping for security reasons. Go to Sites > Actions > Edit Data and correct the table prefix or contact us.");
-            $this->returnException("Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the production site. Stopping for security reasons. Go to Sites > Actions > Edit Data and correct the table prefix or contact us");
+        return (string)$this->clone->prefix;
+    }
+
+
+
+
+
+
+
+
+    private function stagingPrefixOverlapsProductionPrefix(string $stagingPrefix): bool
+    {
+        if (!$this->isConnectedToProductionDatabase()) {
+            return false;
         }
 
-        return $this->clone->prefix;
+        $productionPrefix = strtolower($this->productionDb->base_prefix ?: $this->productionDb->prefix);
+        $stagingPrefix    = strtolower($stagingPrefix);
+
+        return $this->strings->startsWith($productionPrefix, $stagingPrefix)
+            || $this->strings->startsWith($stagingPrefix, $productionPrefix);
     }
 
 
@@ -381,20 +424,103 @@ class Delete extends Job
             return;
         }
 
-        $tables = $this->getTablesToRemove();
+        $stagingPrefix = $this->getStagingPrefix();
+        $tables        = $this->getTablesToRemove();
 
         foreach ($tables as $table) {
- 
-            if (!$this->isExternalDatabase() && $this->strings->startsWith($table, $this->wpdb->prefix)) {
+            if ($this->isConnectedToProductionDatabase() && !$this->tableNameStartsWithPrefix($table, $stagingPrefix)) {
                 $this->log("Fatal Error: Trying to delete table $table of main WP installation!", Logger::TYPE_CRITICAL);
+                $this->returnException("Fatal Error: Can not delete staging site. Table '$table' does not carry the staging site prefix '$stagingPrefix' and lives in the production database. Stopping for security reasons. Go to Sites > Actions > Edit Data and correct the table prefix or contact support@wp-staging.com");
             }
 
-            $this->wpdb->query("DROP TABLE $table");
+            $this->wpdb->query("DROP TABLE `" . str_replace("`", "``", $table) . "`");
         }
 
  
         $this->job->current = "directory";
         $this->updateJob();
+    }
+
+
+
+
+
+
+
+
+    private function tableNameStartsWithPrefix(string $table, string $prefix): bool
+    {
+        if (in_array($this->getLowerCaseTableNames(), ['1', '2'], true)) {
+            return $this->strings->startsWith(strtolower($table), strtolower($prefix));
+        }
+
+        return $this->strings->startsWith($table, $prefix);
+    }
+
+
+
+
+
+
+    private function getLowerCaseTableNames(): string
+    {
+        if ($this->lowerCaseTableNames === null) {
+            $this->lowerCaseTableNames = (string)$this->wpdb->get_var('SELECT @@lower_case_table_names');
+        }
+
+        return $this->lowerCaseTableNames;
+    }
+
+
+
+
+
+
+
+    private function isConnectedToProductionDatabase(): bool
+    {
+        if ($this->connectedToProductionDatabase === null) {
+            $this->connectedToProductionDatabase = $this->connectionAnswersAsProductionDatabase();
+        }
+
+        return $this->connectedToProductionDatabase;
+    }
+
+
+
+
+
+
+    private function connectionAnswersAsProductionDatabase(): bool
+    {
+        if ($this->wpdb === $this->productionDb) {
+            return true;
+        }
+
+        if ($this->wpdb->dbname !== $this->productionDb->dbname) {
+            if ($this->getLowerCaseTableNames() === '0' || strcasecmp($this->wpdb->dbname, $this->productionDb->dbname) !== 0) {
+                return false;
+            }
+        }
+
+        return !$this->serversAreProvenDifferent(new WpDbInfo($this->wpdb), new WpDbInfo($this->productionDb));
+    }
+
+
+
+
+
+
+
+
+
+    private function serversAreProvenDifferent(WpDbInfo $connectedDbInfo, WpDbInfo $productionDbInfo): bool
+    {
+        if ($connectedDbInfo->getServerIp() === '' || $productionDbInfo->getServerIp() === '') {
+            return false;
+        }
+
+        return $connectedDbInfo->getServer() !== $productionDbInfo->getServer();
     }
 
 
@@ -561,6 +687,12 @@ class Delete extends Job
 
     private function isExternalDatabaseError(): bool
     {
+        try {
+            $this->externalDatabaseConfiguration->validateConnectionTarget($this->clone);
+        } catch (DatabaseException $exception) {
+            return true;
+        }
+
         if ($this->clone->databaseSsl) {
  
             if (!defined('MYSQL_CLIENT_FLAGS')) {

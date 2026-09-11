@@ -4,6 +4,10 @@
  * Shared "Create Staging Site" call-to-action: the create button paired with the CLI dock slot.
  * Included by both the staging listing and the empty state so the CTA renders consistently.
  *
+ * The Desktop link is a sibling of the dock slot, never a child, and renders here only once the
+ * banner is dismissed. Only a screen that renders this partial asks the banner for the link, so
+ * exactly one is ever on the page.
+ *
  * @var bool $error True when the staging site option is corrupted; disables the create button.
  */
 
@@ -22,6 +26,12 @@ $cliNotice = WPStaging::make(CliIntegrationNotice::class);
         </svg>
         <?php echo esc_html__('Create Staging Site', 'wp-staging'); ?>
     </button>
-    <!-- CLI Dock Slot - populated after banner collapse or server-side when banner was dismissed -->
-    <div class="wpstg-cli-dock-slot"><?php $cliNotice->maybeRenderDockCta(); ?></div>
+    <div class="wpstg-local-workflow !wpstg-flex wpstg-flex-col wpstg-items-start wpstg-justify-center wpstg-gap-1.5">
+        <div class="wpstg-cli-dock-slot"><?php $cliNotice->maybeRenderDockCta(); ?></div>
+        <?php
+        if ($cliNotice->isBannerDismissed()) {
+            require WPSTG_VIEWS_DIR . 'staging/_partials/desktop-context-link.php';
+        }
+        ?>
+    </div>
 </div>

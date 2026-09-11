@@ -33,7 +33,7 @@ $disabledClass = !$isProVersion ? 'wpstg-storage-settings-disabled' : '';
 $haveProCrons = WPStaging::make(ProCronsCleaner::class)->haveProCrons();
 
 $cronMessage = $haveProCrons ? __('There are backup plans created with WP Staging Pro. Delete them first to create a backup plan with the free version of WP Staging. ', 'wp-staging') :
-    __('A backup is created every day at 12:00 noon!', 'wp-staging');
+    __('A backup is created every day at 12:00 midnight!', 'wp-staging');
 
 $storagesPrefix = 'storage-';
 $isMultisite    = is_multisite();
@@ -288,7 +288,7 @@ if ($isMultisite) {
                                     <input name="wpstg_schedule_mode" id="wpstg-schedule-mode-input--recurring" type="radio" value="recurring" class="wpstg-radio" <?php disabled($recurringDisabled); ?> />
                                 </label>
                             </div>
-                            <div class="wpstg-mt-4 wpstg-upgrade-callout wpstg-basic-schedule-notice <?php echo $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic'; ?>" style="display: <?php echo ($hasSchedule && !$isProVersion) ? 'block' : 'none'; ?>">
+                            <div class="wpstg-mt-4 wpstg-upgrade-callout wpstg-basic-schedule-notice <?php echo $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic'; ?>" style="display: <?php echo ($hasSchedule && !$isProVersion) ? 'block !important' : 'none'; ?>">
                                 <div class="wpstg-upgrade-callout-header">
                                     <div class="wpstg-upgrade-callout-icon" aria-hidden="true">
                                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">

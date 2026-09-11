@@ -15,6 +15,7 @@ class PrepareCancel extends PrepareJob
 
 
 
+
     const ACTION_JOB_CANCEL = 'wpstg.job_cancel';
 
  
@@ -200,9 +201,7 @@ class PrepareCancel extends PrepareJob
 
         $this->assertTargetsExpectedJob($jobData, $data);
 
-        Hooks::callInternalHook(self::ACTION_JOB_CANCEL, [
-            'jobTransientCache' => $jobTransientCache,
-        ]);
+        Hooks::callInternalHook(self::ACTION_JOB_CANCEL, [$jobTransientCache]);
 
         if (empty($data['jobIdBeingCancelled'])) {
             $data['type']                = $jobData['type'];

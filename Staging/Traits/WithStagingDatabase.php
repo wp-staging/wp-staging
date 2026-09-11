@@ -5,6 +5,7 @@ namespace WPStaging\Staging\Traits;
 use wpdb;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Collection\Collection;
+use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use WPStaging\Framework\Database\TableDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Staging\Dto\StagingSiteDto;
@@ -23,23 +24,23 @@ trait WithStagingDatabase
             return;
         }
 
-        if (!$stagingSiteDto->getIsExternalDatabase()) {
-            $stagingWpdb              = new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
-            $stagingWpdb->prefix      = $stagingSiteDto->getPrefix();
-            $stagingWpdb->base_prefix = $stagingSiteDto->getPrefix();
-            $this->stagingDb          = new Database($stagingWpdb);
-            return;
+        if ($stagingSiteDto->getIsCustomDatabaseConnection()) {
+            (new ExternalDatabaseConfiguration())->validateConnectionTarget($stagingSiteDto->toArray());
         }
 
-        $wpdb = new wpdb(
-            $stagingSiteDto->getDatabaseUser(),
-            $stagingSiteDto->getDatabasePassword(),
-            $stagingSiteDto->getDatabaseDatabase(),
-            $stagingSiteDto->getDatabaseServer()
-        );
+        if (!$stagingSiteDto->getIsExternalDatabase()) {
+            $wpdb = new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
+        } else {
+            $wpdb = new wpdb(
+                $stagingSiteDto->getDatabaseUser(),
+                $stagingSiteDto->getDatabasePassword(),
+                $stagingSiteDto->getDatabaseDatabase(),
+                $stagingSiteDto->getDatabaseServer()
+            );
+        }
 
-        $wpdb->prefix      = $stagingSiteDto->getDatabasePrefix();
-        $wpdb->base_prefix = $stagingSiteDto->getDatabasePrefix();
+        $wpdb->prefix      = $stagingSiteDto->getUsedPrefix();
+        $wpdb->base_prefix = $wpdb->prefix;
         $this->stagingDb   = new Database($wpdb);
     }
 

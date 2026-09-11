@@ -102,6 +102,8 @@ class BackupRequirementsCheckTask extends BackupTask
         Hooks::doAction('wpstg.tests.backup.requirements_check.before');
 
         try {
+            $this->cannotRunOnUnsupportedPhpVersion();
+
             if ($this->jobDataDto->getIsSyncRequest()) {
                 $this->logger->info('Started preparing data for sync');
             } else {
@@ -148,6 +150,13 @@ class BackupRequirementsCheckTask extends BackupTask
     {
         if (PHP_INT_SIZE === 4) {
             $this->logger->warning('You are running a 32-bit version of PHP. 32-bits PHP can\'t handle backups larger than 2GB. You might face a critical error. Consider upgrading to 64-bit.');
+        }
+    }
+
+    protected function cannotRunOnUnsupportedPhpVersion(string $phpVersion = PHP_VERSION)
+    {
+        if (!wpstgIsPhpVersionSupportedForBackupAndRestore($phpVersion)) {
+            throw new RuntimeException(wpstgGetUnsupportedPhpVersionMessage($phpVersion));
         }
     }
 

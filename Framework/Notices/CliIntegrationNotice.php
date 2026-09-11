@@ -53,7 +53,10 @@ class CliIntegrationNotice
 
 
 
-    public function maybeShowCliNotice()
+
+
+
+    public function maybeShowCliNotice(bool $screenHasLocalAction = false)
     {
         if (!self::IS_ENABLED) {
             return;
@@ -185,7 +188,7 @@ class CliIntegrationNotice
 
 
 
-    private function isBannerDismissed(): bool
+    public function isBannerDismissed(): bool
     {
         return (bool)get_option(self::OPTION_CLI_NOTICE_HIDDEN_FOREVER) || $this->isTemporarilyDismissed();
     }

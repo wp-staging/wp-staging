@@ -41,6 +41,8 @@ class SourceDatabase
 
     private function getExternalDb()
     {
+        $this->externalDatabaseConfiguration->validateConnectionTarget($this->options);
+
         return new wpdb($this->options->databaseUser, str_replace("\\\\", "\\", $this->options->databasePassword), $this->options->databaseDatabase, $this->options->databaseServer);
     }
 

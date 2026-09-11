@@ -108,7 +108,7 @@ class QueueProcessor
             if ((int)get_site_transient(self::TRANSIENT_FIRE_FAILURE_COUNT) !== 0) {
                 delete_site_transient(self::TRANSIENT_FIRE_FAILURE_COUNT);
             }
-        } elseif ($lastFireTs > 0 && $lastFireAge > self::FIRE_ACK_WINDOW_SECONDS && (int)$this->queue->count(Queue::STATUS_READY) > 0) {
+        } elseif ($lastFireTs > 0 && $lastFireAge > self::FIRE_ACK_WINDOW_SECONDS && $this->queue->hasAvailableAction()) {
  
  
             $this->recordFireFailure();
@@ -147,8 +147,8 @@ class QueueProcessor
 
 
         $fired          = false;
-        $remainingReady = (int)$this->queue->count(Queue::STATUS_READY);
-        if ($processed > 0 && $remainingReady > 0) {
+        $hasAvailableAction = $this->queue->hasAvailableAction();
+        if ($processed > 0 && $hasAvailableAction) {
             $fired = $this->fireAjaxAction();
 
  
@@ -162,7 +162,7 @@ class QueueProcessor
         }
 
         if ($this->inlineRetryDepth === 0 && $processed > 0) {
-            debug_log('[BG Queue] process done: dispatched=' . $processed . ' remaining=' . $remainingReady . ' fired=' . ($fired ? 'yes' : 'no'), 'info', false);
+            debug_log('[BG Queue] process done: dispatched=' . $processed . ' available=' . ($hasAvailableAction ? 'yes' : 'no') . ' fired=' . ($fired ? 'yes' : 'no'), 'info', false);
         }
 
         if ($this->inlineRetryDepth > 0) {
