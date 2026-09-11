@@ -222,7 +222,7 @@ class Assets
             );
         }
 
-        if ($this->isWordPressUpdatePage() && WPStaging::make(UpdateProtectionSettings::class)->isEnabled()) {
+        if ($this->isWordPressUpdatePage() && WPStaging::make(UpdateProtectionSettings::class)->isActive()) {
             $this->enqueueBackupBeforeUpdateAssets();
         }
 
@@ -336,7 +336,8 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
-        $wpstgConfig = [
+        $updateProtection = $this->getUpdateProtectionConfig();
+        $wpstgConfig      = [
             "delayReq"                          => 0,
  
             'backupStatusInterval'              => Hooks::applyFilters(self::FILTER_BACKUP_STATUS_REQUEST_INTERVAL, 8000),
@@ -350,7 +351,7 @@ class Assets
             'assetsUrl'                         => $this->getAssetsUrl(),
             'ajaxUrl'                           => admin_url('admin-ajax.php'),
             'restUrl'                           => $this->getRestUrl(),
-            'wpstgIcon'                         => $this->getAssetsUrl('img/wpstg-loader.gif'),
+            'wpstgIcon'                         => $updateProtection['loaderUrl'],
             'maxUploadChunkSize'                => $this->getMaxUploadChunkSize(),
             'backupDBExtension'                 => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
             'analyticsConsentAllow'             => esc_url($this->analyticsConsent->getConsentLink(true)),
@@ -378,8 +379,7 @@ class Assets
             'stagingEnginePreference'           => WPStaging::make(StagingEngine::class)->getEngine(),
         ];
 
- 
-        wp_localize_script("wpstg-common", "wpstg", $wpstgConfig);
+        wp_localize_script("wpstg-common", "wpstg", array_merge($wpstgConfig, $updateProtection));
  
         if (defined('WPSTG_TEST') && WPSTG_TEST) {
             add_filter('admin_body_class', function ($classes) {
@@ -633,22 +633,16 @@ class Assets
         $css = $this->getCssAssetsFileName('wpstg-update-pages');
         wp_enqueue_style('wpstg-update-pages', $this->getAssetsUrl($css), [], $this->getAssetsVersion($css));
 
-        $token              = (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken();
-        $translations       = $this->i18n->getTranslations();
-        $protectionSettings = WPStaging::make(UpdateProtectionSettings::class);
+        $token        = (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken();
+        $translations = $this->i18n->getTranslations();
         wp_add_inline_script(
             'wpstg-global',
-            'window.wpstg = Object.assign(window.wpstg || {}, ' . wp_json_encode([
-                'accessToken'                  => $token,
-                'ajaxUrl'                      => admin_url('admin-ajax.php'),
-                'settingsUrl'                  => admin_url('admin.php?page=wpstg-settings'),
-                'loaderUrl'                    => $this->getAssetsUrl('img/wpstg-loader.gif'),
-                'logoUrl'                      => $this->getAssetsUrl('img/logo.svg'),
-                'backupBeforeUpdateMode'       => $protectionSettings->getMode(),
-                'backupBeforeUpdateIntrosSeen' => $protectionSettings->getIntrosSeen(),
-                'updateProtectionPaused'       => WPStaging::make(UpdateProtectionHealth::class)->isPaused(),
-                'i18n'                         => ['backup_before_update' => $translations['backup_before_update'] ?? []],
-            ]) . ');',
+            'window.wpstg = Object.assign(window.wpstg || {}, ' . wp_json_encode(array_merge($this->getUpdateProtectionConfig(), [
+                'accessToken' => $token,
+                'ajaxUrl'     => admin_url('admin-ajax.php'),
+                'settingsUrl' => admin_url('admin.php?page=wpstg-settings'),
+                'i18n'        => ['backup_before_update' => $translations['backup_before_update'] ?? []],
+            ])) . ');',
             'after'
         );
 
@@ -659,6 +653,23 @@ class Assets
 
         $js = $this->getJsAssetsFileName('backup/before-update');
         wp_enqueue_script('wpstg-before-update', $this->getAssetsUrl($js), ['wpstg-solid'], $this->getAssetsVersion($js), $this->getScriptLoadingStrategy());
+    }
+
+
+
+
+    private function getUpdateProtectionConfig(): array
+    {
+        $protectionSettings = WPStaging::make(UpdateProtectionSettings::class);
+
+        return [
+            'loaderUrl'                    => $this->getAssetsUrl('img/wpstg-loader.gif'),
+            'logoUrl'                      => $this->getAssetsUrl('img/logo.svg'),
+            'backupsUrl'                   => admin_url('admin.php?page=wpstg_backup'),
+            'backupBeforeUpdateEnabled'    => $protectionSettings->isEnabled(),
+            'backupBeforeUpdateIntrosSeen' => $protectionSettings->getIntrosSeen(),
+            'updateProtectionPaused'       => WPStaging::make(UpdateProtectionHealth::class)->isPaused(),
+        ];
     }
 
 

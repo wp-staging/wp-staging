@@ -43,6 +43,7 @@ abstract class PrepareJob
 
 
 
+
     const ACTION_JOB_FAILURE = 'wpstg_background_job_failure';
 
  
@@ -137,7 +138,7 @@ abstract class PrepareJob
 
 
 
-    private function queueAction($args)
+    private function queueAction($args, int $notBefore = 0)
     {
         if (!isset($args['jobId'])) {
             throw new \BadMethodCallException();
@@ -145,7 +146,7 @@ abstract class PrepareJob
 
         $action   = $this->getCurrentAction();
         $priority = $action === null ? 0 : $action->priority - 1;
-        $actionId = $this->queue->enqueueAction(static::class . '::' . 'act', $args, $args['jobId'], $priority);
+        $actionId = $this->queue->enqueueAction(static::class . '::' . 'act', $args, $args['jobId'], $priority, $notBefore);
 
         if ($actionId === false || !$this->queue->getAction($actionId) instanceof Action) {
             throw new QueueException('Background processing action could not be queued.');
@@ -153,6 +154,7 @@ abstract class PrepareJob
 
         $this->lastQueuedActionId = $actionId;
     }
+
 
 
 
@@ -181,6 +183,17 @@ abstract class PrepareJob
 
             debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=process-locked (re-queued)', 'info', false);
             return new WP_Error(400, $e->getMessage());
+        }
+
+        if ($this->isJobCancelled($args)) {
+            $this->processLock->unlockProcess();
+            return new WP_Error(499, 'Job cancelled by user.');
+        }
+
+        if ($this->queue->hasDeferredForegroundUpload()) {
+            $this->queueAction($args);
+            $this->processLock->unlockProcess();
+            return new WP_Error(423, 'A foreground upload is waiting for the storage provider.');
         }
 
         $this->maybeInitJob($args);
@@ -243,6 +256,12 @@ abstract class PrepareJob
             }
 
             $this->job->commitLogs();
+            if ($taskResponseDto->getRetryAt() > 0) {
+                $this->queueAction($args, $taskResponseDto->getRetryAt());
+                wp_schedule_single_event($taskResponseDto->getRetryAt(), \WPStaging\Framework\BackgroundProcessing\QueueProcessor::ACTION_QUEUE_PROCESS, ['uploadRetry' => $args['jobId']]);
+                $this->processLock->unlockProcess();
+                return $taskResponseDto;
+            }
         } while (!$this->isThreshold());
 
  
@@ -376,13 +395,7 @@ abstract class PrepareJob
         $body .= 'Job ID: ' . $args['jobId'] . PHP_EOL . PHP_EOL;
         $body .= 'Error Message: ' . $errorMessage;
 
-
-
-
-
-        $backupScheduler = WPStaging::make(BackupScheduler::class);
-        $title = $this->getIsBackupJob() ? '' : esc_html__('WP Staging - Error Report', 'wp-staging');
-        $backupScheduler->sendErrorReport($body, $title);
+        $this->sendJobFailureReport($body);
 
         $jobTransientCache = $this->job->getTransientCache();
 
@@ -392,10 +405,52 @@ abstract class PrepareJob
             'jobDataDto'        => $this->job->getJobDataDto(),
         ];
 
-        Hooks::callInternalHook(self::ACTION_JOB_FAILURE, $failure);
-        Hooks::doAction(self::ACTION_JOB_FAILURE, $failure);
+        $this->notifyJobFailureListeners($failure);
 
         $jobTransientCache->failJob('', $errorMessage);
+    }
+
+
+
+
+
+
+
+
+
+
+    private function sendJobFailureReport(string $body)
+    {
+        try {
+ 
+            $backupScheduler = WPStaging::make(BackupScheduler::class);
+            $title = $this->getIsBackupJob() ? '' : esc_html__('WP Staging - Error Report', 'wp-staging');
+            $backupScheduler->sendErrorReport($body, $title);
+        } catch (\Throwable $e) {
+            debug_log('The error report for the failed job could not be sent: ' . $e->getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
+    private function notifyJobFailureListeners(array $failure)
+    {
+        try {
+            Hooks::callInternalHook(self::ACTION_JOB_FAILURE, [$failure]);
+        } catch (\Throwable $e) {
+            debug_log('The internal listener of ' . self::ACTION_JOB_FAILURE . ' threw: ' . $e->getMessage());
+        }
+
+        try {
+            Hooks::doAction(self::ACTION_JOB_FAILURE, $failure);
+        } catch (\Throwable $e) {
+            debug_log('A listener of ' . self::ACTION_JOB_FAILURE . ' threw: ' . $e->getMessage());
+        }
     }
 
 

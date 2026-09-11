@@ -15,6 +15,9 @@ use WPStaging\Framework\Traits\ApplyFiltersTrait;
 use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\SerializeTrait;
 
+
+
+
 class DatabaseImporter
 {
     use DebugLogTrait;
@@ -37,6 +40,9 @@ class DatabaseImporter
 
 
     const SHORT_NAME_MISSING_EXCEPTION_CODE = 2004;
+
+ 
+    const FILTER_ALLOW_LEGACY_TIMESTAMPS = 'wpstg.database.importer.allow_legacy_timestamps';
 
  
     const CUSTOM_TMP_PREFIX_FILTER = 'wpstg.restore.tmp_database_prefix';
@@ -675,6 +681,26 @@ class DatabaseImporter
                     }
 
                     break;
+                case 1293:
+                    if ($this->applyFilters(self::FILTER_ALLOW_LEGACY_TIMESTAMPS, false) !== true) {
+                        break;
+                    }
+
+                    $columns = $this->queryCompatibility->removeAdditionalAutomaticTimestamps($query);
+                    if (empty($columns)) {
+                        break;
+                    }
+
+                    $result = $this->exec($query);
+                    if ($result) {
+                        $this->logWarning(sprintf(
+                            'Legacy timestamp compatibility changed table "%s", columns: %s. Their automatic timestamp initialization and updates were removed; CURRENT_TIMESTAMP defaults became zero dates. Saved timestamp values are preserved. Future inserts and updates must supply these values explicitly. Upgrade the database server to restore the original table behavior.',
+                            htmlspecialchars($this->extractTableNameFromQuery($query), ENT_QUOTES),
+                            htmlspecialchars(implode(', ', $columns), ENT_QUOTES)
+                        ), ['method' => __METHOD__]);
+                    }
+
+                    break;
                 case 1226:
 
 
@@ -762,7 +788,9 @@ class DatabaseImporter
             }
 
             $additionalInfo = '';
-            if ($backupDbVersion !== $currentDbVersion) {
+            if ($errorNo === 1293) {
+                $additionalInfo = ' This database server supports only one automatic TIMESTAMP column per table. Ask your hosting provider to upgrade MySQL or MariaDB, then restore the backup again.';
+            } elseif ($backupDbVersion !== $currentDbVersion) {
                 $additionalInfo = sprintf(' Your current MySQL version is %s. If this issue persists, try using the same MySQL version used to create this Backup (%s).', $currentDbVersion, $backupDbVersion);
             }
 

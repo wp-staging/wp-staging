@@ -9,10 +9,10 @@ use WPStaging\Framework\Facades\Sanitize as SanitizeFacade;
 use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Network\HttpBasicAuth;
+use WPStaging\Backup\Service\UpdateProtectionSettings;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backup\BackupScheduler;
-use WPStaging\Backup\Service\UpdateProtectionSettings;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Security\DataEncryption;
 use WPStaging\Notifications\Notifications;
@@ -415,8 +415,9 @@ class Settings
 
     private function applySideEffects(array &$data): bool
     {
+        $isStagingSite                     = $this->siteInfo->isStagingSite();
         $showErrorToggleStagingSiteCloning = false;
-        if ($this->siteInfo->isStagingSite()) {
+        if ($isStagingSite) {
             $isStagingCloneable = isset($data['isStagingSiteCloneable']) ? $data['isStagingSiteCloneable'] : 'false';
             unset($data['isStagingSiteCloneable']);
             $showErrorToggleStagingSiteCloning = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
@@ -456,11 +457,16 @@ class Settings
         $this->saveHttpAuthCredentials($data);
         unset($data['httpAuthUsername'], $data['httpAuthPassword']);
 
-        $data['enableBackupBeforeUpdate'] = $data['enableBackupBeforeUpdate'] ?? '0';
+ 
+ 
+ 
+        if ($isStagingSite) {
+            $data['enableBackupBeforeUpdate'] = WPStaging::make(UpdateProtectionSettings::class)->isEnabled() ? '1' : '0';
 
-        if ($data['enableBackupBeforeUpdate'] === '0') {
-            WPStaging::make(UpdateProtectionSettings::class)->forgetMode();
+            return $showErrorToggleStagingSiteCloning;
         }
+
+        $data['enableBackupBeforeUpdate'] = $data['enableBackupBeforeUpdate'] ?? '0';
 
         return $showErrorToggleStagingSiteCloning;
     }

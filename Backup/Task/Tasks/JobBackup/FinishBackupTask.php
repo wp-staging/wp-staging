@@ -15,6 +15,7 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\ListableBackup;
 use WPStaging\Backup\BackupScheduler;
+use WPStaging\Backup\Service\BeforeUpdateBackupsService;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -102,7 +103,26 @@ class FinishBackupTask extends BackupTask
 
         do_action(self::ACTION_BACKUP_CREATED, $this->jobDataDto);
 
+        $this->pruneStagingUpdateBackups();
+
         return $this->overrideGenerateResponse($this->makeListableBackup($backupFilePath));
+    }
+
+
+
+
+
+
+
+
+    private function pruneStagingUpdateBackups()
+    {
+        $scheduleId = (string)$this->jobDataDto->getScheduleId();
+        if (strpos($scheduleId, BeforeUpdateBackupsService::STAGING_UPDATE_SCHEDULE_PREFIX) !== 0) {
+            return;
+        }
+
+        WPStaging::make(BeforeUpdateBackupsService::class)->pruneForSchedule($scheduleId);
     }
 
 

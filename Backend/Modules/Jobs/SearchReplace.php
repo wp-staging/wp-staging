@@ -337,6 +337,7 @@ class SearchReplace extends CloningProcess
             $data = $this->stagingDb->get_results("SELECT * FROM $table LIMIT $offset, $limit", ARRAY_A);
         } else {
             $this->lastFetchedPrimaryKeyValue = is_object($this->options->job) && property_exists($this->options->job, 'lastProcessedId') ? $this->options->job->lastProcessedId : false;
+            $this->rowsBatchSize = is_object($this->options->job) && property_exists($this->options->job, 'rowsBatchSize') ? (int)$this->options->job->rowsBatchSize : 0;
             $data = $this->rowsGenerator($table, $offset, $limit, $this->stagingDb);
         }
 
@@ -564,6 +565,7 @@ class SearchReplace extends CloningProcess
     protected function updateJobStart($processed, wpdb $db, $table)
     {
         $this->processed = absint($processed);
+        $this->options->job->rowsBatchSize = $this->rowsBatchSize;
 
  
  

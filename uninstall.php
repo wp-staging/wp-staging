@@ -87,6 +87,7 @@ class Uninstall
 
  
         if ($this->isBasicInstalled() && $this->isUninstallingPro()) {
+            $this->deleteRemoteSyncAuthenticationActivityTransients();
             $this->deleteOptions($this->getProOptions());
             return;
         }
@@ -411,6 +412,7 @@ class Uninstall
             'wpstg_current_site_login_links',
             'wpstg_remote_sync_api_token',
             'wpstg_remote_sync_password',
+            'wpstg_remote_sync_safety_backup_request',
         ];
     }
 
@@ -441,6 +443,8 @@ class Uninstall
             'wpstg_remote_sync_session',
             'wpstg_remote_sync_session_data',
             'wpstg_remote_sync_session_events_offset',
+            'wpstg_backup_before_update_nudge',
+            'wpstg_remote_sync_safety_backup_nudge',
             'wpstg.queue.request.get_method',
             'is_invalid_backup_file_index',
             'wpstg_permalinks_do_purge',
@@ -497,6 +501,65 @@ class Uninstall
         foreach ($transients as $transientName) {
             delete_transient($transientName);
         }
+
+        $this->deleteTransientsByPrefix('wpstg_staging_update_job_');
+        $this->deleteRemoteSyncAuthenticationActivityTransients();
+    }
+
+
+
+
+
+
+
+    private function deleteTransientsByPrefix($prefix)
+    {
+        global $wpdb;
+
+        if (!($wpdb instanceof \wpdb)) {
+            return;
+        }
+
+        $valuePrefix   = '_transient_';
+        $timeoutPrefix = '_transient_timeout_';
+        $query         = $wpdb->prepare(
+            "SELECT option_name FROM `{$wpdb->options}` WHERE option_name LIKE %s OR option_name LIKE %s",
+            $wpdb->esc_like($valuePrefix . $prefix) . '%',
+            $wpdb->esc_like($timeoutPrefix . $prefix) . '%'
+        );
+
+        $transients = [];
+        foreach ($wpdb->get_col($query) as $optionName) {
+            $optionPrefix = strpos($optionName, $timeoutPrefix) === 0 ? $timeoutPrefix : $valuePrefix;
+            $transients[] = substr($optionName, strlen($optionPrefix));
+        }
+
+        foreach (array_unique($transients) as $transient) {
+            wp_cache_delete($transient, 'transient');
+            delete_option($valuePrefix . $transient);
+            delete_option($timeoutPrefix . $transient);
+        }
+    }
+
+
+
+
+
+
+
+    private function deleteRemoteSyncAuthenticationActivityTransients()
+    {
+        $transientPrefix  = 'wpstg_remote_sync_authentication_activity_';
+        $trackingOption   = 'wpstg_remote_sync_authentication_activity_transient';
+        $trackedTransient = get_option($trackingOption, '');
+
+        if (is_string($trackedTransient) && strpos($trackedTransient, $transientPrefix) === 0) {
+            delete_transient($trackedTransient);
+        }
+
+        delete_option($trackingOption);
+
+        $this->deleteTransientsByPrefix($transientPrefix);
     }
 
 
@@ -529,6 +592,48 @@ class Uninstall
     {
  
         wp_clear_scheduled_hook('wpstg_weekly_event');
+        $this->unscheduleHook('wpstg_staging_update_backup_monitor');
+    }
+
+
+
+
+
+
+
+
+    private function unscheduleHook($hook)
+    {
+        if (function_exists('wp_unschedule_hook')) {
+            wp_unschedule_hook($hook);
+            return;
+        }
+
+        $this->unscheduleHookWithoutCoreHelper($hook);
+    }
+
+
+
+
+
+
+
+    private function unscheduleHookWithoutCoreHelper($hook)
+    {
+        $cron = _get_cron_array();
+        if (!is_array($cron)) {
+            return;
+        }
+
+        foreach ($cron as $timestamp => $hooks) {
+            if (!isset($hooks[$hook]) || !is_array($hooks[$hook])) {
+                continue;
+            }
+
+            foreach ($hooks[$hook] as $event) {
+                wp_unschedule_event($timestamp, $hook, $event['args']);
+            }
+        }
     }
 
 

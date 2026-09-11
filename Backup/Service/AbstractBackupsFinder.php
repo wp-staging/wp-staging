@@ -57,8 +57,17 @@ abstract class AbstractBackupsFinder
 
     public function findBackups(): array
     {
+        return $this->findBackupsIn($this->getBackupsDirectory(true));
+    }
+
+
+
+
+
+    public function findBackupsIn(string $directory): array
+    {
         try {
-            $it = new \DirectoryIterator($this->getBackupsDirectory(true));
+            $it = new \DirectoryIterator($directory);
         } catch (\Exception $e) {
             $this->debugLog('WP STAGING: Could not find backup directory ' . $e->getMessage());
             return [];

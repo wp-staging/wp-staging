@@ -7,6 +7,7 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Traits\SerializeTrait;
+use WPStaging\Framework\Traits\SqlIdentifierTrait;
 
 
 
@@ -15,6 +16,7 @@ use WPStaging\Framework\Traits\SerializeTrait;
 class TablesRenamer
 {
     use SerializeTrait;
+    use SqlIdentifierTrait;
 
  
     const OPTION_ACTIVE_PLUGINS = 'active_plugins';
@@ -120,6 +122,9 @@ class TablesRenamer
     protected $dropPrefix = '';
 
  
+    protected $droppedForeignKeys = [];
+
+ 
     protected $renameViews = false;
 
  
@@ -193,6 +198,8 @@ class TablesRenamer
     public function setTmpPrefix(string $tmpPrefix): TablesRenamer
     {
         $this->tmpPrefix = $tmpPrefix;
+        $this->tableService->setCustomTmpPrefix($tmpPrefix);
+
         return $this;
     }
 
@@ -392,6 +399,14 @@ class TablesRenamer
     public function getErrors(): array
     {
         return $this->errors;
+    }
+
+
+
+
+    public function getDroppedForeignKeys(): array
+    {
+        return $this->droppedForeignKeys;
     }
 
 
@@ -646,6 +661,7 @@ class TablesRenamer
 
 
 
+
     public function cleanTemporaryBackupTables(): bool
     {
  
@@ -656,28 +672,86 @@ class TablesRenamer
         $this->tablesToBeDropped          = $this->tableService->findTableNamesStartWith($this->dropPrefix) ?: [];
         $this->tablesRemainingToBeDropped = count($this->tablesToBeDropped);
 
-        $this->tableService->getDatabase()->exec('SET autocommit=0;');
-        $this->tableService->getDatabase()->exec('SET FOREIGN_KEY_CHECKS=0;');
-        $this->tableService->getDatabase()->exec('START TRANSACTION;');
-        foreach ($this->tablesToBeDropped as $table) {
-            $result = $this->tableService->getDatabase()->exec(sprintf(
-                "DROP TABLE `%s`;",
-                $table
-            ));
+        $this->refuseProductionSiteTables($this->tablesToBeDropped);
 
- 
-            if ($result === false) {
-                $this->tableService->getDatabase()->exec('COMMIT;');
-                $this->tableService->getDatabase()->exec('SET autocommit=1;');
-                return false;
+        $database                = $this->tableService->getDatabase();
+        $foreignKeyChecksWereOff = (string)$database->getWpdb()->get_var('SELECT @@FOREIGN_KEY_CHECKS') === '0';
+
+        $database->exec('SET autocommit=0;');
+        $database->exec('SET FOREIGN_KEY_CHECKS=0;');
+        $database->exec('START TRANSACTION;');
+
+        try {
+            foreach ($this->tablesToBeDropped as $table) {
+                $result = $database->exec(sprintf(
+                    "DROP TABLE %s;",
+                    $this->quoteSqlIdentifier($table)
+                ));
+
+                if ($result === false) {
+                    return false;
+                }
+
+                $this->tablesRemainingToBeDropped--;
+            }
+        } finally {
+            $database->exec('COMMIT;');
+            if (!$foreignKeyChecksWereOff) {
+                $database->exec('SET FOREIGN_KEY_CHECKS=1;');
             }
 
-            $this->tablesRemainingToBeDropped--;
+            $database->exec('SET autocommit=1;');
         }
 
-        $this->tableService->getDatabase()->exec('COMMIT;');
-        $this->tableService->getDatabase()->exec('SET autocommit=1;');
         return true;
+    }
+
+
+
+
+
+
+
+
+
+    protected function refuseProductionSiteTables(array $tables)
+    {
+        foreach ($tables as $table) {
+            if (!$this->tableService->isProductionSiteTableOrView($table)) {
+                continue;
+            }
+
+            $message = sprintf('DB Rename: Refused to drop %s, it belongs to the live site.', $table);
+            if ($this->logger instanceof Logger) {
+                $this->logger->critical($message);
+            }
+
+            throw new \RuntimeException($message);
+        }
+    }
+
+
+
+
+
+
+
+
+    public function dropForeignKeysFromTmpTables(): array
+    {
+        $failedTables = [];
+        foreach ($this->tableService->getForeignKeysByTable($this->tmpPrefix) as $tableName => $constraintNames) {
+            if (!$this->tableService->dropForeignKeys($tableName, $constraintNames)) {
+                $failedTables[] = $tableName;
+                continue;
+            }
+
+            $this->droppedForeignKeys[$tableName] = $constraintNames;
+        }
+
+        $this->errors = array_merge($this->errors, $this->tableService->getErrors());
+
+        return $failedTables;
     }
 
 
@@ -697,9 +771,9 @@ class TablesRenamer
             }
 
             $result = $this->tableService->getDatabase()->exec(sprintf(
-                "RENAME TABLE `%s` TO `%s`;",
-                $fullTableName,
-                $tableToDrop
+                "RENAME TABLE %s TO %s;",
+                $this->quoteSqlIdentifier($fullTableName),
+                $this->quoteSqlIdentifier($tableToDrop)
             ));
 
             if ($result !== false) {
@@ -1031,9 +1105,9 @@ class TablesRenamer
     protected function renameTableOrFail(string $tableToRename, string $tableAfterRenamed): bool
     {
         $result = $this->tableService->getDatabase()->exec(sprintf(
-            "RENAME TABLE `%s` TO `%s`;",
-            $tableToRename,
-            $tableAfterRenamed
+            "RENAME TABLE %s TO %s;",
+            $this->quoteSqlIdentifier($tableToRename),
+            $this->quoteSqlIdentifier($tableAfterRenamed)
         ));
 
         if ($result !== false) {

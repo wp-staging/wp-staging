@@ -364,11 +364,8 @@ $runtimeSummaryTooltips = [
                             <span class="wpstg-update-backup-card__pill"><?php esc_html_e('Recommended', 'wp-staging'); ?></span>
                         </div>
                         <p class="wpstg-update-backup-card__body">
-                            <?php esc_html_e('WP STAGING can\'t back up automatically. Open the staging site and create a backup first.', 'wp-staging'); ?>
+                            <?php esc_html_e('WP STAGING can create a full backup of this staging site before the update starts.', 'wp-staging'); ?>
                         </p>
-                        <a href="<?php echo esc_url($stagingSiteUrl); ?>" target="_blank" rel="noopener noreferrer" class="wpstg-update-backup-card__button">
-                            <?php $setupRenderer->icon('external', 'wpstg-h-[13px] wpstg-w-[13px]'); ?><?php esc_html_e('Open staging site', 'wp-staging'); ?>
-                        </a>
                     </div>
                 </div>
             </aside>
@@ -388,7 +385,7 @@ $runtimeSummaryTooltips = [
             </label>
             <div class="wpstg-update-footer-actions">
                 <button type="button" class="wpstg-update-modal-cancel wpstg-btn wpstg-btn-md wpstg-h-11 wpstg-rounded-lg wpstg-py-0 wpstg-leading-none wpstg-btn-secondary wpstg-px-5"><?php esc_html_e('Cancel', 'wp-staging'); ?></button>
-                <button type="button" class="wpstg--update--staging-site wpstg-setup-cta wpstg-setup-cta--red" data-url="<?php echo esc_attr($stagingSiteUrl); ?>" data-wpstg-update-confirmed="true" disabled>
+                <button type="button" class="wpstg--update--staging-site wpstg-setup-cta wpstg-setup-cta--red" data-url="<?php echo esc_attr($stagingSiteUrl); ?>" disabled>
                     <?php $setupRenderer->icon('refresh', 'wpstg-h-4 wpstg-w-4', 2); ?><?php esc_html_e('Update Staging Site', 'wp-staging'); ?>
                 </button>
             </div>

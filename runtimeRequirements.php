@@ -8,6 +8,46 @@ $pluginFilePath = $pluginFilePath ?? '';
  
 require_once(trailingslashit(ABSPATH) . 'wp-admin/includes/plugin.php');
 
+if (!defined('WPSTG_MAX_SUPPORTED_PHP_VERSION')) {
+
+
+
+
+
+    define('WPSTG_MAX_SUPPORTED_PHP_VERSION', '8.5');
+}
+
+if (!function_exists('wpstgIsPhpVersionSupportedForBackupAndRestore')) {
+
+
+
+
+    function wpstgIsPhpVersionSupportedForBackupAndRestore(string $phpVersion = PHP_VERSION): bool
+    {
+        if (!preg_match('/^(\d+)\.(\d+)/', $phpVersion, $matches)) {
+            return false;
+        }
+
+        return version_compare($matches[1] . '.' . $matches[2], WPSTG_MAX_SUPPORTED_PHP_VERSION, '<=');
+    }
+}
+
+if (!function_exists('wpstgGetUnsupportedPhpVersionMessage')) {
+
+
+
+
+    function wpstgGetUnsupportedPhpVersionMessage(string $phpVersion = PHP_VERSION): string
+    {
+        return sprintf(
+            /* translators: 1: detected PHP version, 2: highest validated PHP major/minor version. */
+            __('WP STAGING cannot create or restore backups on PHP %1$s because this PHP version has not yet been validated for safe backup operations. Staging sites remain available. Please use PHP %2$s or earlier. A WP STAGING update will add support after validation.', 'wp-staging'),
+            $phpVersion,
+            WPSTG_MAX_SUPPORTED_PHP_VERSION
+        );
+    }
+}
+
 if (!defined('WPSTGPRO_MINIMUM_FREE_VERSION')) {
 
 
@@ -394,6 +434,19 @@ if (
     }
 
     throw new Exception("Another instance of WPSTAGING active. Plugin that bailed bootstrapping: $pluginFilePath");
+}
+
+if (!wpstgIsPhpVersionSupportedForBackupAndRestore()) {
+    add_action(is_network_admin() ? 'network_admin_notices' : 'admin_notices', function () { // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
+        if (!current_user_can('activate_plugins')) {
+            return;
+        }
+
+        echo '<div class="notice notice-error">';
+        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING', 'wp-staging') . '</p>';
+        echo '<p>' . esc_html(wpstgGetUnsupportedPhpVersionMessage()) . '</p>';
+        echo '</div>';
+    });
 }
 
 

@@ -13,6 +13,19 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 trait RemoteUploadTrait
 {
  
+    private $remoteUploadRetry = [];
+
+    public function getRemoteUploadRetry(): array
+    {
+        return $this->remoteUploadRetry;
+    }
+
+    public function setRemoteUploadRetry(array $state)
+    {
+        $this->remoteUploadRetry = $state;
+    }
+
+ 
     private $isAutomatedBackup = false;
 
  

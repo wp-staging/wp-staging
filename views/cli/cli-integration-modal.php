@@ -4,7 +4,7 @@
  * CLI Integration Modal - Modal content for CLI installation wizard
  *
  * This file contains the hidden modal content that is shown when the user
- * clicks "Create Local Site" in the CLI integration banner.
+ * clicks "Pull Site to Local" in the CLI integration banner.
  *
  * IMPORTANT: The "Copy" button uses an icon only (no text) to avoid width issues.
  * The "Copied to clipboard!" toast text is translatable via the data-copied-text attribute.
@@ -62,7 +62,7 @@ if (!$isDeveloperOrHigher) {
         <div class="wpstg-cli-modal-main">
             <div class="wpstg-cli-modal-header">
                 <div class="wpstg-cli-modal-header-top">
-                    <h2 class="wpstg-cli-modal-title"><?php echo esc_html__('Create a local copy of this site', 'wp-staging'); ?></h2>
+                    <h2 class="wpstg-cli-modal-title"><?php echo esc_html__('Pull this site directly to your computer', 'wp-staging'); ?></h2>
                     <button type="button" class="wpstg-cli-modal-close-btn" title="<?php echo esc_attr__('Close', 'wp-staging'); ?>" aria-label="<?php echo esc_attr__('Close', 'wp-staging'); ?>">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -71,8 +71,34 @@ if (!$isDeveloperOrHigher) {
                     </button>
                 </div>
                 <p class="wpstg-cli-modal-subtitle">
-                    <?php echo esc_html__('Use WP Staging CLI to create an isolated Docker container and clone this site', 'wp-staging'); ?>
+                    <?php echo esc_html__('WP Staging CLI builds a local Docker environment straight from this site, without downloading and importing a backup by hand.', 'wp-staging'); ?>
                 </p>
+                <?php if ($licensingState === 'not_activated') : ?>
+                    <div class="wpstg-cli-gating-notice">
+                        <span><?php echo esc_html__('Activate your license to pull this site directly. Installing the CLI is free.', 'wp-staging'); ?></span>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+                            <?php echo esc_html__('Enter license key', 'wp-staging'); ?>
+                        </a>
+                    </div>
+                <?php elseif ($licensingState !== 'active') : ?>
+                    <div class="wpstg-cli-gating-notice">
+                        <span>
+                            <?php echo wp_kses(
+                                sprintf(
+                                    __('Pulling this site directly requires a %1$s or %2$s license. Installing the CLI is free.', 'wp-staging'),
+                                    '<a href="' . esc_url(Language::getUpgradeUrl('cli_developer')) . '" target="_blank">Developer</a>',
+                                    '<a href="' . esc_url(Language::getUpgradeUrl('cli_agency')) . '" target="_blank">Agency</a>'
+                                ),
+                                [
+                                    'a' => [
+                                        'href'   => [],
+                                        'target' => [],
+                                    ],
+                                ]
+                            ); ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Step Navigation -->
@@ -329,24 +355,6 @@ if (!$isDeveloperOrHigher) {
                             </div>
                         </div>
                     </div>
-                    <?php if ($licensingState !== 'active') : ?>
-                        <p class="wpstg-cli-license-note">
-                            <?php echo esc_html__('You can install now.', 'wp-staging'); ?>
-                            <?php echo wp_kses(
-                                sprintf(
-                                    __('Step 2 requires a %1$s or %2$s license.', 'wp-staging'),
-                                    '<a href="' . esc_url(Language::getUpgradeUrl('cli_developer')) . '" target="_blank">Developer</a>',
-                                    '<a href="' . esc_url(Language::getUpgradeUrl('cli_agency')) . '" target="_blank">Agency</a>'
-                                ),
-                                [
-                                    'a' => [
-                                        'href'   => [],
-                                        'target' => [],
-                                    ],
-                                ]
-                            ); ?>
-                        </p>
-                    <?php endif; ?>
                 </div>
 
                 <!-- Step 2: Create Local WordPress Site -->

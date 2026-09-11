@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Traits;
 
+use WPStaging\Backup\Exceptions\UploadThrottledException;
+
 
 
 
@@ -63,9 +65,16 @@ trait ThrottledResponseTrait
 
 
 
-    protected function requestUntilNotThrottled(string $url, array $args)
+    protected function requestUntilNotThrottled(string $url, array $args, bool $deferUpload = false)
     {
         $response = wp_remote_request($url, $args);
+
+        $isDropboxWriteLimit = !is_wp_error($response) && (int)wp_remote_retrieve_response_code($response) === 409 && $this->reportsRateLimit(wp_remote_retrieve_body($response));
+        if ($deferUpload && ($this->isThrottledResponse($response) || $isDropboxWriteLimit)) {
+            $retryAfter = wp_remote_retrieve_header($response, 'retry-after');
+            $retryAfter = is_array($retryAfter) ? reset($retryAfter) : $retryAfter;
+            throw new UploadThrottledException((string)$retryAfter);
+        }
 
         for ($attempt = 1; $attempt <= $this->getMaxThrottleRetries(); $attempt++) {
             if (!$this->isThrottledResponse($response)) {
@@ -87,11 +96,11 @@ trait ThrottledResponseTrait
 
 
 
-    protected function postUntilNotThrottled(string $url, array $args)
+    protected function postUntilNotThrottled(string $url, array $args, bool $deferUpload = false)
     {
         $args['method'] = 'POST';
 
-        return $this->requestUntilNotThrottled($url, $args);
+        return $this->requestUntilNotThrottled($url, $args, $deferUpload);
     }
 
 

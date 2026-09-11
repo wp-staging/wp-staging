@@ -58,6 +58,9 @@ abstract class AbstractBackgroundBackupRequest
     const NUDGE_LOCK_IN_SECONDS = 10;
 
  
+    const STALL_GRACE_IN_SECONDS = 5 * MINUTE_IN_SECONDS;
+
+ 
     private $state = null;
 
 
@@ -135,6 +138,27 @@ abstract class AbstractBackgroundBackupRequest
         } catch (\Throwable $e) {
             debug_log($this->getLogContext() . ': could not run the queued backup. ' . $e->getMessage(), 'debug', false);
         }
+    }
+
+
+
+
+
+
+    public function failIfStalled(): bool
+    {
+        if ($this->getStatus() !== self::STATUS_RUNNING || !$this->isOlderThanStallGrace()) {
+            return false;
+        }
+
+        if ($this->isBackupJobStillKnown()) {
+            return false;
+        }
+
+        $this->beforeMarkedStalled();
+        $this->markFailed();
+
+        return true;
     }
 
 
@@ -291,6 +315,15 @@ abstract class AbstractBackgroundBackupRequest
 
 
 
+    protected function beforeMarkedStalled()
+    {
+    }
+
+
+
+
+
+
 
 
 
@@ -396,6 +429,31 @@ abstract class AbstractBackgroundBackupRequest
         }
 
         return true;
+    }
+
+
+
+
+    private function isOlderThanStallGrace(): bool
+    {
+        $state     = $this->read();
+        $startedAt = isset($state['started_at']) ? (int)$state['started_at'] : 0;
+
+        return $startedAt > 0 && $startedAt < time() - self::STALL_GRACE_IN_SECONDS;
+    }
+
+
+
+
+    private function isBackupJobStillKnown(): bool
+    {
+        try {
+            return $this->isOwnBackupJob();
+        } catch (\Throwable $e) {
+ 
+ 
+            return true;
+        }
     }
 
 

@@ -323,6 +323,15 @@ class RenameDatabaseTask extends RestoreTask
         $this->setupTableRenamer();
         $this->setCurrentTaskDto($this->tablesRenamer->setupRenamer());
 
+        $tablesWithForeignKeysLeft = $this->tablesRenamer->dropForeignKeysFromTmpTables();
+        if (!empty($tablesWithForeignKeysLeft)) {
+            $message = 'Restore stopped, the foreign keys of these tables could not be removed: ' . implode(', ', $tablesWithForeignKeysLeft) . '. ' . implode(' ', $this->tablesRenamer->getErrors());
+            $this->logger->critical($message);
+            throw new Exception($message);
+        }
+
+        $this->logDroppedForeignKeys();
+
  
         $accessToken              = $this->accessToken->getToken();
         $isNetworkActivatedPlugin = is_plugin_active_for_network(WPSTG_PLUGIN_FILE);
@@ -375,6 +384,24 @@ class RenameDatabaseTask extends RestoreTask
         $wpdb->suppress_errors($suppressErrors);
 
         $this->logger->info(sprintf('Found %d tables to restore.', $this->jobDataDto->getTotalTablesToRename()));
+    }
+
+
+
+
+    protected function logDroppedForeignKeys()
+    {
+        $droppedForeignKeys = $this->tablesRenamer->getDroppedForeignKeys();
+        if (empty($droppedForeignKeys)) {
+            return;
+        }
+
+        $tables = [];
+        foreach ($droppedForeignKeys as $tableName => $constraintNames) {
+            $tables[] = $tableName . ' (' . implode(', ', $constraintNames) . ')';
+        }
+
+        $this->logger->info('The restored site does not keep the foreign keys of these tables: ' . implode(', ', $tables) . '.');
     }
 
 

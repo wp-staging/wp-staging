@@ -21,7 +21,26 @@ final class ExternalDatabaseConfiguration
             return filter_var($options['useCustomDatabase'], FILTER_VALIDATE_BOOLEAN);
         }
 
-        return $this->hasConnectionTarget($options);
+ 
+        return $this->getValue($options, 'databaseDatabase') !== ''
+            && $this->getValue($options, 'databaseUser') !== '';
+    }
+
+
+
+
+
+
+
+    public function getTablePrefix($options)
+    {
+        $options = $this->normalizeOptions($options);
+        $databasePrefix = $options['databasePrefix'] ?? '';
+        if ($this->isEnabled($options) && $databasePrefix !== '') {
+            return $databasePrefix;
+        }
+
+        return $options['prefix'] ?? '';
     }
 
 

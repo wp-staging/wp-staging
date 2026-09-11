@@ -14,6 +14,7 @@
  * @var bool   $hasActiveLicense    Whether user has a valid/expired pro license
  * @var string $licenseType         License type slug (e.g. 'free', 'personal', 'business')
  * @var string $licenseId           License ID or empty
+ * @var bool   $screenHasLocalAction Whether this screen can keep the Desktop link after dismissal
  */
 
 use WPStaging\Core\WPStaging;
@@ -101,7 +102,7 @@ use WPStaging\Framework\Language\Language;
                             <path d="M9 13h6"></path>
                             <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path>
                         </svg>
-                        <?php esc_html_e('Create Local Site', 'wp-staging'); ?>
+                        <?php esc_html_e('Pull Site to Local', 'wp-staging'); ?>
                     </button>
                 <?php else : ?>
                     <?php
@@ -146,6 +147,12 @@ use WPStaging\Framework\Language\Language;
                     </svg>
                 </a>
             </div>
+
+            <?php if ($isDeveloperOrHigher && $screenHasLocalAction) : ?>
+                <div class="wpstg-mt-2">
+                    <?php require WPSTG_VIEWS_DIR . 'staging/_partials/desktop-context-link.php'; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

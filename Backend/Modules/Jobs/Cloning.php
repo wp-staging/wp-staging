@@ -18,7 +18,6 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Utils\Strings;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Staging\Sites;
 
 use function WPStaging\functions\debug_log;
@@ -46,11 +45,6 @@ class Cloning extends Job
 
 
     private $db;
-
-
-
-
-    private $dirUtils;
 
 
 
@@ -84,7 +78,6 @@ class Cloning extends Job
     public function initialize()
     {
         $this->db             = WPStaging::getInstance()->get("wpdb");
-        $this->dirUtils       = new WpDefaultDirectories();
         $this->sitesHelper    = new Sites();
         $this->sanitize       = WPStaging::make(Sanitize::class);
         $this->urls           = WPStaging::make(Urls::class);
@@ -234,7 +227,7 @@ class Cloning extends Job
         }
 
         $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
-        $excludedDirectoriesRequest = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
+        $excludedDirectoriesRequest = $this->directoryAdapter->getExcludedDirectories($excludedDirectoriesRequest);
 
         $this->options->excludedDirectories = array_merge($excludedDirectories, $excludedDirectoriesRequest);
 

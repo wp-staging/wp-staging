@@ -145,6 +145,16 @@ class JobTransientCache
 
 
 
+
+
+    const SYNC_JOB_TYPES = [
+        self::JOB_TYPE_PULL_PREPARE,
+        self::JOB_TYPE_PULL_RESTORE,
+    ];
+
+
+
+
     const CANCELABLE_JOBS = [
         self::JOB_TYPE_BACKUP,
         self::JOB_TYPE_RESTORE,
@@ -178,7 +188,7 @@ class JobTransientCache
         ];
 
         delete_transient(self::TRANSIENT_CURRENT_JOB);
-        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, $this->getRunningExpiry($jobData));
     }
 
 
@@ -196,7 +206,7 @@ class JobTransientCache
 
         $jobData['preInitAt'] = time();
         delete_transient(self::TRANSIENT_CURRENT_JOB);
-        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, $this->getRunningExpiry($jobData));
     }
 
 
@@ -213,7 +223,7 @@ class JobTransientCache
         $jobData['title']     = $title;
         $jobData['updatedAt'] = time();
 
-        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, $this->getRunningExpiry($jobData));
     }
 
 
@@ -249,9 +259,20 @@ class JobTransientCache
 
 
 
-    public function getJob()
+
+
+
+    public function getJob(bool $fresh = false)
     {
-        $jobData = get_transient(self::TRANSIENT_CURRENT_JOB);
+        if ($fresh && !wp_using_ext_object_cache()) {
+            wp_cache_delete('_transient_' . self::TRANSIENT_CURRENT_JOB, 'options');
+            wp_cache_delete('_transient_timeout_' . self::TRANSIENT_CURRENT_JOB, 'options');
+            wp_cache_delete('notoptions', 'options');
+        }
+
+        $jobData = $fresh && wp_using_ext_object_cache()
+            ? wp_cache_get(self::TRANSIENT_CURRENT_JOB, 'transient', true)
+            : get_transient(self::TRANSIENT_CURRENT_JOB);
         if (empty($jobData['jobId'])) {
             return null;
         }
@@ -283,6 +304,37 @@ class JobTransientCache
 
 
 
+
+    public function getJobType(): string
+    {
+        $jobData = $this->getJob();
+        if (empty($jobData['type'])) {
+            return '';
+        }
+
+        return $jobData['type'];
+    }
+
+
+
+
+
+
+
+    public function getJobTitle(): string
+    {
+        $jobData = $this->getJob();
+        if (empty($jobData['title'])) {
+            return '';
+        }
+
+        return $jobData['title'];
+    }
+
+
+
+
+
     public function findJobById(string $jobId)
     {
         if ($jobId === '') {
@@ -302,6 +354,31 @@ class JobTransientCache
         return null;
     }
 
+ 
+    public function deferUpload(int $retryAt, int $budgetExpiresAt)
+    {
+        $jobData = $this->getJob();
+        if ($jobData === null || $jobData['status'] !== self::STATUS_RUNNING) {
+            return;
+        }
+
+        $jobData['uploadRetryAt'] = $retryAt;
+        $jobData['uploadRetryExpiresAt'] = $budgetExpiresAt;
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, $this->getRunningExpiry($jobData));
+    }
+
+ 
+    public function clearUploadWait()
+    {
+        $jobData = $this->getJob();
+        if ($jobData === null || !isset($jobData['uploadRetryAt'])) {
+            return;
+        }
+
+        unset($jobData['uploadRetryAt']);
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, $this->getRunningExpiry($jobData));
+    }
+
 
 
 
@@ -315,7 +392,13 @@ class JobTransientCache
         $jobData['updatedAt'] = time();
 
         delete_transient(self::TRANSIENT_CURRENT_JOB);
-        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY);
+        set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, $this->getRunningExpiry($jobData));
+    }
+
+ 
+    private function getRunningExpiry(array $jobData): int
+    {
+        return self::JOB_TRANSIENT_EXPIRY + max(0, ($jobData['uploadRetryExpiresAt'] ?? 0) - time());
     }
 
 
@@ -331,6 +414,7 @@ class JobTransientCache
             return;
         }
 
+        unset($jobData['uploadRetryAt'], $jobData['uploadRetryExpiresAt']);
         $jobData['status']    = $status;
         $jobData['updatedAt'] = time();
         if (!empty($title)) {

@@ -20,6 +20,27 @@ class TaskResponseDto extends AbstractDto
     protected $excludeHydrate = ['last_msg', 'isForceSave', 'job_done'];
 
  
+    protected $retryAt = 0;
+
+ 
+    protected $retryDelay = 0;
+
+    public function getRetryAt(): int
+    {
+        return $this->retryAt;
+    }
+
+    public function setRetryAt(int $retryAt)
+    {
+        $this->retryAt = $retryAt;
+    }
+
+    public function setRetryDelay(int $retryDelay)
+    {
+        $this->retryDelay = $retryDelay;
+    }
+
+ 
     protected $isRunning;
 
  
@@ -55,6 +76,9 @@ class TaskResponseDto extends AbstractDto
     public function toArray()
     {
         $data = $this->traitToArray();
+        if ($this->retryAt === 0) {
+            unset($data['retryAt'], $data['retryDelay']);
+        }
 
         $lastMsg = null;
         if ($data['messages']) {

@@ -10,6 +10,7 @@ namespace WPStaging\Core\Utils;
 
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Optimizer\Optimizer;
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\WpAdapter;
@@ -68,6 +69,12 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
 
     private $messages       = [];
+
+
+
+
+
+    private $committedCount = 0;
 
 
 
@@ -277,22 +284,110 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     public function commit()
     {
-        if (empty($this->messages)) {
+        $uncommittedMessages = array_slice($this->messages, $this->committedCount);
+        if (empty($uncommittedMessages)) {
             return true;
         }
 
         $messageString = '';
-        foreach ($this->messages as $message) {
+        foreach ($uncommittedMessages as $message) {
             if (is_array($message)) {
                 $messageString .= "[{$message["type"]}]-[{$message["date"]}] {$message["message"]}" . PHP_EOL;
             }
         }
 
         if (strlen($messageString) < 1) {
+            $this->markMessagesCommitted($uncommittedMessages);
             return true;
         }
 
-        return (@file_put_contents($this->getLogFile(), $messageString, FILE_APPEND));
+        if (!$this->appendToLogFile($this->getLogFile(), $messageString)) {
+            return false;
+        }
+
+        $this->markMessagesCommitted($uncommittedMessages);
+
+        return true;
+    }
+
+
+
+
+
+    private function markMessagesCommitted(array $messages)
+    {
+        $this->committedCount += count($messages);
+    }
+
+
+
+
+
+
+
+
+
+
+    private function appendToLogFile(string $logFile, string $messageString): bool
+    {
+        set_error_handler([$this, 'handleLogFileWriteError']);
+
+        $isRecordComplete = $this->writeRecordUnderLock($logFile, $messageString);
+
+        restore_error_handler();
+
+        return $isRecordComplete;
+    }
+
+
+
+
+
+
+
+
+
+
+    private function writeRecordUnderLock(string $logFile, string $messageString): bool
+    {
+        $handle = fopen($logFile, 'a');
+        if ($handle === false) {
+            return false;
+        }
+
+        if (!flock($handle, LOCK_EX)) {
+            fclose($handle);
+
+            return false;
+        }
+
+        fseek($handle, 0, SEEK_END);
+        $sizeBeforeWrite = ftell($handle);
+
+        $bytesWritten = fwrite($handle, $messageString);
+        fflush($handle);
+
+        $isRecordComplete = $bytesWritten === strlen($messageString);
+        if (!$isRecordComplete && $sizeBeforeWrite !== false) {
+            ftruncate($handle, $sizeBeforeWrite);
+        }
+
+        flock($handle, LOCK_UN);
+        fclose($handle);
+
+        return $isRecordComplete;
+    }
+
+
+
+
+
+
+
+
+    public function handleLogFileWriteError(int $errno, string $errstr, string $errfile = '', int $errline = 0): bool
+    {
+        return true;
     }
 
 
@@ -539,18 +634,6 @@ class Logger implements LoggerInterface, ShutdownableInterface
             'lastUpdated',
         ];
 
-        $protectedFields = [
-            'googleClientId',
-            'googleClientSecret',
-            'accessKey',
-            'secretKey',
-            'password',
-            'passphrase',
-            'accessToken',
-            'refreshToken',
-            'sharedDriveId',
-        ];
-
         $providerOptions = WPStaging::make($authClass)->getOptions();
 
         $this->add(sprintf('%s Settings', esc_html($providerName)), Logger::TYPE_INFO);
@@ -560,12 +643,13 @@ class Logger implements LoggerInterface, ShutdownableInterface
                 continue;
             }
 
-            if (in_array($key, $protectedFields)) {
+            if (in_array($key, Providers::SENSITIVE_OPTION_KEYS, true) || !is_scalar($value)) {
                 $this->add(sprintf('- %s : %s', ucfirst($key), (empty($value) ? 'Not Set' : '***********')), Logger::TYPE_INFO_SUB);
-            } else {
-                $value = is_bool($value) || $value === 1 || $value === '1' ? ($value ? 'True' : 'False') : $value;
-                $this->add(sprintf('- %s : %s', ucfirst($key), (empty($value) ? 'Not Set' : $value)), Logger::TYPE_INFO_SUB);
+                continue;
             }
+
+            $value = is_bool($value) || $value === 1 || $value === '1' ? ($value ? 'True' : 'False') : $value;
+            $this->add(sprintf('- %s : %s', ucfirst($key), (empty($value) ? 'Not Set' : $value)), Logger::TYPE_INFO_SUB);
         }
     }
 

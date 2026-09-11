@@ -19,6 +19,7 @@ use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient as Database;
 use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
 use WPStaging\Framework\Traits\BenchmarkTrait;
+use WPStaging\Framework\Job\JobTransientCache;
 
 use function WPStaging\functions\debug_log;
 
@@ -79,7 +80,7 @@ class Queue
 
 
 
-    const QUEUE_TABLE_STRUCTURE_VERSION = '1.0.0';
+    const QUEUE_TABLE_STRUCTURE_VERSION = '1.1.0';
 
  
     const STALLED_ACTIONS_BREAKPOINT_IN_MINS = 15;
@@ -178,7 +179,7 @@ class Queue
 
 
 
-    public function enqueueAction($action, array $args = [], $jobId = 'default', $priority = 0)
+    public function enqueueAction($action, array $args = [], $jobId = 'default', $priority = 0, int $notBefore = 0)
     {
  
         $this->featureDetection->isAjaxAvailable(true);
@@ -197,12 +198,13 @@ class Queue
         }
 
         $assignments = [
-            'action'     => $actionObject->action,
-            'jobId'      => (string)$actionObject->jobId,
-            'status'     => self::STATUS_READY,
-            'priority'   => (int)$actionObject->priority,
-            'args'       => $actionObject->args,
-            'updated_at' => current_time('mysql'),
+            'action'       => $actionObject->action,
+            'jobId'        => (string)$actionObject->jobId,
+            'status'       => self::STATUS_READY,
+            'priority'     => (int)$actionObject->priority,
+            'args'         => $actionObject->args,
+            'updated_at'   => current_time('mysql'),
+            'available_at' => max(0, $notBefore),
         ];
 
         $assignmentsList = $this->buildAssignmentsList($assignments);
@@ -541,6 +543,10 @@ class Queue
 
     public function getNextAvailable()
     {
+        if ($this->hasDeferredForegroundUpload()) {
+            return null;
+        }
+
         if ($this->checkTable() !== self::TABLE_EXISTS) {
  
             debug_log('Queue getNextAvailable: Table does not exist for getting the next available.', 'debug', false);
@@ -562,7 +568,8 @@ class Queue
             return null;
         }
 
-        $claimIdQuery = "SELECT id FROM {$tableName}
+        $nowTimestamp = \WPStaging\Core\WPStaging::make(\WPStaging\Framework\Utils\Times::class)->getCurrentTimestamp();
+        $claimIdQuery = "SELECT id, available_at FROM {$tableName}
                         WHERE status = '{$ready}'
                         ORDER BY priority, action, jobId ASC LIMIT 1";
         $claimedId = $this->database->query($claimIdQuery);
@@ -579,6 +586,11 @@ class Queue
         if (!is_array($claimedId) || !array_key_exists('id', $claimedId)) {
             debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery, 'debug', false);
             $this->database->query("UNLOCK TABLES");
+            return null;
+        }
+
+        if ((int)$claimedId['available_at'] > $nowTimestamp) {
+            $this->database->query('UNLOCK TABLES');
             return null;
         }
 
@@ -790,7 +802,9 @@ class Queue
             jobId VARCHAR(1000) DEFAULT NULL,
             status CHAR(20) NOT NULL DEFAULT 'ready',
             priority BIGINT(20) NOT NULL DEFAULT 0,
+            available_at BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
             args LONGTEXT DEFAULT NULL,
+            response LONGTEXT DEFAULT NULL,
             custom LONGTEXT DEFAULT NULL,
             claimed_at DATETIME DEFAULT NULL,
             updated_at DATETIME DEFAULT NULL,
@@ -991,18 +1005,37 @@ class Queue
         return (int)$marked;
     }
 
+ 
+    public function hasDeferredForegroundUpload(): bool
+    {
+        $job = WPStaging::make(JobTransientCache::class)->getJob(true);
+        if ($job === null || $job['status'] !== JobTransientCache::STATUS_RUNNING || !empty($job['queueId'])) {
+            return false;
+        }
 
+        return !empty($job['uploadRetryExpiresAt']);
+    }
 
+ 
+    public function hasAvailableAction(): bool
+    {
+        if ($this->hasDeferredForegroundUpload() || self::TABLE_NOT_EXIST === $this->checkTable()) {
+            return false;
+        }
 
+        $table = self::getTableName();
+        $now = \WPStaging\Core\WPStaging::make(\WPStaging\Framework\Utils\Times::class)->getCurrentTimestamp();
+        $result = $this->database->query("SELECT available_at FROM {$table} WHERE status = 'ready' ORDER BY priority, action, jobId ASC LIMIT 1");
+        $row = $result === false ? [] : $this->database->fetchRow($result);
 
+        return !empty($row) && (int)$row[0] <= $now;
+    }
 
-
-
-
+ 
     public function maybeFireAjaxAction()
     {
  
-        if (!$this->count(self::STATUS_READY)) {
+        if (!$this->hasAvailableAction()) {
             return false;
         }
 
@@ -1478,10 +1511,20 @@ class Queue
 
     protected function addUpgradeQueries(&$dbdeltaQueries)
     {
+        if (!$this->tableExists()) {
+            return;
+        }
+
         $tablename           = self::getTableName();
         $currentTableVersion = $this->getCurrentTableVersion();
 
-        $this->maybeAddUpgradeTableQueryForResponseField($tablename, $currentTableVersion, $dbdeltaQueries);
+        if (version_compare($currentTableVersion, '1.1.0', '<')) {
+            $dbdeltaQueries[] = "ALTER TABLE `{$tablename}` ADD COLUMN `available_at` BIGINT(20) UNSIGNED NOT NULL DEFAULT 0 AFTER `priority`";
+        }
+
+        if (version_compare($currentTableVersion, '1.0.0', '<')) {
+            $this->maybeAddUpgradeTableQueryForResponseField($tablename, $currentTableVersion, $dbdeltaQueries);
+        }
     }
 
 

@@ -92,7 +92,7 @@ class Settings
                 "class" => "medium-text",
                 "step"  => 1,
                 "max"   => 999999,
-                "min"   => 0,
+                "min"   => 1,
             ]
         );
 
@@ -324,7 +324,7 @@ class Settings
         );
 
         $this->form["general"]->add(
-            $element->setLabel(__("Backup Before Update", "wp-staging"))
+            $element->setLabel(__("Plugin Update Protection", "wp-staging"))
             ->setDefault((isset($settings->enableBackupBeforeUpdate)) ? $settings->enableBackupBeforeUpdate : '1'),
             'wpstg-settings-enable-backup-before-update'
         );

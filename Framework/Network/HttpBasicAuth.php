@@ -18,20 +18,27 @@ trait HttpBasicAuth
 
     protected function getHttpAuthHeaders(): array
     {
-        $credentials = get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []);
+        return $this->buildHttpAuthHeaders(get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []));
+    }
 
+
+
+
+
+    protected function buildHttpAuthHeaders($credentials): array
+    {
         if (
             !is_array($credentials)
             || empty($credentials['username'])
             || empty($credentials['password'])
+            || !is_string($credentials['username'])
+            || !is_string($credentials['password'])
         ) {
             return [];
         }
 
-        $password = DataEncryption::decrypt($credentials['password']);
-
         return [
-            'Authorization' => 'Basic ' . base64_encode($credentials['username'] . ':' . $password),
+            'Authorization' => 'Basic ' . base64_encode($credentials['username'] . ':' . DataEncryption::decrypt($credentials['password'])),
         ];
     }
 

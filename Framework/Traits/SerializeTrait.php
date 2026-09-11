@@ -23,7 +23,7 @@ trait SerializeTrait
         $data  = trim($data);
         $value = $this->unserializeQuietly($data, $allowedClasses, $failedToParse);
 
-        if ($value === false && $failedToParse) {
+        if ($failedToParse) {
             $rejected = true;
             return false;
         }
@@ -153,6 +153,7 @@ trait SerializeTrait
  
             case 'a':
             case 'O':
+            case 'C':
             case 'E':
                 return (bool) preg_match("/^{$token}:[0-9]+:/s", $data);
             case 'b':

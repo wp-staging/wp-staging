@@ -50,7 +50,7 @@ class Hooks
     public function callInternalHook(string $hookName, array $args = [], $defaultValue = null)
     {
         if (isset($this->internalHooks[$hookName]) && is_callable($this->internalHooks[$hookName])) {
-            return call_user_func_array($this->internalHooks[$hookName], $args);
+            return call_user_func_array($this->internalHooks[$hookName], array_values($args));
         }
 
         return $defaultValue;

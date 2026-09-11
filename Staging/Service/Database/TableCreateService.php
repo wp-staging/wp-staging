@@ -56,6 +56,7 @@ class TableCreateService
         $this->databaseName      = $this->sourceDb->getWpdba()->getClient()->__get('dbname');
         $this->sourcePrefix      = $this->sourceDb->getPrefix();
         $this->destinationPrefix = $this->destinationDb->getPrefix();
+        $this->tableService->setCustomTmpPrefix($this->destinationPrefix);
     }
 
     public function getTableWithoutPrefix(string $srcTableName): string

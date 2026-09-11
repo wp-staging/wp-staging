@@ -103,6 +103,28 @@ class Providers
         self::IDENTIFIER_PCLOUD              => 'pCloud',
     ];
 
+
+
+
+
+    const SENSITIVE_OPTION_KEYS = [
+        'accessKey',
+        'accessToken',
+        'ftpCertContent',
+        'googleClientId',
+        'googleClientSecret',
+        'key',
+        'passphrase',
+        'password',
+        'refreshToken',
+        'secretKey',
+        'sessionId',
+        'sharedDriveId',
+        'uploadId',
+        'uploadUrl',
+        'username',
+    ];
+
     protected $storages = [];
 
 

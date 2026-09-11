@@ -33,13 +33,16 @@ class Frontend
 
     protected $loginForm;
 
+
+
+
+    private $loginFormBuildAttempted = false;
+
     public function __construct()
     {
-        $this->defineHooks();
-
         $this->settings = (object)get_option("wpstg_settings", []);
 
-        $this->loginForm = WPStaging::make(LoginForm::class);
+        $this->defineHooks();
     }
 
 
@@ -50,18 +53,88 @@ class Frontend
     {
         $this->resetPermaLinks();
 
-        if ($this->showLoginForm()) {
-            if ($this->accessDenied) {
-                wp_logout();
-                $this->loginForm->setError(__('Access Denied', 'wp-staging'));
-            }
+        $this->authenticateSubmittedCredentials();
 
-            $overrides = [
-                'label_username' => __('Username or Email Address', 'wp-staging'),
-            ];
-            $this->loginForm->renderForm($this->loginForm->getDefaultArguments($overrides));
-            die();
+        if (!$this->showLoginForm()) {
+            return;
         }
+
+        $loginForm = $this->getLoginForm();
+
+        if (!$loginForm instanceof LoginForm) {
+            $this->denyAccessWithoutLoginForm();
+            return;
+        }
+
+        if ($this->accessDenied) {
+            wp_logout();
+            $loginForm->setError(__('Access Denied', 'wp-staging'));
+        }
+
+        $overrides = [
+            'label_username' => __('Username or Email Address', 'wp-staging'),
+        ];
+
+        $loginForm->renderForm($loginForm->getDefaultArguments($overrides));
+        die();
+    }
+
+
+
+
+
+
+    protected function getLoginForm()
+    {
+        if ($this->loginFormBuildAttempted) {
+            return $this->loginForm;
+        }
+
+        $this->loginFormBuildAttempted = true;
+
+        try {
+            $this->loginForm = WPStaging::make(LoginForm::class);
+        } catch (\Throwable $e) {
+            debug_log(sprintf(
+                'Frontend: The staging site login form could not be created. %s: %s in %s:%d',
+                get_class($e),
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ));
+        }
+
+        return $this->loginForm;
+    }
+
+
+
+
+    private function authenticateSubmittedCredentials()
+    {
+        if (!$this->isStagingSite()) {
+            return;
+        }
+
+        $loginForm = $this->getLoginForm();
+
+        if (!$loginForm instanceof LoginForm) {
+            return;
+        }
+
+        $loginForm->authenticate();
+    }
+
+
+
+
+    private function denyAccessWithoutLoginForm()
+    {
+        wp_die(
+            esc_html__('This staging site is protected by WP STAGING and its login form could not be loaded. The WP STAGING debug log of this site holds the error behind it.', 'wp-staging'),
+            esc_html__('Access Denied', 'wp-staging'),
+            ['response' => 403]
+        );
     }
 
 

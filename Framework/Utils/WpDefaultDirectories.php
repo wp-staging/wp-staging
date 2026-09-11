@@ -7,9 +7,11 @@ namespace WPStaging\Framework\Utils;
 use DirectoryIterator;
 use UnexpectedValueException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
-use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
  
+
+
+
 class WpDefaultDirectories
 {
 
@@ -193,31 +195,6 @@ class WpDefaultDirectories
         }
 
         return $coreDirectories;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-    public function getExcludedDirectories($directoriesRequest)
-    {
-        if ((empty($directoriesRequest))) {
-            return [];
-        }
-
-        $excludedDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($directoriesRequest));
-        $excludedDirectories = array_map(function ($directory) {
-            return $this->slashit($directory, SlashMode::NO_SLASH);
-        }, $excludedDirectories);
-
-        return $excludedDirectories;
     }
 
 
