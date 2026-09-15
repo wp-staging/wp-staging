@@ -12,6 +12,7 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\LogCleanup;
 use WPStaging\Framework\Mails\MailSender;
+use WPStaging\Framework\Network\SsrfProtection;
 use WPStaging\Framework\Notices\CliIntegrationNotice;
 use WPStaging\Framework\Notices\WpVersionCompatNotice;
 use WPStaging\Framework\Onboarding\FreeOnboarding;
@@ -43,6 +44,7 @@ class CommonServiceProvider extends ServiceProvider
     protected function registerClasses()
     {
         $this->container->singleton(DiskWriteCheck::class);
+        $this->container->singleton(SsrfProtection::class);
         $this->container->make(DebugLogReader::class)->listenDeleteLogRequest();
 
         add_action(Cron::ACTION_DAILY_EVENT, [$this, 'cleanupLogs'], 25, 0);

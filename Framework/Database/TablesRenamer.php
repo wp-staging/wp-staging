@@ -994,7 +994,12 @@ class TablesRenamer
         return $this->updateNetworkOptionValue($this->productionTablePrefix . 'sitemeta', self::OPTION_ACTIVE_SITEWIDE_PLUGINS, serialize($activeSitewidePlugins));
     }
 
-    public function preserveTmpOption(string $optionName): bool
+
+
+
+
+
+    public function preserveTmpOption(string $optionName, $autoload = null): bool
     {
         $tmpOptionsTable = $this->tmpPrefix . 'options';
         if (!$this->tableExists($tmpOptionsTable)) {
@@ -1002,16 +1007,43 @@ class TablesRenamer
         }
 
         $optionsTable = $this->productionTablePrefix . 'options';
-        $optionValue  = $this->getOptionValue($optionsTable, $optionName);
-        if (empty($optionValue)) {
-            return false;
+        if (!$this->hasOption($optionsTable, $optionName)) {
+            return $this->deleteOptionValue($tmpOptionsTable, $optionName);
         }
 
-        if ($this->getOptionValue($tmpOptionsTable, $optionName)) {
-            return $this->updateOptionValue($tmpOptionsTable, $optionName, $optionValue);
+        $optionValue = $this->getOptionValue($optionsTable, $optionName);
+        if ($this->hasOption($tmpOptionsTable, $optionName)) {
+            return $this->updateOptionValue($tmpOptionsTable, $optionName, $optionValue, $autoload);
         }
 
-        return $this->insertOptionValue($tmpOptionsTable, $optionName, $optionValue);
+        return $this->insertOptionValue($tmpOptionsTable, $optionName, $optionValue, $autoload === true);
+    }
+
+
+
+
+
+    public function getProductionOptionData(string $optionName): array
+    {
+        $database     = $this->tableService->getDatabase()->getWpdba()->getClient();
+        $optionsTable = $this->productionTablePrefix . 'options';
+        $option       = $database->get_row(
+            $database->prepare(
+                "SELECT option_value, autoload FROM `{$optionsTable}` WHERE option_name = %s LIMIT 1",
+                $optionName
+            ),
+            ARRAY_A
+        );
+
+        if (!is_array($option)) {
+            return ['exists' => false];
+        }
+
+        return [
+            'exists'   => true,
+            'value'    => $option['option_value'],
+            'autoload' => in_array($option['autoload'], ['yes', 'on', 'auto', 'auto-on'], true),
+        ];
     }
 
 
@@ -1199,15 +1231,61 @@ class TablesRenamer
 
 
 
+    protected function hasOption(string $tableName, string $optionName): bool
+    {
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
+        $result   = $database->get_var(
+            $database->prepare(
+                "SELECT option_id FROM `{$tableName}` WHERE option_name = %s LIMIT 1",
+                $optionName
+            )
+        );
 
-    protected function updateOptionValue(string $tableName, string $optionName, string $optionValue): bool
+        return $result !== null;
+    }
+
+
+
+
+
+
+    protected function deleteOptionValue(string $tableName, string $optionName): bool
     {
         $database = $this->tableService->getDatabase()->getWpdba()->getClient();
 
         return $database->query(
             $database->prepare(
-                "UPDATE `{$tableName}` SET option_value = %s WHERE option_name LIKE %s",
+                "DELETE FROM `{$tableName}` WHERE option_name = %s",
+                $optionName
+            )
+        ) !== false;
+    }
+
+
+
+
+
+
+
+
+    protected function updateOptionValue(string $tableName, string $optionName, string $optionValue, $autoload = null): bool
+    {
+        $database = $this->tableService->getDatabase()->getWpdba()->getClient();
+        if ($autoload === null) {
+            return $database->query(
+                $database->prepare(
+                    "UPDATE `{$tableName}` SET option_value = %s WHERE option_name LIKE %s",
+                    $optionValue,
+                    $database->esc_like($optionName)
+                )
+            );
+        }
+
+        return $database->query(
+            $database->prepare(
+                "UPDATE `{$tableName}` SET option_value = %s, autoload = %s WHERE option_name LIKE %s",
                 $optionValue,
+                $autoload ? 'yes' : 'no',
                 $database->esc_like($optionName)
             )
         );

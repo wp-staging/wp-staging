@@ -357,7 +357,7 @@ abstract class Job implements ShutdownableInterface
                     size_format($maxMemoryLimit),
                     size_format($scriptMemoryLimit)
                 ),
-                Logger::TYPE_ERROR
+                Logger::TYPE_INFO
             );
 
             return true;

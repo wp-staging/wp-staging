@@ -10,6 +10,8 @@ if (file_exists(__DIR__ . '/autoloader_dev.php')) {
     include_once __DIR__ . '/autoloader_dev.php';
 } elseif (wpstgDoLoadPluginAutoLoad($pluginFilePath)) {
     include_once __DIR__ . '/autoloader.php';
+} else {
+    return;
 }
 
  

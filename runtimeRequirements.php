@@ -88,6 +88,21 @@ if (!function_exists('wpstgIsProPluginActiveInNetwork')) {
     }
 }
 
+if (!function_exists('wpstgPluginFileIsProEdition')) {
+
+
+
+
+
+
+
+
+    function wpstgPluginFileIsProEdition(string $pluginFilePath): bool
+    {
+        return substr($pluginFilePath, -strlen(WPSTG_PRO_VERSION_PLUGIN_FILE)) === WPSTG_PRO_VERSION_PLUGIN_FILE;
+    }
+}
+
 if (!function_exists('wpstgIsFreeVersionRequiredForPro')) {
 
 
@@ -336,25 +351,20 @@ if (!function_exists('wpstgDoLoadPluginAutoLoad')) {
 
 
 
+
+
+
     function wpstgDoLoadPluginAutoLoad(string $pluginFilePath): bool
     {
         if (class_exists('\WPStaging\Core\WPStaging')) {
             return false;
         }
 
-        if (strpos($pluginFilePath, 'wp-staging.php') === false) {
+        if (strpos($pluginFilePath, WPSTG_FREE_VERSION_PLUGIN_FILE) === false) {
             return true;
         }
 
-        if (strpos($pluginFilePath, 'wp-staging.php') !== false && (!is_network_admin() && !wpstgIsProPluginActive())) {
-            return true;
-        }
-
-        if (strpos($pluginFilePath, 'wp-staging.php') !== false && (is_network_admin() && !wpstgIsProPluginActiveInNetwork())) {
-            return true;
-        }
-
-        return false;
+        return !wpstgIsProActiveInNetworkOrInCurrentSite();
     }
 }
 

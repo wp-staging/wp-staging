@@ -13,6 +13,9 @@ use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Service\StagingSetup;
 use WPStaging\Staging\Sites;
 
+
+
+
 class PrepareCreate extends AbstractAjaxPrepare
 {
  
@@ -169,7 +172,7 @@ class PrepareCreate extends AbstractAjaxPrepare
 
         $this->prepareStagingSiteDto();
 
-        $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        $this->jobDataDto->generateId();
 
         $this->jobCreate->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Cloning in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_CREATE, $this->queueId);
 
@@ -216,12 +219,18 @@ class PrepareCreate extends AbstractAjaxPrepare
     {
         global $wpdb;
 
+        $reservedPrefixes = WPStaging::make(Sites::class)->getReservedDatabasePrefixes();
+
  
  
         for ($i = 0; $i <= 10000; $i++) {
             $prefix = 'wpstg' . $i . '_';
 
-            $sql    = "SHOW TABLE STATUS LIKE '{$prefix}%'";
+            if (in_array(strtolower($prefix), $reservedPrefixes, true)) {
+                continue;
+            }
+
+            $sql    = $wpdb->prepare('SHOW TABLE STATUS LIKE %s', $wpdb->esc_like($prefix) . '%');
             $tables = $wpdb->get_results($sql);
 
  

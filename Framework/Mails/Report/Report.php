@@ -10,6 +10,7 @@ use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Notifications\Notifications;
+use WPStaging\Pro\License\Licensing;
 
 use function WPStaging\functions\debug_log;
 
@@ -420,6 +421,10 @@ class Report
     private function getLicenseKey(): string
     {
         $licenseKey = get_option('wpstg_license_key');
+        if (class_exists(Licensing::class)) {
+            $licenseKey = WPStaging::make(Licensing::class)->getLicenseKey();
+        }
+
         return !empty($licenseKey) ? $licenseKey : 'Unregistered';
     }
 }

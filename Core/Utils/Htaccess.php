@@ -25,6 +25,11 @@ class Htaccess
 
 
 
+    const PHP_HANDLER_EXTENSIONS = '.php .php3 .php4 .php5 .php7 .php8 .phtml .phps .phar .pht';
+
+
+
+
 
     public $filesystem;
 
@@ -46,9 +51,11 @@ class Htaccess
             'AddType application/octet-stream .log',
             'AddType application/octet-stream .wpstg',
             'AddType application/octet-stream .wpstgtmp',
+            'RemoveHandler ' . self::PHP_HANDLER_EXTENSIONS,
+            'RemoveType ' . self::PHP_HANDLER_EXTENSIONS,
             '</IfModule>',
             '<IfModule mod_dir.c>',
-            'DirectoryIndex index.php',
+            'DirectoryIndex index.html index.php',
             '</IfModule>',
             '<IfModule mod_autoindex.c>',
             'Options -Indexes',

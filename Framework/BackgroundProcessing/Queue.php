@@ -1574,7 +1574,7 @@ class Queue
 
     private function getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses = [])
     {
-        $scheduleIdSerializedRow = 's:10:"scheduleId";s:' . strlen((string)$scheduleId) . ':"' . $scheduleId . '";';
+        $scheduleIdSerializedRow = 's:10:"scheduleId";s:' . strlen((string)$scheduleId) . ':"' . $this->database->escape((string)$scheduleId) . '";';
         $whereCondition          = "args LIKE '%$scheduleIdSerializedRow%'";
         if (empty($statuses)) {
             return $whereCondition;

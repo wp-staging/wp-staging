@@ -13,6 +13,7 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Utils\Sanitize;
+use WPStaging\Framework\Utils\Urls;
 
 
 
@@ -36,7 +37,8 @@ $localDomain  = $sanitize->sanitizeDomainForCli(preg_replace('/\.[a-zA-Z0-9]+$/'
 
  
 $tablePrefix  = $sanitize->sanitizeTablePrefixForCli($table_prefix);
-$licenseKey       = trim(get_option('wpstg_license_key', ''));
+$licensing        = class_exists('\WPStaging\Pro\License\Licensing') ? WPStaging::make(\WPStaging\Pro\License\Licensing::class) : null;
+$licenseKey       = $licensing === null ? trim(get_option('wpstg_license_key', '')) : $licensing->getLicenseKey();
  
 $licenseKeySanitized = $sanitize->sanitizeLicenseKeyForCli($licenseKey);
 $licenseFlag      = !empty($licenseKeySanitized) ? ' -l ' . $licenseKeySanitized : '';
@@ -48,8 +50,7 @@ $licensingState = 'active';
 if (!$isDeveloperOrHigher) {
     if (WPStaging::isBasic()) {
         $licensingState = 'free';
-    } elseif (class_exists('\WPStaging\Pro\License\Licensing')) {
-        $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
+    } elseif ($licensing !== null) {
         $licensingState = $licensing->isValidOrExpiredLicenseKey() ? 'upgrade_needed' : 'not_activated';
     } else {
         $licensingState = 'not_activated';
@@ -451,7 +452,7 @@ if (!$isDeveloperOrHigher) {
                     }
 
  
-                    $defaultBackupUrl = $firstBackup ? $firstBackup->downloadUrl : 'https://example.com/backup.wpstg';
+                    $defaultBackupUrl = $firstBackup ? WPStaging::make(Urls::class)->resolveProtocolRelativeUrl($firstBackup->downloadUrl) : 'https://example.com/backup.wpstg';
 
  
                     $maskedBackupUrl = preg_replace('/(_[0-9]{8}-[0-9]{6}_[a-f0-9]+)(\.wpstg)$/i', '_*****$2', $defaultBackupUrl);

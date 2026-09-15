@@ -8,11 +8,14 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Framework\Traits\LicenseStatusTrait;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Sites;
 
 class Listing extends AbstractTemplateComponent
 {
+    use LicenseStatusTrait;
+
  
     private $siteInfo;
 
@@ -66,7 +69,7 @@ class Listing extends AbstractTemplateComponent
             'staging/listing.php',
             [
                 'stagingSites' => $stagingSites,
-                'license'      => get_option('wpstg_license_status'),
+                'license'      => $this->getLicenseStatus(),
                 'iconPath'     => $this->assets->getAssetsUrl('svg/cloud.svg'),
                 'error'        => $error,
  

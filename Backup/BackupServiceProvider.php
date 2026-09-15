@@ -140,6 +140,8 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_nopriv_wpstg--backups--restore', $this->container->callback(Restore::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         add_action(Cron::ACTION_CREATE_CRON_BACKUP, $this->container->callback(BackupScheduler::class, 'createCronBackup'), 10, 1);
+        add_action('cron_reschedule_event_error', $this->container->callback(BackupScheduler::class, 'reportCronSaveFailure'), 10, 2);
+        add_action('cron_unschedule_event_error', $this->container->callback(BackupScheduler::class, 'reportCronSaveFailure'), 10, 2);
         add_action('wp_ajax_wpstg--backups-dismiss-schedule', $this->container->callback(BackupScheduler::class, 'dismissSchedule'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups-fetch-schedules', $this->container->callback(ScheduleList::class, 'renderScheduleList'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 

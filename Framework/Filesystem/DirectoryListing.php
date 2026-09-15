@@ -216,32 +216,18 @@ PHP
 
 
 
-
-
-
-
-
-
     public function maybeUpdateOldHtaccessWebConfig($backupDirectory)
     {
         $backupDirectory = trailingslashit($backupDirectory);
 
- 
- 
-        if (file_exists($backupDirectory . '.htaccess')) {
-            if ($contents = file_get_contents($backupDirectory . '.htaccess')) {
-                if (strpos($contents, 'AddType application/octet-stream .wpstgtmp') === false) {
-                    $this->htaccess->create($backupDirectory . '.htaccess');
-                }
-            }
+        $htaccess = $backupDirectory . '.htaccess';
+        if (file_exists($htaccess) && strpos((string)file_get_contents($htaccess), 'RemoveHandler ' . Htaccess::PHP_HANDLER_EXTENSIONS) === false) {
+            $this->htaccess->create($htaccess);
         }
 
-        if (file_exists($backupDirectory . 'web.config')) {
-            if ($contents = file_get_contents($backupDirectory . 'web.config')) {
-                if (strpos($contents, '<mimeMap fileExtension=".wpstgtmp" mimeType="application/octet-stream"') === false) {
-                    $this->webConfig->create($backupDirectory . 'web.config');
-                }
-            }
+        $webConfig = $backupDirectory . 'web.config';
+        if (file_exists($webConfig) && strpos((string)file_get_contents($webConfig), IISWebConfig::STATIC_FILE_HANDLER) === false) {
+            $this->webConfig->create($webConfig);
         }
     }
 }

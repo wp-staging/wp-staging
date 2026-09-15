@@ -411,6 +411,8 @@ class Cloning extends Job
 
     private function setStagingPrefix()
     {
+        $reservedPrefixes = $this->sitesHelper->getReservedDatabasePrefixes();
+
  
  
         for ($i = 0; $i <= 10000; $i++) {
@@ -418,7 +420,11 @@ class Cloning extends Job
                 ? 'wpstg' . (count($this->options->existingClones) + $i) . '_'
                 : 'wpstg' . $i . '_';
 
-            $sql    = "SHOW TABLE STATUS LIKE '{$this->options->prefix}%'";
+            if (in_array(strtolower($this->options->prefix), $reservedPrefixes, true)) {
+                continue;
+            }
+
+            $sql    = $this->db->prepare('SHOW TABLE STATUS LIKE %s', $this->db->esc_like($this->options->prefix) . '%');
             $tables = $this->db->get_results($sql);
 
  
@@ -446,6 +452,23 @@ class Cloning extends Job
         if (!property_exists($this->options, 'currentJob') || $this->options->currentJob === null) {
             $this->log("Cloning job finished");
             return true;
+        }
+
+        if (in_array($this->options->mainJob ?? '', [Job::UPDATE, Job::RESET], true)) {
+            $jobSite = new \WPStaging\Staging\Dto\StagingSiteDto();
+            $jobSite->hydrate(array_intersect_key((array)$this->options, array_flip([
+                'useCustomDatabase',
+                'databaseDatabase',
+                'databaseServer',
+                'databaseUser',
+                'databasePassword',
+                'databaseSsl',
+            ])));
+            WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->assertCanModifyTables(
+                $this->options->databasePrefix ?: $this->options->prefix,
+                $this->options->clone,
+                $jobSite
+            );
         }
 
         $methodName = "job" . ucwords($this->options->currentJob);

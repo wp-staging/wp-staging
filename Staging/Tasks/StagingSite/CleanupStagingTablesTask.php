@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Tasks\StagingSite;
 
 use Exception;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\DatabaseInterface;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -12,8 +13,12 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Interfaces\StagingDatabaseDtoInterface;
 use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
 use WPStaging\Staging\Tasks\StagingTask;
+use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
+
+
+
 
 class CleanupStagingTablesTask extends StagingTask
 {
@@ -132,20 +137,26 @@ class CleanupStagingTablesTask extends StagingTask
  
         $jobDataDto  = $this->jobDataDto;
 
-        $this->initStagingDatabase($this->getStagingSiteDto($this->jobDataDto->getCloneId()));
+        $stagingSiteDto = $this->getStagingSiteDto($jobDataDto->getCloneId());
+        $this->initStagingDatabase($stagingSiteDto);
         $this->tableService = new TableService($this->stagingDb);
+
+        $stagingPrefix = $this->stepsDto->getTotal() > 0
+            ? $jobDataDto->getStagingSite()->getUsedPrefix()
+            : $stagingSiteDto->getUsedPrefix();
+        $ownership = WPStaging::make(PrefixOwnership::class);
+        if (!$ownership->canDeleteTables($stagingPrefix, $jobDataDto->getCloneId(), $this->stagingDb->getWpdb())) {
+            return '';
+        }
 
  
         if ($this->stepsDto->getTotal() > 0) {
-            return $jobDataDto->getStagingSite()->getUsedPrefix();
+            return $stagingPrefix;
         }
 
-        $stagingSiteDto = $this->getStagingSiteDto($jobDataDto->getCloneId());
         $jobDataDto->setStagingSite($stagingSiteDto);
 
-        $stagingPrefix = $stagingSiteDto->getUsedPrefix();
-
-        if (!$stagingSiteDto->getIsExternalDatabase() && $this->productionDb->getPrefix() === $stagingPrefix) {
+        if ($ownership->isProductionDatabase($this->stagingDb->getWpdb()) && $this->productionDb->getPrefix() === $stagingPrefix) {
             $this->logger->warning(sprintf(
                 '%s: Staging site prefix "%s" is the same as the WordPress table prefix, it is also not a external database connection. This is not allowed.',
                 static::getTaskTitle(),

@@ -173,6 +173,22 @@ class JobDataDto extends AbstractDto
 
 
 
+    public function generateId()
+    {
+        $this->setId(bin2hex(random_bytes(16)));
+    }
+
+
+
+
+    public function hasId(): bool
+    {
+        return !empty($this->id);
+    }
+
+
+
+
     public function isInit()
     {
         return $this->init;

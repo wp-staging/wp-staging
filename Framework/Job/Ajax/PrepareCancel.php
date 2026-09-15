@@ -84,7 +84,7 @@ class PrepareCancel extends PrepareJob
         $this->jobDataDto->setInit(true);
         $this->jobDataDto->setFinished(false);
         $this->jobDataDto->setStartTime(time());
-        $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        $this->jobDataDto->generateId();
 
         $this->jobCancel->getTransientCache()->cancelJob($this->getJobTitle($this->jobDataDto->getType()));
         $this->jobCancel->setJobDataDto($this->jobDataDto);

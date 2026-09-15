@@ -44,6 +44,7 @@ use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Newsfeed\NewsfeedProvider;
 use WPStaging\Framework\Language\Language;
+use WPStaging\Framework\Traits\LicenseStatusTrait;
 use WPStaging\Pro\License\Licensing;
 use function WPStaging\functions\debug_log;
 
@@ -53,6 +54,8 @@ use function WPStaging\functions\debug_log;
 
 class Administrator
 {
+    use LicenseStatusTrait;
+
 
 
 
@@ -321,6 +324,7 @@ class Administrator
  
  
         $canUseRemoteSync = defined('WPSTGPRO_VERSION')
+            && class_exists(Licensing::class)
             && WPStaging::make(Licensing::class)->isActiveAgencyOrDeveloperPlan();
 
         if ($canUseRemoteSync) {
@@ -493,7 +497,7 @@ class Administrator
     public function getSettingsPage()
     {
 
-        $license = get_option('wpstg_license_status');
+        $license = $this->getLicenseStatus();
 
  
         $tabs = new Tabs(Hooks::applyFilters(self::FILTER_MAIN_SETTING_TABS, [
@@ -515,7 +519,7 @@ class Administrator
     public function getClonePage()
     {
 
-        $license = get_option('wpstg_license_status');
+        $license = $this->getLicenseStatus();
 
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
@@ -529,7 +533,7 @@ class Administrator
 
     public function getBackupPage()
     {
-        $license = get_option('wpstg_license_status');
+        $license = $this->getLicenseStatus();
 
  
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
@@ -565,8 +569,7 @@ class Administrator
 
         WPStaging::getInstance()->set("systemInfo", new SystemInfo());
 
- 
-        $license = get_option('wpstg_license_status');
+        $license = $this->getLicenseStatus();
 
         require_once "{$this->viewsPath}tools/index.php";
     }
@@ -577,8 +580,7 @@ class Administrator
 
     public function getRestorerPage()
     {
- 
-        $license = get_option('wpstg_license_status');
+        $license = $this->getLicenseStatus();
 
         require_once "{$this->viewsPath}pro/wpstg-restorer-ui.php";
     }
@@ -1184,10 +1186,13 @@ class Administrator
 
     public function getLicensePage()
     {
- 
-        $license = get_option('wpstg_license_status');
+        $licensing = WPStaging::make(Licensing::class);
+        $license   = $licensing->getLicenseStatus();
+        if ($licensing->siteInheritsNetworkLicense()) {
+            require_once "{$this->viewsPath}pro/licensing-network.php";
+            return;
+        }
 
-        $licensing                = WPStaging::make(Licensing::class);
         $licenseEntitlements      = $licensing->getEntitlements();
         $manualActivationUrl      = $licensing->buildManualActivationBaseUrl();
         $manualActivationNonce    = $licensing->generateActivationNonce();

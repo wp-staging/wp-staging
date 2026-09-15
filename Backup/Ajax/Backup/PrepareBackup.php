@@ -151,10 +151,8 @@ class PrepareBackup extends PrepareJob
         $this->jobDataDto->setStartTime(time());
         $this->jobDataDto->setIsOnlyUpload(false);
 
-        try {
-            $this->jobDataDto->getId();
-        } catch (\Exception $e) {
-            $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        if (!$this->jobDataDto->getIsSyncRequest() || !$this->jobDataDto->hasId()) {
+            $this->jobDataDto->generateId();
         }
 
         if (!$this->jobDataDto->getIsSyncRequest()) {

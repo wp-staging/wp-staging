@@ -151,7 +151,7 @@ class PrepareUpdate extends AbstractAjaxPrepare
 
         $this->prepareStagingSiteDto();
 
-        $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        $this->jobDataDto->generateId();
 
         $this->jobUpdate->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Update in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_UPDATE, $this->queueId);
 

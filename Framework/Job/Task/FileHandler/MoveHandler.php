@@ -2,6 +2,11 @@
 
 namespace WPStaging\Framework\Job\Task\FileHandler;
 
+use WPStaging\Core\WPStaging;
+
+
+
+
 class MoveHandler extends FileHandler
 {
 
@@ -44,6 +49,7 @@ class MoveHandler extends FileHandler
             $lastError = error_get_last();
             if (!empty($lastError['message']) && substr($lastError['message'], 0, 7) === 'rename(') {
                 $message = preg_replace('@^rename.*?:\s+@', '', $lastError['message']);
+                $message = $this->redactInstallationRoot($message, ABSPATH, WPStaging::isWindowsOs());
             }
 
             $this->logger->warning(sprintf(
@@ -54,5 +60,29 @@ class MoveHandler extends FileHandler
                 $message
             ));
         }
+    }
+
+
+
+
+
+
+
+
+
+    protected function redactInstallationRoot(string $message, string $rootPath, bool $isWindows): string
+    {
+        $rootPath = rtrim($isWindows ? str_replace('\\', '/', $rootPath) : $rootPath, '/');
+        if ($rootPath === '') {
+            return $message;
+        }
+
+        $rootPattern = preg_quote($rootPath, '~');
+        $separator   = $isWindows ? '[/\\\\]' : '/';
+        if ($isWindows) {
+            $rootPattern = str_replace('/', $separator, $rootPattern);
+        }
+
+        return preg_replace('~' . $rootPattern . '(?=' . $separator . '|[\s):;\'\"]|$)~' . ($isWindows ? 'i' : ''), '[ABSPATH]', $message);
     }
 }

@@ -7,12 +7,14 @@ use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Framework\Traits\TablePrefixValidator;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
 {
+    use TablePrefixValidator;
     use WithStagingDatabase;
 
 
@@ -86,7 +88,7 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
 
     protected function getPrefixedStagingTableName(string $tableName): string
     {
-        return $this->jobDataDto->getDatabasePrefix() . $tableName;
+        return $this->requireValidTablePrefix($this->jobDataDto->getDatabasePrefix()) . $tableName;
     }
 
     protected function isOptionsTableExcluded(): bool

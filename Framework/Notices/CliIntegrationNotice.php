@@ -348,11 +348,11 @@ class CliIntegrationNotice
 
     private function getLicenseData()
     {
-        if (!WPStaging::isPro()) {
+        if (!WPStaging::isPro() || !class_exists('\WPStaging\Pro\License\Licensing')) {
             return null;
         }
 
-        $license = get_option('wpstg_license_status', false);
+        $license = WPStaging::make(\WPStaging\Pro\License\Licensing::class)->getLicenseStatus();
         return $license ? (object)$license : null;
     }
 

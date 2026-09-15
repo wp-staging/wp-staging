@@ -229,9 +229,12 @@ class JobTransientCache
 
 
 
-    public function completeJob()
+
+
+
+    public function completeJob(string $title = '', string $message = '', array $data = [])
     {
-        $this->stopJob(self::STATUS_SUCCESS);
+        $this->stopJob(self::STATUS_SUCCESS, $title, $message, '', $data);
     }
 
 
@@ -407,7 +410,7 @@ class JobTransientCache
 
 
 
-    private function stopJob(string $status, string $title = '', string $message = '', string $severity = '')
+    private function stopJob(string $status, string $title = '', string $message = '', string $severity = '', array $data = [])
     {
         $jobData = $this->getJob();
         if ($jobData === null) {
@@ -431,6 +434,10 @@ class JobTransientCache
  
         if ($severity !== '') {
             $jobData['severity'] = $severity;
+        }
+
+        if (!empty($data)) {
+            $jobData['data'] = $data;
         }
 
  

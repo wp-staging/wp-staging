@@ -151,7 +151,7 @@ class PrepareRestore extends PrepareJob
         $this->jobDataDto->setFinished(false);
         $this->jobDataDto->setTmpDatabasePrefix($this->getTmpDatabasePrefix());
 
-        $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        $this->jobDataDto->generateId();
 
         $this->jobRestore->setJobDataDto($this->jobDataDto);
 

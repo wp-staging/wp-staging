@@ -54,7 +54,7 @@ abstract class BaseListing extends AbstractTemplateComponent
         return [
             'directory'   => $this->directory,
             'urlAssets'   => trailingslashit(WPSTG_PLUGIN_URL) . 'assets/',
-            'hasSchedule' => count($this->backupScheduler->getSchedules()) > 0,
+            'hasSchedule' => count($this->backupScheduler->getSchedulesRunByCurrentSite()) > 0,
         ];
     }
 

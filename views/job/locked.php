@@ -13,7 +13,7 @@ try {
     $processLock->checkProcessLocked();
     $isLocked = isset($jobData['status']) && $jobData['status'] === JobTransientCache::STATUS_RUNNING;
 } catch (ProcessLockedException $e) {
-    $isLocked = true;
+    $isLocked = !isset($jobData['status']) || $jobData['status'] === JobTransientCache::STATUS_RUNNING;
 }
 
 if ($isLocked) {

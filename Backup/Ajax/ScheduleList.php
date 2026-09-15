@@ -54,7 +54,7 @@ class ScheduleList
             return;
         }
 
-        $schedules = $this->backupScheduler->getSchedules();
+        $schedules = $this->backupScheduler->getSchedulesRunByCurrentSite();
 
         if (empty($schedules)) {
             wp_send_json_success('<p class="wpstg-backup-no-schedules-list">' . esc_html__('You don\'t have a backup plan yet. Create a new backup and choose a recurrent backup time to start.', 'wp-staging') . '</p>');

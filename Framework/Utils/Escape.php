@@ -77,7 +77,11 @@ class Escape
                 'stroke-linejoin' => [],
             ],
             'g'        => [
-                'fill' => [],
+                'fill'            => [],
+                'stroke'          => [],
+                'stroke-width'    => [],
+                'stroke-linecap'  => [],
+                'stroke-linejoin' => [],
             ],
             'polyline' => [
                 'points' => [],

@@ -124,7 +124,7 @@ class PrepareReset extends AbstractAjaxPrepare
 
         $this->prepareStagingSiteDto();
 
-        $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        $this->jobDataDto->generateId();
 
         $this->jobReset->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Reset in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_RESET, $this->queueId);
 
