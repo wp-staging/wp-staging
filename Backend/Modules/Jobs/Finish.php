@@ -134,7 +134,7 @@ class Finish extends Job
             $this->options->existingClones[$this->options->clone]['isWooSchedulerEnabled']   = empty($this->options->isWooSchedulerEnabled) ? false : true;
             $this->options->existingClones[$this->options->clone]['isEmailsReminderEnabled'] = empty($this->options->isEmailsReminderEnabled) ? false : true;
             $this->options->existingClones[$this->options->clone]['isAutoUpdatePlugins']     = empty($this->options->isAutoUpdatePlugins) ? false : true;
-            update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones, false);
+            WPStaging::make(Sites::class)->updateStagingSites($this->options->existingClones);
             $this->log("Finish: The job finished!");
             return true;
         }
@@ -167,7 +167,7 @@ class Finish extends Job
             "networkClone"        => $this->isNetworkClone(),
         ];
 
-        if (update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones) === false) {
+        if (WPStaging::make(Sites::class)->updateStagingSites($this->options->existingClones) === false) {
             $this->log("Finish: Failed to save {$this->options->clone}'s clone job data to database'");
             return false;
         }

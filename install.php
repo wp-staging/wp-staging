@@ -24,6 +24,8 @@ if (!class_exists('WPStaging\Core\Cron\Cron')) {
 
 $isNewInstall = FirstInstall::hasNeverSeenWpStaging();
 
+$isActivatingProEdition = wpstgPluginFileIsProEdition($pluginFilePath);
+
 FirstInstall::markIfFirstInstall();
 
 PluginLifecycle::recordActivation($isNewInstall);
@@ -41,7 +43,7 @@ $optimizer = (new Optimizer)->installOptimizer();
 
 
 
-if (!defined('WPSTGPRO_VERSION')) {
+if (!$isActivatingProEdition) {
     set_transient('wpstg_activation_redirect', true, 3600);
 }
 
@@ -62,7 +64,7 @@ $settings = (new Settings())->setDefault();
 
 
 
-if (defined('WPSTGPRO_VERSION')) {
+if ($isActivatingProEdition) {
     add_option('wpstgpro_install_date', date('Y-m-d h:i:s'));
 } else {
     add_option('wpstg_free_install_date', date('Y-m-d h:i:s'));

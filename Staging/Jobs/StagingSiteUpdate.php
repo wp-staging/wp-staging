@@ -24,6 +24,7 @@ use WPStaging\Staging\Tasks\StagingSiteUpdate\FinishStagingSiteUpdateTask;
 use WPStaging\Staging\Tasks\StagingSiteUpdate\UpdateRequirementsCheckTask;
 use WPStaging\Staging\Traits\WithDataAdjustmentTasks;
 
+ 
 class StagingSiteUpdate extends AbstractJob
 {
     use WithDataAdjustmentTasks;
@@ -50,6 +51,11 @@ class StagingSiteUpdate extends AbstractJob
     protected function execute()
     {
         try {
+            \WPStaging\Core\WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->assertCanModifyTables(
+                $this->jobDataDto->getStagingSite()->getUsedPrefix(),
+                $this->jobDataDto->getCloneId(),
+                $this->jobDataDto->getStagingSite()
+            );
             $response = $this->getResponse($this->currentTask->execute());
         } catch (\Exception $e) {
             $this->currentTask->getLogger()->critical($e->getMessage());

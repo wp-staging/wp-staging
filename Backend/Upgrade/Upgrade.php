@@ -1,11 +1,5 @@
 <?php
 
-
-
-
-
-
-
 namespace WPStaging\Backend\Upgrade;
 
 use WPStaging\Core\Utils\IISWebConfig;
@@ -25,6 +19,11 @@ use WPStaging\Backup\Service\UpdateProtectionSettings;
 if (!defined("WPINC")) {
     die;
 }
+
+
+
+
+
 
 class Upgrade
 {
@@ -98,6 +97,10 @@ class Upgrade
         $this->adoptLegacyUpdateProtectionMode();
         $this->maybeWarnAboutAffectedNextGenStagingSites();
         $this->normalizeSettingsShape();
+        if (!$this->upgradeFlags->has('staging_prefix_ownership_repaired')) {
+            WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->repairCollisions();
+            $this->upgradeFlags->mark('staging_prefix_ownership_repaired');
+        }
 
         $this->setVersion();
     }

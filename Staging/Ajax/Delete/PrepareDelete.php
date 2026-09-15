@@ -90,7 +90,7 @@ class PrepareDelete extends PrepareJob
         $this->jobDataDto->setFinished(false);
         $this->jobDataDto->setStartTime(time());
 
-        $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        $this->jobDataDto->generateId();
 
         $this->jobDelete->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Delete in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_DELETE, $this->queueId);
 

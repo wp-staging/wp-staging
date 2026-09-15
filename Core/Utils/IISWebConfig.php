@@ -16,6 +16,8 @@ if (!defined("WPINC")) {
 
 class IISWebConfig
 {
+ 
+    const STATIC_FILE_HANDLER = '<add name="StaticFile" path="*" verb="*" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" resourceType="Either" requireAccess="Read" />';
 
 
 
@@ -39,6 +41,10 @@ class IISWebConfig
         return $this->filesystem->create($path, implode(PHP_EOL, [
             '<configuration>',
             '<system.webServer>',
+            '<handlers>',
+            '<clear/>',
+            self::STATIC_FILE_HANDLER,
+            '</handlers>',
             '<staticContent>',
             '<clear/>',
             '<mimeMap fileExtension=".log" mimeType="application/octet-stream" />',

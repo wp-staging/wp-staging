@@ -68,6 +68,7 @@ class Sites
 
     public function getSortedStagingSites()
     {
+        (new PrefixOwnership($this))->repairCollisions();
         $stagingSites = $this->tryGettingStagingSites(self::THROW_EXCEPTION);
 
  
@@ -183,8 +184,38 @@ class Sites
 
 
 
+    public function getReservedDatabasePrefixes(): array
+    {
+        $prefixes = [];
+        foreach ($this->tryGettingStagingSites() as $clone) {
+            $clone = (array)$clone;
+            foreach (['prefix', 'databasePrefix'] as $key) {
+                if (!empty($clone[$key]) && is_string($clone[$key])) {
+                    $prefixes[] = strtolower($clone[$key]);
+                }
+            }
+        }
+
+        return array_unique($prefixes);
+    }
+
+
+
+
+
+
+
     public function updateStagingSites($stagingSites)
     {
+ 
+        if (is_array($stagingSites)) {
+            foreach ($this->tryGettingStagingSites() as $id => $record) {
+                if (isset($stagingSites[$id]) && ($record['ownsDatabaseTables'] ?? null) === false) {
+                    $stagingSites[$id]['ownsDatabaseTables'] = false;
+                }
+            }
+        }
+
         return update_option(self::STAGING_SITES_OPTION, $stagingSites, false);
     }
 

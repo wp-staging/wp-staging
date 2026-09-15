@@ -5,10 +5,12 @@ namespace WPStaging\Backup;
 use DateTime;
 use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Capabilities;
@@ -75,6 +77,9 @@ class BackupScheduler
     const TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT = 'wpstg.backup.schedules.slack_report_sent';
 
  
+    const CRON_SAVE_FAILURE_REPORTED_MARKER = '.cron-save-failure-reported';
+
+ 
     const REPORT_TYPE_ERROR = 'error';
 
  
@@ -138,10 +143,74 @@ class BackupScheduler
     {
         $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
         if (is_array($schedules)) {
-            return $schedules;
+            return array_filter($schedules, 'is_array');
         }
 
         return [];
+    }
+
+
+
+
+    public function getSchedulesRunByCurrentSite(): array
+    {
+        return array_values(array_filter($this->getSchedules(), [$this, 'scheduleIsRunByCurrentSite']));
+    }
+
+
+
+
+
+    private function findScheduleById(string $scheduleId)
+    {
+        if ($scheduleId === '') {
+            return null;
+        }
+
+        foreach ($this->getSchedules() as $schedule) {
+            if (isset($schedule['scheduleId']) && (string)$schedule['scheduleId'] === $scheduleId) {
+                return $schedule;
+            }
+        }
+
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+    public function scheduleIsRunByCurrentSite(array $schedule): bool
+    {
+        if (!is_multisite()) {
+            return true;
+        }
+
+        if (isset($schedule['ownerBlogId'])) {
+            return (int)$schedule['ownerBlogId'] === get_current_blog_id();
+        }
+
+        if (is_main_site() || !isset($schedule['backupType'], $schedule['subsiteBlogId']) || $schedule['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) {
+            return true;
+        }
+
+        return (int)$schedule['subsiteBlogId'] === get_current_blog_id();
+    }
+
+
+
+
+
+
+
+
+    public static function cronEventArguments(string $scheduleId): array
+    {
+        return ['scheduleId' => $scheduleId];
     }
 
 
@@ -157,18 +226,12 @@ class BackupScheduler
             return;
         }
 
-        $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
+        $schedule = $this->findScheduleById((string)$scheduleId);
 
-        $schedule = array_filter($schedules, function ($schedule) use ($scheduleId) {
-            return $schedule['scheduleId'] == $scheduleId;
-        });
-
-        if (empty($schedule)) {
+        if ($schedule === null) {
             debug_log("Could not delete old backups for schedule ID $scheduleId as the schedule rotation plan was not found in the database.");
             return;
         }
-
-        $schedule = array_shift($schedule);
 
         $maxAllowedBackupFiles = absint($schedule['rotation']);
 
@@ -228,6 +291,7 @@ class BackupScheduler
 
         $backupSchedule = [
             'scheduleId'                     => $scheduleId,
+            'ownerBlogId'                    => get_current_blog_id(),
             'schedule'                       => $jobBackupDataDto->getScheduleRecurrence(),
             'backupType'                     => $jobBackupDataDto->getBackupType(),
             'subsiteBlogId'                  => $jobBackupDataDto->getSubsiteBlogId(), 
@@ -255,7 +319,7 @@ class BackupScheduler
             'backupExcludedDirectories'      => $jobBackupDataDto->getBackupExcludedDirectories(),
         ];
 
-        if (wp_next_scheduled(Cron::ACTION_CREATE_CRON_BACKUP, [$backupSchedule])) {
+        if (wp_next_scheduled(Cron::ACTION_CREATE_CRON_BACKUP, [self::cronEventArguments($scheduleId)])) {
             debug_log('[Schedule Backup Cron] Early bailed when registering the cron to create a backup on a schedule, because it already exists');
 
             return;
@@ -293,16 +357,39 @@ class BackupScheduler
 
 
 
-    public function createCronBackup(array $backupData)
+
+
+    public function createCronBackup(array $cronEventArguments)
     {
  
-        $logId = wp_generate_password(4, false);
+        $logId      = wp_generate_password(4, false);
+        $scheduleId = isset($cronEventArguments['scheduleId']) ? (string)$cronEventArguments['scheduleId'] : '';
 
-        debug_log(sprintf("[Schedule Backup Cron - %s] Received request to create a backup using Cron. Backup Data: %s", $logId, wp_json_encode($backupData)), 'info', false);
+        debug_log(sprintf("[Schedule Backup Cron - %s] Received request to create a backup using Cron. Schedule ID: %s", $logId, $scheduleId), 'info', false);
+
+        $schedule = $this->findScheduleById($scheduleId);
+        if ($schedule === null) {
+            debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: schedule %s no longer exists in the database.", $logId, $scheduleId), 'info', false);
+            return;
+        }
+
+        if (!$this->scheduleIsRunByCurrentSite($schedule)) {
+            debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: schedule %s belongs to another site of the network, not site %d.", $logId, $scheduleId, get_current_blog_id()), 'info', false);
+            return;
+        }
+
+ 
+        $queue = WPStaging::make(Queue::class);
+        $queue->markDanglingAs(Queue::STATUS_CANCELED, $queue->getStalledBreakpointDate(), Queue::SET_UPDATED_AT_TO_NOW);
+
+        if ($queue->countActionsByScheduleId($scheduleId, [Queue::STATUS_READY, Queue::STATUS_PROCESSING]) > 0) {
+            debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: a backup job for schedule %s is already queued or running.", $logId, $scheduleId), 'info', false);
+            return;
+        }
 
         try {
             debug_log(sprintf("[Schedule Backup Cron - %s] Preparing job", $logId), 'info', false);
-            $jobId = WPStaging::make(PrepareBackup::class)->prepare($backupData);
+            $jobId = WPStaging::make(PrepareBackup::class)->prepare($schedule);
             if ($jobId instanceof \WP_Error) {
                 debug_log(sprintf("[Schedule Backup Cron - %s] Failed to create backup: %s", $logId, $jobId->get_error_message()));
                 $this->saveBackupFailure($jobId->get_error_message());
@@ -314,6 +401,41 @@ class BackupScheduler
             debug_log("[Schedule Backup Cron - $logId] Exception thrown while preparing the Backup: " . $e->getMessage());
             $this->saveBackupFailure($e->getMessage());
         }
+    }
+
+
+
+
+
+
+
+
+
+    public function reportCronSaveFailure($error, string $hook)
+    {
+        if ($hook !== Cron::ACTION_CREATE_CRON_BACKUP || !defined('WPSTG_DEBUG_LOG_FILE')) {
+            return;
+        }
+
+        $marker = dirname(WPSTG_DEBUG_LOG_FILE) . '/' . self::CRON_SAVE_FAILURE_REPORTED_MARKER;
+        if (file_exists($marker) && filemtime($marker) > time() - HOUR_IN_SECONDS) {
+            return;
+        }
+
+        if (!touch($marker)) {
+            return;
+        }
+
+        global $wpdb;
+
+        debug_log(sprintf(
+            '[Schedule Backup Cron] WordPress could not save the cron option on site %d (%s, error code: %s). Last database error: "%s". Cron option size: %d bytes.',
+            get_current_blog_id(),
+            current_action(),
+            is_wp_error($error) ? $error->get_error_code() : 'unknown',
+            $wpdb->last_error,
+            strlen((string)maybe_serialize(get_option('cron')))
+        ));
     }
 
 
@@ -390,12 +512,17 @@ class BackupScheduler
 
     public function reCreateCron($scheduleBeingEdit = null): bool
     {
-        $schedules = $this->getSchedules();
+        $schedules = $this->getSchedulesRunByCurrentSite();
         static::removeBackupSchedulesFromCron();
 
         $errors = [];
 
         foreach ($schedules as $schedule) {
+            if (empty($schedule['scheduleId'])) {
+                debug_log('[Schedule Backup Cron] Skipped a stored schedule without an id while re-creating the cron events.');
+                continue;
+            }
+
             $timeToSchedule = new \DateTime('now', wp_timezone());
 
 
@@ -409,7 +536,7 @@ class BackupScheduler
             }
 
  
-            $result = wp_schedule_event($timeToSchedule->format('U'), $schedule['schedule'], Cron::ACTION_CREATE_CRON_BACKUP, [$schedule]);
+            $result = wp_schedule_event($timeToSchedule->format('U'), $schedule['schedule'], Cron::ACTION_CREATE_CRON_BACKUP, [self::cronEventArguments($schedule['scheduleId'])]);
 
  
  
@@ -445,7 +572,7 @@ class BackupScheduler
 
     public function reCreateCronIfSchedulesExist(): bool
     {
-        if (empty($this->getSchedules())) {
+        if (empty($this->getSchedulesRunByCurrentSite())) {
             return true;
         }
 
@@ -505,7 +632,7 @@ class BackupScheduler
         $this->cronWarningType          = '';
         $this->lastBackupFailureMessage = '';
 
-        if ($this->isSchedulesEmpty()) {
+        if (empty($this->getSchedulesRunByCurrentSite()) || $this->subsiteOnlyCarriesCopiedScheduleRows()) {
             return true;
         }
 
@@ -528,7 +655,7 @@ class BackupScheduler
             return;
         }
 
-        if ($this->hasOverdueOrMissingBackupCronJob()) {
+        if (!$this->hasBackupCronEventRunByCurrentSite() || $this->hasOverdueBackupCronEventRunByCurrentSite()) {
             $this->cronWarningType = self::CRON_WARNING_TYPE_OVERDUE;
         }
     }
@@ -970,19 +1097,6 @@ class BackupScheduler
 
 
 
-    private function isSchedulesEmpty(): bool
-    {
-        $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
-        if (empty($schedules)) {
-            return true;
-        }
-
-        return false;
-    }
-
-
-
-
     private function getCronJobs(): array
     {
         $cron = get_option('cron');
@@ -1055,25 +1169,102 @@ class BackupScheduler
 
 
 
-
-
-
-    private function hasOverdueOrMissingBackupCronJob(): bool
+    private function getBackupCronEventTimestampsRunByCurrentSite(): array
     {
-        $eventExists = false;
-        $now         = time();
+        $scheduleIdsRunElsewhere = $this->getScheduleIdsRunByOtherSites();
+        $timestamps              = [];
 
         foreach ($this->getCronJobs() as $timestamp => $hooks) {
             if (!isset($hooks[Cron::ACTION_CREATE_CRON_BACKUP])) {
                 continue;
             }
 
-            $eventExists = true;
+            if ($this->backupCronEventsAllBelongToSchedules((array)$hooks[Cron::ACTION_CREATE_CRON_BACKUP], $scheduleIdsRunElsewhere)) {
+                continue;
+            }
+
+            $timestamps[] = (int)$timestamp;
+        }
+
+        return $timestamps;
+    }
+
+ 
+    private function hasBackupCronEventRunByCurrentSite(): bool
+    {
+        return $this->getBackupCronEventTimestampsRunByCurrentSite() !== [];
+    }
+
+ 
+    private function hasOverdueBackupCronEventRunByCurrentSite(): bool
+    {
+        $now = time();
+        foreach ($this->getBackupCronEventTimestampsRunByCurrentSite() as $timestamp) {
             if (($timestamp + self::OVERDUE_GRACE_PERIOD) < $now) {
                 return true;
             }
         }
 
-        return !$eventExists;
+        return false;
+    }
+
+
+
+
+
+
+    private function subsiteOnlyCarriesCopiedScheduleRows(): bool
+    {
+        if (!is_multisite() || is_main_site()) {
+            return false;
+        }
+
+        return !$this->hasScheduleOwnedByCurrentSite() && !$this->hasBackupCronEventRunByCurrentSite();
+    }
+
+
+
+
+
+    private function hasScheduleOwnedByCurrentSite(): bool
+    {
+        foreach ($this->getSchedules() as $schedule) {
+            if (isset($schedule['ownerBlogId']) && (int)$schedule['ownerBlogId'] === get_current_blog_id()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+    private function getScheduleIdsRunByOtherSites(): array
+    {
+        return array_values(array_diff(
+            array_column($this->getSchedules(), 'scheduleId'),
+            array_column($this->getSchedulesRunByCurrentSite(), 'scheduleId')
+        ));
+    }
+
+
+
+
+
+
+    private function backupCronEventsAllBelongToSchedules(array $events, array $scheduleIds): bool
+    {
+        if ($events === [] || $scheduleIds === []) {
+            return false;
+        }
+
+        foreach ($events as $event) {
+            if (!in_array($event['args'][0]['scheduleId'] ?? null, $scheduleIds, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

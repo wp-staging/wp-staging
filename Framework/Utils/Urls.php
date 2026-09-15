@@ -186,6 +186,21 @@ class Urls
 
 
 
+
+
+    public function resolveProtocolRelativeUrl(string $url): string
+    {
+        if (strpos($url, '//') === 0) {
+            return ($this->sslAvailable() ? 'https:' : 'http:') . $url;
+        }
+
+        return $url;
+    }
+
+
+
+
+
     public function maybeUseProtocolRelative(string $url): string
     {
         if ($this->sslAvailable() && substr($url, 0, 7) === 'http://') {

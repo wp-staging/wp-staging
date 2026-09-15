@@ -4,7 +4,6 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
 use RuntimeException;
-use stdClass;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Security\AccessToken;
@@ -244,6 +243,8 @@ class RenameDatabaseTask extends RestoreTask
         ];
 
  
+ 
+ 
         $this->optionsToKeep[] = [
             'name'     => 'wpstg_license_key',
             'value'    => get_option('wpstg_license_key'),
@@ -337,6 +338,7 @@ class RenameDatabaseTask extends RestoreTask
         $isNetworkActivatedPlugin = is_plugin_active_for_network(WPSTG_PLUGIN_FILE);
 
         $this->keepOptions();
+        $this->preserveOptionsInTemporaryTable();
         $this->setupRemoveOptions();
         $this->preserveTransientOptions();
 
@@ -359,6 +361,7 @@ class RenameDatabaseTask extends RestoreTask
         $dataToPreserve = [
             'accessToken'              => $accessToken,
             'isNetworkActivatedPlugin' => $isNetworkActivatedPlugin,
+            'productionTablePrefix'    => $this->tableService->getDatabase()->getPrefix(),
             'optionsToKeep'            => $this->optionsToKeep,
             'optionsToRemove'          => $this->optionsToRemove,
             'activePlugins'            => $activePluginsToPreserve,
@@ -476,6 +479,8 @@ class RenameDatabaseTask extends RestoreTask
         $this->optionsToRemove    = $databaseData['optionsToRemove'];
         $originalAccessToken      = $databaseData['accessToken'];
         $isNetworkActivatedPlugin = $databaseData['isNetworkActivatedPlugin'];
+        $productionTablePrefix = $databaseData['productionTablePrefix'] ?? $this->tableService->getDatabase()->getProductionPrefix();
+        $this->tablesRenamer->setProductionTablePrefix($productionTablePrefix);
 
  
         if (!$this->siteInfo->isHostedOnWordPressCom()) {
@@ -500,11 +505,12 @@ class RenameDatabaseTask extends RestoreTask
             $this->restorePreservedOption($optionToKeep['name'], $value, (bool)$optionToKeep['autoload']);
         }
 
+        $wpdb->flush();
+        $wp_object_cache->flush();
+
         foreach ($this->optionsToRemove as $optionToRemove) {
             delete_option($optionToRemove);
         }
-
-        $this->tablesRenamer->setProductionTablePrefix($wpdb->prefix);
 
         update_option('wpstg.restore.justRestored', 'yes');
         update_option('wpstg.restore.justRestored.metadata', wp_json_encode($this->jobDataDto->getBackupMetadata()));
@@ -571,7 +577,7 @@ class RenameDatabaseTask extends RestoreTask
 
     private function decodePreservedOptionValue($value, &$rejected = false)
     {
-        return $this->safeMaybeUnserialize($value, [stdClass::class], $rejected);
+        return $this->safeMaybeUnserialize($value, [\stdClass::class], $rejected);
     }
 
 
@@ -653,6 +659,37 @@ class RenameDatabaseTask extends RestoreTask
             $this->tablesRenamer->preserveTmpOption('_transient_' . $transient);
             $this->tablesRenamer->preserveTmpOption('_transient_timeout_' . $transient);
         }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    protected function preserveOptionsInTemporaryTable()
+    {
+        foreach ($this->optionsToKeep as &$optionToKeep) {
+            if (empty($optionToKeep['name']) || !is_string($optionToKeep['name'])) {
+                continue;
+            }
+
+            $productionOption       = $this->tablesRenamer->getProductionOptionData($optionToKeep['name']);
+            $optionToKeep['exists'] = !empty($productionOption['exists']);
+            if ($optionToKeep['exists']) {
+                $optionToKeep['autoload'] = $productionOption['autoload'];
+            }
+
+            $this->tablesRenamer->preserveTmpOption($optionToKeep['name'], !empty($optionToKeep['autoload']));
+        }
+
+        unset($optionToKeep);
     }
 
     private function preserveAnalyticsOptions()

@@ -58,9 +58,10 @@ $downloadUrl = $backup->downloadUrl;
  
 $compressor = WPStaging::make(ZlibCompressor::class);
 
- 
-$downloadFileUrl = $downloadUrl;
-$downloadUrl     = (new Urls())->maybeUseProtocolRelative($downloadUrl);
+$urls            = WPStaging::make(Urls::class);
+$downloadFileUrl = $urls->resolveProtocolRelativeUrl($downloadUrl);
+
+$downloadUrl = $urls->maybeUseProtocolRelative($downloadUrl);
 
 $logUrl = add_query_arg([
     'action' => 'wpstg--backups--logs',

@@ -6,7 +6,11 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Staging\Sites;
+use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Staging\Traits\WithStagingDatabase;
+
+
+
 
 class DeleteConfirm extends AbstractTemplateComponent
 {
@@ -43,23 +47,34 @@ class DeleteConfirm extends AbstractTemplateComponent
         try {
             $stagingSiteDto = $this->sites->getStagingSiteDtoByCloneId($cloneId);
         } catch (\Throwable $e) {
-            wp_send_json_error($e->getMessage());
+            wp_send_json_error(['message' => esc_html($e->getMessage())], 409);
         }
 
-        $tables    = [];
-        $connected = false;
+        $ownsTables = true;
+        $tables     = [];
         try {
             $this->initStagingDatabase($stagingSiteDto);
-            $tables    = $this->getStagingTablesStatus($stagingSiteDto->getUsedPrefix());
             $connected = true;
         } catch (\Throwable $e) {
-            $tables    = [];
             $connected = false;
+        }
+
+        if ($connected) {
+            try {
+                $ownsTables = (new PrefixOwnership($this->sites))->canDeleteTables($stagingSiteDto->getUsedPrefix(), $cloneId, $this->stagingDb->getWpdb());
+                $tables = $ownsTables ? $this->getStagingTablesStatus($stagingSiteDto->getUsedPrefix()) : [];
+            } catch (\RuntimeException $e) {
+                wp_send_json_error(['message' => esc_html($e->getMessage())], 409);
+            } catch (\Throwable $e) {
+                $tables    = [];
+                $connected = false;
+            }
         }
 
         $result = $this->templateEngine->render(
             'staging/confirm-delete.php',
             [
+                'ownsDatabaseTables'  => $ownsTables,
                 'stagingSite'         => $stagingSiteDto,
                 'tables'              => $tables === null ? [] : $tables,
                 'isDatabaseConnected' => $connected,

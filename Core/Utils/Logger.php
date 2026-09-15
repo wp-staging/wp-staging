@@ -454,15 +454,22 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
 
 
+
+
+
     public function getLastLogMsg()
     {
- 
-        if (count($this->messages) > 1) {
+        $messageCount = count($this->messages);
+
+        if ($messageCount > 1) {
             return $this->messages;
-        } else {
- 
-            return $this->messages[] = array_pop($this->messages);
         }
+
+        if ($messageCount === 1) {
+            return $this->messages[0];
+        }
+
+        return null;
     }
 
 

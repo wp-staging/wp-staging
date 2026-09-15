@@ -189,9 +189,10 @@ class CronIntegrity
 
 
 
+
     private function checkBackupSchedules()
     {
-        $schedules        = $this->backupScheduler->getSchedules();
+        $schedules        = $this->backupScheduler->getSchedulesRunByCurrentSite();
         $scheduledByCron  = $this->findScheduledBackupCrons();
         $orphanedCronIds  = $this->findOrphanedBackupCronScheduleIds($schedules, $scheduledByCron);
         $hasHandler       = has_action(Cron::ACTION_CREATE_CRON_BACKUP) !== false;

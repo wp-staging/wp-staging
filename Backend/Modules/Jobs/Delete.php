@@ -15,6 +15,7 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Staging\Sites;
+use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 
@@ -214,6 +215,11 @@ class Delete extends Job
     {
         $stagingPrefix = $this->getStagingPrefix();
 
+        if ($stagingPrefix === '') {
+            $this->tables = [];
+            return;
+        }
+
         $escapedPrefix = str_replace(['_', '%'], ['\_', '\%'], $stagingPrefix);
 
         $tables = $this->wpdb->get_results("SHOW TABLE STATUS LIKE '$escapedPrefix%'");
@@ -245,6 +251,16 @@ class Delete extends Job
             $message = "Fatal Error: Can not delete staging site. Prefix '{$this->clone->prefix}' overlaps the production table prefix. Stopping for security reasons. Go to Sites > Actions > Edit Data and correct the table prefix or contact us.";
             $this->log($message);
             $this->returnException($message);
+        }
+
+        try {
+            if (!WPStaging::make(PrefixOwnership::class)->canDeleteTables($this->clone->prefix, (string)($this->clone->name ?? ''), $this->wpdb)) {
+                $this->tables = [];
+                return '';
+            }
+        } catch (Exception $exception) {
+            $this->log($exception->getMessage());
+            $this->returnException($exception->getMessage());
         }
 
         return $this->clone->prefix;

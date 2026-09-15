@@ -327,7 +327,11 @@ class BackgroundLogger
                 $data['severity'] = $jobData['severity'];
             }
         } elseif ($status === JobTransientCache::STATUS_SUCCESS) {
-            $data['message'] = esc_html__('Job completed successfully', 'wp-staging');
+            if (!empty($jobData['data']) && is_array($jobData['data'])) {
+                $data = $jobData['data'];
+            }
+
+            $data['message'] = !empty($jobData['message']) ? esc_html((string) $jobData['message']) : ($data['message'] ?? esc_html__('Job completed successfully', 'wp-staging'));
         }
 
         $this->output('', $status, json_encode($data));

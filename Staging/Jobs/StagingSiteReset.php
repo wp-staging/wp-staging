@@ -23,6 +23,7 @@ use WPStaging\Staging\Tasks\StagingSiteReset\FinishStagingSiteResetTask;
 use WPStaging\Staging\Tasks\StagingSiteReset\ResetRequirementsCheckTask;
 use WPStaging\Staging\Traits\WithDataAdjustmentTasks;
 
+ 
 class StagingSiteReset extends AbstractJob
 {
     use WithDataAdjustmentTasks;
@@ -49,6 +50,11 @@ class StagingSiteReset extends AbstractJob
     protected function execute()
     {
         try {
+            \WPStaging\Core\WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->assertCanModifyTables(
+                $this->jobDataDto->getStagingSite()->getUsedPrefix(),
+                $this->jobDataDto->getCloneId(),
+                $this->jobDataDto->getStagingSite()
+            );
             $response = $this->getResponse($this->currentTask->execute());
         } catch (\Exception $e) {
             $this->currentTask->getLogger()->critical($e->getMessage());

@@ -13,6 +13,7 @@ use WPStaging\Framework\Facades\Info;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Pro\License\Licensing;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Notifications\Notifications;
 use WPStaging\Staging\Sites;
@@ -1137,6 +1138,10 @@ class SystemInfo
     private function getLicenseKey()
     {
         $licenseKey = get_option('wpstg_license_key');
+        if (class_exists(Licensing::class)) {
+            $licenseKey = WPStaging::make(Licensing::class)->getLicenseKey();
+        }
+
         if (empty($licenseKey) || !$this->getEncodeProLicense()) {
             return $licenseKey;
         }

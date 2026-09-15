@@ -51,11 +51,19 @@ class RemoteDownloader
 
 
 
+    const ERROR_BLOCKED_URL = 'blocked_url';
+
+
+
+
 
     private $chunkSize = 5 * 1024 * 1024;
 
  
     protected $sanitize;
+
+ 
+    protected $ssrfProtection;
 
  
     protected $remoteUrl = '';
@@ -108,9 +116,11 @@ class RemoteDownloader
 
 
 
-    public function __construct(Sanitize $sanitize)
+
+    public function __construct(Sanitize $sanitize, SsrfProtection $ssrfProtection)
     {
-        $this->sanitize = $sanitize;
+        $this->sanitize       = $sanitize;
+        $this->ssrfProtection = $ssrfProtection;
     }
 
 
@@ -762,7 +772,13 @@ class RemoteDownloader
             );
         }
 
-        return wp_remote_request($this->remoteUrl, $args);
+        if ($this->ssrfProtection->isBlockedUrl($this->remoteUrl)) {
+            return new \WP_Error(self::ERROR_BLOCKED_URL, esc_html__('The URL resolves to a blocked IP address.', 'wp-staging'));
+        }
+
+        return $this->ssrfProtection->runRequestWithPinnedIp($this->remoteUrl, function () use ($args) {
+            return wp_remote_request($this->remoteUrl, $args);
+        });
     }
 
 

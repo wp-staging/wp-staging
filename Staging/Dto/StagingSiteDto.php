@@ -20,6 +20,20 @@ class StagingSiteDto implements \JsonSerializable
         toArray as private propertiesToArray;
     }
 
+ 
+    protected $ownsDatabaseTables = null;
+
+    public function getOwnsDatabaseTables(): bool
+    {
+        return $this->ownsDatabaseTables !== false;
+    }
+
+ 
+    public function setOwnsDatabaseTables($ownsDatabaseTables)
+    {
+        $this->ownsDatabaseTables = $ownsDatabaseTables;
+    }
+
 
 
 

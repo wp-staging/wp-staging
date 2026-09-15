@@ -97,19 +97,15 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
         <?php esc_html_e('Manage Plans', 'wp-staging'); ?>
     </button>
 
-    <!-- Remote Sync: Sync from Remote Site (Pro Upsell) -->
+    <!-- Remote Sync: Sync with Remote Site (Pro Upsell) -->
     <div class="wpstg-relative wpstg--tooltip">
         <button
             id="wpstg-remote-sync"
             class="wpstg-btn wpstg-btn-lg wpstg-btn-tint wpstg-opacity-60 wpstg-cursor-not-allowed"
             disabled
         >
-            <svg class="wpstg-btn-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" x2="12" y1="15" y2="3"/>
-            </svg>
-            <?php esc_html_e('Sync from Remote Site', 'wp-staging'); ?>
+            <?php $this->getAssets()->renderSvg('remote-sync', 'wpstg-btn-icon'); ?>
+            <?php esc_html_e('Sync with Remote Site', 'wp-staging'); ?>
             <span class="wpstg-badge wpstg-badge-blue">
                 <?php esc_html_e('Pro', 'wp-staging'); ?>
             </span>

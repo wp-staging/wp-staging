@@ -533,7 +533,7 @@ class Assets
                 return '';
             }
 
-            $licenseKey = trim(get_option(\WPStaging\Pro\License\Licensing::WPSTG_LICENSE_KEY, ''));
+            $licenseKey = WPStaging::make(\WPStaging\Pro\License\Licensing::class)->getLicenseKey();
             return Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?nocache=true&edd_license_key=' . urlencode($licenseKey) . '&download_id=11');
         } catch (\Exception $e) {
             return '';
