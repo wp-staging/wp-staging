@@ -67,8 +67,6 @@ it.
 
 You can download the free WP STAGING plugin from wordpress.org at
 [https://wordpress.org/plugins/wp-staging/](https://wordpress.org/plugins/wp-staging/).
-If you would like to test WP Staging Pro, contact us at
-support [at] wp-staging.com and briefly describe what you plan to test.
 
 ## Conditions and rules
 
