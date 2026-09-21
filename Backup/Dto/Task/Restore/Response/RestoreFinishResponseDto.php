@@ -4,12 +4,15 @@ namespace WPStaging\Backup\Dto\Task\Restore\Response;
 
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 
+
+
+
 class RestoreFinishResponseDto extends TaskResponseDto
 {
 
 
 
-    private $isDatabaseRestoreSkipped;
+    private $isDatabaseRestoreSkipped = false;
 
 
 

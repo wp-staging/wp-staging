@@ -10,13 +10,12 @@ use WPStaging\Core\Forms\Elements\SelectMultiple;
 use WPStaging\Core\Forms\Elements\Text;
 use WPStaging\Core\Forms\Elements\Toggle;
 use WPStaging\Core\Forms\Form;
+use WPStaging\Core\DTO\Settings as SettingsDTO;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\BackgroundProcessing\Queue;
-use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\DataEncryption;
-use WPStaging\Framework\Job\Dto\JobDataDto;
 
 
 
@@ -168,7 +167,7 @@ class Settings
             ]
         );
 
-        $defaultCpuPriority = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV ? 'high' : 'low';
+        $defaultCpuPriority = SettingsDTO::getDefaultCpuLoad();
 
         $this->form["general"]->add(
             $element->setLabel(__("CPU Load Priority", "wp-staging"))
@@ -300,22 +299,11 @@ class Settings
                 ['1' => '']
             );
 
-            $isMultiPartEnabled = Hooks::applyFilters(JobDataDto::FILTER_IS_MULTIPART_BACKUP, false);
-
-            if (!$isMultiPartEnabled) {
-                $this->form["general"]->add(
-                    $element->setLabel(__("Compress Backups", "wp-staging"))
-                    ->setDefault((isset($settings->enableCompression)) ? $settings->enableCompression : null),
-                    'wpstg-settings-enable-compression'
-                );
-            } else {
-                $this->form["general"]->add(
-                    $element->setLabel(__("Compress Backups (Incompatible with Multipart Backups)", "wp-staging"))
-                    ->setAttribute('disabled', 'disabled')
-                    ->setDefault(''),
-                    'wpstg-settings-enable-compression'
-                );
-            }
+            $this->form["general"]->add(
+                $element->setLabel(__("Compress Backups", "wp-staging"))
+                ->setDefault((isset($settings->enableCompression)) ? $settings->enableCompression : null),
+                'wpstg-settings-enable-compression'
+            );
         }
 
         $element = new Toggle(

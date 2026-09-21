@@ -198,6 +198,13 @@ abstract class PrepareJob
 
         $this->maybeInitJob($args);
 
+ 
+        $this->job->setOwnerJobId(isset($args['jobId']) ? (string)$args['jobId'] : '');
+
+        if (empty($args['isInit']) && !$this->job->hasPersistedData()) {
+            return $this->abortLostJob($args, $jobIdForLog);
+        }
+
         $args['isInit']  = false;
         $taskResponseDto = null;
 
@@ -275,6 +282,35 @@ abstract class PrepareJob
 
         debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=chunk-done (re-queued)', 'info', false);
         return $taskResponseDto;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private function abortLostJob(array $args, string $jobIdForLog)
+    {
+        $message = 'Background job data was lost or could not be verified (jobId=' . $jobIdForLog . '). Aborting to avoid an unsafe restart.';
+        $currentJob = $this->job->getTransientCache()->getJob(true);
+        $currentJobId = !empty($currentJob['queueId']) ? $currentJob['queueId'] : ($currentJob['jobId'] ?? '');
+        if ($currentJobId !== '' && $currentJobId === ($args['jobId'] ?? '')) {
+            $this->handleError($message, $args);
+        }
+
+        $this->job->skipPersistOnShutdown();
+        $this->processLock->unlockProcess();
+
+        debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=aborted (data lost)', 'info', true);
+
+        return new WP_Error(410, $message);
     }
 
 

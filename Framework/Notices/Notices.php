@@ -22,6 +22,7 @@ use WPStaging\Framework\Traits\NoticesTrait;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\ServerVars;
+use WPStaging\Framework\Utils\WordPressUrl;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\ThirdParty\Aios;
@@ -173,6 +174,11 @@ class Notices
     public function renderNotices()
     {
         if (!current_user_can(WPStaging::make(Capabilities::class)->manageWPSTG())) {
+            return;
+        }
+
+        if (!WordPressUrl::isValid(get_option('siteurl')) || !WordPressUrl::isValid(get_option('home'))) {
+            require $this->viewsNoticesPath . 'invalid-wordpress-url.php';
             return;
         }
 

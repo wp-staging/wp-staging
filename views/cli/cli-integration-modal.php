@@ -171,90 +171,22 @@ if (!$isDeveloperOrHigher) {
 
                     <!-- Mac Tab Content -->
                     <div class="wpstg-cli-tab-content" data-tab-content="mac" role="tabpanel" style="display: none;">
-                        <input id="wpstg-cli-cmd-mac-full" type="hidden" value="<?php echo esc_attr($cmdBashFull); ?>" />
-                        <input id="wpstg-cli-cmd-mac-masked" type="hidden" value="<?php echo esc_attr($cmdBashMasked); ?>" />
-                        <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
-                            <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-red-500"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-yellow-400"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-green-500"></span>
-                                </div>
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-1">
-                                    <?php if ($hasLicense) : ?>
-                                    <button type="button" class="wpstg-cli-license-toggle wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-os="mac" title="<?php echo esc_attr__('Show/hide license key', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-closed wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                            <line x1="1" y1="1" x2="23" y2="23"></line>
-                                        </svg>
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-open wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                    </button>
-                                    <?php endif; ?>
-                                    <button type="button" class="wpstg-cli-copy-button wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-wpstg-source="#wpstg-cli-cmd-mac-full" title="<?php echo esc_attr__('Copy command', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-copy-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                        <svg class="wpstg-cli-check-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="wpstg-cli-terminal-body wpstg-px-4 wpstg-py-3">
-                                <code class="wpstg-flex wpstg-items-center wpstg-text-sm wpstg-leading-relaxed wpstg-break-all wpstg-font-mono wpstg-text-terminal-text">
-                                    <span class="wpstg-mr-3 wpstg-font-semibold wpstg-text-terminal-prompt">$</span>
-                                    <span id="wpstg-cli-cmd-mac-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdBashMasked : $cmdBashFull); ?></span>
-                                </code>
-                            </div>
-                        </div>
+                        <?php
+                        $osId      = 'mac';
+                        $cmdFull   = $cmdBashFull;
+                        $cmdMasked = $cmdBashMasked;
+                        require WPSTG_VIEWS_DIR . 'cli/_partials/command-terminal.php';
+                        ?>
                     </div>
 
                     <!-- Linux Tab Content -->
                     <div class="wpstg-cli-tab-content" data-tab-content="linux" role="tabpanel" style="display: none;">
-                        <input id="wpstg-cli-cmd-linux-full" type="hidden" value="<?php echo esc_attr($cmdBashFull); ?>" />
-                        <input id="wpstg-cli-cmd-linux-masked" type="hidden" value="<?php echo esc_attr($cmdBashMasked); ?>" />
-                        <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
-                            <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-red-500"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-yellow-400"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-green-500"></span>
-                                </div>
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-1">
-                                    <?php if ($hasLicense) : ?>
-                                    <button type="button" class="wpstg-cli-license-toggle wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-os="linux" title="<?php echo esc_attr__('Show/hide license key', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-closed wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                            <line x1="1" y1="1" x2="23" y2="23"></line>
-                                        </svg>
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-open wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                    </button>
-                                    <?php endif; ?>
-                                    <button type="button" class="wpstg-cli-copy-button wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-wpstg-source="#wpstg-cli-cmd-linux-full" title="<?php echo esc_attr__('Copy command', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-copy-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                        <svg class="wpstg-cli-check-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="wpstg-cli-terminal-body wpstg-px-4 wpstg-py-3">
-                                <code class="wpstg-flex wpstg-items-center wpstg-text-sm wpstg-leading-relaxed wpstg-break-all wpstg-font-mono wpstg-text-terminal-text">
-                                    <span class="wpstg-mr-3 wpstg-font-semibold wpstg-text-terminal-prompt">$</span>
-                                    <span id="wpstg-cli-cmd-linux-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdBashMasked : $cmdBashFull); ?></span>
-                                </code>
-                            </div>
-                        </div>
+                        <?php
+                        $osId      = 'linux';
+                        $cmdFull   = $cmdBashFull;
+                        $cmdMasked = $cmdBashMasked;
+                        require WPSTG_VIEWS_DIR . 'cli/_partials/command-terminal.php';
+                        ?>
                         <p class="wpstg-cli-wsl-note"><?php echo esc_html__('Also works in WSL on Windows.', 'wp-staging'); ?></p>
                     </div>
 
@@ -264,97 +196,21 @@ if (!$isDeveloperOrHigher) {
                         <?php
                         $licenseFlagPs = !empty($licenseKeySanitized) ? ' -l ' . $licenseKeySanitized : '';
                         $licenseFlagPsMasked = !empty($licenseKeySanitized) ? ' -l ' . $maskedLicenseKey : '';
-                        $cmdPsFull = '& ([scriptblock]::Create((irm https://wp-staging.com/install.ps1)))' . $licenseFlagPs;
-                        $cmdPsMasked = '& ([scriptblock]::Create((irm https://wp-staging.com/install.ps1)))' . $licenseFlagPsMasked;
+                        $osId      = 'ps';
+                        $cmdFull   = '& ([scriptblock]::Create((irm https://wp-staging.com/install.ps1)))' . $licenseFlagPs;
+                        $cmdMasked = '& ([scriptblock]::Create((irm https://wp-staging.com/install.ps1)))' . $licenseFlagPsMasked;
+                        require WPSTG_VIEWS_DIR . 'cli/_partials/command-terminal.php';
                         ?>
-                        <input id="wpstg-cli-cmd-ps-full" type="hidden" value="<?php echo esc_attr($cmdPsFull); ?>" />
-                        <input id="wpstg-cli-cmd-ps-masked" type="hidden" value="<?php echo esc_attr($cmdPsMasked); ?>" />
-                        <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
-                            <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-red-500"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-yellow-400"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-green-500"></span>
-                                </div>
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-1">
-                                    <?php if ($hasLicense) : ?>
-                                    <button type="button" class="wpstg-cli-license-toggle wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-os="ps" title="<?php echo esc_attr__('Show/hide license key', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-closed wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                            <line x1="1" y1="1" x2="23" y2="23"></line>
-                                        </svg>
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-open wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                    </button>
-                                    <?php endif; ?>
-                                    <button type="button" class="wpstg-cli-copy-button wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-wpstg-source="#wpstg-cli-cmd-ps-full" title="<?php echo esc_attr__('Copy command', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-copy-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                        <svg class="wpstg-cli-check-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="wpstg-cli-terminal-body wpstg-px-4 wpstg-py-3">
-                                <code class="wpstg-flex wpstg-items-center wpstg-text-sm wpstg-leading-relaxed wpstg-break-all wpstg-font-mono wpstg-text-terminal-text">
-                                    <span class="wpstg-mr-3 wpstg-font-semibold wpstg-text-terminal-prompt">$</span>
-                                    <span id="wpstg-cli-cmd-ps-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdPsMasked : $cmdPsFull); ?></span>
-                                </code>
-                            </div>
-                        </div>
 
                         <p class="wpstg-cli-windows-label"><?php echo esc_html__('Windows CMD:', 'wp-staging'); ?></p>
                         <?php
                         $licenseFlagCmd = !empty($licenseKeySanitized) ? ' -l ' . $licenseKeySanitized : '';
                         $licenseFlagCmdMasked = !empty($licenseKeySanitized) ? ' -l ' . $maskedLicenseKey : '';
-                        $cmdCmdFull = 'curl -fsSL https://wp-staging.com/install.cmd -o install.cmd && install.cmd' . $licenseFlagCmd . ' && del install.cmd';
-                        $cmdCmdMasked = 'curl -fsSL https://wp-staging.com/install.cmd -o install.cmd && install.cmd' . $licenseFlagCmdMasked . ' && del install.cmd';
+                        $osId      = 'cmd';
+                        $cmdFull   = 'curl -fsSL https://wp-staging.com/install.cmd -o install.cmd && install.cmd' . $licenseFlagCmd . ' && del install.cmd';
+                        $cmdMasked = 'curl -fsSL https://wp-staging.com/install.cmd -o install.cmd && install.cmd' . $licenseFlagCmdMasked . ' && del install.cmd';
+                        require WPSTG_VIEWS_DIR . 'cli/_partials/command-terminal.php';
                         ?>
-                        <input id="wpstg-cli-cmd-cmd-full" type="hidden" value="<?php echo esc_attr($cmdCmdFull); ?>" />
-                        <input id="wpstg-cli-cmd-cmd-masked" type="hidden" value="<?php echo esc_attr($cmdCmdMasked); ?>" />
-                        <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
-                            <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-red-500"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-yellow-400"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-green-500"></span>
-                                </div>
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-1">
-                                    <?php if ($hasLicense) : ?>
-                                    <button type="button" class="wpstg-cli-license-toggle wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-os="cmd" title="<?php echo esc_attr__('Show/hide license key', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-closed wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                            <line x1="1" y1="1" x2="23" y2="23"></line>
-                                        </svg>
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-open wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                    </button>
-                                    <?php endif; ?>
-                                    <button type="button" class="wpstg-cli-copy-button wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-wpstg-source="#wpstg-cli-cmd-cmd-full" title="<?php echo esc_attr__('Copy command', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-copy-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                        <svg class="wpstg-cli-check-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="wpstg-cli-terminal-body wpstg-px-4 wpstg-py-3">
-                                <code class="wpstg-flex wpstg-items-center wpstg-text-sm wpstg-leading-relaxed wpstg-break-all wpstg-font-mono wpstg-text-terminal-text">
-                                    <span class="wpstg-mr-3 wpstg-font-semibold wpstg-text-terminal-prompt">$</span>
-                                    <span id="wpstg-cli-cmd-cmd-text" <?php echo $hasLicense ? 'data-masked="true"' : ''; ?>><?php echo esc_html($hasLicense ? $cmdCmdMasked : $cmdCmdFull); ?></span>
-                                </code>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -392,20 +248,10 @@ if (!$isDeveloperOrHigher) {
                     <input id="wpstg-cli-cmd-add" type="hidden" value="<?php echo esc_attr($cmdAdd); ?>" />
                     <div class="wpstg-cli-terminal wpstg-w-full wpstg-rounded-xl wpstg-overflow-hidden wpstg-bg-terminal-bg">
                         <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
-                            <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
-                                <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-red-500"></span>
-                                <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-yellow-400"></span>
-                                <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-green-500"></span>
-                            </div>
+                            <?php require WPSTG_VIEWS_DIR . 'cli/_partials/terminal-dots.php'; ?>
                             <div class="wpstg-flex wpstg-items-center wpstg-gap-1">
                                 <button type="button" class="wpstg-cli-copy-button wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-wpstg-source="#wpstg-cli-cmd-add" title="<?php echo esc_attr__('Copy command', 'wp-staging'); ?>">
-                                    <svg class="wpstg-cli-copy-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                    </svg>
-                                    <svg class="wpstg-cli-check-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
+                                    <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/copy.php'; ?>
                                 </button>
                             </div>
                         </div>
@@ -416,9 +262,7 @@ if (!$isDeveloperOrHigher) {
                             </code>
                             <div class="wpstg-mt-3 wpstg-mb-1.5 wpstg-h-px wpstg-bg-terminal-border"></div>
                             <div class="wpstg-flex wpstg-items-center wpstg-gap-2 wpstg-text-sm wpstg-font-medium wpstg-font-mono wpstg-text-terminal-success">
-                                <svg class="wpstg-w-4 wpstg-h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
+                                <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/success-check.php'; ?>
                                 <span><?php echo esc_html__('WordPress instance ready in 30 seconds', 'wp-staging'); ?></span>
                             </div>
                         </div>
@@ -471,31 +315,14 @@ if (!$isDeveloperOrHigher) {
                             <!-- Header -->
                             <div class="wpstg-cli-terminal-header wpstg-flex wpstg-items-center wpstg-justify-between wpstg-px-4 wpstg-bg-terminal-bg">
                                 <!-- Traffic light dots -->
-                                <div class="wpstg-flex wpstg-items-center wpstg-gap-2">
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-red-500"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-yellow-400"></span>
-                                    <span class="wpstg-w-3 wpstg-h-3 wpstg-rounded-full wpstg-bg-green-500"></span>
-                                </div>
+                                <?php require WPSTG_VIEWS_DIR . 'cli/_partials/terminal-dots.php'; ?>
                                 <!-- Icon-only action buttons -->
                                 <div class="wpstg-flex wpstg-items-center wpstg-gap-1">
                                     <button type="button" class="wpstg-cli-url-toggle wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" id="wpstg-cli-url-toggle" title="<?php echo esc_attr__('Show/hide full URL', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-closed wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                            <line x1="1" y1="1" x2="23" y2="23"></line>
-                                        </svg>
-                                        <svg class="wpstg-cli-eye-icon wpstg-cli-eye-open wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
+                                        <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/eye-toggle.php'; ?>
                                     </button>
                                     <button type="button" class="wpstg-cli-copy-button wpstg-p-2 wpstg-rounded-lg wpstg-border-0 wpstg-bg-transparent wpstg-transition-all wpstg-duration-200 wpstg-text-terminal-muted hover:wpstg-bg-terminal-border wpstg-cursor-pointer" data-wpstg-source="#wpstg-cli-cmd-restore" title="<?php echo esc_attr__('Copy command', 'wp-staging'); ?>">
-                                        <svg class="wpstg-cli-copy-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                        <svg class="wpstg-cli-check-icon wpstg-w-4 wpstg-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
+                                        <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/copy.php'; ?>
                                     </button>
                                 </div>
                             </div>
@@ -513,9 +340,7 @@ if (!$isDeveloperOrHigher) {
 
                                 <!-- Success message -->
                                 <div class="wpstg-flex wpstg-items-center wpstg-gap-2 wpstg-text-sm wpstg-font-medium wpstg-font-mono wpstg-text-terminal-success">
-                                    <svg class="wpstg-w-4 wpstg-h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
+                                    <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/success-check.php'; ?>
                                     <span><?php echo esc_html__('Backup successfully restored', 'wp-staging'); ?></span>
                                 </div>
                             </div>
@@ -534,7 +359,7 @@ if (!$isDeveloperOrHigher) {
             <div class="wpstg-cli-modal-footer">
                 <a href="<?php echo esc_url(Language::localizeDocsUrl('https://wp-staging.com/docs/set-up-wp-staging-cli/')); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-cli-docs-link">
                     <?php echo esc_html__('Documentation', 'wp-staging'); ?>
-                    <svg class="wpstg-cli-external-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/external-link.php'; ?>
                 </a>
                 <div class="wpstg-cli-step-buttons-right">
                     <span class="wpstg-cli-step-counter"><?php echo esc_html__('Step 1 of 3', 'wp-staging'); ?></span>
@@ -577,11 +402,11 @@ if (!$isDeveloperOrHigher) {
                     ?>
                     <a href="<?php echo esc_url($learnMoreUrl); ?>" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-link">
                         <?php echo esc_html__('Learn more', 'wp-staging'); ?>
-                        <svg class="wpstg-cli-external-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/external-link.php'; ?>
                     </a>
                     <a href="https://wp-staging.com/launch-docker" target="_blank" rel="noreferrer noopener" class="wpstg-cli-sidebar-link">
                         <?php echo esc_html__('Docker setup guide', 'wp-staging'); ?>
-                        <svg class="wpstg-cli-external-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <?php require WPSTG_VIEWS_DIR . 'cli/_partials/icons/external-link.php'; ?>
                     </a>
                 </div>
             </div>

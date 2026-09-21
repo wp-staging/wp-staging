@@ -27,6 +27,9 @@ use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\Settings\DarkMode;
 use WPStaging\Staging\Service\StagingEngine;
 
+
+
+
 class Assets
 {
     use ResourceTrait;
@@ -47,7 +50,7 @@ class Assets
     const FILTER_TESTS_MAXIMUM_RETRIES = 'wpstg.tests.maximum_retries';
 
  
-    const TRANSIENT_REST_URL = 'wpstg_rest_url';
+    const TRANSIENT_IS_WORDPRESS_REST_URL_REACHABLE = 'wpstg_is_wordpress_rest_url_reachable';
 
     private $accessToken;
 
@@ -186,16 +189,6 @@ class Assets
             $asset = $this->getCssAssetsFileName('wpstg-admin-feedback');
             wp_enqueue_style(
                 "wpstg-admin-feedback",
-                $this->getAssetsUrl($asset),
-                [],
-                $this->getAssetsVersion($asset)
-            );
-        }
-
-        if (is_admin()) {
-            $asset = $this->getCssAssetsFileName('wpstg-admin-menu-badge');
-            wp_enqueue_style(
-                "wpstg-admin-menu-badge-style",
                 $this->getAssetsUrl($asset),
                 [],
                 $this->getAssetsVersion($asset)
@@ -376,6 +369,8 @@ class Assets
             'isTestMode'                        => defined('WPSTG_TEST') && WPSTG_TEST,
             'defaultColorMode'                  => get_option(DarkMode::OPTION_DEFAULT_COLOR_MODE, ''),
             'siteUrl'                           => site_url(),
+            'gmtOffset'                         => (float) get_option('gmt_offset', 0),
+            'timezoneString'                    => (string) get_option('timezone_string', ''),
             'stagingEnginePreference'           => WPStaging::make(StagingEngine::class)->getEngine(),
         ];
 
@@ -681,7 +676,7 @@ class Assets
     {
         global $pagenow;
 
-        return ($pagenow === 'plugins.php');
+        return is_admin() && $pagenow === 'plugins.php';
     }
 
 
@@ -783,19 +778,24 @@ class Assets
 
     private function getRestUrl(): string
     {
-        $restUrl = get_transient(self::TRANSIENT_REST_URL);
-        if ($restUrl) {
-            return $restUrl;
+        if ($this->isWordPressRestUrlReachable()) {
+            return get_rest_url(null, Rest::WPSTG_ROUTE_NAMESPACE_V1);
         }
 
-        $restUrl = get_rest_url(null, Rest::WPSTG_ROUTE_NAMESPACE_V1);
-        if (!$this->isWorkingTestUrl($restUrl)) {
-            $restUrl = site_url('/?rest_route=/' . Rest::WPSTG_ROUTE_NAMESPACE_V1);
+        return site_url('/?rest_route=/' . Rest::WPSTG_ROUTE_NAMESPACE_V1);
+    }
+
+    private function isWordPressRestUrlReachable(): bool
+    {
+        $cachedReachability = get_transient(self::TRANSIENT_IS_WORDPRESS_REST_URL_REACHABLE);
+        if ($cachedReachability !== false) {
+            return (bool)$cachedReachability;
         }
 
-        set_transient(self::TRANSIENT_REST_URL, $restUrl, 24 * HOUR_IN_SECONDS);
+        $isReachable = $this->isWorkingTestUrl(get_rest_url(null, Rest::WPSTG_ROUTE_NAMESPACE_V1));
+        set_transient(self::TRANSIENT_IS_WORDPRESS_REST_URL_REACHABLE, (int)$isReachable, 24 * HOUR_IN_SECONDS);
 
-        return $restUrl;
+        return $isReachable;
     }
 
     private function isWorkingTestUrl($url)

@@ -285,6 +285,21 @@ class Times
 
 
 
+
+
+
+    public function formatTimeOfDay(array $hourAndMinute): string
+    {
+        $timeOfDay = (new DateTime('now', $this->getSiteTimezoneObject()))
+            ->setTime((int)$hourAndMinute[0], (int)$hourAndMinute[1]);
+
+        return $timeOfDay->format(get_option('time_format'));
+    }
+
+
+
+
+
     public function getCurrentTimestamp(): int
     {
         return (new DateTime('now', $this->getSiteTimezoneObject()))->getTimestamp();

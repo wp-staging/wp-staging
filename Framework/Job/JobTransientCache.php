@@ -444,6 +444,10 @@ class JobTransientCache
         delete_transient(self::TRANSIENT_CURRENT_JOB);
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, self::JOB_TRANSIENT_EXPIRY_ON_COMPLETE);
 
+        if ($status === self::STATUS_FAILED) {
+            do_action('wpstg_job_failed', $jobData);
+        }
+
         set_transient(self::TRANSIENT_LAST_JOB_OUTCOME, $jobData, self::LAST_JOB_OUTCOME_EXPIRY);
     }
 }

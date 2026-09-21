@@ -217,6 +217,26 @@ class OnboardingAjax
         wp_send_json_success(['status' => $this->queuedBackup->getStatus()]);
     }
 
+
+
+
+
+
+
+    public function ajaxRemoveQueuedBackup()
+    {
+        if (!$this->isAuthorized()) {
+            return;
+        }
+
+        $stagingJobId = $this->postValue('stagingJobId');
+        if ($stagingJobId !== '' && $this->queuedBackup->isPendingFor($stagingJobId)) {
+            $this->queuedBackup->discard();
+        }
+
+        wp_send_json_success(['status' => $this->queuedBackup->getStatus()]);
+    }
+
     private function isAuthorized(): bool
     {
         if ($this->auth->isAuthenticatedRequest('', 'manage_options')) {

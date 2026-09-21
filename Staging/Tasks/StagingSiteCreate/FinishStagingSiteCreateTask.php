@@ -3,7 +3,9 @@
 namespace WPStaging\Staging\Tasks\StagingSiteCreate;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -26,6 +28,8 @@ class FinishStagingSiteCreateTask extends StagingTask
  
     private $sites;
 
+ 
+    private $stagingSiteHttpDetector;
 
 
 
@@ -33,10 +37,13 @@ class FinishStagingSiteCreateTask extends StagingTask
 
 
 
-    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites)
+
+
+    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites, StagingSiteHttpDetector $stagingSiteHttpDetector)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->sites = $sites;
+        $this->sites                   = $sites;
+        $this->stagingSiteHttpDetector = $stagingSiteHttpDetector;
     }
 
 
@@ -65,14 +72,24 @@ class FinishStagingSiteCreateTask extends StagingTask
         $stagingSite  = $this->buildStagingSite();
         $stagingSites[$this->jobDataDto->getCloneId()] = $stagingSite->toArray();
         $this->sites->updateStagingSites($stagingSites);
+        $this->stagingSiteHttpDetector->scheduleCheck($this->jobDataDto->getCloneId());
         $this->logger->info(sprintf(
             'Staging Site "%s" created.',
             $stagingSite->getSiteName()
         ));
 
         $this->triggerOnStagingSiteCreatedEvent($stagingSite);
+        $this->enqueueFinishEvent();
 
         return $this->overrideGenerateResponse();
+    }
+
+
+
+
+    protected function enqueueFinishEvent()
+    {
+        WPStaging::make(AnalyticsStagingCreate::class)->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
     protected function buildStagingSite(): StagingSiteDto

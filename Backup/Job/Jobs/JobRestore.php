@@ -21,6 +21,7 @@ use WPStaging\Backup\Task\Tasks\JobRestore\UpdateBackupsScheduleTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreFinishTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Task\Tasks\CleanupBakTablesTask;
@@ -80,7 +81,7 @@ class JobRestore extends AbstractJob
             $response = $this->getResponse($this->currentTask->execute());
             $this->jobDataDto->setCaughtExceptionRetries(0);
         } catch (\Exception $e) {
-            $this->currentTask->getLogger()->critical($e->getMessage());
+            $this->currentTask->getLogger()->critical($e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
 
             $retries = $this->jobDataDto->getCaughtExceptionRetries() + 1;
             $this->jobDataDto->setCaughtExceptionRetries($retries);
@@ -88,7 +89,7 @@ class JobRestore extends AbstractJob
             if ($retries >= $this->maxRetries) {
                 $this->deleteJobDataCache();
 
-                return $this->getJobFailResponse($e->getMessage());
+                return $this->getJobFailResponseForThrowable($e);
             }
 
             $response = $this->getResponse($this->currentTask->generateResponse(false));

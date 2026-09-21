@@ -7,12 +7,17 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Service\StagingEngine;
+use WPStaging\Staging\Sites;
 
 abstract class AbstractAjaxPrepare extends PrepareJob
 {
  
     protected $postDataKey = '';
+
+ 
+    protected $jobDataDto;
 
 
 
@@ -124,6 +129,23 @@ abstract class AbstractAjaxPrepare extends PrepareJob
         $directories = $directories === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode(Sanitize::sanitizeString($directories)));
 
         return array_map('sanitize_text_field', $directories);
+    }
+
+    protected function populateJobDataDtoByCloneId(string $cloneId)
+    {
+        $stagingSite = WPStaging::make(Sites::class)->getStagingSiteDtoByCloneId($cloneId);
+        $this->jobDataDto->setStagingSite($stagingSite);
+        $this->jobDataDto->setCloneId($cloneId);
+        $this->jobDataDto->setStagingSiteUrl($stagingSite->getUrl());
+        $this->jobDataDto->setStagingSitePath($stagingSite->getPath());
+        $this->jobDataDto->setDatabasePrefix($stagingSite->getUsedPrefix());
+        $this->jobDataDto->setIsExternalDatabase($stagingSite->getIsExternalDatabase());
+        $this->jobDataDto->setUseCustomDatabase($stagingSite->getIsCustomDatabaseConnection());
+        $this->jobDataDto->setDatabaseServer($stagingSite->getDatabaseServer());
+        $this->jobDataDto->setDatabaseName($stagingSite->getDatabaseDatabase());
+        $this->jobDataDto->setDatabaseUser($stagingSite->getDatabaseUser());
+        $this->jobDataDto->setDatabasePassword($stagingSite->getDatabasePassword());
+        $this->jobDataDto->setDatabaseSsl($stagingSite->getDatabaseSsl());
     }
 
     abstract protected function prepareStagingSiteDto();

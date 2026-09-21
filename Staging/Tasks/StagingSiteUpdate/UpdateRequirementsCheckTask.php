@@ -119,6 +119,7 @@ class UpdateRequirementsCheckTask extends StagingTask
             $this->cannotUpdateIfUsingExternalDatabase();
             $this->cannotUpdateIfStagingPrefixSameAsProductionSite();
         } catch (RuntimeException $e) {
+            $this->jobDataDto->setRequirementFailReason($e->getMessage());
             $this->enqueueRequirementFailEvent();
             $this->logger->critical($e->getMessage());
 
@@ -160,7 +161,7 @@ class UpdateRequirementsCheckTask extends StagingTask
 
     protected function enqueueRequirementFailEvent()
     {
-        $this->analyticsStagingUpdate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+        $this->analyticsStagingUpdate->enqueueRequirementFailEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
 

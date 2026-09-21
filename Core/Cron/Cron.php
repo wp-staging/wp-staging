@@ -63,8 +63,10 @@ class Cron
 
     public function addIntervals($schedules)
     {
+        $schedules = $this->addBasicIntervals($schedules);
+
         if (!WPStaging::isPro()) {
-            return $this->addBasicIntervals($schedules);
+            return $schedules;
         }
 
  
@@ -142,6 +144,22 @@ class Cron
         ];
 
         return $schedules;
+    }
+
+
+
+
+
+
+
+
+    public static function isRecurrenceRegistered(string $recurrence): bool
+    {
+        if ($recurrence === '') {
+            return false;
+        }
+
+        return isset(wp_get_schedules()[$recurrence]);
     }
 
 
@@ -228,23 +246,6 @@ class Cron
         }
 
         return $cronInterval;
-    }
-
-
-
-
-    public function getProEvents()
-    {
-        return [
-            self::HOURLY,
-            self::SIX_HOURS,
-            self::TWELVE_HOURS,
-            self::DAILY,
-            self::EVERY_TWO_DAYS,
-            self::WEEKLY,
-            self::EVERY_TWO_WEEKS,
-            self::MONTHLY,
-        ];
     }
 
 

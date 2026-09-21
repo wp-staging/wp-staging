@@ -31,6 +31,7 @@ use WPStaging\Backup\Task\Tasks\JobBackup\SignBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\ValidateBackupTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\JobTransientCache;
@@ -68,7 +69,7 @@ class JobBackup extends AbstractJob
         } catch (NothingToBackupException $e) {
             return $this->getNothingToBackupResponse($e->getMessage());
         } catch (\Exception $e) {
-            $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage());
+            $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
 
@@ -93,9 +94,9 @@ class JobBackup extends AbstractJob
 
     protected function getMissingPartFailResponse(MissingBackupPartException $e): TaskResponseDto
     {
-        $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage());
+        $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
 
-        return $this->getJobFailResponse($e->getMessage());
+        return $this->getJobFailResponseForThrowable($e);
     }
 
 

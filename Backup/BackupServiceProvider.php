@@ -10,6 +10,7 @@ use WPStaging\Backup\Ajax\Parts;
 use WPStaging\Backup\Ajax\BackupSizeCalculator;
 use WPStaging\Backup\Ajax\Restore;
 use WPStaging\Backup\Ajax\ScheduleList;
+use WPStaging\Backup\Ajax\ScheduleLogs;
 use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup;
 use WPStaging\Backup\Ajax\Backup\BackupBeforeUpdateHandler;
@@ -22,6 +23,7 @@ use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\BeforeUpdateRowStatus;
 use WPStaging\Backup\UpdateProtectionPausedNotice;
 use WPStaging\Backup\Service\BeforeUpdateBackupRequest;
+use WPStaging\Backup\Service\ScheduledBackupReport;
 use WPStaging\Backup\Service\StagingUpdateBackupClient;
 use WPStaging\Backup\Service\UpdateProtectionHealth;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
@@ -109,6 +111,8 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action(FinishBackupTask::ACTION_BACKUP_CREATED, $this->container->callback(UpdateProtectionHealth::class, 'recordSuccess'));
         add_action(PrepareJob::ACTION_JOB_FAILURE, $this->container->callback(BeforeUpdateBackupRequest::class, 'onBackgroundJobFailure'));
 
+        add_action(FinishBackupTask::ACTION_BACKUP_CREATED, $this->container->callback(ScheduledBackupReport::class, 'sendReports'));
+
         add_action('load-plugins.php', $this->container->callback(BeforeUpdateRowStatus::class, 'registerRowMessages'));
         add_action('admin_notices', $this->container->callback(UpdateProtectionPausedNotice::class, 'render'));
         add_action('wp_ajax_wpstg--backups--prepare-backup', $this->container->callback(PrepareBackup::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -143,7 +147,25 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('cron_reschedule_event_error', $this->container->callback(BackupScheduler::class, 'reportCronSaveFailure'), 10, 2);
         add_action('cron_unschedule_event_error', $this->container->callback(BackupScheduler::class, 'reportCronSaveFailure'), 10, 2);
         add_action('wp_ajax_wpstg--backups-dismiss-schedule', $this->container->callback(BackupScheduler::class, 'dismissSchedule'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg--backups-fetch-schedules', $this->container->callback(ScheduleList::class, 'renderScheduleList'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups-pause-schedule', $this->container->callback(BackupScheduler::class, 'pauseSchedule'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups-resume-schedule', $this->container->callback(BackupScheduler::class, 'resumeSchedule'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups-run-schedule-now', $this->container->callback(BackupScheduler::class, 'runScheduleNow'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wpstg_job_failed', function ($jobData) {
+            if (!is_array($jobData) || empty($jobData['queueId'])) {
+                return;
+            }
+
+ 
+            if (empty(get_transient(BackupScheduler::TRANSIENT_SCHEDULE_JOB_PREFIX . $jobData['queueId']))) {
+                return;
+            }
+
+            $this->container->make(BackupScheduler::class)->handleJobFailed($jobData);
+        }, 10, 1);
+        add_action('wp_ajax_wpstg--backups-fetch-schedule-section', $this->container->callback(ScheduleList::class, 'ajaxGetBackupScheduleSectionData'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups-schedule-logs', $this->container->callback(ScheduleLogs::class, 'ajaxGetScheduleLogs'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups-get-reconnect-url', $this->container->callback(ScheduleList::class, 'ajaxGetReconnectUrl')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wpstg_storage_reconnected', $this->container->callback(BackupScheduler::class, 'clearReconnectStorageKeyForProvider')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         add_action("admin_post_wpstg--backups--logs", $this->container->callback(Logs::class, 'download')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 

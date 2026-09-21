@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
+use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Framework\Logger\EventLoggerConst;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Traits\EventLoggerTrait;
@@ -47,6 +48,8 @@ class Finish extends Job
 
  
         $this->prepareCloneDataRecords();
+
+        WPStaging::make(StagingSiteHttpDetector::class)->scheduleCheck((string)$this->options->clone);
 
         $this->options->isRunning = false;
 
@@ -112,6 +115,10 @@ class Finish extends Job
     {
  
         $this->log("Finish: Verifying existing clones...");
+
+        if (!is_array($this->options->existingClones)) {
+            $this->options->existingClones = WPStaging::make(Sites::class)->tryGettingStagingSites();
+        }
 
  
         if (isset($this->options->existingClones[$this->options->clone])) {

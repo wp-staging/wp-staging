@@ -110,7 +110,8 @@ class CreateRequirementsCheckTask extends StagingTask
             $this->cannotCreateIfUsingExternalDatabase();
             $this->cannotCreateIfStagingPrefixSameAsProductionSite();
         } catch (RuntimeException $e) {
-            $this->analyticsStagingCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+            $this->jobDataDto->setRequirementFailReason($e->getMessage());
+            $this->analyticsStagingCreate->enqueueRequirementFailEvent($this->jobDataDto->getId(), $this->jobDataDto);
             $this->logger->critical($e->getMessage());
 
             return $this->generateResponse(false);

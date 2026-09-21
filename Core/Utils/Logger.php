@@ -222,20 +222,25 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     public function log($level, $message, array $context = [])
     {
-        $this->add($message, $level);
+        $this->add($message, $level, isset($context['errorCode']) ? $context['errorCode'] : '');
     }
 
 
 
 
 
-    public function add($message, $type = self::TYPE_ERROR)
+
+    public function add($message, $type = self::TYPE_ERROR, string $errorCode = '')
     {
         $log = [
             "type"    => $type,
             "date"    => current_time(self::LOG_DATETIME_FORMAT),
             "message" => str_replace('<', '&lt;', html_entity_decode((string)$message, ENT_QUOTES, 'UTF-8')),
         ];
+
+        if ($errorCode !== '') {
+            $log["errorCode"] = $errorCode;
+        }
 
         $this->messages[] = $log;
 
@@ -520,7 +525,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     public function critical($message, array $context = [])
     {
-        $this->add($message, LogLevel::CRITICAL);
+        $this->add($message, LogLevel::CRITICAL, isset($context['errorCode']) ? $context['errorCode'] : '');
     }
 
 
@@ -528,7 +533,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     public function error($message, array $context = [])
     {
-        $this->add($message, LogLevel::ERROR);
+        $this->add($message, LogLevel::ERROR, isset($context['errorCode']) ? $context['errorCode'] : '');
     }
 
 

@@ -277,6 +277,10 @@ class Archiver
         }
 
         $writtenBytesBefore = $this->archiverDto->getWrittenBytesTotal();
+        if ($writtenBytesBefore !== 0) {
+            $this->setIndexPositionCreated();
+        }
+
         try {
             $writtenBytesTotal = $this->appendToArchiveFile($resource, $fullFilePath);
         } catch (ThresholdException $ex) {
@@ -530,6 +534,18 @@ class Archiver
     protected function setBackupMetadataCategoryInfo(BackupMetadata $backupMetadata, JobBackupDataDto $jobBackupDataDto)
     {
         $backupMetadata->setIndexPartSize($jobBackupDataDto->getCategorySizes());
+        $backupMetadata->setIndexPartFileCount($this->getIndexPartFileCount($jobBackupDataDto));
+    }
+
+
+
+
+
+
+
+    protected function getIndexPartFileCount(JobBackupDataDto $jobBackupDataDto): array
+    {
+        return $jobBackupDataDto->getIndexPartFileCount();
     }
 
 
@@ -724,7 +740,7 @@ class Archiver
             }
         }
 
-        $this->archiverDto->setIndexPositionCreated(true);
+        $this->setIndexPositionCreated();
 
         $this->addIndexPartSize($identifiablePath, $writtenBytesTotal);
 

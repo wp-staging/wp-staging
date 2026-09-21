@@ -239,4 +239,10 @@ $isCalledFromIndex = true;
             <?php include WPSTG_VIEWS_DIR . 'onboarding/backup-next.php'; ?>
         </div>
     <?php endif; ?>
+
+    <?php if (!empty($isStagingPage)) : ?>
+        <template id="wpstg-staging-creation-template">
+            <?php include WPSTG_VIEWS_DIR . 'staging/modal/create-process.php'; ?>
+        </template>
+    <?php endif; ?>
 </div>

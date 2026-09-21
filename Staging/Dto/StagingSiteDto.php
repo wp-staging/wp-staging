@@ -153,6 +153,25 @@ class StagingSiteDto implements \JsonSerializable
  
     protected $isAutoUpdatePlugins = false;
 
+
+
+
+
+    protected $health = '';
+
+
+
+
+
+
+    protected $healthUrl = '';
+
+
+
+
+
+    protected $healthDiagnostics = [];
+
     public function jsonSerialize(): mixed
     {
         return $this->toArray();
@@ -173,6 +192,9 @@ class StagingSiteDto implements \JsonSerializable
         $listable->databasePrefix = $this->getUsedPrefix();
         $listable->modifiedAt = empty($this->datetime) ? 0 : get_date_from_gmt(date("Y-m-d H:i:s", $this->datetime), "D, d M Y H:i:s T");
         $listable->createdBy = $this->getOwnerName();
+        $listable->health = $this->health;
+        $listable->healthDiagnostics = $this->healthDiagnostics;
+        $listable->urlToOpen = $this->getUrlToOpen();
 
         return $listable;
     }
@@ -746,6 +768,47 @@ class StagingSiteDto implements \JsonSerializable
     public function getIsAutoUpdatePlugins(): bool
     {
         return $this->isAutoUpdatePlugins;
+    }
+
+
+
+
+
+    public function setHealth(string $health)
+    {
+        $this->health = $health;
+    }
+
+
+
+
+
+    public function setHealthUrl(string $healthUrl)
+    {
+        $this->healthUrl = $healthUrl;
+    }
+
+
+
+
+
+    public function setHealthDiagnostics(array $healthDiagnostics)
+    {
+        $this->healthDiagnostics = $healthDiagnostics;
+    }
+
+
+
+
+
+
+
+
+    public function getUrlToOpen(): string
+    {
+        $urlWithIndexPhp = rtrim($this->url, '/\\') . '/index.php';
+
+        return $this->healthUrl === $urlWithIndexPhp ? $this->healthUrl : $this->url;
     }
 
     public function getIsUploadsSymlink(): bool

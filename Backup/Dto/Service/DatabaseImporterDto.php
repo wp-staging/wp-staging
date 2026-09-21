@@ -4,6 +4,10 @@ namespace WPStaging\Backup\Dto\Service;
 
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Backup\Service\Database\ShortNameGenerator;
+
+
+
 
 class DatabaseImporterDto
 {
@@ -114,7 +118,7 @@ class DatabaseImporterDto
 
     public function addShortNameTable(string $table, string $prefix): string
     {
-        $shortName = uniqid($prefix) . str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $shortName = ShortNameGenerator::generate($table, $prefix);
         if ($prefix === $this->tmpPrefix) {
             $this->shortTablesToRestore[$shortName] = $table;
 
@@ -141,7 +145,7 @@ class DatabaseImporterDto
 
         $shortName = array_search($table, $shortTables);
         if ($shortName === false) {
-            throw new \RuntimeException(sprintf('No shortened name was stored for table %s under prefix %s.', $table, $prefix), DatabaseImporter::SHORT_NAME_MISSING_EXCEPTION_CODE);
+            return $this->addShortNameTable($table, $prefix);
         }
 
         return (string)$shortName;

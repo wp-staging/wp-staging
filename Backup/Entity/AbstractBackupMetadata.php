@@ -9,6 +9,7 @@ use WPStaging\Backup\Service\BackupMetadataReader;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Job\Dto\Traits\DateCreatedTrait;
 use WPStaging\Framework\Traits\HydrateTrait;
+use WPStaging\Framework\Utils\WordPressUrl;
 
 
 
@@ -188,6 +189,9 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     private $nonWpTables;
 
  
+    private $databaseTables = null;
+
+ 
     private $logFile = '';
 
  
@@ -195,6 +199,9 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
 
  
     private $indexPartSize = [];
+
+ 
+    private $indexPartFileCount = [];
 
  
     private $isZlibCompressed = false;
@@ -462,12 +469,7 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
  
         $siteUrl = rtrim($siteUrl, '/');
 
- 
-        if (!preg_match('#http(s?)://(.+)#i', $siteUrl)) {
-            throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
-        }
-
-        if (!parse_url($siteUrl, PHP_URL_HOST)) {
+        if (!WordPressUrl::isValid($siteUrl)) {
             throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
 
@@ -493,12 +495,7 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
  
         $homeUrl = rtrim($homeUrl, '/');
 
- 
-        if (!preg_match('#http(s?)://(.+)#i', $homeUrl)) {
-            throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
-        }
-
-        if (!parse_url($homeUrl, PHP_URL_HOST)) {
+        if (!WordPressUrl::isValid($homeUrl)) {
             throw new \RuntimeException('Please check the Home URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
 
@@ -1125,6 +1122,23 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
 
 
 
+    public function getDatabaseTables()
+    {
+        return $this->databaseTables;
+    }
+
+
+
+
+
+    public function setDatabaseTables($tables)
+    {
+        $this->databaseTables = is_array($tables) ? $tables : null;
+    }
+
+
+
+
 
     public function setLogFile(string $fileName)
     {
@@ -1155,6 +1169,28 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     public function getIndexPartSize(): array
     {
         return $this->indexPartSize;
+    }
+
+
+
+
+
+    public function setIndexPartFileCount(array $indexPartFileCount)
+    {
+        $this->indexPartFileCount = $indexPartFileCount;
+    }
+
+
+
+
+
+
+
+
+
+    public function getIndexPartFileCount(): array
+    {
+        return $this->indexPartFileCount;
     }
 
 

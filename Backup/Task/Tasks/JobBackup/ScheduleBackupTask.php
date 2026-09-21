@@ -16,6 +16,9 @@ use WPStaging\Framework\Utils\Cache\Cache;
 
 class ScheduleBackupTask extends BackupTask
 {
+ 
+    const BASIC_SCHEDULE_TIME = ['0', '0'];
+
     private $backupScheduler;
 
     public function __construct(BackupScheduler $backupScheduler, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -54,7 +57,7 @@ class ScheduleBackupTask extends BackupTask
 
     protected function setDefaultBasicScheduleOptions()
     {
-        $this->jobDataDto->setScheduleTime(["0", "0"]); 
+        $this->jobDataDto->setScheduleTime(self::BASIC_SCHEDULE_TIME);
         $this->jobDataDto->setScheduleRotation(1);
         $this->jobDataDto->setScheduleRecurrence(Cron::BASIC_DAILY);
     }

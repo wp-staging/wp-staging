@@ -58,7 +58,7 @@ class FirstRun
         (new LoginNotice())->setTransient();
 
  
-        delete_transient(Assets::TRANSIENT_REST_URL);
+        delete_transient(Assets::TRANSIENT_IS_WORDPRESS_REST_URL_REACHABLE);
 
  
         WPStaging::make(DisabledItemsNotice::class)->enable();

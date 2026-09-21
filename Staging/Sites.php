@@ -4,7 +4,10 @@ namespace WPStaging\Staging;
 
 use Exception;
 use WPStaging\Framework\Exceptions\WPStagingException;
+use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Staging\Dto\StagingSiteDto;
+
+use function WPStaging\functions\debug_log;
 
 
 
@@ -17,10 +20,18 @@ use WPStaging\Staging\Dto\StagingSiteDto;
 
 class Sites
 {
+    use SerializeTrait;
+
 
 
 
     const STAGING_SITES_OPTION = 'wpstg_staging_sites';
+
+
+
+
+
+    const MAX_RECOVERY_DEPTH = 5;
 
 
 
@@ -38,6 +49,11 @@ class Sites
 
 
     const BACKUP_STAGING_SITES_OPTION = 'wpstg_staging_sites_backup';
+
+
+
+
+    const CORRUPTED_STAGING_SITES_BACKUP_PREFIX = 'wpstg_staging_sites_backup_';
 
 
 
@@ -171,11 +187,90 @@ class Sites
             return $stagingSites;
         }
 
+        $recoveredSites = $this->recoverStagingSitesOption($stagingSites);
+        if (is_array($recoveredSites)) {
+            $this->storeRecoveredStagingSites($recoveredSites);
+
+            return $recoveredSites;
+        }
+
         if ($throwException) {
             throw new WPStagingException('Staging sites option is not an array.');
         }
 
         return [];
+    }
+
+
+
+
+
+
+
+
+    public function stagingSitesOptionIsUnreadable(): bool
+    {
+        $stagingSites = get_option(self::STAGING_SITES_OPTION, []);
+        if (is_array($stagingSites)) {
+            return false;
+        }
+
+        return !is_array($this->recoverStagingSitesOption($stagingSites));
+    }
+
+
+
+
+
+
+
+
+    public function getRawStagingSitesOption(): string
+    {
+        global $wpdb;
+
+        $rawOption = $wpdb->get_var($wpdb->prepare(
+            "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+            self::STAGING_SITES_OPTION
+        ));
+
+        return $rawOption === null ? '' : $rawOption;
+    }
+
+
+
+
+
+
+
+
+    private function recoverStagingSitesOption($stagingSites)
+    {
+        if (!is_string($stagingSites) || $stagingSites === '') {
+            return $stagingSites;
+        }
+
+        $recovered = $stagingSites;
+        for ($depth = 0; $depth < self::MAX_RECOVERY_DEPTH; $depth++) {
+            $rejected  = false;
+            $unwrapped = $this->safeMaybeUnserialize($recovered, [], $rejected);
+
+            if ($rejected || $unwrapped === $recovered) {
+                return $stagingSites;
+            }
+
+            if (is_array($unwrapped)) {
+                return $unwrapped;
+            }
+
+            if (!is_string($unwrapped)) {
+                return $stagingSites;
+            }
+
+            $recovered = $unwrapped;
+        }
+
+        return $stagingSites;
     }
 
 
@@ -216,7 +311,53 @@ class Sites
             }
         }
 
+        return $this->replaceStagingSitesOption($stagingSites);
+    }
+
+
+
+
+
+
+
+    private function replaceStagingSitesOption($stagingSites): bool
+    {
         return update_option(self::STAGING_SITES_OPTION, $stagingSites, false);
+    }
+
+
+
+
+
+
+
+    private function storeRecoveredStagingSites(array $recoveredSites)
+    {
+        $corruptedOption = $this->getRawStagingSitesOption();
+        if (!$this->replaceStagingSitesOption($recoveredSites)) {
+            return;
+        }
+
+        $this->backupCorruptedStagingSitesOption($corruptedOption);
+    }
+
+
+
+
+
+
+
+
+    private function backupCorruptedStagingSitesOption(string $corruptedOption)
+    {
+        $backupOption = self::CORRUPTED_STAGING_SITES_BACKUP_PREFIX . time();
+
+        add_option($backupOption, $corruptedOption, '', false);
+
+        debug_log(sprintf(
+            'The staging sites option was stored serialized more than once and has been recovered. The value it held is kept in the option "%s".',
+            $backupOption
+        ), 'warning');
     }
 
 

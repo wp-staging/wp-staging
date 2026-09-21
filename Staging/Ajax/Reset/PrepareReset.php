@@ -11,15 +11,11 @@ use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteReset;
 use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Service\StagingSetup;
-use WPStaging\Staging\Sites;
 
 class PrepareReset extends AbstractAjaxPrepare
 {
  
     protected $postDataKey = 'wpstgResetData';
-
- 
-    protected $jobDataDto;
 
  
     protected $jobReset;
@@ -176,20 +172,5 @@ class PrepareReset extends AbstractAjaxPrepare
         $stagingSite->setOwnerId(get_current_user_id());
 
         $this->jobDataDto->setStagingSite($stagingSite);
-    }
-
-    protected function populateJobDataDtoByCloneId(string $cloneId)
-    {
-
-
-
-        $stagingSites = WPStaging::make(Sites::class); // @phpstan-ignore-line
-        $stagingSite  = $stagingSites->getStagingSiteDtoByCloneId($cloneId);
-        $this->jobDataDto->setStagingSite($stagingSite);
-        $this->jobDataDto->setCloneId($cloneId);
-        $this->jobDataDto->setStagingSiteUrl($stagingSite->getUrl());
-        $this->jobDataDto->setStagingSitePath($stagingSite->getPath());
-        $this->jobDataDto->setDatabasePrefix($stagingSite->getUsedPrefix());
-        $this->jobDataDto->setIsExternalDatabase($stagingSite->getIsExternalDatabase());
     }
 }

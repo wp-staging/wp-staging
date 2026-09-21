@@ -13,6 +13,7 @@ use WPStaging\Framework\Onboarding\OnboardingJourney;
 
 $competitorName  = $onboarding->getBackupPluginsDetector()->getCompetitorName();
 $isHostedOnWpCom = $onboarding->isHostedOnWordPressCom();
+$upgradeContext  = 'task_selector_compare';
 ?>
 <div
     id="wpstg-onboarding"
@@ -126,6 +127,17 @@ $isHostedOnWpCom = $onboarding->isHostedOnWordPressCom();
         </div>
 
     </div>
+
+    <p class="wpstg-onboarding__compare">
+        <a
+            href="<?php echo esc_url(Language::getUpgradeUrl($upgradeContext)); ?>"
+            data-wpstg-upgrade-cta="<?php echo esc_attr($upgradeContext); ?>"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            <?php esc_html_e('View pricing', 'wp-staging'); ?>
+        </a>
+    </p>
 
     <button type="button" class="wpstg-onboarding__skip" data-wpstg-onboarding-finish>
         <?php esc_html_e('Skip for now', 'wp-staging'); ?>

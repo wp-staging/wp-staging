@@ -141,6 +141,35 @@ class Frontend
 
 
 
+
+
+
+
+    public function preventIndexPhpStripping($redirectUrl, string $requestedUrl)
+    {
+        if (!is_string($redirectUrl)) {
+            return $redirectUrl;
+        }
+
+        $requestedPath = (string)parse_url($requestedUrl, PHP_URL_PATH);
+        if (strpos($requestedPath, '/index.php') === false || !$this->isStagingSite()) {
+            return $redirectUrl;
+        }
+
+        $pathWithoutIndexPhp = str_replace('/index.php', '', $requestedPath);
+        $redirectPath        = (string)parse_url($redirectUrl, PHP_URL_PATH);
+        $sameQuery           = parse_url($redirectUrl, PHP_URL_QUERY) === parse_url($requestedUrl, PHP_URL_QUERY);
+        if (!$sameQuery || rtrim($redirectPath, '/') !== rtrim($pathWithoutIndexPhp, '/')) {
+            return $redirectUrl;
+        }
+
+        return false;
+    }
+
+
+
+
+
     private function defineHooks()
     {
         static $isRegistered = false;
@@ -150,6 +179,7 @@ class Frontend
 
         add_action("init", [$this, "checkPermissions"]);
         add_action("init", [$this, "resavePermalinks"]);
+        add_filter("redirect_canonical", [$this, "preventIndexPhpStripping"], 10, 2);
 
         $isRegistered = true;
     }

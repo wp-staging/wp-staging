@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Service\Database\Importer;
 
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Backup\Service\Database\ShortNameGenerator;
 use WPStaging\Framework\Traits\ApplyFiltersTrait;
 
 
@@ -157,7 +158,7 @@ class QueryCompatibility
                 continue;
             }
 
-            $shortIdentifier                    = uniqid(DatabaseImporter::TMP_DATABASE_PREFIX) . str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $shortIdentifier                    = ShortNameGenerator::generate($identifier, DatabaseImporter::TMP_DATABASE_PREFIX);
             $shortIdentifiers[$shortIdentifier] = $identifier;
         }
 

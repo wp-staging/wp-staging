@@ -4,10 +4,22 @@ namespace WPStaging\Backup\Service;
 
 use WPStaging\Framework\Filesystem\FileObject;
 
+
+
+
 class BackupMetadataReader
 {
  
     const FILTER_MAX_BACKUP_METADATA_SIZE = 'wpstg_max_backup_metadata_size';
+
+
+
+
+
+
+
+
+    const MAX_BACKUP_METADATA_RECORD_SIZE = 2 * 1024 * 1024;
 
  
     private $existingMetadataPosition;
@@ -45,6 +57,10 @@ class BackupMetadataReader
                 $backupMetadata = $this->extractMetadata($line);
             }
         } while ($this->fileObject->valid() && !is_array($backupMetadata));
+
+        if (!is_array($backupMetadata)) {
+            $backupMetadata = $this->readBackupMetadataFromEnd($negativeOffset);
+        }
 
         if (!is_array($backupMetadata)) {
             $error = sprintf('Could not find metadata in the backup file %s - This file could be corrupt.', $this->fileObject->getFilename());
@@ -100,6 +116,112 @@ class BackupMetadataReader
         }
 
         return $this->existingMetadataPosition;
+    }
+
+
+
+
+
+
+
+
+
+
+    private function readBackupMetadataFromEnd(int $chunkSize)
+    {
+        $recordEnd = $this->findLastRecordEnd($chunkSize);
+        if ($recordEnd === 0) {
+            return null;
+        }
+
+        $this->fileObject->fseek($recordEnd - 1, SEEK_SET);
+        if ($this->fileObject->fread(1) !== '}') {
+            return null;
+        }
+
+        $position    = $recordEnd;
+        $recordStart = 0;
+
+        while ($position > 0) {
+            $bytesScanned = $recordEnd - $position;
+            $bytesToRead  = min(
+                $chunkSize,
+                $position,
+                self::MAX_BACKUP_METADATA_RECORD_SIZE + 1 - $bytesScanned
+            );
+            if ($bytesToRead <= 0) {
+                return null;
+            }
+
+            $chunkStart = $position - $bytesToRead;
+
+            $this->fileObject->fseek($chunkStart, SEEK_SET);
+            $chunk = $this->fileObject->fread($bytesToRead);
+            if ($chunk === '') {
+                return null;
+            }
+
+            $lineBreakPosition = strrpos($chunk, "\n");
+            if ($lineBreakPosition !== false) {
+                $recordStart = $chunkStart + $lineBreakPosition + 1;
+                if ($recordEnd - $recordStart > self::MAX_BACKUP_METADATA_RECORD_SIZE) {
+                    return null;
+                }
+
+                break;
+            }
+
+            $position = $chunkStart;
+            if ($recordEnd - $position > self::MAX_BACKUP_METADATA_RECORD_SIZE) {
+                return null;
+            }
+        }
+
+        $recordLength = $recordEnd - $recordStart;
+        $this->fileObject->fseek($recordStart, SEEK_SET);
+        $line = $this->fileObject->fread($recordLength);
+        if (strlen($line) !== $recordLength) {
+            return null;
+        }
+
+        $line = trim($line);
+        if (!$this->isValidMetadata($line)) {
+            return null;
+        }
+
+        $this->existingMetadataPosition = $recordStart;
+        return $this->extractMetadata($line);
+    }
+
+
+
+
+
+
+
+    private function findLastRecordEnd(int $chunkSize): int
+    {
+        $position = $this->fileObject->getSize();
+
+        while ($position > 0) {
+            $bytesToRead = min($chunkSize, $position);
+            $chunkStart  = $position - $bytesToRead;
+
+            $this->fileObject->fseek($chunkStart, SEEK_SET);
+            $chunk = $this->fileObject->fread($bytesToRead);
+            if ($chunk === '') {
+                return 0;
+            }
+
+            $chunk = rtrim($chunk);
+            if ($chunk !== '') {
+                return $chunkStart + strlen($chunk);
+            }
+
+            $position = $chunkStart;
+        }
+
+        return 0;
     }
 
     private function getExpectedMaxBackupMetadataSize(): int

@@ -15,6 +15,7 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Notifications\Notifications;
 
 use function WPStaging\functions\debug_log;
@@ -56,6 +57,9 @@ class BackupScheduler
     const OPTION_LAST_BACKUP_FAILURE = 'wpstg_last_backup_failure';
 
  
+    const TRANSIENT_SCHEDULE_JOB_PREFIX = 'wpstg_schedule_for_job_';
+
+ 
     const CRON_WARNING_TYPE_FAILURE = 'failure';
 
  
@@ -66,12 +70,6 @@ class BackupScheduler
 
  
     const TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT = 'wpstg.backup.schedules.error_report_sent';
-
- 
-    const TRANSIENT_BACKUP_SCHEDULE_WARNING_REPORT_SENT = 'wpstg.backup.schedules.warning_report_sent';
-
- 
-    const TRANSIENT_BACKUP_SCHEDULE_GENERAL_REPORT_SENT = 'wpstg.backup.schedules.general_report_sent';
 
  
     const TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT = 'wpstg.backup.schedules.slack_report_sent';
@@ -92,6 +90,12 @@ class BackupScheduler
     const FILTER_SCHEDULES_BACKUP_INTERVAL = 'wpstg.schedulesBackup.interval';
 
  
+    const LAST_RUN_ERROR_MAX_LENGTH = 500;
+
+ 
+    const FIELD_RUNS_RECORDED_SINCE = 'runsRecordedSince';
+
+ 
     protected $backupsFinder;
 
  
@@ -104,9 +108,6 @@ class BackupScheduler
 
 
     protected $notifications;
-
- 
-    protected $numberOverdueCronjobs = 0;
 
 
 
@@ -132,8 +133,6 @@ class BackupScheduler
         $this->processLock   = $processLock;
         $this->backupDeleter = $backupDeleter;
         $this->notifications = $notifications;
-
-        $this->countOverdueCronjobs();
     }
 
 
@@ -142,11 +141,221 @@ class BackupScheduler
     public function getSchedules(): array
     {
         $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
-        if (is_array($schedules)) {
-            return array_filter($schedules, 'is_array');
+        if (!is_array($schedules)) {
+            return [];
         }
 
-        return [];
+        $schedules = array_filter($schedules, 'is_array');
+
+        foreach ($schedules as &$schedule) {
+            if (!array_key_exists('lastRunTime', $schedule)) {
+                $schedule['lastRunTime']     = null;
+                $schedule['lastRunStatus']   = null;
+                $schedule['lastRunDuration'] = null;
+            }
+
+            if (!array_key_exists('lastRunJobId', $schedule)) {
+                $schedule['lastRunJobId'] = '';
+                $schedule['lastRunError'] = '';
+            }
+
+            if (!array_key_exists('isPaused', $schedule)) {
+                $schedule['isPaused'] = false;
+            }
+        }
+
+        unset($schedule);
+
+        return $schedules;
+    }
+
+
+
+
+
+
+
+
+    public function getNextRunTimestampsByScheduleId(): array
+    {
+        $cron   = get_option('cron');
+        $result = [];
+
+        if (!is_array($cron)) {
+            return $result;
+        }
+
+        ksort($cron, SORT_NUMERIC);
+
+        foreach ($cron as $timestamp => $events) {
+            if (!is_array($events) || !isset($events[Cron::ACTION_CREATE_CRON_BACKUP])) {
+                continue;
+            }
+
+            foreach ($events[Cron::ACTION_CREATE_CRON_BACKUP] as $event) {
+                if (!isset($event['args'][0]['scheduleId'])) {
+                    continue;
+                }
+
+                $sid = $event['args'][0]['scheduleId'];
+
+                if (!isset($result[$sid])) {
+                    $result[$sid] = (int)$timestamp;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+
+
+
+
+
+
+
+
+    public function updateScheduleLastRun(string $scheduleId, string $status, int $duration = 0, string $errorMessage = '', string $jobId = '')
+    {
+        $schedules = $this->getSchedules();
+        $updated   = false;
+
+        foreach ($schedules as &$schedule) {
+            if ($schedule['scheduleId'] === $scheduleId) {
+                $schedule['lastRunTime']     = time();
+                $schedule['lastRunStatus']   = $status;
+                $schedule['lastRunDuration'] = $duration;
+                $schedule['lastRunError']    = mb_substr($errorMessage, 0, self::LAST_RUN_ERROR_MAX_LENGTH);
+                $schedule['lastRunJobId']    = $jobId;
+
+                if ($status === 'failed' && !empty($errorMessage)) {
+                    $storageKeys                       = isset($schedule['storages']) ? (array)$schedule['storages'] : [];
+                    $schedule['reconnectStorageKeys']  = $this->detectAuthFailureStorageKeys($errorMessage, $storageKeys);
+                } else {
+                    $schedule['reconnectStorageKeys'] = [];
+                }
+
+                $updated = true;
+                break;
+            }
+        }
+
+        unset($schedule);
+
+        if ($updated) {
+            update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+        }
+    }
+
+
+
+
+
+
+    private function detectAuthFailureStorageKeys(string $errorMessage, array $storageKeys): array
+    {
+        $oauthProviders = [
+            Providers::IDENTIFIER_GOOGLE_DRIVE,
+            Providers::IDENTIFIER_DROPBOX,
+            Providers::IDENTIFIER_ONE_DRIVE,
+            Providers::IDENTIFIER_PCLOUD,
+        ];
+
+        $authErrorPatterns = [
+            'reconnect',
+            'fail to refresh the access token',
+            'token expired',
+            'access token expired',
+            'not authenticated',
+        ];
+
+        $lowerError  = strtolower($errorMessage);
+        $isAuthError = false;
+
+        foreach ($authErrorPatterns as $pattern) {
+            if (strpos($lowerError, $pattern) !== false) {
+                $isAuthError = true;
+                break;
+            }
+        }
+
+        if (!$isAuthError) {
+            return [];
+        }
+
+        $failed = [];
+        foreach ($storageKeys as $key) {
+            if (in_array($key, $oauthProviders, true)) {
+                $failed[] = $key;
+            }
+        }
+
+        return $failed;
+    }
+
+
+
+
+
+
+
+
+    public function clearReconnectStorageKeyForProvider(string $storageKey)
+    {
+        $schedules = $this->getSchedules();
+        $updated   = false;
+
+        foreach ($schedules as &$schedule) {
+            $keys = $this->readReconnectStorageKeys($schedule);
+
+            if (!in_array($storageKey, $keys, true)) {
+                continue;
+            }
+
+            $schedule['reconnectStorageKeys'] = array_values(array_filter($keys, function ($k) use ($storageKey) {
+                return $k !== $storageKey;
+            }));
+            $updated = true;
+        }
+
+        unset($schedule);
+
+        if ($updated) {
+            update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+        }
+    }
+
+
+
+
+
+    private function readReconnectStorageKeys(array $schedule): array
+    {
+        return is_array($schedule['reconnectStorageKeys'] ?? null) ? $schedule['reconnectStorageKeys'] : [];
+    }
+
+
+
+
+
+    public function handleJobFailed(array $jobData)
+    {
+        if (empty($jobData['queueId'])) {
+            return;
+        }
+
+        $transientKey = self::TRANSIENT_SCHEDULE_JOB_PREFIX . $jobData['queueId'];
+        $scheduleId   = get_transient($transientKey);
+
+        if (empty($scheduleId)) {
+            return;
+        }
+
+        delete_transient($transientKey);
+        $errorMessage = isset($jobData['message']) ? (string)$jobData['message'] : '';
+        $jobId        = isset($jobData['jobId']) ? (string)$jobData['jobId'] : '';
+        $this->updateScheduleLastRun($scheduleId, 'failed', 0, $errorMessage, $jobId);
     }
 
 
@@ -194,11 +403,11 @@ class BackupScheduler
             return (int)$schedule['ownerBlogId'] === get_current_blog_id();
         }
 
-        if (is_main_site() || !isset($schedule['backupType'], $schedule['subsiteBlogId']) || $schedule['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) {
+        if (is_main_site()) {
             return true;
         }
 
-        return (int)$schedule['subsiteBlogId'] === get_current_blog_id();
+        return isset($schedule['subsiteBlogId']) && (int)$schedule['subsiteBlogId'] === get_current_blog_id();
     }
 
 
@@ -308,6 +517,7 @@ class BackupScheduler
             'sitesToBackup'                  => $jobBackupDataDto->getSitesToBackup(),
             'storages'                       => $jobBackupDataDto->getStorages(),
             'firstSchedule'                  => $firstSchedule,
+            self::FIELD_RUNS_RECORDED_SINCE  => time(),
             'isSmartExclusion'               => $jobBackupDataDto->getIsSmartExclusion(),
             'isExcludingSpamComments'        => $jobBackupDataDto->getIsExcludingSpamComments(),
             'isExcludingPostRevision'        => $jobBackupDataDto->getIsExcludingPostRevision(),
@@ -317,6 +527,11 @@ class BackupScheduler
             'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
             'isWpCliRequest'                 => true, 
             'backupExcludedDirectories'      => $jobBackupDataDto->getBackupExcludedDirectories(),
+            'lastRunTime'                    => null,
+            'lastRunStatus'                  => null,
+            'lastRunDuration'                => null,
+            'lastRunJobId'                   => '',
+            'lastRunError'                   => '',
         ];
 
         if (wp_next_scheduled(Cron::ACTION_CREATE_CRON_BACKUP, [self::cronEventArguments($scheduleId)])) {
@@ -327,6 +542,85 @@ class BackupScheduler
 
         $this->registerScheduleInDb($backupSchedule);
         $this->reCreateCron();
+    }
+
+
+
+
+
+
+
+
+    public function adoptRunsFromExistingBackups(): int
+    {
+        $schedules = $this->getSchedules();
+        if (empty($schedules) === true) {
+            return 0;
+        }
+
+        $lastRunByScheduleId = $this->lastBackupTimeByScheduleId();
+        $now                 = time();
+        $adopted             = 0;
+
+        foreach ($schedules as &$schedule) {
+            if (!empty($schedule[self::FIELD_RUNS_RECORDED_SINCE]) || !empty($schedule['lastRunTime'])) {
+                continue;
+            }
+
+            $lastRun = $lastRunByScheduleId[(string)($schedule['scheduleId'] ?? '')] ?? 0;
+
+            if ($lastRun > 0) {
+                $schedule['lastRunTime']   = $lastRun;
+                $schedule['lastRunStatus'] = 'success';
+            }
+
+            $schedule[self::FIELD_RUNS_RECORDED_SINCE] = $lastRun > 0 ? $lastRun : $now;
+            $adopted++;
+        }
+
+        unset($schedule);
+
+        if ($adopted > 0) {
+            update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+        }
+
+        return $adopted;
+    }
+
+
+
+
+    private function lastBackupTimeByScheduleId(): array
+    {
+        try {
+            $backups = $this->backupsFinder->findBackups();
+        } catch (\Throwable $e) {
+            debug_log('[Schedule Backup Cron] Could not read the existing backups while adopting the runs of the stored plans: ' . $e->getMessage());
+
+            return [];
+        }
+
+        $lastRuns = [];
+
+        foreach ($backups as $backup) {
+            try {
+                $scheduleId = (string)(new BackupMetadata())->hydrateByFilePath($backup->getPathname())->getScheduleId();
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            if ($scheduleId === '') {
+                continue;
+            }
+
+            $createdAt = (int)$backup->getMTime();
+
+            if ($createdAt > ($lastRuns[$scheduleId] ?? 0)) {
+                $lastRuns[$scheduleId] = $createdAt;
+            }
+        }
+
+        return $lastRuns;
     }
 
 
@@ -378,11 +672,7 @@ class BackupScheduler
             return;
         }
 
- 
-        $queue = WPStaging::make(Queue::class);
-        $queue->markDanglingAs(Queue::STATUS_CANCELED, $queue->getStalledBreakpointDate(), Queue::SET_UPDATED_AT_TO_NOW);
-
-        if ($queue->countActionsByScheduleId($scheduleId, [Queue::STATUS_READY, Queue::STATUS_PROCESSING]) > 0) {
+        if ($this->scheduleHasQueuedOrRunningBackup($scheduleId)) {
             debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: a backup job for schedule %s is already queued or running.", $logId, $scheduleId), 'info', false);
             return;
         }
@@ -397,6 +687,8 @@ class BackupScheduler
             }
 
             debug_log(sprintf("[Schedule Backup Cron - %s] Successfully received a Job ID: %s", $logId, $jobId), 'info', false);
+
+            set_transient(self::TRANSIENT_SCHEDULE_JOB_PREFIX . $jobId, $scheduleId, 2 * DAY_IN_SECONDS);
         } catch (\Exception $e) {
             debug_log("[Schedule Backup Cron - $logId] Exception thrown while preparing the Backup: " . $e->getMessage());
             $this->saveBackupFailure($e->getMessage());
@@ -470,6 +762,197 @@ class BackupScheduler
 
 
 
+
+    private function findScheduleIndexById(array $schedules, string $scheduleId)
+    {
+        foreach ($schedules as $index => $schedule) {
+            if ($schedule['scheduleId'] === $scheduleId) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+
+
+
+
+    public function pauseSchedule()
+    {
+        if (!current_user_can((new Capabilities())->manageWPSTG())) {
+            return;
+        }
+
+        if (!(new Nonce())->requestHasValidNonce(Nonce::WPSTG_NONCE)) {
+            return;
+        }
+
+        if (empty($_POST['scheduleId'])) {
+            return;
+        }
+
+        $scheduleId = Sanitize::sanitizeString($_POST['scheduleId']);
+        $schedules  = $this->getSchedules();
+        $index      = $this->findScheduleIndexById($schedules, $scheduleId);
+
+        if ($index === null) {
+            wp_send_json_error('Schedule not found.');
+            return;
+        }
+
+        $schedules[$index]['isPaused'] = true;
+
+        update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+        $this->reCreateCron();
+        wp_send_json_success();
+    }
+
+
+
+
+
+    public function resumeSchedule()
+    {
+        if (!current_user_can((new Capabilities())->manageWPSTG())) {
+            return;
+        }
+
+        if (!(new Nonce())->requestHasValidNonce(Nonce::WPSTG_NONCE)) {
+            return;
+        }
+
+        if (empty($_POST['scheduleId'])) {
+            return;
+        }
+
+        $scheduleId = Sanitize::sanitizeString($_POST['scheduleId']);
+        $schedules  = $this->getSchedules();
+        $index      = $this->findScheduleIndexById($schedules, $scheduleId);
+
+        if ($index === null) {
+            wp_send_json_error('Schedule not found.');
+            return;
+        }
+
+        $schedules[$index]['isPaused']                       = false;
+        $schedules[$index]['firstSchedule']                  = $this->upcomingOccurrenceTimestamp($schedules[$index]);
+        $schedules[$index][self::FIELD_RUNS_RECORDED_SINCE]   = time();
+
+        update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+        $this->reCreateCron();
+        wp_send_json_success();
+    }
+
+
+
+
+
+
+
+
+
+    private function upcomingOccurrenceTimestamp(array $schedule): int
+    {
+        $firstOccurrence = $this->firstOccurrenceTimestamp($schedule);
+        $interval        = $this->intervalInSeconds($schedule);
+        $now             = time();
+
+        if ($firstOccurrence === null || $interval <= 0) {
+            $recurrence = (string)($schedule['schedule'] ?? '');
+
+            return $this->getUpcomingScheduleTime(implode(':', $this->scheduleTimeOfDay($schedule)), $recurrence);
+        }
+
+        if ($firstOccurrence >= $now) {
+            return $firstOccurrence;
+        }
+
+        return $firstOccurrence + ((int)ceil(($now - $firstOccurrence) / $interval) * $interval);
+    }
+
+
+
+
+
+    private function scheduleTimeOfDay(array $schedule): array
+    {
+        if (empty($schedule['time'])) {
+            return ['0', '0'];
+        }
+
+        return is_array($schedule['time']) ? $schedule['time'] : explode(':', (string)$schedule['time']);
+    }
+
+
+
+
+
+    public function runScheduleNow()
+    {
+        if (!current_user_can((new Capabilities())->manageWPSTG())) {
+            return;
+        }
+
+        if (!(new Nonce())->requestHasValidNonce(Nonce::WPSTG_NONCE)) {
+            return;
+        }
+
+        if (empty($_POST['scheduleId'])) {
+            return;
+        }
+
+        $scheduleId = Sanitize::sanitizeString($_POST['scheduleId']);
+        $schedules  = $this->getSchedules();
+        $index      = $this->findScheduleIndexById($schedules, $scheduleId);
+
+        if ($index === null) {
+            wp_send_json_error('Schedule not found.');
+            return;
+        }
+
+        $target = $schedules[$index];
+
+        if (!$this->scheduleRecurrenceIsRegistered($target)) {
+            wp_send_json_error(['message' => __('This backup plan uses a schedule frequency this version of WP STAGING cannot run.', 'wp-staging')]);
+            return;
+        }
+
+        if (!empty($target['isPaused'])) {
+            wp_send_json_error('Cannot run a paused schedule.');
+            return;
+        }
+
+        if ($this->scheduleHasQueuedOrRunningBackup($scheduleId)) {
+            wp_send_json_error(['message' => __('A backup for this schedule is already running. Wait for it to finish before starting another one.', 'wp-staging')]);
+            return;
+        }
+
+        do_action(Cron::ACTION_CREATE_CRON_BACKUP, $target);
+        wp_send_json_success();
+    }
+
+
+
+
+
+
+
+    private function scheduleHasQueuedOrRunningBackup(string $scheduleId): bool
+    {
+ 
+        $queue = WPStaging::make(Queue::class);
+        $queue->markDanglingAs(Queue::STATUS_CANCELED, $queue->getStalledBreakpointDate(), Queue::SET_UPDATED_AT_TO_NOW);
+
+        return $queue->countActionsByScheduleId($scheduleId, [Queue::STATUS_READY, Queue::STATUS_PROCESSING]) > 0;
+    }
+
+
+
+
+
+
+
     public function deleteSchedule(string $scheduleId, $reCreateCron = true)
     {
         $schedules = $this->getSchedules();
@@ -513,13 +996,27 @@ class BackupScheduler
     public function reCreateCron($scheduleBeingEdit = null): bool
     {
         $schedules = $this->getSchedulesRunByCurrentSite();
+        $this->reportThePlansThisSiteDoesNotRun();
         static::removeBackupSchedulesFromCron();
 
         $errors = [];
 
         foreach ($schedules as $schedule) {
+            if (!empty($schedule['isPaused'])) {
+                continue;
+            }
+
             if (empty($schedule['scheduleId'])) {
                 debug_log('[Schedule Backup Cron] Skipped a stored schedule without an id while re-creating the cron events.');
+                continue;
+            }
+
+            if (!$this->scheduleRecurrenceIsRegistered($schedule)) {
+                debug_log(sprintf(
+                    '[Schedule Backup Cron] Skipped schedule %s while re-creating the cron events: this version of WP STAGING does not register the recurrence %s.',
+                    $schedule['scheduleId'],
+                    $schedule['schedule'] ?? ''
+                ), 'info', false);
                 continue;
             }
 
@@ -532,7 +1029,7 @@ class BackupScheduler
                 $this->setNextSchedulingDate($timeToSchedule, $schedule);
             } else {
                 $dayOfWeek = Cron::extractDayFromSchedule($schedule['schedule']);
-                $this->setUpcomingDateTime($timeToSchedule, $schedule['time'], $dayOfWeek, $schedule['schedule']);
+                $this->setUpcomingDateTime($timeToSchedule, $this->scheduleTimeOfDay($schedule), $dayOfWeek, $schedule['schedule']);
             }
 
  
@@ -560,6 +1057,46 @@ class BackupScheduler
         }
 
         return true;
+    }
+
+
+
+
+    private function reportThePlansThisSiteDoesNotRun()
+    {
+        if (!is_multisite()) {
+            return;
+        }
+
+        $scheduleIds = [];
+        foreach ($this->getSchedules() as $schedule) {
+            if ($this->scheduleIsRunByCurrentSite($schedule)) {
+                continue;
+            }
+
+            $scheduleIds[] = $this->readableScheduleId($schedule);
+        }
+
+        if (empty($scheduleIds)) {
+            return;
+        }
+
+        debug_log(sprintf(
+            '[Schedule Backup Cron] Skipped these schedules while re-creating the cron events on site %d, because the plan names another site of the network or names none: %s.',
+            get_current_blog_id(),
+            implode(', ', $scheduleIds)
+        ), 'info', false);
+    }
+
+
+
+
+
+    private function readableScheduleId(array $schedule): string
+    {
+        $scheduleId = isset($schedule['scheduleId']) && is_scalar($schedule['scheduleId']) ? (string)$schedule['scheduleId'] : '';
+
+        return $scheduleId === '' ? '(unknown)' : $scheduleId;
     }
 
 
@@ -632,11 +1169,14 @@ class BackupScheduler
         $this->cronWarningType          = '';
         $this->lastBackupFailureMessage = '';
 
-        if (empty($this->getSchedulesRunByCurrentSite()) || $this->subsiteOnlyCarriesCopiedScheduleRows()) {
+        $activeSchedules = array_filter($this->getSchedulesRunByCurrentSite(), function (array $schedule): bool {
+            return empty($schedule['isPaused']) && $this->scheduleRecurrenceIsRegistered($schedule);
+        });
+        if (empty($activeSchedules)) {
             return true;
         }
 
-        $this->detectScheduledBackupWarning();
+        $this->detectScheduledBackupWarning($activeSchedules);
 
         return $this->cronWarningType === '';
     }
@@ -646,7 +1186,9 @@ class BackupScheduler
 
 
 
-    private function detectScheduledBackupWarning()
+
+
+    private function detectScheduledBackupWarning(array $activeSchedules)
     {
         $lastFailure = get_option(self::OPTION_LAST_BACKUP_FAILURE);
         if (is_array($lastFailure) && !empty($lastFailure['time']) && (int)$lastFailure['time'] > $this->getLastScheduledBackupSuccessTime()) {
@@ -655,9 +1197,114 @@ class BackupScheduler
             return;
         }
 
-        if (!$this->hasBackupCronEventRunByCurrentSite() || $this->hasOverdueBackupCronEventRunByCurrentSite()) {
-            $this->cronWarningType = self::CRON_WARNING_TYPE_OVERDUE;
+        foreach ($activeSchedules as $schedule) {
+            if ($this->scheduleMissedARun($schedule)) {
+                $this->cronWarningType = self::CRON_WARNING_TYPE_OVERDUE;
+                return;
+            }
         }
+    }
+
+
+
+
+
+
+
+
+
+    private function scheduleMissedARun(array $schedule): bool
+    {
+        $runsRecordedSince = $this->runsRecordedSince($schedule);
+        if ($runsRecordedSince === 0) {
+            return false;
+        }
+
+        $dueOccurrence = $this->lastOccurrenceDueAtOrBefore($schedule, time() - self::OVERDUE_GRACE_PERIOD);
+        if ($dueOccurrence === null || $dueOccurrence <= $runsRecordedSince) {
+            return false;
+        }
+
+        return !$this->scheduleHasQueuedOrRunningBackup((string)($schedule['scheduleId'] ?? ''));
+    }
+
+
+
+
+
+
+
+
+
+    private function runsRecordedSince(array $schedule): int
+    {
+        return max(
+            (int)($schedule['lastRunTime'] ?? 0),
+            (int)($schedule[self::FIELD_RUNS_RECORDED_SINCE] ?? 0)
+        );
+    }
+
+
+
+
+
+
+
+
+    private function lastOccurrenceDueAtOrBefore(array $schedule, int $deadline)
+    {
+        $firstOccurrence = $this->firstOccurrenceTimestamp($schedule);
+        $interval        = $this->intervalInSeconds($schedule);
+
+        if ($firstOccurrence === null || $interval <= 0 || $firstOccurrence > $deadline) {
+            return null;
+        }
+
+        return $firstOccurrence + ((int)floor(($deadline - $firstOccurrence) / $interval) * $interval);
+    }
+
+
+
+
+
+
+
+
+    private function firstOccurrenceTimestamp(array $schedule)
+    {
+        if (!empty($schedule['firstSchedule'])) {
+            return (int)$schedule['firstSchedule'];
+        }
+
+        if (!empty($schedule['lastRunTime'])) {
+            return (int)$schedule['lastRunTime'];
+        }
+
+        return null;
+    }
+
+
+
+
+
+    private function intervalInSeconds(array $schedule): int
+    {
+        $recurrence  = (string)($schedule['schedule'] ?? '');
+        $wpSchedules = wp_get_schedules();
+
+        return isset($wpSchedules[$recurrence]) ? (int)$wpSchedules[$recurrence]['interval'] : 0;
+    }
+
+
+
+
+
+
+
+
+    private function scheduleRecurrenceIsRegistered(array $schedule): bool
+    {
+        return Cron::isRecurrenceRegistered((string)($schedule['schedule'] ?? ''));
     }
 
 
@@ -691,21 +1338,9 @@ class BackupScheduler
     }
 
  
-    public function getOverdueCronJobsCount(): int
-    {
-        return $this->numberOverdueCronjobs;
-    }
-
- 
     public function isWpCronDisabled(): bool
     {
         return defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
-    }
-
- 
-    public function hasOverdueCronJobs(): bool
-    {
-        return $this->numberOverdueCronjobs > 4;
     }
 
 
@@ -829,6 +1464,18 @@ class BackupScheduler
                 $datetime->add(new \DateInterval("P{$daysUntilTarget}D"));
             }
         } else {
+            $wpSchedules = wp_get_schedules();
+            if (
+                $scheduleRecurrence !== null &&
+                isset($wpSchedules[$scheduleRecurrence]) &&
+                (int)$wpSchedules[$scheduleRecurrence]['interval'] < DAY_IN_SECONDS
+            ) {
+ 
+ 
+                $datetime->add(new \DateInterval('PT' . (int)$wpSchedules[$scheduleRecurrence]['interval'] . 'S'));
+                return;
+            }
+
  
             if ((int)sprintf('%02d%02d', $hourAndMinute[0], $hourAndMinute[1]) <= (int)$datetime->format('Hi')) {
                 $datetime->add(new \DateInterval('P1D'));
@@ -844,14 +1491,30 @@ class BackupScheduler
 
 
 
+    private function hasNoRecomputableAnchor(int $interval): bool
+    {
+        return $interval >= MONTH_IN_SECONDS || ($interval > 0 && $interval < DAY_IN_SECONDS);
+    }
+
+
+
+
+
+
+
 
     protected function setNextSchedulingDate(DateTime &$datetime, array $schedule)
     {
         $next = $schedule['firstSchedule'];
         $now  = $datetime->getTimestamp();
         if ($next >= $now) {
+            if ($this->hasNoRecomputableAnchor($this->intervalInSeconds($schedule))) {
+                $datetime->setTimestamp($next);
+                return;
+            }
+
             $dayOfWeek = Cron::extractDayFromSchedule($schedule['schedule']);
-            $this->setUpcomingDateTime($datetime, $schedule['time'], $dayOfWeek, $schedule['schedule']);
+            $this->setUpcomingDateTime($datetime, $this->scheduleTimeOfDay($schedule), $dayOfWeek, $schedule['schedule']);
             return;
         }
 
@@ -973,9 +1636,7 @@ class BackupScheduler
             return false;
         }
 
- 
-        $transientName = $this->getReportTransientName($reportType);
-        if (get_transient($transientName) !== false) {
+        if ($this->isReportThrottled($reportType)) {
             return false;
         }
 
@@ -987,9 +1648,7 @@ class BackupScheduler
             $title = $this->getDefaultReportTitle($reportType);
         }
 
- 
-        $transientName = $this->getReportTransientName($reportType);
-        set_transient($transientName, true, 5 * 60);
+        $this->throttleReport($reportType);
 
         if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
             return $this->notifications->sendEmailAsHTML($reportEmail, $title, $message);
@@ -1063,17 +1722,23 @@ class BackupScheduler
 
 
 
-    private function getReportTransientName(string $reportType): string
+
+    private function isReportThrottled(string $reportType): bool
     {
-        switch ($reportType) {
-            case self::REPORT_TYPE_WARNING:
-                return self::TRANSIENT_BACKUP_SCHEDULE_WARNING_REPORT_SENT;
-            case self::REPORT_TYPE_GENERAL:
-                return self::TRANSIENT_BACKUP_SCHEDULE_GENERAL_REPORT_SENT;
-            case self::REPORT_TYPE_ERROR:
-            default:
-                return self::TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT;
+        return $reportType === self::REPORT_TYPE_ERROR && get_transient(self::TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT) !== false;
+    }
+
+
+
+
+
+    private function throttleReport(string $reportType)
+    {
+        if ($reportType !== self::REPORT_TYPE_ERROR) {
+            return;
         }
+
+        set_transient(self::TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT, true, 5 * 60);
     }
 
 
@@ -1091,42 +1756,6 @@ class BackupScheduler
                 return esc_html__('WP Staging - Backup General Report', 'wp-staging');
             default:
                 return esc_html__('WP Staging - Backup Error Report', 'wp-staging');
-        }
-    }
-
-
-
-
-    private function getCronJobs(): array
-    {
-        $cron = get_option('cron');
-        if (!is_array($cron)) {
-            return [];
-        }
-
-        $cronJobs = [];
-        foreach ($cron as $timestamp => $hooks) {
-            if (!is_numeric($timestamp) || !is_array($hooks)) {
-                continue;
-            }
-
-            $cronJobs[(int)$timestamp] = $hooks;
-        }
-
-        return $cronJobs;
-    }
-
-
-
-
-    private function countOverdueCronjobs()
-    {
-        $cronJobs = $this->getCronJobs();
-        $timeNow  = time();
-        foreach ($cronJobs as $expectedExecutionTime => $cronJob) {
-            if (($expectedExecutionTime + self::OVERDUE_GRACE_PERIOD) < $timeNow) {
-                $this->numberOverdueCronjobs++;
-            }
         }
     }
 
@@ -1163,108 +1792,5 @@ class BackupScheduler
             'time'    => time(),
             'message' => $message,
         ], false);
-    }
-
-
-
-
-
-    private function getBackupCronEventTimestampsRunByCurrentSite(): array
-    {
-        $scheduleIdsRunElsewhere = $this->getScheduleIdsRunByOtherSites();
-        $timestamps              = [];
-
-        foreach ($this->getCronJobs() as $timestamp => $hooks) {
-            if (!isset($hooks[Cron::ACTION_CREATE_CRON_BACKUP])) {
-                continue;
-            }
-
-            if ($this->backupCronEventsAllBelongToSchedules((array)$hooks[Cron::ACTION_CREATE_CRON_BACKUP], $scheduleIdsRunElsewhere)) {
-                continue;
-            }
-
-            $timestamps[] = (int)$timestamp;
-        }
-
-        return $timestamps;
-    }
-
- 
-    private function hasBackupCronEventRunByCurrentSite(): bool
-    {
-        return $this->getBackupCronEventTimestampsRunByCurrentSite() !== [];
-    }
-
- 
-    private function hasOverdueBackupCronEventRunByCurrentSite(): bool
-    {
-        $now = time();
-        foreach ($this->getBackupCronEventTimestampsRunByCurrentSite() as $timestamp) {
-            if (($timestamp + self::OVERDUE_GRACE_PERIOD) < $now) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-
-
-
-
-    private function subsiteOnlyCarriesCopiedScheduleRows(): bool
-    {
-        if (!is_multisite() || is_main_site()) {
-            return false;
-        }
-
-        return !$this->hasScheduleOwnedByCurrentSite() && !$this->hasBackupCronEventRunByCurrentSite();
-    }
-
-
-
-
-
-    private function hasScheduleOwnedByCurrentSite(): bool
-    {
-        foreach ($this->getSchedules() as $schedule) {
-            if (isset($schedule['ownerBlogId']) && (int)$schedule['ownerBlogId'] === get_current_blog_id()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-
-
-    private function getScheduleIdsRunByOtherSites(): array
-    {
-        return array_values(array_diff(
-            array_column($this->getSchedules(), 'scheduleId'),
-            array_column($this->getSchedulesRunByCurrentSite(), 'scheduleId')
-        ));
-    }
-
-
-
-
-
-
-    private function backupCronEventsAllBelongToSchedules(array $events, array $scheduleIds): bool
-    {
-        if ($events === [] || $scheduleIds === []) {
-            return false;
-        }
-
-        foreach ($events as $event) {
-            if (!in_array($event['args'][0]['scheduleId'] ?? null, $scheduleIds, true)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

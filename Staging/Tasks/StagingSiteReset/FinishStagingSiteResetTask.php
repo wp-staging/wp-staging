@@ -2,6 +2,8 @@
 
 namespace WPStaging\Staging\Tasks\StagingSiteReset;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Staging\Tasks\StagingSiteUpdate\FinishStagingSiteUpdateTask;
 
 class FinishStagingSiteResetTask extends FinishStagingSiteUpdateTask
@@ -20,6 +22,14 @@ class FinishStagingSiteResetTask extends FinishStagingSiteUpdateTask
     public static function getTaskTitle()
     {
         return 'Finishing Staging Site Reset';
+    }
+
+
+
+
+    protected function enqueueFinishEvent()
+    {
+        WPStaging::make(AnalyticsStagingReset::class)->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
 

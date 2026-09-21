@@ -4,39 +4,25 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
 use RuntimeException;
-use WPStaging\Framework\Database\TableService;
-use WPStaging\Framework\Queue\SeekableQueueInterface;
-use WPStaging\Framework\Security\AccessToken;
-use WPStaging\Staging\Sites;
-use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\BackupScheduler;
-use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
-use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
-use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
-use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
-use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\Utils\Logger;
-use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\BackgroundProcessing\Queue;
-use WPStaging\Framework\Database\TablesRenamer;
 use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Traits\DatabaseTablesRenameTaskTrait;
+use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Settings\SettingsTable;
-use WPStaging\Framework\SiteInfo;
-use WPStaging\Framework\Traits\RestoresPreservedOptionsTrait;
 use WPStaging\Framework\Traits\SerializeTrait;
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 
 
 
 class RenameDatabaseTask extends RestoreTask
 {
-    use RestoresPreservedOptionsTrait;
+    use DatabaseTablesRenameTaskTrait;
     use SerializeTrait;
 
 
@@ -53,42 +39,7 @@ class RenameDatabaseTask extends RestoreTask
     const FILTER_EXCLUDE_TABLES_DURING_RESTORE = 'wpstg.backup.restore.exclude.tables';
 
  
-    private $tableService;
-
- 
-    private $tablesRenamer;
-
- 
-    private $tableViewsRenamer;
-
- 
-    private $accessToken;
-
- 
-    private $siteInfo;
-
- 
-    protected $optionsToKeep = [];
-
- 
-    protected $optionsToRemove = [];
-
- 
-    protected $viewDDLOrder;
-
- 
     protected $currentTaskDto;
-
-    public function __construct(SiteInfo $siteinfo, TablesRenamer $tablesRenamer, ViewDDLOrder $viewDDLOrder, TableService $tableService, TableViewsRenamer $tableViewsRenamer, AccessToken $accessToken, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
-    {
-        parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->tableService      = $tableService;
-        $this->tablesRenamer     = $tablesRenamer;
-        $this->accessToken       = $accessToken;
-        $this->viewDDLOrder      = $viewDDLOrder;
-        $this->siteInfo          = $siteinfo;
-        $this->tableViewsRenamer = $tableViewsRenamer;
-    }
 
     public static function getTaskName(): string
     {
@@ -196,122 +147,12 @@ class RenameDatabaseTask extends RestoreTask
 
 
 
-
-
-    protected function getAutoloadedOptions()
+    protected function getLicenseOptionsToKeep(): array
     {
-        global $wpdb;
-        $suppress     = $wpdb->suppress_errors();
-        $allOptionsDb = $wpdb->get_results("SELECT option_name FROM $wpdb->options WHERE autoload = 'yes'");
-        $wpdb->suppress_errors($suppress);
-
-        $allOptions = [];
-        foreach ((array)$allOptionsDb as $o) {
-            $allOptions[] = $o->option_name;
-        }
-
-        return $allOptions;
-    }
-
-
-
-
-    protected function keepOptions()
-    {
-        $allOptions = $this->getAutoloadedOptions();
-
- 
- 
-        $this->optionsToKeep[] = [
-            'name'     => 'wpstg_existing_clones_beta',
-            'value'    => get_option('wpstg_existing_clones_beta'),
-            'autoload' => in_array('wpstg_existing_clones_beta', $allOptions),
+        return [
+            'wpstg_license_key'    => get_option('wpstg_license_key'),
+            'wpstg_license_status' => maybe_serialize(get_option('wpstg_license_status')),
         ];
-
- 
-        $this->optionsToKeep[] = [
-            'name'     => Sites::STAGING_SITES_OPTION,
-            'value'    => get_option(Sites::STAGING_SITES_OPTION),
-            'autoload' => in_array(Sites::STAGING_SITES_OPTION, $allOptions),
-        ];
-
- 
-        $this->optionsToKeep[] = [
-            'name'     => 'wpstg_settings',
-            'value'    => get_option('wpstg_settings'),
-            'autoload' => in_array('wpstg_settings', $allOptions),
-        ];
-
- 
- 
- 
-        $this->optionsToKeep[] = [
-            'name'     => 'wpstg_license_key',
-            'value'    => get_option('wpstg_license_key'),
-            'autoload' => in_array('wpstg_license_key', $allOptions),
-        ];
-
-        $this->optionsToKeep[] = [
-            'name'     => 'wpstg_license_status',
-            'value'    => maybe_serialize(get_option('wpstg_license_status')),
-            'autoload' => in_array('wpstg_license_status', $allOptions),
-        ];
-
- 
-        $this->optionsToKeep[] = [
-            'name'     => 'wpstg_is_staging_site',
-            'value'    => get_option('wpstg_is_staging_site'),
-            'autoload' => in_array('wpstg_is_staging_site', $allOptions),
-        ];
-
- 
-        $this->optionsToKeep[] = [
-            'name'     => BackupScheduler::OPTION_BACKUP_SCHEDULES,
-            'value'    => get_option(BackupScheduler::OPTION_BACKUP_SCHEDULES),
-            'autoload' => in_array(BackupScheduler::OPTION_BACKUP_SCHEDULES, $allOptions),
-        ];
-
- 
-        $this->optionsToKeep[] = [
-            'name'     => 'blog_public',
-            'value'    => get_option('blog_public'),
-            'autoload' => in_array('blog_public', $allOptions),
-        ];
-
- 
-        $this->optionsToKeep[] = [
-            'name'     => FinishBackupTask::OPTION_LAST_BACKUP,
-            'value'    => get_option(FinishBackupTask::OPTION_LAST_BACKUP),
-            'autoload' => in_array(FinishBackupTask::OPTION_LAST_BACKUP, $allOptions),
-        ];
-
-        $this->preserveAnalyticsOptions();
-
-        $this->optionsToKeep = Hooks::callInternalHook(self::HOOK_KEEP_OPTIONS, [$this->optionsToKeep], $this->optionsToKeep);
-
-        global $wpdb;
-
-        $analyticsEvents = $wpdb->get_results("SELECT * FROM $wpdb->options WHERE `option_name` LIKE 'wpstg_analytics_event_%' LIMIT 0, 200");
-
-        if (!empty($analyticsEvents)) {
-            foreach ($analyticsEvents as $option) {
-                $this->optionsToKeep[] = [
-                    'name'     => $option->option_name,
-                    'value'    => $option->option_value,
-                    'autoload' => false,
-                ];
-            }
-        }
-    }
-
-
-
-
-    protected function setupRemoveOptions()
-    {
-        if (!$this->siteInfo->isStagingSite()) {
-            $this->optionsToRemove[] = 'wpstg_is_staging_site';
-        }
     }
 
 
@@ -371,12 +212,7 @@ class RenameDatabaseTask extends RestoreTask
             $dataToPreserve['activeSitewidePlugins'] = $this->tablesRenamer->getActiveSitewidePluginsToPreserve();
         }
 
-        $errors = $this->tablesRenamer->getErrors();
-        if (!empty($errors)) {
-            foreach ($errors as $error) {
-                $this->logger->warning($error);
-            }
-        }
+        $this->logTablesRenamerErrors();
 
         $this->jobDataDto->setDatabaseDataToPreserve($dataToPreserve);
 
@@ -413,49 +249,11 @@ class RenameDatabaseTask extends RestoreTask
 
     protected function performDatabaseRename(): bool
     {
-        $this->setupTableRenamer();
-        $this->tablesRenamer->setTaskDto($this->currentTaskDto);
-
- 
- 
-        $result = $this->tablesRenamer->renameNonConflictingTables();
-        if ($result === false) {
-            if ($this->tablesRenamer->getRenamedTables() === 0) {
-                $this->logger->critical('Could not restore non-conflicting tables. Contact support@wp-staging.com.');
-                throw new Exception("Could not restore non-conflicting tables.");
-            }
-
-            $this->currentTaskDto->nonConflictingTablesRenamed = $this->tablesRenamer->getNonConflictingTablesRenamed();
-            $this->logger->info(sprintf('Restored %d/%d tables.', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
-            $this->setCurrentTaskDto($this->currentTaskDto);
+        if (!$this->renameImportedTables('restore', 'Restored', $this->jobDataDto->getTotalTablesToRename())) {
             return false;
         }
 
- 
-        if ($this->tablesRenamer->getIsNonConflictingTablesRenamingTaskExecuted()) {
-            $this->currentTaskDto->nonConflictingTablesRenamed = $this->tablesRenamer->getNonConflictingTablesRenamed();
-            $this->logger->info(sprintf('Restored %d/%d tables.', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
-            $this->setCurrentTaskDto($this->currentTaskDto);
-            return false;
-        }
-
-        $result = $this->tablesRenamer->renameConflictingTables();
-
-        $this->currentTaskDto->conflictingTablesRenamed = $this->tablesRenamer->getConflictingTablesRenamed();
-        $tablesRenamed                                  = $this->currentTaskDto->nonConflictingTablesRenamed + $this->currentTaskDto->conflictingTablesRenamed;
-        $this->logger->info(sprintf('Restored %d/%d tables.', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
-        $this->setCurrentTaskDto($this->currentTaskDto);
-
-        if ($result === false) {
-            if ($this->tablesRenamer->getRenamedTables() === 0) {
-                $this->logger->critical('Could not rename any database table. Please contact support@wp-staging.com.');
-                throw new Exception("Could not rename any database table.");
-            }
-
-            return false;
-        }
-
-        $this->renameViewReferences();
+        $this->renameViewReferences($this->jobDataDto->getTmpDatabasePrefix());
         $this->tablesRenamer->renameTablesToDrop();
 
         return true;
@@ -530,12 +328,7 @@ class RenameDatabaseTask extends RestoreTask
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $wpstgPluginToActivate = '');
         }
 
-        $errors = $this->tablesRenamer->getErrors();
-        if (!empty($errors)) {
-            foreach ($errors as $error) {
-                $this->logger->warning($error);
-            }
-        }
+        $this->logTablesRenamerErrors();
 
 
 
@@ -547,68 +340,11 @@ class RenameDatabaseTask extends RestoreTask
             $wp_object_cache->flush();
         }
 
- 
-        if (file_exists(trailingslashit(ABSPATH) . 'wp-admin/includes/upgrade.php')) {
-            global $wpdb, $wp_db_version, $wp_current_db_version;
-            require_once trailingslashit(ABSPATH) . 'wp-admin/includes/upgrade.php';
-
-            $wp_current_db_version = (int)__get_option('db_version');
-            if ($wp_db_version !== $wp_current_db_version) {
- 
-                $wpdb->suppress_errors();
-
-                wp_upgrade();
-
-                $this->logger->info(sprintf('WordPress database upgraded successfully from db version %s to %s.', $wp_current_db_version, $wp_db_version));
-            }
-        } else {
-            $this->logger->warning('Could not upgrade WordPress database version as the wp-admin/includes/upgrade.php file does not exist.');
-        }
+        $this->upgradeWordPressDatabaseIfNeeded();
 
         $this->logger->info('Database restored successfully.');
 
         Hooks::doAction(self::FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS);
-    }
-
-
-
-
-
-
-    private function decodePreservedOptionValue($value, &$rejected = false)
-    {
-        return $this->safeMaybeUnserialize($value, [\stdClass::class], $rejected);
-    }
-
-
-
-
-    protected function renameViewReferences()
-    {
-        $views = $this->tablesRenamer->getViewsToBeRenamed();
-        foreach ($views as $view) {
-            $query = $this->tableService->getCreateViewQuery($this->tableService->getDatabase()->getPrefix() . $view);
-            $query = str_replace($this->jobDataDto->getTmpDatabasePrefix(), $this->tableService->getDatabase()->getPrefix(), $query);
-            $this->viewDDLOrder->enqueueViewToBeWritten($this->tableService->getDatabase()->getPrefix() . $view, $query);
-        }
-
-        foreach ($this->viewDDLOrder->tryGetOrderedViews() as $tmpViewName => $viewQuery) {
-            $this->tableViewsRenamer->renameViewReferences($viewQuery);
-        }
-    }
-
-
-
-
-    protected function setupTask()
-    {
- 
-        $this->accessToken->setIsCheckCapabilities(!$this->jobDataDto->getIsSyncRequest());
-        if ($this->stepsDto->getTotal() > 0) {
-            return;
-        }
-
-        $this->stepsDto->setTotal(3);
     }
 
 
@@ -649,21 +385,6 @@ class RenameDatabaseTask extends RestoreTask
 
 
 
-    protected function preserveTransientOptions()
-    {
-        $transientToPreserve = [
-            JobTransientCache::TRANSIENT_CURRENT_JOB,
-        ];
-
-        foreach ($transientToPreserve as $transient) {
-            $this->tablesRenamer->preserveTmpOption('_transient_' . $transient);
-            $this->tablesRenamer->preserveTmpOption('_transient_timeout_' . $transient);
-        }
-    }
-
-
-
-
 
 
 
@@ -692,23 +413,13 @@ class RenameDatabaseTask extends RestoreTask
         unset($optionToKeep);
     }
 
-    private function preserveAnalyticsOptions()
+
+
+
+
+
+    private function decodePreservedOptionValue($value, &$rejected = false)
     {
-        $allOptions = $this->getAutoloadedOptions();
-
-        $analyticsOptions = [
-            AnalyticsConsent::OPTION_NAME_ANALYTICS_HAS_CONSENT,
-            AnalyticsConsent::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED,
-            AnalyticsConsent::OPTION_NAME_ANALYTICS_MODAL_DISMISSED,
-            AnalyticsConsent::OPTION_NAME_ANALYTICS_REMIND_ME,
-        ];
-
-        foreach ($analyticsOptions as $optionName) {
-            $this->optionsToKeep[] = [
-                'name'     => $optionName,
-                'value'    => get_option($optionName),
-                'autoload' => in_array($optionName, $allOptions),
-            ];
-        }
+        return $this->safeMaybeUnserialize($value, [\stdClass::class], $rejected);
     }
 }

@@ -280,6 +280,8 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setHostingType($this->siteInfo->getHostingType());
         $backupMetadata->setIsContaining2GBFile($this->jobDataDto->getIsContaining2GBFile());
         $backupMetadata->setIsZlibCompressed($this->jobDataDto->getIsCompressed());
+        $backupMetadata->setIndexPartSize($this->jobDataDto->getCategorySizes());
+        $backupMetadata->setIndexPartFileCount($this->jobDataDto->getIndexPartFileCount());
 
         $this->addSystemInfoToBackupMetadata($backupMetadata);
 
@@ -296,6 +298,7 @@ class FinalizeBackupTask extends BackupTask
             $backupMetadata->setMaxTableLength($maxTableLength);
 
             $backupMetadata->setNonWpTables($this->jobDataDto->getNonWpTables());
+            $backupMetadata->setDatabaseTables($this->jobDataDto->getDatabaseTablesInfo());
         }
 
         $backupMetadata->setPlugins(array_keys(get_plugins()));

@@ -10,12 +10,14 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Traits\TablePrefixValidator;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Traits\WithStagingDatabase;
+use WPStaging\Staging\Traits\WithStagingOptionsTable;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
 {
     use TablePrefixValidator;
     use WithStagingDatabase;
+    use WithStagingOptionsTable;
 
 
 
@@ -86,11 +88,6 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         return false;
     }
 
-    protected function getPrefixedStagingTableName(string $tableName): string
-    {
-        return $this->requireValidTablePrefix($this->jobDataDto->getDatabasePrefix()) . $tableName;
-    }
-
     protected function isOptionsTableExcluded(): bool
     {
         if ($this->isTableExcluded('options')) {
@@ -98,59 +95,6 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         }
 
         return false;
-    }
-
-
-
-
-
-
-
-    protected function insertOption(string $optionName, $optionValue, bool $autoload = false): bool
-    {
- 
-        $this->deleteOption($optionName);
-
-        $optionTable = $this->getOptionsTableName();
-        return $this->executeQuery(
-            "INSERT INTO `{$optionTable}` (option_name, option_value, autoload) VALUES (%s, %s, %s)",
-            $optionName,
-            $optionValue,
-            $autoload ? 'on' : 'off'
-        );
-    }
-
-
-
-
-
-
-    protected function updateOption(string $optionName, string $optionValue): bool
-    {
-        $optionTable = $this->getOptionsTableName();
-        return $this->executeQuery(
-            "UPDATE `{$optionTable}` SET `option_value` = %s WHERE `option_name` = %s;",
-            $optionValue,
-            $optionName
-        );
-    }
-
-
-
-
-
-    protected function deleteOption(string $optionName): bool
-    {
-        $optionTable = $this->getOptionsTableName();
-        return $this->executeQuery(
-            "DELETE FROM `{$optionTable}` WHERE `option_name` = %s;",
-            $optionName
-        );
-    }
-
-    protected function getOptionsTableName(): string
-    {
-        return $this->getPrefixedStagingTableName('options');
     }
 
 
@@ -173,10 +117,5 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
         }
 
         return true;
-    }
-
-    protected function lastError(): string
-    {
-        return $this->wpdb->last_error;
     }
 }

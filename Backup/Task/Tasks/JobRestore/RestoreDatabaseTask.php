@@ -3,7 +3,6 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
-use RuntimeException;
 use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
 use WPStaging\Backup\Dto\Task\Restore\RestoreDatabaseTaskDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
@@ -14,12 +13,15 @@ use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
+use WPStaging\Framework\Job\Traits\DatabaseImportTaskTrait;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RestoreDatabaseTask extends RestoreTask
 {
+    use DatabaseImportTaskTrait;
+
 
 
 
@@ -102,37 +104,12 @@ class RestoreDatabaseTask extends RestoreTask
         $queriesExecuted = $this->stepsDto->getCurrent();
         $totalQueries    = $this->stepsDto->getTotal();
 
-        if ($totalQueries === 0) {
-            $this->logger->critical('Total number of queries is 0. Stop restoring backup. Contact support@wp-staging.com.');
-            throw new Exception('Total number of queries is 0. Stop restoring backup');
-        }
-
+        $this->stopWhenDatabaseDumpHasNoQueries($totalQueries);
         $this->setupExecutionTime();
         $this->restoreDatabase();
         $this->updateTaskDtos();
         $this->setCurrentTaskDto($this->currentTaskDto);
-
-        $newQueriesExecuted = $this->stepsDto->getCurrent();
-
-        if ($newQueriesExecuted > $totalQueries) {
-            $newQueriesExecuted = $totalQueries;
-        }
-
-        $queriesPerSecond = ($newQueriesExecuted - $queriesExecuted) / (microtime(true) - $start);
-        $queriesPerSecond = (int)$queriesPerSecond;
-
-        if ($queriesPerSecond > 0) {
-            $queriesPerSecond = number_format_i18n($queriesPerSecond);
-        }
-
-        $queriesLog = sprintf('Executed %s/%s queries (%s queries per second)', number_format_i18n($newQueriesExecuted), number_format_i18n($totalQueries), $queriesPerSecond);
-        $this->logger->info($queriesLog);
-
-        if ($queriesPerSecond === 0) {
-            $this->maybeUpdateExecutionTime();
-        } else {
-            $this->jobDataDto->resetNumberOfRetries();
-        }
+        $this->logImportSpeedAndAdjustExecutionTime($queriesExecuted, $totalQueries, $start);
 
         if ($this->stepsDto->isFinished() && $this->jobDataDto->getBackupMetadata()->getIsMultipartBackup()) {
             $this->jobDataDto->setDatabasePartIndex($this->jobDataDto->getDatabasePartIndex() + 1);
@@ -167,16 +144,7 @@ class RestoreDatabaseTask extends RestoreTask
         }
 
         $databaseFile = $this->pathIdentifier->transformIdentifiableToPath($metadata->getDatabaseFile());
-        $fileSize = filesize($databaseFile);
-
-        if ($fileSize === false || $fileSize === 0) {
-            throw new RuntimeException(sprintf('Could not get database file size for %s', $databaseFile));
-        }
-
-        if (!file_exists($databaseFile)) {
-            throw new RuntimeException(sprintf('Can not find database file %s', $databaseFile));
-        }
-
+        $this->requireNonEmptyDatabaseFile($databaseFile);
         $this->setupDatabaseImporterFile($databaseFile);
 
         if (!$this->stepsDto->getTotal()) {
@@ -262,39 +230,9 @@ class RestoreDatabaseTask extends RestoreTask
 
 
 
-    protected function setupExecutionTime()
-    {
-        static::$backupRestoreMaxExecutionTimeInSeconds = $this->jobDataDto->getCurrentExecutionTimeDatabaseImport();
-    }
-
-
-
-
     protected function setupSearchReplace()
     {
         $this->databaseImporter->setSearchReplace($this->databaseSearchReplacer->getSearchAndReplace(get_site_url(), get_home_url()));
-    }
-
-
-
-
-
-    protected function maybeUpdateExecutionTime()
-    {
-        $this->jobDataDto->incrementNumberOfRetries();
-        if ($this->jobDataDto->getNumberOfRetries() < self::MAX_RETRIES) {
-            return;
-        }
-
-        $this->jobDataDto->incrementCurrentExecutionTimeDatabaseImport();
-        $this->jobDataDto->resetNumberOfRetries();
-
-        $currentExecutionTimeDatabaseImport = $this->jobDataDto->getCurrentExecutionTimeDatabaseImport();
-        if ($currentExecutionTimeDatabaseImport > self::MAX_EXECUTION_TIME_ALLOWED) {
-            throw new RuntimeException(sprintf(esc_html__('Cannot increase execution time. Max allowed execution time of %s seconds exceeded.', 'wp-staging'), self::MAX_EXECUTION_TIME_ALLOWED));
-        }
-
-        $this->logger->warning(sprintf(esc_html__('Repeat database restore after increasing execution time to %s seconds', 'wp-staging'), $currentExecutionTimeDatabaseImport));
     }
 
 
@@ -308,12 +246,7 @@ class RestoreDatabaseTask extends RestoreTask
 
         try {
             while (!$this->isDatabaseRestoreThreshold()) {
-                try {
-                    $this->databaseImporter->execute();
-                } catch (\OutOfBoundsException $e) {
- 
-                    $this->logger->debug($e->getMessage());
-                }
+                $this->executeNextDatabaseImporterQuery();
 
  
  
@@ -327,19 +260,7 @@ class RestoreDatabaseTask extends RestoreTask
                 }
             }
         } catch (Exception $e) {
-            if ($e->getCode() === DatabaseImporter::FINISHED_QUEUE_EXCEPTION_CODE) {
-                $this->databaseImporter->finish();
-            } elseif ($e->getCode() === DatabaseImporter::THRESHOLD_EXCEPTION_CODE) {
- 
-            } elseif ($e->getCode() === DatabaseImporter::RETRY_EXCEPTION_CODE) {
-                $this->databaseImporter->retryQuery();
-            } elseif ($e->getCode() === DatabaseImporter::SHORT_NAME_MISSING_EXCEPTION_CODE) {
-                $this->logger->critical(substr($e->getMessage(), 0, 1000));
-            } else {
-                $this->databaseImporter->updateIndex();
-                $this->logger->critical(substr($e->getMessage(), 0, 1000));
-            }
-
+            $this->handleDatabaseImporterStop($e);
             return;
         }
 

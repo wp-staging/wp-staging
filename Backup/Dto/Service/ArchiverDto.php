@@ -4,13 +4,16 @@ namespace WPStaging\Backup\Dto\Service;
 
 use WPStaging\Backup\Entity\BackupMetadata;
 
+
+
+
 class ArchiverDto
 {
  
     private $filePath;
 
  
-    private $indexPath;
+    private $indexPath = '';
 
  
     private $fileHeaderSizeInBytes = 0;
@@ -79,7 +82,7 @@ class ArchiverDto
         $this->setFileSize(-1);
         $this->setFilePath('');
         $this->setWrittenBytesTotal(0);
-        $this->setIndexPositionCreated(false);
+        $this->indexPositionCreated = [];
         $this->setFileHeaderSizeInBytes(0);
         $this->setStartOffset(0);
         $this->setIsContinuation(false);

@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Analytics;
 
 use Throwable;
+use WPStaging\Backup\Exceptions\MissingBackupPartException;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
@@ -17,15 +18,16 @@ use WPStaging\Framework\Job\Exception\ThresholdException;
 
 class ErrorCode
 {
-    const UNKNOWN            = 'unknown';
-    const DISK_FULL          = 'disk_full';
-    const FILE_VALIDATION    = 'file_validation';
-    const PROCESS_LOCKED     = 'process_locked';
-    const TASK_HEALTH        = 'task_health';
-    const THRESHOLD_EXCEEDED = 'threshold_exceeded';
-    const MEMORY_EXHAUSTED   = 'memory_exhausted';
-    const DB_RESTORE_QUERY   = 'db_restore_query';
-    const REQUEST_FAILED     = 'request_failed';
+    const UNKNOWN             = 'unknown';
+    const DISK_FULL           = 'disk_full';
+    const FILE_VALIDATION     = 'file_validation';
+    const PROCESS_LOCKED      = 'process_locked';
+    const TASK_HEALTH         = 'task_health';
+    const THRESHOLD_EXCEEDED  = 'threshold_exceeded';
+    const MEMORY_EXHAUSTED    = 'memory_exhausted';
+    const DB_RESTORE_QUERY    = 'db_restore_query';
+    const REQUEST_FAILED      = 'request_failed';
+    const BACKUP_PART_MISSING = 'backup_part_missing';
 
 
 
@@ -33,13 +35,19 @@ class ErrorCode
 
     const DB_RESTORE_QUERY_PREFIX = 'db_restore_query_';
 
- 
+
+
+
+
+
+
     private static $exceptionMap = [
-        DiskNotWritableException::class => self::DISK_FULL,
-        FileValidationException::class  => self::FILE_VALIDATION,
-        ProcessLockedException::class   => self::PROCESS_LOCKED,
-        TaskHealthException::class      => self::TASK_HEALTH,
-        ThresholdException::class       => self::THRESHOLD_EXCEEDED,
+        MissingBackupPartException::class => self::BACKUP_PART_MISSING,
+        DiskNotWritableException::class   => self::DISK_FULL,
+        FileValidationException::class    => self::FILE_VALIDATION,
+        ProcessLockedException::class     => self::PROCESS_LOCKED,
+        TaskHealthException::class        => self::TASK_HEALTH,
+        ThresholdException::class         => self::THRESHOLD_EXCEEDED,
     ];
 
 
