@@ -59,6 +59,24 @@ class ListableStagingSite
 
 
 
+    public $health;
+
+
+
+
+
+    public $urlToOpen;
+
+
+
+
+
+    public $healthDiagnostics = [];
+
+
+
+
+
 
 
     public $createdBy;

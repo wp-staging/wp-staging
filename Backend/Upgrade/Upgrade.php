@@ -94,15 +94,34 @@ class Upgrade
         $this->upgrade3_0_7();
         $this->upgrade3_8_1();
         $this->migrateRemoteStorageOptionNames();
+        $this->deleteMigratedLegacyStorageOptions();
         $this->adoptLegacyUpdateProtectionMode();
         $this->maybeWarnAboutAffectedNextGenStagingSites();
         $this->normalizeSettingsShape();
+        $this->adoptTheRunsOfTheStoredBackupPlans();
         if (!$this->upgradeFlags->has('staging_prefix_ownership_repaired')) {
             WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->repairCollisions();
             $this->upgradeFlags->mark('staging_prefix_ownership_repaired');
         }
 
         $this->setVersion();
+    }
+
+
+
+
+
+
+
+
+    private function adoptTheRunsOfTheStoredBackupPlans()
+    {
+        if ($this->upgradeFlags->has('schedule_runs_adopted')) {
+            return;
+        }
+
+        WPStaging::make(BackupScheduler::class)->adoptRunsFromExistingBackups();
+        $this->upgradeFlags->mark('schedule_runs_adopted');
     }
 
 
@@ -208,6 +227,19 @@ class Upgrade
 
         (new Providers())->migrateRemoteStorageOptions();
         $this->upgradeFlags->mark('remote_storage_option_names_migrated');
+    }
+
+
+
+
+    private function deleteMigratedLegacyStorageOptions()
+    {
+        if ($this->upgradeFlags->has('migrated_legacy_storage_options_deleted')) {
+            return;
+        }
+
+        (new Providers())->deleteMigratedLegacyStorageOptions();
+        $this->upgradeFlags->mark('migrated_legacy_storage_options_deleted');
     }
 
 

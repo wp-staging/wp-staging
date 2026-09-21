@@ -593,6 +593,8 @@ class DatabaseImporter
                 || (strpos($query, self::NULL_FLAG) !== false)
             ) {
                 $this->searchReplaceInsertQuery($query);
+            } else {
+                $query = $this->maybeShorterTableNameForInsertQuery($query);
             }
 
  
@@ -842,6 +844,9 @@ class DatabaseImporter
         }
 
         preg_match('#^DROP TABLE IF EXISTS `(.+?(?=`))`;$#', $query, $dropTableExploded);
+        if (!isset($dropTableExploded[1])) {
+            return $query;
+        }
 
         $tableName = $dropTableExploded[1];
         if (strlen($tableName) > 64) {
@@ -995,12 +1000,37 @@ class DatabaseImporter
         }
 
         preg_match('#^CREATE TABLE `(.+?(?=`))`#', $query, $createTableExploded);
+        if (!isset($createTableExploded[1])) {
+            return $query;
+        }
 
         $tableName = $createTableExploded[1];
         if (strlen($tableName) > 64) {
             $shortName = $this->databaseImporterDto->getShortNameTable($tableName, $this->tmpDatabasePrefix);
             return str_replace($tableName, $shortName, $query);
         }
+
+        return $query;
+    }
+
+    protected function maybeShorterTableNameForInsertQuery(&$query)
+    {
+        if (strpos($query, 'INSERT INTO') !== 0) {
+            return $query;
+        }
+
+        preg_match('#^INSERT INTO `(.+?(?=`))`#', $query, $insertIntoExploded);
+        if (!isset($insertIntoExploded[1])) {
+            return $query;
+        }
+
+        $tableName = $insertIntoExploded[1];
+        if (strlen($tableName) <= 64) {
+            return $query;
+        }
+
+        $shortName = $this->databaseImporterDto->getShortNameTable($tableName, $this->tmpDatabasePrefix);
+        $query     = 'INSERT INTO `' . $shortName . '`' . substr($query, strlen('INSERT INTO `' . $tableName . '`'));
 
         return $query;
     }

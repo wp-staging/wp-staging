@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.14.0
+Stable tag: 4.15.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,31 +283,89 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.14.0 =
-* New: Add parallel part upload and merge support for Remote Sync Push. (Pro) #5246
-* Fix: Block IPv6 and DNS-rebinding bypasses of the backup download SSRF filter. #5991
-* Fix: Enable the Start Upload button when a storage is selected in the Upload Backup to Cloud popup. #6064
-* Fix: Generate job IDs with a secure random source so log stream tokens cannot be guessed. #5991
-* Fix: Include schemes in copied backup links and CLI restore commands. #5435
-* Fix: Let the subsites of a multisite use the WP Staging Pro licence activated in the network admin. #6162
-* Fix: Preserve native Element.prototype.closest and only polyfill it when missing. #6004
-* Fix: Prevent staging prefix reuse from destroying another staging site. #6146
-* Fix: Redact the installation root inside failed-move warnings. #6108
-* Fix: Refuse an invalid database table prefix when a staging site is saved, so pushing or resetting it cannot fail on it later. #6095
-* Fix: Reject invalid cloud download filenames before writing to the backups folder. (Pro) #5462
-* Fix: Remove every trailing issue reference from a changelog line before it appears in the newsfeed. #6171
-* Fix: Render the staging delete modal when the staging database is unreachable. #6181
-* Fix: Reopen the Upload Backup to Cloud popup after connecting a new cloud storage. #6064
-* Fix: Report the latest log line, not the whole log, when a job responds before it has logged anything. #6017
-* Fix: Stop logging a throttled request as an error during a healthy job. #6077
-* Fix: Stop the backup schedule cron event from flooding the error log when WordPress cannot save the cron option, and prevent copied network schedules from running on other sites without disabling cross-site backup plans. #6173
-* Fix: Stop the backups folder running scripts on Apache and IIS. #5462
-* Fix: Stop the fatal error in the network admin when WP STAGING Free and WP STAGING Pro are both active on the main site. #6152
-* Fix: Stop the scheduled-backup menu badge and cron warning from reporting a schedule row copied to a multisite subsite as overdue. #6161
-* Dev: Keep the release changelog intact when the prepare phase runs more than once. #6126
-* Dev: Post the WordPress.org release notes in every release run instead of leaving them as an optional follow-up. #6169
-* Dev: Say which environment an E2E pass ran in, so a green job no longer ends on an all-skipped summary. #6096
-* Dev: Write a release announcement covering Free and Pro once both versions are published, so the team is told what shipped. #5916
+= 4.15.0 =
+* New: Enable multipart backups with compression. (Pro) #3423
+* New: Show whether each staging site still opens, with a diagnose dialog and a re-check button when it does not. #5645
+* Enh: Add database table and file-part metadata to new backups using backup format 2.1.1. #5571
+* Enh: Offer WP Staging Pro on the Free first run once the first backup or staging site is ready, and link Pro pricing from the task selector. #6203
+* Enh: Provision only the WordPress sites a CI job actually uses so E2E rounds spend less time setting up. #6330
+* Enh: Remove duplicated markup and request code behind the backup, staging and command line screens. #6136
+* Enh: Replace scheduled backup plans with inline collapsible section on the backup tab. #2093
+* Enh: Rework the staging-creation screen into one understandable process with persistent stages, an activity indicator and on-demand diagnostics. #6205
+* Enh: Run an E2E round on Blacksmith when it would be second in the queue for our own runners. #6331
+* Enh: Share one copy of the database tasks used by backup restore, push and staging. #6134
+* Enh: Show the reworked staging process screen when updating or resetting a staging site. #6218
+* Fix: Build the log stream REST URL from the host and scheme of each request, so a running job no longer reports an error on sites served under several domains or over both HTTP and HTTPS. #6233
+* Fix: Encrypt Google Drive OAuth tokens in the database. #6246
+* Fix: Honor the unit-test resource-threshold opt-out in legacy jobs. #6198
+* Fix: Keep MoveHandlerTest reliable on Windows permission checks. #6199
+* Fix: Keep a backup the remote refused to delete in the retention list. (Pro) #6338
+* Fix: Keep damaged staging site data intact while a staging site is deleted, so the repair notice still has something to repair. #5892
+* Fix: Keep delete-guard case-alias tests independent of request timeouts. #6125
+* Fix: Keep the staging database credentials in wp-config.php after a Next-Gen reset or update of a staging site that uses an external database. (Pro) #6352
+* Fix: Let the unit test suite run again; FinalizeMultipartDatabaseTaskTest stopped it loading on every PHP version. #6265
+* Fix: Match CPU Load Priority defaults and restore the inline layout. #6109
+* Fix: Prevent Free feedback assets from loading on the front end. #5580
+* Fix: Prevent TypeError when reading backup DTO fields before they are set. #5636
+* Fix: Prevent invalid WordPress Home or Site URLs from crashing WP Admin. #6221
+* Fix: Prevent the empty-object warning when plugin information requests fail. (Pro) #3043
+* Fix: Regenerate Elementor CSS so layouts survive pushing staging to live. (Pro) #6090
+* Fix: Regenerate the English translation template so it matches the strings in the free backup modal. #6306
+* Fix: Regenerate the translation template so static_checks passes again. #6322
+* Fix: Remote Sync pull gets stuck waiting after the source site has finished preparing the backup. (Pro) #5218
+* Fix: Report a backup plan as overdue only when a run it was due to make did not happen, instead of judging the WordPress cron events, take the last run of a plan created before WP STAGING recorded its runs from the backups it produced, and stop the free version reporting backup plans created with WP Staging Pro as overdue. #6347
+* Fix: Report a finished event when a Next-Gen staging job ends, and record a staging job stopped by its requirements check as a requirement failure instead of as a finished job. #6275
+* Fix: Report a stable error code with a failed job, so failure causes can be counted across languages. #6276
+* Fix: Report the static checks of the fast-tests run in the pull request description too. #6324
+* Fix: Restore tables with long names across multiple requests. #5828
+* Fix: Restore the staging site list automatically when its stored data is damaged, instead of clearing it and asking you to reconnect every staging site, and keep a copy of the damaged data so the problem can still be reported afterwards. #5892
+* Fix: Restore the update-protection notice translation that told you how many minutes ago the backup was made. #6213
+* Fix: Send the Warnings and General Backup Status emails again when a scheduled backup completes. #6247
+* Fix: Show an unfinished or broken staging site as unhealthy instead of running. #6349
+* Fix: Show in the free backup modal that a backup plan is already scheduled and the time it runs. #6039
+* Fix: Stop a push reporting success when it could not identify the table holding the live site settings, licence and staging site list. #6158
+* Fix: Stop a subsite from running a backup plan copied to it from another site. #6364
+* Fix: Stop telling you an update failed when WordPress simply did not report how it went. The update usually installed, so WP STAGING now says the result is unknown and offers to reload the page. #6278
+* Fix: Stop the Remote Sync pull cancellation test racing the pull it cancels. #6223
+* Fix: Translate the new Update Protection panel controls and messages, its setting description and four Remote Sync errors, which were shown in English on non-English sites. #6225
+* Fix: Update Protection no longer opens a second progress panel when an update is started from the plugin details window. #6248
+* Fix: Use the standard WordPress numbered notification badge in the Free and Pro admin menus. #6348
+* UX: Draw the modal success icon cleanly in light mode when the theme switches from dark while the modal is open. #6082
+* UX: Toggle table selection actions for push and update. #1518
+* Ux: Give every tooltip the same border, corner radius and colours, so they no longer differ from page to page. #6105
+* Ux: Move each general setting's description into a tooltip on an info icon beside its label. #6105
+* Dev: Add the plan for sharding the E2E suites so a Pro round finishes in about 15 minutes. #6294
+* Dev: Build the distributable packages once per E2E round and hand them to the suite jobs instead of building them in every job. #6303
+* Dev: Cache the pro package built at the plugin's own version separately from the one built at the CI version, so Remote Sync no longer tests against whichever build won the cache race. #6303
+* Dev: Correct the Free vs Pro comparison copy against the current plugin. #6244
+* Dev: Correct the documented cost of make tests guardrails and of a single test class; both were quoted at about a second and take twelve to twenty seconds and about two. #6292
+* Dev: Derive the SFTP SSH key fields from a single named condition and pin the SSH key toggle's stored-key rule with tests. #5927
+* Dev: Fix the multisite subsite scheduled-backup badge test after database resets. #6319
+* Dev: Give the fast tests unit jobs 30 minutes so a loaded runner no longer cancels a passing branch. #6308
+* Dev: Include the release tag in the Pro version built by the Create Distribution Package workflow. #6150
+* Dev: Keep a fix as small as the defect it repairs. #6290
+* Dev: Keep multisite test sites intact when re-provisioning. #5870
+* Dev: Keep mv and rm out of agent commands that do not need them, so a harmless chain no longer stops for a confirmation. #6242
+* Dev: Keep nawawi out of the reviewer rotation unless the pull request is a security fix. #6200
+* Dev: Keep translations out of pull requests: a PR regenerates the English template and the release merges and translates the eleven catalogues. #6228
+* Dev: Let an agent open a pull request without stopping for a confirmation. #6366
+* Dev: Load plugin styles, scripts and images from the loopback URL that make tests_web prints. #6226
+* Dev: Open a pull request description with what changed for a person, and move the technical account below it. #6316
+* Dev: Pin the build stamp and the schedule clocks in marketing screenshots, so a second run of a spec no longer rewrites images whose screen did not change. #6240
+* Dev: Point the screenshot normalizer's backup-overview clock pins at the scheduled-backups section, which replaced the markup they were written against. #6279
+* Dev: Record how long every E2E spec file takes and add the e2e:shard-plan command that balances shards by measured time. #6300
+* Dev: Regenerate only screenshots whose screens changed. #6227
+* Dev: Regenerate the translation template while a pull request is being opened, so drift on the branch is fixed in seconds instead of a CI round. #6328
+* Dev: Report a release that was prepared and never tagged, and allow the missing tag to be created without merging its pull request. #6160
+* Dev: Run background jobs again on a make tests_web fixture, whose queue self-request could not reach the loopback URL from inside the container. #6274
+* Dev: Run the Pro and Basic E2E suites on the self-hosted wpstg-ci-1 runner box instead of Blacksmith. #6282
+* Dev: Run the release test phase version fan-out on Blacksmith and keep its gate on our own runners. #6340
+* Dev: Scope the local check run in work-on-issue to the files a change actually touches, instead of running the whole fast-test stack every time. #6286
+* Dev: Show a UI change in the pull request body — before and after screenshots, and a screencast of a flow. #6296
+* Dev: Show the working WP Staging Pro admin on the make tests_web site of a fresh worktree, not only its install page. #6232
+* Dev: Sign every review with the model that wrote it and its thinking level. #6206
+* Dev: Stop a skills-only push from running the full fast-test suite. #6214
+* Dev: Stop the Update Protection tests clicking a half-loaded plugin details window. #6335
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

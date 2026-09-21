@@ -42,8 +42,8 @@ class MoveHandler extends FileHandler
         $this->unlock();
 
         if (!$moved) {
-            $relativeSourcePathForLogging      = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $source);
-            $relativeDestinationPathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $destination);
+            $relativeSourcePathForLogging      = $this->filesystem->getPathRelativeToAbspath($source);
+            $relativeDestinationPathForLogging = $this->filesystem->getPathRelativeToAbspath($destination);
 
             $message   = 'Maybe a file permission issue?';
             $lastError = error_get_last();

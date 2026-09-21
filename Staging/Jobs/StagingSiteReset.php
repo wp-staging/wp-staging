@@ -2,6 +2,7 @@
 
 namespace WPStaging\Staging\Jobs;
 
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Tasks\StagingSite\CleanupStagingFilesTask;
@@ -57,7 +58,7 @@ class StagingSiteReset extends AbstractJob
             );
             $response = $this->getResponse($this->currentTask->execute());
         } catch (\Exception $e) {
-            $this->currentTask->getLogger()->critical($e->getMessage());
+            $this->currentTask->getLogger()->critical($e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
 

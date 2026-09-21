@@ -21,6 +21,8 @@
  * @var bool   $isNextCapabilityAvailable False when the offered capability cannot run on this site.
  */
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Onboarding\OnboardingJourney;
 
 $confirmations = [
@@ -83,6 +85,25 @@ $background         = [
  
  
 $offerButtonClass = $hasStagingSite ? 'wpstg-btn-outline' : 'wpstg-btn-primary';
+
+$proOffers = [
+    OnboardingJourney::CAPABILITY_BACKUP  => [
+        'title' => __('Keep a copy off this server', 'wp-staging'),
+        'text'  => __('WP Staging Pro uploads every backup to Google Drive, Amazon S3, Dropbox or your own FTP server, and restores it on any host.', 'wp-staging'),
+    ],
+    OnboardingJourney::CAPABILITY_STAGING => [
+        'title' => __('Push your changes to the live site', 'wp-staging'),
+        'text'  => __('WP Staging Pro copies the files and database changes you test here onto your live website in one click.', 'wp-staging'),
+    ],
+];
+
+$proOffer = $isFinale ? [
+    'title' => __('Go further with WP Staging Pro', 'wp-staging'),
+    'text'  => __('One-click push to production, backups in the cloud, unlimited schedules and migrations to any host.', 'wp-staging'),
+] : $proOffers[$completedCapability];
+
+$proButtonClass = $isFinale ? 'wpstg-btn-pro' : 'wpstg-btn-pro-soft';
+$upgradeContext = $isFinale ? 'onboarding_complete' : 'first_task_complete';
 ?>
 <div
     class="wpstg-onboarding-next"
@@ -183,6 +204,22 @@ $offerButtonClass = $hasStagingSite ? 'wpstg-btn-outline' : 'wpstg-btn-primary';
                     <?php echo esc_html($offer['cta']); ?>
                 </button>
             <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (WPStaging::isBasic()) : ?>
+        <div class="wpstg-onboarding-next__pro">
+            <h3 class="wpstg-onboarding-next__pro-title"><?php echo esc_html($proOffer['title']); ?></h3>
+            <p class="wpstg-onboarding-next__pro-text"><?php echo esc_html($proOffer['text']); ?></p>
+            <a
+                class="wpstg-btn wpstg-btn-md <?php echo esc_attr($proButtonClass); ?>"
+                href="<?php echo esc_url(Language::getUpgradeUrl($upgradeContext)); ?>"
+                data-wpstg-upgrade-cta="<?php echo esc_attr($upgradeContext); ?>"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?>
+            </a>
         </div>
     <?php endif; ?>
 

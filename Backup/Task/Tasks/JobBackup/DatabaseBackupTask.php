@@ -85,9 +85,11 @@ class DatabaseBackupTask extends BackupTask
             $ddlExporter->setSubsites($subsites);
             $ddlExporter->setTablesToExclude($tablesToExclude);
             $ddlExporter->backupDDLTablesAndViews();
-            $this->jobDataDto->setTablesToBackup(array_merge($ddlExporter->getTables(), $ddlExporter->getNonWPTables()));
+            $allTables = array_merge($ddlExporter->getTables(), $ddlExporter->getNonWPTables());
+            $this->jobDataDto->setTablesToBackup($allTables);
             $this->jobDataDto->setNonWpTables($ddlExporter->getNonWPTables());
             $this->jobDataDto->setLastInsertId(-PHP_INT_MAX);
+            $this->jobDataDto->setDatabaseTablesInfo([]);
 
             $this->stepsDto->setTotal(count($this->jobDataDto->getTablesToBackup()));
 
@@ -164,6 +166,11 @@ class DatabaseBackupTask extends BackupTask
  
             if ($this->jobDataDto->getTableRowsOffset() === 0) {
                 $this->jobDataDto->setTotalRowsOfTableBeingBackup($rowsExporter->countTotalRows());
+                $this->upsertDatabaseTableInfo(
+                    $rowsExporter,
+                    $rowsExporter->getTableBeingBackup(),
+                    $this->jobDataDto->getTotalRowsOfTableBeingBackup()
+                );
 
                 if ($hasNumericIncrementalPk) {
 
@@ -309,6 +316,22 @@ class DatabaseBackupTask extends BackupTask
     protected function setupMultipartDatabaseFilePathName(wpdb $wpdb)
     {
  
+    }
+
+
+
+
+
+
+
+
+
+    protected function upsertDatabaseTableInfo(RowsExporter $rowsExporter, string $tableName, int $rows)
+    {
+        $this->jobDataDto->setDatabaseTableInfo(
+            $rowsExporter->getTableNameForExport($tableName),
+            $rows
+        );
     }
 
 

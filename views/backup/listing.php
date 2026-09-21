@@ -1,6 +1,5 @@
 <?php
 
-use WPStaging\Backup\Ajax\ScheduleList;
 use WPStaging\Backup\BackupDownload;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\WPStaging;
@@ -86,17 +85,6 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
         <?php esc_html_e('Upload Backup', 'wp-staging'); ?>
     </button>
 
-    <!-- Secondary: Manage Plans -->
-    <button
-        id="wpstg-manage-backup-schedules"
-        class="wpstg-btn wpstg-btn-lg wpstg-btn-secondary"
-    >
-        <svg class="wpstg-btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-        </svg>
-        <?php esc_html_e('Manage Plans', 'wp-staging'); ?>
-    </button>
-
     <!-- Remote Sync: Sync with Remote Site (Pro Upsell) -->
     <div class="wpstg-relative wpstg--tooltip">
         <button
@@ -111,17 +99,7 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
             </span>
         </button>
         <span class="wpstg--tooltiptext wpstg-remote-sync-tooltip" style="width: 350px; line-height: 1.5; margin-top: -1px; white-space: normal;">
-            <span class="wpstg-remote-sync-tooltip-thumb"
-                  role="button" tabindex="0"
-                  aria-label="<?php echo esc_attr__('Play demo video', 'wp-staging'); ?>"
-                  data-vimeo-id="1162852843"
-                  data-img="<?php echo esc_url($urlAssets); ?>img/thumbnail-small-dark.webp">
-                <img class="wpstg-remote-sync-tooltip-thumb-img"
-                     src="<?php echo esc_url($urlAssets); ?>img/thumbnail-small-dark.webp"
-                     alt="<?php echo esc_attr__('Remote Sync demo', 'wp-staging'); ?>"
-                     width="320" height="180" loading="lazy" />
-                <span class="wpstg-remote-sync-tooltip-duration">46s</span>
-            </span>
+            <?php require WPSTG_VIEWS_DIR . 'backup/_partials/remote-sync-tooltip-thumb.php'; ?>
             <span class="wpstg-remote-sync-tooltip-cta">
                 <?php esc_html_e('Watch Remote Sync demo', 'wp-staging'); ?>
             </span>
@@ -132,34 +110,13 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
     </div>
 </div>
 
-<div id="wpstg-backup-runs-info">
-    <?php WPStaging::make(ScheduleList::class)->renderNextBackupSnippet(); ?>
-</div>
+<?php include(__DIR__ . '/partials/scheduled-backups-section.php'); ?>
 <div class="wpstg-backup-listing-container">
-    <div id="wpstg-existing-backups">
-        <div id="backup-messages"></div>
-        <div class="wpstg-backup-list">
-            <span id="local-backup-title"><?php echo esc_html__('Local Backups:', 'wp-staging'); ?></span>
-            <ul id="wpstg-backup-list-ul">
-                <li><?php esc_html_e('Searching for existing backups...', 'wp-staging'); ?></li>
-            </ul>
-        </div>
-    </div>
+    <?php require WPSTG_VIEWS_DIR . 'backup/_partials/local-backups-list.php'; ?>
 </div>
 
 <?php
-include(WPSTG_VIEWS_DIR . 'job/modal/process.php');
-include(WPSTG_VIEWS_DIR . 'job/modal/success.php');
-include(WPSTG_VIEWS_DIR . 'otp/overlay.php');
-include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-success.php');
+require WPSTG_VIEWS_DIR . 'backup/_partials/listing-modals.php';
 include(WPSTG_VIEWS_DIR . 'notices/review-prompt-handlers.php');
-include(__DIR__ . '/modal/backup.php');
-include(__DIR__ . '/modal/download-modal.php');
-include(__DIR__ . '/modal/upload.php');
-include(__DIR__ . '/modal/manage-schedules.php');
-include(__DIR__ . '/modal/remote-upload.php');
-include(__DIR__ . '/modal/edit-schedule-modal.php');
-include(__DIR__ . '/modal/restore.php');
-include(__DIR__ . '/restore-wait.php');
 ?>
 <div id="wpstg-delete-confirmation"></div>

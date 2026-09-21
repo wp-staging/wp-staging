@@ -110,7 +110,7 @@ class RowsExporter extends AbstractExporter
     protected $specialFields;
 
  
-    protected $nonWpTables;
+    protected $nonWpTables = [];
 
 
 
@@ -206,6 +206,25 @@ class RowsExporter extends AbstractExporter
     public function getTableBeingBackup(): string
     {
         return array_key_exists($this->tableIndex, $this->tables) ? $this->tables[$this->tableIndex] : '';
+    }
+
+
+
+
+
+
+
+    public function getTableNameForExport(string $tableName): string
+    {
+        if (in_array($tableName, $this->nonWpTables, true)) {
+            return $tableName;
+        }
+
+        if (is_multisite() && !$this->isNetworkSiteBackup) {
+            return $this->getPrefixedBaseTableName($tableName);
+        }
+
+        return $this->getPrefixedTableName($tableName);
     }
 
 
@@ -332,11 +351,7 @@ class RowsExporter extends AbstractExporter
 
         $this->logger = $logger;
 
-        $isMultisiteBackup = is_multisite() && !$this->isNetworkSiteBackup;
-        $prefixedTableName = $this->tableName;
-        if (!in_array($this->tableName, $this->nonWpTables)) {
-            $prefixedTableName = $isMultisiteBackup ? $this->getPrefixedBaseTableName($this->tableName) : $this->getPrefixedTableName($this->tableName);
-        }
+        $prefixedTableName = $this->getTableNameForExport($this->tableName);
 
         $tableColumns = $this->tableService->getColumnTypes($this->tableName);
 

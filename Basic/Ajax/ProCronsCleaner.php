@@ -9,17 +9,13 @@ use WPStaging\Framework\Security\Auth;
 class ProCronsCleaner
 {
  
-    private $cronAdapter;
-
- 
     private $backupScheduler;
 
  
     private $auth;
 
-    public function __construct(Cron $cronAdapter, BackupScheduler $backupScheduler, Auth $auth)
+    public function __construct(BackupScheduler $backupScheduler, Auth $auth)
     {
-        $this->cronAdapter     = $cronAdapter;
         $this->backupScheduler = $backupScheduler;
         $this->auth            = $auth;
     }
@@ -30,11 +26,8 @@ class ProCronsCleaner
             wp_send_json_error(['message' => esc_html__('Invalid Request!', 'wp-staging')], 401);
         }
 
-        $proCrons        = $this->cronAdapter->getProEvents();
-        $backupSchedules = $this->backupScheduler->getSchedules();
-
-        foreach ($backupSchedules as $backupSchedule) {
-            if ($this->isProCronSchedule($backupSchedule, $proCrons)) {
+        foreach ($this->backupScheduler->getSchedules() as $backupSchedule) {
+            if ($this->scheduleWasCreatedByPro($backupSchedule)) {
                 $this->backupScheduler->deleteSchedule($backupSchedule['scheduleId'], $reCreateCron = false);
             }
         }
@@ -52,11 +45,8 @@ class ProCronsCleaner
 
     public function haveProCrons()
     {
-        $proCrons        = $this->cronAdapter->getProEvents();
-        $backupSchedules = $this->backupScheduler->getSchedules();
-
-        foreach ($backupSchedules as $backupSchedule) {
-            if ($this->isProCronSchedule($backupSchedule, $proCrons)) {
+        foreach ($this->backupScheduler->getSchedules() as $backupSchedule) {
+            if ($this->scheduleWasCreatedByPro($backupSchedule)) {
                 return true;
             }
         }
@@ -69,8 +59,12 @@ class ProCronsCleaner
 
 
 
-    protected function isProCronSchedule($schedule, $proCrons)
+
+
+    protected function scheduleWasCreatedByPro($schedule): bool
     {
-        return in_array($schedule['schedule'], $proCrons);
+        $recurrence = (string)($schedule['schedule'] ?? '');
+
+        return $recurrence !== '' && $recurrence !== Cron::BASIC_DAILY;
     }
 }

@@ -13,7 +13,6 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Times;
-use WPStaging\Basic\Ajax\ProCronsCleaner;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Facades\Hooks;
 
@@ -29,11 +28,6 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
 $disabledProAttribute = $isProVersion ? '' : ' disabled';
 
 $disabledClass = !$isProVersion ? 'wpstg-storage-settings-disabled' : '';
-
-$haveProCrons = WPStaging::make(ProCronsCleaner::class)->haveProCrons();
-
-$cronMessage = $haveProCrons ? __('There are backup plans created with WP Staging Pro. Delete them first to create a backup plan with the free version of WP Staging. ', 'wp-staging') :
-    __('A backup is created every day at 12:00 midnight!', 'wp-staging');
 
 $storagesPrefix = 'storage-';
 $isMultisite    = is_multisite();
@@ -288,33 +282,7 @@ if ($isMultisite) {
                                     <input name="wpstg_schedule_mode" id="wpstg-schedule-mode-input--recurring" type="radio" value="recurring" class="wpstg-radio" <?php disabled($recurringDisabled); ?> />
                                 </label>
                             </div>
-                            <div class="wpstg-mt-4 wpstg-upgrade-callout wpstg-basic-schedule-notice <?php echo $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic'; ?>" style="display: <?php echo ($hasSchedule && !$isProVersion) ? 'block !important' : 'none'; ?>">
-                                <div class="wpstg-upgrade-callout-header">
-                                    <div class="wpstg-upgrade-callout-icon" aria-hidden="true">
-                                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="4" width="18" height="18" rx="2"/>
-                                            <path d="M16 2v4"/>
-                                            <path d="M8 2v4"/>
-                                            <path d="M3 10h18"/>
-                                            <path d="M12 14v3"/>
-                                            <path d="M10.5 15.5h3"/>
-                                        </svg>
-                                    </div>
-                                    <div class="wpstg-upgrade-callout-content">
-                                        <div class="wpstg-upgrade-callout-title">
-                                            <?php esc_html_e('Free schedules use default settings', 'wp-staging'); ?>
-                                            <span class="wpstg-badge-pro"><?php esc_html_e('Pro', 'wp-staging'); ?></span>
-                                        </div>
-                                        <p class="wpstg-upgrade-callout-description">
-                                            <?php echo esc_html($cronMessage); ?>
-                                            <?php esc_html_e('Upgrade to Pro to create unlimited backup plans, choose the start time, and upload scheduled backups to cloud storage.', 'wp-staging'); ?>
-                                        </p>
-                                        <div class="wpstg-upgrade-callout-actions">
-                                            <a href="<?php echo esc_url(Language::getUpgradeUrl('backup_schedule')); ?>" target="_blank" rel="noopener noreferrer" class="wpstg-btn wpstg-btn-md wpstg-btn-primary"><?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <?php require WPSTG_VIEWS_DIR . 'backup/modal/partials/schedule-notice.php'; ?>
                             <?php require_once WPSTG_VIEWS_DIR . 'backup/modal/backup-scheduling-options.php'; ?>
                         </div>
                     </div>

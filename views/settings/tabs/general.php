@@ -1,6 +1,7 @@
 <?php
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Core\DTO\Settings as SettingsDTO;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Facades\Hooks;
@@ -99,17 +100,19 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[queryLimit]"); ?></span>
-                                        <span class="wpstg-settings-field-badge wpstg-recommended"><?php echo esc_html__('Recommended', 'wp-staging');?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php
-                                        esc_html_e(
-                                            "Number of DB rows, that are queried within one request.
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php
+                                                esc_html_e(
+                                                    "Number of DB rows, that are queried within one request.
                                         The higher the value the faster the database copy process.
                                         To find out the highest possible values try a high value like 10.000 or more. If you get timeout issues, lower it
                                         until you get no more errors during copying process.",
-                                            "wp-staging"
-                                        ); ?>
+                                                    "wp-staging"
+                                                ); ?>
+                                            </span>
+                                        </span>
+                                        <span class="wpstg-settings-field-badge wpstg-recommended"><?php echo esc_html__('Recommended', 'wp-staging');?></span>
                                     </div>
                                     <div class="wpstg-settings-default-value">
                                         <div>Default:</div>
@@ -124,9 +127,11 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[querySRLimit]"); ?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php esc_html_e("Number of DB rows processed within one request for search and replace operations. Memory intensive process - lower values for large databases.", "wp-staging"); ?>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php esc_html_e("Number of DB rows processed within one request for search and replace operations. Memory intensive process - lower values for large databases.", "wp-staging"); ?>
+                                            </span>
+                                        </span>
                                     </div>
                                     <div class="wpstg-settings-default-value">
                                         <div>Default:</div>
@@ -141,9 +146,11 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[fileLimit]"); ?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php esc_html_e("Number of files copied within one request. Higher values speed up file copying but may cause timeouts with large file sets.", "wp-staging"); ?>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php esc_html_e("Number of files copied within one request. Higher values speed up file copying but may cause timeouts with large file sets.", "wp-staging"); ?>
+                                            </span>
+                                        </span>
                                     </div>
                                     <div class="wpstg-settings-default-value">
                                         <div>Default:</div>
@@ -158,9 +165,11 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[maxFileSize]"); ?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php esc_html_e("Maximum size of files that can be copied. Files larger than this will be skipped to prevent memory issues during staging.", "wp-staging"); ?>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php esc_html_e("Maximum size of files that can be copied. Files larger than this will be skipped to prevent memory issues during staging.", "wp-staging"); ?>
+                                            </span>
+                                        </span>
                                     </div>
                                     <div class="wpstg-settings-default-value">
                                         <div>Default:</div>
@@ -175,18 +184,20 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[batchSize]"); ?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php
-                                        esc_html_e(
-                                            "Buffer size for the file copy process in megabytes.
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php
+                                                esc_html_e(
+                                                    "Buffer size for the file copy process in megabytes.
                                         The higher the value the faster large files are copied.
                                         To find out the highest possible values try a high one and lower it until
                                         you get no more errors during file copy process. Usually this value correlates directly
                                         with the memory consumption of PHP so make sure that
                                         it does not exceed any php.ini max_memory limits.",
-                                            "wp-staging"
-                                        ); ?>
+                                                    "wp-staging"
+                                                ); ?>
+                                            </span>
+                                        </span>
                                     </div>
                                     <div class="wpstg-settings-default-value">
                                         <div>Default:</div>
@@ -201,13 +212,21 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[cpuLoad]"); ?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php esc_html_e("Using HIGH results in faster processing but higher CPU load. Using lower values reduces server load but slows staging site creation.", "wp-staging"); ?>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php esc_html_e("Using HIGH results in faster processing but higher CPU load. Using lower values reduces server load but slows staging site creation.", "wp-staging"); ?>
+                                            </span>
+                                        </span>
                                     </div>
                                     <div class="wpstg-settings-default-value">
                                         <div>Default:</div>
-                                        <div>Low</div>
+                                        <div>
+                                            <?php
+                                            echo SettingsDTO::getDefaultCpuLoad() === 'high'
+                                                ? esc_html__('High', 'wp-staging')
+                                                : esc_html__('Low', 'wp-staging');
+                                            ?>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input wpstg-select">
@@ -228,10 +247,12 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php esc_html_e('Compress Backups', 'wp-staging') ?></span>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php echo esc_html__('This reduces backup size by up to 60%, making it especially useful for large databases.', 'wp-staging'); ?>
+                                                </span>
+                                            </span>
                                             <a href="<?php echo esc_url(Language::getUpgradeUrl('compress_backups')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php echo esc_html__('This reduces backup size by up to 60%, making it especially useful for large databases.', 'wp-staging'); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -245,10 +266,12 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[enableCompression]"); ?></span>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php echo esc_html__('This reduces backup size by up to 60%, making it especially useful for large databases.', 'wp-staging'); ?>
+                                                </span>
+                                            </span>
                                             <span class="wpstg-settings-field-badge wpstg-recommended"><?php echo esc_html__('Recommended', 'wp-staging');?></span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php echo esc_html__('This reduces backup size by up to 60%, making it especially useful for large databases.', 'wp-staging'); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -261,10 +284,12 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[enableBackupBeforeUpdate]"); ?></span>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php esc_html_e('Create a recovery backup before installing plugin, theme, WordPress core or staging site updates. Plugin updates start straight away and WP STAGING reports them in the corner of the screen.', 'wp-staging'); ?>
+                                                </span>
+                                            </span>
                                             <span class="wpstg-settings-field-badge wpstg-recommended"><?php esc_html_e('Recommended', 'wp-staging'); ?></span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php esc_html_e('Create a recovery backup before installing plugin, theme, WordPress core or staging site updates. Plugin updates start straight away and WP STAGING reports them in the corner of the screen.', 'wp-staging'); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -328,9 +353,11 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php esc_html_e('Email Address', 'wp-staging'); ?></span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php esc_html_e('Send emails to this address', 'wp-staging'); ?>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php esc_html_e('Send emails to this address', 'wp-staging'); ?>
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -339,9 +366,11 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php esc_html_e('Email as HTML', 'wp-staging') ?></span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php esc_html_e('Send emails as HTML', 'wp-staging') ?>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php esc_html_e('Send emails as HTML', 'wp-staging') ?>
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -359,12 +388,14 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php esc_html_e('Slack Notifications', 'wp-staging'); ?></span>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php esc_html_e('If a scheduled backup fails, send a report to the Slack channel.', 'wp-staging'); ?>
+                                            </span>
+                                        </span>
                                         <?php if (!defined('WPSTGPRO_VERSION')) : ?>
                                         <a href="<?php echo esc_url(Language::getUpgradeUrl('slack_notifications')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         <?php endif; ?>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php esc_html_e('If a scheduled backup fails, send a report to the Slack channel.', 'wp-staging'); ?>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">
@@ -378,18 +409,20 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <label for="wpstg-send-schedules-report-slack-webhook" class="wpstg-settings-field-label"><?php esc_html_e('Slack Webhook URL', 'wp-staging'); ?></label>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php
-                                        $link = '<a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener">' .
-                                                esc_html__('Slack webhooks documentation', 'wp-staging') .
-                                                '</a>';
-                                        echo wp_kses_post(sprintf(
-                                            /* translators: %s is a link to Slack webhook documentation */
-                                            Escape::escapeHtml(__('Send Slack notifications by using a Webhook URL. Read the %s to learn how to create one.', 'wp-staging')),
-                                            $link
-                                        ));
-                                        ?>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php
+                                                $link = '<a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener">' .
+                                                        esc_html__('Slack webhooks documentation', 'wp-staging') .
+                                                        '</a>';
+                                                echo wp_kses_post(sprintf(
+                                                    /* translators: %s is a link to Slack webhook documentation */
+                                                    Escape::escapeHtml(__('Send Slack notifications by using a Webhook URL. Read the %s to learn how to create one.', 'wp-staging')),
+                                                    $link
+                                                ));
+                                                ?>
+                                            </span>
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">
@@ -417,17 +450,19 @@ $directory = WPStaging::make(Directory::class);
                                             <span class="wpstg-settings-field-label">
                                                 <?php echo esc_html__("Keep Permalinks", "wp-staging"); ?>
                                             </span>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php
+                                                    echo wp_kses_post(sprintf(
+                                                        __(
+                                                            'Use on the staging site the same permalink structure and do not set permalinks to plain structure. <br/>Read more: <a href="%1$s" target="_blank">Permalink Settings</a> ',
+                                                            'wp-staging'
+                                                        ),
+                                                        'https://wp-staging.com/docs/activate-permalinks-staging-site/'
+                                                    )); ?>
+                                                </span>
+                                            </span>
                                             <a href="<?php echo esc_url(Language::getUpgradeUrl('keep_permalinks')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php
-                                            echo wp_kses_post(sprintf(
-                                                __(
-                                                    'Use on the staging site the same permalink structure and do not set permalinks to plain structure. <br/>Read more: <a href="%1$s" target="_blank">Permalink Settings</a> ',
-                                                    'wp-staging'
-                                                ),
-                                                'https://wp-staging.com/docs/activate-permalinks-staging-site/'
-                                            )); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -441,14 +476,16 @@ $directory = WPStaging::make(Directory::class);
                                             <span class="wpstg-settings-field-label">
                                                 <?php echo esc_html__("Access Permissions", "wp-staging"); ?>
                                             </span>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php
+                                                    echo Escape::escapeHtml(__(
+                                                        'Select the user role you want to give access to the staging site. You can select multiple roles by holding CTRL or ⌘ Cmd key while clicking. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong>',
+                                                        'wp-staging'
+                                                    )); ?>
+                                                </span>
+                                            </span>
                                             <a href="<?php echo esc_url(Language::getUpgradeUrl('access_permissions')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php
-                                            echo Escape::escapeHtml(__(
-                                                'Select the user role you want to give access to the staging site. You can select multiple roles by holding CTRL or ⌘ Cmd key while clicking. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong>',
-                                                'wp-staging'
-                                            )); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input wpstg-select wpstg-multi-select">
@@ -471,14 +508,16 @@ $directory = WPStaging::make(Directory::class);
                                             <label class="wpstg-settings-field-label">
                                                 <?php echo esc_html__("Users With Staging Access", "wp-staging"); ?>
                                             </label>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php
+                                                    echo Escape::escapeHtml(__(
+                                                        'Specify users who will have access to the staging site regardless of their role. You can enter multiple user names separated by a comma. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong>',
+                                                        'wp-staging'
+                                                    )); ?>
+                                                </span>
+                                            </span>
                                             <a href="<?php echo esc_url(Language::getUpgradeUrl('staging_access_users')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php
-                                            echo Escape::escapeHtml(__(
-                                                'Specify users who will have access to the staging site regardless of their role. You can enter multiple user names separated by a comma. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong>',
-                                                'wp-staging'
-                                            )); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -493,8 +532,6 @@ $directory = WPStaging::make(Directory::class);
                                             </label>
                                             <a href="<?php echo esc_url(Language::getUpgradeUrl('admin_bar_color')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
                                         </div>
-                                        <div class="wpstg-settings-field-description">
-                                        </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
                                         <input type="color" value="#ff8d00" disabled>
@@ -504,9 +541,11 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[disableAdminLogin]"); ?></span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php esc_html_e("Disable the additional login form on the staging site. Search engine indexing is always blocked via the 'noindex' tag, regardless of this setting.", "wp-staging"); ?>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php esc_html_e("Disable the additional login form on the staging site. Search engine indexing is always blocked via the 'noindex' tag, regardless of this setting.", "wp-staging"); ?>
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -521,10 +560,12 @@ $directory = WPStaging::make(Directory::class);
                                             <span class="wpstg-settings-field-label">
                                                 <?php esc_html_e('Allow Cloning (Staging Site Only)', 'wp-staging') ?>
                                             </span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php esc_html_e('Check this box to make this staging site cloneable.', 'wp-staging') ?>
-                                            <?php echo sprintf(__("If you would like to know more about cloning staging sites check out <a href='%s' target='_new'>this article</a>.", 'wp-staging'), 'https://wp-staging.com/docs/cloning-a-staging-site-testing-push-method/'); ?>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php esc_html_e('Check this box to make this staging site cloneable.', 'wp-staging') ?>
+                                                    <?php echo sprintf(__("If you would like to know more about cloning staging sites check out <a href='%s' target='_new'>this article</a>.", 'wp-staging'), 'https://wp-staging.com/docs/cloning-a-staging-site-testing-push-method/'); ?>
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -546,18 +587,20 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[debugMode]"); ?></span>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php
+                                                esc_html_e(
+                                                    "Enable a debug mode that creates log entries in wp-content/uploads/wp-staging/logs/logfile.log.",
+                                                    "wp-staging"
+                                                );
+                                                ?>
+                                                <strong>
+                                                    <?php esc_html_e('It\'s not recommended to activate this until we ask you to do so!', 'wp-staging') ?>
+                                                </strong>
+                                            </span>
+                                        </span>
                                         <span class="wpstg-settings-field-badge wpstg-caution"><?php echo esc_html__('Caution', 'wp-staging');?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php
-                                        esc_html_e(
-                                            "Enable a debug mode that creates log entries in wp-content/uploads/wp-staging/logs/logfile.log.",
-                                            "wp-staging"
-                                        );
-                                        ?>
-                                        <strong>
-                                            <?php esc_attr_e('It\'s not recommended to activate this until we ask you to do so!', 'wp-staging') ?>
-                                        </strong>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">
@@ -569,15 +612,17 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[optimizer]"); ?></span>
-                                        <span class="wpstg-settings-field-badge wpstg-recommended"><?php esc_html_e("Recommended", "wp-staging");?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php
-                                        esc_html_e(
-                                            "The Optimizer is a mu-plugin that disables all other plugins during staging and backup operations.
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php
+                                                esc_html_e(
+                                                    "The Optimizer is a mu-plugin that disables all other plugins during staging and backup operations.
                                         This lowers memory consumption and speeds up processing. It should always be enabled!",
-                                            "wp-staging"
-                                        ); ?>
+                                                    "wp-staging"
+                                                ); ?>
+                                            </span>
+                                        </span>
+                                        <span class="wpstg-settings-field-badge wpstg-recommended"><?php esc_html_e("Recommended", "wp-staging");?></span>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">
@@ -588,26 +633,28 @@ $directory = WPStaging::make(Directory::class);
                                 <div>
                                     <div class="wpstg-settings-field-header">
                                         <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[unInstallOnDelete]"); ?></span>
+                                        <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                            <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                <?php
+                                                esc_html_e(
+                                                    "Remove all WP STAGING settings and data on uninstall. Staging site data, backups, and related database tables will not be deleted unless empty.",
+                                                    "wp-staging"
+                                                );
+                                                ?>
+                                                <br><br>
+                                                <strong><?php echo esc_html__("Note:", "wp-staging"); ?></strong>
+                                                <br>
+                                                <?php
+                                                echo sprintf(
+                                                    esc_html__("The backups folder %s will only be deleted if it does not contain any backup files.", "wp-staging"),
+                                                    "<strong>" . esc_html($directory->getBackupDirectory()) . "</strong>"
+                                                );
+                                                ?>
+                                                <br>
+                                                <?php esc_html_e("Staging site data is never deleted while staging sites exist.", "wp-staging");?>
+                                            </span>
+                                        </span>
                                         <span class="wpstg-settings-field-badge wpstg-caution"><?php echo esc_html__('Caution', 'wp-staging');?></span>
-                                    </div>
-                                    <div class="wpstg-settings-field-description">
-                                        <?php
-                                        esc_html_e(
-                                            "Remove all WP STAGING settings and data on uninstall. Staging site data, backups, and related database tables will not be deleted unless empty.",
-                                            "wp-staging"
-                                        );
-                                        ?>
-                                        <br><br>
-                                        <strong><?php echo esc_html__("Note:", "wp-staging"); ?></strong>
-                                        <br>
-                                        <?php
-                                        echo sprintf(
-                                            esc_html__("The backups folder %s will only be deleted if it does not contain any backup files.", "wp-staging"),
-                                            "<strong>" . esc_html($directory->getBackupDirectory()) . "</strong>"
-                                        );
-                                        ?>
-                                        <br>
-                                        <?php esc_html_e("Staging site data is never deleted while staging sites exist.", "wp-staging");?>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">
@@ -648,10 +695,12 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[httpAuthUsername]"); ?></span>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php esc_html_e('The HTTP Basic Auth username required to access /wp-admin.', 'wp-staging'); ?>
+                                                </span>
+                                            </span>
                                             <span class="wpstg-settings-field-badge wpstg-badge-gray wpstg-icon-person"><?php echo esc_html__('Username', 'wp-staging'); ?></span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php esc_html_e('The HTTP Basic Auth username required to access /wp-admin.', 'wp-staging'); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -664,10 +713,12 @@ $directory = WPStaging::make(Directory::class);
                                     <div>
                                         <div class="wpstg-settings-field-header">
                                             <span class="wpstg-settings-field-label"><?php $form->renderLabel("wpstg_settings[httpAuthPassword]"); ?></span>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php esc_html_e('The HTTP Basic Auth password for the username above.', 'wp-staging'); ?>
+                                                </span>
+                                            </span>
                                             <span class="wpstg-settings-field-badge wpstg-badge-gray wpstg-icon-lock"><?php echo esc_html__('Password', 'wp-staging'); ?></span>
-                                        </div>
-                                        <div class="wpstg-settings-field-description">
-                                            <?php esc_html_e('The HTTP Basic Auth password for the username above.', 'wp-staging'); ?>
                                         </div>
                                     </div>
                                     <div class="wpstg-settings-field-input">
@@ -712,11 +763,13 @@ $directory = WPStaging::make(Directory::class);
                         <div>
                             <div class="wpstg-settings-field-header">
                                 <label class="wpstg-settings-field-label"><?php esc_html_e("Send Usage Information", "wp-staging");?></label>
-                            </div>
-                            <div class="wpstg-settings-field-description">
-                                <?php esc_html_e("Send usage information to wp-staging.com to help improve the plugin. No personal data is collected.", "wp-staging");
-                                echo '<br/><i>' . wp_kses_post(sprintf(__('See the data we collect <a href="%s" target="_blank">here</a>', 'wp-staging'), 'https://wp-staging.com/what-data-do-we-collect/')) . '</i>';
-                                ?>
+                                <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                    <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                        <?php esc_html_e("Send usage information to wp-staging.com to help improve the plugin. No personal data is collected.", "wp-staging");
+                                        echo '<br/><i>' . wp_kses_post(sprintf(__('See the data we collect <a href="%s" target="_blank">here</a>', 'wp-staging'), 'https://wp-staging.com/what-data-do-we-collect/')) . '</i>';
+                                        ?>
+                                    </span>
+                                </span>
                             </div>
                         </div>
                         <div class="wpstg-settings-field-input">

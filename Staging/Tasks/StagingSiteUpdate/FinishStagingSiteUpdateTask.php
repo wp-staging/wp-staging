@@ -3,7 +3,9 @@
 namespace WPStaging\Staging\Tasks\StagingSiteUpdate;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -26,6 +28,8 @@ class FinishStagingSiteUpdateTask extends StagingTask
  
     private $sites;
 
+ 
+    private $stagingSiteHttpDetector;
 
 
 
@@ -33,10 +37,13 @@ class FinishStagingSiteUpdateTask extends StagingTask
 
 
 
-    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites)
+
+
+    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites, StagingSiteHttpDetector $stagingSiteHttpDetector)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->sites = $sites;
+        $this->sites                   = $sites;
+        $this->stagingSiteHttpDetector = $stagingSiteHttpDetector;
     }
 
 
@@ -65,10 +72,20 @@ class FinishStagingSiteUpdateTask extends StagingTask
         $stagingSite  = $this->buildStagingSite();
         $stagingSites[$this->jobDataDto->getCloneId()] = $stagingSite->toArray();
         $this->sites->updateStagingSites($stagingSites);
+        $this->stagingSiteHttpDetector->scheduleCheck($this->jobDataDto->getCloneId());
         $this->logFinishHeader($stagingSite->getSiteName());
         $this->triggerOnStagingSiteCreatedEvent($stagingSite);
+        $this->enqueueFinishEvent();
 
         return $this->overrideGenerateResponse();
+    }
+
+
+
+
+    protected function enqueueFinishEvent()
+    {
+        WPStaging::make(AnalyticsStagingUpdate::class)->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
 

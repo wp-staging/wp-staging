@@ -14,6 +14,7 @@ use WPStaging\Framework\Adapter\Database\DatabaseException;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
+use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Framework\Utils\Sanitize;
@@ -673,17 +674,22 @@ class Delete extends Job
             'delete' => self::DELETE_STATUS_FINISHED,
         ];
 
-        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
+        $sitesHelper        = WPStaging::make(Sites::class);
+        $optionIsUnreadable = $sitesHelper->stagingSitesOptionIsUnreadable();
+        $existingClones     = $sitesHelper->tryGettingStagingSites();
 
  
         $this->log("Verifying existing clones...");
         foreach ($existingClones as $name => $clone) {
             if ($clone["path"] === $this->clone->path) {
                 unset($existingClones[$name]);
+                WPStaging::make(StagingSiteHttpDetector::class)->unscheduleCheck((string)$name);
             }
         }
 
-        if (update_option(Sites::STAGING_SITES_OPTION, $existingClones, false) === false) {
+        if ($optionIsUnreadable) {
+            $this->log("Delete: The staging sites option can not be read, so it is left for the repair notice.", Logger::TYPE_WARNING);
+        } elseif (update_option(Sites::STAGING_SITES_OPTION, $existingClones, false) === false) {
             $this->log("Delete: Nothing to save.'");
         }
 

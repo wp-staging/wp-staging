@@ -112,6 +112,7 @@ class CommonServiceProvider extends ServiceProvider
         add_action('wp_ajax_wpstg_onboarding_finish', $this->container->callback(OnboardingAjax::class, 'ajaxFinish')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_onboarding_queue_backup', $this->container->callback(OnboardingAjax::class, 'ajaxQueueBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_onboarding_backup_status', $this->container->callback(OnboardingAjax::class, 'ajaxQueuedBackupStatus')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg_onboarding_remove_queued_backup', $this->container->callback(OnboardingAjax::class, 'ajaxRemoveQueuedBackup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
  
         add_action(StagingSiteCreate::ACTION_STAGING_SITE_CREATED, $this->container->callback(OnboardingJourney::class, 'completeStaging'), 5);

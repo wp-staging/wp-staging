@@ -18,13 +18,11 @@ if ($backupScheduler->getWarningType() === '') {
     return;
 }
 
-$overdueCount   = $backupScheduler->getOverdueCronJobsCount();
-$hasOverdue     = $backupScheduler->hasOverdueCronJobs();
 $isWpCronDisabled = $backupScheduler->isWpCronDisabled();
-$isLitespeed    = WPStaging::make(ServerVars::class)->isLitespeed();
-$isPro          = WPStaging::isPro();
-$warningType    = $backupScheduler->getWarningType();
-$failureMessage = $backupScheduler->getLastBackupFailureMessage();
+$isLitespeed      = WPStaging::make(ServerVars::class)->isLitespeed();
+$isPro            = WPStaging::isPro();
+$warningType      = $backupScheduler->getWarningType();
+$failureMessage   = $backupScheduler->getLastBackupFailureMessage();
 
  
 $helpUrl = $isPro
@@ -33,7 +31,7 @@ $helpUrl = $isPro
 ?>
 
 <div class="wpstg-cron-banner" id="wpstg-cron-warning-notice">
-    <!-- Collapsed row: icon + message + badge + buttons -->
+    <!-- Collapsed row: icon + message + buttons -->
     <div class="wpstg-cron-banner-row">
         <!-- Icon Box - uses UI primitive -->
         <div class="wpstg-icon-box wpstg-icon-box-amber wpstg-cron-banner-icon">
@@ -44,7 +42,7 @@ $helpUrl = $isPro
             </svg>
         </div>
 
-        <!-- Message + Badge -->
+        <!-- Message -->
         <div class="wpstg-cron-banner-message">
             <span class="wpstg-cron-banner-text">
                 <?php if ($warningType === BackupScheduler::CRON_WARNING_TYPE_FAILURE) : ?>
@@ -53,9 +51,6 @@ $helpUrl = $isPro
                     <?php esc_html_e('Scheduled backup is overdue.', 'wp-staging'); ?>
                 <?php endif; ?>
             </span>
-            <?php if ($hasOverdue) : ?>
-                <span class="wpstg-badge wpstg-cron-banner-badge"><?php echo esc_html((string)$overdueCount); ?> <?php esc_html_e('overdue', 'wp-staging'); ?></span>
-            <?php endif; ?>
         </div>
 
         <!-- Actions - uses UI primitive buttons -->
@@ -91,19 +86,19 @@ $helpUrl = $isPro
                     <code class="wpstg-code-chip"><?php echo esc_html($failureMessage); ?></code>
                 </p>
             <?php endif; ?>
-            <?php if ($isWpCronDisabled) : ?>
-                <p class="wpstg-cron-banner-cause">
-                    <?php esc_html_e('Detected', 'wp-staging'); ?>
-                    <code class="wpstg-code-chip">DISABLE_WP_CRON=true</code>
-                    <?php esc_html_e('in wp-config.php.', 'wp-staging'); ?>
+            <?php if ($warningType === BackupScheduler::CRON_WARNING_TYPE_OVERDUE) : ?>
+                <?php if ($isWpCronDisabled) : ?>
+                    <p class="wpstg-cron-banner-cause">
+                        <?php esc_html_e('Detected', 'wp-staging'); ?>
+                        <code class="wpstg-code-chip">DISABLE_WP_CRON=true</code>
+                        <?php esc_html_e('in wp-config.php.', 'wp-staging'); ?>
+                    </p>
+                <?php endif; ?>
+                <p class="wpstg-cron-banner-guidance">
+                    <?php esc_html_e('Make sure WP-Cron runs, either through visitors or a server cron job calling wp-cron.php.', 'wp-staging'); ?>
+                    <?php esc_html_e('This could also indicate a development site with no visitors.', 'wp-staging'); ?>
                 </p>
             <?php endif; ?>
-            <p class="wpstg-cron-banner-guidance">
-                <?php esc_html_e('Enable WP-Cron or configure a server cron job.', 'wp-staging'); ?>
-                <?php if ($hasOverdue) : ?>
-                    <?php esc_html_e('This could also indicate a development site with no visitors.', 'wp-staging'); ?>
-                <?php endif; ?>
-            </p>
             <?php if ($isLitespeed) : ?>
                 <p class="wpstg-cron-banner-litespeed">
                     <?php esc_html_e('LiteSpeed server detected.', 'wp-staging'); ?>

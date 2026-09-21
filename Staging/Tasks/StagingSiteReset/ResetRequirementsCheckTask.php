@@ -54,7 +54,7 @@ class ResetRequirementsCheckTask extends UpdateRequirementsCheckTask
 
     protected function enqueueRequirementFailEvent()
     {
-        WPStaging::make(AnalyticsStagingReset::class)->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
+        WPStaging::make(AnalyticsStagingReset::class)->enqueueRequirementFailEvent($this->jobDataDto->getId(), $this->jobDataDto);
     }
 
 

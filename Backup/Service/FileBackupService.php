@@ -167,7 +167,6 @@ class FileBackupService implements ServiceInterface
         $archiverDto->setStartOffset($this->jobDataDto->getCurrentFileStartOffset());
 
         if ($archiverDto->getWrittenBytesTotal() !== 0) {
-            $archiverDto->setIndexPositionCreated(true);
             $this->logger->debug('Resuming backup of a large file from previous request.');
         }
 
@@ -192,6 +191,8 @@ class FileBackupService implements ServiceInterface
             $path = trailingslashit(ABSPATH) . $path;
         }
 
+        $totalFilesBeforeAppend = (int)$this->jobDataDto->getTotalFiles();
+
         try {
             $isFileWrittenCompletely = $this->appendCurrentFileToBackup($path, $indexPath);
         } catch (BackupSkipItemException $e) {
@@ -214,16 +215,13 @@ class FileBackupService implements ServiceInterface
             throw $th;
         }
 
+        $this->updateSingleFilePartCount($totalFilesBeforeAppend);
         $this->jobDataDto->setCurrentWrittenFileHeaderBytes(0);
  
         if ($isFileWrittenCompletely === true) {
             $this->jobDataDto->setFileBeingBackupWrittenBytes(0);
             $this->stepsDto->incrementCurrentStep();
             $this->jobDataDto->setQueueOffset($this->taskQueue->getOffset());
-
-            if (!$this->jobDataDto->getIsMultipartBackup()) {
-                $this->jobDataDto->incrementFilesInPart($this->fileIdentifier);
-            }
 
             $this->persistJobDataDto();
             return;
@@ -247,6 +245,30 @@ class FileBackupService implements ServiceInterface
         if ($isFileWrittenCompletely === null) {
             throw new ThresholdException();
         }
+    }
+
+
+
+
+
+
+
+
+
+
+    protected function updateSingleFilePartCount(int $totalFilesBeforeAppend)
+    {
+        if ($this->jobDataDto->getIsMultipartBackup()) {
+            return;
+        }
+
+        $filesAdded = (int)$this->jobDataDto->getTotalFiles() - $totalFilesBeforeAppend;
+        if ($filesAdded <= 0) {
+            return;
+        }
+
+        $filesInPart = $this->jobDataDto->getFilesInPart($this->fileIdentifier, 0);
+        $this->jobDataDto->setFilesInPart($this->fileIdentifier, 0, $filesInPart + $filesAdded);
     }
 
     protected function getBackupSpeed(): string

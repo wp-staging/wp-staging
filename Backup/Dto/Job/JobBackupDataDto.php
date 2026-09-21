@@ -8,6 +8,7 @@ use WPStaging\Backup\Dto\Traits\IsExcludingTrait;
 use WPStaging\Backup\Dto\Traits\RemoteUploadTrait;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
@@ -86,6 +87,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 
  
     private $nonWpTables = [];
+
+ 
+    private $databaseTablesInfo = [];
 
  
     private $databaseFileSize = 0;
@@ -483,6 +487,51 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 
 
 
+    public function getDatabaseTablesInfo(): array
+    {
+        $databaseTablesInfo = [];
+
+        foreach ($this->databaseTablesInfo as $name => $rows) {
+            $databaseTablesInfo[] = [
+                'name' => $name,
+                'rows' => $rows,
+            ];
+        }
+
+        return $databaseTablesInfo;
+    }
+
+
+
+
+
+    public function setDatabaseTablesInfo(array $databaseTablesInfo)
+    {
+        $this->databaseTablesInfo = [];
+
+        foreach ($databaseTablesInfo as $name => $tableInfo) {
+            if (is_array($tableInfo)) {
+                $this->setDatabaseTableInfo((string)$tableInfo['name'], (int)$tableInfo['rows']);
+                continue;
+            }
+
+            $this->setDatabaseTableInfo((string)$name, (int)$tableInfo);
+        }
+    }
+
+
+
+
+
+
+    public function setDatabaseTableInfo(string $name, int $rows)
+    {
+        $this->databaseTablesInfo[$name] = $rows;
+    }
+
+
+
+
     public function getTotalRowsOfTableBeingBackup()
     {
         return (int)$this->totalRowsOfTableBeingBackup;
@@ -716,6 +765,49 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function getFilesInParts()
     {
         return $this->filesInParts;
+    }
+
+
+
+
+
+
+    public function getIndexPartFileCount(): array
+    {
+        $counts = [
+            PartIdentifier::PLUGIN_PART_IDENTIFIER     => 0,
+            PartIdentifier::MU_PLUGIN_PART_IDENTIFIER  => 0,
+            PartIdentifier::THEME_PART_IDENTIFIER      => 0,
+            PartIdentifier::UPLOAD_PART_IDENTIFIER     => 0,
+            PartIdentifier::WP_CONTENT_PART_IDENTIFIER => 0,
+            PartIdentifier::WP_ROOT_PART_IDENTIFIER    => 0,
+        ];
+
+        foreach ($this->filesInParts as $category => $partCounts) {
+            $total = array_sum(array_map('intval', (array)$partCounts));
+
+            switch ($category) {
+                case PartIdentifier::PLUGIN_PART_IDENTIFIER:
+                case PartIdentifier::MU_PLUGIN_PART_IDENTIFIER:
+                case PartIdentifier::THEME_PART_IDENTIFIER:
+                case PartIdentifier::UPLOAD_PART_IDENTIFIER:
+                    $counts[$category] += $total;
+                    break;
+                case PartIdentifier::WP_CONTENT_PART_IDENTIFIER:
+                case PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER:
+                case PartIdentifier::LANGUAGE_PART_IDENTIFIER:
+                case PartIdentifier::DROPIN_PART_IDENTIFIER:
+                    $counts[PartIdentifier::WP_CONTENT_PART_IDENTIFIER] += $total;
+                    break;
+                case PartIdentifier::WP_ROOT_PART_IDENTIFIER:
+                case PartIdentifier::OTHER_WP_ROOT_PART_IDENTIFIER:
+                case PartIdentifier::WP_ROOT_FILES_PART_IDENTIFIER:
+                    $counts[PartIdentifier::WP_ROOT_PART_IDENTIFIER] += $total;
+                    break;
+            }
+        }
+
+        return $counts;
     }
 
 

@@ -358,4 +358,18 @@ class Providers
             $migrated[$newId] = true;
         }
     }
+
+
+
+
+    public function deleteMigratedLegacyStorageOptions()
+    {
+        foreach (self::LEGACY_OPTION_MAP as $newId => $legacyOptionName) {
+            if (get_option('wpstg_' . $newId) === false) {
+                continue;
+            }
+
+            delete_option($legacyOptionName);
+        }
+    }
 }

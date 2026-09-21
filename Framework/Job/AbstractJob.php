@@ -6,9 +6,11 @@
 namespace WPStaging\Framework\Job;
 
 use RuntimeException;
+use Throwable;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
@@ -31,10 +33,16 @@ abstract class AbstractJob implements ShutdownableInterface
     use BenchmarkTrait;
 
  
+    const CACHE_OWNER_KEY = '__wpstgOwnerJobId';
+
+ 
     protected $jobDataDto;
 
  
     private $jobDataCache;
+
+ 
+    private $ownerJobId = '';
 
  
     private $uploadWaitResponse;
@@ -143,12 +151,10 @@ abstract class AbstractJob implements ShutdownableInterface
 
     public function persistJobDataDto()
     {
-        $data = $this->jobDataDto->toArray();
-
         try {
  
  
-            if ($this->jobDataCache->save($data, true) === false) {
+            if ($this->jobDataCache->save($this->getJobDataWithOwner(), true) === false) {
                 throw new \RuntimeException('Could not persist Job data to cache.');
             }
         } catch (\Exception $e) {
@@ -251,7 +257,7 @@ abstract class AbstractJob implements ShutdownableInterface
         } catch (DiskNotWritableException $e) {
             $this->jobDataCache->delete();
 
-            return $this->getJobFailResponse($e->getMessage());
+            return $this->getJobFailResponseForThrowable($e);
         }
 
         if ($this->getIsCancelled()) {
@@ -267,14 +273,14 @@ abstract class AbstractJob implements ShutdownableInterface
                 if ($e->getCode() === TaskHealthException::CODE_TASK_FAILED_TOO_MANY_TIMES) {
                     $this->jobDataCache->delete();
 
-                    return $this->getJobFailResponse($e->getMessage());
+                    return $this->getJobFailResponseForThrowable($e);
                 } else {
                     return $this->getJobRetryResponse($e->getMessage());
                 }
             } catch (RuntimeException $ex) {
                 $this->jobDataCache->delete();
 
-                return $this->getJobFailResponse($ex->getMessage());
+                return $this->getJobFailResponseForThrowable($ex);
             }
 
             if ($this->uploadWaitResponse !== null) {
@@ -347,6 +353,53 @@ abstract class AbstractJob implements ShutdownableInterface
 
 
 
+
+
+
+
+    public function setOwnerJobId(string $jobId)
+    {
+        $this->ownerJobId = $jobId;
+    }
+
+
+
+
+
+
+
+    public function skipPersistOnShutdown()
+    {
+        $this->hasPersisted = true;
+    }
+
+
+
+
+
+
+
+
+
+
+    public function hasPersistedData(): bool
+    {
+        $data = $this->jobDataCache->get([]);
+        if (empty($data)) {
+            return false;
+        }
+
+        $storedOwner = isset($data[self::CACHE_OWNER_KEY]) ? (string)$data[self::CACHE_OWNER_KEY] : '';
+        if ($this->ownerJobId !== '' && $storedOwner !== '' && $storedOwner !== $this->ownerJobId) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+
     public function setJobDataDto($jobDataDto)
     {
         $this->jobDataDto = $jobDataDto;
@@ -381,7 +434,7 @@ abstract class AbstractJob implements ShutdownableInterface
         if (!$this->jobDataDto->getTaskHealthResponded()) {
  
             $this->jobDataDto->setTaskHealthSequentialFailedRetries($this->jobDataDto->getTaskHealthSequentialFailedRetries() + 1);
-            $this->jobDataCache->save($this->jobDataDto);
+            $this->jobDataCache->save($this->getJobDataWithOwner());
 
             if ($this->jobDataDto->getTaskHealthSequentialFailedRetries() >= $this->maxRetries) {
                 throw TaskHealthException::taskFailedTooManyTimes();
@@ -397,6 +450,7 @@ abstract class AbstractJob implements ShutdownableInterface
         $data = $this->jobDataCache->get([]);
 
         if ($data) {
+            unset($data[self::CACHE_OWNER_KEY]);
             $this->jobDataDto->hydrate($data);
         }
 
@@ -602,18 +656,54 @@ abstract class AbstractJob implements ShutdownableInterface
         return $response;
     }
 
-    protected function getJobFailResponse(string $message): TaskResponseDto
+
+
+
+
+
+
+    protected function getJobFailResponseForThrowable(Throwable $throwable): TaskResponseDto
+    {
+        return $this->getJobFailResponse($throwable->getMessage(), ErrorCode::fromThrowable($throwable));
+    }
+
+    protected function getJobFailResponse(string $message, string $errorCode): TaskResponseDto
     {
         $response = new TaskResponseDto();
         $response->setIsRunning(false);
         $response->setJobStatus('JOB_FAIL');
-        $response->addMessage([
+        $response->setJobId($this->findFailingJobId());
+        $failure = [
             'type'    => 'critical',
             'date'    => $this->getFormattedDate(),
             'message' => esc_html($message, 'wp-staging'),
-        ]);
+        ];
+
+        if ($errorCode !== '') {
+            $failure['errorCode'] = $errorCode;
+        }
+
+        $response->addMessage($failure);
 
         return $response;
+    }
+
+
+
+
+
+
+    private function findFailingJobId(): string
+    {
+        if ($this->jobDataDto instanceof JobDataDto && $this->jobDataDto->hasId()) {
+            return (string)$this->jobDataDto->getId();
+        }
+
+        if ($this->jobTransientCache instanceof JobTransientCache) {
+            return $this->jobTransientCache->getJobId();
+        }
+
+        return '';
     }
 
     protected function getJobRetryResponse(string $message): TaskResponseDto
@@ -636,5 +726,22 @@ abstract class AbstractJob implements ShutdownableInterface
     private function getFormattedDate()
     {
         return current_time(Logger::LOG_DATETIME_FORMAT);
+    }
+
+
+
+
+
+
+
+    private function getJobDataWithOwner(): array
+    {
+        $data = $this->jobDataDto->toArray();
+
+        if ($this->ownerJobId !== '') {
+            $data[self::CACHE_OWNER_KEY] = $this->ownerJobId;
+        }
+
+        return $data;
     }
 }

@@ -58,7 +58,7 @@ class Uninstall
 
     private function runForNetwork()
     {
-        $siteIds = get_sites(['fields' => 'ids']);
+        $siteIds = get_sites(['fields' => 'ids', 'number' => 0]);
         foreach ($siteIds as $siteId) {
             switch_to_blog($siteId);
             $this->runForSingleSite();
@@ -363,6 +363,7 @@ class Uninstall
             'wpstg_next_gen_engine_notice',
             'wpstg_staging_engine_preference',
             'wpstg_staging_engine_preferences',
+            'wpstg_clear_elementor_css_cache',
         ];
     }
 
@@ -406,6 +407,8 @@ class Uninstall
             'wpstg_generic-s3',
             'wpstg_backup_schedules',
             'wpstg_backup_schedules_send_error_report',
+            'wpstg_backup_schedules_send_warning_report',
+            'wpstg_backup_schedules_send_general_report',
             'wpstg_backup_schedules_report_email',
             'wpstg_backup_schedules_send_slack_error_report',
             'wpstg_backup_schedules_report_slack_webhook',
@@ -426,6 +429,7 @@ class Uninstall
             'wpstg_last_job_outcome',
             'wpstg_deactivation_reason',
             'wpstg_rest_url',
+            'wpstg_is_wordpress_rest_url_reachable',
             'wpstg.run_daily',
             'wpstg_show_login_notice',
             'wpstg_user_logged_in_status',
@@ -456,6 +460,7 @@ class Uninstall
             'wpstg_rate_limit_update_check',
             'wpstg_issue_report_submitted',
             'wpstg.backup.schedules.slack_report_sent',
+            'wpstg.backup.schedules.last_reported_job',
             'wpstg_email_notification_access_token',
             'wpstg.directory_listing.last_checked',
             'wpstg_push_size_cache',
@@ -593,6 +598,7 @@ class Uninstall
  
         wp_clear_scheduled_hook('wpstg_weekly_event');
         $this->unscheduleHook('wpstg_staging_update_backup_monitor');
+        $this->unscheduleHook('wpstg_check_staging_site_health');
     }
 
 

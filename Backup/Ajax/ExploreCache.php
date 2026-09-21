@@ -2,10 +2,8 @@
 
 namespace WPStaging\Backup\Ajax;
 
-use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\FileHeader;
-use WPStaging\Core\WPStaging;
+use WPStaging\Backup\IndexLineDtoFactory;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PathIdentifier;
@@ -135,7 +133,7 @@ class ExploreCache
 
     private function buildTree(string $backupFile, BackupMetadata $metadata)
     {
-        $indexLineDto = $this->createIndexLineDto($metadata);
+        $indexLineDto = IndexLineDtoFactory::createForBackupFormat($metadata->getIsBackupFormatV1());
         $fileObject   = new FileObject($backupFile, FileObject::MODE_READ);
         $fileObject->fseek((int)$metadata->getHeaderStart());
 
@@ -248,18 +246,5 @@ class ExploreCache
         unset($bucket);
 
         return $tree;
-    }
-
-
-
-
-
-    private function createIndexLineDto(BackupMetadata $metadata)
-    {
-        if ($metadata->getIsBackupFormatV1()) {
-            return new BackupFileIndex();
-        }
-
-        return WPStaging::make(FileHeader::class);
     }
 }

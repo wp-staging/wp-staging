@@ -67,7 +67,7 @@ class BackupHeader
 
 
 
-    const BACKUP_VERSION = '2.1.0';
+    const BACKUP_VERSION = '2.1.1';
 
 
 

@@ -2,6 +2,7 @@
 
 namespace WPStaging\Staging\Tasks\StagingSiteDelete;
 
+use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -19,6 +20,8 @@ class FinishStagingSiteDeleteTask extends StagingTask
  
     private $sites;
 
+ 
+    private $stagingSiteHttpDetector;
 
 
 
@@ -26,10 +29,13 @@ class FinishStagingSiteDeleteTask extends StagingTask
 
 
 
-    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites)
+
+
+    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Sites $sites, StagingSiteHttpDetector $stagingSiteHttpDetector)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->sites = $sites;
+        $this->sites                   = $sites;
+        $this->stagingSiteHttpDetector = $stagingSiteHttpDetector;
     }
 
 
@@ -60,6 +66,8 @@ class FinishStagingSiteDeleteTask extends StagingTask
             unset($stagingSites[$this->jobDataDto->getCloneId()]);
             $this->sites->updateStagingSites($stagingSites);
         }
+
+        $this->stagingSiteHttpDetector->unscheduleCheck($this->jobDataDto->getCloneId());
 
         $this->logger->info(sprintf(
             'Staging Site "%s" deleted.',

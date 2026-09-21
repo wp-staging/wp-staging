@@ -7,6 +7,7 @@ use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Backup\Service\Database\ShortNameGenerator;
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
@@ -288,7 +289,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
             if (strlen($unprefixedName) + strlen(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) > 64) {
                 $requireShortNamesForTablesToDrop = true;
-                $shortName = uniqid(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) . str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                $shortName = ShortNameGenerator::generate($table->getName(), DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP);
                 $this->jobDataDto->addShortNameTableToDrop($table->getName(), $shortName);
                 $this->logger->warning("MySQL has a limit of 64 characters for table names. One of your tables, combined with the temporary prefix used by the backup restore, would exceed this limit, therefore the backup will be restored with a shorter name and change it back to original name if restoration fails otherwise drop it along with other backups table. The table with the extra-long name is: \"{$table->getName()}\". It will be backup with the name: \"{$shortName}\", So in case anything goes wrong you can restore it back.");
             }

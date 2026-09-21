@@ -22,9 +22,6 @@ class PrepareCreate extends AbstractAjaxPrepare
     protected $postDataKey = 'wpstgCreateData';
 
  
-    protected $jobDataDto;
-
- 
     protected $jobCreate;
 
     protected function postDataSanitization(): array

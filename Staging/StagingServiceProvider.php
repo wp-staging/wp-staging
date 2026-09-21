@@ -2,10 +2,12 @@
 
 namespace WPStaging\Staging;
 
+use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\DatabaseInterface;
 use WPStaging\Framework\DI\FeatureServiceProvider;
+use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\ThirdParty\MalCare;
 use WPStaging\Staging\Ajax\Create;
@@ -13,6 +15,7 @@ use WPStaging\Staging\Ajax\Create\PrepareCreate;
 use WPStaging\Staging\Ajax\Delete;
 use WPStaging\Staging\Ajax\Delete\PrepareDelete;
 use WPStaging\Staging\Ajax\DirectoryChildren;
+use WPStaging\Staging\Ajax\HealthCheck;
 use WPStaging\Staging\Ajax\Listing;
 use WPStaging\Staging\Ajax\Delete\DeleteConfirm;
 use WPStaging\Staging\Ajax\Repair;
@@ -61,6 +64,17 @@ class StagingServiceProvider extends FeatureServiceProvider
     protected function addHooks()
     {
         $this->enqueueAjaxListeners();
+        $this->enqueueStagingSitesHealthCheck();
+    }
+
+
+
+
+
+    protected function enqueueStagingSitesHealthCheck()
+    {
+        add_action(Cron::ACTION_DAILY_EVENT, $this->container->callback(StagingSiteHttpDetector::class, 'scheduleChecksForAllStagingSites'), 30, 0);
+        add_action(StagingSiteHttpDetector::ACTION_CHECK_STAGING_SITE, $this->container->callback(StagingSiteHttpDetector::class, 'checkStagingSite'), 10, 1);
     }
 
     protected function enqueueAjaxListeners()
@@ -71,6 +85,7 @@ class StagingServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--staging-site--listing', $this->container->callback(Listing::class, 'ajaxListing')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--staging-site--fix-option', $this->container->callback(Repair::class, 'ajaxFixOption')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--staging-site--report-option', $this->container->callback(Repair::class, 'ajaxReportOption')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--staging-site--health-check', $this->container->callback(HealthCheck::class, 'ajaxCheck')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action(StagingSiteCreate::ACTION_CLONING_COMPLETE, $this->container->callback(MalCare::class, 'maybeDisableMalCare'));
         $this->enqueueStagingAjaxListeners();
     }

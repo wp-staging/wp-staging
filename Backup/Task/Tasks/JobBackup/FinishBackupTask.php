@@ -6,6 +6,7 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use RuntimeException;
 use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
+use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Traits\EventLoggerTrait;
@@ -14,7 +15,6 @@ use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\ListableBackup;
-use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Service\BeforeUpdateBackupsService;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Core\WPStaging;
@@ -85,11 +85,30 @@ class FinishBackupTask extends BackupTask
 
         $this->jobDataDto->setEndTime(time());
 
-        update_option(static::OPTION_LAST_BACKUP, [
-            'endTime'          => time(), 
-            'duration'         => $this->jobDataDto->getDuration(),
-            'JobBackupDataDto' => $this->jobDataDto,
-        ], false);
+ 
+ 
+        $isScheduleCreationOnly = $this->jobDataDto->getRepeatBackupOnSchedule()
+            && !$this->jobDataDto->getIsCreateScheduleBackupNow();
+
+        if (!$isScheduleCreationOnly) {
+            update_option(static::OPTION_LAST_BACKUP, [
+                'endTime'          => time(), 
+                'duration'         => $this->jobDataDto->getDuration(),
+                'JobBackupDataDto' => $this->jobDataDto,
+            ], false);
+        }
+
+        $scheduleId = $this->jobDataDto->getScheduleId();
+        if (!empty($scheduleId) && !$isScheduleCreationOnly) {
+            WPStaging::make(BackupScheduler::class)->updateScheduleLastRun(
+                $scheduleId,
+                'success',
+                $this->jobDataDto->getDuration(),
+                '',
+                (string)$this->getJobId()
+            );
+            $this->deleteScheduleJobTransient();
+        }
 
  
         if ($this->jobDataDto->isScheduledBackup()) {
@@ -131,6 +150,23 @@ class FinishBackupTask extends BackupTask
     protected function performFinishBackupAction()
     {
         $this->getJobTransientCache()->completeJob();
+    }
+
+
+
+
+
+
+
+    protected function deleteScheduleJobTransient()
+    {
+        $currentJob = $this->getJobTransientCache()->getJob();
+        $ownsCurrentJob = is_array($currentJob) && ($currentJob['jobId'] ?? null) === $this->jobDataDto->getId();
+        if (!$ownsCurrentJob || empty($currentJob['queueId'])) {
+            return;
+        }
+
+        delete_transient(BackupScheduler::TRANSIENT_SCHEDULE_JOB_PREFIX . (string)$currentJob['queueId']);
     }
 
 

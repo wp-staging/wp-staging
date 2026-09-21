@@ -2,11 +2,9 @@
 
 namespace WPStaging\Backup\Ajax;
 
-use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\FileHeader;
+use WPStaging\Backup\IndexLineDtoFactory;
 use WPStaging\Backup\Utils\BackupPathResolver;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
@@ -523,7 +521,7 @@ class Explore extends AbstractTemplateComponent
         $directoryHasSubdirs = [];
         $files = [];
 
-        $indexLineDto = $this->createIndexLineDto($metadata);
+        $indexLineDto = IndexLineDtoFactory::createForBackupFormat($metadata->getIsBackupFormatV1());
         $fileObject   = new FileObject($backupFile, FileObject::MODE_READ);
         $fileObject->fseek((int)$metadata->getHeaderStart());
 
@@ -616,7 +614,7 @@ class Explore extends AbstractTemplateComponent
         $prefix = $folder === '' ? '' : trailingslashit($folder);
         $directories = [];
 
-        $indexLineDto = $this->createIndexLineDto($metadata);
+        $indexLineDto = IndexLineDtoFactory::createForBackupFormat($metadata->getIsBackupFormatV1());
         $fileObject   = new FileObject($backupFile, FileObject::MODE_READ);
         $fileObject->fseek((int)$metadata->getHeaderStart());
 
@@ -683,7 +681,7 @@ class Explore extends AbstractTemplateComponent
         $prefix = $folder === '' ? '' : trailingslashit($folder);
 
         $files = [];
-        $indexLineDto = $this->createIndexLineDto($metadata);
+        $indexLineDto = IndexLineDtoFactory::createForBackupFormat($metadata->getIsBackupFormatV1());
         $fileObject   = new FileObject($backupFile, FileObject::MODE_READ);
         $fileObject->fseek((int)$metadata->getHeaderStart());
 
@@ -731,7 +729,7 @@ class Explore extends AbstractTemplateComponent
         $count = 0;
         $size  = 0;
 
-        $indexLineDto = $this->createIndexLineDto($metadata);
+        $indexLineDto = IndexLineDtoFactory::createForBackupFormat($metadata->getIsBackupFormatV1());
         $fileObject   = new FileObject($backupFile, FileObject::MODE_READ);
         $fileObject->fseek((int)$metadata->getHeaderStart());
 
@@ -836,18 +834,5 @@ class Explore extends AbstractTemplateComponent
         });
 
         return $files;
-    }
-
-
-
-
-
-    private function createIndexLineDto(BackupMetadata $metadata)
-    {
-        if ($metadata->getIsBackupFormatV1()) {
-            return new BackupFileIndex();
-        }
-
-        return WPStaging::make(FileHeader::class);
     }
 }

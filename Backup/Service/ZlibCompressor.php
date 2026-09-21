@@ -2,10 +2,10 @@
 
 namespace WPStaging\Backup\Service;
 
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Compression\CompressionInterface;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class ZlibCompressor
 {
@@ -59,7 +59,7 @@ class ZlibCompressor
     public function isCompressionEnabled(): bool
     {
  
-        if (Hooks::applyFilters(JobDataDto::FILTER_IS_MULTIPART_BACKUP, false)) {
+        if (Hooks::applyFilters(BackupMetadata::FILTER_BACKUP_FORMAT_V1, false)) {
             return false;
         }
 

@@ -143,8 +143,27 @@ if (!function_exists('wpstgIsStagingSite')) {
     }
 }
 
+if (!function_exists('wpstgHasQueuedElementorCssClear')) {
+
+
+
+
+
+
+    function wpstgHasQueuedElementorCssClear(string $queuedClearOptionName = 'wpstg_clear_elementor_css_cache'): bool
+    {
+        $autoloadedOptions = wp_load_alloptions();
+
+        return !empty($autoloadedOptions[$queuedClearOptionName]);
+    }
+}
+
 if (!function_exists('wpstgShouldSkipBootstrap')) {
-    function wpstgShouldSkipBootstrap(): bool
+
+
+
+
+    function wpstgShouldSkipBootstrap(string $phpSapiName = PHP_SAPI): bool
     {
         if (defined('WP_INSTALLING') && WP_INSTALLING) {
             return false;
@@ -180,8 +199,12 @@ if (!function_exists('wpstgShouldSkipBootstrap')) {
             return false;
         }
 
+        if (wpstgHasQueuedElementorCssClear()) {
+            return false;
+        }
+
  
-        if (php_sapi_name() === 'cli') {
+        if ($phpSapiName === 'cli') {
             return false;
         }
 

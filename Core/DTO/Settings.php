@@ -248,6 +248,23 @@ class Settings
 
 
 
+    public static function getDefaultCpuLoad($isDeveloperMode = null)
+    {
+        if ($isDeveloperMode === null) {
+            $isDeveloperMode = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV;
+        }
+
+        return $isDeveloperMode ? 'high' : 'low';
+    }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -396,13 +413,9 @@ class Settings
             $settings['queryLimit']   = "10000";
             $settings['querySRLimit'] = "20000";
 
-            if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) {
-                $settings['fileLimit'] = "500";
-                $settings['cpuLoad']   = 'high';
-            } else {
-                $settings['fileLimit'] = "50";
-                $settings['cpuLoad']   = 'low';
-            }
+            $isDeveloperMode        = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV;
+            $settings['fileLimit']  = $isDeveloperMode ? "500" : "50";
+            $settings['cpuLoad']    = self::getDefaultCpuLoad($isDeveloperMode);
 
             $settings['batchSize']   = "2";
             $settings['maxFileSize'] = "8";

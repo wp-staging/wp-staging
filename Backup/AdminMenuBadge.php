@@ -31,7 +31,7 @@ class AdminMenuBadge
             return;
         }
 
-        $this->appendBadgeToMenuItem($submenu[$parentSlug], ['wpstg_backup']);
+        $this->appendBadgeToMenuItem($submenu[$parentSlug], ['wpstg_backup'], true);
     }
 
 
@@ -50,7 +50,8 @@ class AdminMenuBadge
 
 
 
-    private function appendBadgeToMenuItem(array &$menuItems, array $slugs)
+
+    private function appendBadgeToMenuItem(array &$menuItems, array $slugs, bool $isSubmenu = false)
     {
         foreach ($menuItems as $key => $item) {
             if (!isset($item[2])) {
@@ -61,7 +62,15 @@ class AdminMenuBadge
                 continue;
             }
 
-            $menuItems[$key][0] .= $this->getBadgeHtml();
+            $title = rtrim($item[0]);
+            if ($isSubmenu) {
+                $lastSpace = strrpos($title, ' ');
+                $prefix = $lastSpace === false ? '' : substr($title, 0, $lastSpace + 1);
+                $lastWord = substr($title, strlen($prefix));
+                $menuItems[$key][0] = $prefix . '<span style="white-space: nowrap;">' . $lastWord . $this->getBadgeHtml() . '</span>';
+            } else {
+                $menuItems[$key][0] = $title . $this->getBadgeHtml();
+            }
             return $item[2];
         }
 
@@ -71,10 +80,19 @@ class AdminMenuBadge
  
     private function getBadgeHtml(): string
     {
+        $notificationCount = $this->getNotificationCount();
+
         return sprintf(
-            ' <span class="update-plugins count-1"><span class="plugin-count" aria-hidden="true">!</span><span class="screen-reader-text">%s</span></span>',
+            ' <span class="update-plugins count-%1$d"><span class="plugin-count" aria-hidden="true">%1$d</span><span class="screen-reader-text">%2$s</span></span>',
+            $notificationCount,
             esc_html($this->getBadgeLabel())
         );
+    }
+
+ 
+    private function getNotificationCount(): int
+    {
+        return 1;
     }
 
 

@@ -12,13 +12,12 @@ namespace WPStaging\Backup\Service;
 use Exception;
 use OutOfRangeException;
 use RuntimeException;
-use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Exceptions\EmptyChunkException;
 use WPStaging\Backup\FileHeader;
+use WPStaging\Backup\IndexLineDtoFactory;
 use WPStaging\Backup\Interfaces\ExtractorTaskInterface;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\FileValidationException;
@@ -85,11 +84,7 @@ class Extractor extends AbstractExtractor
     public function setIsBackupFormatV1(bool $isBackupFormatV1)
     {
         $this->isBackupFormatV1 = $isBackupFormatV1;
-        if ($isBackupFormatV1) {
-            $this->indexLineDto = new BackupFileIndex();
-        } else {
-            $this->indexLineDto = WPStaging::make(FileHeader::class);
-        }
+        $this->indexLineDto     = IndexLineDtoFactory::createForBackupFormat($isBackupFormatV1);
     }
 
 

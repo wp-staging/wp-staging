@@ -24,7 +24,7 @@ class BackupItemDto
     private $index;
 
  
-    private $identifiablePath;
+    private $identifiablePath = '';
 
  
     private $path;

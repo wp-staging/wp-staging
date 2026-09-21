@@ -27,7 +27,7 @@ include(WPSTG_VIEWS_DIR . 'job/modal/success.php');
 </div>
 
 <div id="wpstg-finished-result" class="wpstg--grey">
-    <h3><?php esc_html_e('Congratulations', 'wp-staing') ?></h3>
+    <h3><?php esc_html_e('Congratulations', 'wp-staging') ?></h3>
     <?php
     $subDirectory = str_replace(get_home_path(), '', ABSPATH);
     $urlsHelper   = WPStaging::make(Urls::class);

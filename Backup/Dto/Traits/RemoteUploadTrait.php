@@ -38,7 +38,7 @@ trait RemoteUploadTrait
     private $uploadedFiles = [];
 
  
-    private $storages;
+    private $storages = [];
 
 
 

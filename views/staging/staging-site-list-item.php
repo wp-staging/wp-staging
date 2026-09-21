@@ -10,21 +10,77 @@
  * @var WPStaging\Framework\Assets\Assets         $assets
  */
 
+use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Staging\Dto\StagingSiteDto;
 
-$stagingSiteElementId = empty($stagingSiteItem->directoryName) ? $stagingSiteItem->cloneName : $stagingSiteItem->directoryName;
+$stagingSiteElementId   = empty($stagingSiteItem->directoryName) ? $stagingSiteItem->cloneName : $stagingSiteItem->directoryName;
+$isStagingSiteUnhealthy = $stagingSiteItem->health === StagingSiteHttpDetector::HEALTH_UNHEALTHY;
+$isStagingSiteBroken    = !empty($stagingSiteItem->status) && $stagingSiteItem->status !== StagingSiteDto::STATUS_FINISHED;
+$diagnostics            = $stagingSiteItem->healthDiagnostics;
+$answeredByLiveSite     = isset($diagnostics['reason']) && $diagnostics['reason'] === StagingSiteHttpDetector::REASON_LIVE_SITE;
 
 ?>
 
 <div id="<?php echo esc_attr($stagingSiteElementId); ?>" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" class="wpstg-clone">
     <div class="wpstg-clone-header">
-        <a href="javascript:void(0);" class="wpstg-clone-title wpstg-open-staging-site" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>">
+        <a href="javascript:void(0);" class="wpstg-clone-title wpstg-open-staging-site" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->urlToOpen); ?>">
             <?php echo esc_html($stagingSiteItem->siteName); ?>
         </a>
         <?php if (is_multisite()) : ?>
         <div class="wpstg-clone-labels">
             <span class="wpstg-clone-label"><?php echo $stagingSiteItem->isNetworkClone ? esc_html__('Network Site', 'wp-staging') : esc_html__('Single Site', 'wp-staging'); ?></span>
+        </div>
+        <?php endif; ?>
+        <div class="wpstg-clone-health wpstg-inline-flex wpstg-items-center wpstg-flex-wrap wpstg-gap-2" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>">
+            <?php if ($isStagingSiteUnhealthy || $isStagingSiteBroken) : ?>
+                <span class="wpstg-badge wpstg-badge-warning wpstg-health-badge"><?php esc_html_e('Unhealthy', 'wp-staging'); ?></span>
+            <?php elseif ($stagingSiteItem->health === StagingSiteHttpDetector::HEALTH_REACHABLE) : ?>
+                <span class="wpstg-badge wpstg-badge-info wpstg-health-badge"><?php esc_html_e('Running', 'wp-staging'); ?></span>
+            <?php endif; ?>
+            <?php if ($isStagingSiteUnhealthy) : ?>
+                <button type="button" aria-haspopup="dialog" class="wpstg--diagnose--staging-site wpstg-btn wpstg-btn-sm wpstg-btn-ghost" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-close="<?php esc_attr_e('Close', 'wp-staging'); ?>">
+                    <?php esc_html_e('Diagnose Issue', 'wp-staging'); ?>
+                </button>
+            <?php endif; ?>
+            <button type="button" class="wpstg--recheck--staging-site wpstg-btn wpstg-btn-sm wpstg-btn-ghost" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-checking="<?php esc_attr_e('Checking…', 'wp-staging'); ?>">
+                <?php esc_html_e('Re-Check health', 'wp-staging'); ?>
+            </button>
+        </div>
+        <?php if ($isStagingSiteUnhealthy) : ?>
+        <div class="wpstg-diagnose-content" data-clone-id="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" hidden>
+            <div class="wpstg-text-left">
+                <div class="wpstg-flex wpstg-gap-4">
+                    <div class="wpstg-flex wpstg-h-14 wpstg-w-14 wpstg-flex-shrink-0 wpstg-items-center wpstg-justify-center wpstg-rounded-full wpstg-border wpstg-border-solid wpstg-border-amber-200 dark:wpstg-border-amber-800 wpstg-bg-amber-100 dark:wpstg-bg-amber-900">
+                        <?php $assets->renderSvg('alert', 'wpstg-h-7 wpstg-w-7 wpstg-text-amber-500'); ?>
+                    </div>
+                    <div>
+                        <span class="wpstg-inline-flex wpstg-items-center wpstg-gap-1.5 wpstg-rounded-full wpstg-bg-amber-100 dark:wpstg-bg-amber-900 wpstg-px-3 wpstg-py-1 wpstg-text-sm wpstg-font-semibold wpstg-text-amber-700 dark:wpstg-text-amber-300">
+                            <?php esc_html_e('Unreachable', 'wp-staging'); ?>
+                        </span>
+                        <h2 class="wpstg-mt-1 wpstg-text-xl wpstg-font-bold wpstg-text-slate-900 dark:wpstg-text-slate-100">
+                            <?php echo $answeredByLiveSite
+                                ? sprintf(esc_html__('Staging site "%s" is not served at this address', 'wp-staging'), esc_html($stagingSiteItem->siteName))
+                                : sprintf(esc_html__('Staging site "%s" isn\'t responding', 'wp-staging'), esc_html($stagingSiteItem->siteName)); ?>
+                        </h2>
+                    </div>
+                </div>
+                <a href="<?php echo esc_url($stagingSiteItem->urlToOpen); ?>" target="_blank" rel="noopener noreferrer" class="wpstg-mt-4 wpstg-inline-flex wpstg-max-w-full wpstg-items-center wpstg-gap-1.5 wpstg-break-all wpstg-rounded-lg wpstg-border wpstg-border-solid wpstg-border-slate-200 dark:wpstg-border-slate-700 wpstg-bg-slate-50 dark:wpstg-bg-slate-800 wpstg-px-3 wpstg-py-1.5 wpstg-text-sm wpstg-font-mono wpstg-text-blue-600 hover:wpstg-text-blue-700">
+                    <?php echo esc_html($stagingSiteItem->urlToOpen); ?>
+                    <span class="screen-reader-text"><?php esc_html_e('(opens in a new tab)', 'wp-staging'); ?></span>
+                </a>
+            </div>
+            <?php if (!empty($diagnostics['body'])) : ?>
+            <div class="wpstg-mt-6 wpstg-rounded-2xl wpstg-border wpstg-border-solid wpstg-border-slate-200 dark:wpstg-border-slate-700 wpstg-p-4 wpstg-text-left">
+                <div class="wpstg-text-xs wpstg-font-semibold wpstg-uppercase wpstg-tracking-wider wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php esc_html_e('Server response', 'wp-staging'); ?></div>
+                <?php if ($answeredByLiveSite) : ?>
+                    <p class="wpstg-mt-2 wpstg-text-sm wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php esc_html_e('This is the live site, not the staging site we expected at this address.', 'wp-staging'); ?></p>
+                <?php endif; ?>
+                <pre role="region" tabindex="0" aria-label="<?php echo esc_attr__('Server response', 'wp-staging'); ?>" class="wpstg-mt-3 wpstg-max-h-72 wpstg-overflow-auto wpstg-rounded-2xl wpstg-bg-slate-900 wpstg-p-5 wpstg-text-sm wpstg-font-mono wpstg-leading-relaxed wpstg-text-slate-100 wpstg-whitespace-pre-wrap wpstg-break-all"><?php echo esc_html($diagnostics['body']); ?></pre>
+            </div>
+            <?php endif; ?>
+            <p class="wpstg-mt-6 wpstg-text-center wpstg-text-sm wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php echo sprintf(esc_html__('Still stuck? %s and we\'ll help you resolve this issue.', 'wp-staging'), '<a href="https://wp-staging.com/support/" target="_blank" rel="noopener noreferrer" class="wpstg-font-medium wpstg-text-blue-600 hover:wpstg-text-blue-700">' . esc_html__('Contact WP STAGING Support', 'wp-staging') . '</a>'); ?></p>
         </div>
         <?php endif; ?>
         <div class="wpstg-clone-actions">
@@ -35,7 +91,7 @@ $stagingSiteElementId = empty($stagingSiteItem->directoryName) ? $stagingSiteIte
                 </a>
                 <div class="wpstg-dropdown-menu">
                     <?php do_action('wpstg.views.single_overview.before_existing_clones_actions', $stagingSiteItem->cloneId, $stagingSite->toArray(), $license); ?>
-                    <a href="javascript:void(0)" class="wpstg-open-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>" title="<?php echo esc_html__("Open the staging site in a new tab", "wp-staging"); ?>">
+                    <a href="javascript:void(0)" class="wpstg-open-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->urlToOpen); ?>" title="<?php echo esc_html__("Open the staging site in a new tab", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('open-site'); ?>
                         </div>
@@ -103,10 +159,10 @@ $stagingSiteElementId = empty($stagingSiteItem->directoryName) ? $stagingSiteIte
             <li><span><?php esc_html_e('Database Name', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-database-name"><?php echo esc_html($stagingSiteItem->databaseName); ?></span></li>
             <li><span><?php esc_html_e('Database Prefix', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-database-prefix"><?php echo esc_html($stagingSiteItem->databasePrefix); ?></span></li>
             <li><span><?php esc_html_e('Directory Path', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-path"><?php echo esc_html($stagingSiteItem->path); ?></span></li>
-            <li><span><?php esc_html_e('URL', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-url"><?php echo empty($stagingSiteItem->url) ? '' : sprintf('<a href="%1$s" id="wpstg-staging-site-url" target="_blank">%1$s</a>', esc_url($stagingSiteItem->url)); ?></span></li>
+            <li><span><?php esc_html_e('URL', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-url"><?php echo empty($stagingSiteItem->urlToOpen) ? '' : sprintf('<a href="%1$s" id="wpstg-staging-site-url" target="_blank">%1$s</a>', esc_url($stagingSiteItem->urlToOpen)); ?></span></li>
             <li><span><?php esc_html_e('Created By', 'wp-staging'); ?>: </span><span class="wpstg-bold wpstg-staging-site-created-by"><?php echo esc_html($stagingSiteItem->createdBy); ?></span></li>
             <li>
-            <?php if (!empty($stagingSiteItem->status) && $stagingSiteItem->status !== 'finished') : ?>
+            <?php if ($isStagingSiteBroken) : ?>
                 <span><?php esc_html_e('Status', 'wp-staging'); ?>: </span>
                 <span class="wpstg-staging-status wpstg-bold"
                     title="<?php esc_attr_e("This clone is incomplete and does not work. Clone or update it again! \n\n" .

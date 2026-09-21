@@ -11,6 +11,9 @@ abstract class AnalyticsEventDto implements \JsonSerializable
     use WithAnalyticsSiteInfo;
 
  
+    const REQUIREMENT_FAIL_REASON_MAX_LENGTH = 255;
+
+ 
     protected $event;
 
  
@@ -128,6 +131,39 @@ abstract class AnalyticsEventDto implements \JsonSerializable
             $this->saveEvent($jobId, $event);
         } catch (\Exception $e) {
             \WPStaging\functions\debug_log("WP STAGING: Could not save finish event analytics data for job ID $jobId.", 'debug', false);
+        }
+    }
+
+
+
+
+
+
+
+
+    public function enqueueRequirementFailEvent($jobId, $eventData)
+    {
+        try {
+            $event = $this->getEventByJobId($jobId);
+        } catch (\Exception $e) {
+            \WPStaging\functions\debug_log("WP STAGING: Could not register requirement fail event analytics data for job ID $jobId", 'debug', false);
+
+            return;
+        }
+
+        $failReason = (string)$this->getEventDataValue($eventData, 'requirementFailReason', '');
+
+        $event->is_finished               = false;
+        $event->is_requirement_check_fail = true;
+        $event->requirement_fail_reason   = mb_substr($failReason, 0, self::REQUIREMENT_FAIL_REASON_MAX_LENGTH);
+        $event->end_time                  = time();
+        $event->duration                  = time() - $event->start_time;
+        $event->ready_to_send             = true;
+
+        try {
+            $this->saveEvent($jobId, $event);
+        } catch (\Exception $e) {
+            \WPStaging\functions\debug_log("WP STAGING: Could not save requirement fail event analytics data for job ID $jobId.", 'debug', false);
         }
     }
 

@@ -206,9 +206,7 @@ $runtimeSummaryTooltips = [
                                 <div class="wpstg-update-list-head">
                                     <span class="wpstg-update-list-count" data-wpstg-update-tables-count></span>
                                     <span class="wpstg-update-list-actions">
-                                        <button type="button" class="wpstg-update-select-all-tables"><?php esc_html_e('Select all live tables', 'wp-staging'); ?></button>
-                                        <span class="wpstg-update-list-sep" aria-hidden="true">·</span>
-                                        <button type="button" class="wpstg-update-deselect-all-tables"><?php esc_html_e('Deselect all', 'wp-staging'); ?></button>
+                                        <button type="button" class="wpstg-button-unselect" data-select-all-tables-label="<?php esc_attr_e('Select all live tables', 'wp-staging'); ?>"><?php esc_html_e('Deselect all tables', 'wp-staging'); ?></button>
                                     </span>
                                 </div>
                                 <fieldset id="wpstg-setup-tables" class="wpstg-update-selection wpstg-update-selection--tables">
@@ -477,9 +475,7 @@ $runtimeSummaryTooltips = [
                                 <div class="wpstg-update-list-head">
                                     <span class="wpstg-update-list-count" data-wpstg-update-tables-count></span>
                                     <span class="wpstg-update-list-actions">
-                                        <button type="button" class="wpstg-update-select-all-tables"><?php esc_html_e('Select all live tables', 'wp-staging'); ?></button>
-                                        <span class="wpstg-update-list-sep" aria-hidden="true">·</span>
-                                        <button type="button" class="wpstg-update-deselect-all-tables"><?php esc_html_e('Deselect all', 'wp-staging'); ?></button>
+                                        <button type="button" class="wpstg-button-unselect" data-select-all-tables-label="<?php esc_attr_e('Select all live tables', 'wp-staging'); ?>"><?php esc_html_e('Deselect all tables', 'wp-staging'); ?></button>
                                     </span>
                                 </div>
                                 <fieldset id="wpstg-setup-tables" class="wpstg-update-selection wpstg-update-selection--tables">

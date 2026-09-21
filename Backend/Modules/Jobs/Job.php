@@ -12,6 +12,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Database\ExcludedTables;
 use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
@@ -334,6 +335,10 @@ abstract class Job implements ShutdownableInterface
 
     public function isOverThreshold()
     {
+        if ($this->isUnitTest() && !Hooks::applyFilters('wpstg.tests.resources.allow_check', $this->allowResourceCheckOnUnitTests)) {
+            return false;
+        }
+
  
         $usedMemory        = $this->getMemoryPeakUsage();
         $maxMemoryLimit    = $this->getMaxMemoryLimit();
