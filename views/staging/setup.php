@@ -355,16 +355,6 @@ $runtimeSummaryTooltips = [
                     <a href="#" id="wpstg-check-space" class="wpstg-hidden" aria-hidden="true" tabindex="-1"><?php esc_html_e('Recalculate size', 'wp-staging'); ?></a>
                     <div id="wpstg-disk-space-result" class="wpstg-update-summary-disk-msg" style="display:none;"><div id="wpstg-disk-space-result-msg"></div></div>
 
-                    <div class="wpstg-update-backup-card">
-                        <div class="wpstg-update-backup-card__head">
-                            <?php $setupRenderer->icon('archive', 'wpstg-update-backup-card__icon'); ?>
-                            <strong><?php esc_html_e('Back up staging first', 'wp-staging'); ?></strong>
-                            <span class="wpstg-update-backup-card__pill"><?php esc_html_e('Recommended', 'wp-staging'); ?></span>
-                        </div>
-                        <p class="wpstg-update-backup-card__body">
-                            <?php esc_html_e('WP STAGING can create a full backup of this staging site before the update starts.', 'wp-staging'); ?>
-                        </p>
-                    </div>
                 </div>
             </aside>
         </div>

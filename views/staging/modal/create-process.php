@@ -114,7 +114,7 @@ $sysinfoUrl = admin_url('admin-post.php?action=wpstg_download_sysinfo');
                     <?php esc_html_e('Open staging site', 'wp-staging'); ?>
                     <span aria-hidden="true">↗</span>
                 </button>
-                <button type="button" class="wpstg-staging-creation__btn wpstg-staging-creation__btn--secondary" data-wpstg-manage-staging><?php esc_html_e('Manage staging sites', 'wp-staging'); ?></button>
+                <button type="button" class="wpstg-staging-creation__btn wpstg-staging-creation__btn--secondary" data-wpstg-manage-staging><?php esc_html_e('Close', 'wp-staging'); ?></button>
             </div>
 
             <div class="wpstg-staging-creation__review" data-wpstg-review-slot></div>

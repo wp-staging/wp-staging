@@ -72,7 +72,7 @@ class FinishStagingSiteCreateTask extends StagingTask
         $stagingSite  = $this->buildStagingSite();
         $stagingSites[$this->jobDataDto->getCloneId()] = $stagingSite->toArray();
         $this->sites->updateStagingSites($stagingSites);
-        $this->stagingSiteHttpDetector->scheduleCheck($this->jobDataDto->getCloneId());
+        $this->stagingSiteHttpDetector->scheduleCheckOfNewStagingSite($this->jobDataDto->getCloneId());
         $this->logger->info(sprintf(
             'Staging Site "%s" created.',
             $stagingSite->getSiteName()

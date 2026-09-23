@@ -634,7 +634,6 @@ class I18n
             'create_text'                                         => esc_html__('Create', 'wp-staging'),
             'update_text'                                         => esc_html__('Update', 'wp-staging'),
             'openStagingSite'                                     => esc_html__('Open Staging Site', 'wp-staging'),
-            'manageStagingSites'                                  => esc_html__('Manage Staging Sites', 'wp-staging'),
             'temporary_logins'                                    => [
                 'not_allowed'          => esc_html__('You are not allowed to create a temporary login link.', 'wp-staging'),
                 'invalid_email'        => esc_html__('Please enter the email address of the person you wish to grant access to.', 'wp-staging'),

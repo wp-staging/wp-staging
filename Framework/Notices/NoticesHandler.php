@@ -36,7 +36,7 @@ class NoticesHandler
             return;
         }
 
-        if ($isWPStagingAdminPage && $this->isOnboardingFocusMode()) {
+        if ($isWPStagingAdminPage && $this->wpstgNoticesStandDownForFirstRun()) {
             return;
         }
 
@@ -56,11 +56,15 @@ class NoticesHandler
 
 
 
-    private function isOnboardingFocusMode(): bool
+    private function wpstgNoticesStandDownForFirstRun(): bool
     {
         $onboarding = FreeOnboarding::resolve();
 
-        return $onboarding !== null && $onboarding->ownsCurrentScreen();
+        if ($onboarding === null || $onboarding->isPreConsentScreen()) {
+            return false;
+        }
+
+        return $onboarding->isFocusMode();
     }
 
 

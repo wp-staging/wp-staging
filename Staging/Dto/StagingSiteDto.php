@@ -341,7 +341,7 @@ class StagingSiteDto implements \JsonSerializable
 
     public function getDatabaseUser(): string
     {
-        return $this->databaseUser;
+        return $this->databaseUser === '' ? DB_USER : $this->databaseUser;
     }
 
 
@@ -355,7 +355,7 @@ class StagingSiteDto implements \JsonSerializable
 
     public function getDatabasePassword(): string
     {
-        return $this->databasePassword;
+        return $this->databasePassword === '' ? DB_PASSWORD : $this->databasePassword;
     }
 
 
@@ -383,7 +383,7 @@ class StagingSiteDto implements \JsonSerializable
 
     public function getDatabaseServer(): string
     {
-        return $this->databaseServer;
+        return $this->databaseServer === '' ? DB_HOST : $this->databaseServer;
     }
 
 

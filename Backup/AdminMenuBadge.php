@@ -62,30 +62,42 @@ class AdminMenuBadge
                 continue;
             }
 
-            $title = rtrim($item[0]);
+            $title  = rtrim($item[0]);
+            $prefix = '';
             if ($isSubmenu) {
                 $lastSpace = strrpos($title, ' ');
-                $prefix = $lastSpace === false ? '' : substr($title, 0, $lastSpace + 1);
-                $lastWord = substr($title, strlen($prefix));
-                $menuItems[$key][0] = $prefix . '<span style="white-space: nowrap;">' . $lastWord . $this->getBadgeHtml() . '</span>';
-            } else {
-                $menuItems[$key][0] = $title . $this->getBadgeHtml();
+                $prefix    = $lastSpace === false ? '' : substr($title, 0, $lastSpace + 1);
+                $title     = substr($title, strlen($prefix));
             }
+
+            $menuItems[$key][0] = $prefix . $this->getLabelWithBadgeOnOneLine($title);
             return $item[2];
         }
 
         return null;
     }
 
+
+
+
+
+    private function getLabelWithBadgeOnOneLine(string $label): string
+    {
+        return '<span style="white-space: nowrap; letter-spacing: -0.2px;">' . $label . $this->getBadgeHtml() . '</span>';
+    }
+
  
     private function getBadgeHtml(): string
     {
         $notificationCount = $this->getNotificationCount();
+        $compactCircle     = 'min-width:14px;height:14px;line-height:14px;border-radius:7px;padding:0 3px;'
+            . 'margin-block:3px -1px;margin-inline:2px 0;font-size:9px;';
 
         return sprintf(
-            ' <span class="update-plugins count-%1$d"><span class="plugin-count" aria-hidden="true">%1$d</span><span class="screen-reader-text">%2$s</span></span>',
+            '<span class="update-plugins count-%1$d" style="%3$s"><span class="plugin-count" aria-hidden="true">%1$d</span><span class="screen-reader-text">%2$s</span></span>',
             $notificationCount,
-            esc_html($this->getBadgeLabel())
+            esc_html($this->getBadgeLabel()),
+            $compactCircle
         );
     }
 
