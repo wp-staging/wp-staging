@@ -15,7 +15,6 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Traits\DatabaseTablesRenameTaskTrait;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Settings\SettingsTable;
-use WPStaging\Framework\Traits\SerializeTrait;
 
 
 
@@ -23,7 +22,6 @@ use WPStaging\Framework\Traits\SerializeTrait;
 class RenameDatabaseTask extends RestoreTask
 {
     use DatabaseTablesRenameTaskTrait;
-    use SerializeTrait;
 
 
 
@@ -291,17 +289,7 @@ class RenameDatabaseTask extends RestoreTask
             wp_suspend_cache_addition(true);
         }
 
-        foreach ($this->optionsToKeep as $optionToKeep) {
-            $rejected = false;
-            $value    = $this->decodePreservedOptionValue($optionToKeep['value'], $rejected);
-
-            if ($rejected) {
-                $this->logger->warning(sprintf('Could not preserve the option "%s" because its value could not be safely unserialized. The value from the backup is kept instead.', $optionToKeep['name']));
-                continue;
-            }
-
-            $this->restorePreservedOption($optionToKeep['name'], $value, (bool)$optionToKeep['autoload']);
-        }
+        $this->restoreKeptOptions('backup');
 
         $wpdb->flush();
         $wp_object_cache->flush();
@@ -411,15 +399,5 @@ class RenameDatabaseTask extends RestoreTask
         }
 
         unset($optionToKeep);
-    }
-
-
-
-
-
-
-    private function decodePreservedOptionValue($value, &$rejected = false)
-    {
-        return $this->safeMaybeUnserialize($value, [\stdClass::class], $rejected);
     }
 }

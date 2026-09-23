@@ -44,8 +44,15 @@ class VerifyWpConfigTask extends FileAdjustmentTask
             return $this->generateResponse();
         }
 
+        $rootWpConfig  = $this->getWordPressRootPath() . 'wp-config.php';
+        $symlinkTarget = (string)realpath($rootWpConfig);
+        if (is_link($rootWpConfig) && $this->isValidWpConfig($symlinkTarget) && $this->filesystem->copy($symlinkTarget, $destination)) {
+            $this->logger->info("Successfully copied wp-config.php file from symlink target {$symlinkTarget} to {$destination}.");
+            return $this->generateResponse();
+        }
+
         $this->logger->warning('wp-config.php file doesn\'t exists in staging site. Checking if wp-config exists outside of ABSPATH path...');
-        $source = trailingslashit(dirname(ABSPATH)) . 'wp-config.php';
+        $source = trailingslashit(dirname($this->getWordPressRootPath())) . 'wp-config.php';
  
         if ($this->isValidWpConfig($source)) {
  
@@ -83,6 +90,15 @@ class VerifyWpConfigTask extends FileAdjustmentTask
 
 
 
+    protected function getWordPressRootPath(): string
+    {
+        return ABSPATH;
+    }
+
+
+
+
+
 
     protected function alterWpConfig(string $source): bool
     {
@@ -90,9 +106,9 @@ class VerifyWpConfigTask extends FileAdjustmentTask
             return false;
         }
 
-        $search = "// ** MySQL settings ** //";
+        $search = "<?php";
 
-        $replace = "// ** MySQL settings ** //\r\n
+        $replace = "<?php\r\n\r\n// ** MySQL settings ** //\r\n
 define( 'DB_NAME', '" . DB_NAME . "' );\r\n
 /** MySQL database username */\r\n
 define( 'DB_USER', '" . DB_USER . "' );\r\n
@@ -105,7 +121,11 @@ define( 'DB_CHARSET', '" . DB_CHARSET . "' );\r\n
 /** The Database Collate type. Don't change this if in doubt. */\r\n
 define( 'DB_COLLATE', '" . (defined('DB_COLLATE') ? DB_COLLATE : '') . "' );\r\n";
 
-        $content = str_replace($search, $replace, $content);
+        $content = str_replace($search, $replace, $content, $replacements);
+
+        if ($replacements === 0) {
+            return false;
+        }
 
         if ($this->filesystem->create($source, $content) === false) {
             return false;

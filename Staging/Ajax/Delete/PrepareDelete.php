@@ -55,7 +55,6 @@ class PrepareDelete extends PrepareJob
                 'isDeletingFiles'  => 'bool',
                 'cloneId'          => 'string',
             ]);
-            $data['excludedTables'] = isset($_POST['wpstgDeleteData']['excludedTables']) ? Sanitize::sanitizeString($_POST['wpstgDeleteData']['excludedTables']) : [];
         }
 
         try {

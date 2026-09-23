@@ -3,6 +3,8 @@
 namespace WPStaging\Framework\Hosting;
 
 use WPStaging\Framework\Network\SsrfProtection;
+use WPStaging\Staging\Dto\StagingSiteDto;
+use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Staging\Sites;
 
 
@@ -44,6 +46,18 @@ class StagingSiteHttpDetector
     const REASON_BAD_ANSWER = 'bad-answer';
 
  
+    const REASON_FILES_MISSING = 'files-missing';
+
+ 
+    const REASON_TABLES_MISSING = 'tables-missing';
+
+ 
+    const WORDPRESS_FILES = ['index.php', 'wp-load.php', 'wp-includes/version.php'];
+
+ 
+    const FOLDER_LISTING_TITLE = '<title>Index of /';
+
+ 
     const PASSWORD_CODES = [401, 403];
 
  
@@ -53,16 +67,21 @@ class StagingSiteHttpDetector
     private $ssrfProtection;
 
  
+    private $prefixOwnership;
+
+ 
     private $isLiveSiteUnreachableFromItself;
 
 
 
 
 
-    public function __construct(Sites $sites, SsrfProtection $ssrfProtection)
+
+    public function __construct(Sites $sites, SsrfProtection $ssrfProtection, PrefixOwnership $prefixOwnership)
     {
-        $this->sites          = $sites;
-        $this->ssrfProtection = $ssrfProtection;
+        $this->sites           = $sites;
+        $this->ssrfProtection  = $ssrfProtection;
+        $this->prefixOwnership = $prefixOwnership;
     }
 
 
@@ -77,11 +96,18 @@ class StagingSiteHttpDetector
 
     public function scheduleCheck(string $cloneId, int $delay = self::DELAY_AFTER_JOB)
     {
-        if (empty($cloneId) || wp_next_scheduled(self::ACTION_CHECK_STAGING_SITE, [$cloneId])) {
-            return;
-        }
+        $this->scheduleCheckOnce([$cloneId], $delay);
+    }
 
-        wp_schedule_single_event(time() + $delay, self::ACTION_CHECK_STAGING_SITE, [$cloneId]);
+
+
+
+
+
+
+    public function scheduleCheckOfNewStagingSite(string $cloneId)
+    {
+        $this->scheduleCheckOnce([$cloneId, true], self::DELAY_AFTER_JOB);
     }
 
 
@@ -94,33 +120,35 @@ class StagingSiteHttpDetector
 
 
 
-    public function checkStagingSite(string $cloneId): string
+
+
+
+
+
+    public function checkStagingSite(string $cloneId, bool $mayLabelUnlabelledSiteUnhealthy = false): string
     {
         $url = $this->getStagingSiteUrl($cloneId);
         if (empty($url)) {
             return self::HEALTH_UNKNOWN;
         }
 
+        $missingPart = $this->findMissingPartOfStagingSite($cloneId);
+        if ($missingPart !== '') {
+            $measurement = ['health' => self::HEALTH_UNHEALTHY, 'url' => $url, 'answer' => ['code' => 0, 'body' => ''], 'reason' => $missingPart];
+
+            return $this->recordMeasurement($cloneId, $measurement, $mayLabelUnlabelledSiteUnhealthy);
+        }
+
         if ($this->ssrfProtection->isBlockedUrl($url)) {
             return $this->storeResult($cloneId, self::HEALTH_UNKNOWN, $url, ['code' => 0, 'body' => '']);
         }
 
-        $answer = $this->request($url);
-        if ($this->answerCountsAsStagingSiteOpening($url, $answer)) {
-            return $this->storeResult($cloneId, self::HEALTH_REACHABLE, $url, $answer);
+        $measurement = $this->measureStagingSite($url);
+        if ($measurement['health'] === self::HEALTH_UNHEALTHY) {
+            $measurement = $this->measureStagingSite($url);
         }
 
-        if ($answer['code'] === 0 || $answer['code'] >= 500 || strpos($url, '/index.php') !== false) {
-            return $this->storeResult($cloneId, self::HEALTH_UNHEALTHY, $url, $answer);
-        }
-
-        $urlWithIndexPhp = $url . '/index.php';
-        $indexPhpAnswer  = $this->request($urlWithIndexPhp);
-        if ($this->answerCountsAsStagingSiteOpening($urlWithIndexPhp, $indexPhpAnswer)) {
-            return $this->storeResult($cloneId, self::HEALTH_REACHABLE, $urlWithIndexPhp, $indexPhpAnswer);
-        }
-
-        return $this->storeResult($cloneId, self::HEALTH_UNHEALTHY, $url, $answer);
+        return $this->recordMeasurement($cloneId, $measurement, $mayLabelUnlabelledSiteUnhealthy);
     }
 
 
@@ -166,6 +194,22 @@ class StagingSiteHttpDetector
     public function unscheduleCheck(string $cloneId)
     {
         wp_clear_scheduled_hook(self::ACTION_CHECK_STAGING_SITE, [$cloneId]);
+        wp_clear_scheduled_hook(self::ACTION_CHECK_STAGING_SITE, [$cloneId, true]);
+    }
+
+
+
+
+
+
+    private function scheduleCheckOnce(array $checkArguments, int $delay)
+    {
+        $cloneId = $checkArguments[0];
+        if (empty($cloneId) || wp_next_scheduled(self::ACTION_CHECK_STAGING_SITE, $checkArguments)) {
+            return;
+        }
+
+        wp_schedule_single_event(time() + $delay, self::ACTION_CHECK_STAGING_SITE, $checkArguments);
     }
 
 
@@ -180,6 +224,149 @@ class StagingSiteHttpDetector
         }
 
         return rtrim((string)$stagingSites[$cloneId]['url'], '/\\');
+    }
+
+
+
+
+
+
+
+    private function stagingSiteHasHealthLabel(string $cloneId): bool
+    {
+        $stagingSites = $this->sites->tryGettingStagingSites();
+
+        return in_array($stagingSites[$cloneId]['health'] ?? '', [self::HEALTH_REACHABLE, self::HEALTH_UNHEALTHY], true);
+    }
+
+
+
+
+
+
+
+
+    private function findMissingPartOfStagingSite(string $cloneId): string
+    {
+        $stagingSite = $this->sites->getStagingSiteDtoByCloneId($cloneId);
+        if ($this->stagingSiteIsKnownToLackWordPressFiles($stagingSite)) {
+            return self::REASON_FILES_MISSING;
+        }
+
+        if ($this->stagingSiteIsKnownToLackSettingsTable($stagingSite)) {
+            return self::REASON_TABLES_MISSING;
+        }
+
+        return '';
+    }
+
+
+
+
+
+
+
+
+    private function stagingSiteIsKnownToLackWordPressFiles(StagingSiteDto $stagingSite): bool
+    {
+        if ($stagingSite->getPath() === '') {
+            return false;
+        }
+
+        $folder = trailingslashit($stagingSite->getPath());
+        if (!is_dir($folder) || !is_readable($folder)) {
+            return false;
+        }
+
+        foreach (self::WORDPRESS_FILES as $file) {
+            if (!is_file($folder . $file)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+
+
+
+
+    private function stagingSiteIsKnownToLackSettingsTable(StagingSiteDto $stagingSite): bool
+    {
+        global $wpdb;
+
+        $prefix = $stagingSite->getUsedPrefix();
+        if ($prefix === '' || $stagingSite->getIsExternalDatabase() || $this->readPrefixFromStagingSiteConfig($stagingSite) !== $prefix) {
+            return false;
+        }
+
+        $settingsTable = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($prefix . 'options')));
+
+        return $settingsTable === null && $wpdb->last_error === '';
+    }
+
+
+
+
+
+
+
+
+    private function readPrefixFromStagingSiteConfig(StagingSiteDto $stagingSite)
+    {
+        if ($stagingSite->getPath() === '') {
+            return null;
+        }
+
+        return $this->prefixOwnership->readConfigPrefix(
+            trailingslashit($stagingSite->getPath()) . 'wp-config.php',
+            $stagingSite->getDatabaseName(),
+            $stagingSite->getIsCustomDatabaseConnection() ? $stagingSite->getDatabaseServer() : DB_HOST
+        );
+    }
+
+
+
+
+
+
+
+    private function recordMeasurement(string $cloneId, array $measurement, bool $mayLabelUnlabelledSiteUnhealthy): string
+    {
+        if ($measurement['health'] === self::HEALTH_UNHEALTHY && !$mayLabelUnlabelledSiteUnhealthy && !$this->stagingSiteHasHealthLabel($cloneId)) {
+            return self::HEALTH_UNKNOWN;
+        }
+
+        return $this->storeResult($cloneId, $measurement['health'], $measurement['url'], $measurement['answer'], $measurement['reason'] ?? '');
+    }
+
+
+
+
+
+
+
+    private function measureStagingSite(string $url): array
+    {
+        $answer = $this->request($url);
+        if ($this->answerCountsAsStagingSiteOpening($url, $answer)) {
+            return ['health' => self::HEALTH_REACHABLE, 'url' => $url, 'answer' => $answer];
+        }
+
+        if ($answer['code'] === 0 || $answer['code'] >= 500 || strpos($url, '/index.php') !== false) {
+            return ['health' => self::HEALTH_UNHEALTHY, 'url' => $url, 'answer' => $answer];
+        }
+
+        $urlWithIndexPhp = $url . '/index.php';
+        $indexPhpAnswer  = $this->request($urlWithIndexPhp);
+        if ($this->answerCountsAsStagingSiteOpening($urlWithIndexPhp, $indexPhpAnswer)) {
+            return ['health' => self::HEALTH_REACHABLE, 'url' => $urlWithIndexPhp, 'answer' => $indexPhpAnswer];
+        }
+
+        return ['health' => self::HEALTH_UNHEALTHY, 'url' => $url, 'answer' => $answer];
     }
 
 
@@ -288,7 +475,7 @@ class StagingSiteHttpDetector
             return $this->folderFromAddress($answeringSite) === $folder;
         }
 
-        return $this->pageMentionsFolder($body, $folder);
+        return !$this->pageListsTheFolderFiles($body) && $this->pageMentionsFolder($body, $folder);
     }
 
 
@@ -331,6 +518,21 @@ class StagingSiteHttpDetector
 
 
 
+
+
+    private function pageListsTheFolderFiles(string $body): bool
+    {
+        return stripos($body, self::FOLDER_LISTING_TITLE) !== false;
+    }
+
+
+
+
+
+
+
+
+
     private function askWhichSiteAnswered(string $url): string
     {
         $separator = strpos($url, '?') === false ? '?' : '&';
@@ -357,7 +559,8 @@ class StagingSiteHttpDetector
 
 
 
-    private function storeResult(string $cloneId, string $health, string $url, array $answer): string
+
+    private function storeResult(string $cloneId, string $health, string $url, array $answer, string $reason = ''): string
     {
         wp_cache_delete(Sites::STAGING_SITES_OPTION, 'options');
 
@@ -372,7 +575,7 @@ class StagingSiteHttpDetector
             'healthDiagnostics' => $health === self::HEALTH_UNHEALTHY ? [
                 'code'   => $answer['code'],
                 'body'   => $this->truncateAnswerBodyToValidUtf8($answer['body']),
-                'reason' => $this->failureReason($answer['code']),
+                'reason' => $reason !== '' ? $reason : $this->failureReason($answer['code']),
             ] : [],
         ]);
 

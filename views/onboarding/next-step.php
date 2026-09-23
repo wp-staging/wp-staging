@@ -112,6 +112,17 @@ $upgradeContext = $isFinale ? 'onboarding_complete' : 'first_task_complete';
     data-staging-url="<?php echo esc_url($adminUrl . 'wpstg_clone'); ?>"
     data-backup-url="<?php echo esc_url($adminUrl . 'wpstg_backup'); ?>"
 >
+    <button
+        type="button"
+        class="wpstg-onboarding-next__close"
+        data-wpstg-onboarding-finish
+        aria-label="<?php esc_attr_e('Close', 'wp-staging'); ?>"
+    >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M18 6 6 18M6 6l12 12"></path>
+        </svg>
+    </button>
+
     <div class="wpstg-onboarding-next__done">
         <svg class="wpstg-onboarding-next__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <path d="M20 6 9 17l-5-5"></path>
@@ -224,6 +235,6 @@ $upgradeContext = $isFinale ? 'onboarding_complete' : 'first_task_complete';
     <?php endif; ?>
 
     <button type="button" class="wpstg-onboarding-next__finish" data-wpstg-onboarding-finish>
-        <?php esc_html_e('Continue to WP STAGING', 'wp-staging'); ?>
+        <?php esc_html_e('Done', 'wp-staging'); ?>
     </button>
 </div>

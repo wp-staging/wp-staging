@@ -20,6 +20,12 @@ $isStagingSiteUnhealthy = $stagingSiteItem->health === StagingSiteHttpDetector::
 $isStagingSiteBroken    = !empty($stagingSiteItem->status) && $stagingSiteItem->status !== StagingSiteDto::STATUS_FINISHED;
 $diagnostics            = $stagingSiteItem->healthDiagnostics;
 $answeredByLiveSite     = isset($diagnostics['reason']) && $diagnostics['reason'] === StagingSiteHttpDetector::REASON_LIVE_SITE;
+$diagnoseHeadings       = [
+    StagingSiteHttpDetector::REASON_LIVE_SITE      => __('Staging site "%s" is not served at this address', 'wp-staging'),
+    StagingSiteHttpDetector::REASON_FILES_MISSING  => __('Staging site "%s" is missing its WordPress files', 'wp-staging'),
+    StagingSiteHttpDetector::REASON_TABLES_MISSING => __('Staging site "%s" is missing its database tables', 'wp-staging'),
+];
+$diagnoseHeading        = $diagnoseHeadings[$diagnostics['reason'] ?? ''] ?? __('Staging site "%s" isn\'t responding', 'wp-staging');
 
 ?>
 
@@ -60,9 +66,7 @@ $answeredByLiveSite     = isset($diagnostics['reason']) && $diagnostics['reason'
                             <?php esc_html_e('Unreachable', 'wp-staging'); ?>
                         </span>
                         <h2 class="wpstg-mt-1 wpstg-text-xl wpstg-font-bold wpstg-text-slate-900 dark:wpstg-text-slate-100">
-                            <?php echo $answeredByLiveSite
-                                ? sprintf(esc_html__('Staging site "%s" is not served at this address', 'wp-staging'), esc_html($stagingSiteItem->siteName))
-                                : sprintf(esc_html__('Staging site "%s" isn\'t responding', 'wp-staging'), esc_html($stagingSiteItem->siteName)); ?>
+                            <?php echo esc_html(sprintf($diagnoseHeading, $stagingSiteItem->siteName)); ?>
                         </h2>
                     </div>
                 </div>

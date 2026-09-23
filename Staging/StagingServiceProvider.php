@@ -74,7 +74,7 @@ class StagingServiceProvider extends FeatureServiceProvider
     protected function enqueueStagingSitesHealthCheck()
     {
         add_action(Cron::ACTION_DAILY_EVENT, $this->container->callback(StagingSiteHttpDetector::class, 'scheduleChecksForAllStagingSites'), 30, 0);
-        add_action(StagingSiteHttpDetector::ACTION_CHECK_STAGING_SITE, $this->container->callback(StagingSiteHttpDetector::class, 'checkStagingSite'), 10, 1);
+        add_action(StagingSiteHttpDetector::ACTION_CHECK_STAGING_SITE, $this->container->callback(StagingSiteHttpDetector::class, 'checkStagingSite'), 10, 2);
     }
 
     protected function enqueueAjaxListeners()

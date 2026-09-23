@@ -47,7 +47,13 @@ class FreeOnboarding
     const ACTIONS = ['staging', 'backup', self::ACTION_DESKTOP];
 
  
-    const FIRST_RUN_PAGES = ['wpstg_clone', 'wpstg_backup'];
+    const PAGE_FIRST_RUN_HOME = 'wpstg_clone';
+
+ 
+    const PAGE_BACKUP = 'wpstg_backup';
+
+ 
+    const FIRST_RUN_PAGES = [self::PAGE_FIRST_RUN_HOME, self::PAGE_BACKUP];
 
  
     private $firstInstall;
@@ -68,6 +74,9 @@ class FreeOnboarding
     private $sites;
 
  
+    private $queuedBackup;
+
+ 
     private $isEligible = null;
 
     public function __construct(
@@ -76,7 +85,8 @@ class FreeOnboarding
         SiteInfo $siteInfo,
         AnalyticsConsent $analyticsConsent,
         OnboardingJourney $journey,
-        Sites $sites
+        Sites $sites,
+        QueuedBackup $queuedBackup
     ) {
         $this->firstInstall          = $firstInstall;
         $this->backupPluginsDetector = $backupPluginsDetector;
@@ -84,6 +94,7 @@ class FreeOnboarding
         $this->analyticsConsent      = $analyticsConsent;
         $this->journey               = $journey;
         $this->sites                 = $sites;
+        $this->queuedBackup          = $queuedBackup;
     }
 
 
@@ -173,7 +184,7 @@ class FreeOnboarding
 
     public function ownsCurrentScreen(): bool
     {
-        return $this->isTaskSelector() && $this->isFirstRunPage();
+        return $this->isTaskSelector() && $this->isFirstRunPage() && $this->currentPageRendersTheJourneyStep();
     }
 
 
@@ -184,11 +195,54 @@ class FreeOnboarding
         return $this->isPreConsent() && $this->isFirstRunPage();
     }
 
+
+
+
+
+
+
+    public function isFocusMode(): bool
+    {
+        if ($this->isPreConsentScreen()) {
+            return true;
+        }
+
+        return $this->ownsCurrentScreen() && $this->journey->getStep() !== OnboardingJourney::STEP_NEXT;
+    }
+
+
+
+
+
+    public function currentPageRendersTheJourneyStep(): bool
+    {
+        return !$this->isShowingThePostSuccessSurface() || $this->getCurrentPage() === self::PAGE_FIRST_RUN_HOME;
+    }
+
+
+
+
+
+
+
+
+    private function isShowingThePostSuccessSurface(): bool
+    {
+        if (!$this->isTaskSelector() || !$this->journey->isFirstCapabilityCompleted()) {
+            return false;
+        }
+
+        return $this->journey->getAction(OnboardingJourney::POSITION_SECOND) === '' || $this->queuedBackup->isPending();
+    }
+
     private function isFirstRunPage(): bool
     {
-        $page = isset($_GET['page']) ? sanitize_key($_GET['page']) : ''; // phpcs:ignore WPStaging.Security.FirstArgNotAString
+        return in_array($this->getCurrentPage(), self::FIRST_RUN_PAGES, true);
+    }
 
-        return in_array($page, self::FIRST_RUN_PAGES, true);
+    private function getCurrentPage(): string
+    {
+        return isset($_GET['page']) ? sanitize_key($_GET['page']) : ''; // phpcs:ignore WPStaging.Security.FirstArgNotAString
     }
 
     public function getBackupPluginsDetector(): BackupPluginsDetector
@@ -355,11 +409,10 @@ class FreeOnboarding
 
 
 
-
     public function addFocusModeBodyClass($classes): string
     {
  
-        if (!$this->isFirstRunPage() || (!$this->isPreConsent() && !$this->isTaskSelector())) {
+        if (!$this->isFirstRunPage() || !$this->isFocusMode()) {
             return (string)$classes;
         }
 

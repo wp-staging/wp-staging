@@ -49,7 +49,7 @@ class Finish extends Job
  
         $this->prepareCloneDataRecords();
 
-        WPStaging::make(StagingSiteHttpDetector::class)->scheduleCheck((string)$this->options->clone);
+        $this->scheduleHealthCheck();
 
         $this->options->isRunning = false;
 
@@ -200,5 +200,20 @@ class Finish extends Job
  
         $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
         return rtrim($this->urls->getBaseUrl(), '/\\') . $multisitePath . $this->options->cloneDirectoryName;
+    }
+
+
+
+
+    private function scheduleHealthCheck()
+    {
+        $cloneId                 = (string)$this->options->clone;
+        $stagingSiteHttpDetector = WPStaging::make(StagingSiteHttpDetector::class);
+        if ($this->options->mainJob === Job::STAGING) {
+            $stagingSiteHttpDetector->scheduleCheckOfNewStagingSite($cloneId);
+            return;
+        }
+
+        $stagingSiteHttpDetector->scheduleCheck($cloneId);
     }
 }

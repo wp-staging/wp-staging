@@ -15,7 +15,7 @@ class LegacyOptionsCache
 {
     public function prepare(string $mainJob, string $cloneId = '')
     {
-        if (WPStaging::make(StagingEngine::class)->getEngine() !== StagingEngine::ENGINE_LEGACY) {
+        if ($mainJob !== Job::PUSH && WPStaging::make(StagingEngine::class)->getEngine() !== StagingEngine::ENGINE_LEGACY) {
             return;
         }
 

@@ -39,6 +39,6 @@ class HealthCheck extends AbstractTemplateComponent
             wp_send_json_error(['message' => esc_html__('Missing staging site id', 'wp-staging')], 400);
         }
 
-        wp_send_json_success(['health' => $this->stagingSiteHttpDetector->checkStagingSite($cloneId)]);
+        wp_send_json_success(['health' => $this->stagingSiteHttpDetector->checkStagingSite($cloneId, true)]);
     }
 }

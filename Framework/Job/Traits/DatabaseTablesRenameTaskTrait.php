@@ -17,6 +17,7 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\RestoresPreservedOptionsTrait;
+use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Sites;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -28,6 +29,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 trait DatabaseTablesRenameTaskTrait
 {
     use RestoresPreservedOptionsTrait;
+    use SerializeTrait;
 
  
     private $tableService;
@@ -123,6 +125,30 @@ trait DatabaseTablesRenameTaskTrait
         $this->optionsToKeep = Hooks::callInternalHook(static::HOOK_KEEP_OPTIONS, [$this->optionsToKeep], $this->optionsToKeep);
 
         $this->keepAnalyticsEvents();
+    }
+
+
+
+
+
+
+
+
+
+
+    protected function restoreKeptOptions(string $importedValueSource)
+    {
+        foreach ($this->optionsToKeep as $optionToKeep) {
+            $rejected = false;
+            $value    = $this->safeMaybeUnserialize($optionToKeep['value'], [\stdClass::class], $rejected);
+
+            if ($rejected) {
+                $this->logger->warning(sprintf('Could not preserve the option "%s" because its value could not be safely unserialized. The value from the %s is kept instead.', $optionToKeep['name'], $importedValueSource));
+                continue;
+            }
+
+            $this->restorePreservedOption($optionToKeep['name'], $value, (bool)$optionToKeep['autoload']);
+        }
     }
 
 

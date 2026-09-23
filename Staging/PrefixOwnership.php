@@ -336,7 +336,9 @@ class PrefixOwnership
 
 
 
-    private function readConfigPrefix(string $path, string $databaseName, string $databaseHost)
+
+
+    public function readConfigPrefix(string $path, string $databaseName, string $databaseHost)
     {
         $source = @file_get_contents($path);
         if ($source === false) {

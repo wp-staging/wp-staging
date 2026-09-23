@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Onboarding;
 
+use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsGenericEvent;
 use WPStaging\Framework\Security\Auth;
@@ -175,6 +176,7 @@ class OnboardingJourney
 
     public function completeStaging()
     {
+        $this->selectOutstandingCapability(self::CAPABILITY_STAGING);
         $this->completeCapability(self::CAPABILITY_STAGING);
     }
 
@@ -188,11 +190,15 @@ class OnboardingJourney
 
     public function completeBackup($jobDataDto = null)
     {
+        if ($this->jobDataIdentifiesABackupTheUserAskedFor($jobDataDto)) {
+            $this->selectOutstandingCapability(self::CAPABILITY_BACKUP);
+        }
+
         $position = $this->activePosition();
 
         $this->completeCapability(self::CAPABILITY_BACKUP);
 
-        if ($position === '' || !is_object($jobDataDto) || !method_exists($jobDataDto, 'getBackupFilePath')) {
+        if ($position === '' || $this->isCompleted() || !is_object($jobDataDto) || !method_exists($jobDataDto, 'getBackupFilePath')) {
             return;
         }
 
@@ -224,6 +230,41 @@ class OnboardingJourney
         }
 
         return [];
+    }
+
+
+
+
+
+
+
+    private function selectOutstandingCapability(string $capability)
+    {
+        if ($this->activePosition() !== '' || $this->getNextCapability() !== $capability) {
+            return;
+        }
+
+        $this->selectAction($capability);
+    }
+
+
+
+
+
+
+
+
+    private function jobDataIdentifiesABackupTheUserAskedFor($jobDataDto): bool
+    {
+        if (!$jobDataDto instanceof JobBackupDataDto) {
+            return false;
+        }
+
+        if ($jobDataDto->getIsBeforeUpdateBackup() || ($jobDataDto->isScheduledBackup() && !$jobDataDto->getIsCreateScheduleBackupNow())) {
+            return false;
+        }
+
+        return (string)$jobDataDto->getBackupFilePath() !== '';
     }
 
 

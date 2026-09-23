@@ -27,15 +27,17 @@ if ($onboarding !== null) {
     $onboarding->recordExposure();
 }
 
+$rendersJourneyStep = $onboarding !== null && $onboarding->currentPageRendersTheJourneyStep();
+
 $journey        = $onboarding === null ? null : $onboarding->getJourney();
-$journeyStep    = $onboarding === null ? '' : $onboarding->getJourneyStep();
+$journeyStep    = $rendersJourneyStep ? $onboarding->getJourneyStep() : '';
 $isPreConsent   = $onboarding !== null && $onboarding->isPreConsent();
-$showBackupNext = $onboarding !== null && $onboarding->isTaskSelector();
+$showBackupNext = $rendersJourneyStep && $onboarding->isTaskSelector();
 
 $showSelector        = $journeyStep === OnboardingJourney::STEP_SELECT;
 $completedCapability = $journey === null ? '' : $journey->getAction(OnboardingJourney::POSITION_FIRST);
 $nextCapability      = $journey === null ? '' : $journey->getNextCapability();
-$hasFirstSuccess     = $journey !== null && $journey->isFirstCapabilityCompleted();
+$hasFirstSuccess     = $rendersJourneyStep && $journey !== null && $journey->isFirstCapabilityCompleted();
 
 $secondAction = $journey === null ? '' : $journey->getAction(OnboardingJourney::POSITION_SECOND);
 
@@ -43,13 +45,14 @@ $nextStepRenderer  = $hasFirstSuccess ? NextStepRenderer::resolve() : null;
 $nextStepMarkup    = $nextStepRenderer === null ? '' : $nextStepRenderer->render();
 $isNextStepVisible = $nextStepMarkup !== '';
 
-$isFocusMode = $isPreConsent || $journeyStep !== '';
+$isFirstRunOnScreen = $onboarding !== null && ($onboarding->ownsCurrentScreen() || $onboarding->isPreConsentScreen());
+$isFocusMode        = $onboarding !== null && $onboarding->isFocusMode();
 
 $isFirstRunOffer = $showBackupNext && $journey !== null && $journey->getNextCapability() !== OnboardingJourney::CAPABILITY_STAGING;
  
  
  
-$backupNextOffer = (!$isFocusMode && class_exists(BackupNextOffer::class)) ? BackupNextOffer::resolve() : null;
+$backupNextOffer = (!$isFirstRunOnScreen && class_exists(BackupNextOffer::class)) ? BackupNextOffer::resolve() : null;
 $offerBackupNext = $isFirstRunOffer || ($backupNextOffer !== null && $backupNextOffer->isEligible());
 
 $adminUrl           = admin_url('admin.php?page=');
@@ -60,7 +63,7 @@ $activeCapability = $journeyStep === OnboardingJourney::STEP_RUNNING ? $journey-
 $showProgress     = $activeCapability !== '' && !$isNextStepVisible;
 
  
-$onboardingHiddenClass = ($isPreConsent || $showSelector || $isNextStepVisible || $showProgress) ? ' wpstg-onboarding-hidden' : '';
+$onboardingHiddenClass = $isFocusMode ? ' wpstg-onboarding-hidden' : '';
 if ($isNextStepVisible && $secondAction === '') {
     $journey->recordNextOfferShown();
 }
@@ -68,7 +71,7 @@ if ($isNextStepVisible && $secondAction === '') {
 $isCalledFromIndex = true;
 ?>
 
-<div id="wpstg-clonepage-wrapper" class="<?php echo $isFocusMode ? 'wpstg-onboarding-focus' : ''; ?>">
+<div id="wpstg-clonepage-wrapper" class="<?php echo $isFocusMode ? 'wpstg-onboarding-focus' : ''; ?>"<?php echo $isFirstRunOnScreen ? ' data-wpstg-first-run' : ''; ?>>
     <?php
     if (!$isFocusMode) {
         require_once($this->viewsPath . (WPStaging::isPro() ? 'pro/_main/header.php' : '_main/header.php'));
@@ -130,8 +133,7 @@ $isCalledFromIndex = true;
             }
 
  
- 
-            if ($isFocusMode) : ?>
+            if ($journeyStep !== '') : ?>
                 <div class="wpstg-onboarding-job" data-wpstg-inline-progress hidden></div>
             <?php endif;
 

@@ -37,7 +37,7 @@ class CopyWpConfig extends FileCloningService
             return true;
         }
 
-        $dir = trailingslashit(dirname(ABSPATH));
+        $dir = trailingslashit(dirname($this->getWordPressRootPath()));
 
         $source = $dir . 'wp-config.php';
 
@@ -46,6 +46,13 @@ class CopyWpConfig extends FileCloningService
  
         if ($this->isValidWpConfig($destination)) {
             $this->log("Skipping: wp-config.php already exists in {$destination}");
+            return true;
+        }
+
+        $rootWpConfig  = $this->getWordPressRootPath() . 'wp-config.php';
+        $symlinkTarget = (string)realpath($rootWpConfig);
+        if (is_link($rootWpConfig) && $this->isValidWpConfig($symlinkTarget) && $this->copy($symlinkTarget, $destination)) {
+            $this->log("Successfully copied wp-config.php file from symlink target {$symlinkTarget} to {$destination}");
             return true;
         }
 
@@ -75,6 +82,15 @@ class CopyWpConfig extends FileCloningService
         return true;
     }
 
+
+
+
+
+
+    protected function getWordPressRootPath()
+    {
+        return ABSPATH;
+    }
 
 
 
@@ -115,9 +131,9 @@ class CopyWpConfig extends FileCloningService
             return false;
         }
 
-        $search = "// ** MySQL settings ** //";
+        $search = "<?php";
 
-        $replace = "// ** MySQL settings ** //\r\n
+        $replace = "<?php\r\n\r\n// ** MySQL settings ** //\r\n
 define( 'DB_NAME', '" . DB_NAME . "' );\r\n
 /** MySQL database username */\r\n
 define( 'DB_USER', '" . DB_USER . "' );\r\n
@@ -131,7 +147,11 @@ define( 'DB_CHARSET', '" . DB_CHARSET . "' );\r\n
 define( 'DB_COLLATE', '" . (defined('DB_COLLATE') ? DB_COLLATE : '') . "' );\r\n";
 
         $content = $this->normalizeFileContent($content);
-        $content = str_replace($search, $replace, $content);
+        $content = str_replace($search, $replace, $content, $replacements);
+
+        if ($replacements === 0) {
+            return false;
+        }
 
         if ($this->filesystem->create($source, $content) === false) {
             $this->log("Can't save wp-config.php", Logger::TYPE_ERROR);
