@@ -5,6 +5,7 @@ namespace WPStaging\Staging\Ajax;
 use RuntimeException;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\DirectorySize;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
@@ -23,6 +24,14 @@ use WPStaging\Framework\Utils\WpDefaultDirectories;
 class SizeCalculator extends AbstractTemplateComponent
 {
     use LegacyFileRulesTrait;
+
+
+
+
+
+
+
+    const FILTER_ALTERNATE_SIZE_RESPONSE = 'wpstg.staging.alternate_size_response';
 
  
     private $directory;
@@ -71,6 +80,12 @@ class SizeCalculator extends AbstractTemplateComponent
     public function ajaxSize()
     {
         if (!$this->canRenderAjax()) {
+            return;
+        }
+
+        $alternateResponse = Hooks::applyFilters(self::FILTER_ALTERNATE_SIZE_RESPONSE, null);
+        if (is_array($alternateResponse)) {
+            wp_send_json($alternateResponse);
             return;
         }
 

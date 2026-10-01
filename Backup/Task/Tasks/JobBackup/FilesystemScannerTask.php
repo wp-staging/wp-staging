@@ -82,6 +82,16 @@ class FilesystemScannerTask extends BackupTask
 
 
 
+    public function usesTaskQueue(): bool
+    {
+        return true;
+    }
+
+
+
+
+
+
 
 
 

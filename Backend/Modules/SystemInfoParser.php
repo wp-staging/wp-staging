@@ -72,13 +72,11 @@ class SystemInfoParser
         $storages          = [];
 
         foreach ($providersInstance->getStorages() as $storage) {
-            $optionName = 'wpstg_' . strtolower($storage['id']);
-
             $storages[] = [
-                'id'         => $storage['id'],
-                'name'       => $storage['name'],
-                'optionName' => $optionName,
-                'title'      => $storage['name'] . ' Settings',
+                'id'    => $storage['id'],
+                'icon'  => $storage['icon'],
+                'name'  => $storage['name'],
+                'title' => $storage['name'] . ' Settings',
             ];
         }
 
@@ -91,14 +89,15 @@ class SystemInfoParser
 
 
 
-    public function getStorageProviderIdByName($name): string
+    private function getStorageProviderByName($name): array
     {
-        $providers = $this->getStorageProvidersForSystemInfo();
-        $found     = array_filter($providers, function ($provider) use ($name) {
-            return $provider['name'] === $name;
-        });
+        foreach ($this->getStorageProvidersForSystemInfo() as $provider) {
+            if ($provider['name'] === $name) {
+                return $provider;
+            }
+        }
 
-        return !empty($found) ? reset($found)['id'] : '';
+        return [];
     }
 
 
@@ -366,12 +365,13 @@ class SystemInfoParser
         $storageProviders       = [];
         $currentProvider        = null;
         $providerId             = null;
+        $providerIcon           = '';
         $currentProviderData    = [];
         $processedProviders     = []; 
         $hasCurrentProviderData = false;
 
  
-        $addProvider = function () use (&$storageProviders, &$currentProvider, &$providerId, &$currentProviderData, &$hasCurrentProviderData, &$processedProviders) {
+        $addProvider = function () use (&$storageProviders, &$currentProvider, &$providerId, &$providerIcon, &$currentProviderData, &$hasCurrentProviderData, &$processedProviders) {
             if ($currentProvider === null || !$hasCurrentProviderData) {
                 return;
             }
@@ -383,6 +383,7 @@ class SystemInfoParser
 
             $storageProviders[] = [
                 'id'       => $providerId,
+                'icon'     => $providerIcon,
                 'name'     => $currentProvider,
                 'settings' => $currentProviderData,
             ];
@@ -396,7 +397,9 @@ class SystemInfoParser
 
  
                 $currentProvider        = $this->getStorageProviderName($item['label']);
-                $providerId             = $this->getStorageProviderIdByName($currentProvider);
+                $provider               = $this->getStorageProviderByName($currentProvider);
+                $providerId             = isset($provider['id']) ? $provider['id'] : '';
+                $providerIcon           = isset($provider['icon']) ? $provider['icon'] : '';
                 $currentProviderData    = [];
                 $hasCurrentProviderData = false;
             } elseif ($currentProvider !== null) {

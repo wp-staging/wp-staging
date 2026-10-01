@@ -62,4 +62,30 @@ class IISWebConfig
             '</configuration>',
         ]));
     }
+
+ 
+    const DENY_DIRECTIVE = '<deny users="*" />';
+
+
+
+
+
+
+
+    public function createDeny($path)
+    {
+        return $this->filesystem->create($path, implode(PHP_EOL, [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<configuration>',
+            '<system.webServer>',
+            '<security>',
+            '<authorization>',
+            '<remove users="*" roles="" verbs="" />',
+            self::DENY_DIRECTIVE,
+            '</authorization>',
+            '</security>',
+            '</system.webServer>',
+            '</configuration>',
+        ]));
+    }
 }

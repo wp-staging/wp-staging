@@ -16,6 +16,9 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Filesystem\Filesystem;
 
+
+
+
 class CleanupTmpFilesTask extends AbstractTask
 {
  
@@ -26,6 +29,12 @@ class CleanupTmpFilesTask extends AbstractTask
 
  
     private $pathIdentifier;
+
+ 
+    public function usesTaskQueue(): bool
+    {
+        return false;
+    }
 
 
 

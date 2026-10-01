@@ -24,7 +24,7 @@ if (empty($title)) {
 }
 
 if (empty($description)) {
-    $description = __('This will copy your WordPress database and files with recommended settings. No customization is required.', 'wp-staging');
+    $description = __('This will copy your WordPress database and files with recommended settings.', 'wp-staging');
 }
 
 if (empty($databaseDescription)) {
@@ -57,7 +57,7 @@ if (empty($engineSuffix)) {
     $engineSuffix = __(' - faster one available', 'wp-staging');
 }
 
-$renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtml = false) use ($customizeLinks, $renderer, $showCustomizeButton) {
+$renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtml = false, $blankDescription = '') use ($customizeLinks, $renderer, $showCustomizeButton) {
     $customizeLink = isset($customizeLinks[$key]) && is_array($customizeLinks[$key]) ? $customizeLinks[$key] : [];
     $miniCardAttributes = '';
 
@@ -88,7 +88,10 @@ $renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtm
                     </button>
                 <?php endif; ?>
             </span>
-            <small><?php echo $descriptionIsHtml ? wp_kses_post($description) : esc_html($description); ?></small>
+            <small<?php echo $blankDescription === '' ? '' : ' data-wpstg-clone-copy'; ?>><?php echo $descriptionIsHtml ? wp_kses_post($description) : esc_html($description); ?></small>
+            <?php if ($blankDescription !== '') : ?>
+                <small data-wpstg-blank-copy hidden><?php echo esc_html($blankDescription); ?></small>
+            <?php endif; ?>
         </span>
     </div>
     <?php
@@ -102,12 +105,13 @@ $renderMiniCard = function ($key, $icon, $title, $description, $descriptionIsHtm
         </span>
         <div class="wpstg-min-w-0">
             <h2 class="wpstg-m-0 wpstg-text-[15px] wpstg-font-bold wpstg-leading-tight wpstg-text-green-900 dark:wpstg-text-green-200" data-ready-title-default="<?php echo esc_attr($title); ?>" data-ready-title-warning="<?php esc_attr_e('A core folder is excluded', 'wp-staging'); ?>" data-ready-title-warning-table="<?php esc_attr_e('A core table is excluded', 'wp-staging'); ?>" data-ready-title-warning-both="<?php esc_attr_e('Core folders and tables are excluded', 'wp-staging'); ?>"><?php echo esc_html($title); ?></h2>
-            <p class="wpstg-m-0 wpstg-mt-2 wpstg-max-w-2xl wpstg-text-[13px] wpstg-font-normal wpstg-leading-relaxed" data-ready-text-default="<?php echo esc_attr($description); ?>" data-ready-text-warning="<?php esc_attr_e('Your staging site may not work as expected. Re-add the folder below if you are not sure.', 'wp-staging'); ?>" data-ready-text-warning-table="<?php esc_attr_e('Your staging site may not work as expected. Re-add the table below if you are not sure.', 'wp-staging'); ?>" data-ready-text-warning-both="<?php esc_attr_e('Your staging site may not work as expected. Re-add the excluded folders and tables below if you are not sure.', 'wp-staging'); ?>"><?php echo esc_html($description); ?></p>
+            <p class="wpstg-create-ready-card__text" data-ready-text-default="<?php echo esc_attr($description); ?>" data-ready-text-warning="<?php esc_attr_e('Your staging site may not work as expected. Re-add the folder below if you are not sure.', 'wp-staging'); ?>" data-ready-text-warning-table="<?php esc_attr_e('Your staging site may not work as expected. Re-add the table below if you are not sure.', 'wp-staging'); ?>" data-ready-text-warning-both="<?php esc_attr_e('Your staging site may not work as expected. Re-add the excluded folders and tables below if you are not sure.', 'wp-staging'); ?>" data-wpstg-clone-copy><?php echo esc_html($description); ?></p>
+            <p class="wpstg-create-ready-card__text" data-wpstg-blank-copy hidden><?php esc_html_e('A fresh WordPress will be installed. Nothing from this site is copied.', 'wp-staging'); ?></p>
         </div>
     </div>
     <div class="wpstg-create-ready-grid">
-        <?php $renderMiniCard('database', 'database', __('Database', 'wp-staging'), $databaseDescription); ?>
-        <?php $renderMiniCard('files', 'folder', __('Files', 'wp-staging'), $filesDescription, $filesDescriptionIsHtml); ?>
+        <?php $renderMiniCard('database', 'database', __('Database', 'wp-staging'), $databaseDescription, false, __('Fresh WordPress tables, nothing copied', 'wp-staging')); ?>
+        <?php $renderMiniCard('files', 'folder', __('Files', 'wp-staging'), $filesDescription, $filesDescriptionIsHtml, __('WordPress core and WP STAGING only', 'wp-staging')); ?>
         <?php $engineDescription = '<span class="wpstg-create-summary-engine-inline">' . esc_html($renderer->getSelectedEngineName()) . '</span><span class="wpstg-create-summary-engine-suffix">' . esc_html($engineSuffix) . '</span>'; ?>
         <?php $renderMiniCard('engine', 'beaker', __('Transfer method', 'wp-staging'), $engineDescription, true); ?>
         <?php if ($showRuntimeBehavior) :

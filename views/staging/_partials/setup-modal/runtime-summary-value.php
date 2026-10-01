@@ -13,7 +13,7 @@
 $isPro      = $isProLicenseActive;
 $enabled    = !$isPro;
 $stateClass = $enabled ? 'wpstg-create-summary-enabled' : 'wpstg-create-summary-disabled';
-$label      = $enabled ? __('Enabled', 'wp-staging') : __('Disabled', 'wp-staging');
+$label      = $enabled ? __('Always on', 'wp-staging') : __('Disabled', 'wp-staging');
 $tooltip    = $enabled ? $tooltips['enabled'] : $tooltips['disabled'];
 ?>
 <dd class="<?php echo esc_attr($stateClass); ?> wpstg-staging-summary-runtime" data-wpstg-create-summary-runtime="<?php echo esc_attr($key); ?>">

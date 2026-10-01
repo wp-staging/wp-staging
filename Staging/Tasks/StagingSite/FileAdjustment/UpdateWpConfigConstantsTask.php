@@ -10,6 +10,7 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\ThirdParty\Jetpack;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Tasks\FileAdjustmentTask;
@@ -22,6 +23,8 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 {
+    use WithUnfinishedCloneWpConfigGuard;
+
  
     const ABSPATH_REGEX = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
 
@@ -186,7 +189,7 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         $replaceOrAdd = (array)apply_filters(self::FILTER_CONSTANTS_REPLACE_OR_ADD, $replaceOrAdd);
 
-        $content = $this->readWpConfig();
+        $content = $this->removeUnfinishedCloneGuardFromWpConfig($this->readWpConfig());
         foreach ($replaceOrAdd as $constant => $newDefinition) {
             $content = $this->replaceOrAddDefinition($constant, $content, $newDefinition);
         }

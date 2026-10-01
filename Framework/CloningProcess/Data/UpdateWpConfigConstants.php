@@ -10,9 +10,12 @@ use RuntimeException;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Staging\Tasks\StagingSite\FileAdjustment\UpdateWpConfigConstantsTask;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 
 class UpdateWpConfigConstants extends FileCloningService
 {
+    use WithUnfinishedCloneWpConfigGuard;
+
 
 
 
@@ -148,7 +151,7 @@ class UpdateWpConfigConstants extends FileCloningService
 
         $replaceOrAdd = (array)apply_filters(UpdateWpConfigConstantsTask::FILTER_CONSTANTS_REPLACE_OR_ADD, $replaceOrAdd);
 
-        $content = $this->readWpConfig();
+        $content = $this->removeUnfinishedCloneGuardFromWpConfig($this->readWpConfig());
         foreach ($replaceOrAdd as $constant => $newDefinition) {
             $content = $this->replaceOrAddDefinition($constant, $content, $newDefinition);
         }

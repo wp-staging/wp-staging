@@ -91,6 +91,9 @@ abstract class AbstractTask
     protected $taskQueue;
 
  
+    protected $taskInstanceArgument = '';
+
+ 
     protected $isWaitTask = false;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
@@ -122,6 +125,41 @@ abstract class AbstractTask
 
 
 
+
+
+
+    public function setTaskInstanceArgument(string $argument)
+    {
+        $this->taskInstanceArgument = (string)preg_replace('/[^A-Za-z0-9_-]/', '', $argument);
+    }
+
+
+
+
+
+
+
+    public static function getTaskTitleFor(string $argument): string
+    {
+        return static::getTaskTitle();
+    }
+
+
+
+
+    public function getTaskInstanceName(): string
+    {
+        if ($this->taskInstanceArgument === '') {
+            return static::getTaskName();
+        }
+
+        return static::getTaskName() . '__' . $this->taskInstanceArgument;
+    }
+
+
+
+
+
     public static function getTaskTitle()
     {
         throw new WPStagingException('Any extending class MUST override the getTaskTitle method.');
@@ -140,7 +178,7 @@ abstract class AbstractTask
     public function setJobContext(AbstractJob $job)
     {
         $this->cache->setLifetime($this->getStepsCacheLifetime());
-        $this->cache->setFilename('task_steps_' . static::getTaskName());
+        $this->cache->setFilename('task_steps_' . $this->getTaskInstanceName());
 
         $stepsData = $this->cache->get([
             'current' => 0,
@@ -165,9 +203,25 @@ abstract class AbstractTask
     public function setJobDataDto(JobDataDto $jobDataDto)
     {
         $this->jobDataDto = $jobDataDto;
-        $this->taskQueue->setup(static::getTaskName());
-        $this->taskQueue->seek($this->jobDataDto->getQueueOffset());
+
+        if ($this->usesTaskQueue()) {
+            $this->taskQueue->setup($this->getTaskInstanceName());
+            $this->taskQueue->seek($this->jobDataDto->getQueueOffset());
+        } else {
+            $this->jobDataDto->setQueueOffset(0);
+        }
+
         $this->setupCurrentTaskDto();
+    }
+
+
+
+
+
+
+    public function usesTaskQueue(): bool
+    {
+        return true;
     }
 
 
@@ -209,12 +263,14 @@ abstract class AbstractTask
         ));
 
         if ($isFinished) {
-            $this->taskQueue->seek(0);
+            if ($this->usesTaskQueue()) {
+                $this->taskQueue->seek(0);
+            }
+
             $this->jobDataDto->setQueueOffset(0);
             $response->setPercentage(0);
             $this->jobDataDto->setCurrentTaskData([]);
             $this->cache->delete();
-            $this->jobDataDto->setCurrentTaskData([]);
         } else {
             $this->persistStepsDto();
         }

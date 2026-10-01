@@ -52,10 +52,19 @@ abstract class FileAdjustmentTask extends DataAdjustmentTask
 
 
 
+    protected function getSiteRootPath(): string
+    {
+        return $this->jobDataDto->getStagingSitePath();
+    }
+
+
+
+
+
 
     protected function readFile(string $file): string
     {
-        $path = trailingslashit($this->jobDataDto->getStagingSitePath()) . $file;
+        $path = trailingslashit($this->getSiteRootPath()) . $file;
         if (($content = file_get_contents($path)) === false) {
             throw new WPStagingException("Error - can't read " . $file);
         }
@@ -71,7 +80,7 @@ abstract class FileAdjustmentTask extends DataAdjustmentTask
 
     protected function writeFile(string $file, string $content)
     {
-        $path = trailingslashit($this->jobDataDto->getStagingSitePath()) . $file;
+        $path = trailingslashit($this->getSiteRootPath()) . $file;
         if ($this->filesystem->create($path, $content) === false) {
             throw new WPStagingException("Error - can't write to " . $file . ".");
         }

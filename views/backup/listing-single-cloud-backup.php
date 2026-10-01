@@ -22,7 +22,7 @@ $storageProviderName = $backup->storageProviderName;
 ?>
 <li id="<?php echo esc_attr($storageProviderName . "-" . $sanitizedId) ?>" class="wpstg-clone wpstg-backup wpstg-cloud-backup-item" data-name="<?php echo esc_attr($backup->name); ?>">
     <div class="wpstg-clone-header">
-        <span class="wpstg-clone-title wpstg-clone-cloud-title">
+        <span class="wpstg-clone-title wpstg-clone-cloud-title" title="<?php echo esc_attr($name); ?>">
             <?php echo esc_html($name); ?>
         </span>
         <div class="wpstg-cloud-backups-actions-container">

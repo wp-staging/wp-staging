@@ -10,6 +10,7 @@
 
 
 
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 
@@ -131,16 +132,7 @@ function wpstg_starts_with($haystack, $needle)
 
 function wpstg_is_empty_dir($dir)
 {
-    if (!is_dir($dir)) {
-        return true;
-    }
-
-    $iterator = new FilesystemIterator($dir);
-    if ($iterator->valid()) {
-        return false;
-    }
-
-    return true;
+    return (new Filesystem())->isEmptyDir($dir);
 }
 
 

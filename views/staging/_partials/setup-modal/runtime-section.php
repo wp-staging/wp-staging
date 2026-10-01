@@ -53,9 +53,9 @@ $renderer->accordionSection([
  
  
  
-                $renderer->proControlRow('wpstg_allow_emails', true, esc_html__('Email delivery', 'wp-staging'), esc_html__('Pro lets you disable outgoing emails from staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'email_delivery');
-                $renderer->proControlRow('wpstg_enable_cron', true, esc_html__('WordPress cron', 'wp-staging'), esc_html__('Pro lets you stop scheduled tasks from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'wordpress_cron');
-                $renderer->proControlRow('wpstg_woo_scheduler_enabled', true, esc_html__('WooCommerce actions', 'wp-staging'), esc_html__('Pro lets you prevent WooCommerce background actions from running on staging.', 'wp-staging'), esc_html__('Enabled in Free', 'wp-staging'), '', 'woocommerce_actions');
+                $renderer->proControlRow('wpstg_allow_emails', true, esc_html__('Email delivery', 'wp-staging'), esc_html__('Pro lets you disable outgoing emails from staging.', 'wp-staging'), esc_html__('Always on', 'wp-staging'), '', 'email_delivery');
+                $renderer->proControlRow('wpstg_enable_cron', true, esc_html__('WordPress cron', 'wp-staging'), esc_html__('Pro lets you stop scheduled tasks from running on staging.', 'wp-staging'), esc_html__('Always on', 'wp-staging'), '', 'wordpress_cron');
+                $renderer->proControlRow('wpstg_woo_scheduler_enabled', true, esc_html__('WooCommerce actions', 'wp-staging'), esc_html__('Pro lets you prevent WooCommerce background actions from running on staging.', 'wp-staging'), esc_html__('Always on', 'wp-staging'), '', 'woocommerce_actions');
                 ?>
                 <div class="wpstg-create-automation-heading">
                     <strong><?php esc_html_e('After creation automation', 'wp-staging'); ?></strong>

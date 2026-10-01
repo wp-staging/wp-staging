@@ -5,8 +5,17 @@ namespace WPStaging\Framework\Job\Task\Tasks;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Task\AbstractTask;
 
+
+
+
 class FinishCancelTask extends AbstractTask
 {
+ 
+    public function usesTaskQueue(): bool
+    {
+        return false;
+    }
+
 
 
 

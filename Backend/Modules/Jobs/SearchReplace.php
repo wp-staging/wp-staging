@@ -13,6 +13,7 @@ use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\Escape;
+use WPStaging\Staging\Service\Database\SubsiteUrlSearchReplace;
 
 
 
@@ -346,6 +347,23 @@ class SearchReplace extends CloningProcess
 
         $filter = apply_filters(self::FILTER_CLONE_SEARCH_REPLACE_EXCLUDED_ROWS, $filter);
 
+        $excludes      = Hooks::applyFilters(self::FILTER_CLONE_SEARCH_REPLACE_EXCLUDED, []);
+        $searchReplace = new \WPStaging\Framework\Database\SearchReplace($args['search_for'], $args['replace_with'], $args['case_insensitive'], $excludes);
+        if (!empty($this->options->subsiteUrlMappings) && is_array($this->options->subsiteUrlMappings)) {
+            $searchReplace = new SubsiteUrlSearchReplace(
+                $searchReplace,
+                $this->options->subsiteUrlMappings,
+                false,
+                $excludes,
+                $args['search_for'],
+                $args['replace_with']
+            );
+        }
+
+ 
+        $siteInfo = WPStaging::make(SiteInfo::class);
+        $searchReplace->setWpBakeryActive($siteInfo->isWpBakeryActive());
+
         $processed = 0;
 
  
@@ -402,11 +420,6 @@ class SearchReplace extends CloningProcess
                     continue;
                 }
 
-                $excludes = Hooks::applyFilters(self::FILTER_CLONE_SEARCH_REPLACE_EXCLUDED, []);
-                $searchReplace = new \WPStaging\Framework\Database\SearchReplace($args['search_for'], $args['replace_with'], $args['case_insensitive'], $excludes);
- 
-                $siteInfo = WPStaging::make(SiteInfo::class);
-                $searchReplace->setWpBakeryActive($siteInfo->isWpBakeryActive());
                 $dataRow = $searchReplace->replaceExtended($dataRow);
 
                 $sizeAfterReplace = strlen($dataRow);

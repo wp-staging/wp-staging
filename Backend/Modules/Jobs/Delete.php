@@ -3,7 +3,6 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use Exception;
-use FilesystemIterator;
 use mysqli;
 use stdClass;
 use wpdb;
@@ -595,7 +594,7 @@ class Delete extends Job
         }
 
  
-        if (!$this->isEmptyDir($this->deleteDir)) {
+        if (!(new Filesystem())->isEmptyDir($this->deleteDir)) {
             $response = [
                 'job'     => 'delete',
                 'status'  => true,
@@ -636,22 +635,6 @@ class Delete extends Job
         }
 
         return true;
-    }
-
-
-
-
-
-
-    private function isEmptyDir($dir): bool
-    {
-        if (!is_dir($dir)) {
-            return true;
-        }
-
-        $iterator = new FilesystemIterator($dir);
-
-        return !$iterator->valid();
     }
 
 

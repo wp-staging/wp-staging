@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
+use WPStaging\Framework\Settings\SettingsTable;
 use WPStaging\Staging\CloneOptions;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\FirstRun;
@@ -67,11 +68,6 @@ class PreserveDataSecondStep extends JobExecutable
     public function copyToStaging()
     {
  
-        if (!$this->tableExists($this->stagingPrefix . "options")) {
-            return true;
-        }
-
- 
         $result = $this->productionDb->get_var(
             $this->productionDb->prepare(
                 "SELECT `option_value` FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s",
@@ -79,14 +75,9 @@ class PreserveDataSecondStep extends JobExecutable
             )
         );
 
- 
-        if (!$result) {
-            return true;
+        if ($result === null && $this->productionDb->last_error !== '') {
+            $this->log("Preserve Data Second Step: Discarded the preserved data, could not read wpstg_tmp_data from the production site - db error: {$this->productionDb->last_error}");
         }
-
- 
- 
-        $backupSchedulesOption = 'wpstg_backup_schedules';
 
  
         $deleteTmpData = $this->productionDb->query(
@@ -96,6 +87,19 @@ class PreserveDataSecondStep extends JobExecutable
         if ($deleteTmpData === false) {
             $this->log("Preserve Data Second Step: Failed to delete wpstg_tmp_data from the production site");
         }
+
+        if (!$result) {
+            return true;
+        }
+
+        if (!$this->tableExists($this->stagingPrefix . "options")) {
+            $this->log("Preserve Data Second Step: Discarded the preserved data, the staging site options table is missing");
+            return true;
+        }
+
+ 
+ 
+        $backupSchedulesOption = 'wpstg_backup_schedules';
 
         $this->preservedData = maybe_unserialize($result);
 
@@ -126,7 +130,49 @@ class PreserveDataSecondStep extends JobExecutable
             }
         }
 
+        $this->preserveStagingSettingsTableRows();
+
         return true;
+    }
+
+
+
+
+
+
+
+    protected function preserveStagingSettingsTableRows()
+    {
+        if (!$this->propertyExists('settingsTableRows')) {
+            return;
+        }
+
+        $rows = $this->preservedData->settingsTableRows;
+        if (!is_array($rows)) {
+            return;
+        }
+
+        $table = $this->stagingPrefix . SettingsTable::TABLE_NAME;
+        if (!$this->tableExists($table)) {
+            $this->log("Preserve Data Second Step: " . $table . " does not exist on the staging site");
+            return;
+        }
+
+        $now = current_time('mysql');
+        foreach ($rows as $settingKey => $settingValue) {
+            $isInserted = $this->stagingDb->query($this->stagingDb->prepare(
+                "INSERT INTO `{$table}` (setting_key, setting_value, created_at, updated_at) VALUES (%s, %s, %s, %s)
+                 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = VALUES(updated_at)",
+                $settingKey,
+                $settingValue,
+                $now,
+                $now
+            ));
+
+            if ($isInserted === false) {
+                $this->log("Preserve Data Second Step: Failed to insert preserved " . $settingKey . " into " . $table);
+            }
+        }
     }
 
 

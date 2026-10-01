@@ -1,4 +1,4 @@
-![Tests](https://img.shields.io/badge/tests-PHPUnit%20%7C%20Playwright%20%7C%20Selenium-blue)
+![Tests](https://img.shields.io/badge/tests-PHPUnit%20%7C%20Playwright-blue)
 ![PHP](https://img.shields.io/badge/php-7.4%20%7C%208.0--8.4-8892BF)
 ![WordPress](https://img.shields.io/badge/WordPress-tested%20up%20to%206.9-21759b)
 ![License](https://img.shields.io/badge/license-GPLv2%2B-green)
@@ -13,7 +13,7 @@ This is the latest release of WP STAGING BASIC for WordPress that you can find o
 
 This is the repository for WPSTAGING Basic. It is **generated automatically** as part of a build process that happens in the private repository of WPSTAGING Pro, where the real development happens.
 
-In the real repository, we run thousands of quality tests using GitHub actions during development, such as code style (PHPCS), static code analysis checks (PHPSTAN), and automated unit tests (PHPUnit) and webdriver tests (Selenium), powered by wp-browser.
+In the real repository, we run thousands of quality tests using GitHub actions during development, such as code style (PHPCS), static code analysis checks (PHPSTAN), automated unit tests (PHPUnit, powered by wp-browser) and end-to-end browser tests (Playwright).
 
 ## Bugs ##
 If you find an issue, let us know [here](https://github.com/WP-Staging/wp-staging/issues?state=open)!

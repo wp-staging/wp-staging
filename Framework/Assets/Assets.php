@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Assets;
 
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\UpdateProtectionHealth;
@@ -350,6 +351,7 @@ class Assets
             'analyticsConsentAllow'             => esc_url($this->analyticsConsent->getConsentLink(true)),
             'analyticsConsentDeny'              => esc_url($this->analyticsConsent->getConsentLink(false)),
             'analyticsConsentLater'             => esc_url($this->analyticsConsent->getRemindMeLaterConsentLink()),
+            'storageLabels'                     => Providers::STORAGE_LABELS,
             'pluginVersion'                     => WPStaging::getVersion(),
             'isPro'                             => WPStaging::isPro(),
             'isDeveloperOrHigherLicense'        => WPStaging::make(CliIntegrationNotice::class)->isDeveloperOrHigherLicense(),
@@ -641,13 +643,28 @@ class Assets
             'after'
         );
 
+        $captureAsset = $this->getJsAssetsFileName('backup/before-update-capture');
+        wp_enqueue_script(
+            'wpstg-before-update-capture',
+            $this->getAssetsUrl($captureAsset),
+            [],
+            $this->getAssetsVersion($captureAsset),
+            false
+        );
+
         $solidAsset = $this->getJsAssetsFileName('wpstg-solid');
         if (file_exists($this->getAssetsPath($solidAsset)) && !wp_script_is('wpstg-solid', 'registered') && !wp_script_is('wpstg-solid', 'enqueued')) {
             wp_enqueue_script('wpstg-solid', $this->getAssetsUrl($solidAsset), ['wpstg-global'], $this->getAssetsVersion($solidAsset), $this->getScriptLoadingStrategy());
         }
 
         $js = $this->getJsAssetsFileName('backup/before-update');
-        wp_enqueue_script('wpstg-before-update', $this->getAssetsUrl($js), ['wpstg-solid'], $this->getAssetsVersion($js), $this->getScriptLoadingStrategy());
+        wp_enqueue_script(
+            'wpstg-before-update',
+            $this->getAssetsUrl($js),
+            ['wpstg-solid', 'wpstg-before-update-capture'],
+            $this->getAssetsVersion($js),
+            $this->getScriptLoadingStrategy()
+        );
     }
 
 

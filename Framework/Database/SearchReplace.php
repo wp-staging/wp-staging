@@ -29,6 +29,9 @@ class SearchReplace
     const FILTER_REPLACE_EXTENDED_DATA = 'wpstg.database.searchreplace.replace_extended_data';
 
  
+    const SINGLE_PASS_PATTERN_MAX_LENGTH = 8192;
+
+ 
     private $search;
 
  
@@ -48,6 +51,18 @@ class SearchReplace
 
  
     private $isWpBakeryActive;
+
+ 
+    private $singlePass = false;
+
+ 
+    private $singlePassActive = false;
+
+ 
+    private $replacementMap;
+
+ 
+    private $replacementPattern;
 
     protected $smallerReplacement = PHP_INT_MAX;
 
@@ -104,6 +119,12 @@ class SearchReplace
             );
         }
 
+        $this->singlePassActive = $this->canUseSinglePassReplacement();
+        if ($this->singlePassActive) {
+            $this->prepareSinglePassReplacement();
+            return $this->walker($data);
+        }
+
         for ($i = 0; $i < $totalSearch; $i++) {
             $this->currentSearch  = (string)$this->search[$i];
             $this->currentReplace = (string)$this->replace[$i];
@@ -146,15 +167,27 @@ class SearchReplace
         return '[vc_raw_html]' . base64_encode($data) . '[/vc_raw_html]';
     }
 
+
+
+
+
+    public function setSinglePass(bool $enabled)
+    {
+        $this->singlePass = $enabled;
+        return $this;
+    }
+
     public function setSearch(array $search)
     {
         $this->search = $search;
+        $this->replacementMap = null;
         return $this;
     }
 
     public function setReplace(array $replace)
     {
         $this->replace = $replace;
+        $this->replacementMap = null;
         return $this;
     }
 
@@ -171,6 +204,7 @@ class SearchReplace
     public function appendSearchReplacePair(string $search, string $replace)
     {
         $this->search[] = $search;
+        $this->replacementMap = null;
         $this->replace[] = $replace;
         $this->smallerReplacement = PHP_INT_MAX;
         return $this;
@@ -267,8 +301,53 @@ class SearchReplace
         return $data;
     }
 
+ 
+    private function replaceSinglePass(string $data): string
+    {
+        if ($this->replacementPattern === '') {
+            return strtr($data, $this->replacementMap);
+        }
+
+        $result = preg_replace_callback($this->replacementPattern, function ($match) {
+            return (string)$this->replacementMap[$match[0]];
+        }, $data);
+
+        if ($result === null) {
+            throw new \RuntimeException('Could not search and replace database value. PCRE error: ' . preg_last_error());
+        }
+
+        return $result;
+    }
+
+ 
+    private function prepareSinglePassReplacement()
+    {
+        if ($this->replacementMap !== null) {
+            return;
+        }
+
+        $replacementMap = array_combine($this->search, $this->replace);
+        if (array_key_exists('', $replacementMap)) {
+            throw new \InvalidArgumentException('Single-pass search strings must not be empty.');
+        }
+
+        uksort($replacementMap, function ($first, $second) {
+            return strlen($second) <=> strlen($first);
+        });
+
+        $this->replacementMap = $replacementMap;
+        $pattern = '#' . implode('|', array_map(function ($search) {
+            return preg_quote((string)$search, '#');
+        }, array_keys($this->replacementMap))) . '#';
+        $this->replacementPattern = strlen($pattern) <= self::SINGLE_PASS_PATTERN_MAX_LENGTH ? $pattern : '';
+    }
+
     private function strReplace($data = '')
     {
+        if ($this->singlePassActive) {
+            return $this->replaceSinglePass($data);
+        }
+
         $regexExclude = '';
         foreach ($this->exclude as $excludeString) {
  
@@ -281,5 +360,11 @@ class SearchReplace
         }
 
         return preg_replace($pattern, $this->currentReplace, $data);
+    }
+
+ 
+    private function canUseSinglePassReplacement(): bool
+    {
+        return $this->singlePass && $this->caseSensitive && !$this->exclude;
     }
 }

@@ -263,6 +263,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setName($this->jobDataDto->getName());
         $backupMetadata->setIsAutomatedBackup($this->jobDataDto->getIsAutomatedBackup());
         $backupMetadata->setIsBeforeUpdateBackup($this->jobDataDto->getIsBeforeUpdateBackup());
+        $backupMetadata->setIsBeforePushBackup($this->jobDataDto->getIsBeforePushBackup());
         $backupMetadata->setPrefix($this->getPrefix());
 
  

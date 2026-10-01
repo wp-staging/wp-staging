@@ -41,6 +41,13 @@ class StagingSiteDto implements \JsonSerializable
 
     const STATUS_UNFINISHED_BROKEN = 'unfinished or broken (?)';
 
+
+
+
+
+
+    const EXCLUDED_DIRS_VERSION = 1;
+
  
     protected $cloneId = '';
 
@@ -116,6 +123,9 @@ class StagingSiteDto implements \JsonSerializable
  
     protected $networkClone = false;
 
+ 
+    protected $subsiteUrlMappings = [];
+
 
 
 
@@ -148,10 +158,16 @@ class StagingSiteDto implements \JsonSerializable
     protected $excludedDirs = [];
 
  
+    protected $excludedDirsVersion = 0;
+
+ 
     protected $tablePushSelection = false;
 
  
     protected $isAutoUpdatePlugins = false;
+
+ 
+    protected $isBlankSite = false;
 
 
 
@@ -171,6 +187,22 @@ class StagingSiteDto implements \JsonSerializable
 
 
     protected $healthDiagnostics = [];
+
+
+
+
+    public function getSubsiteUrlMappings(): array
+    {
+        return $this->subsiteUrlMappings;
+    }
+
+
+
+
+    public function setSubsiteUrlMappings(array $subsiteUrlMappings)
+    {
+        $this->subsiteUrlMappings = $subsiteUrlMappings;
+    }
 
     public function jsonSerialize(): mixed
     {
@@ -567,6 +599,19 @@ class StagingSiteDto implements \JsonSerializable
         $this->isCronEnabled = $isCronEnabled;
     }
 
+    public function getIsBlankSite(): bool
+    {
+        return $this->isBlankSite;
+    }
+
+
+
+
+    public function setIsBlankSite(bool $isBlankSite)
+    {
+        $this->isBlankSite = $isBlankSite;
+    }
+
     public function getIsWooSchedulerEnabled(): bool
     {
         return $this->isWooSchedulerEnabled;
@@ -663,6 +708,20 @@ class StagingSiteDto implements \JsonSerializable
     public function setExcludedDirs(array $excludedDirs)
     {
         $this->excludedDirs = $excludedDirs;
+    }
+
+    public function getExcludedDirsVersion(): int
+    {
+        return $this->excludedDirsVersion;
+    }
+
+
+
+
+
+    public function setExcludedDirsVersion(int $excludedDirsVersion)
+    {
+        $this->excludedDirsVersion = $excludedDirsVersion;
     }
 
 

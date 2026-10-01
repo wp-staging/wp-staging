@@ -9,6 +9,7 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\Settings\SettingsTable;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Tasks\DatabaseAdjustmentTask;
@@ -52,6 +53,8 @@ class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
     {
         $this->setup();
 
+        $this->preserveSettingsTableRows();
+
         if ($this->isOptionsTableExcluded()) {
             return $this->generateResponse();
         }
@@ -89,6 +92,29 @@ class PreserveOptionsOnUpdateTask extends DatabaseAdjustmentTask
         $this->logger->info(sprintf('Preserved %d staging-only option(s) across update.', count($preservedRows)));
 
         return $this->generateResponse();
+    }
+
+
+
+
+
+
+    private function preserveSettingsTableRows()
+    {
+        $destTable = $this->getPrefixedStagingTableName(SettingsTable::TABLE_NAME);
+        $bakTable  = DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP . SettingsTable::TABLE_NAME;
+
+        if (!$this->isTableExists($bakTable) || $this->isTableExcluded(SettingsTable::TABLE_NAME)) {
+            return;
+        }
+
+        $this->executeBulk(
+            "INSERT INTO `{$destTable}` (setting_key, setting_value, created_at, updated_at) "
+            . "SELECT setting_key, setting_value, created_at, updated_at FROM `{$bakTable}` "
+            . "ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = VALUES(updated_at)"
+        );
+
+        $this->logger->info('Preserved the staging site\'s own storage settings across update.');
     }
 
 

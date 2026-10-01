@@ -114,6 +114,7 @@ class PrepareBackup extends PrepareJob
                 'backupExcludedDirectories'      => 'string',
             ]);
             $data['name'] = isset($_POST['wpstgBackupData']['name']) ? htmlentities(sanitize_text_field($_POST['wpstgBackupData']['name']), ENT_QUOTES) : '';
+            $data         = $this->discardScheduleIdSentWithTheRequest($data);
         }
 
         try {
@@ -127,6 +128,20 @@ class PrepareBackup extends PrepareJob
         }
 
         return $sanitizedData;
+    }
+
+
+
+
+
+
+
+
+    private function discardScheduleIdSentWithTheRequest(array $data): array
+    {
+        unset($data['scheduleId']);
+
+        return $data;
     }
 
 
@@ -210,6 +225,7 @@ class PrepareBackup extends PrepareJob
             'isExportingDatabase'            => false,
             'isAutomatedBackup'              => false,
             'isBeforeUpdateBackup'           => false,
+            'isBeforePushBackup'             => false,
             'repeatBackupOnSchedule'         => false,
             'scheduleRecurrence'             => '',
             'scheduleTime'                   => [0, 0],

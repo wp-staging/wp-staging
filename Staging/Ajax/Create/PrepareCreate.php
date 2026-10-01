@@ -105,6 +105,8 @@ class PrepareCreate extends AbstractAjaxPrepare
             'excludeFileRules'       => [],
             'excludeFolderRules'     => [],
             'excludeExtensionRules'  => [],
+            'isBlankSite'            => false,
+            'blankWpVersion'         => '',
         ];
     }
 

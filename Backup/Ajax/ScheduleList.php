@@ -67,6 +67,7 @@ class ScheduleList
             $storages     = isset($schedule['storages']) && is_array($schedule['storages']) ? $schedule['storages'] : [];
             $storageKeys  = $this->keysWithAResolvableStorageName($storages);
             $storageNames = array_map([$this, 'storageDisplayName'], $storageKeys);
+            $storageIcons = array_map([$this, 'storageIcon'], $storageKeys);
 
             $reconnectStorageKeys  = $this->resolveReconnectStorageKeys($schedule);
             $reconnectStorageNames = array_map([$this, 'storageDisplayName'], $reconnectStorageKeys);
@@ -81,6 +82,7 @@ class ScheduleList
                 'recurrence'                     => Cron::getCronDisplayName($schedule['schedule'] ?? ''),
                 'storageNames'                   => $storageNames,
                 'storageKeys'                    => $storageKeys,
+                'storageIcons'                   => $storageIcons,
                 'nextRunTimestamp'               => $this->normalizeNextRunTimestamp($nextRunMap[$schedule['scheduleId'] ?? ''] ?? null, $schedule['schedule'] ?? ''),
                 'isPro'                          => $this->isPro,
                 'isRunnableOnThisVersion'        => Cron::isRecurrenceRegistered($schedule['schedule'] ?? ''),
@@ -343,5 +345,20 @@ class ScheduleList
         $name = $this->providers->getStorageProperty($storageKey, 'name');
 
         return empty($name) ? $storageKey : $name;
+    }
+
+
+
+
+
+
+
+
+
+    protected function storageIcon(string $storageKey): string
+    {
+        $icon = $this->providers->getStorageProperty($storageKey, 'icon');
+
+        return is_string($icon) ? $icon : '';
     }
 }

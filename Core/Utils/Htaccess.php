@@ -63,6 +63,28 @@ class Htaccess
         ]));
     }
 
+ 
+    const DENY_DIRECTIVE = 'Require all denied';
+
+
+
+
+
+
+
+    public function createDeny($path)
+    {
+        return $this->filesystem->create($path, implode(PHP_EOL, [
+            '<IfModule mod_authz_core.c>',
+            self::DENY_DIRECTIVE,
+            '</IfModule>',
+            '<IfModule !mod_authz_core.c>',
+            'Order deny,allow',
+            'Deny from all',
+            '</IfModule>',
+        ]));
+    }
+
 
 
 

@@ -13,6 +13,16 @@ abstract class BackupTask extends AbstractTask
  
     protected $jobDataDto;
 
+
+
+
+
+
+    public function usesTaskQueue(): bool
+    {
+        return false;
+    }
+
     public function setJobDataDto(JobDataDto $jobDataDto)
     {
  

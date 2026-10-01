@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Service;
 
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
@@ -14,6 +15,7 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 use WPStaging\Framework\Traits\ResourceTrait;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Staging\Dto\Service\BigFileDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -27,6 +29,7 @@ class FileCopier
 {
     use ResourceTrait;
     use EndOfLinePlaceholderTrait;
+    use WithUnfinishedCloneWpConfigGuard;
 
 
 
@@ -298,12 +301,9 @@ class FileCopier
 
         $destinationPath = $this->getDestinationPath($filePath, $indexPath);
 
- 
-        $fileSize = filesize($filePath);
-
-        $result = false;
- 
-        if ($fileSize > $this->batchSize) {
+        if ($this->isStagingSiteRootWpConfig($destinationPath)) {
+            $result = $this->copyStagingSiteRootWpConfig($filePath, $destinationPath);
+        } elseif (filesize($filePath) > $this->batchSize) {
             $result = $this->copyBigFile($filePath, $destinationPath, $this->batchSize);
         } else {
             $result = $this->filesystem->copyFile($filePath, $destinationPath);
@@ -317,6 +317,26 @@ class FileCopier
         $this->chmod($destinationPath, $this->permissions->getFilePermission($destinationPath));
 
         $this->setDirPermissions($destinationPath);
+
+        return true;
+    }
+
+    protected function isStagingSiteRootWpConfig(string $destinationPath): bool
+    {
+        return strcasecmp($destinationPath, $this->stagingSitePath . 'wp-config.php') === 0;
+    }
+
+
+
+
+
+
+
+    protected function copyStagingSiteRootWpConfig(string $sourcePath, string $destinationPath): bool
+    {
+        if (!$this->copyWpConfigWithUnfinishedCloneGuard($this->filesystem, $sourcePath, $destinationPath)) {
+            throw new WPStagingException("Refused to copy a wp-config.php that cannot be guarded against an unfinished clone: {$sourcePath} -> {$destinationPath}");
+        }
 
         return true;
     }

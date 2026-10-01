@@ -26,9 +26,9 @@ class EncryptionNoticeService
 
 
 
-    public function renderEncryptedNotice(string $optionName, $credentialKeys, string $label)
+    public function renderEncryptedNotice($storedOptions, $credentialKeys, string $label)
     {
-        if ($this->hasStaleCredential($optionName, $credentialKeys)) {
+        if ($this->hasStaleCredential($storedOptions, $credentialKeys)) {
             require WPSTG_VIEWS_DIR . '_main/partials/encrypted-notice.php';
         }
     }
@@ -40,15 +40,14 @@ class EncryptionNoticeService
 
 
 
-    private function hasStaleCredential(string $optionName, $credentialKeys): bool
+    private function hasStaleCredential($storedOptions, $credentialKeys): bool
     {
-        $option = get_option($optionName, []);
-        if (empty($option) || !is_array($option)) {
+        if (empty($storedOptions) || !is_array($storedOptions)) {
             return false;
         }
 
         foreach ((array)$credentialKeys as $key) {
-            if ($this->isStale($option[$key] ?? '')) {
+            if ($this->isStale($storedOptions[$key] ?? '')) {
                 return true;
             }
         }

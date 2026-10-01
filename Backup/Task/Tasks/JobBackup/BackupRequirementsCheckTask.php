@@ -12,7 +12,6 @@ use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Service\Archiver;
@@ -34,9 +33,6 @@ class BackupRequirementsCheckTask extends BackupTask
 
  
     protected $analyticsBackupCreate;
-
- 
-    protected $backupScheduler;
 
  
     private $archiver;
@@ -61,7 +57,6 @@ class BackupRequirementsCheckTask extends BackupTask
         SeekableQueueInterface $taskQueue,
         DiskWriteCheck $diskWriteCheck,
         AnalyticsBackupCreate $analyticsBackupCreate,
-        BackupScheduler $backupScheduler,
         Archiver $archiver,
         SystemInfo $systemInfo,
         Providers $providers,
@@ -72,7 +67,6 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->directory             = $directory;
         $this->diskWriteCheck        = $diskWriteCheck;
         $this->analyticsBackupCreate = $analyticsBackupCreate;
-        $this->backupScheduler       = $backupScheduler;
         $this->archiver              = $archiver;
         $this->systemInfo            = $systemInfo;
         $this->providers             = $providers;
@@ -138,8 +132,6 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->addBackupSettingsToLogs();
 
         $this->logger->info('Backup requirements passed...');
-
-        $this->backupScheduler->maybeDeleteOldBackups($this->jobDataDto);
 
         $this->maybeCreateMainIndexFile();
 
@@ -368,14 +360,13 @@ class BackupRequirementsCheckTask extends BackupTask
                 continue;
             }
 
-            $authClass    = $this->providers->getStorageProperty($storage, 'authClass', true);
             $providerName = $this->providers->getStorageProperty($storage, 'name', true);
-
-            if (!$authClass || !class_exists($authClass) || empty($providerName)) {
+            $provider     = $this->providers->makeStorageFor($storage);
+            if (empty($providerName) || $provider === null) {
                 continue;
             }
 
-            $this->logger->logProviderSettings($providerName, $authClass);
+            $this->logger->logProviderSettings($providerName, $provider);
         }
     }
 

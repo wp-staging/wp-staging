@@ -637,21 +637,18 @@ $directory = WPStaging::make(Directory::class);
                                             <span class="wpstg--tooltiptext wpstg-settings-field-description">
                                                 <?php
                                                 esc_html_e(
-                                                    "Remove all WP STAGING settings and data on uninstall. Staging site data, backups, and related database tables will not be deleted unless empty.",
+                                                    "Remove settings and temporary data on uninstall. Staging sites and backups are kept to prevent data loss. Delete them separately before uninstalling if no longer needed.",
                                                     "wp-staging"
                                                 );
                                                 ?>
                                                 <br><br>
-                                                <strong><?php echo esc_html__("Note:", "wp-staging"); ?></strong>
-                                                <br>
                                                 <?php
+                                                /* translators: %s: Absolute path to the backup folder. */
                                                 echo sprintf(
-                                                    esc_html__("The backups folder %s will only be deleted if it does not contain any backup files.", "wp-staging"),
+                                                    esc_html__("Backup folder: %s", "wp-staging"),
                                                     "<strong>" . esc_html($directory->getBackupDirectory()) . "</strong>"
                                                 );
                                                 ?>
-                                                <br>
-                                                <?php esc_html_e("Staging site data is never deleted while staging sites exist.", "wp-staging");?>
                                             </span>
                                         </span>
                                         <span class="wpstg-settings-field-badge wpstg-caution"><?php echo esc_html__('Caution', 'wp-staging');?></span>
@@ -688,7 +685,7 @@ $directory = WPStaging::make(Directory::class);
                                     <?php
  
                                         $encryptionNoticeService = WPStaging::make(EncryptionNoticeService::class);
-                                        $encryptionNoticeService->renderEncryptedNotice(Queue::OPTION_HTTP_AUTH_CREDENTIALS, 'password', 'HTTP Basic Auth');
+                                        $encryptionNoticeService->renderEncryptedNotice(get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []), 'password', 'HTTP Basic Auth');
                                     ?>
                                 </div>
                                 <div class="wpstg-settings-field wpstg-settings-has-toggle">

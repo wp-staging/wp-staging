@@ -332,7 +332,7 @@ class RenameDatabaseTask extends RestoreTask
 
         $this->logger->info('Database restored successfully.');
 
-        Hooks::doAction(self::FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS);
+        Hooks::doAction(self::FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS, $this->jobDataDto->getBackupMetadata());
     }
 
 

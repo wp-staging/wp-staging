@@ -635,7 +635,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
 
 
-    public function logProviderSettings($providerName, $authClass)
+    public function logProviderSettings($providerName, $provider)
     {
         $excludedFields = [
             'expiresIn',
@@ -646,7 +646,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
             'lastUpdated',
         ];
 
-        $providerOptions = WPStaging::make($authClass)->getOptions();
+        $providerOptions = $provider->getOptions();
 
         $this->add(sprintf('%s Settings', esc_html($providerName)), Logger::TYPE_INFO);
 

@@ -75,6 +75,7 @@ class ScheduledBackupReport
         return $jobDataDto instanceof JobBackupDataDto
             && !empty($jobDataDto->getScheduleId())
             && !$jobDataDto->getRepeatBackupOnSchedule()
+            && !$jobDataDto->getIsCreateScheduleBackupNow()
             && !$jobDataDto->getIsBeforeUpdateBackup()
             && $jobDataDto->getTotalBackupSize() > 0;
     }

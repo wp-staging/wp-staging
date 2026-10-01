@@ -9,6 +9,7 @@ use function WPStaging\functions\debug_log;
 
 
 
+
 class Elementor
 {
 
@@ -44,9 +45,9 @@ class Elementor
 
 
 
-    public function queueCssCacheClearAfterPush(bool $isNetworkClone)
+    public function queueCssCacheClear(bool $everySiteInNetworkReplaced)
     {
-        if (!$isNetworkClone || !is_multisite() || !is_main_site()) {
+        if (!$everySiteInNetworkReplaced || !is_multisite() || !is_main_site()) {
             $this->queueCssCacheClearOnCurrentSite();
             return;
         }
@@ -82,7 +83,7 @@ class Elementor
         }
 
         $filesManager->clear_cache();
-        debug_log('Elementor CSS cache cleared after push.');
+        debug_log('Elementor CSS cache cleared after the database was replaced.');
         delete_option(self::OPTION_CLEAR_CSS_CACHE);
     }
 

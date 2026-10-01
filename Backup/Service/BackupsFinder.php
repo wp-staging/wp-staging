@@ -110,6 +110,17 @@ class BackupsFinder extends AbstractBackupsFinder
         if (file_exists($renamedBackupPath)) {
             $this->filesystem->delete($renamedBackupPath);
         }
+
+ 
+ 
+ 
+ 
+        $partFiles = glob($backupsDir . '*' . $jobId . '.*.' . Archiver::BACKUP_EXTENSION . '*');
+        if (is_array($partFiles)) {
+            foreach ($partFiles as $partFile) {
+                $this->filesystem->delete($partFile);
+            }
+        }
     }
 
 

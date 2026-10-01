@@ -16,6 +16,7 @@ use WPStaging\Staging\Service\TableScanner;
 $copyMode = isset($copyMode) ? $copyMode : 'create';
 $copyPanelId = isset($copyPanelId) ? $copyPanelId : sprintf('wpstg-%s-copy-panel', $copyMode);
 $copyAccordionCardClass = isset($copyAccordionCardClass) ? $copyAccordionCardClass : 'wpstg-create-accordion-card';
+$copyCardIsCloneOnly    = isset($copyCardIsCloneOnly) ? $copyCardIsCloneOnly : false;
 $copyHeaderClass = isset($copyHeaderClass) ? $copyHeaderClass : 'wpstg-tab-header wpstg-create-accordion-header';
 $copyChevronClass = isset($copyChevronClass) ? $copyChevronClass : 'wpstg-create-accordion-chevron';
 $copyIconClass = isset($copyIconClass) ? $copyIconClass : 'wpstg-create-accordion-icon';
@@ -30,7 +31,7 @@ $filesToggleClass = sprintf('wpstg-%s-copy-toggle', $copyMode);
 $databaseCustomizeClass = sprintf('wpstg-%s-copy-customize-tables', $copyMode);
 $filesCustomizeClass = sprintf('wpstg-%s-copy-customize-files', $copyMode);
 ?>
-<div class="<?php echo esc_attr($copyAccordionCardClass); ?>">
+<div class="<?php echo esc_attr($copyAccordionCardClass); ?>"<?php echo $copyCardIsCloneOnly ? ' data-wpstg-clone-copy' : ''; ?>>
     <a href="#" class="<?php echo esc_attr($copyHeaderClass); ?>" data-id="#<?php echo esc_attr($copyPanelId); ?>" data-collapsed="true" role="button" aria-expanded="false" aria-controls="<?php echo esc_attr($copyPanelId); ?>">
         <span class="<?php echo esc_attr($copyIconClass); ?>" aria-hidden="true">
             <?php $renderer->icon('copy'); ?>
