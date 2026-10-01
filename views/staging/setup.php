@@ -73,6 +73,7 @@ $runtimeSummaryUpgradeLink = $isProLicenseActive ? '' : sprintf(
     esc_html__('Upgrade', 'wp-staging')
 );
 
+$runtimeSummaryEnabledLabel = $isProLicenseActive ? __('Enabled', 'wp-staging') : __('Always on', 'wp-staging');
 
 $runtimeSummaryTooltips = [
     'emails' => [
@@ -598,17 +599,17 @@ $runtimeSummaryTooltips = [
         data-engine-next-gen-label="<?php esc_attr_e('Next-Gen', 'wp-staging'); ?>"
         data-engine-legacy-suffix="<?php esc_attr_e(' - faster one available', 'wp-staging'); ?>"
         data-engine-next-gen-suffix="<?php esc_attr_e(' - recommended', 'wp-staging'); ?>"
-        data-summary-enabled="<?php esc_attr_e('Enabled', 'wp-staging'); ?>"
+        data-summary-enabled="<?php echo esc_attr($runtimeSummaryEnabledLabel); ?>"
         data-summary-disabled="<?php esc_attr_e('Disabled', 'wp-staging'); ?>"
-        data-summary-emails-enabled="<?php esc_attr_e('Enabled', 'wp-staging'); ?>"
+        data-summary-emails-enabled="<?php echo esc_attr($runtimeSummaryEnabledLabel); ?>"
         data-summary-emails-disabled="<?php esc_attr_e('Disabled', 'wp-staging'); ?>"
         data-summary-emails-enabled-tooltip="<?php echo esc_attr($runtimeSummaryTooltips['emails']['enabled']); ?>"
         data-summary-emails-disabled-tooltip="<?php echo esc_attr($runtimeSummaryTooltips['emails']['disabled']); ?>"
-        data-summary-cron-enabled="<?php esc_attr_e('Enabled', 'wp-staging'); ?>"
+        data-summary-cron-enabled="<?php echo esc_attr($runtimeSummaryEnabledLabel); ?>"
         data-summary-cron-disabled="<?php esc_attr_e('Disabled', 'wp-staging'); ?>"
         data-summary-cron-enabled-tooltip="<?php echo esc_attr($runtimeSummaryTooltips['cron']['enabled']); ?>"
         data-summary-cron-disabled-tooltip="<?php echo esc_attr($runtimeSummaryTooltips['cron']['disabled']); ?>"
-        data-summary-woo-enabled="<?php esc_attr_e('Enabled', 'wp-staging'); ?>"
+        data-summary-woo-enabled="<?php echo esc_attr($runtimeSummaryEnabledLabel); ?>"
         data-summary-woo-disabled="<?php esc_attr_e('Disabled', 'wp-staging'); ?>"
         data-summary-woo-enabled-tooltip="<?php echo esc_attr($runtimeSummaryTooltips['woo']['enabled']); ?>"
         data-summary-woo-disabled-tooltip="<?php echo esc_attr($runtimeSummaryTooltips['woo']['disabled']); ?>"

@@ -23,7 +23,7 @@ class PermalinksPurge
         set_transient(self::TRANSIENT, "true");
         $this->logPushCompleted();
         set_transient(LiteSpeedCache::TRANSIENT_PURGE_LITESPEED_CACHE, "true");
-        WPStaging::make(Elementor::class)->queueCssCacheClearAfterPush($this->pushedStagingSiteIsNetworkClone($stagingSite));
+        WPStaging::make(Elementor::class)->queueCssCacheClear($this->pushedStagingSiteIsNetworkClone($stagingSite));
     }
 
     public function purgePermalinks()

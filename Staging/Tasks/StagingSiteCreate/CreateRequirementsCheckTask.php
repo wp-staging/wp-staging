@@ -5,6 +5,7 @@ namespace WPStaging\Staging\Tasks\StagingSiteCreate;
 use RuntimeException;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Framework\Adapter\Database;
+use WPStaging\Framework\Adapter\Database\DatabaseException;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
@@ -17,6 +18,7 @@ use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
+use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Staging\Traits\WithStagingEnginePreference;
 use WPStaging\Staging\Traits\WithStagingRequirementLogs;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -26,6 +28,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class CreateRequirementsCheckTask extends StagingTask
 {
+    use WithStagingDatabase;
     use WithStagingEnginePreference;
     use WithStagingRequirementLogs;
 
@@ -109,6 +112,7 @@ class CreateRequirementsCheckTask extends StagingTask
             $this->cannotCreateIfPrefixContainsInvalidCharacter();
             $this->cannotCreateIfUsingExternalDatabase();
             $this->cannotCreateIfStagingPrefixSameAsProductionSite();
+            $this->cannotCreateIfStagingPrefixIsInUse();
         } catch (RuntimeException $e) {
             $this->jobDataDto->setRequirementFailReason($e->getMessage());
             $this->analyticsStagingCreate->enqueueRequirementFailEvent($this->jobDataDto->getId(), $this->jobDataDto);
@@ -182,6 +186,37 @@ class CreateRequirementsCheckTask extends StagingTask
         if ($isSamePrefix) {
             throw new RuntimeException(esc_html__('Staging site prefix is same as production site prefix. Use different prefix for staging site.', 'wp-staging'));
         }
+    }
+
+
+
+
+
+
+    protected function cannotCreateIfStagingPrefixIsInUse()
+    {
+        try {
+            $this->initStagingDatabase($this->jobDataDto->getStagingSite());
+        } catch (DatabaseException $e) {
+            throw new RuntimeException($e->getMessage());
+        }
+
+        $stagingSitePrefix = $this->jobDataDto->getDatabasePrefix();
+        $stagingDb         = $this->stagingDb->getWpdb();
+        $existingTable     = $stagingDb->get_var($stagingDb->prepare('SHOW TABLES LIKE %s', $stagingDb->esc_like($stagingSitePrefix) . '%'));
+        if ($stagingDb->last_error !== '') {
+            throw new RuntimeException(esc_html($stagingDb->last_error));
+        }
+
+        if ($existingTable === null) {
+            return;
+        }
+
+        throw new RuntimeException(sprintf(
+            esc_html__("Can not proceed. Tables beginning with the prefix '%1\$s' already exist in the database i.e. %2\$s. Choose another table prefix and try again.", 'wp-staging'),
+            esc_html($stagingSitePrefix),
+            esc_html($existingTable)
+        ));
     }
 
     protected function writeStagingSettingsLogs()

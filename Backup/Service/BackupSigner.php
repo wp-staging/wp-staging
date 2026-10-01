@@ -10,6 +10,9 @@ use WPStaging\Framework\Filesystem\FileObject;
 class BackupSigner
 {
  
+    const MAX_SIZE_WRITE_ATTEMPTS = 16;
+
+ 
     protected $backupMetadataEditor;
 
  
@@ -65,23 +68,66 @@ class BackupSigner
     {
         clearstatcache();
         if (!is_file($backupFilePath)) {
-            throw new \RuntimeException('The backup file is invalid: ' . $backupFilePath . '.');
+            throw new RuntimeException('The backup file is invalid: ' . $backupFilePath . '.');
         }
 
         $file           = new FileObject($backupFilePath, FileObject::MODE_APPEND_AND_READ);
         $backupMetadata = new BackupMetadata();
         $backupMetadata = $backupMetadata->hydrateByFile($file);
 
-        if ($backupSize === 0) {
-            $backupSize = $file->getSize();
+        if ($backupSize !== 0) {
+            $this->writeSizesToMetadata($file, $backupMetadata, $backupSize, $partSize);
+            $this->jobDataDto->setTotalBackupSize($backupSize);
 
-            $backupSize = $this->reCalcBackupSize($backupSize);
+            return;
         }
 
-        $this->jobDataDto->setTotalBackupSize($backupSize);
+        $ownSize = $this->writeUntilTheSizeHolds(function ($size) use ($file, $backupMetadata) {
+            return $this->writeSizesToMetadata($file, $backupMetadata, $size, $size);
+        }, $file->getSize());
+
+        $this->jobDataDto->setTotalBackupSize($ownSize);
+    }
+
+
+
+
+    private function writeSizesToMetadata(FileObject $file, BackupMetadata $backupMetadata, int $backupSize, int $partSize): int
+    {
         $backupMetadata->setBackupSize($backupSize);
-        $this->signMultiPartMetadata($backupMetadata, $partSize);
+        $this->signMultipartMetadata($backupMetadata, $partSize);
         $this->backupMetadataEditor->setBackupMetadata($file, $backupMetadata);
+        $file->fflush();
+
+        clearstatcache(true, $file->getPathname());
+
+        return (int)filesize($file->getPathname());
+    }
+
+
+
+
+
+
+
+
+
+
+    protected function writeUntilTheSizeHolds(callable $writeThenMeasure, int $startingSize): int
+    {
+        $size = $startingSize;
+
+        for ($attempt = 0; $attempt < static::MAX_SIZE_WRITE_ATTEMPTS; $attempt++) {
+            $measured = (int)$writeThenMeasure($size);
+
+            if ($measured === $size) {
+                return $size;
+            }
+
+            $size = $measured;
+        }
+
+        throw new RuntimeException('Cannot determine the size to record in the backup metadata.');
     }
 
 
@@ -135,21 +181,5 @@ class BackupSigner
     protected function validateMultipartMetadata(BackupMetadata $backupMetadata, int $partSize)
     {
  
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-    private function reCalcBackupSize(int $backupSize = 0): int
-    {
-        return $backupSize - 2 + strlen((string)$backupSize);
     }
 }

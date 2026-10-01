@@ -73,6 +73,8 @@ trait WithStagingRequirementLogs
             $this->booleanSetting('Emails Sending Allowed', 'getIsEmailsAllowed'),
             $this->booleanSetting('Email Reminder Enabled', 'getIsEmailsReminderEnabled'),
             $this->booleanSetting('Auto Update Plugins Enabled', 'getIsAutoUpdatePlugins'),
+            $this->booleanSetting('Create Blank WP Site Enabled', 'getIsBlankSite'),
+            $this->stringSetting('Blank WP Site Version', 'getBlankWpVersion'),
         ];
 
         if ($this->isWooSchedulerSettingRendered()) {
@@ -108,7 +110,7 @@ trait WithStagingRequirementLogs
             $this->booleanSetting('Clean Plugins/Themes', 'getIsCleanPluginsThemes'),
             $this->booleanSetting('Clean Uploads', 'getIsCleanUploads'),
             $this->booleanSetting('Backup Uploads', 'getIsBackupUploads'),
-            $this->booleanSetting('Create Database Backup', 'getIsCreateDatabaseBackup'),
+            $this->booleanSetting('Create Full Site Backup', 'getIsCreateDatabaseBackup'),
         ];
     }
 

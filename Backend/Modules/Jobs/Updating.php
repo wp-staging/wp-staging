@@ -11,6 +11,7 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Traits\ValueGetterTrait;
+use WPStaging\Pro\Multisite\Service\SubsiteUrlMapping;
 
 
 
@@ -84,6 +85,7 @@ class Updating extends Job
  
         $this->options->clone               = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
         $this->options->cloneNumber         = 1;
+        $this->options->subsiteUrlMappings   = [];
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
         $this->options->extraDirectories    = [];
@@ -146,6 +148,14 @@ class Updating extends Job
             $this->options->prefix                  = $this->getValueFromArray('prefix', $currentStagingSite);
             $this->options->isEmailsAllowed         = $this->getValueFromArray('isEmailsAllowed', $currentStagingSite);
             $this->options->networkClone            = filter_var($this->getValueFromArray('networkClone', $currentStagingSite), FILTER_VALIDATE_BOOLEAN);
+            $storedSubsiteUrlMappings               = $this->getValueFromArray('subsiteUrlMappings', $currentStagingSite, []);
+            $this->options->subsiteUrlMappings      = $this->options->networkClone
+                && defined('WPSTGPRO_VERSION')
+                && class_exists(SubsiteUrlMapping::class)
+                && is_array($storedSubsiteUrlMappings)
+                && !empty($storedSubsiteUrlMappings)
+                ? WPStaging::make(SubsiteUrlMapping::class)->refreshCloneMappings($storedSubsiteUrlMappings, (string)$this->options->destinationHostname)
+                : [];
             $this->options->homeHostname            = $this->urls->getHomeUrlWithoutScheme();
             $this->options->useNewAdminAccount      = $this->getValueFromArray('useNewAdminAccount', $currentStagingSite);
             $this->options->adminEmail              = $this->getValueFromArray('adminEmail', $currentStagingSite);

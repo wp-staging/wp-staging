@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Traits;
 
 use WPStaging\Backup\Storage\Providers;
+use WPStaging\Backup\Storage\StorageProfiles;
 use WPStaging\Backup\Storage\Traits\StorageIdNormalizerTrait;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
@@ -129,11 +130,25 @@ trait EventLoggerTrait
  
     public function logBackupUploadCompleted(array $storages = [])
     {
- 
         $storages      = array_map([$this, 'normalizeStorageId'], $storages);
-        $storages      = array_fill_keys($storages, true);
+        $storages      = array_fill_keys($this->foldProfilesIntoProviders($storages), true);
         $processPrefix = EventLoggerConst::PROCESS_PREFIX_BACKUP_UPLOAD . '|' . $this->prepareJobSettings($this->backupStoragesIdentifiers, $storages);
         $this->writeEventStatus($processPrefix);
+    }
+
+
+
+
+
+
+
+    private function foldProfilesIntoProviders(array $storages): array
+    {
+        $profiles = new StorageProfiles();
+
+        return array_map(function ($storageId) use ($profiles) {
+            return $profiles->getBaseProvider((string)$storageId);
+        }, $storages);
     }
 
 

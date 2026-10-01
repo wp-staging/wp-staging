@@ -398,7 +398,7 @@ class DirectoryScanner
             $shouldBeChecked = false;
         }
 
-        $shouldBeChecked = $this->getShouldBeChecked($shouldBeChecked, $directory);
+        $shouldBeChecked = $this->getShouldBeChecked($shouldBeChecked, $directory, $preserveSelection);
         $isDisabledDir = $directory->getName() === 'wp-admin' || $directory->getName() === 'wp-includes';
 
         $isDisabled = false;
@@ -604,7 +604,7 @@ class DirectoryScanner
 
 
 
-    protected function getShouldBeChecked(bool $shouldBeChecked, DirectoryNodeDto $directory): bool
+    protected function getShouldBeChecked(bool $shouldBeChecked, DirectoryNodeDto $directory, bool $preserveSelection = false): bool
     {
         return $shouldBeChecked;
     }

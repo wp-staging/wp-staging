@@ -10,18 +10,20 @@ use WPStaging\Staging\Interfaces\StagingDatabaseDtoInterface;
 use WPStaging\Staging\Interfaces\StagingNetworkDtoInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
+use WPStaging\Staging\Interfaces\SubsiteUrlMappingDtoInterface;
 use WPStaging\Staging\Traits\StagingDatabaseDtoTrait;
 use WPStaging\Staging\Traits\StagingNetworkDtoTrait;
 use WPStaging\Staging\Traits\StagingOperationDtoTrait;
+use WPStaging\Staging\Traits\SubsiteUrlMappingDtoTrait;
 use WPStaging\Staging\Traits\WithAdvanceStagingOptions;
 use WPStaging\Staging\Traits\WithStagingSiteDto;
 
 
 
 
-class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingSiteDtoInterface, StagingOperationDtoInterface, AdvanceStagingOptionsInterface, FilesystemScannerDtoInterface, StagingNetworkDtoInterface
+class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingSiteDtoInterface, StagingOperationDtoInterface, AdvanceStagingOptionsInterface, FilesystemScannerDtoInterface, StagingNetworkDtoInterface, SubsiteUrlMappingDtoInterface
 {
-    use FilesystemScannerDtoTrait, WithAdvanceStagingOptions, WithStagingSiteDto, StagingOperationDtoTrait, StagingDatabaseDtoTrait, StagingNetworkDtoTrait {
+    use FilesystemScannerDtoTrait, WithAdvanceStagingOptions, WithStagingSiteDto, StagingOperationDtoTrait, StagingDatabaseDtoTrait, StagingNetworkDtoTrait, SubsiteUrlMappingDtoTrait {
         StagingOperationDtoTrait::setExcludedTables insteadof StagingDatabaseDtoTrait;
         StagingOperationDtoTrait::getExcludedTables insteadof StagingDatabaseDtoTrait;
         WithAdvanceStagingOptions::getDatabasePrefix insteadof StagingDatabaseDtoTrait;
@@ -71,6 +73,18 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
 
 
     private $isUploadsCleanupDone = false;
+
+ 
+    private $blankAdminUsername = '';
+
+ 
+    private $blankRemoteFileSize = 0;
+
+ 
+    private $blankDownloadedBytes = 0;
+
+ 
+    private $blankChecksumOffset = 0;
 
 
 
@@ -223,5 +237,57 @@ class StagingSiteJobsDataDto extends JobDataDto implements StagingDatabaseDtoInt
     public function getIsUploadsCleanupDone(): bool
     {
         return $this->isUploadsCleanupDone;
+    }
+
+
+
+
+    public function setBlankAdminUsername(string $blankAdminUsername)
+    {
+        $this->blankAdminUsername = $blankAdminUsername;
+    }
+
+    public function getBlankAdminUsername(): string
+    {
+        return $this->blankAdminUsername;
+    }
+
+
+
+
+    public function setBlankRemoteFileSize(int $blankRemoteFileSize)
+    {
+        $this->blankRemoteFileSize = $blankRemoteFileSize;
+    }
+
+    public function getBlankRemoteFileSize(): int
+    {
+        return $this->blankRemoteFileSize;
+    }
+
+
+
+
+    public function setBlankDownloadedBytes(int $blankDownloadedBytes)
+    {
+        $this->blankDownloadedBytes = $blankDownloadedBytes;
+    }
+
+    public function getBlankDownloadedBytes(): int
+    {
+        return $this->blankDownloadedBytes;
+    }
+
+
+
+
+    public function setBlankChecksumOffset(int $blankChecksumOffset)
+    {
+        $this->blankChecksumOffset = $blankChecksumOffset;
+    }
+
+    public function getBlankChecksumOffset(): int
+    {
+        return $this->blankChecksumOffset;
     }
 }

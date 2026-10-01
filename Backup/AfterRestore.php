@@ -2,10 +2,12 @@
 
 namespace WPStaging\Backup;
 
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Security\AccessToken;
+use WPStaging\Framework\ThirdParty\Elementor;
 use WPStaging\Framework\ThirdParty\NinjaForms;
 
 class AfterRestore
@@ -31,13 +33,44 @@ class AfterRestore
 
 
 
+    protected $elementor;
 
 
-    public function __construct(TableService $tableService, AccessToken $accessToken, NinjaForms $ninjaForms)
+
+
+
+
+
+    public function __construct(TableService $tableService, AccessToken $accessToken, NinjaForms $ninjaForms, Elementor $elementor)
     {
         $this->tableService = $tableService;
         $this->accessToken  = $accessToken;
         $this->ninjaForms   = $ninjaForms;
+        $this->elementor    = $elementor;
+    }
+
+
+
+
+
+
+
+
+    public function queueElementorCssCacheClear($backupMetadata = null)
+    {
+        $this->elementor->queueCssCacheClear($this->restoredBackupIsNetworkBackup($backupMetadata));
+    }
+
+
+
+
+
+
+
+    private function restoredBackupIsNetworkBackup($backupMetadata): bool
+    {
+        return $backupMetadata instanceof BackupMetadata
+            && $backupMetadata->getBackupType() === BackupMetadata::BACKUP_TYPE_MULTISITE;
     }
 
 

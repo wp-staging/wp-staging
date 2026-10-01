@@ -123,7 +123,7 @@ $assets            = WPStaging::make(Assets::class);
                                 <div class="wpstg-system-info-staging-site-card wpstg-card wpstg-system-info-card-body wpstg-w-[unset]">
                                     <div class="wpstg-system-info-staging-site-header wpstg-toggle-header" data-toggle-target="<?php echo esc_attr($toggleId); ?>">
                                         <h4 class="wpstg-system-info-staging-site-title">
-                                            <?php $assets->renderSvg($provider['id'] ?? '', 'wpstg-storages-icon'); ?>
+                                            <?php $assets->renderSvg($provider['icon'] ?? '', 'wpstg-storages-icon'); ?>
                                             <?php echo esc_html($provider['name'] ?? ''); ?>
                                         </h4>
                                         <svg class="wpstg-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

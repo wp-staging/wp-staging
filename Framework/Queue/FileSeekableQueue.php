@@ -11,6 +11,9 @@ use WPStaging\Framework\Utils\Cache\Cache;
 
 use function WPStaging\functions\debug_log;
 
+
+
+
 class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 {
  
@@ -40,6 +43,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
  
     protected $isWriteOnly;
 
+ 
+    protected $queuePath;
+
     public function __construct(Directory $directory, Filesystem $filesystem)
     {
         $this->directory  = $directory;
@@ -58,10 +64,13 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
     public function setup($taskName, $queueMode = SeekableQueueInterface::MODE_READ_WRITE)
     {
+        $this->shutdown();
         $this->taskName = $taskName;
 
         $extension = self::FILE_EXTENSION;
         $path      = "{$this->directory->getCacheDirectory()}$taskName.$extension";
+
+        $this->queuePath = $path;
 
         $this->filesystem->mkdir(dirname($path), true);
 
@@ -72,7 +81,8 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             throw new \BadMethodCallException();
         }
 
-        $this->handle = new FileObject($path, $queueMode);
+        $this->handle       = new FileObject($path, $queueMode);
+        $this->offsetBefore = null;
         $this->handle->setFlags(FileObject::DROP_NEW_LINE);
         $this->fileGenerator = $this->initializeGenerator();
 
@@ -270,7 +280,39 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             $this->unlockObject();
         }
 
-        $this->handle = null;
+        $this->needsUnlock = false;
+        $this->fileGenerator = null;
+        $this->offsetBefore  = null;
+        $this->handle        = null;
+    }
+
+
+
+
+
+
+
+
+
+    public function delete()
+    {
+        $queuePath = $this->queuePath;
+        $this->shutdown();
+
+        if ($queuePath === null) {
+            return;
+        }
+
+        if (!file_exists($queuePath)) {
+            $this->queuePath = null;
+            return;
+        }
+
+        if ((!is_file($queuePath) && !is_link($queuePath)) || !$this->filesystem->delete($queuePath)) {
+            throw new RuntimeException(sprintf('Could not delete Queue file: %s', $queuePath));
+        }
+
+        $this->queuePath = null;
     }
 
 

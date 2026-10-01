@@ -33,6 +33,9 @@ abstract class AbstractJob implements ShutdownableInterface
     use BenchmarkTrait;
 
  
+    const TASK_ARGUMENT_SEPARATOR = '::';
+
+ 
     const CACHE_OWNER_KEY = '__wpstgOwnerJobId';
 
  
@@ -52,6 +55,9 @@ abstract class AbstractJob implements ShutdownableInterface
 
  
     private $hasShutdownBackstop = false;
+
+ 
+    protected $hasCurrentTaskCompleted = false;
 
  
     protected $currentTaskName;
@@ -136,14 +142,29 @@ abstract class AbstractJob implements ShutdownableInterface
             return;
         }
 
-        if ($this->currentTask instanceof AbstractTask) {
-            $this->jobDataDto->setQueueOffset($this->currentTask->getQueue()->getOffset());
-            $this->currentTask->persistStepsDto();
-        }
+        $this->persistRunningTaskProgress();
 
         $this->persistJobDataDto();
 
         $this->hasPersisted = true;
+    }
+
+
+
+
+
+
+    protected function persistRunningTaskProgress()
+    {
+        if (!$this->currentTask instanceof AbstractTask || $this->hasCurrentTaskCompleted) {
+            return;
+        }
+
+        if ($this->currentTask->usesTaskQueue()) {
+            $this->jobDataDto->setQueueOffset($this->currentTask->getQueue()->getOffset());
+        }
+
+        $this->currentTask->persistStepsDto();
     }
 
 
@@ -299,10 +320,10 @@ abstract class AbstractJob implements ShutdownableInterface
 
 
 
-            $nextTask = $this->jobDataDto->getCurrentTask();
+            list($nextTaskClass, $nextTaskArgument) = $this->splitTaskQueueEntry((string)$this->jobDataDto->getCurrentTask());
 
-            if ($response->getRetryAt() === 0 && is_subclass_of($nextTask, AbstractTask::class)) {
-                $response->setStatusTitle(call_user_func("$nextTask::getTaskTitle"));
+            if ($response->getRetryAt() === 0 && is_subclass_of($nextTaskClass, AbstractTask::class)) {
+                $response->setStatusTitle(call_user_func("$nextTaskClass::getTaskTitleFor", $nextTaskArgument));
             }
 
             $this->removeMemoryExhaustErrorTmpFile();
@@ -447,6 +468,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
     public function prepare()
     {
+        $this->hasCurrentTaskCompleted = false;
         $data = $this->jobDataCache->get([]);
 
         if ($data) {
@@ -490,12 +512,16 @@ abstract class AbstractJob implements ShutdownableInterface
             return;
         }
 
+        list($taskClass, $taskInstanceArgument) = $this->splitTaskQueueEntry($this->currentTaskName);
+
  
-        $this->currentTask = WPStaging::getInstance()->get($this->currentTaskName);
+        $this->currentTask = WPStaging::getInstance()->get($taskClass);
 
         if (!$this->currentTask instanceof AbstractTask) {
-            throw new \RuntimeException('Is there enough free disk space? Please free up some space. Delete old backup files and staging sites and try again. Error: Next task of queue job is null or invalid. Task name: ' . $this->currentTaskName . ' Task: ' . print_r($this->currentTask, true));
+            throw new \RuntimeException($this->getTaskStartFailureMessage($this->currentTaskName, $this->currentTask));
         }
+
+        $this->currentTask->setTaskInstanceArgument($taskInstanceArgument);
 
         if (!$this->jobDataDto instanceof AbstractDto) {
             throw new \RuntimeException('Job Queue DTO is null or invalid.');
@@ -595,15 +621,11 @@ abstract class AbstractJob implements ShutdownableInterface
 
     protected function getResponse(TaskResponseDto $response)
     {
+        $this->hasCurrentTaskCompleted = !$response->isRunning();
         $this->jobDataDto->setTaskHealthResponded(true);
         $this->jobDataDto->setTaskHealthSequentialFailedRetries(0);
 
         $response->setJob(substr($this->findCurrentJob(), 3));
-
- 
-        if ($response->isRunning()) {
-            $className = get_class($this->currentTask);
-        }
 
         try {
             if (!$response->isRunning()) {
@@ -638,6 +660,40 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->jobDataDto->setTaskQueue($tasks);
     }
 
+
+
+
+
+
+
+
+
+    public static function taskQueueEntry(string $taskClass, string $argument = ''): string
+    {
+        if ($argument === '') {
+            return $taskClass;
+        }
+
+        return $taskClass . self::TASK_ARGUMENT_SEPARATOR . $argument;
+    }
+
+
+
+
+
+    private function splitTaskQueueEntry(string $queueEntry): array
+    {
+        $separatorPosition = strpos($queueEntry, self::TASK_ARGUMENT_SEPARATOR);
+        if ($separatorPosition === false) {
+            return [$queueEntry, ''];
+        }
+
+        return [
+            substr($queueEntry, 0, $separatorPosition),
+            substr($queueEntry, $separatorPosition + strlen(self::TASK_ARGUMENT_SEPARATOR)),
+        ];
+    }
+
     protected function getJobCancelResponse(): TaskResponseDto
     {
         if ($this->jobDataDto instanceof \WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface) {
@@ -654,6 +710,22 @@ abstract class AbstractJob implements ShutdownableInterface
         ]);
 
         return $response;
+    }
+
+
+
+
+
+
+
+
+    protected function getTaskStartFailureMessage(string $taskName, $resolved): string
+    {
+        return sprintf(
+            'Internal error: the task %s could not be started (got %s). Please run the job again, and contact support@wp-staging.com if it fails again.',
+            $taskName,
+            is_object($resolved) ? get_class($resolved) : gettype($resolved)
+        );
     }
 
 

@@ -1308,7 +1308,6 @@ class Queue
 
 
 
-
     public function countActionsByScheduleId($scheduleId, $statuses = [])
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {

@@ -24,6 +24,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $isBeforeUpdateBackup = false;
 
  
+    private $isBeforePushBackup = false;
+
+ 
     private $excludedDirectories = [];
 
  
@@ -251,6 +254,21 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setIsBeforeUpdateBackup(bool $isBeforeUpdateBackup)
     {
         $this->isBeforeUpdateBackup = $isBeforeUpdateBackup;
+    }
+
+ 
+    public function getIsBeforePushBackup(): bool
+    {
+        return $this->isBeforePushBackup;
+    }
+
+
+
+
+
+    public function setIsBeforePushBackup(bool $isBeforePushBackup)
+    {
+        $this->isBeforePushBackup = $isBeforePushBackup;
     }
 
 

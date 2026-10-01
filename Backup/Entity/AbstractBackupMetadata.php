@@ -111,6 +111,9 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     private $isBeforeUpdateBackup = false;
 
  
+    private $isBeforePushBackup = false;
+
+ 
     private $databaseFile;
 
  
@@ -613,6 +616,21 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     public function setIsBeforeUpdateBackup(bool $isBeforeUpdateBackup)
     {
         $this->isBeforeUpdateBackup = $isBeforeUpdateBackup;
+    }
+
+ 
+    public function getIsBeforePushBackup(): bool
+    {
+        return $this->isBeforePushBackup;
+    }
+
+
+
+
+
+    public function setIsBeforePushBackup(bool $isBeforePushBackup)
+    {
+        $this->isBeforePushBackup = $isBeforePushBackup;
     }
 
 

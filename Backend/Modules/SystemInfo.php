@@ -424,7 +424,7 @@ class SystemInfo
         $parser            = WPStaging::make(SystemInfoParser::class);
         $storageProviders = $parser->getStorageProvidersForSystemInfo();
         foreach ($storageProviders as $provider) {
-            $output .= $this->formatStorageSettings($provider['optionName'], $provider['title']);
+            $output .= $this->formatStorageSettings($provider['id'], $provider['title']);
         }
 
         $this->currentSection = SystemInfoParser::SECTIONS['WP_STAGING_EXISTING_SITES']['id'];
@@ -1166,11 +1166,12 @@ class SystemInfo
 
 
 
-    protected function formatStorageSettings(string $optionName, string $title): string
+    protected function formatStorageSettings(string $storageId, string $title): string
     {
-        $output = PHP_EOL . "-- " . $title . PHP_EOL;
+        $output  = PHP_EOL . "-- " . $title . PHP_EOL;
+        $storage = WPStaging::make(Providers::class)->makeStorageFor($storageId);
 
-        $settings = (array) get_option($optionName, []);
+        $settings = $storage === null ? [] : (array)$storage->getOptions();
         if (!empty($settings)) {
  
             if ($this->enableStructuredOutput) {

@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Tasks\StagingSite\DatabaseAdjustment;
 
 use WPStaging\Backup\BackupRetentionHandler;
+use WPStaging\Backup\Storage\SftpProfileStore;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\WpAdapter;
@@ -177,6 +178,7 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
             $toDelete[] = 'wpstg_dropbox';
             $toDelete[] = 'wpstg_one-drive';
             $toDelete[] = 'wpstg_pcloud';
+            $toDelete[] = SftpProfileStore::LEGACY_OPTION_NAME;
  
             $toDelete[] = FinishBackupTask::OPTION_LAST_BACKUP;
         }

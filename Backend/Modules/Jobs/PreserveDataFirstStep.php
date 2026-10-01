@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
+use WPStaging\Framework\Settings\SettingsTable;
 use WPStaging\Staging\CloneOptions;
 use WPStaging\Staging\Sites;
 use WPStaging\Backend\Modules\Jobs\Job as MainJob;
@@ -101,8 +102,10 @@ class PreserveDataFirstStep extends JobExecutable
  
         $remoteStorages = $this->preserveRemoteStorages();
 
+        $settingsTableRows = $this->getStagingSiteSettingsTableRows();
+
  
-        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules && !$loginLinkSettings && empty($remoteStorages)) {
+        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules && !$loginLinkSettings && empty($remoteStorages) && empty($settingsTableRows)) {
             return true;
         }
 
@@ -111,6 +114,7 @@ class PreserveDataFirstStep extends JobExecutable
             'cloneOptions'      => $cloneOptions,
             'backupSchedules'   => $backupSchedules,
             'loginLinkSettings' => $loginLinkSettings,
+            'settingsTableRows' => $settingsTableRows,
         ];
 
  
@@ -160,6 +164,33 @@ class PreserveDataFirstStep extends JobExecutable
         }
 
         return true;
+    }
+
+
+
+
+
+
+
+    protected function getStagingSiteSettingsTableRows()
+    {
+        $table = $this->stagingPrefix . SettingsTable::TABLE_NAME;
+        if (!$this->tableExists($table)) {
+            return [];
+        }
+
+        $rows = $this->stagingDb->get_results("SELECT `setting_key`, `setting_value` FROM `{$table}`", ARRAY_A);
+        if (!is_array($rows)) {
+            $this->log("Preserve Data: Failed to get the rows of " . $table);
+            return [];
+        }
+
+        $settingsTableRows = [];
+        foreach ($rows as $row) {
+            $settingsTableRows[$row['setting_key']] = $row['setting_value'];
+        }
+
+        return $settingsTableRows;
     }
 
  

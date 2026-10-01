@@ -27,6 +27,7 @@ use WPStaging\Backup\Service\ScheduledBackupReport;
 use WPStaging\Backup\Service\StagingUpdateBackupClient;
 use WPStaging\Backup\Service\UpdateProtectionHealth;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
+use WPStaging\Backup\Task\Tasks\JobRestore\RenameDatabaseTask;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Ajax\BackupSpeedIndex;
@@ -86,6 +87,7 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action(Cron::ACTION_WEEKLY_EVENT, [$this, 'createBackupsDirectory'], 25, 0);
 
         add_action('wp_login', $this->container->callback(AfterRestore::class, 'loginAfterRestore'), 10, 0);
+        add_action(RenameDatabaseTask::FILTER_BACKUP_IMPORT_DATABASE_POST_DATABASE_RESTORE_ACTIONS, $this->container->callback(AfterRestore::class, 'queueElementorCssCacheClear'), 10, 1);
 
         Hooks::registerInternalHook(PrepareJob::ACTION_JOB_FAILURE, $this->container->callback(BackupScheduler::class, 'onBackgroundJobFailure'));
     }

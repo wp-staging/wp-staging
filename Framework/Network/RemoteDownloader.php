@@ -291,7 +291,8 @@ class RemoteDownloader
 
 
 
-    public function downloadChunk()
+
+    public function downloadChunk(bool $sslVerify = false)
     {
         $this->errorCode = '';
 
@@ -315,7 +316,7 @@ class RemoteDownloader
         $args = [
             'method'              => 'GET',
             'timeout'             => Hooks::applyFilters('wpstg.downloader_timeout', $this->timeout),
-            'sslverify'           => false,
+            'sslverify'           => $sslVerify,
             'stream'              => true,
             'filename'            => $chunkPath,
             'limit_response_size' => $limitResponseSize,

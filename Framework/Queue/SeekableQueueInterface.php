@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Queue;
 
+use RuntimeException;
+
 interface SeekableQueueInterface
 {
  
@@ -66,4 +68,13 @@ interface SeekableQueueInterface
 
 
     public function shutdown();
+
+
+
+
+
+
+
+
+    public function delete();
 }

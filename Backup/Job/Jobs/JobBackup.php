@@ -37,6 +37,8 @@ use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\Task\AbstractTask;
 
+use function WPStaging\functions\debug_log;
+
 class JobBackup extends AbstractJob
 {
  
@@ -161,19 +163,31 @@ class JobBackup extends AbstractJob
 
 
 
-
-
-
     protected function getResponse(TaskResponseDto $response)
     {
         $response = parent::getResponse($response);
 
-        if ($this->currentTask instanceof AbstractTask) {
-            $this->jobDataDto->setQueueOffset($this->currentTask->getQueue()->getOffset());
-            $this->currentTask->persistStepsDto();
+        if (!$this->currentTask instanceof AbstractTask) {
+            return $response;
         }
 
-        $this->persistJobDataDto();
+        if (!$this->hasCurrentTaskCompleted) {
+            $this->persistRunningTaskProgress();
+            $this->persistJobDataDto();
+
+            return $response;
+        }
+
+        if ($this->currentTask->usesTaskQueue()) {
+ 
+            try {
+                $this->currentTask->getQueue()->delete();
+            } catch (\Throwable $e) {
+                $message = sprintf('Could not delete completed Backup task Queue: %s', $e->getMessage());
+                debug_log($message);
+                $this->currentTask->getLogger()->warning($message);
+            }
+        }
 
         return $response;
     }
@@ -225,10 +239,11 @@ class JobBackup extends AbstractJob
 
         $this->addDatabaseTasks();
 
-        $this->addFinalizeTask();
         if ($this->jobDataDto->getRepeatBackupOnSchedule()) {
             $this->addSchedulerTask();
         }
+
+        $this->addFinalizeTask();
 
         if (!$this->jobDataDto->getIsMultipartBackup()) {
             $this->tasks[] = RecalibrateFilesCountTask::class;
@@ -241,10 +256,18 @@ class JobBackup extends AbstractJob
 
         $this->addValidationTasks();
 
-        $this->tasks[] = SignBackupTask::class;
+        $this->addSignBackupTask();
 
         $this->addStoragesTasks();
         $this->addFinishBackupTask();
+    }
+
+
+
+
+    protected function addSignBackupTask()
+    {
+        $this->tasks[] = SignBackupTask::class;
     }
 
     protected function addDatabaseTasks()
@@ -301,6 +324,9 @@ class JobBackup extends AbstractJob
     {
         $this->tasks[] = FinishBackupTask::class;
     }
+
+
+
 
 
 

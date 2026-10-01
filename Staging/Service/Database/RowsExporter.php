@@ -7,6 +7,7 @@ use WPStaging\Framework\Database\Exporter\AbstractRowsExporter;
 use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
+use WPStaging\Staging\Interfaces\SubsiteUrlMappingDtoInterface;
 
 
 
@@ -88,12 +89,24 @@ class RowsExporter extends AbstractRowsExporter
         $replace = isset($searchReplaceArgs['replace_with']) && is_array($searchReplaceArgs['replace_with']) ? $searchReplaceArgs['replace_with'] : $searchReplaceParams['replace'];
         $caseSensitive = !(isset($searchReplaceArgs['case_insensitive']) && $searchReplaceArgs['case_insensitive']);
 
+        $excludedPatterns = $this->getSearchReplaceExcludedPatterns();
         $this->searchReplace = new SearchReplace(
             $search,
             $replace,
             $caseSensitive,
-            $this->getSearchReplaceExcludedPatterns()
+            $excludedPatterns
         );
+
+        if ($this->jobDataDto instanceof SubsiteUrlMappingDtoInterface && $this->jobDataDto->getSubsiteUrlMappings() !== []) {
+            $this->searchReplace = new SubsiteUrlSearchReplace(
+                $this->searchReplace,
+                $this->jobDataDto->getSubsiteUrlMappings(),
+                false,
+                $excludedPatterns,
+                $search,
+                $replace
+            );
+        }
     }
 
 

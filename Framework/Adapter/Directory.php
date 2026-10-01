@@ -357,6 +357,29 @@ class Directory implements DirectoryInterface
 
 
 
+
+
+    public function getDefaultExcludedDirectoriesInWpContent(string $wpContentDirectory): array
+    {
+        $wpContent = trailingslashit($wpContentDirectory);
+
+        return [
+            $wpContent . 'cache',
+            $wpContent . 'uploads.wpstg_backup',
+            $wpContent . 'ai1wm-backups',
+            $wpContent . 'uploads/wio_backup',
+            $wpContent . 'wp-staging',
+            $wpContent . 'uploads/wp-staging',
+            $wpContent . self::STAGING_SITE_DIRECTORY,
+            $wpContent . 'uploads/' . self::STAGING_SITE_DIRECTORY,
+        ];
+    }
+
+
+
+
+
+
     public function getWpStagingDataDirectories(): array
     {
         return [

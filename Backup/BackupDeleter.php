@@ -7,6 +7,9 @@ use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Utils\BackupPathResolver;
 
+
+
+
 class BackupDeleter
 {
  
@@ -90,6 +93,8 @@ class BackupDeleter
             $metadata = $this->backupMetadata->hydrateByFilePath($backup->getRealPath());
             if (
                 $metadata->getIsAutomatedBackup() &&
+                $metadata->getIsBeforePushBackup() &&
+                empty($metadata->getScheduleId()) &&
                 $metadata->getIsExportingUploads() &&
                 !$metadata->getIsExportingDatabase() &&
                 !$metadata->getIsExportingMuPlugins() &&
@@ -107,24 +112,21 @@ class BackupDeleter
 
 
 
+
+
+
     public function deleteAllAutomatedPushBackups()
     {
         $this->clearErrors();
 
         foreach ($this->backupsFinder->findBackups() as $backup) {
             $metadata = $this->backupMetadata->hydrateByFilePath($backup->getRealPath());
-            if (
-                $metadata->getIsAutomatedBackup() &&
-                $metadata->getIsExportingDatabase() &&
-                $metadata->getIsExportingUploads() &&
-                !$metadata->getIsExportingMuPlugins() &&
-                !$metadata->getIsExportingPlugins() &&
-                !$metadata->getIsExportingThemes() &&
-                !$metadata->getIsExportingOtherWpContentFiles() &&
-                !$metadata->getIsExportingOtherWpRootFiles()
-            ) {
-                $this->deleteBackup($backup, $metadata);
+
+            if (!$metadata->getIsAutomatedBackup() || !$metadata->getIsBeforePushBackup() || !empty($metadata->getScheduleId())) {
+                continue;
             }
+
+            $this->deleteBackup($backup, $metadata);
         }
     }
 

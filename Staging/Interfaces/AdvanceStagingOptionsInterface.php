@@ -76,6 +76,14 @@ interface AdvanceStagingOptionsInterface
 
     public function getIsAutoUpdatePlugins(): bool;
 
+    public function setIsBlankSite(bool $isBlankSite);
+
+    public function getIsBlankSite(): bool;
+
+    public function setBlankWpVersion(string $blankWpVersion);
+
+    public function getBlankWpVersion(): string;
+
     public function getTmpExcludedFullPaths(): array;
 
     public function setTmpExcludedFullPaths(array $tmpExcludedFullPaths);

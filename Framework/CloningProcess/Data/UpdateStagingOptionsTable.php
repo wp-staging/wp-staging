@@ -12,6 +12,7 @@ use WPStaging\Staging\Sites;
 use WPStaging\Framework\ThirdParty\FreemiusScript;
 use WPStaging\Pro\Staging\NetworkClone;
 use WPStaging\Backup\BackupRetentionHandler;
+use WPStaging\Backup\Storage\SftpProfileStore;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Adapter\WpAdapter;
@@ -163,6 +164,7 @@ class UpdateStagingOptionsTable extends DBCloningService
             $toDelete[] = 'wpstg_dropbox';
             $toDelete[] = 'wpstg_one-drive';
             $toDelete[] = 'wpstg_pcloud';
+            $toDelete[] = SftpProfileStore::LEGACY_OPTION_NAME;
             $toDelete[] = BackupScheduler::OPTION_BACKUP_SCHEDULES;
  
             $toDelete[] = 'wpstg_current_site_login_links';

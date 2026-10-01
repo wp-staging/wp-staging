@@ -887,7 +887,14 @@ class Administrator
 
         $cloning = $this->getCloningJob();
 
-        if (!$cloning->save()) {
+        try {
+            $isSaved = $cloning->save();
+        } catch (\UnexpectedValueException $e) {
+            $this->sendSubsiteUrlValidationError($e);
+            return;
+        }
+
+        if (!$isSaved) {
             $message = $cloning->getErrorMessage();
             wp_send_json([
                 'success' => false,
@@ -1183,11 +1190,27 @@ class Administrator
             wp_send_json_error($e->getMessage(), $e->getCode());
 
             return false;
+        } catch (\UnexpectedValueException $e) {
+            $this->sendSubsiteUrlValidationError($e);
+
+            return false;
         }
 
         wp_send_json($response);
 
         return false;
+    }
+
+
+
+
+    private function sendSubsiteUrlValidationError(\UnexpectedValueException $exception)
+    {
+        wp_send_json([
+            'success' => false,
+            'error'   => true,
+            'message' => $exception->getMessage(),
+        ]);
     }
 
 

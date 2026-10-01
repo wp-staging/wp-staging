@@ -261,9 +261,13 @@ class Cloning extends Job
         $this->options->isEmailsReminderEnabled = false;
         $this->options->isAutoUpdatePlugins     = false;
         $this->setAdvancedCloningOptions();
+        $stagingPrefixInUseMessage = $this->getStagingPrefixInUseMessage();
+        if ($stagingPrefixInUseMessage !== '') {
+            $this->errorMessage = $stagingPrefixInUseMessage;
+            return false;
+        }
 
-        $this->options->destinationDir      = $this->getDestinationDir();
-        $this->options->destinationHostname = $this->getDestinationHostname();
+        $this->setDestinationCloningOptions();
 
         $this->options->homeHostname = $this->urls->getHomeUrlWithoutScheme();
 
@@ -321,6 +325,7 @@ class Cloning extends Job
             "excludedDirectories"     => $this->options->excludedDirectories,
             "extraDirectories"        => $this->options->extraDirectories,
             "networkClone"            => $this->isNetworkClone(),
+            'subsiteUrlMappings'      => is_array($this->options->subsiteUrlMappings ?? null) ? $this->options->subsiteUrlMappings : [],
             'useNewAdminAccount'      => $this->options->useNewAdminAccount,
             'adminEmail'              => $this->options->adminEmail,
             'adminPassword'           => $this->options->adminPassword,
@@ -338,7 +343,7 @@ class Cloning extends Job
 
 
 
-    private function getDestinationUrl(): string
+    protected function getDestinationUrl(): string
     {
         if (!empty($this->options->cloneHostname)) {
             return $this->options->cloneHostname;
@@ -358,6 +363,18 @@ class Cloning extends Job
         }
 
         return $this->getHostnameWithoutScheme($this->options->cloneHostname);
+    }
+
+
+
+
+
+
+    protected function setDestinationCloningOptions()
+    {
+        $this->options->destinationDir      = $this->getDestinationDir();
+        $this->options->destinationHostname = $this->getDestinationHostname();
+        $this->setDestinationDependentCloningOptions();
     }
 
 
@@ -635,6 +652,24 @@ class Cloning extends Job
 
 
     protected function setAdvancedCloningOptions()
+    {
+ 
+    }
+
+
+
+
+
+
+    protected function getStagingPrefixInUseMessage(): string
+    {
+        return '';
+    }
+
+
+
+
+    protected function setDestinationDependentCloningOptions()
     {
  
     }

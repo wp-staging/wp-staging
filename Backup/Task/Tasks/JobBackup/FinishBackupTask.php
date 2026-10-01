@@ -100,13 +100,15 @@ class FinishBackupTask extends BackupTask
 
         $scheduleId = $this->jobDataDto->getScheduleId();
         if (!empty($scheduleId) && !$isScheduleCreationOnly) {
-            WPStaging::make(BackupScheduler::class)->updateScheduleLastRun(
+            $backupScheduler = WPStaging::make(BackupScheduler::class);
+            $backupScheduler->updateScheduleLastRun(
                 $scheduleId,
                 'success',
                 $this->jobDataDto->getDuration(),
                 '',
                 (string)$this->getJobId()
             );
+            $backupScheduler->maybeDeleteOldBackups($this->jobDataDto);
             $this->deleteScheduleJobTransient();
         }
 
@@ -293,11 +295,15 @@ class FinishBackupTask extends BackupTask
 
 
 
+
+
+
+
     protected function getBackupCreationPrepareData(): array
     {
         $jobBackupDataDto = $this->jobDataDto;
 
-        return [
+        $prepareData = [
             'name'                           => $jobBackupDataDto->getName(),
             'isBeforeUpdateBackup'           => $jobBackupDataDto->getIsBeforeUpdateBackup(),
             'isExportingPlugins'             => $jobBackupDataDto->getIsExportingPlugins(),
@@ -321,5 +327,15 @@ class FinishBackupTask extends BackupTask
             'isCreateBackupInBackground'     => false,
             'isAutomatedBackup'              => false,
         ];
+
+        $scheduleId = $jobBackupDataDto->getScheduleId();
+        if (empty($scheduleId)) {
+            return $prepareData;
+        }
+
+        $prepareData['scheduleId']                = $scheduleId;
+        $prepareData['isCreateScheduleBackupNow'] = $jobBackupDataDto->getIsCreateScheduleBackupNow();
+
+        return $prepareData;
     }
 }

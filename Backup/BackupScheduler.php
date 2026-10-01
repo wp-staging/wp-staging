@@ -138,35 +138,121 @@ class BackupScheduler
 
 
 
+
+
+
+
     public function getSchedules(): array
     {
-        $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
-        if (!is_array($schedules)) {
+        $storedSchedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
+        if (!is_array($storedSchedules)) {
             return [];
         }
 
-        $schedules = array_filter($schedules, 'is_array');
+        $schedules = [];
 
-        foreach ($schedules as &$schedule) {
-            if (!array_key_exists('lastRunTime', $schedule)) {
-                $schedule['lastRunTime']     = null;
-                $schedule['lastRunStatus']   = null;
-                $schedule['lastRunDuration'] = null;
+        foreach ($storedSchedules as $index => $schedule) {
+            if (!is_array($schedule)) {
+                continue;
             }
 
-            if (!array_key_exists('lastRunJobId', $schedule)) {
-                $schedule['lastRunJobId'] = '';
-                $schedule['lastRunError'] = '';
+            $scheduleId = $this->usableScheduleId($schedule);
+
+            if ($scheduleId === '') {
+                continue;
             }
 
-            if (!array_key_exists('isPaused', $schedule)) {
-                $schedule['isPaused'] = false;
-            }
+            $schedule['scheduleId'] = $scheduleId;
+            $schedules[$index]      = $this->scheduleWithMissingFieldsDefaulted($schedule);
         }
 
-        unset($schedule);
-
         return $schedules;
+    }
+
+
+
+
+
+
+
+
+    public function storeSchedules(array $schedules): bool
+    {
+        $rowsToKeep = array_merge(array_values($schedules), $this->storedPlansWithoutAUsableId());
+
+        return update_option(static::OPTION_BACKUP_SCHEDULES, $rowsToKeep, false);
+    }
+
+
+
+
+    private function storedPlansWithoutAUsableId(): array
+    {
+        $storedSchedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
+
+        if (!is_array($storedSchedules)) {
+            return [];
+        }
+
+        return array_values(array_filter($storedSchedules, function ($schedule): bool {
+            return is_array($schedule) && $this->usableScheduleId($schedule) === '';
+        }));
+    }
+
+
+
+
+
+
+
+    private function usableScheduleId(array $schedule): string
+    {
+        if (!isset($schedule['scheduleId']) || (!is_string($schedule['scheduleId']) && !is_int($schedule['scheduleId']))) {
+            return '';
+        }
+
+        $scheduleId = (string)$schedule['scheduleId'];
+
+        return empty($scheduleId) ? '' : $scheduleId;
+    }
+
+
+
+
+
+    private function scheduleWithMissingFieldsDefaulted(array $schedule): array
+    {
+        if (!array_key_exists('lastRunTime', $schedule)) {
+            $schedule['lastRunTime']     = null;
+            $schedule['lastRunStatus']   = null;
+            $schedule['lastRunDuration'] = null;
+        }
+
+        if (!array_key_exists('lastRunJobId', $schedule)) {
+            $schedule['lastRunJobId'] = '';
+            $schedule['lastRunError'] = '';
+        }
+
+        if (!array_key_exists('isPaused', $schedule)) {
+            $schedule['isPaused'] = false;
+        }
+
+        return $schedule;
+    }
+
+
+
+
+    private function reportTheStoredPlansWithoutAUsableId()
+    {
+        foreach ($this->storedPlansWithoutAUsableId() as $schedule) {
+            $storedRow = wp_json_encode($schedule);
+
+            debug_log(sprintf(
+                '[Schedule Backup Cron] Skipped a stored backup plan whose scheduleId is not text this site can address it by, so nothing runs, lists or repairs it: %s.',
+                is_string($storedRow) ? $storedRow : serialize($schedule)
+            ), 'info', false);
+        }
     }
 
 
@@ -244,7 +330,7 @@ class BackupScheduler
         unset($schedule);
 
         if ($updated) {
-            update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+            $this->storeSchedules($schedules);
         }
     }
 
@@ -322,7 +408,7 @@ class BackupScheduler
         unset($schedule);
 
         if ($updated) {
-            update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+            $this->storeSchedules($schedules);
         }
     }
 
@@ -356,6 +442,51 @@ class BackupScheduler
         $errorMessage = isset($jobData['message']) ? (string)$jobData['message'] : '';
         $jobId        = isset($jobData['jobId']) ? (string)$jobData['jobId'] : '';
         $this->updateScheduleLastRun($scheduleId, 'failed', 0, $errorMessage, $jobId);
+    }
+
+
+
+
+
+
+
+
+    public function unsetStorageFromSchedules(string $storageId): int
+    {
+        $schedules = $this->getSchedules();
+        $affected  = 0;
+
+        foreach ($schedules as $index => $schedule) {
+            if (empty($schedule['storages']) || !is_array($schedule['storages'])) {
+                continue;
+            }
+
+            if (!in_array($storageId, $schedule['storages'], true)) {
+                continue;
+            }
+
+            $remaining = array_values(array_diff($schedule['storages'], [$storageId]));
+            if ($remaining === []) {
+                $remaining = ['localStorage'];
+            }
+
+            $schedules[$index]['storages'] = $remaining;
+            $affected++;
+        }
+
+        if ($affected === 0) {
+            return 0;
+        }
+
+        if (!$this->storeSchedules($schedules)) {
+            debug_log('Could not drop the removed storage ' . $storageId . ' from the backup schedules.');
+
+            return 0;
+        }
+
+        $this->reCreateCron();
+
+        return $affected;
     }
 
 
@@ -426,6 +557,8 @@ class BackupScheduler
 
 
 
+
+
     public function maybeDeleteOldBackups(JobBackupDataDto $jobBackupDataDto)
     {
         $scheduleId = $jobBackupDataDto->getScheduleId();
@@ -443,11 +576,14 @@ class BackupScheduler
         }
 
         $maxAllowedBackupFiles = absint($schedule['rotation']);
+        if ($maxAllowedBackupFiles < 1) {
+            return;
+        }
 
         $backupFiles = $this->backupsFinder->findBackupByScheduleId($scheduleId);
 
  
-        if (count($backupFiles) < $maxAllowedBackupFiles) {
+        if (count($backupFiles) <= $maxAllowedBackupFiles) {
             return;
         }
 
@@ -467,8 +603,7 @@ class BackupScheduler
  
         $backupFiles = array_values($backupFiles);
 
- 
-        $backupFiles = array_slice($backupFiles, 0, max(1, count($backupFiles) - $maxAllowedBackupFiles + 1));
+        $backupFiles = array_slice($backupFiles, 0, count($backupFiles) - $maxAllowedBackupFiles);
 
         array_map(function ($file) {
             $this->backupDeleter->clearErrors();
@@ -486,12 +621,12 @@ class BackupScheduler
 
 
 
-    public function scheduleBackup(JobBackupDataDto $jobBackupDataDto, string $scheduleId)
+    public function scheduleBackup(JobBackupDataDto $jobBackupDataDto, string $scheduleId): bool
     {
-        if (!isset(wp_get_schedules()[$jobBackupDataDto->getScheduleRecurrence()])) {
+        if (!Cron::isRecurrenceRegistered((string)$jobBackupDataDto->getScheduleRecurrence())) {
             debug_log("Tried to schedule a backup, but schedule '" . $jobBackupDataDto->getScheduleRecurrence() . "' is not registered as a WordPress cron schedule. Data DTO: " . wp_json_encode($jobBackupDataDto));
 
-            return;
+            return false;
         }
 
         $time          = $jobBackupDataDto->getScheduleTime();
@@ -537,11 +672,16 @@ class BackupScheduler
         if (wp_next_scheduled(Cron::ACTION_CREATE_CRON_BACKUP, [self::cronEventArguments($scheduleId)])) {
             debug_log('[Schedule Backup Cron] Early bailed when registering the cron to create a backup on a schedule, because it already exists');
 
-            return;
+            return false;
         }
 
-        $this->registerScheduleInDb($backupSchedule);
+        if (!$this->registerScheduleInDb($backupSchedule)) {
+            return false;
+        }
+
         $this->reCreateCron();
+
+        return true;
     }
 
 
@@ -581,7 +721,7 @@ class BackupScheduler
         unset($schedule);
 
         if ($adopted > 0) {
-            update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+            $this->storeSchedules($schedules);
         }
 
         return $adopted;
@@ -803,7 +943,7 @@ class BackupScheduler
 
         $schedules[$index]['isPaused'] = true;
 
-        update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+        $this->storeSchedules($schedules);
         $this->reCreateCron();
         wp_send_json_success();
     }
@@ -839,7 +979,7 @@ class BackupScheduler
         $schedules[$index]['firstSchedule']                  = $this->upcomingOccurrenceTimestamp($schedules[$index]);
         $schedules[$index][self::FIELD_RUNS_RECORDED_SINCE]   = time();
 
-        update_option(static::OPTION_BACKUP_SCHEDULES, $schedules, false);
+        $this->storeSchedules($schedules);
         $this->reCreateCron();
         wp_send_json_success();
     }
@@ -961,7 +1101,7 @@ class BackupScheduler
             return $schedule['scheduleId'] != $scheduleId;
         });
 
-        if (!update_option(static::OPTION_BACKUP_SCHEDULES, $newSchedules, false)) {
+        if (!$this->storeSchedules($newSchedules)) {
             debug_log('[Schedule Backup Cron] Could not update BackupSchedules DB option after removing schedule.');
             throw new \RuntimeException('Could not unschedule event from Db.');
         }
@@ -996,6 +1136,7 @@ class BackupScheduler
     public function reCreateCron($scheduleBeingEdit = null): bool
     {
         $schedules = $this->getSchedulesRunByCurrentSite();
+        $this->reportTheStoredPlansWithoutAUsableId();
         $this->reportThePlansThisSiteDoesNotRun();
         static::removeBackupSchedulesFromCron();
 
@@ -1003,11 +1144,6 @@ class BackupScheduler
 
         foreach ($schedules as $schedule) {
             if (!empty($schedule['isPaused'])) {
-                continue;
-            }
-
-            if (empty($schedule['scheduleId'])) {
-                debug_log('[Schedule Backup Cron] Skipped a stored schedule without an id while re-creating the cron events.');
                 continue;
             }
 
@@ -1074,7 +1210,7 @@ class BackupScheduler
                 continue;
             }
 
-            $scheduleIds[] = $this->readableScheduleId($schedule);
+            $scheduleIds[] = $schedule['scheduleId'];
         }
 
         if (empty($scheduleIds)) {
@@ -1086,17 +1222,6 @@ class BackupScheduler
             get_current_blog_id(),
             implode(', ', $scheduleIds)
         ), 'info', false);
-    }
-
-
-
-
-
-    private function readableScheduleId(array $schedule): string
-    {
-        $scheduleId = isset($schedule['scheduleId']) && is_scalar($schedule['scheduleId']) ? (string)$schedule['scheduleId'] : '';
-
-        return $scheduleId === '' ? '(unknown)' : $scheduleId;
     }
 
 

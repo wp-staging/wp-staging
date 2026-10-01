@@ -130,7 +130,8 @@ if (!empty($uploadDir['basedir'])) {
         foreach ($allStorages as $storageKey => $storage) :
             $storageDisplayName = $isCloudUpsell && $storage['id'] === Providers::IDENTIFIER_ONE_DRIVE ? __('One Drive', 'wp-staging') : $storage['name'];
             $isRestrictedStorage = false;
-            if (in_array('all', $currentRestrictions, true) || in_array($storage['id'], $currentRestrictions, true)) {
+            $baseStorageId = $storages->getStorageProfiles()->getBaseProvider($storage['id']);
+            if (in_array('all', $currentRestrictions, true) || in_array($baseStorageId, $currentRestrictions, true)) {
                 $isRestrictedStorage = true;
             }
 
@@ -143,7 +144,7 @@ if (!empty($uploadDir['basedir'])) {
             ?>
             <div class="wpstg-storages-option wpstg-box-border wpstg-flex wpstg-items-center wpstg-justify-between wpstg-gap-3 wpstg-rounded-[7px] wpstg-border wpstg-border-solid wpstg-border-slate-250 wpstg-bg-white wpstg-p-3 dark:wpstg-border-slate-700 dark:wpstg-bg-slate-800 <?php echo $isCreateBackupModal ? 'wpstg-cloud-provider-option' : ''; ?>" data-row="<?php echo esc_attr((string)$rowCount); ?>" data-position="<?php echo esc_attr((string)$positionInRow); ?>">
                 <?php
-                $isActivated   = $storages->isActivated($storage['authClass']);
+                $isActivated   = $storages->isActivated($storage['id']);
                 $isProStorage  = empty($storage['authClass']);
                 $isDisabled    = !$isActivated || (!$isProVersion && $isProStorage) || $isPersonalLicense || $isRestrictedStorage;
                 $disabledClass = $isDisabled ? 'wpstg-storages-settings-disabled' : '';
@@ -162,7 +163,7 @@ if (!empty($uploadDir['basedir'])) {
                 <label class="wpstg-storages-label <?php echo esc_attr($disabledClass); ?> <?php echo esc_attr($tooltipClass); ?> !wpstg-flex wpstg-items-center wpstg-gap-1 wpstg-text-slate-700 dark:wpstg-text-slate-200">
                     <input type="checkbox" class="wpstg-mt-1 wpstg-checkbox" id="<?php echo esc_attr($storagesPrefix . $storage['id']); ?>" name="storages" value="<?php echo esc_attr($storage['id']); ?>" data-summary-kind="storage" data-summary-label="<?php echo esc_attr($storageDisplayName); ?>" <?php echo $isDisabled ? "disabled" : "";?>>
                     <div class="wpstg-storages-content wpstg-flex-row">
-                        <?php $assets->renderSvg($storage['id'], 'wpstg-storages-icon'); ?>
+                        <?php $assets->renderSvg($storage['icon'], 'wpstg-storages-icon'); ?>
                         <span class="wpstg-storages-name <?php echo esc_attr($disabledClass) ?> dark:wpstg-text-slate-100"><?php echo esc_html($storageDisplayName); ?></span>
                     </div>
                     <?php if ($isDisabled && $isProVersion) : ?>

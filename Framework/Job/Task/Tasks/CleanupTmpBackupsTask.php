@@ -27,6 +27,16 @@ class CleanupTmpBackupsTask extends AbstractTask
 
 
 
+    public function usesTaskQueue(): bool
+    {
+        return false;
+    }
+
+
+
+
+
+
 
 
 

@@ -152,7 +152,27 @@ abstract class Job implements ShutdownableInterface
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
+        $this->normalizeSubsiteUrlMappings();
+
         $this->initialize();
+    }
+
+
+
+
+
+
+    protected function normalizeSubsiteUrlMappings()
+    {
+        if (!isset($this->options->subsiteUrlMappings) || !is_array($this->options->subsiteUrlMappings)) {
+            return;
+        }
+
+        foreach ($this->options->subsiteUrlMappings as $index => $mapping) {
+            if (is_object($mapping)) {
+                $this->options->subsiteUrlMappings[$index] = (array)$mapping;
+            }
+        }
     }
 
 
@@ -694,7 +714,7 @@ abstract class Job implements ShutdownableInterface
         }
 
         if (isset($this->options->createBackupBeforePushing)) {
-            $this->logger->add(sprintf('- Create database backup : %s', ($this->options->createBackupBeforePushing ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+            $this->logger->add(sprintf('- Create full site backup : %s', ($this->options->createBackupBeforePushing ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
         }
     }
 }

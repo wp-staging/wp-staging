@@ -41,14 +41,21 @@ class ScheduleBackupTask extends BackupTask
 
 
 
+
+
     public function execute()
     {
         $scheduleId = wp_generate_password(12, false);
 
-        $this->jobDataDto->setScheduleId($scheduleId);
-
         $this->setDefaultBasicScheduleOptions();
-        $this->backupScheduler->scheduleBackup($this->jobDataDto, $scheduleId);
+
+        if (!$this->backupScheduler->scheduleBackup($this->jobDataDto, $scheduleId)) {
+            $this->logger->warning('Could not create the backup plan, so this backup belongs to no plan.');
+
+            return $this->generateResponse(true);
+        }
+
+        $this->jobDataDto->setScheduleId($scheduleId);
 
         $this->logger->info('Created scheduled backup id: '  . $scheduleId);
 

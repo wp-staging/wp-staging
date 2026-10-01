@@ -111,10 +111,10 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                     <?php $renderer->icon('arrow-left', 'wpstg-h-3.5 wpstg-w-3.5', 2.2); ?>
                     <?php esc_html_e('Back to settings overview', 'wp-staging'); ?>
                 </button>
-                <div class="wpstg-create-customizations-header">
-                    <h2 class="wpstg-m-0 wpstg-text-sm wpstg-font-bold wpstg-leading-5 wpstg-text-[#001b3d] dark:wpstg-text-slate-100"><?php esc_html_e('Customize settings', 'wp-staging'); ?></h2>
-                </div>
             <?php endif; ?>
+            <?php if ($isCreate) {
+                require WPSTG_VIEWS_DIR . 'staging/_partials/setup-modal/create-type-section.php';
+            } ?>
             <div id="wpstg-staging-setup-tabs" class="wpstg-tabs-wrapper wpstg-selection-tabs-wrapper wpstg-create-accordion wpstg-staging-accordion wpstg-mt-4">
                 <?php
                 $copyMode = $setupMode;
@@ -126,6 +126,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                 $copyChevronClass = 'wpstg-create-accordion-chevron wpstg-staging-accordion-chevron';
                 $copyIconClass = 'wpstg-create-accordion-icon wpstg-staging-accordion-icon';
                 $showFileSizeLimitCard = true;
+                $copyCardIsCloneOnly   = $isCreate;
                 assert($directoryScanner instanceof DirectoryScanner);
                 assert($tableScanner instanceof TableScanner);
                 require WPSTG_VIEWS_DIR . 'staging/_partials/what-to-copy-section.php';
@@ -148,12 +149,18 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
             <h2><?php $renderer->icon('clipboard', 'wpstg-create-summary-heading-icon'); ?><?php echo esc_html($isCreate ? __('Creation Summary', 'wp-staging') : ($isUpdate ? __('Update Summary', 'wp-staging') : __('Reset Summary', 'wp-staging'))); ?></h2>
             <dl class="wpstg-create-summary-list wpstg-staging-summary-list">
                 <div><dt><?php $renderer->icon('globe', 'wpstg-create-summary-icon'); ?><?php echo esc_html($isCreate ? __('Site name', 'wp-staging') : __('Staging site', 'wp-staging')); ?></dt><dd class="<?php echo esc_attr($isCreate ? 'wpstg-create-summary-site-name' : ''); ?>"><?php echo esc_html($stagingSiteName); ?></dd></div>
-                <div><dt><?php $renderer->icon('database', 'wpstg-create-summary-icon'); ?><?php esc_html_e('Database', 'wp-staging'); ?></dt><dd class="wpstg-create-summary-database"><?php echo esc_html($isCreate ? __('WordPress tables', 'wp-staging') : __('Preselected', 'wp-staging')); ?></dd></div>
+                <div><dt><?php $renderer->icon('database', 'wpstg-create-summary-icon'); ?><?php esc_html_e('Database', 'wp-staging'); ?></dt>
+                    <dd class="wpstg-create-summary-database"<?php echo $isCreate ? ' data-wpstg-clone-copy' : ''; ?>><?php echo esc_html($isCreate ? __('WordPress tables', 'wp-staging') : __('Preselected', 'wp-staging')); ?></dd>
+                    <?php if ($isCreate) : ?>
+                        <dd data-wpstg-blank-copy hidden><?php esc_html_e('Fresh install', 'wp-staging'); ?></dd>
+                    <?php endif; ?>
+                </div>
                 <div><dt><?php $renderer->icon('folder', 'wpstg-create-summary-icon'); ?><?php esc_html_e('Files', 'wp-staging'); ?></dt>
                     <?php if ($isCreate) : ?>
                         <dd class="wpstg-create-summary-files-cell">
-                            <span class="wpstg-create-summary-files"><?php esc_html_e('All folders selected', 'wp-staging'); ?></span>
-                            <small class="wpstg-create-summary-subnote"><?php echo wp_kses_post(sprintf(/* translators: %s: file-size limit in MB (a number). */ esc_html__('Files over %s MB are skipped', 'wp-staging'), '<span data-wpstg-files-skip-size>8</span>')); ?></small>
+                            <span class="wpstg-create-summary-files" data-wpstg-clone-copy><?php esc_html_e('All folders selected', 'wp-staging'); ?></span>
+                            <span data-wpstg-blank-copy hidden><?php esc_html_e('WordPress core only', 'wp-staging'); ?></span>
+                            <small class="wpstg-create-summary-subnote" data-wpstg-clone-copy><?php echo wp_kses_post(sprintf(/* translators: %s: file-size limit in MB (a number). */ esc_html__('Files over %s MB are skipped', 'wp-staging'), '<span data-wpstg-files-skip-size>8</span>')); ?></small>
                         </dd>
                     <?php else : ?>
                         <dd><?php esc_html_e('Preselected', 'wp-staging'); ?></dd>

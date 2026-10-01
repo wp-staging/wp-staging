@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Dto\Traits;
 
 use WPStaging\Backup\Storage\Providers;
+use WPStaging\Backup\Storage\StorageProfiles;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\Dto\JobDataDto;
@@ -222,7 +223,33 @@ trait RemoteUploadTrait
  
     public function isUploadToSftp(): bool
     {
-        return in_array(Providers::IDENTIFIER_SFTP, $this->getStorages());
+        return $this->getSelectedStoragesOf(Providers::IDENTIFIER_SFTP) !== [];
+    }
+
+
+
+
+
+
+
+    public function getSelectedStoragesOf(string $providerId): array
+    {
+        $profiles = new StorageProfiles();
+        $selected = [];
+
+        foreach ($this->getStorages() as $storageId) {
+            if (!is_string($storageId) || $profiles->getBaseProvider($storageId) !== $providerId) {
+                continue;
+            }
+
+            if (!$profiles->exists($storageId)) {
+                continue;
+            }
+
+            $selected[] = $storageId;
+        }
+
+        return $selected;
     }
 
  

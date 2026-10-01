@@ -94,8 +94,8 @@ class Providers
     const STORAGE_LABELS = [
         self::IDENTIFIER_GOOGLE_DRIVE        => 'Google Drive',
         self::IDENTIFIER_AMAZON_S3           => 'Amazon S3',
-        self::IDENTIFIER_SFTP                => 'sFTP/FTP',
-        self::IDENTIFIER_DIGITALOCEAN_SPACES => 'Digital Ocean Spaces',
+        self::IDENTIFIER_SFTP                => 'FTP / SFTP',
+        self::IDENTIFIER_DIGITALOCEAN_SPACES => 'DigitalOcean Spaces',
         self::IDENTIFIER_WASABI_S3           => 'Wasabi S3',
         self::IDENTIFIER_GENERIC_S3          => 'Generic S3',
         self::IDENTIFIER_DROPBOX             => 'Dropbox',
@@ -127,6 +127,15 @@ class Providers
 
     protected $storages = [];
 
+ 
+    protected $storageProfiles;
+
+ 
+    private $expandedStorages = null;
+
+ 
+    private $expandedFromRegistry = null;
+
 
 
 
@@ -136,11 +145,13 @@ class Providers
 
     public function __construct()
     {
+        $this->storageProfiles = new StorageProfiles();
+
         $this->storages = [
             [
                 'id'           => self::IDENTIFIER_GOOGLE_DRIVE,
                 'cli'          => self::IDENTIFIER_GOOGLE_DRIVE,
-                'name'         => 'Google Drive',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_GOOGLE_DRIVE],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(GoogleDriveAuth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_GOOGLE_DRIVE),
@@ -148,7 +159,7 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_AMAZON_S3,
                 'cli'          => self::IDENTIFIER_AMAZON_S3,
-                'name'         => 'Amazon S3',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_AMAZON_S3],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(AmazonS3Auth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_AMAZON_S3),
@@ -156,7 +167,7 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_DROPBOX,
                 'cli'          => self::IDENTIFIER_DROPBOX,
-                'name'         => 'Dropbox',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_DROPBOX],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(DropboxAuth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_DROPBOX),
@@ -164,7 +175,7 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_ONE_DRIVE,
                 'cli'          => self::IDENTIFIER_ONE_DRIVE,
-                'name'         => 'Microsoft OneDrive',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_ONE_DRIVE],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(OneDriveAuth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_ONE_DRIVE),
@@ -172,7 +183,7 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_PCLOUD,
                 'cli'          => self::IDENTIFIER_PCLOUD,
-                'name'         => 'pCloud',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_PCLOUD],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(PCloudAuth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_PCLOUD),
@@ -180,7 +191,7 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_SFTP,
                 'cli'          => self::IDENTIFIER_SFTP,
-                'name'         => 'FTP / SFTP',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_SFTP],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(SftpAuth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_SFTP),
@@ -188,7 +199,7 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_DIGITALOCEAN_SPACES,
                 'cli'          => self::IDENTIFIER_DIGITALOCEAN_SPACES,
-                'name'         => 'DigitalOcean Spaces',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_DIGITALOCEAN_SPACES],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(DOSAuth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_DIGITALOCEAN_SPACES),
@@ -196,7 +207,7 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_WASABI_S3,
                 'cli'          => self::IDENTIFIER_WASABI_S3,
-                'name'         => 'Wasabi S3',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_WASABI_S3],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(WasabiAuth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_WASABI_S3),
@@ -204,12 +215,43 @@ class Providers
             [
                 'id'           => self::IDENTIFIER_GENERIC_S3,
                 'cli'          => self::IDENTIFIER_GENERIC_S3,
-                'name'         => 'Generic S3',
+                'name'         => self::STORAGE_LABELS[self::IDENTIFIER_GENERIC_S3],
                 'enabled'      => true,
                 'authClass'    => $this->filterAuthClassForPro(GenericS3Auth::class),
                 'settingsPath' => $this->getStorageAdminPage(self::IDENTIFIER_GENERIC_S3),
             ],
         ];
+    }
+
+
+
+
+
+
+
+    private function expandProfiles(array $storages): array
+    {
+        $expanded = [];
+        foreach ($storages as $storage) {
+            $storage['icon'] = $storage['id'];
+
+            $profiles = $this->storageProfiles->getProfiles($storage['id']);
+            if ($profiles === []) {
+                $expanded[] = $storage;
+                continue;
+            }
+
+            foreach ($profiles as $profileId => $profileName) {
+                $expanded[] = array_merge($storage, [
+                    'id'           => $profileId,
+                    'cli'          => $profileId,
+                    'name'         => $profileName,
+                    'settingsPath' => $this->getStorageAdminPage($profileId),
+                ]);
+            }
+        }
+
+        return $expanded;
     }
 
 
@@ -233,17 +275,55 @@ class Providers
 
 
 
+    public function getBaseStorages($isEnabled = null): array
+    {
+        return $this->filterByEnabled($this->storages, $isEnabled);
+    }
+
+
+
+
+
+
+    private function filterByEnabled(array $storages, $isEnabled): array
+    {
+        if ($isEnabled === null) {
+            return $storages;
+        }
+
+        return array_filter($storages, function ($storage) use ($isEnabled) {
+            return $storage['enabled'] === $isEnabled;
+        });
+    }
+
+
+
+
+
+
+
 
 
     public function getStorages($isEnabled = null)
     {
-        if ($isEnabled === null) {
-            return $this->storages;
+        return $this->filterByEnabled($this->getExpandedStorages(), $isEnabled);
+    }
+
+
+
+
+
+
+    private function getExpandedStorages(): array
+    {
+        $registry = $this->storageProfiles->getRegistry();
+
+        if ($this->expandedStorages === null || $this->expandedFromRegistry !== $registry) {
+            $this->expandedStorages     = $this->expandProfiles($this->storages);
+            $this->expandedFromRegistry = $registry;
         }
 
-        return array_filter($this->storages, function ($storage) use ($isEnabled) {
-            return $storage['enabled'] === $isEnabled;
-        });
+        return $this->expandedStorages;
     }
 
 
@@ -273,15 +353,65 @@ class Providers
 
 
 
-    public function isActivated($class)
+    public function isActivated(string $storageId): bool
     {
-        if (empty($class)) {
-            return false;
+        $storage = $this->makeStorageFor($storageId);
+
+        return $storage === null ? false : (bool)$storage->isAuthenticated();
+    }
+
+
+
+
+
+
+
+
+    public function makeStorage($class, string $storageId)
+    {
+        if (empty($class) || !class_exists($class)) {
+            return null;
+        }
+
+        if (!$this->storageProfiles->exists($storageId)) {
+            return null;
         }
 
  
         $storage = WPStaging::make($class);
-        return $storage->isAuthenticated();
+        if ($storage instanceof ProfileAwareStorageInterface) {
+            $storage->useProfile($storageId);
+        }
+
+        return $storage;
+    }
+
+
+
+
+
+    public function makeStorageFor(string $storageId)
+    {
+        return $this->makeStorage($this->getStorageProperty($storageId, 'authClass', true), $storageId);
+    }
+
+
+
+
+
+
+
+    public function getSettingsTemplate(string $storageId): string
+    {
+        return strtolower($this->storageProfiles->getBaseProvider($storageId));
+    }
+
+
+
+
+    public function getStorageProfiles(): StorageProfiles
+    {
+        return $this->storageProfiles;
     }
 
 

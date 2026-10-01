@@ -5,9 +5,12 @@ namespace WPStaging\Framework\CloningProcess\Data;
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 
 class CopyWpConfig extends FileCloningService
 {
+    use WithUnfinishedCloneWpConfigGuard;
+
 
 
 
@@ -51,7 +54,11 @@ class CopyWpConfig extends FileCloningService
 
         $rootWpConfig  = $this->getWordPressRootPath() . 'wp-config.php';
         $symlinkTarget = (string)realpath($rootWpConfig);
-        if (is_link($rootWpConfig) && $this->isValidWpConfig($symlinkTarget) && $this->copy($symlinkTarget, $destination)) {
+        if (is_link($rootWpConfig) && $this->isValidWpConfig($symlinkTarget)) {
+            if (!$this->copyWpConfigWithUnfinishedCloneGuard($this->filesystem, $symlinkTarget, $destination)) {
+                throw new FatalException("Could not copy wp-config.php from symlink target {$symlinkTarget} to {$destination}");
+            }
+
             $this->log("Successfully copied wp-config.php file from symlink target {$symlinkTarget} to {$destination}");
             return true;
         }
@@ -59,10 +66,12 @@ class CopyWpConfig extends FileCloningService
  
         if ($this->isValidWpConfig($source)) {
  
-            if ($this->copy($source, $destination)) {
-                $this->log("Successfully copied wp-config.php file from source {$source} to {$destination}");
-                return true;
+            if (!$this->copyWpConfigWithUnfinishedCloneGuard($this->filesystem, $source, $destination)) {
+                throw new FatalException("Could not copy wp-config.php from {$source} to {$destination}");
             }
+
+            $this->log("Successfully copied wp-config.php file from source {$source} to {$destination}");
+            return true;
         }
 
  
@@ -70,18 +79,16 @@ class CopyWpConfig extends FileCloningService
 
         $this->log("Copy default wp-config.php file from source {$source} to {$destination}");
 
-        if ($this->copy($source, $destination)) {
- 
-            if (!$this->alterWpConfig($destination)) {
-                throw new FatalException("Can not alter db credentials in wp-config.php");
-            }
-        } else {
+        if (!$this->copyWpConfigWithUnfinishedCloneGuard($this->filesystem, $source, $destination)) {
             throw new FatalException("Could not copy wp-config.php to " . $destination);
+        }
+
+        if (!$this->alterWpConfig($destination)) {
+            throw new FatalException("Can not alter db credentials in wp-config.php");
         }
 
         return true;
     }
-
 
 
 
@@ -97,43 +104,15 @@ class CopyWpConfig extends FileCloningService
 
 
 
-
-    protected function copy($source, $destination)
-    {
- 
-        if (is_link($source)) {
-            $this->log("Symbolic link found...", Logger::TYPE_INFO);
-            if (!@copy(readlink($source), $destination)) {
-                $errors = error_get_last();
-                $this->log("Failed to copy {$source} Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR);
-                return false;
-            }
-        }
-
- 
-        if (!@copy($source, $destination)) {
-            $errors = error_get_last();
-            $this->log("Failed to copy {$source}! Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR);
-            return false;
-        }
-
-        return true;
-    }
-
-
-
-
-
-
     protected function alterWpConfig($source)
     {
         if (($content = file_get_contents($source)) === false) {
             return false;
         }
 
-        $search = "<?php";
+        $search = $this->getTextDatabaseConstantsMustFollow($content);
 
-        $replace = "<?php\r\n\r\n// ** MySQL settings ** //\r\n
+        $replace = $search . "\r\n\r\n// ** MySQL settings ** //\r\n
 define( 'DB_NAME', '" . DB_NAME . "' );\r\n
 /** MySQL database username */\r\n
 define( 'DB_USER', '" . DB_USER . "' );\r\n

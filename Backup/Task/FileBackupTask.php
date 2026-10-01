@@ -28,6 +28,16 @@ abstract class FileBackupTask extends BackupTask
  
     protected $fileBackupService;
 
+
+
+
+
+
+    public function usesTaskQueue(): bool
+    {
+        return true;
+    }
+
     public function __construct(FileBackupServiceProvider $fileBackupServiceProvider, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);

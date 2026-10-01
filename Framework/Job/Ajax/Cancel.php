@@ -36,7 +36,8 @@ class Cancel extends AbstractTemplateComponent
         } catch (ProcessLockedException $e) {
             if ($this->shouldContinuePollingWhileLocked()) {
                 wp_send_json([
-                    'isRunning' => true,
+                    'isRunning'        => true,
+                    'isWaitingForLock' => true,
                 ]);
             }
 

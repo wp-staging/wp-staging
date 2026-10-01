@@ -43,7 +43,7 @@ class ExcludedTables
     public function __construct()
     {
         $this->excludedTables = [
-            Queue::getTableName(),
+            Queue::QUEUE_TABLE_NAME,
         ];
 
         $this->networkExcludedTables = [

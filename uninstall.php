@@ -89,6 +89,7 @@ class Uninstall
         if ($this->isBasicInstalled() && $this->isUninstallingPro()) {
             $this->deleteRemoteSyncAuthenticationActivityTransients();
             $this->deleteOptions($this->getProOptions());
+            $this->deleteProStorageSettings();
             return;
         }
 
@@ -111,6 +112,7 @@ class Uninstall
     private function performCompleteCleanup(bool $isPro)
     {
         $this->deleteOptions($this->getBasicOptions());
+        $this->deleteCorruptedStagingSitesBackupOptions();
         if ($isPro) {
             $this->deleteOptions($this->getProOptions());
         }
@@ -121,6 +123,34 @@ class Uninstall
         $this->cleanupEmptyPreserveOptions();
         $this->clearCronEvents();
         $this->cleanupWpStagingDirectories();
+    }
+
+
+
+
+
+
+
+    private function deleteProStorageSettings()
+    {
+        global $wpdb;
+
+        if (!($wpdb instanceof \wpdb)) {
+            return;
+        }
+
+        $tableName = str_replace('`', '', $wpdb->prefix . 'wpstg_settings');
+
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($tableName)));
+        if ($exists !== $tableName) {
+            return;
+        }
+
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM `{$tableName}` WHERE setting_key = %s OR setting_key LIKE %s",
+            'sftp_profiles',
+            $wpdb->esc_like('sftp_profile_') . '%'
+        ));
     }
 
 
@@ -323,6 +353,7 @@ class Uninstall
             'wpstg_staging_sites',
             'wpstg_existing_clones',
             'wpstg_existing_clones_beta',
+            'wpstg_tmp_data',
             'wpstg_execute',
             'wpstg_emails_disabled',
             'wpstg_woo_scheduler_disabled',
@@ -392,6 +423,7 @@ class Uninstall
             'wpstg_license_key',
             'wpstg_license_status',
             'wpstg_pro_latest_version',
+            'wpstg_available_wp_versions',
             'wpstg_googledrive', 
             'wpstg_google-drive',
             'wpstg_dropbox',
@@ -490,6 +522,40 @@ class Uninstall
 
 
 
+
+    private function deleteCorruptedStagingSitesBackupOptions()
+    {
+        $this->deleteOptionsByPrefix('wpstg_staging_sites_backup_');
+    }
+
+
+
+
+
+
+
+    private function deleteOptionsByPrefix($prefix)
+    {
+        global $wpdb;
+
+        if (!($wpdb instanceof \wpdb)) {
+            return;
+        }
+
+        $optionNames = $wpdb->get_col($wpdb->prepare(
+            "SELECT option_name FROM `{$wpdb->options}` WHERE option_name LIKE %s",
+            $wpdb->esc_like($prefix) . '%'
+        ));
+
+        $this->deleteOptions($optionNames);
+    }
+
+
+
+
+
+
+
     private function deleteUserMeta(array $metaKeys)
     {
         foreach ($metaKeys as $metaKey) {
@@ -509,6 +575,7 @@ class Uninstall
 
         $this->deleteTransientsByPrefix('wpstg_staging_update_job_');
         $this->deleteRemoteSyncAuthenticationActivityTransients();
+        $this->deleteTransientsByPrefix('wpstg_rs_lowdisk_ack_');
     }
 
 

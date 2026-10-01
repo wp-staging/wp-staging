@@ -101,6 +101,7 @@ $diagnoseHeading        = $diagnoseHeadings[$diagnostics['reason'] ?? ''] ?? __(
                         </div>
                         <?php esc_html_e("Open", "wp-staging"); ?>
                     </a>
+                    <?php if (!$stagingSite->getIsBlankSite()) : ?>
                     <a href="#" class="wpstg--update--staging-site--setup wpstg-clone-action" data-cloneId="<?php echo esc_attr($stagingSiteItem->cloneId); ?>" data-url="<?php echo esc_url($stagingSiteItem->url); ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging"); ?>">
                         <div class="wpstg-dropdown-item-icon">
                             <?php $assets->renderSvg('update-site'); ?>
@@ -113,6 +114,7 @@ $diagnoseHeading        = $diagnoseHeadings[$diagnostics['reason'] ?? ''] ?? __(
                         </div>
                         <?php esc_html_e("Reset", "wp-staging"); ?>
                     </a>
+                    <?php endif; ?>
                     <?php
                     do_action(TemplateEngine::ACTION_AFTER_EXISTING_CLONES, $stagingSiteItem->cloneId, $stagingSite->toArray(), $license);
 

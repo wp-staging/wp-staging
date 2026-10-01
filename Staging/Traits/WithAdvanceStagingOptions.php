@@ -59,6 +59,12 @@ trait WithAdvanceStagingOptions
     private $isAutoUpdatePlugins = false;
 
  
+    private $isBlankSite = false;
+
+ 
+    private $blankWpVersion = '';
+
+ 
     private $tmpExcludedFullPaths = [];
 
  
@@ -361,6 +367,32 @@ trait WithAdvanceStagingOptions
     public function getIsAutoUpdatePlugins(): bool
     {
         return $this->isAutoUpdatePlugins;
+    }
+
+
+
+
+    public function setIsBlankSite(bool $isBlankSite)
+    {
+        $this->isBlankSite = $isBlankSite;
+    }
+
+    public function getIsBlankSite(): bool
+    {
+        return $this->isBlankSite;
+    }
+
+
+
+
+    public function setBlankWpVersion(string $blankWpVersion)
+    {
+        $this->blankWpVersion = $blankWpVersion;
+    }
+
+    public function getBlankWpVersion(): string
+    {
+        return $this->blankWpVersion;
     }
 
 

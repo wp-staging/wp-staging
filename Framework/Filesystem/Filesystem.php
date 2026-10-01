@@ -388,12 +388,17 @@ class Filesystem extends FilterableDirectoryIterator
 
     public function isEmptyDir(string $dir): bool
     {
-        if (is_dir($dir)) {
-            $iterator = new \FilesystemIterator($dir);
-            return !$iterator->valid();
+        if (!is_dir($dir)) {
+            return true;
         }
 
-        return true;
+        try {
+            $iterator = new \FilesystemIterator($dir);
+        } catch (\UnexpectedValueException $e) {
+            return false;
+        }
+
+        return !$iterator->valid();
     }
 
 

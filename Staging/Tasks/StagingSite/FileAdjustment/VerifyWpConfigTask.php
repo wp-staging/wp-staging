@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Tasks\StagingSite\FileAdjustment;
 
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Staging\Tasks\FileAdjustmentTask;
 
 
@@ -10,6 +11,8 @@ use WPStaging\Staging\Tasks\FileAdjustmentTask;
 
 class VerifyWpConfigTask extends FileAdjustmentTask
 {
+    use WithUnfinishedCloneWpConfigGuard;
+
 
 
 
@@ -46,7 +49,12 @@ class VerifyWpConfigTask extends FileAdjustmentTask
 
         $rootWpConfig  = $this->getWordPressRootPath() . 'wp-config.php';
         $symlinkTarget = (string)realpath($rootWpConfig);
-        if (is_link($rootWpConfig) && $this->isValidWpConfig($symlinkTarget) && $this->filesystem->copy($symlinkTarget, $destination)) {
+        if (is_link($rootWpConfig) && $this->isValidWpConfig($symlinkTarget)) {
+            if (!$this->copyWpConfigWithUnfinishedCloneGuard($this->filesystem, $symlinkTarget, $destination)) {
+                $this->logger->error("Failed to copy wp-config.php file from symlink target {$symlinkTarget} to {$destination}.");
+                return $this->generateResponse();
+            }
+
             $this->logger->info("Successfully copied wp-config.php file from symlink target {$symlinkTarget} to {$destination}.");
             return $this->generateResponse();
         }
@@ -57,19 +65,20 @@ class VerifyWpConfigTask extends FileAdjustmentTask
         if ($this->isValidWpConfig($source)) {
  
             $this->logger->info('wp-config.php file found outside ABSPATH.');
-            if ($this->filesystem->copy($source, $destination)) {
-                $this->logger->info("Successfully copied wp-config.php file from source {$source} to {$destination}.");
+            if (!$this->copyWpConfigWithUnfinishedCloneGuard($this->filesystem, $source, $destination)) {
+                $this->logger->error("Failed to copy wp-config.php file from source {$source} to {$destination}.");
                 return $this->generateResponse();
-            } else {
-                $this->logger->warning("Failed to copy wp-config.php file from source {$source} to {$destination}.");
             }
+
+            $this->logger->info("Successfully copied wp-config.php file from source {$source} to {$destination}.");
+            return $this->generateResponse();
         }
 
  
         $source = trailingslashit(WPSTG_RESOURCES_DIR) . "helpers/wp-config.php";
         $this->logger->info("Will try copying default wp-config.php file from source {$source} to {$destination}.");
 
-        if (!$this->filesystem->copy($source, $destination)) {
+        if (!$this->copyWpConfigWithUnfinishedCloneGuard($this->filesystem, $source, $destination)) {
             $this->logger->error("Failed to copy default wp-config.php file from {$source} to {$destination}.");
             return $this->generateResponse();
         }
@@ -106,9 +115,9 @@ class VerifyWpConfigTask extends FileAdjustmentTask
             return false;
         }
 
-        $search = "<?php";
+        $search = $this->getTextDatabaseConstantsMustFollow($content);
 
-        $replace = "<?php\r\n\r\n// ** MySQL settings ** //\r\n
+        $replace = $search . "\r\n\r\n// ** MySQL settings ** //\r\n
 define( 'DB_NAME', '" . DB_NAME . "' );\r\n
 /** MySQL database username */\r\n
 define( 'DB_USER', '" . DB_USER . "' );\r\n
