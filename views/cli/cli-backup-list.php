@@ -11,11 +11,13 @@
  * @var bool $isDeveloperOrHigher
  */
 
+use WPStaging\Backup\Security\BackupDirectoryProtectionService;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Utils\Urls;
 
-$urls = WPStaging::make(Urls::class);
+$urls                        = WPStaging::make(Urls::class);
+$isPermanentBackupUrlOffered = WPStaging::make(BackupDirectoryProtectionService::class)->isPermanentBackupUrlOffered();
 $hasListableBackups = false;
 foreach ($backups as $backup) {
     if (!$backup->isCorrupt && !$backup->isLegacy) {
@@ -46,10 +48,9 @@ foreach ($backups as $backup) {
                         continue;
                     }
 
-                    $backupFileName = $backup->name;
                     $selectedClass = $isFirst ? ' wpstg-cli-backup-item-selected wpstg-bg-blue-50 dark:wpstg-bg-blue-950' : '';
                     ?>
-                    <tr class="wpstg-cli-backup-item wpstg-border-b wpstg-border-gray-200 last:wpstg-border-b-0 hover:wpstg-bg-gray-50 wpstg-cursor-pointer wpstg-transition-colors dark:wpstg-border-gray-700 dark:hover:wpstg-bg-gray-800<?php echo esc_attr($selectedClass); ?>" data-backup-url="<?php echo esc_attr($urls->resolveProtocolRelativeUrl($backup->downloadUrl)); ?>" data-backup-name="<?php echo esc_attr($backupFileName); ?>">
+                    <tr class="wpstg-cli-backup-item wpstg-border-b wpstg-border-gray-200 last:wpstg-border-b-0 hover:wpstg-bg-gray-50 wpstg-cursor-pointer wpstg-transition-colors dark:wpstg-border-gray-700 dark:hover:wpstg-bg-gray-800<?php echo esc_attr($selectedClass); ?>" data-backup-url="<?php echo esc_attr($isPermanentBackupUrlOffered ? $urls->resolveProtocolRelativeUrl($backup->downloadUrl) : ''); ?>" data-backup-id="<?php echo esc_attr($backup->md5BaseName); ?>" data-backup-multipart="<?php echo esc_attr($backup->isMultipartBackup ? '1' : '0'); ?>">
                         <td class="wpstg-py-2.5 wpstg-px-4">
                             <label class="wpstg-flex wpstg-items-center wpstg-gap-3 wpstg-cursor-pointer">
                                 <input type="radio" name="wpstg-cli-backup-selection" value="<?php echo esc_attr($backup->md5BaseName); ?>" <?php echo $isFirst ? 'checked' : ''; ?> class="wpstg-h-4 wpstg-w-4 wpstg-accent-blue-500" />

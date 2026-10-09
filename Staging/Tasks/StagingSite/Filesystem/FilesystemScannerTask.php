@@ -19,7 +19,9 @@ use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Staging\Interfaces\StagingNetworkDtoInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
+use WPStaging\Staging\Service\StagingSetup;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\FileCopierTask;
 use WPStaging\Staging\Tasks\StagingTask;
@@ -342,11 +344,20 @@ class FilesystemScannerTask extends StagingTask
             return $this->generateResponse();
         }
 
-        $excludeRules = [];
+        $excludeRules = $this->getWpRootFileExcludeRules();
         $this->filesystemScanner->setOnlyFiles();
         $this->preScanPath($dirToScan, PartIdentifier::WP_ROOT_FILES_PART_IDENTIFIER, $excludeRules);
 
         return $this->generateResponse();
+    }
+
+    protected function getWpRootFileExcludeRules(): array
+    {
+        if ($this->jobDataDto->getJobType() !== StagingSetup::JOB_UPDATE || !$this->jobDataDto->getIsStagingNetwork()) {
+            return [];
+        }
+
+        return [trailingslashit($this->directory->getAbsPath()) . '.htaccess'];
     }
 
     protected function scanWpAdminDirectory(): TaskResponseDto

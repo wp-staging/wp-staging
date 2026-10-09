@@ -196,7 +196,11 @@ abstract class PrepareJob
             return new WP_Error(423, 'A foreground upload is waiting for the storage provider.');
         }
 
-        $this->maybeInitJob($args);
+        try {
+            $this->maybeInitJob($args);
+        } catch (Exception $e) {
+            return $this->abortJobThatFailedToInitialize($args, $e, $jobIdForLog);
+        }
 
  
         $this->job->setOwnerJobId(isset($args['jobId']) ? (string)$args['jobId'] : '');
@@ -233,9 +237,8 @@ abstract class PrepareJob
             } catch (Exception $e) {
                 debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
                 $this->handlingError = true;
-                $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
-
                 $this->handleError($e->getMessage(), $args);
+                $this->recordFailedResponseOnCurrentAction($e->getMessage());
 
                 return new WP_Error(400, $e->getMessage());
             }
@@ -247,6 +250,7 @@ abstract class PrepareJob
             $errorMessage = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
                 $this->handleError($errorMessage, $args);
+                $this->recordFailedResponseOnCurrentAction($errorMessage, $taskResponseDto);
 
                 debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=error', 'info', false);
                 return new WP_Error(400, $errorMessage);
@@ -311,6 +315,32 @@ abstract class PrepareJob
         debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=aborted (data lost)', 'info', true);
 
         return new WP_Error(410, $message);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private function abortJobThatFailedToInitialize(array $args, Exception $exception, string $jobIdForLog)
+    {
+        if ($this->job === null) {
+            throw $exception;
+        }
+
+        $this->job->skipPersistOnShutdown();
+        $this->handleError($exception->getMessage(), $args);
+        $this->recordFailedResponseOnCurrentAction($exception->getMessage());
+        $this->processLock->unlockProcess();
+
+        debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=aborted (preparation failed): ' . $exception->getMessage(), 'info', false);
+
+        return new WP_Error(400, $exception->getMessage());
     }
 
 
@@ -444,6 +474,22 @@ abstract class PrepareJob
         $this->notifyJobFailureListeners($failure);
 
         $jobTransientCache->failJob('', $errorMessage);
+    }
+
+
+
+
+
+
+
+
+    private function recordFailedResponseOnCurrentAction(string $errorMessage, $lastResponse = null)
+    {
+        if ($lastResponse instanceof TaskResponseDto && $lastResponse->getJobStatus() === 'JOB_FAIL') {
+            return;
+        }
+
+        $this->persistDtoToAction($this->getCurrentAction(), $this->job->getJobFailResponse($errorMessage, ''));
     }
 
 

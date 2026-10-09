@@ -42,6 +42,7 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Queue\FileSeekableQueue;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\ThirdParty\LiteSpeedCache;
 use WPStaging\Framework\BackgroundProcessing\Job\PrepareJob;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Security\Otp\OtpSender;
@@ -122,6 +123,8 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         add_action('wp_ajax_wpstg--backups--prepare-restore', $this->container->callback(PrepareRestore::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--restore', $this->container->callback(Restore::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_nopriv_' . LiteSpeedCache::AJAX_ACTION_SERVER_PURGE, $this->container->callback(LiteSpeedCache::class, 'answerServerPurgeRequest')); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- authorized by the single-use token purgeAfterRestore() issues
+        add_action('wp_ajax_' . LiteSpeedCache::AJAX_ACTION_SERVER_PURGE, $this->container->callback(LiteSpeedCache::class, 'answerServerPurgeRequest')); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- authorized by the single-use token purgeAfterRestore() issues
 
         add_action('wp_ajax_wpstg--backups--read-backup-metadata', $this->container->callback(ReadBackupMetadata::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--delete', $this->container->callback(Delete::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -146,6 +149,8 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_nopriv_wpstg--backups--restore', $this->container->callback(Restore::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         add_action(Cron::ACTION_CREATE_CRON_BACKUP, $this->container->callback(BackupScheduler::class, 'createCronBackup'), 10, 1);
+ 
+        add_action('wpstg.backup.schedules.retry_email_report', $this->container->callback(BackupScheduler::class, 'retryEmailReport'), 10, 5);
         add_action('cron_reschedule_event_error', $this->container->callback(BackupScheduler::class, 'reportCronSaveFailure'), 10, 2);
         add_action('cron_unschedule_event_error', $this->container->callback(BackupScheduler::class, 'reportCronSaveFailure'), 10, 2);
         add_action('wp_ajax_wpstg--backups-dismiss-schedule', $this->container->callback(BackupScheduler::class, 'dismissSchedule'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked

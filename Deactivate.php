@@ -2,11 +2,16 @@
 
 namespace WPStaging;
 
+use Throwable;
+use WPStaging\Backup\Transfer\TransferCleanupService;
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\PluginLifecycle;
 use WPStaging\Framework\BackgroundProcessing\BackgroundProcessingServiceProvider;
 use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
+
+use function WPStaging\functions\debug_log;
 
 
 
@@ -45,6 +50,7 @@ class Deactivate
 
         $this->deleteBackupSchedulesFromCron();
         $this->deleteOtherCron();
+        $this->removeTransferLinks();
     }
 
 
@@ -65,6 +71,34 @@ class Deactivate
         }
 
         return false;
+    }
+
+
+
+
+
+
+
+    private function removeTransferLinks()
+    {
+        try {
+            WPStaging::make(TransferCleanupService::class)->removeAllArtifacts($this->isDeactivatedForEverySite() ? 0 : get_current_blog_id());
+        } catch (Throwable $e) {
+            debug_log('WP STAGING: Could not remove the download links while deactivating. ' . $e->getMessage());
+        }
+    }
+
+    private function isDeactivatedForEverySite(): bool
+    {
+        if (!is_multisite()) {
+            return true;
+        }
+
+        if (!function_exists('is_plugin_active_for_network')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        return is_plugin_active_for_network(plugin_basename($this->currentPluginFile));
     }
 
 
@@ -111,6 +145,7 @@ class Deactivate
             QueueProcessor::ACTION_QUEUE_PROCESS,
             Cron::ACTION_WEEKLY_EVENT,
             Cron::ACTION_DAILY_EVENT,
+            TransferCleanupService::CRON_HOOK,
         ];
 
         foreach ($hooks as $hook) {

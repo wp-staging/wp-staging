@@ -8,6 +8,8 @@ use WPStaging\Framework\Security\DataEncryption as SecurityDataEncryption;
  * @method static string encrypt(string|int $value)
  * @method static string decrypt(string $value)
  * @method static bool isEncrypted(string $value)
+ * @method static string setKey(string $value)
+ * @method static string setSalt(string $value)
  */
 class DataEncryption extends Facade
 {

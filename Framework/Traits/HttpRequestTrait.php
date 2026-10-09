@@ -60,7 +60,9 @@ trait HttpRequestTrait
                 }
             }
 
-            throw new StorageException("Error Message: $errorMessage; Error Code: $responseCode; Url: $url", (int)$responseCode);
+            $requestHost  = (string)wp_parse_url($url, PHP_URL_HOST);
+            $errorMessage = str_replace($url, $requestHost, $errorMessage);
+            throw new StorageException("Error Message: $errorMessage; Error Code: $responseCode; Host: $requestHost", (int)$responseCode);
         }
 
         return $response;

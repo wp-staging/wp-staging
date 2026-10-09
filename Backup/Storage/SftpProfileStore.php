@@ -20,10 +20,16 @@ class SftpProfileStore
     const LEGACY_OPTION_NAME = 'wpstg_sftp';
 
  
+    const LOCK_WAIT_SECONDS = 5;
+
+ 
     private $settingsTable;
 
  
     private $tableIsThere;
+
+ 
+    private static $isRunningLocked = false;
 
 
 
@@ -128,6 +134,56 @@ class SftpProfileStore
 
 
 
+
+
+    public function runLocked(callable $operation)
+    {
+        global $wpdb;
+
+        $lockName = 'wpstg_sftp_profiles_' . md5($wpdb->dbname . '|' . $wpdb->prefix);
+        $acquired = (string)$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lockName, self::LOCK_WAIT_SECONDS));
+        if ($acquired === '0') {
+            return null;
+        }
+
+        try {
+            self::$isRunningLocked = true;
+            $this->forgetCachedDestinations();
+
+            return $operation();
+        } finally {
+            self::$isRunningLocked = false;
+            if ($acquired === '1') {
+                $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lockName));
+            }
+        }
+    }
+
+
+
+
+
+
+
+    private function forgetCachedDestinations()
+    {
+        $this->settingsTable->forgetCachedValue(self::REGISTRY_KEY);
+
+        $registry     = $this->getRegistry();
+        $storageIds   = isset($registry['profiles']) && is_array($registry['profiles']) ? array_keys($registry['profiles']) : [];
+        $storageIds[] = Providers::IDENTIFIER_SFTP;
+
+        foreach (array_unique($storageIds) as $storageId) {
+            $this->settingsTable->forgetCachedValue($this->settingKey((string)$storageId));
+        }
+    }
+
+
+
+
+
+
+
     public function migrateLegacyOption(): bool
     {
         if ($this->hasRegistry()) {
@@ -174,9 +230,10 @@ class SftpProfileStore
 
 
 
+
     private function settingsTableExists(): bool
     {
-        if ($this->tableIsThere === null) {
+        if ($this->tableIsThere === null || (!$this->tableIsThere && self::$isRunningLocked)) {
             $this->tableIsThere = $this->settingsTable->tableExists();
         }
 

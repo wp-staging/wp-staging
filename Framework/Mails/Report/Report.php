@@ -296,7 +296,14 @@ class Report
                     }
 
                     $fileCount              = $logFileNum + 1;
-                    $destinationLogFilePath = $tempDirectory . $logFileType . '-' . $postfix . '-' . $fileCount . '.log';
+                    $logTimestamp           = $this->getLogFileTimestamp($logFilePath);
+                    $destinationLogFilePath = $tempDirectory . sprintf(
+                        '%s-%s-%s-%d.log',
+                        $logFileType,
+                        $logTimestamp,
+                        $postfix,
+                        $fileCount
+                    );
                     $this->copyDataToFile($destinationLogFilePath, file_get_contents($logFilePath));
                     $logFiles[] = $destinationLogFilePath;
                 }
@@ -333,6 +340,41 @@ class Report
         }
 
         return [];
+    }
+
+
+
+
+
+
+
+    private function getLogFileTimestamp(string $logFilePath): string
+    {
+        $fileName = pathinfo($logFilePath, PATHINFO_FILENAME);
+        $patterns = [
+            '/__(\d{4}_\d{2}_\d{2}__\d{2}(?:_\d{2}(?:_\d{2})?)?)(?:__|$)/',
+            '/(?:^|_)(\d{4}-\d{2}-\d{2})(?:_|$)/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $fileName, $matches)) {
+                return $matches[1];
+            }
+        }
+
+        $logFile = fopen($logFilePath, 'rb');
+        if ($logFile !== false) {
+            $firstLogEntry = fgets($logFile);
+            fclose($logFile);
+
+            if (preg_match('/\[[^\]]+\]-\[(\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2})\]/', (string)$firstLogEntry, $matches)) {
+                return str_replace(['/', ' ', ':'], ['_', '__', '_'], $matches[1]);
+            }
+        }
+
+        $modifiedAt = filemtime($logFilePath);
+
+        return date('Y_m_d__H_i_s', $modifiedAt === false ? time() : $modifiedAt);
     }
 
 

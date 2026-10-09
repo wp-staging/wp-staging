@@ -38,6 +38,10 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
 
 ?>
 
+<div id="wpstg-backup-hardening-notice-container">
+    <?php require WPSTG_VIEWS_DIR . 'backup/partials/backup-directory-hardening-notice.php'; ?>
+</div>
+
 <div class="wpstg-did-you-know">
     <?php
     echo Escape::escapeHtml(

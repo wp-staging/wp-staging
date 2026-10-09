@@ -192,6 +192,8 @@ class PrepareBackup extends PrepareJob
             unset($data['schedule']); 
         }
 
+        $suppliedSubsiteBlogId = $this->suppliedSubsiteBlogId($data);
+
  
         foreach ($data as $key => $value) {
             if (empty($value)) {
@@ -298,7 +300,8 @@ class PrepareBackup extends PrepareJob
         }
 
         if ($data['isNetworkSiteBackup']) {
-            $data['subsiteBlogId'] = $this->validateAndSanitizeSubsiteBlogId($data['subsiteBlogId']);
+            $subsiteBlogId = $suppliedSubsiteBlogId === null ? $data['subsiteBlogId'] : $suppliedSubsiteBlogId;
+            $data['subsiteBlogId'] = $this->validateAndSanitizeSubsiteBlogId($subsiteBlogId);
         }
 
         if (is_string($data['backupExcludedDirectories'])) {
@@ -319,22 +322,41 @@ class PrepareBackup extends PrepareJob
 
 
 
+    private function suppliedSubsiteBlogId($data)
+    {
+        if (!isset($data['subsiteBlogId']) || $data['subsiteBlogId'] === '') {
+            return null;
+        }
+
+        return $data['subsiteBlogId'];
+    }
+
+
+
+
+
+
     protected function validateAndSanitizeSubsiteBlogId($subsiteBlogId): int
     {
         if (!is_multisite()) {
             return get_current_blog_id();
         }
 
-        if (!is_numeric($subsiteBlogId)) {
-            return get_current_blog_id();
+        $isWholeNumber = (is_int($subsiteBlogId) || is_string($subsiteBlogId)) && ctype_digit((string)$subsiteBlogId);
+
+        if (!$isWholeNumber || (int)$subsiteBlogId < 1) {
+            throw new \UnexpectedValueException(esc_html__('Subsite Blog ID must be a whole number greater than 0.', 'wp-staging'));
         }
 
-        if ($subsiteBlogId < 0) {
-            return get_current_blog_id();
+        $subsiteBlogId = (int)$subsiteBlogId;
+
+        $subsite = get_site($subsiteBlogId);
+        if (!$subsite instanceof \WP_Site || (int)$subsite->site_id !== get_current_network_id()) {
+            throw new \UnexpectedValueException(sprintf(esc_html__('Subsite with blog ID %d does not exist on this network.', 'wp-staging'), $subsiteBlogId));
         }
 
-        if (get_blog_details($subsiteBlogId) === false) {
-            return get_current_blog_id();
+        if ($subsite->archived || $subsite->spam || $subsite->deleted) {
+            throw new \UnexpectedValueException(sprintf(esc_html__('Subsite with blog ID %d is archived, suspended or deleted, so it cannot be backed up.', 'wp-staging'), $subsiteBlogId));
         }
 
         return $subsiteBlogId;

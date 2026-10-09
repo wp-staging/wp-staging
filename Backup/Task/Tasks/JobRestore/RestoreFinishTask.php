@@ -3,6 +3,8 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use RuntimeException;
+use Throwable;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Restore\Response\RestoreFinishResponseDto;
 use WPStaging\Backup\Task\RestoreTask;
@@ -10,6 +12,7 @@ use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Notices\ObjectCacheNotice;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\ThirdParty\LiteSpeedCache;
 use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -51,6 +54,8 @@ class RestoreFinishTask extends RestoreTask
         }
 
         try {
+            $this->purgeLiteSpeedCache();
+
             if ($this->jobDataDto->getObjectCacheSkipped()) {
                 $this->objectCacheNotice->enable();
             }
@@ -73,6 +78,35 @@ class RestoreFinishTask extends RestoreTask
         $response->setIsDatabaseRestoreSkipped($this->jobDataDto->getIsDatabaseRestoreSkipped());
 
         return $response;
+    }
+
+
+
+
+
+
+    protected function purgeLiteSpeedCache()
+    {
+        try {
+            $statusCode = WPStaging::make(LiteSpeedCache::class)->purgeAfterRestore();
+        } catch (Throwable $e) {
+            $this->logger->warning('The LiteSpeed page cache could not be purged: ' . $e->getMessage());
+            return;
+        }
+
+        if ($statusCode === null) {
+            return;
+        }
+
+        if ($statusCode === 204) {
+            $this->logger->info('LiteSpeed page cache purged.');
+            return;
+        }
+
+        $this->logger->warning(sprintf(
+            'The LiteSpeed page cache could not be purged: the purge request %s. Visitors may see the old site until it expires or is purged by hand.',
+            $statusCode === 0 ? 'got no response' : 'was answered with HTTP ' . $statusCode
+        ));
     }
 
 

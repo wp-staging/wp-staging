@@ -19,6 +19,20 @@ class IISWebConfig
  
     const STATIC_FILE_HANDLER = '<add name="StaticFile" path="*" verb="*" modules="StaticFileModule,DefaultDocumentModule,DirectoryListingModule" resourceType="Either" requireAccess="Read" />';
 
+ 
+    const STATIC_CONTENT_RULES = [
+        '<handlers>',
+        '<clear/>',
+        self::STATIC_FILE_HANDLER,
+        '</handlers>',
+        '<staticContent>',
+        '<clear/>',
+        '<mimeMap fileExtension=".log" mimeType="application/octet-stream" />',
+        '<mimeMap fileExtension=".wpstg" mimeType="application/octet-stream" />',
+        '<mimeMap fileExtension=".wpstgtmp" mimeType="application/octet-stream" />',
+        '</staticContent>',
+    ];
+
 
 
 
@@ -38,19 +52,7 @@ class IISWebConfig
 
     public function create($path)
     {
-        return $this->filesystem->create($path, implode(PHP_EOL, [
-            '<configuration>',
-            '<system.webServer>',
-            '<handlers>',
-            '<clear/>',
-            self::STATIC_FILE_HANDLER,
-            '</handlers>',
-            '<staticContent>',
-            '<clear/>',
-            '<mimeMap fileExtension=".log" mimeType="application/octet-stream" />',
-            '<mimeMap fileExtension=".wpstg" mimeType="application/octet-stream" />',
-            '<mimeMap fileExtension=".wpstgtmp" mimeType="application/octet-stream" />',
-            '</staticContent>',
+        return $this->filesystem->create($path, implode(PHP_EOL, array_merge(['<configuration>', '<system.webServer>'], self::STATIC_CONTENT_RULES, [
             '<defaultDocument>',
             '<files>',
             '<clear/>',
@@ -60,7 +62,7 @@ class IISWebConfig
             '<directoryBrowse enabled="false" />',
             '</system.webServer>',
             '</configuration>',
-        ]));
+        ])));
     }
 
  

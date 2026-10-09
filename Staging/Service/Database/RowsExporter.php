@@ -2,6 +2,7 @@
 
 namespace WPStaging\Staging\Service\Database;
 
+use WPStaging\Backup\Transfer\TransferSessionTable;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\Exporter\AbstractRowsExporter;
 use WPStaging\Framework\Database\SearchReplace;
@@ -33,6 +34,7 @@ class RowsExporter extends AbstractRowsExporter
     const TABLES_EXCLUDED_FROM_DATA_COPYING = [
         'wpstg_queue',
         'wpstg_settings',
+        TransferSessionTable::TABLE_NAME,
     ];
 
  

@@ -8,6 +8,8 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Mails\MailSender;
 use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Framework\Traits\DebugLogTrait;
+use WPStaging\Framework\Upgrade\UpgradeFlags;
 use WPStaging\Staging\Sites;
 
 
@@ -16,6 +18,8 @@ use WPStaging\Staging\Sites;
 
 class Repair extends AbstractTemplateComponent
 {
+    use DebugLogTrait;
+
 
 
 
@@ -46,6 +50,26 @@ class Repair extends AbstractTemplateComponent
         $this->report     = $report;
         $this->directory  = $directory;
         $this->sites      = $sites;
+    }
+
+
+
+
+
+
+    public function deleteLegacyReport()
+    {
+        $flags = WPStaging::make(UpgradeFlags::class);
+        if ($flags->has('corrupted_staging_report_removed')) {
+            return;
+        }
+
+        $path = $this->directory->getLogDirectory() . self::CORRUPTED_STAGING_SITE_OPTION_FILE_NAME;
+        if (is_file($path) && !$this->deleteReportFile($path)) {
+            return;
+        }
+
+        $flags->mark('corrupted_staging_report_removed');
     }
 
 
@@ -126,13 +150,98 @@ class Repair extends AbstractTemplateComponent
         );
         $emailBody .= "\n\nSite logs and corrupted option data are attached.";
 
-        $corruptedOptionFilePath = $this->directory->getLogDirectory() . self::CORRUPTED_STAGING_SITE_OPTION_FILE_NAME;
-        file_put_contents($corruptedOptionFilePath, $corruptedOption);
+        $reportDirectory = $this->directory->getPluginWpContentDirectory();
+        if (!wp_mkdir_p($reportDirectory)) {
+            return false;
+        }
 
-        $this->mailSender->setAttachments($this->getAttachments($corruptedOptionFilePath));
-        $this->mailSender->setRecipient(Report::WPSTG_SUPPORT_EMAIL);
-        $this->mailSender->setReplyTo($this->getReplyToAddress());
-        return $this->mailSender->sendRequestForEmailNotification(self::REPAIR_EMAIL_SUBJECT, $emailBody);
+        $corruptedOptionFilePath = $reportDirectory . 'corrupted-staging-site-option-' . wp_hash(uniqid('', true)) . '.log';
+        try {
+            if (file_put_contents($corruptedOptionFilePath, $this->redactCorruptedOption($corruptedOption)) === false) {
+                return false;
+            }
+
+            $this->mailSender->setAttachments($this->getAttachments($corruptedOptionFilePath));
+            $this->mailSender->setRecipient(Report::WPSTG_SUPPORT_EMAIL);
+            $this->mailSender->setReplyTo($this->getReplyToAddress());
+            return $this->mailSender->sendRequestForEmailNotification(self::REPAIR_EMAIL_SUBJECT, $emailBody);
+        } finally {
+            if (is_file($corruptedOptionFilePath)) {
+                $this->deleteReportFile($corruptedOptionFilePath);
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+    private function redactCorruptedOption(string $raw): string
+    {
+        $withheld = sprintf('Corrupted option contents withheld: unable to safely redact %d bytes.', strlen($raw));
+        $result = '';
+        $offset = 0;
+        while (preg_match('/s:(?:16:"databasePassword"|13:"adminPassword");s:([0-9]+):"/', $raw, $match, PREG_OFFSET_CAPTURE, $offset)) {
+            $prefix = substr($raw, $offset, $match[0][1] - $offset);
+            $valueStart = $match[0][1] + strlen($match[0][0]);
+            $length = $match[1][0];
+            if ($this->containsPasswordKey($prefix) || $length > strlen($raw) - $valueStart - 2) {
+                return $withheld;
+            }
+
+            $length = (int)$length;
+            if (substr($raw, $valueStart + $length, 2) !== '";') {
+                return $withheld;
+            }
+
+            $result .= $prefix . $match[0][0] . str_repeat('*', $length) . '";';
+            $offset = $valueStart + $length + 2;
+        }
+
+        $suffix = substr($raw, $offset);
+        return $this->containsPasswordKey($suffix) ? $withheld : $result . $suffix;
+    }
+
+
+
+
+
+
+
+    private function containsPasswordKey(string $value): bool
+    {
+        return strpos($value, 'databasePassword') !== false || strpos($value, 'adminPassword') !== false;
+    }
+
+
+
+
+
+
+
+    private function deleteReportFile(string $path): bool
+    {
+        set_error_handler(function () {
+            return true;
+        });
+        try {
+            $deleted = unlink($path);
+        } finally {
+            restore_error_handler();
+        }
+
+        if (!$deleted) {
+            $flags = WPStaging::make(UpgradeFlags::class);
+            if (!$flags->has('corrupted_staging_report_cleanup_failed')) {
+                $this->debugLog('Could not remove a corrupted staging sites report. Check file and directory permissions.', 'warning');
+                $flags->mark('corrupted_staging_report_cleanup_failed');
+            }
+        }
+
+        return $deleted;
     }
 
 

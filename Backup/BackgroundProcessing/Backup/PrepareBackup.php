@@ -8,12 +8,17 @@
 
 namespace WPStaging\Backup\BackgroundProcessing\Backup;
 
+use UnexpectedValueException;
+use WP_Error;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup as AjaxPrepareBackup;
+use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Job\JobBackupProvider;
+use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Job\PrepareJob;
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Utils\Times;
 
@@ -82,11 +87,37 @@ class PrepareBackup extends PrepareJob
             debug_log('[Background Job] Initiating Backup Job', 'info', false);
             $prepareBackup = WPStaging::make(AjaxPrepareBackup::class);
             $prepareBackup->setQueueId(empty($args['jobId']) ? '' : $args['jobId']);
-            $prepareBackup->prepare($args);
+            $preparedBackup = $prepareBackup->prepare($args);
+            if ($preparedBackup instanceof WP_Error) {
+                $this->job = $this->getJobToRecordFailedPreparationAgainst($args);
+                throw new UnexpectedValueException($preparedBackup->get_error_message());
+            }
+
             $this->job = $prepareBackup->getJob();
         } else {
             $this->job =  WPStaging::make(JobBackupProvider::class)->getJob();
         }
+    }
+
+
+
+
+
+
+
+    private function getJobToRecordFailedPreparationAgainst(array $args): JobBackup
+    {
+ 
+        $job = WPStaging::make(JobBackupProvider::class)->getJob();
+ 
+        $jobDataDto = $job->getJobDataDto();
+        $jobDataDto->setScheduleId(empty($args['scheduleId']) ? null : (string)$args['scheduleId']);
+
+        if (empty($args['isSyncRequest'])) {
+            $job->getTransientCache()->startJob((string)$args['jobId'], esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, (string)$args['jobId']);
+        }
+
+        return $job;
     }
 
     protected function getIsBackupJob(): bool

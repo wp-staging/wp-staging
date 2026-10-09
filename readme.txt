@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.16.0
+Stable tag: 4.17.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,125 +283,96 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.16.0 =
-* New: Add "Create Blank WP Site" option that installs a fresh WordPress instead of cloning the live site. (Pro) #2959
-* New: Add opt-in low disk space mode for Remote Sync pull that creates and transfers the backup in capped parts, so the source site no longer needs free disk space for the whole backup. #5317
-* New: Preview and map subsite URLs when cloning and pushing. (Pro) #5898
-* Enh: Duplicate an FTP / SFTP storage profile, so a second destination on the same server needs no retyped connection details. (Pro) #6506
-* Enh: FTP / SFTP settings move to a new place on update, so going back to an older version needs them entered again. #5946
-* Enh: Keep FTP / SFTP destinations out of staging sites, so production credentials are not copied to a clone. #5946
-* Enh: Load remote storage code only for WP STAGING requests. (Pro) #3879
-* Enh: Refuse to save an FTP / SFTP profile into a folder another profile already uses on the same server. (Pro) #6506
-* Enh: Support multiple independent FTP / SFTP storage profiles per site. #5946
-* Fix: Backups no longer fail their own integrity check when their size lands just below a power of ten. #6480
-* Fix: Cancelling a backup started from the first-run screen now closes the progress window and offers the choice again, instead of leaving the window open and failing on a second attempt. #6406
-* Fix: Delete every wpstg_staging_sites_backup_<time> option when the plugin is uninstalled. #6185
-* Fix: Delete the backups a plan no longer keeps once the new one exists, so a plan that keeps a single backup is never left without one. #6359
-* Fix: Delete the temporary copy of the staging site's storage credentials when an update cannot restore it, and on uninstall. #6263
-* Fix: Exclude the background-processing queue table from staging site clones. #6362
-* Fix: Expect the storage profile AJAX callbacks in the storage service provider test, so master's unit tests pass again. #6550
-* Fix: Give the backup a plan makes with Create backup now the plan's schedule id, so the plan counts that backup toward the number of backups it keeps, rotates it away in its turn, and reports it as its last run. #6462
-* Fix: Honour WP-CLI options written with a leading double dash and report unknown ones. #6413
-* Fix: Keep rebuilding the backup cron events when one backup plan's schedule id is not a string. #6370
-* Fix: Keep the "Cancelling & Cleaning up" modal after cancelling a backup restore instead of reporting the job as cancelled from another page. #6620
-* Fix: Keep the Next-Gen transfer method selected after a push. (Pro) #6527
-* Fix: Make WP-CLI staging-site-create honour its database and other advanced options. (Pro) #6257
-* Fix: Name the missing automatic login endpoint instead of blaming a firewall when the staging site runs WP STAGING Free. #6222
-* Fix: Prevent duplicated domain suffixes and preserve escaped page-builder URLs when restoring backups. (Pro) #3439
-* Fix: Protect updates clicked before the page finishes loading. #6337
-* Fix: Record the actual reason a Remote Sync authentication failed instead of one generic message. #5505
-* Fix: Reduce temporary files created during backups. #2037
-* Fix: Refuse cloning to a target directory PHP cannot read instead of failing with a fatal error. #6494
-* Fix: Refuse creating a staging site when its destination table prefix is already in use. #6220
-* Fix: Refuse to back up a subsite in the WP-CLI backup-create command when it is archived, suspended or deleted, or belongs to another network. #6384
-* Fix: Regenerate Elementor CSS after restoring a backup or syncing a database with Remote Sync. #6251
-* Fix: Report a cancellation that cannot finish instead of asking the server about it for ever. #6422
-* Fix: Say which task could not be built instead of blaming disk space, and keep the object that came back out of the error report. #6277
-* Fix: Select custom folders under wp-content by default when pushing, so a push no longer leaves them behind without saying so. #6157
-* Fix: Show actionable guidance for Error 429 during backup uploads. #1162
-* Fix: Show only one label at a time on the backup "Contains" icons, instead of leaving several overlapping. #5381
-* Fix: Stop a cancelled backup, staging site or push from logging the request the cancel aborted to the browser console, and report an error a finished job runs into while it closes down instead of swallowing it. #6007
-* Fix: Stop an interrupted clone from leaving a live WordPress in the staging folder wired to the production database. #6145
-* Fix: Stop an unchanged save of a backup plan from restarting the point its runs are counted from, so a missed backup stays reported. (Pro) #6409
-* Fix: Stop counting failed Remote Sync authentications as sync attempts in usage analytics. #5505
-* Fix: Stop reporting a backup restore as failed when its status check fails right after pressing Cancel. #6620
-* Fix: Stop the WP-CLI backup-create command from backing up a different subsite than the one subsite_blog_id names. #6384
-* Fix: The Create Backup modal no longer opens by itself on the backup page of a site that stopped running WP Staging Pro. #6613
-* Fix: The Upload Backup to Cloud and Create Backup modals no longer reopen by themselves after saving cloud storage settings that did not leave the page. (Pro) #6613
-* UX: Show "Always on" in the staging summary for isolation controls that only Pro can turn off. #5987
-*  Tweak: Create a full-site backup before pushing to production. (Pro) #5240
-*  Tweak: Explain why uninstall keeps staging sites and backups. #6155
-* Dev: Align AGENTS.md with the house rules in CLAUDE.md, so Copilot and Codex follow the same changelog, test, comment and code style rules. #6510
-* Dev: Align the code-style guide and the test docs with CLAUDE.md. #6515
-* Dev: Apply the blocked label from the lifecycle controller in place of fast-tests-failed and fast-tests-cancelled. #6592
-* Dev: Apply the review-role labels from the lifecycle controller and take an unsupported ready-to-merge off. #6601
-* Dev: Ask Copilot for its review from the lifecycle controller when nobody did. #6644
-* Dev: Ask for the kind and the reproduction in the pull request template, so a pull request filled in by hand can satisfy the merge-readiness status. #6560
-* Dev: Ask the author for the missing Follow-up owed line, not another fix, when every open review finding is already reported fixed and waits on the reviewer. #6591
-* Dev: Ask the reviewer a second approval waits for to review the head, and name them in the merge-readiness status. #6614
-* Dev: Bring the process docs and diagrams in line with the lifecycle controller. #6678
-* Dev: Build WP Staging Free during make reset when dist/wp-staging holds no complete build, so WP Staging Pro can activate it on the dev sites. #6103
-* Dev: Build the JavaScript the fast-test browser fixture serves, so a Playwright run cannot silently test a stale bundle. #6457
-* Dev: Cap a review at 25 lines and name the defect in each finding title. #6594
-* Dev: Check each open pull request's labels against its reviews, checks and holds, and report where they disagree, without writing any. #6525
-* Dev: Check every SCSS file with Prettier, not only those one folder deep. #6509
-* Dev: Check the translation template on every push to master, so a stale template is reported against the merge that introduced it instead of being discovered in an unrelated pull request. #6312
-* Dev: Claim a GitHub issue before starting on it, and take several off the backlog with one command. #6394
-* Dev: Continue HIGH PRIORITY reviews into fixing verified blockers. #6448
-* Dev: Correct fast-test label and WordPress 7.0 RC documentation. #6537
-* Dev: Count the project owner's skip-tests in the lifecycle controller, so merge-readiness can pass on a pull request merged without a test run. #6576
-* Dev: Credit a fast-tests status only when GitHub Actions posted it. #6606
-* Dev: Delete CI artifacts that a newer run or a closed pull request made obsolete, and keep the E2E packages for three days instead of fourteen. #6634
-* Dev: Describe the pull request workflow in plain words with its diagrams, count the E2E rounds the controller dispatches, and let the author verify every review fix and feature. #6622
-* Dev: Fail loudly when the Free fixture switch cannot read a version or a worktree E2E run skips every test, and restore the edition when a run is interrupted. #6392
-* Dev: Generate the translation template without committing it in PRs. #6481
-* Dev: Keep AGENTS.md and CLAUDE.md from contradicting each other. #6562
-* Dev: Keep Playwright traces only for failed tests, which shrinks the report a failed E2E suite uploads. #6638
-* Dev: Keep a review finding open when the author asks the wrong reviewer back for it. #6589
-* Dev: Keep a review round whose holders already read the head, and read re-review signatures and bare approvals as follow-ups. #6646
-* Dev: Keep a role review counting when the round moves to a new commit before the other review is in. #6669
-* Dev: Label unit-test results as unit-baseline-passed and unit-full-matrix-passed, the names the lifecycle controller reads, instead of the fast-tests-passed family. #6574
-* Dev: Let a reviewer hold a review role on request without joining the assignment rotation. #6615
-* Dev: Let the author close a role-review finding that carries no Verify line, as review-procedure § 10 says, instead of holding it for a reviewer follow-up. #6587
-* Dev: Let the author close every finding the hand-back reports fixed or dismisses, and never wait on a follow-up the PR asked for. #6653
-* Dev: Let the author verify most review fixes and owe a follow-up only to the reviewer who raised the finding. #6533
-* Dev: Let the project owner's skip-reviews label lift the review roles, and have the lifecycle controller apply ready-to-merge to routine work once every gate passes. #6568
-* Dev: Limit review findings to blockers and performance or UX gains. #6536
-* Dev: List Pro-only changes in their own section of the wordpress.org release notes instead of dropping them. #6510
-* Dev: Merge the labels that meant the same thing and name each one once in the skills, the controller and its policy. #6572
-* Dev: Move the release procedure from the project slash command into .agents/skills, so every agent working in this repository can read and follow it. #6464
-* Dev: Publish the lifecycle controller's merge-readiness verdict as an advisory commit status on each open pull request's head. #6548
-* Dev: Queue the lifecycle controller's runs instead of cancelling them, and keep merge-readiness from waiting on GitHub's own blocked or unknown merge state. #6554
-* Dev: Rebuild the stale Pro build before make tests_e2e serves it after a PHP edit. #6490
-* Dev: Record a human verification of a feature on its head, and report the merge-eligibility and merge-readiness results it gates, without writing any. #6534
-* Dev: Remove dead Selenium leftovers from the test tooling and repair make targets that cannot run. #6521
-* Dev: Remove the inactive Kanban workflow and retire the unused in-progress label. #6604
-* Dev: Remove the staging site the missing login endpoint E2E test left in the site root, which grew the full-site backup before push past the backup explorer's memory limit. #6659
-* Dev: Require every fix pull request to record whether it is a regression, what introduced it and which release shipped it. #6451
-* Dev: Require the human verification of a feature to cover its whole workflow, and keep agents from recording it. #6610
-* Dev: Rewrite the Copilot instructions as review rules, with path-specific rules and a code-review skill. #6502
-* Dev: Rewrite the developer docs that still described the removed Selenium browser suite. #6516
-* Dev: Run Fast tests on pull requests again by keeping the job results out of the size-limited verdict script expression. #6585
-* Dev: Run the Flywheel and WordPress.com E2E suites nightly instead of on every Pro round. #6458
-* Dev: Run the full PHP matrix once per pull request head: every push tests PHP 7.4 and 8.3, and the fast-tests label adds only the versions that head has not passed yet. #6520
-* Dev: Run the lifecycle controller on runners of its own, so it never queues behind the tests. #6668
-* Dev: Run the lifecycle controller's job on the self-hosted xsimulator fleet instead of a paid Blacksmith runner. #6563
-* Dev: Say in the review procedure that make tests_web and make tests_e2e rebuild a stale Pro build by themselves. #6485
-* Dev: Set GitHub's review state when a signed role review is posted. #6674
-* Dev: Skip TickLockTest's exclusivity checks where flock is not exclusive, such as the macOS Docker bind mount. #6523
-* Dev: Spend the full fast-tests matrix only after a pull request has been reviewed. #6485
-* Dev: Split pull request reviews into a correctness role and a workflow role, each held by its own assigned developer. #6485
-* Dev: Start the owed E2E round from the lifecycle controller instead of waiting for a trigger label. #6596
-* Dev: Stop a second WordPress version from cancelling an E2E workflow run dispatched on the same branch and PHP version. #6511
-* Dev: Stop counting a review, hand-back or decision somebody other than its author edited. #6609
-* Dev: Stop guardrail checks failing at random when grep -q closes the pipe early. #6651
-* Dev: Stop reviews from reporting agent credits in commits and PR descriptions as blocking findings. #6647
-* Dev: Stop running CI jobs a documentation-only pull request cannot affect. #6566
-* Dev: Stop the skills from prescribing git commands the permission rules deny. #6546
-* Dev: Stop the staging delete test from racing the modal backdrop. #6097
-* Dev: Switch off the lifecycle controller's Copilot request, which the workflow token cannot make. #6670
-* Dev: Take changes-required off from the lifecycle controller once every blocking finding is settled. #6645
-* Dev: Tell the release skill to reproduce a failed test locally before dispatching a CI shard. #6121
+= 4.17.0 =
+* New: Add secure transfer sessions for backup downloads. Backups are no longer offered as permanent public URLs. Instead Download Backup and Share Backup Link create a short-lived, tokenized transfer link on click that the webserver serves statically, so PHP never streams the backup and large downloads can not run into PHP timeouts. #5449
+* New: Protect the permanent backup directory against direct HTTP access on Apache and IIS, and add a backup folder security self-test with a small, expandable notice that says what to ask the hosting provider when the folder is still reachable. #5449
+* Enh: Advertise the Pro auto login feature below the button that opens a new staging site in the free version. #6360
+* Enh: Ask OneDrive for a whole page of entries when listing backups, instead of leaving Microsoft Graph on its default of 200 per request. (Pro) #5913
+* Enh: Limit "Create Blank WP Site" to the Business plan and above. (Pro) #6725
+* Enh: Show the ten newest remote backups first and keep the rest behind a "Show more" button, so a large remote backup folder does not slow the backup list down. (Pro) #5913
+* Fix: A backup no longer fails when a theme, plugin or media file has a modification date before 1970 or after 2106. #6582
+* Fix: A second cancellation that starts while one is still running now waits for it instead of stopping it silently. #6623
+* Fix: Background jobs could fail to find their queue table on sites that use SQLite. #6756
+* Fix: Clone the subsite that source-blog-id names in the WP-CLI staging-site-create command instead of the current blog. (Pro) #6268
+* Fix: Correct the .htaccess rewrite base for multisite network clones. (Pro) #6137
+* Fix: Delete the Remote Sync settings when WP Staging Pro is uninstalled. (Pro) #6764
+* Fix: Finish deleting a split backup once every part was deleted, instead of ending the request without a reply. (Pro) #6784
+* Fix: Finish the remote backup list when one of several storages answers with an error, instead of leaving the loading indicator running and the "No remote Backups found" message out of date. (Pro) #5913
+* Fix: Hash the whole backup once instead of twice when a remote upload checks a file already on the remote storage. (Pro) #6498
+* Fix: Include Remote Sync logs and timestamps in bundled downloads. (Pro) #6640
+* Fix: Keep bundled log downloads inside the 14-day retention window instead of including logs of any age. #6713
+* Fix: Keep every job log entry on one line, so a line break in an error message can no longer forge log entries. #6758
+* Fix: Keep passwords out of corrupted staging sites reports and remove temporary report files. #6131
+* Fix: Keep storage access tokens out of the request error that reaches the job log and the debug log. (Pro) #6631
+* Fix: Keep the live site's database prefix while listing a push's tables, so the rest of that request no longer reads or writes the staging site's tables. (Pro) #6772
+* Fix: Keep the run day and the missed-run record of a backup plan when only its retention is changed. (Pro) #6479
+* Fix: Keep the staging creation screen open after pressing Stop instead of reporting the job as cancelled from another page or opening a status error popup. #6455
+* Fix: Let the Delete wpstg-restore.php button remove the restore tool without a Developer or Agency license. (Pro) #6706
+* Fix: Make wp wpstg status report running, finished and failed jobs correctly. (Pro) #6787
+* Fix: Name the failed backup in upload failure reports. (Pro) #6551
+* Fix: Offer the staging site's login page instead of a session-expired error when the license is not active. (Pro) #6708
+* Fix: Open the backup explorer on backups with many files instead of failing with an HTTP 500 memory error. #6667
+* Fix: Post every failed scheduled backup upload to Slack, a repeated one at most once per hour, and send Slack error reports even with error emails off. (Pro) #6551
+* Fix: Preserve clone settings when continuing past the database grant warning. (Pro) #6712
+* Fix: Preserve production wpstg_queue and wpstg_settings during Legacy Push. (Pro) #6693
+* Fix: Purge the LiteSpeed page cache after a restore, also when the restore replaced or deactivated the LiteSpeed Cache plugin. #6779
+* Fix: Read every page of the backup listing on Google Drive, OneDrive and the S3 storages, so the backup list and retention see every stored backup. (Pro) #5913
+* Fix: Reading and checking plugin settings could hang or come back empty on sites that use SQLite. #6751
+* Fix: Refuse a subsite backup whose blog ID names no subsite of the current network, or names one that is archived, suspended or deleted. #6403
+* Fix: Remote Sync push no longer logs a setTmpDatabasePrefix() TypeError on every queue tick. (Pro) #6773
+* Fix: Repair a missing queue column when the stored schema version is current. #6693
+* Fix: Report a backup file that reached the server's file size limit as such, with what to do about it, instead of as a full disk. #6862
+* Fix: Retry a scheduled backup report email that could not be sent. #6551
+* Fix: Retry opening the Google Drive upload session after a network error instead of cancelling the upload. (Pro) #6681
+* Fix: Run the optimizer preflight with the current mu-plugin and retry unverified checks. #5659
+* Fix: Send identical backup report emails at most once per hour. #6551
+* Fix: Show an Activate License button in the Pro header when the site is not activated on its license. (Pro) #6707
+* Fix: Show why Run Now could not start a backup plan, and mark the plan's last run as failed when its subsite backup is refused. #6403
+* Fix: Skip hashing the whole backup when a remote upload finds the remote copy at a different size. (Pro) #6823
+* Fix: Stop PHP 8.4 deprecation notice in the search & replace step of staging site cloning and pushing. #5623
+* Fix: Stop a killed backup request from adding the same files twice, which threw finished backups away at the file-count check. #6578
+* Fix: Stop a remote backup upload when a wrong-sized file of the same name cannot be deleted first, and retry a pCloud deletion that timed out. (Pro) #6496
+* Fix: Stop a retried Next-Gen push, or staging site creation, update or reset, from replaying database rows and failing with a duplicate PRIMARY key. #6577
+* Fix: Stop a second "Success" dialog from covering the next dialog opened after creating a staging site. #6664
+* Fix: Stop duplicate PHP time-limit warnings for successful scheduled backups. #6551
+* Fix: Stop expired temporary-login records from logging out an existing administrator who signed in with their password. (Pro) #6840
+* Fix: Stop reporting a backup as failed when its status check fails right after pressing Stop. #6455
+* Fix: Stop the backup of a subsite from silently backing up the current blog when the blog ID cannot be resolved. #6403
+* Fix: Stop two simultaneous FTP / SFTP profile saves from both claiming the same folder. (Pro) #6559
+* Fix: The Upload Backup to Cloud and Create Backup modals no longer reopen by themselves on a later visit to Backups after connecting Google Drive with your own API credentials. (Pro) #6139
+* Fix: Warn when a backup listing could not be read in full on Google Drive, OneDrive, Dropbox or any of the S3 storages, instead of showing a short list as the whole folder. (Pro) #5913
+* Fix: Write database passwords, users and names containing an apostrophe, double quote or backslash correctly to wp-config.php in the standalone restore tool. (Pro) #6794
+* Dev: Add the Pro 6.16.0 features to the Free vs Pro comparison. #6716
+* Dev: Check the backup cancel and error modals themselves instead of the whole page, which now quotes the cancel modal title in the newsfeed. #6715
+* Dev: Confirm each dummy backup in the cloud storage integration tests through the listing, and upload it again when a transient network error lost it. #6624
+* Dev: Delete the OneDrive integration test folder after each run instead of leaving it in the shared account. #6682
+* Dev: Document which existing backup, Remote Sync and CLI parts the planned hosted deploy service can reuse. #6744
+* Dev: Drop the second approval and let two clean role reviews make a pull request ready to merge. #6736
+* Dev: Expect a backup cancel to end as cancelled when a status check fails during it. #6728
+* Dev: Find a fix already in flight under another issue before an agent works on one. #6800
+* Dev: Hand the dismissal of a changes-requested review to the author or the project owner, since agents are denied it. #6759
+* Dev: Keep the live license check out of the Remote Sync pull database spec. #6711
+* Dev: Let a worktree run a Playwright spec that reads the database. #6368
+* Dev: Let agents post review thread replies through `dev/ci-watch.sh reply`. #6748
+* Dev: Let the lifecycle controller accept a Codex review in place of Copilot's. #6868
+* Dev: Let the lifecycle controller act on pull requests whose mergeability is still being computed. #6798
+* Dev: Lower the CPU each E2E test spends on screen recording and looping animations. #6695
+* Dev: Make the WP-CLI staging-site polling example stop when the job finishes or fails. #6785
+* Dev: Make the fatal-error guard detect fatals in hidden markup. #6505
+* Dev: Record migration as a Pro-only feature in the licence feature matrix. #6788
+* Dev: Resume an issue with make worktree from its branch on origin instead of starting a second branch from master. #6803
+* Dev: Retry WordPress plugin and theme downloads during site setup. #5303
+* Dev: Run the release pipeline on the branch it was dispatched on instead of one named after the current month. #6692
+* Dev: Search for an existing issue before an agent opens a new one. #6503
+* Dev: Settle a pull request in one review round: a push after a role review no longer asks its reviewer again. #6657
+* Dev: Shard Pro Single Staging and Pro Single Backup in the release suite's PHP 7.4 gate. #6698
+* Dev: Start the full PHP matrix from the lifecycle controller once the review is settled. #6739
+* Dev: Start the lifecycle controller after a role review is posted, so the review-role labels come off at once. #6832
+* Dev: Stop StagingSiteHttpDetectorTest failing with 301 instead of 300 when a second passes between scheduling two staging sites. #6762
+* Dev: Stop the lifecycle controller from holding back a pull request that is only behind master. #6790
+* Dev: Tell the lifecycle controller when a Fast tests or E2E run it started has finished, instead of waiting for its two-hourly sweep. #6814
+* Dev: Turn off wp-browser's temporary-table rewrite in four unit test classes that need real tables. #6763
+* Dev: Write owner decision requests on pull requests in product terms, without code names. #6804
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

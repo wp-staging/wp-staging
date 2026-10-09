@@ -98,6 +98,10 @@ class Upgrade
         $this->adoptLegacyUpdateProtectionMode();
         $this->maybeWarnAboutAffectedNextGenStagingSites();
         $this->normalizeSettingsShape();
+        if (!$this->upgradeFlags->has('corrupted_staging_report_removed')) {
+            WPStaging::make(\WPStaging\Staging\Ajax\Repair::class)->deleteLegacyReport();
+        }
+
         $this->adoptTheRunsOfTheStoredBackupPlans();
         if (!$this->upgradeFlags->has('staging_prefix_ownership_repaired')) {
             WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->repairCollisions();

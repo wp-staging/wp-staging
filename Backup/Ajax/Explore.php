@@ -94,32 +94,16 @@ class Explore extends AbstractTemplateComponent
         $folder = $this->normalizeFolder($folder);
 
         $search = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
-        $sort   = 'name_asc';
 
         $withTree = isset($_POST['withTree'])
             ? filter_var(wp_unslash($_POST['withTree']), FILTER_VALIDATE_BOOLEAN)
             : false;
 
         try {
-            $entries = $this->getDirectoryEntries($backupFile, $metadata, $folder, $search, $sort);
+            $response = $this->getDirectoryEntriesPage($backupFile, $metadata, $folder, $search, $page, $perPage);
         } catch (\Throwable $e) {
             wp_send_json_error(['message' => $e->getMessage()]);
         }
-
-        $totalEntries = count($entries);
-        $totalPages   = (int)ceil($totalEntries / $perPage);
-        $offset       = ($page - 1) * $perPage;
-        $pagedEntries = array_slice($entries, $offset, $perPage);
-
-        $response = [
-            'entries' => $pagedEntries,
-            'paging'  => [
-                'totalItems' => $totalEntries,
-                'totalPages' => $totalPages,
-                'page'       => $page,
-                'hasMore'    => $page < $totalPages,
-            ],
-        ];
 
         if ($withTree) {
             try {
@@ -167,28 +151,14 @@ class Explore extends AbstractTemplateComponent
         $folder = $this->normalizeFolder($folder);
 
         $search = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
-        $sort   = 'name_asc';
 
         try {
-            $entries = $this->getDirectoryEntries($backupFile, $metadata, $folder, $search, $sort);
+            $response = $this->getDirectoryEntriesPage($backupFile, $metadata, $folder, $search, $page, $perPage);
         } catch (\Throwable $e) {
             wp_send_json_error(['message' => $e->getMessage()]);
         }
 
-        $totalEntries = count($entries);
-        $totalPages   = (int)ceil($totalEntries / $perPage);
-        $offset       = ($page - 1) * $perPage;
-        $pagedEntries = array_slice($entries, $offset, $perPage);
-
-        wp_send_json_success([
-            'entries' => $pagedEntries,
-            'paging'  => [
-                'totalItems' => $totalEntries,
-                'totalPages' => $totalPages,
-                'page'       => $page,
-                'hasMore'    => $page < $totalPages,
-            ],
-        ]);
+        wp_send_json_success($response);
     }
 
 
@@ -289,19 +259,17 @@ class Explore extends AbstractTemplateComponent
 
 
 
-    private function getDirectoryEntries(string $backupFile, BackupMetadata $metadata, string $folder, string $search, string $sort): array
-    {
-        $isSearching = $search !== '';
 
- 
-        if (!$isSearching) {
-            $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
-            if ($tree !== null) {
-                return $this->getEntriesFromCache($tree, $folder, $sort);
-            }
+    private function getDirectoryEntriesPage(string $backupFile, BackupMetadata $metadata, string $folder, string $search, int $page, int $perPage): array
+    {
+        $offset = ($page - 1) * $perPage;
+        $treeReader = $search === '' ? $this->exploreCache->openOrBuildTreeReader($backupFile, $metadata) : null;
+        if ($treeReader === null) {
+            $allEntries = $this->getDirectoryEntriesFromIndex($backupFile, $metadata, $folder, $search, 'name_asc');
+            return $this->buildEntriesPage(array_slice($allEntries, $offset, $perPage), count($allEntries), $page, $perPage);
         }
 
-        return $this->getDirectoryEntriesFromIndex($backupFile, $metadata, $folder, $search, $sort);
+        return $this->buildEntriesPage($treeReader->readEntries($folder, $offset, $perPage), $treeReader->countEntries($folder), $page, $perPage);
     }
 
 
@@ -311,41 +279,19 @@ class Explore extends AbstractTemplateComponent
 
 
 
-
-    private function getEntriesFromCache(array $tree, string $folder, string $sort): array
+    private function buildEntriesPage(array $entries, int $totalEntries, int $page, int $perPage): array
     {
-        if (!isset($tree[$folder])) {
-            return [];
-        }
+        $totalPages = (int)ceil($totalEntries / $perPage);
 
-        $bucket = $tree[$folder];
-        $directories = [];
-        foreach ($bucket['dirs'] as $dir) {
-            $directories[] = [
-                'type'        => 'dir',
-                'name'        => $dir['name'],
-                'path'        => $dir['path'],
-                'items'       => $dir['items'] ?? 0,
-                'hasChildren' => $dir['hasChildren'] ?? false,
-            ];
-        }
-
-        $files = [];
-        foreach ($bucket['files'] as $file) {
-            $files[] = [
-                'type'          => 'file',
-                'name'          => $file['name'],
-                'path'          => $file['path'],
-                'size'          => $file['size'],
-                'sizeFormatted' => size_format($file['size'], 2),
-                'offset'        => $file['offset'],
-            ];
-        }
-
-        $directories = $this->sortDirectories($directories, $sort);
-        $files       = $this->sortFiles($files, $sort);
-
-        return array_merge($directories, $files);
+        return [
+            'entries' => $entries,
+            'paging'  => [
+                'totalItems' => $totalEntries,
+                'totalPages' => $totalPages,
+                'page'       => $page,
+                'hasMore'    => $page < $totalPages,
+            ],
+        ];
     }
 
 
@@ -358,9 +304,9 @@ class Explore extends AbstractTemplateComponent
 
     private function getDirectoryTree(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
-        $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
-        if ($tree !== null) {
-            return $this->getTreeFromCache($tree, $folder);
+        $treeReader = $this->exploreCache->openOrBuildTreeReader($backupFile, $metadata);
+        if ($treeReader !== null) {
+            return $treeReader->readSubfolders($folder, self::MAX_TREE_ITEMS);
         }
 
         return $this->getDirectoryTreeFromIndex($backupFile, $metadata, $folder);
@@ -373,43 +319,12 @@ class Explore extends AbstractTemplateComponent
 
 
 
-    private function getTreeFromCache(array $tree, string $folder): array
-    {
-        if (!isset($tree[$folder])) {
-            return [];
-        }
-
-        $dirs = $tree[$folder]['dirs'];
-
-        $result = [];
-        foreach ($dirs as $dir) {
-            $result[] = [
-                'name'        => $dir['name'],
-                'path'        => $dir['path'],
-                'hasChildren' => $dir['hasChildren'] ?? false,
-            ];
-        }
-
-        usort($result, function ($a, $b) {
-            return strcasecmp($a['name'], $b['name']);
-        });
-
-        return array_slice($result, 0, self::MAX_TREE_ITEMS);
-    }
-
-
-
-
-
-
-
-
 
     private function getDirectoryStatsForSelection(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
-        $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
-        if ($tree !== null) {
-            return $this->getStatsFromCache($tree, $folder);
+        $treeReader = $this->exploreCache->openOrBuildTreeReader($backupFile, $metadata);
+        if ($treeReader !== null) {
+            return $treeReader->readTotalsBelow($folder);
         }
 
         return $this->getDirectoryStatsFromIndex($backupFile, $metadata, $folder);
@@ -422,84 +337,15 @@ class Explore extends AbstractTemplateComponent
 
 
 
-    private function getStatsFromCache(array $tree, string $folder): array
-    {
-        $count = 0;
-        $size  = 0;
-
-        $stack = [$folder];
-        while (!empty($stack)) {
-            $dir = array_pop($stack);
-            if (!isset($tree[$dir])) {
-                continue;
-            }
-
-            foreach ($tree[$dir]['files'] as $file) {
-                $count++;
-                $size += $file['size'];
-            }
-
-            foreach ($tree[$dir]['dirs'] as $subdir) {
-                $stack[] = $subdir['path'];
-            }
-        }
-
-        return [
-            'count' => $count,
-            'size'  => $size,
-        ];
-    }
-
-
-
-
-
-
-
-
 
     private function getDirectoryFilesForSelection(string $backupFile, BackupMetadata $metadata, string $folder): array
     {
-        $tree = $this->exploreCache->getOrBuild($backupFile, $metadata);
-        if ($tree !== null) {
-            return $this->getFilesFromCache($tree, $folder);
+        $treeReader = $this->exploreCache->openOrBuildTreeReader($backupFile, $metadata);
+        if ($treeReader !== null) {
+            return $treeReader->readFilesBelow($folder);
         }
 
         return $this->getDirectoryFilesFromIndex($backupFile, $metadata, $folder);
-    }
-
-
-
-
-
-
-
-
-    private function getFilesFromCache(array $tree, string $folder): array
-    {
-        $files = [];
-        $stack = [$folder];
-
-        while (!empty($stack)) {
-            $dir = array_pop($stack);
-            if (!isset($tree[$dir])) {
-                continue;
-            }
-
-            foreach ($tree[$dir]['files'] as $file) {
-                $files[] = [
-                    'offset' => $file['offset'],
-                    'path'   => $file['path'],
-                    'size'   => $file['size'],
-                ];
-            }
-
-            foreach ($tree[$dir]['dirs'] as $subdir) {
-                $stack[] = $subdir['path'];
-            }
-        }
-
-        return $files;
     }
 
  

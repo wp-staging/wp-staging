@@ -27,7 +27,16 @@ class LogFiles
     public function __construct(Directory $directory)
     {
         $this->logsDirectory         = $directory->getLogDirectory();
-        $this->availableLogFileTypes = ['push', 'backup_restore', 'cloning', 'backup_job', 'staging_plugins_updater'];
+        $this->availableLogFileTypes = [
+            'backup_job',
+            'backup_restore',
+            'cloning',
+            'lowdisk_sync_backup',
+            'pull_initiator',
+            'push',
+            'push_initiator',
+            'staging_plugins_updater',
+        ];
         $this->latestLogFiles        = [];
     }
 
@@ -50,18 +59,38 @@ class LogFiles
 
     private function findLatestLogFiles(string $fileName)
     {
-        foreach ($this->availableLogFileTypes as $logFilePrefix) {
-            if (strpos($fileName, $logFilePrefix) !== 0) {
+        $logFileType = $this->getLogFileType($fileName);
+        if ($logFileType === null) {
+            return;
+        }
+
+        $logFilePath = trailingslashit($this->logsDirectory) . $fileName;
+        if (!isset($this->latestLogFiles[$logFileType]) || filemtime($logFilePath) > filemtime($this->latestLogFiles[$logFileType])) {
+            $this->latestLogFiles[$logFileType] = $logFilePath;
+        }
+    }
+
+
+
+
+
+
+
+    private function getLogFileType(string $fileName)
+    {
+        $matchedType = null;
+
+        foreach ($this->availableLogFileTypes as $logFileType) {
+            if (strpos($fileName, $logFileType) !== 0) {
                 continue;
             }
 
-            $logFilePath = trailingslashit($this->logsDirectory) . $fileName;
-            if (!isset($this->latestLogFiles[$logFilePrefix]) || filemtime($logFilePath) > filemtime($this->latestLogFiles[$logFilePrefix])) {
-                $this->latestLogFiles[$logFilePrefix] = $logFilePath;
+            if ($matchedType === null || strlen($logFileType) > strlen($matchedType)) {
+                $matchedType = $logFileType;
             }
-
-            break;
         }
+
+        return $matchedType;
     }
 
 
@@ -83,9 +112,8 @@ class LogFiles
 
     public function getRetentionLogFiles(int $days = 14): array
     {
-        $logPrefix = implode('|', $this->availableLogFileTypes);
         $logFiles  = [];
-        $dayStart  = strtotime('-' . $days);
+        $dayStart  = time() - $days * DAY_IN_SECONDS;
 
         $dirIterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->logsDirectory));
         foreach ($dirIterator as $fileInfo) {
@@ -96,17 +124,17 @@ class LogFiles
             $filePath = $fileInfo->getRealPath();
             $fileName = $fileInfo->getFilename();
 
-            if (!preg_match('@^(' . $logPrefix . ')@', $fileName, $matches)) {
+            $fileType = $this->getLogFileType($fileName);
+            if ($fileType === null) {
                 continue;
             }
 
-            $fileType  = $matches[1];
             $fileMTime = $fileInfo->getMTime();
             if (!$fileMTime) {
                 continue;
             }
 
-            if ($dayStart >= $fileMTime) {
+            if ($fileMTime >= $dayStart) {
                 $logFiles[$fileType][] = $filePath;
             }
         }

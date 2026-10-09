@@ -871,6 +871,10 @@ class Filesystem extends FilterableDirectoryIterator
 
     public function createWithMarkers(string $path, string $marker, $content): bool
     {
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
         return @insert_with_markers($path, $marker, $content);
     }
 

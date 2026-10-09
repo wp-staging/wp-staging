@@ -72,7 +72,22 @@ class BackupScheduler
     const TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT = 'wpstg.backup.schedules.error_report_sent';
 
  
+    const TRANSIENT_BACKUP_SCHEDULE_EMAIL_REPORT_PREFIX = 'wpstg.backup.schedules.email_report_';
+
+ 
+    const ACTION_RETRY_EMAIL_REPORT = 'wpstg.backup.schedules.retry_email_report';
+
+ 
+    const EMAIL_REPORT_RETRY_DELAY = 15 * MINUTE_IN_SECONDS;
+
+ 
+    const MAX_EMAIL_REPORT_ATTEMPTS = 3;
+
+ 
     const TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT = 'wpstg.backup.schedules.slack_report_sent';
+
+ 
+    const TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_PREFIX = 'wpstg.backup.schedules.slack_fingerprint_';
 
  
     const CRON_SAVE_FAILURE_REPORTED_MARKER = '.cron-save-failure-reported';
@@ -804,17 +819,17 @@ class BackupScheduler
         $schedule = $this->findScheduleById($scheduleId);
         if ($schedule === null) {
             debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: schedule %s no longer exists in the database.", $logId, $scheduleId), 'info', false);
-            return;
+            return null;
         }
 
         if (!$this->scheduleIsRunByCurrentSite($schedule)) {
             debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: schedule %s belongs to another site of the network, not site %d.", $logId, $scheduleId, get_current_blog_id()), 'info', false);
-            return;
+            return null;
         }
 
         if ($this->scheduleHasQueuedOrRunningBackup($scheduleId)) {
             debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: a backup job for schedule %s is already queued or running.", $logId, $scheduleId), 'info', false);
-            return;
+            return null;
         }
 
         try {
@@ -822,17 +837,31 @@ class BackupScheduler
             $jobId = WPStaging::make(PrepareBackup::class)->prepare($schedule);
             if ($jobId instanceof \WP_Error) {
                 debug_log(sprintf("[Schedule Backup Cron - %s] Failed to create backup: %s", $logId, $jobId->get_error_message()));
-                $this->saveBackupFailure($jobId->get_error_message());
-                return;
+                $this->recordFailedRunOfSchedule($scheduleId, $jobId->get_error_message());
+                return $jobId;
             }
 
             debug_log(sprintf("[Schedule Backup Cron - %s] Successfully received a Job ID: %s", $logId, $jobId), 'info', false);
 
             set_transient(self::TRANSIENT_SCHEDULE_JOB_PREFIX . $jobId, $scheduleId, 2 * DAY_IN_SECONDS);
+            return null;
         } catch (\Exception $e) {
             debug_log("[Schedule Backup Cron - $logId] Exception thrown while preparing the Backup: " . $e->getMessage());
-            $this->saveBackupFailure($e->getMessage());
+            $this->recordFailedRunOfSchedule($scheduleId, $e->getMessage());
+            return new \WP_Error(400, $e->getMessage());
         }
+    }
+
+
+
+
+
+
+    private function recordFailedRunOfSchedule(string $scheduleId, string $errorMessage)
+    {
+        $this->saveBackupFailure($errorMessage);
+        $this->updateScheduleLastRun($scheduleId, 'failed', 0, $errorMessage);
+        $this->sendErrorReport('Error in scheduled backup' . PHP_EOL . PHP_EOL . 'Error Message: ' . $errorMessage);
     }
 
 
@@ -1068,7 +1097,12 @@ class BackupScheduler
             return;
         }
 
-        do_action(Cron::ACTION_CREATE_CRON_BACKUP, $target);
+        $preparationError = $this->createCronBackup($target);
+        if ($preparationError instanceof \WP_Error) {
+            wp_send_json_error(['message' => $preparationError->get_error_message()]);
+            return;
+        }
+
         wp_send_json_success();
     }
 
@@ -1660,12 +1694,8 @@ class BackupScheduler
 
 
 
-    public function sendErrorReport(string $message, string $title = ''): bool
+    public function sendErrorReport(string $message, string $title = '', string $reportIdentity = ''): bool
     {
-        if (get_option(self::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) !== 'true') {
-            return false;
-        }
-
         if (empty($message)) {
             return false;
         }
@@ -1678,10 +1708,21 @@ class BackupScheduler
             $title = esc_html__('WP Staging - Backup Error Report', 'wp-staging');
         }
 
-        $this->sendEmailReport($message, $title);
-        $this->sendSlackReport($message, $title);
+        $isEmailSent = false;
+        try {
+            $isEmailSent = $this->sendEmailReport($message, $title, self::REPORT_TYPE_ERROR, $reportIdentity);
+        } catch (\Throwable $e) {
+            debug_log('The backup error report email could not be sent: ' . $e->getMessage());
+        }
 
-        return true;
+        $isSlackSent = false;
+        try {
+            $isSlackSent = $this->sendSlackReport($message, $title, $reportIdentity);
+        } catch (\Throwable $e) {
+            debug_log('The backup error report Slack message could not be sent: ' . $e->getMessage());
+        }
+
+        return $isEmailSent || $isSlackSent;
     }
 
 
@@ -1693,7 +1734,8 @@ class BackupScheduler
 
 
 
-    public function sendWarningReport(string $message, string $title = ''): bool
+
+    public function sendWarningReport(string $message, string $title = '', string $reportIdentity = ''): bool
     {
         if (get_option(self::OPTION_BACKUP_SCHEDULE_WARNING_REPORT) !== 'true') {
             return false;
@@ -1707,7 +1749,7 @@ class BackupScheduler
             $title = esc_html__('WP Staging - Backup Warning Report', 'wp-staging');
         }
 
-        $this->sendEmailReport($message, $title, self::REPORT_TYPE_WARNING);
+        $this->sendEmailReport($message, $title, self::REPORT_TYPE_WARNING, $reportIdentity);
 
         return true;
     }
@@ -1721,7 +1763,8 @@ class BackupScheduler
 
 
 
-    public function sendGeneralReport(string $message, string $title = ''): bool
+
+    public function sendGeneralReport(string $message, string $title = '', string $reportIdentity = ''): bool
     {
         if (get_option(self::OPTION_BACKUP_SCHEDULE_GENERAL_REPORT) !== 'true') {
             return false;
@@ -1735,7 +1778,7 @@ class BackupScheduler
             $title = esc_html__('WP Staging - Backup General Report', 'wp-staging');
         }
 
-        $this->sendEmailReport($message, $title, self::REPORT_TYPE_GENERAL);
+        $this->sendEmailReport($message, $title, self::REPORT_TYPE_GENERAL, $reportIdentity);
 
         return true;
     }
@@ -1748,8 +1791,16 @@ class BackupScheduler
 
 
 
-    public function sendEmailReport(string $message, string $title = '', string $reportType = self::REPORT_TYPE_ERROR): bool
-    {
+
+
+
+    public function sendEmailReport(
+        string $message,
+        string $title = '',
+        string $reportType = self::REPORT_TYPE_ERROR,
+        string $reportIdentity = '',
+        int $attempt = 1
+    ): bool {
         $optionName = $this->getReportOptionName($reportType);
 
         if (get_option($optionName) !== 'true') {
@@ -1761,7 +1812,7 @@ class BackupScheduler
             return false;
         }
 
-        if ($this->isReportThrottled($reportType)) {
+        if ($this->isReportThrottled($reportType, $reportIdentity)) {
             return false;
         }
 
@@ -1773,13 +1824,36 @@ class BackupScheduler
             $title = $this->getDefaultReportTitle($reportType);
         }
 
-        $this->throttleReport($reportType);
-
-        if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
-            return $this->notifications->sendEmailAsHTML($reportEmail, $title, $message);
+        $fingerprintTransient = $this->getEmailReportFingerprintTransient(
+            $reportEmail,
+            $title,
+            $message,
+            $reportIdentity
+        );
+        if (!$this->reserveReportFingerprint($fingerprintTransient)) {
+            return false;
         }
 
-        return $this->notifications->sendEmail($reportEmail, $title, $message);
+        $this->throttleReport($reportType, $reportIdentity);
+
+        $sent = false;
+        try {
+            if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
+                $sent = $this->notifications->sendEmailAsHTML($reportEmail, $title, $message);
+            } else {
+                $sent = $this->notifications->sendEmail($reportEmail, $title, $message);
+            }
+        } finally {
+            if (!$sent) {
+                delete_transient($fingerprintTransient);
+            }
+
+            if (!$sent && $this->isEmailReportRetryable($reportType, $attempt)) {
+                $this->scheduleEmailReportRetry($message, $title, $reportType, $reportIdentity, $attempt + 1);
+            }
+        }
+
+        return $sent;
     }
 
 
@@ -1790,7 +1864,31 @@ class BackupScheduler
 
 
 
-    public function sendSlackReport(string $message, string $title = ''): bool
+
+
+
+    public function retryEmailReport(string $message, string $title, string $reportType, string $reportIdentity, int $attempt): bool
+    {
+        try {
+            return $this->sendEmailReport($message, $title, $reportType, $reportIdentity, $attempt);
+        } catch (\Throwable $e) {
+            debug_log('The backup report email could not be sent on retry: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    public function sendSlackReport(string $message, string $title = '', string $reportIdentity = ''): bool
     {
         if (!WPStaging::isPro()) {
             return false;
@@ -1805,8 +1903,7 @@ class BackupScheduler
             return false;
         }
 
- 
-        if (get_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT) !== false) {
+        if ($reportIdentity === '' && get_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT) !== false) {
             return false;
         }
 
@@ -1818,9 +1915,27 @@ class BackupScheduler
             $title = esc_html__('WP Staging - Backup Report', 'wp-staging');
         }
 
- 
-        set_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT, true, 5 * 60);
-        return $this->notifications->sendSlack($webhook, $title, $message);
+        if ($reportIdentity === '') {
+            set_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT, true, 5 * 60);
+            return $this->notifications->sendSlack($webhook, $title, $message);
+        }
+
+        $fingerprintTransient = self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_PREFIX
+            . hash('sha256', serialize([$webhook, $title, $message, $reportIdentity]));
+        if (!$this->reserveReportFingerprint($fingerprintTransient)) {
+            return false;
+        }
+
+        $sent = false;
+        try {
+            $sent = $this->notifications->sendSlack($webhook, $title, $message);
+        } finally {
+            if (!$sent) {
+                delete_transient($fingerprintTransient);
+            }
+        }
+
+        return $sent;
     }
 
 
@@ -1846,24 +1961,101 @@ class BackupScheduler
 
 
 
-
-
-    private function isReportThrottled(string $reportType): bool
+    private function isReportThrottled(string $reportType, string $reportIdentity): bool
     {
-        return $reportType === self::REPORT_TYPE_ERROR && get_transient(self::TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT) !== false;
+        return $this->reportFallsUnderErrorThrottle($reportType, $reportIdentity)
+            && get_transient(self::TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT) !== false;
     }
 
 
 
 
 
-    private function throttleReport(string $reportType)
+
+    private function throttleReport(string $reportType, string $reportIdentity)
     {
-        if ($reportType !== self::REPORT_TYPE_ERROR) {
+        if (!$this->reportFallsUnderErrorThrottle($reportType, $reportIdentity)) {
             return;
         }
 
         set_transient(self::TRANSIENT_BACKUP_SCHEDULE_ERROR_REPORT_SENT, true, 5 * 60);
+    }
+
+
+
+
+
+
+
+
+
+
+    private function reportFallsUnderErrorThrottle(string $reportType, string $reportIdentity): bool
+    {
+        return $reportType === self::REPORT_TYPE_ERROR && $reportIdentity === '';
+    }
+
+
+
+
+
+
+
+
+    private function getEmailReportFingerprintTransient(
+        string $reportEmail,
+        string $title,
+        string $message,
+        string $reportIdentity
+    ): string {
+        $deduplicationIdentity = $reportIdentity === '' ? $message : $reportIdentity;
+        $fingerprint           = hash('sha256', serialize([$reportEmail, $title, $deduplicationIdentity]));
+
+        return self::TRANSIENT_BACKUP_SCHEDULE_EMAIL_REPORT_PREFIX . $fingerprint;
+    }
+
+
+
+
+
+
+
+
+    private function isEmailReportRetryable(string $reportType, int $failedAttempt): bool
+    {
+        return $reportType !== self::REPORT_TYPE_ERROR && $failedAttempt < self::MAX_EMAIL_REPORT_ATTEMPTS;
+    }
+
+
+
+
+
+
+
+
+
+    private function scheduleEmailReportRetry(string $message, string $title, string $reportType, string $reportIdentity, int $attempt)
+    {
+        wp_schedule_single_event(
+            time() + self::EMAIL_REPORT_RETRY_DELAY,
+            self::ACTION_RETRY_EMAIL_REPORT,
+            [$message, $title, $reportType, $reportIdentity, $attempt]
+        );
+    }
+
+
+
+
+
+    private function reserveReportFingerprint(string $fingerprintTransient): bool
+    {
+        if (wp_using_ext_object_cache()) {
+            return wp_cache_add($fingerprintTransient, true, 'transient', HOUR_IN_SECONDS)
+                || wp_cache_get($fingerprintTransient, 'transient') === false;
+        }
+
+        return get_transient($fingerprintTransient) === false
+            && set_transient($fingerprintTransient, true, HOUR_IN_SECONDS);
     }
 
 

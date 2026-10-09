@@ -3,6 +3,8 @@
 /**
  * @var \WPStaging\Framework\TemplateEngine\TemplateEngine $this
  * @var array $backupParts
+ * @var bool  $isTransferSessionEnabled
+ * @var bool  $isPermanentBackupUrlOffered
  */
 
 ?>
@@ -21,9 +23,18 @@ foreach ($backupParts as $backupPart) :?>
                 </span>
             <?php endif; ?>
         </div>
-        <a href="<?php esc_attr_e($backupPart['downloadLink'], 'wp-staging'); ?>" class="wpstg--download-btn">
-            <?php $this->getAssets()->renderSvg('download'); ?>
-        </a>
+        <?php if ($isTransferSessionEnabled) : ?>
+            <a href="javascript:void(0)" class="wpstg--download-btn wpstg--backup--transfer-prepare"
+               data-backup-id="<?php echo esc_attr($backupPart['backupId']); ?>"
+               data-transfer-action="download"
+               title="<?php esc_attr_e('Prepare a temporary secure download link for this backup part.', 'wp-staging'); ?>">
+                <?php $this->getAssets()->renderSvg('download'); ?>
+            </a>
+        <?php elseif ($isPermanentBackupUrlOffered) : ?>
+            <a href="<?php echo esc_url($backupPart['downloadLink']); ?>" download class="wpstg--download-btn">
+                <?php $this->getAssets()->renderSvg('download'); ?>
+            </a>
+        <?php endif; ?>
     </div>
     <div class="wpstg-backup-part-desc">
         <?php esc_html_e($backupPart['description'], 'wp-staging'); ?>

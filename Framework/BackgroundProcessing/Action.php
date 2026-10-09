@@ -25,6 +25,7 @@ use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
  * @property string     $claimedAt     The date and time, in the site timezone, the Action was last claimed for processing.
  * @property string     $updatedAt     The date and time, in the site timezone, the Action was last updated.
  * @property mixed|null $custom        Custom data attached to the Action.
+ * @property mixed|null $response      The unserialized response the job persisted after its last step, usually a TaskResponseDto.
  */
 class Action
 {

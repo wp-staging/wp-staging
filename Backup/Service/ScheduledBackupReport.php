@@ -59,10 +59,25 @@ class ScheduledBackupReport
             }
 
             set_transient(self::TRANSIENT_LAST_REPORTED_JOB, $jobDataDto->getId(), DAY_IN_SECONDS);
-            $this->backupScheduler->sendGeneralReport($this->buildStatusMessage($jobDataDto));
+        } catch (\Throwable $e) {
+            debug_log('The scheduled backup report state could not be recorded: ' . $e->getMessage());
+            return;
+        }
+
+        try {
+            $this->backupScheduler->sendGeneralReport(
+                $this->buildStatusMessage($jobDataDto),
+                '',
+                (string)$jobDataDto->getId()
+            );
+        } catch (\Throwable $e) {
+            debug_log('The status report of the scheduled backup could not be sent: ' . $e->getMessage());
+        }
+
+        try {
             $this->sendLoggedWarningsReport($jobDataDto);
         } catch (\Throwable $e) {
-            debug_log('The report of the scheduled backup could not be sent: ' . $e->getMessage());
+            debug_log('The warning report of the scheduled backup could not be sent: ' . $e->getMessage());
         }
     }
 
@@ -93,7 +108,11 @@ class ScheduledBackupReport
         }
 
         $warnings = $this->readLoggedWarnings((string)$jobDataDto->getId());
-        $this->backupScheduler->sendWarningReport($this->buildWarningMessage($jobDataDto, $warnings));
+        $this->backupScheduler->sendWarningReport(
+            $this->buildWarningMessage($jobDataDto, $warnings),
+            '',
+            (string)$jobDataDto->getId()
+        );
     }
 
 

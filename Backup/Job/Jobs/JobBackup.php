@@ -34,6 +34,7 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\Task\AbstractTask;
 
@@ -67,7 +68,9 @@ class JobBackup extends AbstractJob
         try {
             $response = $this->getResponse($this->currentTask->execute());
         } catch (MissingBackupPartException $e) {
-            return $this->getMissingPartFailResponse($e);
+            return $this->getUnrecoverableFailResponse($e);
+        } catch (FileSizeLimitException $e) {
+            return $this->getUnrecoverableFailResponse($e);
         } catch (NothingToBackupException $e) {
             return $this->getNothingToBackupResponse($e->getMessage());
         } catch (\Exception $e) {
@@ -94,7 +97,8 @@ class JobBackup extends AbstractJob
 
 
 
-    protected function getMissingPartFailResponse(MissingBackupPartException $e): TaskResponseDto
+
+    protected function getUnrecoverableFailResponse(\Exception $e): TaskResponseDto
     {
         $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
 

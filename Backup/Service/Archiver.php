@@ -24,6 +24,7 @@ use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\NotFinishedException;
 use WPStaging\Framework\Job\Exception\ThresholdException;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
@@ -233,6 +234,7 @@ class Archiver
     {
         return $this->tempBackup;
     }
+
 
 
 
@@ -628,6 +630,7 @@ class Archiver
         $this->fileHeader->setStartOffset($startOffset);
         return $this->tempBackupIndex->append($this->fileHeader->getIndexHeader());
     }
+
 
 
 

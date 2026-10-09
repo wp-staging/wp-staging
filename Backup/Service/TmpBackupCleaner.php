@@ -4,6 +4,8 @@ namespace WPStaging\Backup\Service;
 
 use DirectoryIterator;
 use Exception;
+use WPStaging\Backup\BackupDeleter;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Network\RemoteDownloader;
 
 
@@ -47,7 +49,7 @@ class TmpBackupCleaner
                 continue;
             }
 
-            if (@unlink($path)) {
+            if (WPStaging::make(BackupDeleter::class)->deleteBackupFile($path) === '') {
                 $deletedFiles++;
             }
         }

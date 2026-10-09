@@ -11,6 +11,7 @@ use WPStaging\Framework\Settings\SettingsTable as SettingsTableService;
  * @method static bool has(string $name)
  * @method static string getFullTableName()
  * @method static void ensureTable()
+ * @method static void forgetCachedValue(string $name)
  * @method static void invalidateCache()
  */
 class SettingsTable extends Facade

@@ -5,6 +5,7 @@ namespace WPStaging\Framework\Analytics;
 use Throwable;
 use WPStaging\Backup\Exceptions\MissingBackupPartException;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
@@ -20,6 +21,7 @@ class ErrorCode
 {
     const UNKNOWN             = 'unknown';
     const DISK_FULL           = 'disk_full';
+    const FILE_SIZE_LIMIT     = 'file_size_limit';
     const FILE_VALIDATION     = 'file_validation';
     const PROCESS_LOCKED      = 'process_locked';
     const TASK_HEALTH         = 'task_health';
@@ -44,6 +46,7 @@ class ErrorCode
     private static $exceptionMap = [
         MissingBackupPartException::class => self::BACKUP_PART_MISSING,
         DiskNotWritableException::class   => self::DISK_FULL,
+        FileSizeLimitException::class     => self::FILE_SIZE_LIMIT,
         FileValidationException::class    => self::FILE_VALIDATION,
         ProcessLockedException::class     => self::PROCESS_LOCKED,
         TaskHealthException::class        => self::TASK_HEALTH,

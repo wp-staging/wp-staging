@@ -6,20 +6,18 @@ namespace WPStaging\Backup\Ajax;
 
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
-use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Security\BackupDirectoryProtectionService;
+use WPStaging\Backup\Transfer\TransferSessionService;
 use WPStaging\Backup\Utils\BackupPathResolver;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Urls;
 
+use function WPStaging\functions\debug_log;
+
 class Parts extends AbstractTemplateComponent
 {
-
-
-
-    private $backupsFinder;
-
 
 
 
@@ -28,14 +26,25 @@ class Parts extends AbstractTemplateComponent
 
 
 
+    private $transferSessionService;
+
+
+
+
     private $urls;
 
-    public function __construct(TemplateEngine $templateEngine, BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver, Urls $urls)
+
+
+
+    private $protectionService;
+
+    public function __construct(TemplateEngine $templateEngine, BackupPathResolver $backupPathResolver, TransferSessionService $transferSessionService, Urls $urls, BackupDirectoryProtectionService $protectionService)
     {
         parent::__construct($templateEngine);
-        $this->backupsFinder      = $backupsFinder;
-        $this->backupPathResolver = $backupPathResolver;
-        $this->urls               = $urls;
+        $this->backupPathResolver     = $backupPathResolver;
+        $this->transferSessionService = $transferSessionService;
+        $this->urls                   = $urls;
+        $this->protectionService      = $protectionService;
     }
 
 
@@ -50,7 +59,6 @@ class Parts extends AbstractTemplateComponent
             ]);
         }
 
-        $backupDir = wp_normalize_path($this->backupsFinder->getBackupsDirectory());
         $indexFile = isset($_POST['filePath']) ? Sanitize::sanitizePath($_POST['filePath']) : '';
 
         if ($indexFile === '') {
@@ -78,32 +86,25 @@ class Parts extends AbstractTemplateComponent
             ]);
         }
 
-        $metadata = $info->getMultipartMetadata();
+        $metadata       = $info->getMultipartMetadata();
+        $backupFilename = wp_basename($file);
 
         $parts = array_merge(
-            $this->addParts('Database', $metadata->getDatabaseParts(), $backupDir),
-            $this->addParts('Medias', $metadata->getUploadsParts(), $backupDir),
-            $this->addParts('Themes', $metadata->getThemesParts(), $backupDir),
-            $this->addParts('Plugins', $metadata->getPluginsParts(), $backupDir),
-            $this->addParts('Mu Plugins', $metadata->getMuPluginsParts(), $backupDir),
-            $this->addParts('Others', $metadata->getOthersParts(), $backupDir),
-            $this->addParts('Root Files', $metadata->getOtherWpRootParts(), $backupDir)
+            $this->addParts('Database', $metadata->getDatabaseParts(), $backupFilename),
+            $this->addParts('Medias', $metadata->getUploadsParts(), $backupFilename),
+            $this->addParts('Themes', $metadata->getThemesParts(), $backupFilename),
+            $this->addParts('Plugins', $metadata->getPluginsParts(), $backupFilename),
+            $this->addParts('Mu Plugins', $metadata->getMuPluginsParts(), $backupFilename),
+            $this->addParts('Others', $metadata->getOthersParts(), $backupFilename),
+            $this->addParts('Root Files', $metadata->getOtherWpRootParts(), $backupFilename)
         );
 
         $result = $this->renderTemplate('backup/modal/backup-parts.php', [
-            'backupParts' => $parts,
+            'backupParts'                 => $parts,
+            'isTransferSessionEnabled'    => $this->transferSessionService->isEnabled(),
+            'isPermanentBackupUrlOffered' => $this->protectionService->isPermanentBackupUrlOffered(),
         ]);
         wp_send_json($result);
-    }
-
-
-
-
-
-
-    private function getFullPath(string $backupDir, string $relativePath): string
-    {
-        return trailingslashit($backupDir) . basename(wp_normalize_path($relativePath));
     }
 
 
@@ -132,6 +133,7 @@ class Parts extends AbstractTemplateComponent
             'icon'         => $this->getIcon($partType),
             'name'         => $partName,
             'fileSize'     => size_format(filesize($fullPath), 2),
+            'backupId'     => md5(basename($fullPath)),
             'downloadLink' => $this->urls->getBackupUrl() . $fileName,
         ];
     }
@@ -143,14 +145,22 @@ class Parts extends AbstractTemplateComponent
 
 
 
-    private function addParts(string $type, array $files, string $backupDir): array
+
+
+
+    private function addParts(string $type, array $files, string $backupFilename): array
     {
         $total = count($files);
         $parts = [];
 
         foreach ($files as $key => $fileName) {
-            $fullPath = $this->getFullPath($backupDir, $fileName);
-            $parts[]  = $this->getPart($type, $key, $fileName, $fullPath, $total);
+            $fullPath = $this->backupPathResolver->resolveBackupPartPath($fileName, $backupFilename);
+            if ($fullPath === '' || !file_exists($fullPath)) {
+                debug_log('WP STAGING: Skipped a backup part that does not belong to this backup: ' . $fileName);
+                continue;
+            }
+
+            $parts[] = $this->getPart($type, $key, $fileName, $fullPath, $total);
         }
 
         return $parts;

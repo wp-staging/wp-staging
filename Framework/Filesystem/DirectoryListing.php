@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use RuntimeException;
+use WPStaging\Backup\Security\BackupDirectoryProtectionService;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\Utils\IISWebConfig;
@@ -221,13 +222,28 @@ PHP
         $backupDirectory = trailingslashit($backupDirectory);
 
         $htaccess = $backupDirectory . '.htaccess';
-        if (file_exists($htaccess) && strpos((string)file_get_contents($htaccess), 'RemoveHandler ' . Htaccess::PHP_HANDLER_EXTENSIONS) === false) {
-            $this->htaccess->create($htaccess);
+        if (file_exists($htaccess)) {
+            $contents = (string)file_get_contents($htaccess);
+            if (!$this->isBackupVaultFile($contents) && strpos($contents, 'RemoveHandler ' . Htaccess::PHP_HANDLER_EXTENSIONS) === false) {
+                $this->htaccess->create($htaccess);
+            }
         }
 
         $webConfig = $backupDirectory . 'web.config';
-        if (file_exists($webConfig) && strpos((string)file_get_contents($webConfig), IISWebConfig::STATIC_FILE_HANDLER) === false) {
-            $this->webConfig->create($webConfig);
+        if (file_exists($webConfig)) {
+            $contents = (string)file_get_contents($webConfig);
+            if (!$this->isBackupVaultFile($contents) && strpos($contents, IISWebConfig::STATIC_FILE_HANDLER) === false) {
+                $this->webConfig->create($webConfig);
+            }
         }
+    }
+
+
+
+
+
+    private function isBackupVaultFile(string $contents): bool
+    {
+        return strpos($contents, BackupDirectoryProtectionService::BACKUP_VAULT_MARKER) !== false;
     }
 }

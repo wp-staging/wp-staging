@@ -117,6 +117,12 @@ $sysinfoUrl = admin_url('admin-post.php?action=wpstg_download_sysinfo');
                 <button type="button" class="wpstg-staging-creation__btn wpstg-staging-creation__btn--secondary" data-wpstg-manage-staging><?php esc_html_e('Close', 'wp-staging'); ?></button>
             </div>
 
+            <?php
+            $autoLoginCtaClass = 'wpstg-staging-creation__btn wpstg-staging-creation__btn--pro-locked';
+            include WPSTG_VIEWS_DIR . 'staging/_partials/auto-login-pro-cta.php';
+            unset($autoLoginCtaClass);
+            ?>
+
             <div class="wpstg-staging-creation__review" data-wpstg-review-slot></div>
 
             <div class="wpstg-staging-creation__backup-status" data-wpstg-backup-status hidden>
