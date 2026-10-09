@@ -195,20 +195,22 @@ class StorageProfiles
 
     public function addProfile(string $providerId): string
     {
-        if (!$this->canAddProfile($providerId)) {
-            return '';
-        }
+        return (string)$this->store()->runLocked(function () use ($providerId) {
+            if (!$this->canAddProfile($providerId)) {
+                return '';
+            }
 
-        if (!$this->store()->migrateLegacyOption()) {
-            return '';
-        }
+            if (!$this->store()->migrateLegacyOption()) {
+                return '';
+            }
 
-        $nextIndex            = $this->getNextIndex($providerId);
-        $storageId            = $providerId . '-' . $nextIndex;
-        $profiles             = $this->getStoredProfiles($providerId);
-        $profiles[$storageId] = $this->nameForNewProfile($storageId);
+            $nextIndex            = $this->getNextIndex($providerId);
+            $storageId            = $providerId . '-' . $nextIndex;
+            $profiles             = $this->getStoredProfiles($providerId);
+            $profiles[$storageId] = $this->nameForNewProfile($storageId);
 
-        return $this->save($providerId, $profiles, $nextIndex + 1) ? $storageId : '';
+            return $this->save($providerId, $profiles, $nextIndex + 1) ? $storageId : '';
+        });
     }
 
 
@@ -244,20 +246,22 @@ class StorageProfiles
 
     public function renameProfile(string $storageId, string $name): bool
     {
-        if (!$this->exists($storageId)) {
-            return false;
-        }
+        return (bool)$this->store()->runLocked(function () use ($storageId, $name) {
+            if (!$this->exists($storageId)) {
+                return false;
+            }
 
-        if ($this->isNameTaken($this->displayedNameFor($storageId, $name), $storageId)) {
-            return false;
-        }
+            if ($this->isNameTaken($this->displayedNameFor($storageId, $name), $storageId)) {
+                return false;
+            }
 
-        $providerId           = $this->getBaseProvider($storageId);
-        $normalized           = $this->normalizeName($name);
-        $profiles             = $this->getStoredProfiles($providerId);
-        $profiles[$storageId] = $normalized;
+            $providerId           = $this->getBaseProvider($storageId);
+            $normalized           = $this->normalizeName($name);
+            $profiles             = $this->getStoredProfiles($providerId);
+            $profiles[$storageId] = $normalized;
 
-        return $this->save($providerId, $profiles, $this->getNextIndex($providerId));
+            return $this->save($providerId, $profiles, $this->getNextIndex($providerId));
+        });
     }
 
 
@@ -272,15 +276,17 @@ class StorageProfiles
             return false;
         }
 
-        if (!$this->exists($storageId)) {
-            return false;
-        }
+        return (bool)$this->store()->runLocked(function () use ($storageId) {
+            if (!$this->exists($storageId)) {
+                return false;
+            }
 
-        $providerId = $this->getBaseProvider($storageId);
-        $profiles   = $this->getStoredProfiles($providerId);
-        unset($profiles[$storageId]);
+            $providerId = $this->getBaseProvider($storageId);
+            $profiles   = $this->getStoredProfiles($providerId);
+            unset($profiles[$storageId]);
 
-        return $this->save($providerId, $profiles, $this->getNextIndex($providerId));
+            return $this->save($providerId, $profiles, $this->getNextIndex($providerId));
+        });
     }
 
 

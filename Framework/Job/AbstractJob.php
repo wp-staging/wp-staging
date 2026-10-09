@@ -739,7 +739,7 @@ abstract class AbstractJob implements ShutdownableInterface
         return $this->getJobFailResponse($throwable->getMessage(), ErrorCode::fromThrowable($throwable));
     }
 
-    protected function getJobFailResponse(string $message, string $errorCode): TaskResponseDto
+    public function getJobFailResponse(string $message, string $errorCode): TaskResponseDto
     {
         $response = new TaskResponseDto();
         $response->setIsRunning(false);

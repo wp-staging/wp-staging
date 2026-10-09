@@ -119,6 +119,8 @@ class Uninstall
 
         $this->deleteUserMeta($this->getBasicUserMeta());
         $this->dropWpStagingSettingsTable();
+        $this->dropWpStagingTransferSessionsTable();
+        $this->deleteOptionsByPrefix('wpstg_transfer_lock_');
         $this->deleteTransients();
         $this->cleanupEmptyPreserveOptions();
         $this->clearCronEvents();
@@ -165,6 +167,24 @@ class Uninstall
         }
 
         $tableName = str_replace('`', '', $wpdb->prefix . 'wpstg_settings');
+        $wpdb->query("DROP TABLE IF EXISTS `{$tableName}`");
+    }
+
+
+
+
+
+
+
+    private function dropWpStagingTransferSessionsTable()
+    {
+        global $wpdb;
+
+        if (!($wpdb instanceof \wpdb)) {
+            return;
+        }
+
+        $tableName = str_replace('`', '', $wpdb->base_prefix . 'wpstg_transfer_sessions');
         $wpdb->query("DROP TABLE IF EXISTS `{$tableName}`");
     }
 
@@ -351,6 +371,7 @@ class Uninstall
             'wpstg_rmpermalinks_executed',
             'wpstg_connection',
             'wpstg_staging_sites',
+            'wpstg_staging_sites_backup',
             'wpstg_existing_clones',
             'wpstg_existing_clones_beta',
             'wpstg_tmp_data',
@@ -365,6 +386,9 @@ class Uninstall
             'wpstg_freemius_notice',
             'wpstg_queue_table_structure_version',
             'wpstg_settings_table_version',
+            'wpstg_transfer_sessions_table_version',
+            'wpstg_backup_directory_security_check',
+            'wpstg_backup_directory_notice_dismissed',
             'wpstg_q_feature_detection_ajax_available',
             'wpstg_analytics_has_consent',
             'wpstg_analytics_modal_dismissed',
@@ -447,6 +471,8 @@ class Uninstall
             'wpstg_current_site_login_links',
             'wpstg_remote_sync_api_token',
             'wpstg_remote_sync_password',
+            'wpstg_remote_sync_enabled',
+            'wpstg_remote_sync_send_success_notification',
             'wpstg_remote_sync_safety_backup_request',
         ];
     }
@@ -479,12 +505,15 @@ class Uninstall
             'wpstg_remote_sync_session',
             'wpstg_remote_sync_session_data',
             'wpstg_remote_sync_session_events_offset',
+            'wpstg_remote_sync_initiator_activity',
+            'wpstg_remote_sync_source_activity',
             'wpstg_backup_before_update_nudge',
             'wpstg_remote_sync_safety_backup_nudge',
             'wpstg.queue.request.get_method',
             'is_invalid_backup_file_index',
             'wpstg_permalinks_do_purge',
             'wpstg_purge_litespeed_cache',
+            'wpstg_litespeed_server_purge',
             'wpstg_activation_redirect',
             'wpstg_optimizer_check_secret',
             'wpstg_pro_activation_redirect',
@@ -496,6 +525,8 @@ class Uninstall
             'wpstg_email_notification_access_token',
             'wpstg.directory_listing.last_checked',
             'wpstg_push_size_cache',
+            'wpstg.transfer_session.last_cleanup',
+            'wpstg.backup_directory_protection.last_checked',
             'wpstg_magic_login_check_failures',
         ];
     }
@@ -574,6 +605,8 @@ class Uninstall
         }
 
         $this->deleteTransientsByPrefix('wpstg_staging_update_job_');
+        $this->deleteTransientsByPrefix('wpstg.backup.schedules.email_report_');
+        $this->deleteTransientsByPrefix('wpstg.backup.schedules.slack_fingerprint_');
         $this->deleteRemoteSyncAuthenticationActivityTransients();
         $this->deleteTransientsByPrefix('wpstg_rs_lowdisk_ack_');
     }
@@ -660,12 +693,15 @@ class Uninstall
 
 
 
+
+
     private function clearCronEvents()
     {
- 
         wp_clear_scheduled_hook('wpstg_weekly_event');
+        wp_clear_scheduled_hook('wpstg_transfer_session_cleanup');
         $this->unscheduleHook('wpstg_staging_update_backup_monitor');
         $this->unscheduleHook('wpstg_check_staging_site_health');
+        $this->unscheduleHook('wpstg.backup.schedules.retry_email_report');
     }
 
 

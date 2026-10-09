@@ -9,13 +9,19 @@ use WPStaging\Staging\Service\StagingEngine;
  *
  * @var \WPStaging\Staging\Renderer\SetupRenderer $renderer
  * @var bool $isProLicenseActive
+ * @var \WPStaging\Staging\Service\AbstractStagingSetup $stagingSetup
  */
 
-$isNextGenAvailable = WPStaging::make(StagingEngine::class)->isNextGenEnabled();
+$isNextGenAvailable      = WPStaging::make(StagingEngine::class)->isNextGenEnabled();
+$isBlankUpsell           = !$stagingSetup->isBlankSiteAllowed();
+$isBlankSiteLockedByPlan = $isProLicenseActive && $isBlankUpsell;
+$upgradeAriaLabel        = $isBlankSiteLockedByPlan ? __('Requires the Business plan or higher', 'wp-staging') : __('Requires WP STAGING Pro', 'wp-staging');
 
 $blankHint = '';
 if (!$isProLicenseActive) {
     $blankHint = __('Available in WP STAGING Pro.', 'wp-staging');
+} elseif ($isBlankSiteLockedByPlan) {
+    $blankHint = __('Available in the Business plan and higher.', 'wp-staging');
 } elseif (!$isNextGenAvailable) {
     $blankHint = __('Needs the Next-Gen transfer method, which is temporarily unavailable.', 'wp-staging');
 }
@@ -52,14 +58,14 @@ $isBlankSelectable = $blankHint === '';
                 <?php $renderer->icon('sparkles', 'wpstg-create-type__icon'); ?>
                 <span class="wpstg-create-type__heading">
                     <span class="wpstg-create-type__label"><?php esc_html_e('Create Blank WP Site', 'wp-staging'); ?></span>
-                    <?php if (!$isProLicenseActive) : ?>
-                        <a class="wpstg-badge-amber wpstg-create-type__badge" href="<?php echo esc_url(Language::getUpgradeUrl('blank_site_badge')); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Requires WP STAGING Pro', 'wp-staging'); ?>"><?php $renderer->icon('lock', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('Available in Pro', 'wp-staging'); ?></a>
+                    <?php if ($isBlankUpsell) : ?>
+                        <a class="wpstg-badge-amber wpstg-create-type__badge" href="<?php echo esc_url(Language::getUpgradeUrl('blank_site_badge', Language::getInstallSource())); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($upgradeAriaLabel); ?>"><?php $renderer->icon('lock', 'wpstg-h-3 wpstg-w-3'); ?><?php echo esc_html($isBlankSiteLockedByPlan ? __('Business and higher', 'wp-staging') : __('Available in Pro', 'wp-staging')); ?></a>
                     <?php endif; ?>
                 </span>
             </span>
         </label>
-        <?php if (!$isProLicenseActive) : ?>
-            <a class="wpstg-create-summary-pro-link wpstg-create-type__blank-note" href="<?php echo esc_url(Language::getUpgradeUrl('blank_site')); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Requires WP STAGING Pro', 'wp-staging'); ?>"><?php $renderer->icon('sparkles', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('Upgrade to create blank staging sites', 'wp-staging'); ?></a>
+        <?php if ($isBlankUpsell) : ?>
+            <a class="wpstg-create-summary-pro-link wpstg-create-type__blank-note" href="<?php echo esc_url(Language::getUpgradeUrl('blank_site', Language::getInstallSource())); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr($upgradeAriaLabel); ?>"><?php $renderer->icon('sparkles', 'wpstg-h-3 wpstg-w-3'); ?><?php echo esc_html($isBlankSiteLockedByPlan ? __('Upgrade to Business to create blank staging sites', 'wp-staging') : __('Upgrade to create blank staging sites', 'wp-staging')); ?></a>
         <?php elseif (!$isNextGenAvailable) : ?>
             <p class="wpstg-create-type__hint wpstg-create-type__blank-note"><?php echo esc_html($blankHint); ?></p>
         <?php endif; ?>

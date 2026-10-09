@@ -10,6 +10,7 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Backup\BackupDeleter;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
@@ -94,9 +95,7 @@ class BackupsFinder extends AbstractBackupsFinder
 
  
         $tempBackupPath = $backupsDir . $jobId . '.' . Archiver::TMP_BACKUP_EXTENSION;
-        if (file_exists($tempBackupPath)) {
-            $this->filesystem->delete($tempBackupPath);
-        }
+        $this->deleteBackupUnlessItsDownloadLinkSurvives($tempBackupPath);
 
  
         $uploadingPath = $tempBackupPath . '.' . RemoteDownloader::UPLOADING_EXTENSION;
@@ -107,9 +106,7 @@ class BackupsFinder extends AbstractBackupsFinder
  
  
         $renamedBackupPath = $backupsDir . $jobId . '.' . Archiver::BACKUP_EXTENSION;
-        if (file_exists($renamedBackupPath)) {
-            $this->filesystem->delete($renamedBackupPath);
-        }
+        $this->deleteBackupUnlessItsDownloadLinkSurvives($renamedBackupPath);
 
  
  
@@ -118,7 +115,7 @@ class BackupsFinder extends AbstractBackupsFinder
         $partFiles = glob($backupsDir . '*' . $jobId . '.*.' . Archiver::BACKUP_EXTENSION . '*');
         if (is_array($partFiles)) {
             foreach ($partFiles as $partFile) {
-                $this->filesystem->delete($partFile);
+                $this->deleteBackupUnlessItsDownloadLinkSurvives($partFile);
             }
         }
     }
@@ -199,5 +196,23 @@ class BackupsFinder extends AbstractBackupsFinder
         $fileObject     = new FileObject($backupPath);
 
         return $backupValidator->validateFileIndex($fileObject, $backupMetadata);
+    }
+
+
+
+
+
+
+
+    private function deleteBackupUnlessItsDownloadLinkSurvives(string $backupPath)
+    {
+        if (!file_exists($backupPath)) {
+            return;
+        }
+
+        $failureReason = WPStaging::make(BackupDeleter::class)->deleteBackupFile($backupPath);
+        if ($failureReason !== '') {
+            debug_log('WP STAGING: Kept the temporary backup ' . basename($backupPath) . '. ' . $failureReason);
+        }
     }
 }

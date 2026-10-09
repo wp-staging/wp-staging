@@ -56,7 +56,7 @@ trait DatabaseDumpImportTaskTrait
         $this->stopWhenDatabaseDumpHasNoQueries($totalQueries);
         $this->setupExecutionTime();
         $this->importDatabaseDump($tablePrefix);
-        $this->stepsDto->setCurrent($this->databaseImporterDto->getCurrentIndex());
+        $this->persistCommittedImportLine();
         $this->logImportSpeedAndAdjustExecutionTime($queriesExecuted, $totalQueries, $startedAt);
 
         return $this->generateResponse(false);
@@ -100,6 +100,7 @@ trait DatabaseDumpImportTaskTrait
         try {
             while (!$this->isThreshold()) {
                 $this->executeNextDatabaseImporterQuery();
+                $this->persistCommittedImportLine();
             }
         } catch (Exception $exception) {
             $this->handleDatabaseImporterStop($exception);
@@ -107,5 +108,22 @@ trait DatabaseDumpImportTaskTrait
         }
 
         $this->databaseImporter->updateIndex();
+    }
+
+
+
+
+
+
+
+    private function persistCommittedImportLine()
+    {
+        $committedLine = $this->databaseImporterDto->getCurrentIndex();
+        if ($committedLine <= $this->stepsDto->getCurrent()) {
+            return;
+        }
+
+        $this->stepsDto->setCurrent($committedLine);
+        $this->persistStepsDto();
     }
 }

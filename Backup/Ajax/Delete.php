@@ -4,6 +4,7 @@ namespace WPStaging\Backup\Ajax;
 
 use Exception;
 use SplFileInfo;
+use WPStaging\Backup\BackupDeleter;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
 use WPStaging\Backup\Service\BackupsFinder;
@@ -23,11 +24,15 @@ class Delete extends AbstractTemplateComponent
  
     private $backupPathResolver;
 
-    public function __construct(BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver, TemplateEngine $templateEngine)
+ 
+    private $backupDeleter;
+
+    public function __construct(BackupsFinder $backupsFinder, BackupPathResolver $backupPathResolver, TemplateEngine $templateEngine, BackupDeleter $backupDeleter)
     {
         parent::__construct($templateEngine);
         $this->backupsFinder      = $backupsFinder;
         $this->backupPathResolver = $backupPathResolver;
+        $this->backupDeleter      = $backupDeleter;
     }
 
     public function render()
@@ -72,22 +77,24 @@ class Delete extends AbstractTemplateComponent
             return;
         }
 
-        $deleted = unlink($backup->getRealPath());
-
-        if ($deleted) {
-            delete_transient(TransientCache::KEY_INVALID_BACKUP_FILE_INDEX);
-            wp_send_json([
-                'error'   => false,
-                'message' => __('Successfully deleted the backup.', 'wp-staging'),
-            ]);
-        } else {
-            debug_log('WP STAGING: User tried to delete backup but "unlink" returned false. Backup that couldn\'t be deleted: ' . $backup->getRealPath());
+ 
+        $failureReason = $this->backupDeleter->deleteBackupFile($backup->getPathname());
+        if ($failureReason !== '') {
+            debug_log('WP STAGING: User tried to delete backup ' . $backup->getPathname() . ' but it was kept. ' . $failureReason);
 
             wp_send_json([
                 'error'   => true,
-                'message' => __('Could not delete the backup. Maybe a permission issue?', 'wp-staging'),
+                'message' => esc_html($failureReason),
             ]);
+
+            return;
         }
+
+        delete_transient(TransientCache::KEY_INVALID_BACKUP_FILE_INDEX);
+        wp_send_json([
+            'error'   => false,
+            'message' => __('Successfully deleted the backup.', 'wp-staging'),
+        ]);
     }
 
 
@@ -128,22 +135,21 @@ class Delete extends AbstractTemplateComponent
                 continue;
             }
 
-            $deleted = unlink($backupPart);
-            if (!$deleted) {
-                $error = "Couldn't delete backup part. Maybe Permission Issue? Part: " . $backupPart;
-                debug_log('WP STAGING: ' . $error);
+            $failureReason = $this->backupDeleter->deleteBackupFile($backupPart);
+            if ($failureReason !== '') {
+                debug_log('WP STAGING: ' . $failureReason . ' Part: ' . $backupPart);
 
-                $errors[] = $error;
+                $errors[] = $failureReason;
             }
         }
 
         if (count($errors) === 0) {
-            return false;
+            return true;
         }
 
         wp_send_json([
             'error'    => true,
-            'message'  => '',
+            'message'  => esc_html(implode(' ', array_unique($errors))),
             'messages' => $errors,
         ]);
 

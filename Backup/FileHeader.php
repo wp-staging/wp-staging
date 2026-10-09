@@ -137,10 +137,22 @@ class FileHeader implements IndexLineInterface
             'attributes'       => $this->attributes,
         ];
 
-        $logMessageTemplate = 'DataEncoder error in %s for file "' . ($fileName ?: 'unknown') .
-                              '": %s. Using fallback values to continue backup.';
+        $logMessage = sprintf(
+            'DataEncoder error in %s for file "%s": %s. Using fallback values to continue backup.',
+            $method,
+            $fileName ?: 'unknown',
+            $errorMessage
+        );
 
-        $this->logEncodingErrorWithContext($errorMessage, $context, $logMessageTemplate);
+        $this->logEncodingErrorWithContext($logMessage, $context);
+    }
+
+
+
+
+    private function isModifiedTimeEncodable(): bool
+    {
+        return $this->modifiedTime !== null && $this->modifiedTime >= 0 && $this->modifiedTime <= 0xFFFFFFFF;
     }
 
 
@@ -151,7 +163,7 @@ class FileHeader implements IndexLineInterface
     private function applyFallbackValues()
     {
  
-        if ($this->modifiedTime === null) {
+        if (!$this->isModifiedTimeEncodable()) {
             $this->modifiedTime = time(); 
         }
 

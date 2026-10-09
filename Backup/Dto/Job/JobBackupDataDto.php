@@ -80,6 +80,15 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $sqlWrittenBytes = 0;
 
  
+    private $fileCheckpointKey = '';
+
+ 
+    private $fileCheckpointBackupBytes = 0;
+
+ 
+    private $fileCheckpointIndexBytes = 0;
+
+ 
     private $totalRowsOfTableBeingBackup = 0;
 
  
@@ -436,6 +445,54 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setSqlWrittenBytes($sqlWrittenBytes)
     {
         $this->sqlWrittenBytes = (int)$sqlWrittenBytes;
+    }
+
+
+
+
+    public function getFileCheckpointKey()
+    {
+        return (string)$this->fileCheckpointKey;
+    }
+
+
+
+
+    public function setFileCheckpointKey($fileCheckpointKey)
+    {
+        $this->fileCheckpointKey = (string)$fileCheckpointKey;
+    }
+
+
+
+
+    public function getFileCheckpointBackupBytes()
+    {
+        return (int)$this->fileCheckpointBackupBytes;
+    }
+
+
+
+
+    public function setFileCheckpointBackupBytes($fileCheckpointBackupBytes)
+    {
+        $this->fileCheckpointBackupBytes = (int)$fileCheckpointBackupBytes;
+    }
+
+
+
+
+    public function getFileCheckpointIndexBytes()
+    {
+        return (int)$this->fileCheckpointIndexBytes;
+    }
+
+
+
+
+    public function setFileCheckpointIndexBytes($fileCheckpointIndexBytes)
+    {
+        $this->fileCheckpointIndexBytes = (int)$fileCheckpointIndexBytes;
     }
 
 

@@ -9,6 +9,7 @@ use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
 use WPStaging\Backup\Task\BackupTask;
+use WPStaging\Backup\Transfer\TransferSessionTable;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporterProvider;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporterProvider;
@@ -25,6 +26,14 @@ use WPStaging\Framework\Filesystem\PartIdentifier;
 
 class DatabaseBackupTask extends BackupTask
 {
+ 
+    const TABLES_EXCLUDED_FROM_BACKUP = [
+        'wpstg_queue',
+        'wpstg_settings',
+        TransferSessionTable::TABLE_NAME,
+        'wpr_rucss_used_css',
+    ];
+
  
     protected $directory;
 
@@ -52,12 +61,7 @@ class DatabaseBackupTask extends BackupTask
     {
         $this->setupDatabaseFilePathName();
 
- 
-        $tablesToExclude = [
-            'wpstg_queue',
-            'wpstg_settings',
-            'wpr_rucss_used_css',
-        ];
+        $tablesToExclude = self::TABLES_EXCLUDED_FROM_BACKUP;
 
  
         if (is_multisite() && $this->jobDataDto->getIsNetworkSiteBackup() && is_main_site($this->jobDataDto->getSubsiteBlogId())) {

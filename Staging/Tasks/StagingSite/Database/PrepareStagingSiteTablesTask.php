@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Tasks\StagingSite\Database;
 
 use Exception;
+use WPStaging\Backup\Transfer\TransferSessionTable;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
@@ -64,6 +65,11 @@ class PrepareStagingSiteTablesTask extends StagingTask
             $srcTable  = $this->tables[$this->stepsDto->getCurrent()];
             $destTable = $this->tableCreateService->getDestinationTable($srcTable);
 
+            if ($this->isExistingDownloadLinkTable($srcTable, $destTable)) {
+                $this->stepsDto->incrementCurrentStep();
+                continue;
+            }
+
             if ($this->tableCreateService->isTableExist($destTable)) {
                 $tableWithoutPrefix = $this->tableCreateService->getTableWithoutPrefix($srcTable);
                 $backupTable        = $this->tableCreateService->preserveExistingTable($destTable, $tableWithoutPrefix);
@@ -102,5 +108,18 @@ class PrepareStagingSiteTablesTask extends StagingTask
             $this->stepsDto->setTotal(count($this->tables));
             $this->jobDataDto->setSelectedTables($this->tables);
         }
+    }
+
+
+
+
+
+    private function isExistingDownloadLinkTable(string $srcTable, string $destTable): bool
+    {
+        if ($this->tableCreateService->getTableWithoutPrefix($srcTable) !== TransferSessionTable::TABLE_NAME) {
+            return false;
+        }
+
+        return $this->tableCreateService->isTableExist($destTable);
     }
 }

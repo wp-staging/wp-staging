@@ -53,6 +53,7 @@ class CommonServiceProvider extends ServiceProvider
 
  
         add_action('wp_ajax_wpstg_can_use_optimizer', $this->container->callback(Optimizer::class, 'ajaxCanUseOptimizer')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_nopriv_wpstg_can_use_optimizer', $this->container->callback(Optimizer::class, 'ajaxCanUseOptimizer')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
  
         if ($this->canStartOptimizerSafetyCheck()) {

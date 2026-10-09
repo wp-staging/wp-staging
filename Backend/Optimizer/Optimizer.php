@@ -84,6 +84,10 @@ class Optimizer
             return;
         }
 
+        if (!$this->installOptimizer() && $this->mustUpdateOptimizer()) {
+            return;
+        }
+
         $secret = wp_generate_password(32, false);
         set_transient(self::TRANSIENT_CHECK_SECRET, $secret, MINUTE_IN_SECONDS);
 
@@ -91,7 +95,7 @@ class Optimizer
         $headers   = $this->getHttpAuthHeaders();
         $sslVerify = empty($headers) ? apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false) : true;
 
-        wp_remote_post(admin_url('admin-ajax.php'), [
+        $response = wp_remote_post(admin_url('admin-ajax.php'), [
             'timeout'   => self::SAFETY_CHECK_TIMEOUT,
             'blocking'  => true,
             'sslverify' => $sslVerify,
@@ -102,6 +106,8 @@ class Optimizer
             ],
         ]);
 
+        delete_transient(self::TRANSIENT_CHECK_SECRET);
+
  
         wp_cache_delete(self::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL, 'options');
         wp_cache_delete('alloptions', 'options');
@@ -109,7 +115,15 @@ class Optimizer
             return;
         }
 
- 
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return;
+        }
+
+        $result = json_decode(wp_remote_retrieve_body($response), true);
+        if (!is_array($result) || !isset($result['success']) || $result['success'] !== true) {
+            return;
+        }
+
         add_option(self::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL, '0');
     }
 

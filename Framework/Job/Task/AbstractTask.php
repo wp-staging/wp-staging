@@ -255,12 +255,7 @@ abstract class AbstractTask
 
         $this->addLogMessageToResponse($response);
 
-        $this->logger->setFileName(sprintf(
-            '%s__%s__%s',
-            $this->getJobName(),
-            date('Y_m_d__H'),
-            $this->getJobId()
-        ));
+        $this->logger->setFileName($this->getJobLogFileName());
 
         if ($isFinished) {
             if ($this->usesTaskQueue()) {
@@ -350,7 +345,14 @@ abstract class AbstractTask
     {
         if ($this->logger instanceof Logger) {
             $this->logger->setupSseLogger((string)$this->jobId);
+            $this->logger->setFileName($this->getJobLogFileName());
         }
+    }
+
+ 
+    private function getJobLogFileName(): string
+    {
+        return sprintf('%s__%s__%s', $this->getJobName(), date('Y_m_d__H'), $this->getJobId());
     }
 
 

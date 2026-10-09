@@ -5,7 +5,6 @@ namespace WPStaging\Backup\Ajax;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\IndexLineDtoFactory;
 use WPStaging\Framework\Filesystem\FileObject;
-use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Utils\Cache\Cache;
 
@@ -22,7 +21,16 @@ class ExploreCache
     const LIFETIME = 3600;
 
  
-    const MAX_CACHE_SIZE = 20 * 1024 * 1024;
+    const FORMAT_VERSION = 3;
+
+ 
+    const TRAILER_LENGTH = 256;
+
+ 
+    const ABANDONED_BUILD_AGE = 600;
+
+ 
+    const WRITE_BUFFER_SIZE = 1048576;
 
  
     private $cache;
@@ -31,13 +39,12 @@ class ExploreCache
     private $pathIdentifier;
 
  
-    private $filesystem;
+    private $backupFileWithFailedBuild = '';
 
-    public function __construct(Cache $cache, PathIdentifier $pathIdentifier, Filesystem $filesystem)
+    public function __construct(Cache $cache, PathIdentifier $pathIdentifier)
     {
         $this->cache          = $cache;
         $this->pathIdentifier = $pathIdentifier;
-        $this->filesystem     = $filesystem;
     }
 
 
@@ -45,26 +52,24 @@ class ExploreCache
 
 
 
-
-
-    public function getOrBuild(string $backupFile, BackupMetadata $metadata)
+    public function openOrBuildTreeReader(string $backupFile, BackupMetadata $metadata)
     {
         $this->configureCache($backupFile);
 
-        $cached = $this->read($backupFile);
-        if ($cached !== null) {
-            return $cached;
+        $treeReader = $this->openTreeReader($backupFile);
+        if ($treeReader !== null || $backupFile === $this->backupFileWithFailedBuild) {
+            return $treeReader;
         }
 
-        $tree = $this->buildTree($backupFile, $metadata);
-        if ($tree === null) {
-            return null;
+        $isBuilt    = $this->build($backupFile, $metadata);
+        $treeReader = $this->openTreeReader($backupFile);
+        if (!$isBuilt && $treeReader === null) {
+            $this->backupFileWithFailedBuild = $backupFile;
         }
 
-        $this->write($backupFile, $tree);
-
-        return $tree;
+        return $treeReader;
     }
+
 
 
 
@@ -79,30 +84,30 @@ class ExploreCache
 
 
 
-
-
-    private function read(string $backupFile)
+    private function openTreeReader(string $backupFile)
     {
         if (!$this->cache->isValid(false)) {
             return null;
         }
 
-        $filePath = $this->cache->getFilePath();
-        if (filesize($filePath) > self::MAX_CACHE_SIZE) {
+        try {
+            $file         = new FileObject($this->cache->getFilePath(), FileObject::MODE_READ);
+            $trailerStart = $file->getSize() - self::TRAILER_LENGTH;
+        } catch (\Throwable $e) {
             return null;
         }
 
-        $data = $this->cache->get();
-        if (!is_array($data) || !isset($data['mtime'], $data['tree'])) {
+        if ($trailerStart < strlen(Cache::PHP_HEADER) || $file->fread(strlen(Cache::PHP_HEADER)) !== Cache::PHP_HEADER) {
             return null;
         }
 
-        $currentMtime = @filemtime($backupFile);
-        if ($currentMtime === false || (int)$data['mtime'] !== $currentMtime) {
+        $file->fseek($trailerStart);
+        $trailer = json_decode(trim($file->fread(self::TRAILER_LENGTH)), true);
+        if (!$this->trailerDescribesBackup($trailer, $backupFile)) {
             return null;
         }
 
-        return $data['tree'];
+        return new ExploreTreeReader($file, (int)$trailer['folderStart'], (int)$trailer['folderCount'], (int)$trailer['offsetTableStart'], (int)$trailer['offsetWidth']);
     }
 
 
@@ -110,18 +115,17 @@ class ExploreCache
 
 
 
-
-    private function write(string $backupFile, array $tree)
+    private function trailerDescribesBackup($trailer, string $backupFile): bool
     {
-        $mtime = @filemtime($backupFile);
-        if ($mtime === false) {
-            return;
+        if (!is_array($trailer) || !isset($trailer['format'], $trailer['backupModifiedTime'], $trailer['backupSize'], $trailer['folderStart'], $trailer['folderCount'], $trailer['offsetTableStart'], $trailer['offsetWidth'])) {
+            return false;
         }
 
-        $this->cache->save([
-            'mtime' => $mtime,
-            'tree'  => $tree,
-        ]);
+        if ((int)$trailer['format'] !== self::FORMAT_VERSION) {
+            return false;
+        }
+
+        return (int)$trailer['backupModifiedTime'] === filemtime($backupFile) && (int)$trailer['backupSize'] === filesize($backupFile);
     }
 
 
@@ -131,17 +135,61 @@ class ExploreCache
 
 
 
-    private function buildTree(string $backupFile, BackupMetadata $metadata)
+    private function build(string $backupFile, BackupMetadata $metadata): bool
+    {
+        $this->deleteAbandonedBuilds();
+
+        $backupModifiedTime = filemtime($backupFile);
+        $backupSize         = filesize($backupFile);
+        $buildFile          = $this->cache->getPath() . $this->cache->getFilename() . '-' . uniqid() . '.' . Cache::FILE_EXTENSION;
+
+        try {
+            $this->writeTree($buildFile, $this->collectFolders($backupFile, $metadata), $backupModifiedTime, $backupSize);
+        } catch (\Throwable $e) {
+            $this->deleteFile($buildFile);
+            return false;
+        }
+
+        if (!$this->moveBuildIntoPlace($buildFile, $this->cache->getFilePath())) {
+            $this->deleteFile($buildFile);
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+
+
+
+    protected function moveBuildIntoPlace(string $buildFile, string $cacheFile): bool
+    {
+        return $this->callQuietly(function () use ($buildFile, $cacheFile) {
+            return rename($buildFile, $cacheFile);
+        });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    private function collectFolders(string $backupFile, BackupMetadata $metadata): array
     {
         $indexLineDto = IndexLineDtoFactory::createForBackupFormat($metadata->getIsBackupFormatV1());
         $fileObject   = new FileObject($backupFile, FileObject::MODE_READ);
         $fileObject->fseek((int)$metadata->getHeaderStart());
 
- 
-        $tree = ['' => ['dirs' => [], 'files' => []]];
- 
-        $dirChildren = [];
-        $dirHasSubdirs = [];
+        $fileRecordsByFolder    = [];
+        $subfolderNamesByFolder = ['' => ''];
+        $sizeByFolder           = [];
 
         while ($fileObject->valid() && $fileObject->ftell() < (int)$metadata->getHeaderEnd()) {
             $indexOffset  = $fileObject->ftell();
@@ -150,101 +198,307 @@ class ExploreCache
                 continue;
             }
 
-            $backupFileIndex = $indexLineDto->readIndexLine($rawIndexFile);
-            $relativePath    = $this->pathIdentifier->transformIdentifiableToRelativePath($backupFileIndex->getIdentifiablePath());
-            $relativePath    = $this->filesystem->normalizePath($relativePath);
-
-            if ($relativePath === '' || $relativePath === '/') {
+            $backupFileIndex  = $indexLineDto->readIndexLine($rawIndexFile);
+            $identifiablePath = $backupFileIndex->getIdentifiablePath();
+            if (!$this->pathIdentifier->isSafeIdentifiablePath($identifiablePath)) {
                 continue;
             }
 
-            $lastSlash  = strrpos($relativePath, '/');
-            $parentDir  = $lastSlash === false ? '' : substr($relativePath, 0, $lastSlash);
-            $fileName   = $lastSlash === false ? $relativePath : substr($relativePath, $lastSlash + 1);
-
+            $relativePath = $this->normalizeSlashes($this->pathIdentifier->transformIdentifiableToRelativePath($identifiablePath));
+            $lastSlash    = strrpos($relativePath, '/');
+            $folder       = $lastSlash === false ? '' : substr($relativePath, 0, $lastSlash);
+            $fileName     = $lastSlash === false ? $relativePath : substr($relativePath, $lastSlash + 1);
             if ($fileName === '') {
                 continue;
             }
 
- 
-            if (!isset($tree[$parentDir])) {
-                $tree[$parentDir] = ['dirs' => [], 'files' => []];
+            if (!isset($subfolderNamesByFolder[$folder])) {
+                $this->registerFolderAndAncestors($subfolderNamesByFolder, $folder);
             }
 
- 
- 
-            $parts = explode('/', $relativePath);
-            $depth = count($parts);
-
-            if ($depth > 1) {
- 
-                $currentPath = '';
-                for ($i = 0; $i < $depth - 1; $i++) {
-                    $dirName = $parts[$i];
-                    $childPath = $currentPath === '' ? $dirName : $currentPath . '/' . $dirName;
-
-                    if (!isset($tree[$currentPath])) {
-                        $tree[$currentPath] = ['dirs' => [], 'files' => []];
-                    }
-
- 
-                    if (!isset($tree[$currentPath]['dirs'][$dirName])) {
-                        $tree[$currentPath]['dirs'][$dirName] = [
-                            'name'        => $dirName,
-                            'path'        => $childPath,
-                            'hasChildren' => false,
-                        ];
-                    }
-
- 
-                    if ($i + 1 < $depth - 1) {
- 
-                        $dirHasSubdirs[$childPath] = true;
-                    }
-
- 
-                    $nextPart = $parts[$i + 1];
-                    $dirChildren[$childPath][$nextPart] = true;
-
-                    $currentPath = $childPath;
-                }
+            $size       = (int)$backupFileIndex->getUncompressedSize();
+            $fileRecord = $fileName . "\0" . $size . "\0" . (int)$indexOffset;
+            if (isset($fileRecordsByFolder[$folder])) {
+                $fileRecordsByFolder[$folder] .= '/' . $fileRecord;
+                $sizeByFolder[$folder]        += $size;
+                continue;
             }
 
- 
-            $size = (int)$backupFileIndex->getUncompressedSize();
-            $tree[$parentDir]['files'][] = [
-                'name'   => $fileName,
-                'path'   => $relativePath,
-                'size'   => $size,
-                'offset' => (int)$indexOffset,
-            ];
+            $fileRecordsByFolder[$folder] = $fileRecord;
+            $sizeByFolder[$folder]        = $size;
         }
 
         $fileObject = null;
 
- 
-        foreach ($tree as $folderPath => &$bucket) {
-            $dirArray = [];
-            foreach ($bucket['dirs'] as $dirName => $dirData) {
-                $dirPath = $dirData['path'];
-                $dirData['hasChildren'] = isset($dirChildren[$dirPath]) && count($dirChildren[$dirPath]) > 0;
-                $dirData['items']       = isset($dirChildren[$dirPath]) ? count($dirChildren[$dirPath]) : 0;
-                $dirArray[] = $dirData;
+        return [
+            'files'      => $fileRecordsByFolder,
+            'subfolders' => $subfolderNamesByFolder,
+            'sizes'      => $sizeByFolder,
+        ];
+    }
+
+
+
+
+
+
+    private function registerFolderAndAncestors(array &$subfolderNamesByFolder, string $folder)
+    {
+        $subfolderNames = explode('/', $folder);
+        $deepestIndex   = count($subfolderNames) - 1;
+        $parentFolder   = '';
+        foreach ($subfolderNames as $index => $subfolderName) {
+            $subfolder = $index === $deepestIndex ? $folder : ExploreTreeReader::joinPath($parentFolder, $subfolderName);
+            if (!isset($subfolderNamesByFolder[$subfolder])) {
+                $subfolderNamesByFolder[$subfolder]     = '';
+                $subfolderNamesByFolder[$parentFolder] .= ($subfolderNamesByFolder[$parentFolder] === '' ? '' : '/') . $subfolderName;
             }
 
-            usort($dirArray, function ($a, $b) {
-                return strcasecmp($a['name'], $b['name']);
-            });
+            $parentFolder = $subfolder;
+        }
+    }
 
-            $bucket['dirs'] = $dirArray;
 
-            usort($bucket['files'], function ($a, $b) {
-                return strcasecmp($a['name'], $b['name']);
-            });
+
+
+
+
+
+
+    private function writeTree(string $cacheFile, array $tree, int $backupModifiedTime, int $backupSize)
+    {
+        $file = new FileObject($cacheFile, FileObject::MODE_WRITE);
+        list($recordLines, $recordOffsets) = $this->writeFolderEntries($file, $tree);
+
+        $folderStart = $file->ftell();
+        $this->writeOrFail($file, $recordLines);
+        $recordLines = null;
+
+        $offsetTableStart = $file->ftell();
+        $offsetWidth      = strlen((string)max($recordOffsets));
+        $offsetTable      = '';
+        foreach ($recordOffsets as $recordOffset) {
+            $offsetTable .= str_pad((string)$recordOffset, $offsetWidth, '0', STR_PAD_LEFT);
+            $offsetTable  = $this->flushWhenFull($file, $offsetTable);
         }
 
-        unset($bucket);
+        $this->writeOrFail($file, $offsetTable);
 
-        return $tree;
+        $trailer = json_encode([
+            'format'             => self::FORMAT_VERSION,
+            'backupModifiedTime' => $backupModifiedTime,
+            'backupSize'         => $backupSize,
+            'folderStart'        => $folderStart,
+            'folderCount'        => count($recordOffsets),
+            'offsetTableStart'   => $offsetTableStart,
+            'offsetWidth'        => $offsetWidth,
+        ]);
+
+        $this->writeOrFail($file, str_pad($trailer, self::TRAILER_LENGTH - 1) . "\n");
+        $file = null;
+    }
+
+
+
+
+
+
+
+
+    private function writeFolderEntries(FileObject $file, array $tree): array
+    {
+        $fileRecordsByFolder    = $tree['files'];
+        $subfolderNamesByFolder = $tree['subfolders'];
+        list($totalFileCountByFolder, $totalSizeByFolder) = $this->sumFilesBelowEachFolder($fileRecordsByFolder, $tree['sizes']);
+
+        $folders = array_map('strval', array_keys($subfolderNamesByFolder));
+        sort($folders, SORT_STRING);
+
+        $buffer        = Cache::PHP_HEADER;
+        $recordLines   = '';
+        $recordOffsets = [];
+        foreach ($folders as $folder) {
+            $subfolderNames = $this->splitPackedList($subfolderNamesByFolder[$folder]);
+            usort($subfolderNames, 'strcasecmp');
+
+            $fileRecords = $this->splitPackedList($fileRecordsByFolder[$folder] ?? '');
+            usort($fileRecords, 'strcasecmp');
+
+            $recordOffsets[] = strlen($recordLines);
+            $recordLines    .= implode("\t", [
+                ExploreTreeReader::escapeField($folder),
+                $file->ftell() + strlen($buffer),
+                count($subfolderNames),
+                count($fileRecords),
+                $totalFileCountByFolder[$folder] ?? 0,
+                $totalSizeByFolder[$folder] ?? 0,
+            ]) . "\n";
+
+            foreach ($subfolderNames as $subfolderName) {
+                $subfolder = ExploreTreeReader::joinPath($folder, $subfolderName);
+                $items     = $this->countPackedList($subfolderNamesByFolder[$subfolder]) + $this->countPackedList($fileRecordsByFolder[$subfolder] ?? '');
+                $buffer   .= ExploreTreeReader::escapeField($subfolderName) . "\t" . $items . "\n";
+                $buffer    = $this->flushWhenFull($file, $buffer);
+            }
+
+            foreach ($fileRecords as $fileRecord) {
+                list($fileName, $size, $indexOffset) = explode("\0", $fileRecord, 3);
+                $buffer .= ExploreTreeReader::escapeField($fileName) . "\t" . $size . "\t" . $indexOffset . "\n";
+                $buffer  = $this->flushWhenFull($file, $buffer);
+            }
+        }
+
+        $this->writeOrFail($file, $buffer);
+
+        return [$recordLines, $recordOffsets];
+    }
+
+
+
+
+
+
+    private function sumFilesBelowEachFolder(array $fileRecordsByFolder, array $sizeByFolder): array
+    {
+        $totalFileCountByFolder = [];
+        $totalSizeByFolder      = [];
+        foreach ($fileRecordsByFolder as $folder => $fileRecords) {
+            $fileCount = $this->countPackedList($fileRecords);
+            $size      = $sizeByFolder[$folder];
+            $ancestor  = (string)$folder;
+            while (true) {
+                $totalFileCountByFolder[$ancestor] = ($totalFileCountByFolder[$ancestor] ?? 0) + $fileCount;
+                $totalSizeByFolder[$ancestor]      = ($totalSizeByFolder[$ancestor] ?? 0) + $size;
+                if ($ancestor === '') {
+                    break;
+                }
+
+                $ancestor = $this->parentFolderOf($ancestor);
+            }
+        }
+
+        return [$totalFileCountByFolder, $totalSizeByFolder];
+    }
+
+
+
+
+
+    private function splitPackedList(string $packedList): array
+    {
+        return $packedList === '' ? [] : explode('/', $packedList);
+    }
+
+
+
+
+
+    private function countPackedList(string $packedList): int
+    {
+        return $packedList === '' ? 0 : substr_count($packedList, '/') + 1;
+    }
+
+
+
+
+
+
+
+    private function writeOrFail(FileObject $file, string $content): int
+    {
+        $writtenBytes = $file->fwriteSafe($content);
+        if ($writtenBytes === false) {
+            throw new \RuntimeException('Could not write the backup explorer cache.');
+        }
+
+        return $writtenBytes;
+    }
+
+
+
+
+
+
+    private function flushWhenFull(FileObject $file, string $buffer): string
+    {
+        if (strlen($buffer) < self::WRITE_BUFFER_SIZE) {
+            return $buffer;
+        }
+
+        $this->writeOrFail($file, $buffer);
+
+        return '';
+    }
+
+
+
+
+
+
+
+
+    private function normalizeSlashes(string $path): string
+    {
+        return (string)preg_replace('|/+|', '/', str_replace('\\', '/', $path));
+    }
+
+
+
+
+
+    private function parentFolderOf(string $path): string
+    {
+        $lastSlash = strrpos($path, '/');
+
+        return $lastSlash === false ? '' : substr($path, 0, $lastSlash);
+    }
+
+
+
+
+
+
+    private function deleteAbandonedBuilds()
+    {
+        $buildFiles = glob($this->cache->getPath() . $this->cache->getFilename() . '-*.' . Cache::FILE_EXTENSION);
+        $this->callQuietly(function () use ($buildFiles) {
+            foreach ($buildFiles ?: [] as $buildFile) {
+                if (filemtime($buildFile) < time() - self::ABANDONED_BUILD_AGE) {
+                    $this->deleteFile($buildFile);
+                }
+            }
+        });
+    }
+
+
+
+
+
+
+
+    private function callQuietly(callable $callback)
+    {
+        set_error_handler(function () {
+            return true;
+        });
+
+        try {
+            return $callback();
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+
+
+
+
+    private function deleteFile(string $filePath)
+    {
+        $this->callQuietly(function () use ($filePath) {
+            if (is_file($filePath)) {
+                unlink($filePath);
+            }
+        });
     }
 }

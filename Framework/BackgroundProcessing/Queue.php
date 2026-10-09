@@ -275,8 +275,7 @@ class Queue
 
         $currentTableVersion = $this->getCurrentTableVersion();
 
- 
-        if (version_compare($currentTableVersion, $this->getLatestTableVersion(), '<') || !$this->tableExists()) {
+        if (version_compare($currentTableVersion, $this->getLatestTableVersion(), '<') || !$this->tableExists() || !$this->availableAtColumnHoldsIntegers()) {
             $tableState = $this->updateTable();
 
             if ($tableState === self::TABLE_EXISTS) {
@@ -290,6 +289,26 @@ class Queue
         $this->tableState = $this->tableExists() ? self::TABLE_EXISTS : self::TABLE_NOT_EXIST;
 
         return $this->tableState;
+    }
+
+ 
+    private function getAvailableAtColumnType(): string
+    {
+        $table  = self::getTableName();
+        $result = $this->database->query("SHOW COLUMNS FROM `{$table}` LIKE 'available_at'");
+        $column = $result === false ? null : $this->database->fetchAssoc($result);
+
+        return empty($column['Type']) ? '' : strtolower($column['Type']);
+    }
+
+ 
+    private function availableAtColumnHoldsIntegers(): bool
+    {
+        if (isset($this->database->isSQLite) && $this->database->isSQLite) {
+            return version_compare($this->getCurrentTableVersion(), '1.1.0', '>=');
+        }
+
+        return strpos($this->getAvailableAtColumnType(), 'int') !== false;
     }
 
 
@@ -1429,13 +1448,37 @@ class Queue
 
     public function getLatestUpdatedAction($jobId)
     {
+        return $this->findLatestUpdatedAction($jobId, false);
+    }
+
+
+
+
+
+
+
+
+    public function getLatestActionWithResponse(string $jobId)
+    {
+        return $this->findLatestUpdatedAction($jobId, true);
+    }
+
+
+
+
+
+
+
+    private function findLatestUpdatedAction($jobId, bool $mustHaveResponse)
+    {
         if (!is_string($jobId) || $this->tableState === self::TABLE_NOT_EXIST) {
             return null;
         }
 
-        $tableName    = self::getTableName();
-        $escapedJobId = $this->database->escape(trim($jobId));
-        $query        = "SELECT id FROM $tableName WHERE jobId = '$escapedJobId' ORDER BY updated_at DESC, id DESC LIMIT 1";
+        $tableName         = self::getTableName();
+        $escapedJobId      = $this->database->escape(trim($jobId));
+        $responseCondition = $mustHaveResponse ? 'AND response IS NOT NULL' : '';
+        $query             = "SELECT id FROM $tableName WHERE jobId = '$escapedJobId' $responseCondition ORDER BY updated_at DESC, id DESC LIMIT 1";
 
         $result = $this->database->query($query);
 
@@ -1459,7 +1502,7 @@ class Queue
             return null;
         }
 
-        return $this->getAction($row['id']);
+        return $this->getAction($row['id'], true);
     }
 
 
@@ -1517,8 +1560,9 @@ class Queue
         $tablename           = self::getTableName();
         $currentTableVersion = $this->getCurrentTableVersion();
 
-        if (version_compare($currentTableVersion, '1.1.0', '<')) {
-            $dbdeltaQueries[] = "ALTER TABLE `{$tablename}` ADD COLUMN `available_at` BIGINT(20) UNSIGNED NOT NULL DEFAULT 0 AFTER `priority`";
+        if (!$this->availableAtColumnHoldsIntegers()) {
+            $alteration       = $this->getAvailableAtColumnType() === '' ? 'ADD' : 'MODIFY';
+            $dbdeltaQueries[] = "ALTER TABLE `{$tablename}` {$alteration} COLUMN `available_at` BIGINT(20) UNSIGNED NOT NULL DEFAULT 0 AFTER `priority`";
         }
 
         if (version_compare($currentTableVersion, '1.0.0', '<')) {

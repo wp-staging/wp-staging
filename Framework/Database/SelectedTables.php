@@ -137,8 +137,7 @@ class SelectedTables
             $this->wpdb = new wpdb($username, str_replace("\\\\", "\\", $password), $database, $server);
         }
 
-        $this->wpdb->prefix = $prefix;
-        $this->prefix       = $prefix;
+        $this->prefix = $prefix;
     }
 
 
@@ -147,9 +146,8 @@ class SelectedTables
 
     public function setWpdb($wpdb, $prefix)
     {
-        $this->wpdb         = $wpdb;
-        $this->wpdb->prefix = $prefix;
-        $this->prefix       = $prefix;
+        $this->wpdb   = $wpdb;
+        $this->prefix = $prefix;
     }
 
 

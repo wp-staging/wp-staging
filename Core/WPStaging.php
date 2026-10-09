@@ -7,6 +7,7 @@ use RuntimeException;
 use WPStaging\Backend\Administrator;
 use WPStaging\Backend\DashboardWidget\DashboardWidgetServiceProvider;
 use WPStaging\Backup\BackupServiceProvider;
+use WPStaging\Backup\Transfer\TransferServiceProvider;
 use WPStaging\Backup\Service\BackupsDirectoryResolver;
 use WPStaging\Backup\Service\TmpBackupCleaner;
 use WPStaging\Basic\BasicServiceProvider;
@@ -151,6 +152,7 @@ final class WPStaging
         $this->container->register(JobServiceProvider::class);
         $this->container->register(StagingServiceProvider::class);
         $this->container->register(BackupServiceProvider::class);
+        $this->container->register(TransferServiceProvider::class);
 
  
         Hooks::callInternalHook(self::HOOK_BOOTSTRAP_SERVICES);

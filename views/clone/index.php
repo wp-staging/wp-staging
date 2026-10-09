@@ -246,5 +246,9 @@ $isCalledFromIndex = true;
         <template id="wpstg-staging-creation-template">
             <?php include WPSTG_VIEWS_DIR . 'staging/modal/create-process.php'; ?>
         </template>
+
+        <div id="wpstg-staging-auto-login-content" style="display:none;">
+            <?php include WPSTG_VIEWS_DIR . 'staging/_partials/auto-login-pro-cta.php'; ?>
+        </div>
     <?php endif; ?>
 </div>

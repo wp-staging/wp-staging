@@ -27,6 +27,17 @@ class Htaccess
 
     const PHP_HANDLER_EXTENSIONS = '.php .php3 .php4 .php5 .php7 .php8 .phtml .phps .phar .pht';
 
+ 
+    const MOD_MIME_RULES = [
+        '<IfModule mod_mime.c>',
+        'AddType application/octet-stream .log',
+        'AddType application/octet-stream .wpstg',
+        'AddType application/octet-stream .wpstgtmp',
+        'RemoveHandler ' . self::PHP_HANDLER_EXTENSIONS,
+        'RemoveType ' . self::PHP_HANDLER_EXTENSIONS,
+        '</IfModule>',
+    ];
+
 
 
 
@@ -46,21 +57,14 @@ class Htaccess
 
     public function create($path)
     {
-        return $this->filesystem->create($path, implode(PHP_EOL, [
-            '<IfModule mod_mime.c>',
-            'AddType application/octet-stream .log',
-            'AddType application/octet-stream .wpstg',
-            'AddType application/octet-stream .wpstgtmp',
-            'RemoveHandler ' . self::PHP_HANDLER_EXTENSIONS,
-            'RemoveType ' . self::PHP_HANDLER_EXTENSIONS,
-            '</IfModule>',
+        return $this->filesystem->create($path, implode(PHP_EOL, array_merge(self::MOD_MIME_RULES, [
             '<IfModule mod_dir.c>',
             'DirectoryIndex index.html index.php',
             '</IfModule>',
             '<IfModule mod_autoindex.c>',
             'Options -Indexes',
             '</IfModule>',
-        ]));
+        ])));
     }
 
  
@@ -115,10 +119,25 @@ class Htaccess
 
     public function createForStagingNetwork($path, $baseDirectory)
     {
-        return $this->filesystem->create($path, implode(PHP_EOL, [
+        if (!function_exists('insert_with_markers')) {
+            require_once ABSPATH . 'wp-admin/includes/misc.php';
+        }
+
+        $rules = [
+            '<IfModule mod_rewrite.c>',
             'RewriteEngine On',
+            'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
             'RewriteBase ' . trailingslashit($baseDirectory),
             'RewriteRule ^index\.php$ - [L]',
+        ];
+
+        if (get_site_option('ms_files_rewriting')) {
+            $rules[] = '';
+            $rules[] = '# uploaded files';
+            $rules[] = 'RewriteRule ^([_0-9a-zA-Z-]+/)?files/(.+) wp-includes/ms-files.php?file=$2 [L]';
+        }
+
+        $rules = array_merge($rules, [
             '',
             '# add a trailing slash to /wp-admin',
             'RewriteRule ^([_0-9a-zA-Z-]+/)?wp-admin$ $1wp-admin/ [R=301,L]',
@@ -129,7 +148,9 @@ class Htaccess
             'RewriteRule ^([_0-9a-zA-Z-]+/)?(wp-(content|admin|includes).*) $2 [L]',
             'RewriteRule ^([_0-9a-zA-Z-]+/)?(.*\.php)$ $2 [L]',
             'RewriteRule . index.php [L]',
-            '',
-        ]));
+            '</IfModule>',
+        ]);
+
+        return $this->filesystem->createWithMarkers($path, 'WordPress', $rules);
     }
 }

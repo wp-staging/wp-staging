@@ -25,7 +25,21 @@ class SqliteAdapter implements InterfaceDatabaseClient
 
 
 
+
+
+    private $currentFetchAssocResult;
+
+
+
+
     private $currentFetchRowIndex = 0;
+
+
+
+
+
+
+    private $currentFetchRowResult;
 
     public function __construct($link = null)
     {
@@ -80,15 +94,19 @@ class SqliteAdapter implements InterfaceDatabaseClient
         return $this->link->versionString(); // @phpstan-ignore-line
     }
 
+
+
+
+
     public function fetchAll($result): array
     {
-        $data = [];
-
-        while ($row = $result) {
-            $data[] = $row;
+        if (!is_array($result)) {
+            return [];
         }
 
-        return $data;
+        return array_map(function ($row) {
+            return (array)$row;
+        }, $result);
     }
 
     public function fetchAssoc($result)
@@ -96,6 +114,11 @@ class SqliteAdapter implements InterfaceDatabaseClient
         // @phpstan-ignore-next-line
         if (empty($result)) {
             return [];
+        }
+
+        if ($result !== $this->currentFetchAssocResult) {
+            $this->currentFetchAssocResult   = $result;
+            $this->currentFetchAssocRowIndex = 0;
         }
 
  
@@ -117,6 +140,7 @@ class SqliteAdapter implements InterfaceDatabaseClient
         } else {
  
             $this->currentFetchAssocRowIndex = 0;
+            $this->currentFetchAssocResult   = null;
         }
 
         return [];
@@ -153,6 +177,11 @@ class SqliteAdapter implements InterfaceDatabaseClient
 
     public function fetchRow($result)
     {
+        if ($result !== $this->currentFetchRowResult) {
+            $this->currentFetchRowResult = $result;
+            $this->currentFetchRowIndex  = 0;
+        }
+
  
         $resultArray = $this->castObjectToArrayRecursive($result);
 
@@ -166,7 +195,8 @@ class SqliteAdapter implements InterfaceDatabaseClient
             return [reset($row)];
         } else {
  
-            $this->currentFetchRowIndex = 0;
+            $this->currentFetchRowIndex  = 0;
+            $this->currentFetchRowResult = null;
             return null;
         }
     }
@@ -207,17 +237,15 @@ class SqliteAdapter implements InterfaceDatabaseClient
 
     public function numRows($result): int
     {
-        $count = 0;
-        while ($result) {
-            $count++;
-        }
-        return $count;
+        return is_array($result) ? count($result) : 0;
     }
 
     public function freeResult($result)
     {
         $this->currentFetchAssocRowIndex = 0;
+        $this->currentFetchAssocResult   = null;
         $this->currentFetchRowIndex      = 0;
+        $this->currentFetchRowResult     = null;
         return null;
     }
 

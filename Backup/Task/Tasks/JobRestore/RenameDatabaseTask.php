@@ -8,6 +8,7 @@ use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Backup\Transfer\TransferSessionTable;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Hooks;
@@ -110,11 +111,11 @@ class RenameDatabaseTask extends RestoreTask
         }
 
  
-        $excludedTables = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME];
+        $excludedTables = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME, TransferSessionTable::TABLE_NAME];
         $excludedTables = array_merge($excludedTables, Hooks::applyFilters(self::FILTER_EXCLUDE_TABLES_DURING_RESTORE, []));
         $this->tablesRenamer->setExcludedTables($excludedTables);
 
-        $tablesToPreserve = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME];
+        $tablesToPreserve = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME, TransferSessionTable::TABLE_NAME];
         $this->tablesRenamer->setDestinationSubsiteBlogIds([]);
 
         if ($this->isSubsiteRestore()) {

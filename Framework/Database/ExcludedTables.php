@@ -2,8 +2,11 @@
 
 namespace WPStaging\Framework\Database;
 
+use WPStaging\Backup\Transfer\TransferSessionTable;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Hooks;
+
+
 
 
 
@@ -44,6 +47,7 @@ class ExcludedTables
     {
         $this->excludedTables = [
             Queue::QUEUE_TABLE_NAME,
+            TransferSessionTable::TABLE_NAME,
         ];
 
         $this->networkExcludedTables = [

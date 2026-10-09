@@ -1,6 +1,8 @@
 <?php
 
 use WPStaging\Backup\Service\ZlibCompressor;
+use WPStaging\Backup\Security\BackupDirectoryProtectionService;
+use WPStaging\Backup\Transfer\TransferSessionService;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\UI\Alert;
@@ -52,16 +54,15 @@ if (empty($indexFileError)) {
 $carriesBackupId = ($isCorrupt || $isLegacy) && preg_match('/_\d{8}-\d{6}_[a-f0-9]+\./', $backupName) === 1;
 $displayName     = $carriesBackupId ? WPStaging::make(Strings::class)->maskBackupFilename($backupName) : $backupName;
 
- 
-$downloadUrl = $backup->downloadUrl;
+$urls               = WPStaging::make(Urls::class);
+$permanentBackupUrl = $urls->maybeUseProtocolRelative($backup->downloadUrl);
+$copyableBackupUrl  = $urls->resolveProtocolRelativeUrl($backup->downloadUrl);
+
+$isTransferSessionEnabled    = WPStaging::make(TransferSessionService::class)->isEnabled();
+$isPermanentBackupUrlOffered = WPStaging::make(BackupDirectoryProtectionService::class)->isPermanentBackupUrlOffered();
 
  
 $compressor = WPStaging::make(ZlibCompressor::class);
-
-$urls            = WPStaging::make(Urls::class);
-$downloadFileUrl = $urls->resolveProtocolRelativeUrl($downloadUrl);
-
-$downloadUrl = $urls->maybeUseProtocolRelative($downloadUrl);
 
 $logUrl = add_query_arg([
     'action' => 'wpstg--backups--logs',
@@ -74,11 +75,10 @@ if (WPStaging::isOnWordPressPlayground()) {
     $downloadAttribute = 'target=_blank';
 }
 
- 
 $wpstgRestorePageUrl = add_query_arg([
     'page' => 'wpstg-restorer',
     // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
-    'hash' => rtrim(base64_encode($downloadUrl . '.backupid:' . $id), "="),
+    'hash' => rtrim(base64_encode($backup->name . '.backupid:' . $id), "="),
 ], admin_url('admin.php'));
 ?>
 <li id="<?php echo esc_attr($id) ?>" class="wpstg-clone wpstg-backup" data-md5="<?php echo esc_attr($backup->md5BaseName); ?>" data-name="<?php echo esc_attr($backup->backupName); ?>">
@@ -142,19 +142,37 @@ $wpstgRestorePageUrl = add_query_arg([
                             <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('download'); ?></span>
                             <?php esc_html_e('Download Backup', 'wp-staging'); ?>
                         </a>
-                    <?php else : ?>
-                        <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($downloadUrl ?: ''); ?>" class="wpstg--backup--download wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                    <?php elseif ($isPermanentBackupUrlOffered) : ?>
+                        <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($permanentBackupUrl ?: ''); ?>" class="wpstg--backup--download wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
                            title="<?php esc_attr_e('Download backup to local system', 'wp-staging'); ?>">
                             <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('download'); ?></span>
                             <?php esc_html_e('Download Backup', 'wp-staging'); ?>
                         </a>
+                    <?php elseif ($isTransferSessionEnabled) : ?>
+                        <a href="javascript:void(0)" class="wpstg--backup--transfer-prepare wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                           data-backup-id="<?php echo esc_attr($backup->md5BaseName); ?>"
+                           data-transfer-action="download"
+                           title="<?php esc_attr_e('Download this backup through a temporary link that is created when you click.', 'wp-staging'); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('download'); ?></span>
+                            <?php esc_html_e('Download Backup', 'wp-staging'); ?>
+                        </a>
                     <?php endif; ?>
-                    <a href="javascript:void(0)" id="wpstg-copy-backup-url" class="wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
-                       data-copy-content="<?php echo esc_attr($downloadFileUrl); ?>"
-                       title="<?php esc_attr_e('Copy backup link to restore it quickly on another website.', 'wp-staging'); ?>">
-                        <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('copy-link'); ?></span>
-                        <?php esc_html_e('Copy Backup Link', 'wp-staging'); ?>
-                    </a>
+                    <?php if ($isPermanentBackupUrlOffered) : ?>
+                        <a href="javascript:void(0)" id="wpstg-copy-backup-url" class="wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                           data-copy-content="<?php echo esc_attr($copyableBackupUrl); ?>"
+                           title="<?php esc_attr_e('Copy backup link to restore it quickly on another website.', 'wp-staging'); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('copy-link'); ?></span>
+                            <?php esc_html_e('Copy Backup Link', 'wp-staging'); ?>
+                        </a>
+                    <?php elseif ($isTransferSessionEnabled && !$isMultipartBackup) : ?>
+                        <a href="javascript:void(0)" class="wpstg--backup--transfer-prepare wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
+                           data-backup-id="<?php echo esc_attr($backup->md5BaseName); ?>"
+                           data-transfer-action="share"
+                           title="<?php esc_attr_e('Create a temporary link to download this backup or transfer it to another website.', 'wp-staging'); ?>">
+                            <span class="wpstg-h-4 wpstg-w-4 wpstg-text-dim-foreground wpstg-flex wpstg-items-center wpstg-justify-center wpstg-shrink-0"><?php $this->getAssets()->renderSvg('copy-link'); ?></span>
+                            <?php esc_html_e('Share Backup Link', 'wp-staging'); ?>
+                        </a>
+                    <?php endif; ?>
                     <?php if (!$isLegacy && !$isCorrupt && !$requires64Bit) : ?>
                         <a href="javascript:void(0)" class="wpstg--backup--edit wpstg-clone-action wpstg-relative wpstg-flex wpstg-cursor-pointer wpstg-select-none wpstg-items-center wpstg-gap-2.5 wpstg-rounded-sm wpstg-px-2 wpstg-py-1.5 wpstg-text-sm wpstg-outline-none hover:wpstg-bg-accent hover:wpstg-text-accent-foreground"
                            data-md5="<?php echo esc_attr($backup->md5BaseName); ?>"
@@ -350,6 +368,33 @@ $wpstgRestorePageUrl = add_query_arg([
             }
             ?>
         </ul>
+    </div>
+    <div class="wpstg-transfer-panel wpstg-mt-3 wpstg-rounded-md wpstg-border wpstg-border-solid wpstg-border-dim wpstg-bg-gray-50 wpstg-p-3 wpstg-text-sm dark:wpstg-bg-slate-950/45" style="display:none;" data-backup-id="<?php echo esc_attr($backup->md5BaseName); ?>">
+        <div class="wpstg-transfer-panel-preparing" style="display:none;">
+            <?php esc_html_e('Creating a temporary link…', 'wp-staging'); ?>
+        </div>
+        <div class="wpstg-transfer-panel-ready" style="display:none;">
+            <div class="wpstg-flex wpstg-flex-wrap wpstg-items-center wpstg-gap-3">
+                <a href="#" <?php echo esc_attr($downloadAttribute); ?> class="wpstg-btn wpstg-btn-sm wpstg-btn-primary wpstg-transfer-download-btn" rel="noopener">
+                    <?php esc_html_e('Download Backup', 'wp-staging'); ?>
+                </a>
+                <button type="button" class="wpstg-btn wpstg-btn-sm wpstg-btn-ghost wpstg-transfer-copy-btn">
+                    <?php esc_html_e('Copy Link', 'wp-staging'); ?>
+                </button>
+                <button type="button" class="wpstg-btn wpstg-btn-sm wpstg-btn-ghost wpstg-transfer-revoke-btn">
+                    <?php esc_html_e('Revoke Link', 'wp-staging'); ?>
+                </button>
+                <span class="wpstg-badge wpstg-transfer-mode"></span>
+            </div>
+            <p class="wpstg-mt-2 wpstg-mb-0 wpstg-transfer-expiry"></p>
+            <p class="wpstg-mt-1 wpstg-mb-0 wpstg-transfer-copy-warning" style="display:none;">
+                <?php esc_html_e('A temporary copy is used because this server does not support hardlinks. This may temporarily require additional disk space.', 'wp-staging'); ?>
+            </p>
+            <p class="wpstg-mt-1 wpstg-mb-0 wpstg-text-xs wpstg-text-dim-foreground">
+                <?php esc_html_e('Anyone with this link can download the backup until you revoke it. WP STAGING deletes the link automatically after it expires. The link does not reveal where the backup is stored.', 'wp-staging'); ?>
+            </p>
+        </div>
+        <div class="wpstg-transfer-panel-error wpstg-text-destructive" style="display:none;"></div>
     </div>
     <div class="wpstg-download-notice" style="display:none;">
         <?php Alert::render(

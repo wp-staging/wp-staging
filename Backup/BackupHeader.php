@@ -153,9 +153,8 @@ class BackupHeader
         ];
 
         $this->logEncodingErrorWithContext(
-            $errorMessage,
-            $context,
-            'DataEncoder error in BackupHeader::getHeader(): %s. Using fallback values to continue backup.'
+            sprintf('DataEncoder error in BackupHeader::getHeader(): %s. Using fallback values to continue backup.', $errorMessage),
+            $context
         );
     }
 

@@ -31,6 +31,12 @@ class RowsExporterTaskDto extends AbstractTaskDto
  
     public $locked = false;
 
+ 
+    public $sqlWrittenBytes = null;
+
+ 
+    public $sqlWrittenBytesStep = 0;
+
     public function toRowsExporterDto(): RowsExporterDto
     {
         $rowsExporterDto = new RowsExporterDto();

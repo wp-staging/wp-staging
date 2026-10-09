@@ -33,7 +33,13 @@ class ListableBackup
  
     public $dateUploadedFormatted;
 
- 
+
+
+
+
+
+
+
     public $downloadUrl;
 
  

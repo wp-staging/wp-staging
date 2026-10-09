@@ -126,7 +126,7 @@ trait DbRowsGeneratorTrait
 
 
 
-    protected function rowsGenerator($table, $offset, $limit, \wpdb $db = null)
+    protected function rowsGenerator($table, $offset, $limit, $db = null)
     {
 
 

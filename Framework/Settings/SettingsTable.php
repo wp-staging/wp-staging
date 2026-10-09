@@ -169,6 +169,18 @@ class SettingsTable extends CustomTable
 
 
 
+
+
+
+    public function forgetCachedValue($name)
+    {
+        wp_cache_delete($name, self::CACHE_GROUP);
+        wp_cache_delete($this->getExistsCacheKey($name), self::CACHE_GROUP);
+    }
+
+
+
+
     public function invalidateCache()
     {
         if (function_exists('wp_cache_flush_group')) {

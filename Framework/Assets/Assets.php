@@ -369,6 +369,7 @@ class Assets
             'i18n'                              => $this->i18n->getTranslations(),
             'isCloneable'                       => (new SiteInfo())->isCloneable(),
             'isTestMode'                        => defined('WPSTG_TEST') && WPSTG_TEST,
+            'isOnWordPressPlayground'           => WPStaging::isOnWordPressPlayground(),
             'defaultColorMode'                  => get_option(DarkMode::OPTION_DEFAULT_COLOR_MODE, ''),
             'siteUrl'                           => site_url(),
             'gmtOffset'                         => (float) get_option('gmt_offset', 0),

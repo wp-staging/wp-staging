@@ -4,6 +4,7 @@ namespace WPStaging\Backup\Service;
 
 use SplFileInfo;
 use Throwable;
+use WPStaging\Backup\BackupDeleter;
 use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Framework\Facades\Hooks;
@@ -63,14 +64,19 @@ class BeforeUpdateBackupsService
     private $backupsFinder;
 
  
+    private $backupDeleter;
+
+ 
     private $backups = null;
 
 
 
 
-    public function __construct(BackupsFinder $backupsFinder)
+
+    public function __construct(BackupsFinder $backupsFinder, BackupDeleter $backupDeleter)
     {
         $this->backupsFinder = $backupsFinder;
+        $this->backupDeleter = $backupDeleter;
     }
 
 
@@ -331,6 +337,8 @@ class BeforeUpdateBackupsService
 
 
 
+
+
     private function delete(SplFileInfo $backup, array $parts): bool
     {
         foreach ($parts as $part) {
@@ -339,8 +347,9 @@ class BeforeUpdateBackupsService
                 continue;
             }
 
-            if (!unlink($partPath)) {
-                debug_log('WP STAGING: Could not delete backup part while pruning backup-before-update backups: ' . $partPath);
+            $failureReason = $this->backupDeleter->deleteBackupFile($partPath);
+            if ($failureReason !== '') {
+                debug_log('WP STAGING: Kept a backup part while pruning backup-before-update backups. ' . $failureReason);
 
                 return false;
             }
@@ -353,8 +362,9 @@ class BeforeUpdateBackupsService
             return true;
         }
 
-        if (!unlink($backup->getPathname())) {
-            debug_log('WP STAGING: Could not delete backup while pruning backup-before-update backups: ' . $backup->getPathname());
+        $failureReason = $this->backupDeleter->deleteBackupFile($backup->getPathname());
+        if ($failureReason !== '') {
+            debug_log('WP STAGING: Kept a backup while pruning backup-before-update backups. ' . $failureReason);
 
             return false;
         }

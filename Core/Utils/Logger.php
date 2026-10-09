@@ -235,7 +235,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $log = [
             "type"    => $type,
             "date"    => current_time(self::LOG_DATETIME_FORMAT),
-            "message" => str_replace('<', '&lt;', html_entity_decode((string)$message, ENT_QUOTES, 'UTF-8')),
+            "message" => str_replace('<', '&lt;', $this->collapseLineBreaks(html_entity_decode((string)$message, ENT_QUOTES, 'UTF-8'))),
         ];
 
         if ($errorCode !== '') {
@@ -249,6 +249,17 @@ class Logger implements LoggerInterface, ShutdownableInterface
         if ($this->sseEventCache !== null) {
             $this->sseEventCache->push($log);
         }
+    }
+
+
+
+
+
+
+
+    private function collapseLineBreaks(string $message): string
+    {
+        return (string)preg_replace('/[\r\n]+[ \t]*/', ' ', $message);
     }
 
 

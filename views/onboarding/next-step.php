@@ -161,6 +161,10 @@ $upgradeContext = $isFinale ? 'onboarding_complete' : 'first_task_complete';
         </p>
 
         <?php include WPSTG_VIEWS_DIR . 'onboarding/open-staging-site.php'; ?>
+
+        <?php if ($stagingSiteUrl !== '') : ?>
+            <?php include WPSTG_VIEWS_DIR . 'staging/_partials/auto-login-pro-cta.php'; ?>
+        <?php endif; ?>
     <?php endif; ?>
 
     <?php if (!$isFinale && $isNextCapabilityAvailable) : ?>

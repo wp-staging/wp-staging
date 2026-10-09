@@ -57,6 +57,14 @@ class ServerVars
 
 
 
+    public function isNginx()
+    {
+        return stripos($this->getServerSoftware(), 'nginx') !== false && stripos($this->getServerSoftware(), 'litespeed') === false;
+    }
+
+
+
+
     public function isFunctionDisabled(string $functionName): bool {
         $disableFunctions = array_map(function ($input) {
             return trim($input);

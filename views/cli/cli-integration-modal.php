@@ -295,15 +295,15 @@ if (!$isDeveloperOrHigher) {
                         }
                     }
 
- 
-                    $defaultBackupUrl = $firstBackup ? WPStaging::make(Urls::class)->resolveProtocolRelativeUrl($firstBackup->downloadUrl) : 'https://example.com/backup.wpstg';
+                    $defaultBackupUrl = $firstBackup && $isPermanentBackupUrlOffered ? WPStaging::make(Urls::class)->resolveProtocolRelativeUrl($firstBackup->downloadUrl) : '';
+                    $cmdRestoreFull   = '';
+                    $cmdRestoreMasked = '';
 
- 
-                    $maskedBackupUrl = preg_replace('/(_[0-9]{8}-[0-9]{6}_[a-f0-9]+)(\.wpstg)$/i', '_*****$2', $defaultBackupUrl);
-
- 
-                    $cmdRestoreFull   = sprintf("wpstaging restore %s --from=%s", $localDomain, $defaultBackupUrl);
-                    $cmdRestoreMasked = sprintf("wpstaging restore %s --from=%s", $localDomain, $maskedBackupUrl);
+                    if ($defaultBackupUrl !== '') {
+                        $maskedBackupUrl  = preg_replace('/(_[0-9]{8}-[0-9]{6}_[a-f0-9]+)(\.wpstg)$/i', '_*****$2', $defaultBackupUrl);
+                        $cmdRestoreFull   = sprintf("wpstaging restore %s --from=%s", $localDomain, $defaultBackupUrl);
+                        $cmdRestoreMasked = sprintf("wpstaging restore %s --from=%s", $localDomain, $maskedBackupUrl);
+                    }
                     ?>
                     <div id="wpstg-cli-restore-commands-container" class="wpstg-mt-4"<?php echo $firstBackup ? '' : ' style="display: none;"'; ?>>
                         <!-- Hidden inputs for copy functionality -->
@@ -334,6 +334,11 @@ if (!$isDeveloperOrHigher) {
                                     <span class="wpstg-mr-3 wpstg-font-semibold wpstg-text-terminal-prompt">$</span>
                                     <span id="wpstg-cli-cmd-text"><?php echo esc_html($cmdRestoreMasked); ?></span>
                                 </code>
+                                <?php if (!$isPermanentBackupUrlOffered) : ?>
+                                    <button type="button" id="wpstg-cli-create-restore-link" class="wpstg-btn wpstg-btn-sm wpstg-btn-secondary wpstg-mt-3" style="display: none;">
+                                        <?php esc_html_e('Create restore link', 'wp-staging'); ?>
+                                    </button>
+                                <?php endif; ?>
 
                                 <!-- Divider -->
                                 <div class="wpstg-mt-3 wpstg-mb-1.5 wpstg-h-px wpstg-bg-terminal-border"></div>

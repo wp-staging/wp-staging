@@ -12,6 +12,7 @@ use WPStaging\Framework\Exceptions\IOException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\ThresholdException;
 
 use function WPStaging\functions\debug_log;
@@ -100,6 +101,7 @@ class BufferedCache extends AbstractCache
 
 
 
+
     public function append($value)
     {
         if (is_array($value)) {
@@ -109,7 +111,9 @@ class BufferedCache extends AbstractCache
  
         $file = new FileObject($this->filePath, FileObject::MODE_APPEND);
 
-        $writtenData = $file->fwriteSafe($value . "\n");
+        $writtenData = $this->writeOrFailOnFileSizeLimit(function () use ($file, $value) {
+            return $file->fwriteSafe($value . "\n");
+        });
 
         if ($writtenData === false) {
             debug_log("Could not write to file {$this->filePath} Data: {$value}");
@@ -129,12 +133,15 @@ class BufferedCache extends AbstractCache
 
 
 
+
     public function appendUnsafe(string $content): int
     {
  
         $file = new FileObject($this->filePath, FileObject::MODE_APPEND_AND_READ);
 
-        $writtenData = $file->fwrite($content);
+        $writtenData = $this->writeOrFailOnFileSizeLimit(function () use ($file, $content) {
+            return $file->fwrite($content);
+        });
 
         if ($writtenData === false) {
             debug_log("Could not write to file {$this->filePath} Data: {$content}");
@@ -260,6 +267,7 @@ class BufferedCache extends AbstractCache
         unlink($this->filePath);
         copy($this->filePath . 'tmp', $this->filePath);
     }
+
 
 
 
@@ -395,11 +403,14 @@ class BufferedCache extends AbstractCache
 
 
 
+
     public function save($value)
     {
         $file = new FileObject($this->filePath, FileObject::MODE_WRITE);
 
-        $writtenData = $file->fwriteSafe($value);
+        $writtenData = $this->writeOrFailOnFileSizeLimit(function () use ($file, $value) {
+            return $file->fwriteSafe($value);
+        });
 
         $file = null;
 
@@ -520,6 +531,7 @@ class BufferedCache extends AbstractCache
 
 
 
+
     private function stoppableAppendFile($source, $target, $offset)
     {
         $stats             = fstat($source);
@@ -539,7 +551,9 @@ class BufferedCache extends AbstractCache
                 throw new \RuntimeException('Could not read chunk from file');
             }
 
-            $bytesWrittenInThisRequest = fwrite($target, $chunk);
+            $bytesWrittenInThisRequest = $this->writeOrFailOnFileSizeLimit(function () use ($target, $chunk) {
+                return fwrite($target, $chunk);
+            });
 
  
             if ($bytesWrittenInThisRequest === false || ($bytesWrittenInThisRequest <= 0 && strlen($chunk) > 0)) {
@@ -555,5 +569,33 @@ class BufferedCache extends AbstractCache
         }
 
         return $bytesWrittenTotal;
+    }
+
+
+
+
+
+
+    private function writeOrFailOnFileSizeLimit(callable $write)
+    {
+        $limitReached = false;
+        set_error_handler(function ($severity, $message) use (&$limitReached) {
+            debug_log("Write notice on file {$this->filePath}: {$message}");
+            $limitReached = FileSizeLimitException::writeNoticeReportsFileSizeLimit($message);
+
+            return $limitReached;
+        });
+
+        try {
+            $written = $write();
+        } finally {
+            restore_error_handler();
+        }
+
+        if ($limitReached) {
+            throw FileSizeLimitException::forFile($this->filePath);
+        }
+
+        return $written;
     }
 }

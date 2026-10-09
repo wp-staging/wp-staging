@@ -27,6 +27,7 @@ use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
 use WPStaging\Backup\Dto\Service\ArchiverDto;
+use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\NotFinishedException;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Job\Exception\ThresholdException;
@@ -133,6 +134,8 @@ class FinalizeBackupTask extends BackupTask
         try {
             $this->addFilesIndex();
             $this->addBackupMetadata($archiverDto, $isUploadBackup);
+        } catch (FileSizeLimitException $e) {
+            throw $e;
         } catch (Exception $e) {
             $this->logger->critical(sprintf('Failed to create backup file: %s', $e->getMessage()));
             return $this->generateResponse(false);

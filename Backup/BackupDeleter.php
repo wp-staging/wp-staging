@@ -5,13 +5,23 @@ namespace WPStaging\Backup;
 use SplFileInfo;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Transfer\TransferSessionLock;
 use WPStaging\Backup\Utils\BackupPathResolver;
+use WPStaging\Framework\Facades\Hooks;
+
+use function WPStaging\functions\debug_log;
 
 
 
 
 class BackupDeleter
 {
+
+
+
+
+    const FILTER_BEFORE_BACKUP_DELETED = 'wpstg.backup.before_backup_deleted';
+
  
     protected $backupsFinder;
 
@@ -22,16 +32,17 @@ class BackupDeleter
     protected $backupPathResolver;
 
  
-    protected $errors = [];
+    protected $transferSessionLock;
 
  
-    protected $deletingAutomatedDatabaseOnlyBackup = false;
+    protected $errors = [];
 
-    public function __construct(BackupsFinder $backupsFinder, BackupMetadata $backupMetadata, BackupPathResolver $backupPathResolver)
+    public function __construct(BackupsFinder $backupsFinder, BackupMetadata $backupMetadata, BackupPathResolver $backupPathResolver, TransferSessionLock $transferSessionLock)
     {
-        $this->backupsFinder      = $backupsFinder;
-        $this->backupMetadata     = $backupMetadata;
-        $this->backupPathResolver = $backupPathResolver;
+        $this->backupsFinder       = $backupsFinder;
+        $this->backupMetadata      = $backupMetadata;
+        $this->backupPathResolver  = $backupPathResolver;
+        $this->transferSessionLock = $transferSessionLock;
     }
 
  
@@ -42,8 +53,7 @@ class BackupDeleter
 
     public function clearErrors()
     {
-        $this->errors                              = [];
-        $this->deletingAutomatedDatabaseOnlyBackup = false;
+        $this->errors = [];
     }
 
 
@@ -62,7 +72,6 @@ class BackupDeleter
     public function deleteAllAutomatedDbOnlyBackups()
     {
         $this->clearErrors();
-        $this->deletingAutomatedDatabaseOnlyBackup = true;
 
         foreach ($this->backupsFinder->findBackups() as $backup) {
             $metadata = $this->backupMetadata->hydrateByFilePath($backup->getRealPath());
@@ -136,19 +145,14 @@ class BackupDeleter
 
     public function deleteBackup($backup, $metadata = null)
     {
-        $additionalLog = '';
-        if ($this->deletingAutomatedDatabaseOnlyBackup) {
-            $additionalLog = 'database-only automated';
-        }
-
         if ($metadata === null) {
             $metadata = $this->backupMetadata->hydrateByFilePath($backup->getRealPath());
         }
 
         if (!$metadata->getIsMultipartBackup()) {
-            $deleted = unlink($backup->getRealPath());
-            if (!$deleted) {
-                $this->errors[] = sprintf(__('Unable to delete %s backup: %s', 'wp-staging'), $additionalLog, $backup->getFilename());
+            $failureReason = $this->deleteBackupFile($backup->getRealPath());
+            if ($failureReason !== '') {
+                $this->errors[] = $failureReason;
             }
 
             return;
@@ -165,10 +169,75 @@ class BackupDeleter
                 continue;
             }
 
-            $deleted = unlink($partPath);
-            if (!$deleted) {
-                $this->errors[] = sprintf(__('Unable to delete %s split backup part: %s', 'wp-staging'), $additionalLog, wp_basename($partPath));
+            $failureReason = $this->deleteBackupFile($partPath);
+            if ($failureReason !== '') {
+                $this->errors[] = $failureReason;
             }
         }
+    }
+
+ 
+    public function getDeletionBlockReason(string $backupPath): string
+    {
+        return (string)Hooks::applyFilters(self::FILTER_BEFORE_BACKUP_DELETED, '', $backupPath);
+    }
+
+
+
+
+
+
+
+    public function deleteBackupFile(string $backupPath): string
+    {
+        $lockKey = $this->getTransferLockKey($backupPath);
+
+        if (!$this->transferSessionLock->acquire($lockKey)) {
+            return __('Another request is working on this backup right now, so it was kept. Try again in a moment.', 'wp-staging');
+        }
+
+        try {
+            $blockReason = $this->getDeletionBlockReason($backupPath);
+            if ($blockReason !== '') {
+                return $blockReason;
+            }
+
+            if (!$this->unlinkBackupFileUnlessAlreadyGone($backupPath)) {
+                return sprintf(__('Could not delete %s. Maybe a permission issue?', 'wp-staging'), wp_basename($backupPath));
+            }
+
+            return '';
+        } finally {
+            $this->transferSessionLock->release($lockKey);
+        }
+    }
+
+ 
+    private function unlinkBackupFileUnlessAlreadyGone(string $backupPath): bool
+    {
+        clearstatcache(true, $backupPath);
+        if (!file_exists($backupPath)) {
+            return true;
+        }
+
+        set_error_handler(function ($severity, $message) {
+            debug_log('WP STAGING: ' . $message);
+
+            return true;
+        });
+
+        try {
+            return unlink($backupPath);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+ 
+    private function getTransferLockKey(string $backupPath): string
+    {
+        $realPath = realpath($backupPath);
+
+        return wp_normalize_path($realPath === false ? $backupPath : $realPath);
     }
 }

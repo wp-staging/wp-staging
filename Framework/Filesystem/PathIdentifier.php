@@ -173,6 +173,16 @@ class PathIdentifier
 
 
 
+    public function isSafeIdentifiablePath(string $identifiablePath): bool
+    {
+        return preg_match('/^wpstg_[acptmul]_/', $identifiablePath) === 1 && !$this->hasPathTraversal($identifiablePath);
+    }
+
+
+
+
+
+
     public function hasPathTraversal(string $identifiablePath): bool
     {
         $relativePath = $this->getPathWithoutIdentifier($identifiablePath);

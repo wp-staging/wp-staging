@@ -189,6 +189,12 @@ abstract class AbstractStagingSetup
         return false;
     }
 
+ 
+    public function isBlankSiteAllowed(): bool
+    {
+        return false;
+    }
+
     abstract public function renderNetworkCloneSettings();
 
     abstract public function getAdvanceSettingsTitle(): string;

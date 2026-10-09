@@ -34,7 +34,7 @@ class JobRestoreDataDto extends JobDataDto
     protected $extractorMetadataIndexPosition = 0;
 
  
-    protected $tmpDatabasePrefix;
+    protected $tmpDatabasePrefix = '';
 
  
     protected $tableToRestore;
