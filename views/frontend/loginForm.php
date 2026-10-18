@@ -7,6 +7,7 @@
  * @var string $notice
  * @var array $args
  * @var bool $isCustomLogin2faEnabled
+ * @var bool $isWordfenceRecaptchaEnforcedOnLogin
  */
 
 use WPStaging\Core\WPStaging;
@@ -36,46 +37,61 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
                 ?>
             </p>
         <?php endif; ?>
-        <div class="form-group login-username">
-            <label for="<?php echo esc_attr($args['id_username']); ?>"><?php echo esc_html($args['label_username']); ?></label>
-            <input type="text" name="wpstg-username" id="<?php echo esc_attr($args['id_username']); ?>" class="input form-control" value="<?php echo esc_attr($args['value_username']); ?>" size="20" />
-        </div>
-        <div class="form-group login-password">
-            <label for="<?php echo esc_attr($args['id_password']); ?>"><?php echo esc_html($args['label_password']); ?></label>
-            <input type="password" name="wpstg-pass" id="<?php echo esc_attr($args['id_password']); ?>" class="input form-control" value="" size="20" />
-        </div>
+        <?php if (!empty($isWordfenceRecaptchaEnforcedOnLogin)) : ?>
+            <div class="wpstg-alert wpstg-alert-info wpstg-u-text-justify">
+                <p>
+                    <?php
+                    esc_html_e('This staging site is protected by Wordfence reCAPTCHA. Please use the button below to log in through the WordPress login form.', 'wp-staging');
+                    ?>
+                </p>
+            </div>
+            <div class="login-submit">
+                <a href="<?php echo esc_url(wp_login_url($args['redirect'])); ?>" class="btn" style="display:block;text-align:center;text-decoration:none;line-height:36px;">
+                    <?php esc_html_e('Go to WordPress Login', 'wp-staging'); ?>
+                </a>
+            </div>
+        <?php else : ?>
+            <div class="form-group login-username">
+                <label for="<?php echo esc_attr($args['id_username']); ?>"><?php echo esc_html($args['label_username']); ?></label>
+                <input type="text" name="wpstg-username" id="<?php echo esc_attr($args['id_username']); ?>" class="input form-control" value="<?php echo esc_attr($args['value_username']); ?>" size="20" />
+            </div>
+            <div class="form-group login-password">
+                <label for="<?php echo esc_attr($args['id_password']); ?>"><?php echo esc_html($args['label_password']); ?></label>
+                <input type="password" name="wpstg-pass" id="<?php echo esc_attr($args['id_password']); ?>" class="input form-control" value="" size="20" />
+            </div>
 
-        <?php if ($args['remember']) { ?>
-            <div class="form-group login-remember"><label><input name="rememberme" type="checkbox" id="<?php echo esc_attr($args['id_remember']); ?>" value="forever"<?php echo ( $args['value_remember'] ? ' checked="checked"' : '' ); ?> /> <span><?php echo esc_html($args['label_remember']); ?></span></label></div>
-        <?php } ?>
+            <?php if ($args['remember']) { ?>
+                <div class="form-group login-remember"><label><input name="rememberme" type="checkbox" id="<?php echo esc_attr($args['id_remember']); ?>" value="forever"<?php echo ( $args['value_remember'] ? ' checked="checked"' : '' ); ?> /> <span><?php echo esc_html($args['label_remember']); ?></span></label></div>
+            <?php } ?>
 
-        <div class="login-submit">
-            <button type="submit" name="wpstg-submit" id="<?php echo esc_attr($args['id_submit']); ?>" class="btn" value="<?php echo esc_attr($args['label_log_in']); ?>"><?php esc_html_e('Login', 'wp-staging') ?></button>
-            <input type="hidden" name="redirect_to" value="<?php echo esc_url($args['redirect']); ?>" />
-        </div>
-        <?php if (!$isLoginCredentialsVerified) : ?>
-            <p class="wpstg-default-login-link">
-                <?php
-                echo sprintf(
-                    esc_html__('If login is not possible, please use the %s.', 'wp-staging'),
-                    '<a href="' . esc_url(wp_login_url()) . '">' . esc_html__('default login form', 'wp-staging') . '</a>'
-                );
-                ?>
-            </p>
-        <?php endif; ?>
-        <?php if ($isLoginCredentialsVerified) : ?>
-            <p class="error-msg">
-                <?php
+            <div class="login-submit">
+                <button type="submit" name="wpstg-submit" id="<?php echo esc_attr($args['id_submit']); ?>" class="btn" value="<?php echo esc_attr($args['label_log_in']); ?>"><?php esc_html_e('Login', 'wp-staging') ?></button>
+                <input type="hidden" name="redirect_to" value="<?php echo esc_url($args['redirect']); ?>" />
+            </div>
+            <?php if (!$isLoginCredentialsVerified) : ?>
+                <p class="wpstg-default-login-link">
+                    <?php
                     echo sprintf(
-                        esc_html__('Login not possible! it might happen due to using a security plugin, having OTP or 2FA authentication active, Please use the %s instead.', 'wp-staging'),
+                        esc_html__('If login is not possible, please use the %s.', 'wp-staging'),
                         '<a href="' . esc_url(wp_login_url()) . '">' . esc_html__('default login form', 'wp-staging') . '</a>'
                     );
-                ?>
-            </p>
+                    ?>
+                </p>
+            <?php endif; ?>
+            <?php if ($isLoginCredentialsVerified) : ?>
+                <p class="error-msg">
+                    <?php
+                        echo sprintf(
+                            esc_html__('Login not possible! it might happen due to using a security plugin, having OTP or 2FA authentication active, Please use the %s instead.', 'wp-staging'),
+                            '<a href="' . esc_url(wp_login_url()) . '">' . esc_html__('default login form', 'wp-staging') . '</a>'
+                        );
+                    ?>
+                </p>
+            <?php endif; ?>
+            <div class="password-lost">
+                <a href="<?php echo esc_url($args['lost_password_url']); ?>"><?php esc_html_e('Lost your password?', 'wp-staging') ?></a>
+            </div>
         <?php endif; ?>
-        <div class="password-lost">
-            <a href="<?php echo esc_url($args['lost_password_url']); ?>"><?php esc_html_e('Lost your password?', 'wp-staging') ?></a>
-        </div>
 
         <?php if (WPStaging::isBasic()) { ?>
             <div class="wpstg-upsell-link">
@@ -96,7 +112,7 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
 
         <?php
         if ($isCustomLogin2faEnabled) {
-            include_once(WPSTG_VIEWS_DIR . 'frontend/wordfence-2fa.php');
+            include(WPSTG_VIEWS_DIR . 'frontend/wordfence-2fa.php');
         }
         ?>
     </form>

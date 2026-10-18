@@ -10,7 +10,9 @@ use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\Database\ShortNameGenerator;
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Framework\Adapter\Database\SqliteAdapter;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
+use WPStaging\Framework\Database\Exporter\AbstractExporter;
 use WPStaging\Framework\Database\TableDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Facades\Hooks;
@@ -122,6 +124,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->cannotRestoreBackupCreatedBeforeMVP();
             $this->cannotRestoreIfInvalidSiteOrHomeUrl();
             $this->cannotRestoreCompressedBackup();
+            $this->cannotRestoreCaseCollidingTables();
         } catch (ThresholdException $e) {
             $this->logger->info($e->getMessage());
 
@@ -227,6 +230,49 @@ class RestoreRequirementsCheckTask extends RestoreTask
         if (($basePrefix === $this->jobDataDto->getTmpDatabasePrefix() || $basePrefix === DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP)) {
             throw new RuntimeException("Can not proceed. The production site database table prefix uses \"$basePrefix\" which is used for temporary tables by WP STAGING. Please, feel free to reach out to WP STAGING support for assistance.");
         }
+    }
+
+
+
+
+
+
+
+    protected function cannotRestoreCaseCollidingTables()
+    {
+        $backupMetadata = $this->jobDataDto->getBackupMetadata();
+        $tables         = $backupMetadata->getIsExportingDatabase() && !$this->isBackupPartSkipped(PartIdentifier::DATABASE_PART_IDENTIFIER) ? $backupMetadata->getDatabaseTables() : [];
+        $database       = $this->tableService->getDatabase();
+        if (empty($tables) || !$database->foldsTableNameCase()) {
+            return;
+        }
+
+        if (!$database->getClient() instanceof SqliteAdapter && $database->getLowerTablesNameSettings() === '0') {
+            return;
+        }
+
+        $tableNamesByFoldedName = [];
+        foreach ($tables as $table) {
+            $tableName = str_replace(AbstractExporter::TMP_PREFIX_PLACEHOLDER, (string)$backupMetadata->getPrefix(), $table['name']);
+            $tableNamesByFoldedName[strtolower($tableName)][$tableName] = $tableName;
+        }
+
+        $conflicts = [];
+        foreach ($tableNamesByFoldedName as $tableNames) {
+            if (count($tableNames) > 1) {
+                $conflicts[] = implode(' / ', $tableNames);
+            }
+        }
+
+        if ($conflicts === []) {
+            return;
+        }
+
+        throw new RuntimeException(sprintf(
+            /* translators: %s: groups of table names that differ only by letter case, e.g. "wp_wfConfig / wp_wfconfig" */
+            __('The database restore cannot start. The destination database treats table names as case-insensitive, but the backup contains tables whose names differ only by uppercase and lowercase letters: %s. Rename or remove the extra tables on the source site until every table name is unique regardless of case, then create a new backup or sync again.', 'wp-staging'),
+            implode('; ', $conflicts)
+        ));
     }
 
 

@@ -2,41 +2,19 @@
 
 namespace WPStaging\Staging\Jobs;
 
-use WPStaging\Framework\Analytics\ErrorCode;
-use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
 use WPStaging\Staging\Tasks\StagingSite\CleanupStagingFilesTask;
 use WPStaging\Staging\Tasks\StagingSite\CleanupStagingTablesTask;
 use WPStaging\Staging\Tasks\StagingSiteDelete\FinishStagingSiteDeleteTask;
 
-class StagingSiteDelete extends AbstractJob
+class StagingSiteDelete extends AbstractStagingSiteJob
 {
  
     protected $jobDataDto;
 
- 
-    private $tasks = [];
-
     public static function getJobName()
     {
         return 'staging_site_delete';
-    }
-
-    protected function getJobTasks()
-    {
-        return $this->tasks;
-    }
-
-    protected function execute()
-    {
-        try {
-            $response = $this->getResponse($this->currentTask->execute());
-        } catch (\Exception $e) {
-            $this->currentTask->getLogger()->critical($e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
-            $response = $this->getResponse($this->currentTask->generateResponse(false));
-        }
-
-        return $response;
     }
 
     protected function init()

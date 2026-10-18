@@ -315,6 +315,8 @@ trait EventLoggerTrait
             'backup_upload' => EventLoggerConst::PROCESS_PREFIX_BACKUP_UPLOAD,
             'restore'       => EventLoggerConst::PROCESS_PREFIX_RESTORE,
             'clone'         => EventLoggerConst::PROCESS_PREFIX_CLONE,
+            'clone_update'  => EventLoggerConst::PROCESS_PREFIX_CLONE_UPDATE,
+            'clone_reset'   => EventLoggerConst::PROCESS_PREFIX_CLONE_RESET,
             'push'          => EventLoggerConst::PROCESS_PREFIX_PUSH,
         ];
     }

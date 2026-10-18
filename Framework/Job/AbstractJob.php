@@ -18,6 +18,7 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Job\Dto\AbstractDto;
 use WPStaging\Framework\Job\Dto\JobDataDto;
+use WPStaging\Framework\Job\Dto\JobCancelDataDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
@@ -360,7 +361,11 @@ abstract class AbstractJob implements ShutdownableInterface
 
     public function getTransientCache(): JobTransientCache
     {
-        return $this->jobTransientCache;
+        $jobId = $this->jobDataDto instanceof JobCancelDataDto
+            ? $this->jobDataDto->getJobIdBeingCancelled()
+            : ($this->jobDataDto->hasId() ? (string)$this->jobDataDto->getId() : '');
+
+        return $this->jobTransientCache->forJob($jobId, $this->isCancelJob ? '' : $this->ownerJobId);
     }
 
 

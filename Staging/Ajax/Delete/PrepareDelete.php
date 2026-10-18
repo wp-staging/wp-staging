@@ -5,7 +5,6 @@ namespace WPStaging\Staging\Ajax\Delete;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
-use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
 use WPStaging\Staging\Jobs\StagingSiteDelete;
@@ -17,31 +16,6 @@ class PrepareDelete extends PrepareJob
 
  
     private $jobDelete;
-
-
-
-
-
-    public function ajaxPrepare($data)
-    {
-        if (!$this->auth->isAuthenticatedRequest()) {
-            wp_send_json_error(null, 401);
-        }
-
-        try {
-            $this->processLock->lockProcess();
-        } catch (ProcessLockedException $e) {
-            wp_send_json_error($e->getMessage(), $e->getCode());
-        }
-
-        $response = $this->prepare($data);
-
-        if ($response instanceof \WP_Error) {
-            wp_send_json_error($response->get_error_message(), $response->get_error_code());
-        }
-
-        wp_send_json_success();
-    }
 
 
 

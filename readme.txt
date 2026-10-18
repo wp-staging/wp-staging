@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.17.0
+Stable tag: 4.18.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,96 +283,17 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.17.0 =
-* New: Add secure transfer sessions for backup downloads. Backups are no longer offered as permanent public URLs. Instead Download Backup and Share Backup Link create a short-lived, tokenized transfer link on click that the webserver serves statically, so PHP never streams the backup and large downloads can not run into PHP timeouts. #5449
-* New: Protect the permanent backup directory against direct HTTP access on Apache and IIS, and add a backup folder security self-test with a small, expandable notice that says what to ask the hosting provider when the folder is still reachable. #5449
-* Enh: Advertise the Pro auto login feature below the button that opens a new staging site in the free version. #6360
-* Enh: Ask OneDrive for a whole page of entries when listing backups, instead of leaving Microsoft Graph on its default of 200 per request. (Pro) #5913
-* Enh: Limit "Create Blank WP Site" to the Business plan and above. (Pro) #6725
-* Enh: Show the ten newest remote backups first and keep the rest behind a "Show more" button, so a large remote backup folder does not slow the backup list down. (Pro) #5913
-* Fix: A backup no longer fails when a theme, plugin or media file has a modification date before 1970 or after 2106. #6582
-* Fix: A second cancellation that starts while one is still running now waits for it instead of stopping it silently. #6623
-* Fix: Background jobs could fail to find their queue table on sites that use SQLite. #6756
-* Fix: Clone the subsite that source-blog-id names in the WP-CLI staging-site-create command instead of the current blog. (Pro) #6268
-* Fix: Correct the .htaccess rewrite base for multisite network clones. (Pro) #6137
-* Fix: Delete the Remote Sync settings when WP Staging Pro is uninstalled. (Pro) #6764
-* Fix: Finish deleting a split backup once every part was deleted, instead of ending the request without a reply. (Pro) #6784
-* Fix: Finish the remote backup list when one of several storages answers with an error, instead of leaving the loading indicator running and the "No remote Backups found" message out of date. (Pro) #5913
-* Fix: Hash the whole backup once instead of twice when a remote upload checks a file already on the remote storage. (Pro) #6498
-* Fix: Include Remote Sync logs and timestamps in bundled downloads. (Pro) #6640
-* Fix: Keep bundled log downloads inside the 14-day retention window instead of including logs of any age. #6713
-* Fix: Keep every job log entry on one line, so a line break in an error message can no longer forge log entries. #6758
-* Fix: Keep passwords out of corrupted staging sites reports and remove temporary report files. #6131
-* Fix: Keep storage access tokens out of the request error that reaches the job log and the debug log. (Pro) #6631
-* Fix: Keep the live site's database prefix while listing a push's tables, so the rest of that request no longer reads or writes the staging site's tables. (Pro) #6772
-* Fix: Keep the run day and the missed-run record of a backup plan when only its retention is changed. (Pro) #6479
-* Fix: Keep the staging creation screen open after pressing Stop instead of reporting the job as cancelled from another page or opening a status error popup. #6455
-* Fix: Let the Delete wpstg-restore.php button remove the restore tool without a Developer or Agency license. (Pro) #6706
-* Fix: Make wp wpstg status report running, finished and failed jobs correctly. (Pro) #6787
-* Fix: Name the failed backup in upload failure reports. (Pro) #6551
-* Fix: Offer the staging site's login page instead of a session-expired error when the license is not active. (Pro) #6708
-* Fix: Open the backup explorer on backups with many files instead of failing with an HTTP 500 memory error. #6667
-* Fix: Post every failed scheduled backup upload to Slack, a repeated one at most once per hour, and send Slack error reports even with error emails off. (Pro) #6551
-* Fix: Preserve clone settings when continuing past the database grant warning. (Pro) #6712
-* Fix: Preserve production wpstg_queue and wpstg_settings during Legacy Push. (Pro) #6693
-* Fix: Purge the LiteSpeed page cache after a restore, also when the restore replaced or deactivated the LiteSpeed Cache plugin. #6779
-* Fix: Read every page of the backup listing on Google Drive, OneDrive and the S3 storages, so the backup list and retention see every stored backup. (Pro) #5913
-* Fix: Reading and checking plugin settings could hang or come back empty on sites that use SQLite. #6751
-* Fix: Refuse a subsite backup whose blog ID names no subsite of the current network, or names one that is archived, suspended or deleted. #6403
-* Fix: Remote Sync push no longer logs a setTmpDatabasePrefix() TypeError on every queue tick. (Pro) #6773
-* Fix: Repair a missing queue column when the stored schema version is current. #6693
-* Fix: Report a backup file that reached the server's file size limit as such, with what to do about it, instead of as a full disk. #6862
-* Fix: Retry a scheduled backup report email that could not be sent. #6551
-* Fix: Retry opening the Google Drive upload session after a network error instead of cancelling the upload. (Pro) #6681
-* Fix: Run the optimizer preflight with the current mu-plugin and retry unverified checks. #5659
-* Fix: Send identical backup report emails at most once per hour. #6551
-* Fix: Show an Activate License button in the Pro header when the site is not activated on its license. (Pro) #6707
-* Fix: Show why Run Now could not start a backup plan, and mark the plan's last run as failed when its subsite backup is refused. #6403
-* Fix: Skip hashing the whole backup when a remote upload finds the remote copy at a different size. (Pro) #6823
-* Fix: Stop PHP 8.4 deprecation notice in the search & replace step of staging site cloning and pushing. #5623
-* Fix: Stop a killed backup request from adding the same files twice, which threw finished backups away at the file-count check. #6578
-* Fix: Stop a remote backup upload when a wrong-sized file of the same name cannot be deleted first, and retry a pCloud deletion that timed out. (Pro) #6496
-* Fix: Stop a retried Next-Gen push, or staging site creation, update or reset, from replaying database rows and failing with a duplicate PRIMARY key. #6577
-* Fix: Stop a second "Success" dialog from covering the next dialog opened after creating a staging site. #6664
-* Fix: Stop duplicate PHP time-limit warnings for successful scheduled backups. #6551
-* Fix: Stop expired temporary-login records from logging out an existing administrator who signed in with their password. (Pro) #6840
-* Fix: Stop reporting a backup as failed when its status check fails right after pressing Stop. #6455
-* Fix: Stop the backup of a subsite from silently backing up the current blog when the blog ID cannot be resolved. #6403
-* Fix: Stop two simultaneous FTP / SFTP profile saves from both claiming the same folder. (Pro) #6559
-* Fix: The Upload Backup to Cloud and Create Backup modals no longer reopen by themselves on a later visit to Backups after connecting Google Drive with your own API credentials. (Pro) #6139
-* Fix: Warn when a backup listing could not be read in full on Google Drive, OneDrive, Dropbox or any of the S3 storages, instead of showing a short list as the whole folder. (Pro) #5913
-* Fix: Write database passwords, users and names containing an apostrophe, double quote or backslash correctly to wp-config.php in the standalone restore tool. (Pro) #6794
-* Dev: Add the Pro 6.16.0 features to the Free vs Pro comparison. #6716
-* Dev: Check the backup cancel and error modals themselves instead of the whole page, which now quotes the cancel modal title in the newsfeed. #6715
-* Dev: Confirm each dummy backup in the cloud storage integration tests through the listing, and upload it again when a transient network error lost it. #6624
-* Dev: Delete the OneDrive integration test folder after each run instead of leaving it in the shared account. #6682
-* Dev: Document which existing backup, Remote Sync and CLI parts the planned hosted deploy service can reuse. #6744
-* Dev: Drop the second approval and let two clean role reviews make a pull request ready to merge. #6736
-* Dev: Expect a backup cancel to end as cancelled when a status check fails during it. #6728
-* Dev: Find a fix already in flight under another issue before an agent works on one. #6800
-* Dev: Hand the dismissal of a changes-requested review to the author or the project owner, since agents are denied it. #6759
-* Dev: Keep the live license check out of the Remote Sync pull database spec. #6711
-* Dev: Let a worktree run a Playwright spec that reads the database. #6368
-* Dev: Let agents post review thread replies through `dev/ci-watch.sh reply`. #6748
-* Dev: Let the lifecycle controller accept a Codex review in place of Copilot's. #6868
-* Dev: Let the lifecycle controller act on pull requests whose mergeability is still being computed. #6798
-* Dev: Lower the CPU each E2E test spends on screen recording and looping animations. #6695
-* Dev: Make the WP-CLI staging-site polling example stop when the job finishes or fails. #6785
-* Dev: Make the fatal-error guard detect fatals in hidden markup. #6505
-* Dev: Record migration as a Pro-only feature in the licence feature matrix. #6788
-* Dev: Resume an issue with make worktree from its branch on origin instead of starting a second branch from master. #6803
-* Dev: Retry WordPress plugin and theme downloads during site setup. #5303
-* Dev: Run the release pipeline on the branch it was dispatched on instead of one named after the current month. #6692
-* Dev: Search for an existing issue before an agent opens a new one. #6503
-* Dev: Settle a pull request in one review round: a push after a role review no longer asks its reviewer again. #6657
-* Dev: Shard Pro Single Staging and Pro Single Backup in the release suite's PHP 7.4 gate. #6698
-* Dev: Start the full PHP matrix from the lifecycle controller once the review is settled. #6739
-* Dev: Start the lifecycle controller after a role review is posted, so the review-role labels come off at once. #6832
-* Dev: Stop StagingSiteHttpDetectorTest failing with 301 instead of 300 when a second passes between scheduling two staging sites. #6762
-* Dev: Stop the lifecycle controller from holding back a pull request that is only behind master. #6790
-* Dev: Tell the lifecycle controller when a Fast tests or E2E run it started has finished, instead of waiting for its two-hourly sweep. #6814
-* Dev: Turn off wp-browser's temporary-table rewrite in four unit test classes that need real tables. #6763
-* Dev: Write owner decision requests on pull requests in product terms, without code names. #6804
+= 4.18.0 =
+* Enh: Apply security hardening. Updating is strongly recommended. #7051
+* Enh: Back up large databases much faster. #7011
+* Fix: A backup restore no longer stops when the database is briefly unreachable. #5561
+* Fix: Backup plans keep their own schedule when edited, so saving one unchanged no longer makes it run hourly. (Pro) #6473
+* Fix: Create staging sites inside wp-content when the site root is not writable. #6846
+* Fix: Keep live media files intact when updating or pushing a Next-Gen staging site with symlinked uploads. #7017
+* Fix: Large backups uploaded to Dropbox no longer stay at 99%. (Pro) #6986
+* Fix: Long backup names and notes in Japanese, Chinese, Cyrillic or emoji no longer break the backup. #7014
+* Fix: Stop a push when its safety backup fails, instead of pushing without a restore point. (Pro) #6903
+*  Plus 40 more fixes. #7163
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

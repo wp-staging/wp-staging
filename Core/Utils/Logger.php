@@ -666,7 +666,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
                 continue;
             }
 
-            if (in_array($key, Providers::SENSITIVE_OPTION_KEYS, true) || !is_scalar($value)) {
+            if (Providers::isSensitiveOptionKey((string)$key) || !is_scalar($value)) {
                 $this->add(sprintf('- %s : %s', ucfirst($key), (empty($value) ? 'Not Set' : '***********')), Logger::TYPE_INFO_SUB);
                 continue;
             }

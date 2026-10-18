@@ -107,7 +107,7 @@ use WPStaging\Framework\Language\Language;
                 <?php else : ?>
                     <?php
                     if ($hasActiveLicense) {
-                        $upgradeUrl    = admin_url('admin.php?page=wpstg-license');
+                        $upgradeUrl    = WPStaging::make(\WPStaging\Framework\Notices\CliIntegrationNotice::class)->getLicensePageUrl();
                         $isExternalUrl = false;
                     } else {
                         $upgradeUrl    = \WPStaging\Framework\Language\Language::localizeCheckoutUrl('https://wp-staging.com/checkout/?edd_action=add_to_cart&download_id=11&edd_options[price_id]=13');

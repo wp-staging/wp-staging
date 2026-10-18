@@ -4,6 +4,7 @@ namespace WPStaging\Framework;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Logger\SseEventCache;
 
@@ -110,10 +111,12 @@ class ErrorHandler
 
     private function logSseEvent(array $data, bool $isMemoryExhaust = true)
     {
+        $jobDataDto = WPStaging::make(JobDataDto::class);
+        if (!$jobDataDto->hasId()) {
+            return;
+        }
 
-
-
-        $jobTransientCache = WPStaging::make(JobTransientCache::class);
+        $jobTransientCache = WPStaging::make(JobTransientCache::class)->forJob((string)$jobDataDto->getId());
 
         $jobId = $jobTransientCache->getJobId();
         if (empty($jobId)) {

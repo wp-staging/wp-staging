@@ -13,6 +13,8 @@ use WPStaging\Framework\Utils\Sanitize;
 
 class Edit extends AbstractTemplateComponent
 {
+    const MAX_SIZE_WRITE_ATTEMPTS = 10;
+
  
     private $backupMetadataEditor;
 
@@ -49,13 +51,13 @@ class Edit extends AbstractTemplateComponent
 
         $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : 'Backup';
 
-        $name = substr(sanitize_text_field(html_entity_decode($name)), 0, 100);
+        $name = mb_substr(sanitize_text_field(html_entity_decode($name)), 0, 100);
         $name = htmlentities($name, ENT_QUOTES);
         $name = str_replace('\\\'', '\'', $name);
         $name = str_replace('\\\"', '\"', $name);
 
         $notes = isset($_POST['notes']) ? sanitize_textarea_field($_POST['notes']) : '';
-        $notes = substr($notes, 0, 1000);
+        $notes = mb_substr($notes, 0, 1000);
 
         if (strlen($md5) !== 32) {
             wp_send_json([
@@ -86,28 +88,15 @@ class Edit extends AbstractTemplateComponent
                     $file     = new FileObject($backup->getPathname(), FileObject::MODE_APPEND_AND_READ);
                     $metaData = (new BackupMetadata())->hydrateByFile($file);
 
-                    $increment = strlen($name) + strlen($notes);
-
                     if ($metaData->getIsMultipartBackup()) {
-                        $this->updateBackupParts($metaData, $name, $notes, $increment, $backup->getFilename());
+                        $this->updateBackupParts($metaData, $name, $notes, $backup->getFilename());
                         return;
                     }
 
-                    $oldNote       = $metaData->getNote();
-                    $oldNoteLength = 2; 
-                    if ($oldNote !== null) {
-                        $oldNoteLength = strlen($oldNote);
-                    }
-
-                    $backupSize = $metaData->getBackupSize();
-                    $backupSize = $backupSize + $increment - strlen($metaData->getName()) - $oldNoteLength;
-                    $backupSize = $backupSize - $this->backupMetadataEditor->getLineTerminatorOverhead($file);
-
                     $metaData->setName($name);
                     $metaData->setNote($notes);
-                    $metaData->setBackupSize($backupSize);
 
-                    $this->backupMetadataEditor->setBackupMetadata($file, $metaData);
+                    $this->writeMetadataUntilSizesHold([['file' => $file, 'metadata' => $metaData]]);
                 } catch (\Exception $e) {
                     wp_send_json([
                         'error'   => true,
@@ -127,10 +116,8 @@ class Edit extends AbstractTemplateComponent
 
 
 
-
-    protected function updateBackupParts($metaData, $name, $notes, $incrementSize, $backupFilename)
+    protected function updateBackupParts($metaData, $name, $notes, $backupFilename)
     {
-        $backupSize  = 0;
         $backupParts = [];
         foreach ($metaData->getMultipartMetadata()->getBackupParts() as $part) {
             $backupPart = $this->backupPathResolver->resolveBackupPartPath($part, $backupFilename);
@@ -140,36 +127,56 @@ class Edit extends AbstractTemplateComponent
 
             $partFile     = new FileObject($backupPart, FileObject::MODE_APPEND_AND_READ);
             $partMetadata = (new BackupMetadata())->hydrateByFile($partFile);
-            $partSize     = filesize($backupPart);
+            $partMetadata->setName($name);
+            $partMetadata->setNote($notes);
 
-            $oldNote       = $partMetadata->getNote();
-            $oldNoteLength = 2;
-            if ($oldNote !== null) {
-                $oldNoteLength = strlen($oldNote);
-            }
-
-            $partSize = $partSize + $incrementSize - strlen($partMetadata->getName()) - $oldNoteLength;
-            $partSize = $partSize - $this->backupMetadataEditor->getLineTerminatorOverhead($partFile);
-            $backupSize += $partSize;
             $backupParts[] = [
-                'metadata' => $partMetadata,
                 'file'     => $partFile,
-                'size'     => $partSize,
+                'metadata' => $partMetadata,
             ];
         }
 
-        foreach ($backupParts as $part) {
- 
-            $partMetadata = $part['metadata'];
-            $partMetadata->setName($name);
-            $partMetadata->setNote($notes);
-            $partMetadata->setBackupSize($backupSize);
+        $this->writeMetadataUntilSizesHold($backupParts);
+    }
 
-            $multipartMetadata = $partMetadata->getMultipartMetadata();
-            $multipartMetadata->setPartSize($part['size']);
-            $partMetadata->setMultipartMetadata($multipartMetadata);
 
-            $this->backupMetadataEditor->setBackupMetadata($part['file'], $partMetadata);
+
+
+
+
+
+
+    private function writeMetadataUntilSizesHold(array $backupFiles)
+    {
+        $sizes = [];
+        foreach ($backupFiles as $index => $backupFile) {
+            $sizes[$index] = (int)filesize($backupFile['file']->getPathname());
         }
+
+        for ($attempt = 0; $attempt < self::MAX_SIZE_WRITE_ATTEMPTS; $attempt++) {
+            $measured = [];
+            foreach ($backupFiles as $index => $backupFile) {
+ 
+                $metadata = $backupFile['metadata'];
+                $metadata->setBackupSize($metadata->getIsMultipartBackup() ? array_sum($sizes) : $sizes[$index]);
+                if ($metadata->getIsMultipartBackup()) {
+                    $multipartMetadata = $metadata->getMultipartMetadata();
+                    $multipartMetadata->setPartSize($sizes[$index]);
+                    $metadata->setMultipartMetadata($multipartMetadata);
+                }
+
+                $this->backupMetadataEditor->setBackupMetadata($backupFile['file'], $metadata);
+                clearstatcache(true, $backupFile['file']->getPathname());
+                $measured[$index] = (int)filesize($backupFile['file']->getPathname());
+            }
+
+            if ($measured === $sizes) {
+                return;
+            }
+
+            $sizes = $measured;
+        }
+
+        throw new \RuntimeException('Cannot determine the size to record in the backup metadata.');
     }
 }

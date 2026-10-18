@@ -32,6 +32,7 @@ use WPStaging\Staging\Jobs\StagingSiteDelete;
 use WPStaging\Staging\Jobs\StagingSiteReset;
 use WPStaging\Staging\Jobs\StagingSiteUpdate;
 use WPStaging\Staging\Tasks\StagingSite\CleanupStagingTablesTask;
+use WPStaging\Staging\Tasks\StagingSiteReset\ResetStagingTablesTask;
 
 
 
@@ -57,6 +58,10 @@ class StagingServiceProvider extends FeatureServiceProvider
                 ->give(StagingSiteJobsDataDto::class);
 
         $this->container->when(CleanupStagingTablesTask::class)
+                ->needs(DatabaseInterface::class)
+                ->give(Database::class);
+
+        $this->container->when(ResetStagingTablesTask::class)
                 ->needs(DatabaseInterface::class)
                 ->give(Database::class);
     }

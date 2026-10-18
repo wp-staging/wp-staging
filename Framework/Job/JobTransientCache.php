@@ -167,6 +167,22 @@ class JobTransientCache
         self::JOB_TYPE_REMOTE_UPLOAD,
     ];
 
+ 
+    private $expectedJobId = null;
+
+ 
+    private $expectedQueueId = '';
+
+ 
+    public function forJob(string $jobId, string $queueId = ''): self
+    {
+        $cache = clone $this;
+        $cache->expectedJobId = $jobId === '' && $queueId !== '' ? null : $jobId;
+        $cache->expectedQueueId = $queueId;
+
+        return $cache;
+    }
+
 
 
 
@@ -267,6 +283,7 @@ class JobTransientCache
 
     public function getJob(bool $fresh = false)
     {
+        $fresh = $fresh || $this->expectedJobId !== null || $this->expectedQueueId !== '';
         if ($fresh && !wp_using_ext_object_cache()) {
             wp_cache_delete('_transient_' . self::TRANSIENT_CURRENT_JOB, 'options');
             wp_cache_delete('_transient_timeout_' . self::TRANSIENT_CURRENT_JOB, 'options');
@@ -277,6 +294,15 @@ class JobTransientCache
             ? wp_cache_get(self::TRANSIENT_CURRENT_JOB, 'transient', true)
             : get_transient(self::TRANSIENT_CURRENT_JOB);
         if (empty($jobData['jobId'])) {
+            return null;
+        }
+
+        if ($this->expectedJobId !== null && $this->expectedJobId !== (string)$jobData['jobId']) {
+            return null;
+        }
+
+        $queueId = (string)($jobData['queueId'] ?? '');
+        if ($this->expectedQueueId !== '' && $this->expectedQueueId !== $queueId && ($queueId !== '' || $this->expectedJobId === null)) {
             return null;
         }
 
@@ -412,7 +438,7 @@ class JobTransientCache
 
     private function stopJob(string $status, string $title = '', string $message = '', string $severity = '', array $data = [])
     {
-        $jobData = $this->getJob();
+        $jobData = $this->getJob(true);
         if ($jobData === null) {
             return;
         }

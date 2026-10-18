@@ -209,7 +209,7 @@ if (!function_exists('wpstgShouldSkipBootstrap')) {
         }
 
         if (wpstgIsAdminActionRequest($requestUri)) {
-            return !wpstgIsPluginAction($action);
+            return !in_array($action, ['update-plugin', 'install-plugin', 'update-theme', 'install-theme'], true);
         }
 
         if (is_admin()) {

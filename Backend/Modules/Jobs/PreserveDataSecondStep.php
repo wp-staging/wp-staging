@@ -111,9 +111,6 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
  
-        $this->preserveStagingOption("wpstg_login_link_settings", $this->preservedData->loginLinkSettings, 'login settings');
-
- 
         $this->updateCloneOptions();
         $this->preserveStagingOption(CloneOptions::WPSTG_CLONE_SETTINGS_KEY, $this->preservedData->cloneOptions, 'clone options');
 

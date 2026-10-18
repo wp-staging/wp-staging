@@ -54,6 +54,7 @@ class I18n
             'select_all_tables'                                   => esc_html__('Select all tables', 'wp-staging'),
             'select_wordpress_tables'                             => esc_html__('Select WordPress tables', 'wp-staging'),
             'something_went_wrong'                                => esc_html__('Something went wrong', 'wp-staging'),
+            'job_status_checks_stopped'                           => esc_html__('Status checks have stopped. The job keeps running and still reports its progress.', 'wp-staging'),
             /* translators: {datetime} is replaced with the formatted expiry date of the temporary download link. */
             'transfer_available_until'                            => esc_html__('Link expires on {datetime}.', 'wp-staging'),
             'cli_restore_link_preparing'                          => esc_html__('Creating a temporary link…', 'wp-staging'),
@@ -541,6 +542,8 @@ class I18n
             ],
             'backup_manage_schedules'                             => [
                 'show_alert_for_basic_alert'    => sprintf(esc_html__('Please %s to edit existing backup plans. You can delete this plan and create a new one if you want to change it.', 'wp-staging'), '<a href="' . esc_url(Language::getUpgradeUrl('backup_schedule_edit')) . '" target="_blank">' . esc_html__('Upgrade to Pro', 'wp-staging') . '</a>'),
+                /* translators: %s: "activate your WP Staging Pro license" link to the licence page. */
+                'show_alert_for_no_license'     => sprintf(esc_html__('Please %s to edit backup plans.', 'wp-staging'), '<a href="' . esc_url(self_admin_url('admin.php?page=wpstg-license')) . '">' . esc_html__('activate your WP Staging Pro license', 'wp-staging') . '</a>'),
                 'delete_title'                  => esc_html__('Delete Backup Job', 'wp-staging'),
                 'delete_confirm'                => esc_html__('Do you really want to delete this schedule?', 'wp-staging'),
                 'last_run_never'                => esc_html__('Never', 'wp-staging'),
@@ -629,6 +632,10 @@ class I18n
                 'import_modal_login_text'      => esc_html__('You will be redirected to the login page after closing this modal.', 'wp-staging'),
                 'import_modal_modal_title'     => esc_html__('Finished Successfully', 'wp-staging'),
                 'import_modal_modal_html'      => esc_html__('Site has been restored from backup. ', 'wp-staging'),
+                /* translators: %s is the HTTP status and the beginning of the server's last answer. */
+                'stopped_after_failures'       => esc_html__('The restore stopped because the server did not answer correctly after several attempts. Server answer: %s', 'wp-staging'),
+                /* translators: %s: comma-separated list of database view names. */
+                'import_modal_skipped_views'   => esc_html__('These database views were not recreated because a table or view they depend on is not present: %s. See the logs for details.', 'wp-staging'),
             ],
             'backup_upload_url'                                   => [
                 'handle_success_response_success'              => esc_html__('Upload finished', 'wp-staging'),

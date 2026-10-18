@@ -18,7 +18,6 @@ use WPStaging\Backup\Task\FileBackupTask;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\FileSizeLimitException;
-use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScanner;
 use WPStaging\Framework\Job\Exception\ThresholdException;
@@ -180,6 +179,7 @@ class FileBackupService implements ServiceInterface
         $archiverDto->setWrittenBytesTotal($this->jobDataDto->getFileBeingBackupWrittenBytes());
         $archiverDto->setFileHeaderSizeInBytes($this->jobDataDto->getCurrentWrittenFileHeaderBytes());
         $archiverDto->setStartOffset($this->jobDataDto->getCurrentFileStartOffset());
+        $archiverDto->setFileCrc32Stamp($this->jobDataDto->getCurrentFileCrc32Stamp());
 
         if ($archiverDto->getWrittenBytesTotal() !== 0) {
             $this->logger->debug('Resuming backup of a large file from previous request.');
@@ -246,6 +246,7 @@ class FileBackupService implements ServiceInterface
         $archiverDto = $this->archiver->getDto();
         $this->jobDataDto->setFileBeingBackupWrittenBytes($archiverDto->getWrittenBytesTotal());
         $this->jobDataDto->setCurrentFileStartOffset($archiverDto->getStartOffset());
+        $this->jobDataDto->setCurrentFileCrc32Stamp($archiverDto->getFileCrc32Stamp());
         $this->taskQueue->retry(false);
 
         if ($archiverDto->getFileHeaderSizeInBytes() > 0) {
@@ -426,9 +427,7 @@ class FileBackupService implements ServiceInterface
             return;
         }
 
-        $discardedBytes  = $this->truncateToCheckpoint($this->archiver->getTempBackup()->getFilePath(), $this->jobDataDto->getFileCheckpointBackupBytes());
-        $discardedBytes += $this->truncateToCheckpoint($this->archiver->getTempBackupIndex()->getFilePath(), $this->jobDataDto->getFileCheckpointIndexBytes());
-
+        $discardedBytes = $this->archiver->rewindTempBackupToCheckpoint($this->jobDataDto);
         if ($discardedBytes === 0) {
             return;
         }
@@ -477,18 +476,13 @@ class FileBackupService implements ServiceInterface
     protected function recordFileCheckpoint(): bool
     {
         try {
-            $backupBytes = $this->measureFileBytes($this->archiver->getTempBackup()->getFilePath());
-            $indexBytes  = $this->measureFileBytes($this->archiver->getTempBackupIndex()->getFilePath());
+            $this->archiver->recordTempBackupCheckpoint($this->jobDataDto, $this->getCurrentArchiveCheckpointKey());
         } catch (RuntimeException $e) {
             $this->logger->warning($e->getMessage());
             $this->jobDataDto->setFileCheckpointKey(self::UNMEASURED_CHECKPOINT_KEY);
 
             return false;
         }
-
-        $this->jobDataDto->setFileCheckpointKey($this->getCurrentArchiveCheckpointKey());
-        $this->jobDataDto->setFileCheckpointBackupBytes($backupBytes);
-        $this->jobDataDto->setFileCheckpointIndexBytes($indexBytes);
 
         return true;
     }
@@ -508,52 +502,5 @@ class FileBackupService implements ServiceInterface
         if (!$isCheckpointMeasured) {
             throw new ThresholdException();
         }
-    }
-
-
-
-
-
-
-
-    private function truncateToCheckpoint(string $filePath, int $checkpointBytes): int
-    {
-        $fileBytes = $this->measureFileBytes($filePath);
-        if ($fileBytes === $checkpointBytes) {
-            return 0;
-        }
-
-        if ($fileBytes < $checkpointBytes) {
-            throw new RuntimeException(sprintf('Backup: %s is shorter than its last checkpoint (%d < %d bytes), so files already added to the backup are missing.', basename($filePath), $fileBytes, $checkpointBytes));
-        }
-
-        $file = new FileObject($filePath, FileObject::MODE_WRITE_UNSAFE);
-        if (!$file->ftruncate($checkpointBytes)) {
-            throw new RuntimeException(sprintf('Backup: Could not discard %s of files added by a request that did not finish.', size_format($fileBytes - $checkpointBytes)));
-        }
-
-        clearstatcache(true, $filePath);
-
-        return $fileBytes - $checkpointBytes;
-    }
-
-
-
-
-
-
-    private function measureFileBytes(string $filePath): int
-    {
-        clearstatcache(true, $filePath);
-        if (!file_exists($filePath)) {
-            return 0;
-        }
-
-        $bytes = filesize($filePath);
-        if ($bytes === false) {
-            throw new RuntimeException(sprintf('Backup: Could not measure %s to checkpoint the files added to the backup.', basename($filePath)));
-        }
-
-        return $bytes;
     }
 }

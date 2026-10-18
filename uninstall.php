@@ -498,10 +498,6 @@ class Uninstall
             'wpstg_otp_consecutive_failures',
             'wpstg_otp_locked',
             'wpstg_redirect_url',
-            'wpstg_oauth_state_dropbox',
-            'wpstg_oauth_state_google-drive',
-            'wpstg_oauth_state_one-drive',
-            'wpstg_oauth_state_pcloud',
             'wpstg_remote_sync_session',
             'wpstg_remote_sync_session_data',
             'wpstg_remote_sync_session_events_offset',
@@ -605,6 +601,7 @@ class Uninstall
         }
 
         $this->deleteTransientsByPrefix('wpstg_staging_update_job_');
+        $this->deleteTransientsByPrefix('wpstg_oauth_state_');
         $this->deleteTransientsByPrefix('wpstg.backup.schedules.email_report_');
         $this->deleteTransientsByPrefix('wpstg.backup.schedules.slack_fingerprint_');
         $this->deleteRemoteSyncAuthenticationActivityTransients();

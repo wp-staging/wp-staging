@@ -95,7 +95,9 @@ class Database implements DatabaseInterface
     public function foldsTableNameCase(): bool
     {
         if ($this->foldsTableNameCase === null) {
-            $this->foldsTableNameCase = WPStaging::isWindowsOs() || in_array($this->getLowerTablesNameSettings(), ['1', '2'], true);
+            $this->foldsTableNameCase = $this->client instanceof SqliteAdapter
+                || WPStaging::isWindowsOs()
+                || in_array($this->getLowerTablesNameSettings(), ['1', '2'], true);
         }
 
         return $this->foldsTableNameCase;
@@ -107,6 +109,10 @@ class Database implements DatabaseInterface
 
     public function normalizeTableNameCase(string $tableName): string
     {
+        if ($this->client instanceof SqliteAdapter) {
+            return $tableName;
+        }
+
         return $this->foldsTableNameCase() ? strtolower($tableName) : $tableName;
     }
 

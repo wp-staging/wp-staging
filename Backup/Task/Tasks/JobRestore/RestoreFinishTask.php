@@ -76,6 +76,7 @@ class RestoreFinishTask extends RestoreTask
  
         $response = $this->generateResponse();
         $response->setIsDatabaseRestoreSkipped($this->jobDataDto->getIsDatabaseRestoreSkipped());
+        $response->setSkippedViews($this->jobDataDto->getSkippedViews());
 
         return $response;
     }

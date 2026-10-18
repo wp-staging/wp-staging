@@ -301,7 +301,7 @@ class BackgroundLogger
  
             if (!empty($jobData['preInitAt']) && (time() - $jobData['preInitAt']) > self::STALE_JOB_THRESHOLD_SECONDS) {
                 $message = esc_html__('The background process could not start. This usually means the server cannot send HTTP requests to itself (loopback). Please check your server configuration, firewall rules, and DNS settings.', 'wp-staging');
-                $this->jobTransientCache->failJob(
+                $this->jobTransientCache->forJob($jobData['jobId'], $jobData['queueId'] ?? '')->failJob(
                     esc_html__('Background process failed to start', 'wp-staging'),
                     $message
                 );

@@ -48,6 +48,21 @@ class CliIntegrationNotice
         $this->auth = $auth;
     }
 
+ 
+    public function getLicensePageUrl(): string
+    {
+        if (!wpstgIsProPluginActiveInNetwork() || !class_exists('\WPStaging\Pro\License\Licensing')) {
+            return admin_url('admin.php?page=wpstg-license');
+        }
+
+        $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
+        if ($licensing->siteInheritsNetworkLicense() || trim((string)$licensing->getLicenseKey()) === '') {
+            return network_admin_url('admin.php?page=wpstg-license');
+        }
+
+        return admin_url('admin.php?page=wpstg-license');
+    }
+
 
 
 

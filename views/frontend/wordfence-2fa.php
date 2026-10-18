@@ -34,6 +34,17 @@ window.onload = function() {
   loginSubmitButton.type = "button";
   loginForm.action = "<?php echo esc_url(home_url() . "/wp-login.php"); ?>";
 
+  function showAuthError(msg) {
+    const el = loginForm ? loginForm.querySelector('.password-lost') : null;
+    if (!el) {
+      return;
+    }
+
+    el.style.display = 'block';
+    el.innerHTML = '<span class="wpstg-error-text"></span><br><br>Try to log in with the <a href="<?php echo esc_url(wp_login_url($args['redirect'])); ?>">default WordPress login</a> instead.';
+    el.querySelector('.wpstg-error-text').textContent = new DOMParser().parseFromString(msg, 'text/html').body.textContent;
+  }
+
   /*
   * the action wordfence_ls_authenticate checks if the user have 2fa enabled
   * returns two_factor_required = true if 2fa enabled
@@ -46,7 +57,7 @@ window.onload = function() {
       formData.append('redirect_to', '<?php echo esc_url(home_url()); ?>');
       formData.append('action', 'wordfence_ls_authenticate');
 
-      fetch("wp-admin/admin-ajax.php", {method: 'post', body: formData})
+      fetch("<?php echo esc_url(admin_url('admin-ajax.php')); ?>", {method: 'post', body: formData})
       .then((response) => response.json()).then((res) => {
         if (res.login === 1 && res.two_factor_required) {
           isUserLoggedIn = true;
@@ -89,14 +100,13 @@ window.onload = function() {
         } else if (res.login === 1 && !res.two_factor_required) {
           loginForm.action = "";
           loginForm.submit();
+        } else {
+          showAuthError((res && res.error) || 'Authentication failed.');
         }
-        else {
-          loginLostPassElements.forEach(element => {
-            element.innerHTML = 'Cannot log in because WordFence 2FA authentication module is detected, but it does not work properly with the WP STAGING login form. Error message: ' + res.error + ' <br><br>Try to log in with the <a href="./wp-login.php">default WordPress login</a> instead.';
-          });
-        }
-    })
-    .catch((error) => {});
+      })
+      .catch((error) => {
+        showAuthError('An error occurred during authentication.');
+      });
     }
   }
 

@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\ThirdParty\Jetpack;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
@@ -35,6 +36,18 @@ class UpdateWpConfigConstants extends FileCloningService
         $this->log("Updating constants in wp-config.php");
 
         if ($this->isExcludedWpConfig()) {
+            if (is_file($this->dto->getDestinationDir() . 'wp-config.php')) {
+                $content = $this->readWpConfig();
+                $withoutGuard = $this->removeUnfinishedResetGuardFromWpConfig($content);
+                if ($withoutGuard !== $content) {
+                    if ($this->stagingHasSiteurl($this->dto->getStagingDb(), $this->dto->getPrefix())) {
+                        $this->writeWpConfig($withoutGuard);
+                    } else {
+                        $this->log('Keeping the reset guard: the staging options table has no installed siteurl. Update the staging database before opening the site.');
+                    }
+                }
+            }
+
             $this->log("Excluded: wp-config.php is excluded by filter");
             return true;
         }
@@ -151,22 +164,45 @@ class UpdateWpConfigConstants extends FileCloningService
 
         $replaceOrAdd = (array)apply_filters(UpdateWpConfigConstantsTask::FILTER_CONSTANTS_REPLACE_OR_ADD, $replaceOrAdd);
 
-        $content = $this->removeUnfinishedCloneGuardFromWpConfig($this->readWpConfig());
-        foreach ($replaceOrAdd as $constant => $newDefinition) {
-            $content = $this->replaceOrAddDefinition($constant, $content, $newDefinition);
+        try {
+            $content = $this->readWpConfig();
+            foreach ($replaceOrAdd as $constant => $newDefinition) {
+                $content = $this->replaceOrAddDefinition($constant, $content, $newDefinition);
+            }
+
+            foreach ($replaceOrSkip as $constant => $newDefinition) {
+                $content = $this->replaceOrSkipDefinition($constant, $content, $newDefinition);
+            }
+
+            foreach ($delete as $constant) {
+                $content = $this->deleteDefinition($constant, $content);
+            }
+        } catch (FatalException $exception) {
+            throw $exception;
+        } catch (RuntimeException $exception) {
+            if ($this->wpConfigHasUnfinishedCloneGuard()) {
+                throw new FatalException($exception->getMessage(), (int)$exception->getCode(), $exception);
+            }
+
+            throw $exception;
         }
 
-        foreach ($replaceOrSkip as $constant => $newDefinition) {
-            $content = $this->replaceOrSkipDefinition($constant, $content, $newDefinition);
+        try {
+            $content = $this->replaceUnfinishedCloneGuardWithLiveTablesStop($content, $this->dto->getPrefix());
+        } catch (RuntimeException $e) {
+            throw new FatalException($e->getMessage(), 0, $e);
         }
-
-        foreach ($delete as $constant) {
-            $content = $this->deleteDefinition($constant, $content);
-        }
-
         $this->writeWpConfig($content);
 
         return true;
+    }
+
+
+
+
+    private function wpConfigHasUnfinishedCloneGuard(): bool
+    {
+        return strpos($this->readWpConfig(), $this->getUnfinishedCloneGuardEndMarker()) !== false;
     }
 
 

@@ -146,12 +146,12 @@ class ScheduleList
         }
 
         $authProvider = WPStaging::make($authClass);
-        if (!method_exists($authProvider, 'getAuthenticationURL')) {
+        if (!method_exists($authProvider, 'getAuthenticationStartURL')) {
             wp_send_json_error('This storage provider does not support OAuth reconnect.');
             return;
         }
 
-        $url = $authProvider->getAuthenticationURL('wpstg_backup');
+        $url = $authProvider->getAuthenticationStartURL('wpstg_backup');
         wp_send_json_success(['url' => $url]);
     }
 

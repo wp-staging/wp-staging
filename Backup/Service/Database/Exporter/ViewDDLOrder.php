@@ -6,6 +6,7 @@ use WPStaging\Framework\DependencyResolver\DependencyResolver;
 use WPStaging\Framework\DependencyResolver\Exceptions\CircularReferenceException;
 use WPStaging\Framework\DependencyResolver\Exceptions\MissingReferenceException;
 
+ 
 class ViewDDLOrder
 {
     protected $viewsToBeWritten = [];
@@ -36,7 +37,7 @@ class ViewDDLOrder
                 }
 
  
-                if (strpos($queryCurrent, $view) !== false) {
+                if (preg_match('/(?<![\w$])' . preg_quote($view, '/') . '(?![\w$])/', $queryCurrent) === 1) {
                     $dependsOn[$viewNameCurrent][] = $view;
                 }
             }

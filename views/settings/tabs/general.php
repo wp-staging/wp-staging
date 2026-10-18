@@ -677,7 +677,7 @@ $directory = WPStaging::make(Directory::class);
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field-input">
-                                    <?php Toggle::render('wpstg-http-basic-auth-active', '', '', $hasHttpAuthCredentials, ['classes' => 'wpstg-settings-field']); ?>
+                                    <?php Toggle::render('wpstg-http-basic-auth-active', 'wpstg_settings[httpAuthActive]', '1', $hasHttpAuthCredentials, ['classes' => 'wpstg-settings-field']); ?>
                                 </div>
                             </div>
                             <div id="wpstg-http-basic-auth-fields" <?php echo $hasHttpAuthCredentials ? '' : 'class="hidden"'; ?>>

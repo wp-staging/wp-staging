@@ -321,6 +321,11 @@ class Settings
         $this->disableAdminLogin = $disableAdminLogin;
     }
 
+    public function isKeepPermalinks(): bool
+    {
+        return $this->keepPermalinks === '1';
+    }
+
 
 
 

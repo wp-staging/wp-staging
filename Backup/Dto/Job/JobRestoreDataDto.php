@@ -95,6 +95,9 @@ class JobRestoreDataDto extends JobDataDto
     protected $isDatabaseRestoreSkipped = false;
 
  
+    protected $skippedViews = [];
+
+ 
     protected $caughtExceptionRetries = 0;
 
 
@@ -640,6 +643,36 @@ class JobRestoreDataDto extends JobDataDto
     public function setIsDatabaseRestoreSkipped(bool $isDatabaseRestoreSkipped)
     {
         $this->isDatabaseRestoreSkipped = $isDatabaseRestoreSkipped;
+    }
+
+
+
+
+    public function getSkippedViews(): array
+    {
+        return $this->skippedViews;
+    }
+
+
+
+
+
+    public function setSkippedViews(array $skippedViews)
+    {
+        $this->skippedViews = $skippedViews;
+    }
+
+
+
+
+
+    public function addSkippedView(string $viewName)
+    {
+        if (in_array($viewName, $this->skippedViews, true)) {
+            return;
+        }
+
+        $this->skippedViews[] = $viewName;
     }
 
 

@@ -53,16 +53,19 @@ class IncludeDatabaseTask extends BackupTask
             return $this->generateResponse();
         }
 
+        $this->rewindTempBackupToCheckpointOrRecordBaseline();
+
         $archiverDto = $this->archiver->getDto();
-        $archiverDto->setWrittenBytesTotal($this->stepsDto->getCurrent());
+        $archiverDto->setWrittenBytesTotal($this->jobDataDto->getDatabaseCheckpointWrittenBytes());
         $archiverDto->setFileHeaderSizeInBytes($this->jobDataDto->getCurrentWrittenFileHeaderBytes());
         $archiverDto->setStartOffset($this->jobDataDto->getCurrentFileStartOffset());
+        $archiverDto->setFileCrc32Stamp($this->jobDataDto->getCurrentFileCrc32Stamp());
 
         if ($this->archiver->getDto()->getWrittenBytesTotal() !== 0) {
             $this->archiver->getDto()->setIndexPositionCreated(true);
         }
 
-        $writtenBytesBefore = $this->stepsDto->getCurrent();
+        $writtenBytesBefore = $archiverDto->getWrittenBytesTotal();
         $included           = false;
         try {
             $this->archiver->setFileAppendTimeLimit($this->jobDataDto->getFileAppendTimeLimit());
@@ -76,12 +79,15 @@ class IncludeDatabaseTask extends BackupTask
                 $this->archiver->getDto()->getFilePath(),
                 $e->getMessage()
             ));
+
+            return $this->generateResponse(false);
         }
 
-        $archiverDto = $this->archiver->getDto();
+        $this->recordCheckpoint($archiverDto->getWrittenBytesTotal());
         $this->stepsDto->setCurrent($archiverDto->getWrittenBytesTotal());
         $this->jobDataDto->setCurrentWrittenFileHeaderBytes(0);
         $this->jobDataDto->setCurrentFileStartOffset($archiverDto->getStartOffset());
+        $this->jobDataDto->setCurrentFileCrc32Stamp($archiverDto->getFileCrc32Stamp());
         if ($included) {
             clearstatcache();
             $this->jobDataDto->setDatabaseFileSize(filesize($this->jobDataDto->getDatabaseFile()));
@@ -100,6 +106,43 @@ class IncludeDatabaseTask extends BackupTask
 
         $this->logger->info(sprintf('Included %s/%s of Database Backup.', size_format($this->stepsDto->getCurrent(), 2), size_format($this->stepsDto->getTotal(), 2)));
         return $this->generateResponse(false);
+    }
+
+
+
+
+
+
+    private function rewindTempBackupToCheckpointOrRecordBaseline()
+    {
+        if ($this->jobDataDto->getFileCheckpointKey() === $this->getCheckpointKey()) {
+            $discardedBytes = $this->archiver->rewindTempBackupToCheckpoint($this->jobDataDto);
+            if ($discardedBytes > 0) {
+                $this->logger->info(sprintf('Discarded %s of the database added by a request that did not finish.', size_format($discardedBytes)));
+            }
+
+            return;
+        }
+
+        $this->recordCheckpoint($this->stepsDto->getCurrent());
+        $this->persistJobDataDto();
+    }
+
+
+
+
+
+
+
+    private function recordCheckpoint(int $writtenBytes)
+    {
+        $this->archiver->recordTempBackupCheckpoint($this->jobDataDto, $this->getCheckpointKey());
+        $this->jobDataDto->setDatabaseCheckpointWrittenBytes($writtenBytes);
+    }
+
+    private function getCheckpointKey(): string
+    {
+        return self::getTaskName() . '|' . basename($this->archiver->getTempBackup()->getFilePath());
     }
 
     public function prepareDatabaseTask()

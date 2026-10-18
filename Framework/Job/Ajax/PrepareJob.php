@@ -5,6 +5,7 @@ namespace WPStaging\Framework\Job\Ajax;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Security\Auth;
@@ -36,7 +37,35 @@ abstract class PrepareJob
 
     abstract public function prepare($data = null);
 
-    abstract public function ajaxPrepare($data);
+
+
+
+
+    public function ajaxPrepare($data)
+    {
+        if (!$this->auth->isAuthenticatedRequest()) {
+            wp_send_json_error(null, 401);
+        }
+
+        $unavailableError = $this->getJobUnavailableError();
+        if ($unavailableError instanceof \WP_Error) {
+            wp_send_json_error($unavailableError->get_error_message(), $unavailableError->get_error_code());
+        }
+
+        try {
+            $this->processLock->lockProcess();
+        } catch (ProcessLockedException $e) {
+            $this->sendProcessLockedError($e);
+        }
+
+        $response = $this->prepare($data);
+
+        if ($response instanceof \WP_Error) {
+            wp_send_json_error($response->get_error_message(), $response->get_error_code());
+        }
+
+        wp_send_json_success($this->getSuccessResponseData($response));
+    }
 
     abstract public function persist(): bool;
 
@@ -68,6 +97,34 @@ abstract class PrepareJob
         $this->persist();
 
         return $sanitizedData;
+    }
+
+
+
+
+
+
+    protected function getJobUnavailableError()
+    {
+        return null;
+    }
+
+
+
+
+
+    protected function sendProcessLockedError(ProcessLockedException $exception)
+    {
+        wp_send_json_error($exception->getMessage(), $exception->getCode());
+    }
+
+
+
+
+
+    protected function getSuccessResponseData($preparedData)
+    {
+        return null;
     }
 
     protected function clearCacheFolder()

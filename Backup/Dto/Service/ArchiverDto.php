@@ -19,6 +19,9 @@ class ArchiverDto
     private $fileHeaderSizeInBytes = 0;
 
  
+    private $fileCrc32Stamp = '';
+
+ 
     private $writtenBytesTotal = 0;
 
  
@@ -84,6 +87,7 @@ class ArchiverDto
         $this->setWrittenBytesTotal(0);
         $this->indexPositionCreated = [];
         $this->setFileHeaderSizeInBytes(0);
+        $this->setFileCrc32Stamp('');
         $this->setStartOffset(0);
         $this->setIsContinuation(false);
         $this->setSourceBytesWrittenTotal(0);
@@ -193,6 +197,20 @@ class ArchiverDto
     public function setFileHeaderSizeInBytes(int $fileHeaderSizeInBytes)
     {
         $this->fileHeaderSizeInBytes = $fileHeaderSizeInBytes;
+    }
+
+    public function getFileCrc32Stamp(): string
+    {
+        return $this->fileCrc32Stamp;
+    }
+
+
+
+
+
+    public function setFileCrc32Stamp(string $fileCrc32Stamp)
+    {
+        $this->fileCrc32Stamp = $fileCrc32Stamp;
     }
 
 

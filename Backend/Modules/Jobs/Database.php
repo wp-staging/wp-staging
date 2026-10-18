@@ -7,6 +7,7 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\CloningDto;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
 use WPStaging\Framework\Database\TableService;
@@ -23,6 +24,7 @@ class Database extends CloningProcess
 {
     use TotalStepsAreNumberOfTables;
     use TablePrefixValidator;
+    use WithUnfinishedCloneWpConfigGuard;
 
 
 
@@ -155,6 +157,12 @@ class Database extends CloningProcess
 
         if ($this->options->databaseResettingStatus === 'finished') {
             return true;
+        }
+
+        $wpConfigPath = trailingslashit($this->options->cloneDir) . 'wp-config.php';
+        if (!$this->guardWpConfigBeforeReset(WPStaging::make(Filesystem::class), $wpConfigPath)) {
+            $this->returnException('Cannot reset staging tables because wp-config.php cannot be guarded: ' . $wpConfigPath);
+            return false;
         }
 
         if ($this->options->databaseResettingStatus === 'pending') {

@@ -2,8 +2,6 @@
 
 namespace WPStaging\Framework\Rest;
 
-use WPStaging\Framework\Utils\Sanitize;
-
 
 
 
@@ -20,14 +18,6 @@ class Rest
     const REQUEST_TIMEOUT = 30;
 
  
-    private $sanitize;
-
-    public function __construct(Sanitize $sanitize)
-    {
-        $this->sanitize = $sanitize;
-    }
-
- 
     public function isRestUrl()
     {
  
@@ -35,63 +25,32 @@ class Rest
             return false;
         }
 
-        if ($this->hasRestRouteQueryParam()) {
-            return true;
+        $restRoute = isset($_POST['rest_route']) ? $_POST['rest_route'] : (isset($_GET['rest_route']) ? $_GET['rest_route'] : null); // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- compared only, never output or stored
+        if ($restRoute !== null) {
+            return is_string($restRoute) && $restRoute !== '' && $restRoute !== '0';
         }
-
-        $requestUri = $this->sanitize->sanitizeUrl($_SERVER['REQUEST_URI']);
 
  
         if (!function_exists('rest_url')) {
             return false;
         }
 
-        $requestPath = trim($requestUri, '/');
-
         $baseRestURL = get_rest_url(get_current_blog_id(), '/');
-        $restPath    = $this->getApiRequestURI($baseRestURL);
+
+ 
+        if (parse_url($baseRestURL, PHP_URL_QUERY)) {
+            return false;
+        }
+
+        $restPath = trim((string)parse_url($baseRestURL, PHP_URL_PATH), '/');
 
  
         if (empty($restPath)) {
             return false;
         }
 
-        return strpos($requestPath, $restPath) === 0;
-    }
+        $requestPath = trim(explode('?', $_SERVER['REQUEST_URI'], 2)[0], '/'); // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- compared only, never output or stored
 
-
-
-
-
-
-
-
-
-
-
-
-
-    private function hasRestRouteQueryParam(): bool
-    {
-        if (!array_key_exists('rest_route', $_GET) || !is_string($_GET['rest_route'])) {
-            return false;
-        }
-
-        return $_GET['rest_route'] !== '' && $_GET['rest_route'] !== '0';
-    }
-
-    private function getApiRequestURI($url)
-    {
-        if (empty($url)) {
-            return '';
-        }
-
-        $path = parse_url($url, PHP_URL_PATH);
-        $path = empty($path) ? '' : trim($path, '/');
-
-        $query = parse_url($url, PHP_URL_QUERY);
-        $query = empty($query) ? '' : trim($query, '/');
-
-        return $query === '' ? $path : $path . '?' . $query;
+        return $requestPath === $restPath || strpos($requestPath, $restPath . '/') === 0;
     }
 }
