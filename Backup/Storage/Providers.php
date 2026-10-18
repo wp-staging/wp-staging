@@ -107,22 +107,27 @@ class Providers
 
 
 
-    const SENSITIVE_OPTION_KEYS = [
-        'accessKey',
-        'accessToken',
-        'ftpCertContent',
-        'googleClientId',
-        'googleClientSecret',
-        'key',
-        'passphrase',
-        'password',
-        'refreshToken',
-        'secretKey',
+    const CREDENTIAL_OPTION_KEYS = [
+        'wpstg_google-drive'        => ['googleClientId', 'googleClientSecret', 'accessToken', 'refreshToken'],
+        'wpstg_amazon-s3'           => ['accessKey', 'secretKey'],
+        'wpstg_sftp'                => ['username', 'password', 'key', 'passphrase', 'ftpCertContent'],
+        'wpstg_digitalocean-spaces' => ['accessKey', 'secretKey'],
+        'wpstg_wasabi-s3'           => ['accessKey', 'secretKey'],
+        'wpstg_generic-s3'          => ['accessKey', 'secretKey'],
+        'wpstg_dropbox'             => ['accessToken', 'refreshToken'],
+        'wpstg_one-drive'           => ['accessToken', 'refreshToken'],
+        'wpstg_pcloud'              => ['accessToken'],
+    ];
+
+
+
+
+
+    const UNENCRYPTED_SENSITIVE_OPTION_KEYS = [
         'sessionId',
         'sharedDriveId',
         'uploadId',
         'uploadUrl',
-        'username',
     ];
 
     protected $storages = [];
@@ -501,5 +506,23 @@ class Providers
 
             delete_option($legacyOptionName);
         }
+    }
+
+
+
+
+    public static function isSensitiveOptionKey(string $key): bool
+    {
+        if (in_array($key, self::UNENCRYPTED_SENSITIVE_OPTION_KEYS, true)) {
+            return true;
+        }
+
+        foreach (self::CREDENTIAL_OPTION_KEYS as $credentialKeys) {
+            if (in_array($key, $credentialKeys, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -12,9 +12,9 @@ use UnexpectedValueException;
 use WP_Error;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup as AjaxPrepareBackup;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
-use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
+use WPStaging\Backup\Service\ServerInitiatedBackupScope;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Job\PrepareJob;
 use WPStaging\Framework\BackgroundProcessing\Queue;
@@ -53,6 +53,8 @@ class PrepareBackup extends PrepareJob
 
     public function getDefaultDataConfiguration(): array
     {
+        $scope = ServerInitiatedBackupScope::forCurrentContext();
+
         return [
             'isExportingPlugins'             => true,
             'isExportingMuPlugins'           => true,
@@ -74,8 +76,8 @@ class PrepareBackup extends PrepareJob
             'isExcludingUnusedThemes'        => false,
             'isExcludingLogs'                => false,
             'isExcludingCaches'              => false,
-            'backupType'                     => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
-            'subsiteBlogId'                  => null,
+            'backupType'                     => $scope['backupType'],
+            'subsiteBlogId'                  => $scope['subsiteBlogId'],
             'backupExcludedDirectories'      => '',
             "isValidateBackupFiles"          => false,
         ];
@@ -112,6 +114,7 @@ class PrepareBackup extends PrepareJob
  
         $jobDataDto = $job->getJobDataDto();
         $jobDataDto->setScheduleId(empty($args['scheduleId']) ? null : (string)$args['scheduleId']);
+        $job->setOwnerJobId((string)$args['jobId']);
 
         if (empty($args['isSyncRequest'])) {
             $job->getTransientCache()->startJob((string)$args['jobId'], esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, (string)$args['jobId']);

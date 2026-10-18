@@ -40,6 +40,18 @@ class StagingEngine
 
 
 
+    public function getNextGenUnavailableError()
+    {
+        if ($this->isNextGenEnabled()) {
+            return null;
+        }
+
+        return new \WP_Error(403, esc_html__('The Next-Gen engine is temporarily unavailable. Please use the Classic engine.', 'wp-staging'));
+    }
+
+
+
+
 
     public function getEngine(): string
     {

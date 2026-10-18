@@ -966,7 +966,7 @@ class SystemInfo
             return self::NOT_SET_LABEL;
         }
 
-        if (in_array($key, Providers::SENSITIVE_OPTION_KEYS, true)) {
+        if (Providers::isSensitiveOptionKey((string)$key)) {
             return self::REMOVED_LABEL;
         }
 

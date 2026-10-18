@@ -237,6 +237,30 @@ class Language
 
 
 
+
+
+    public static function getLicenseUpgradeUrl(string $licenseId, string $upgradeId, string $context): string
+    {
+        $query = http_build_query([
+            'nocache'    => 'true',
+            'edd_action' => 'sl_license_upgrade',
+            'license_id' => $licenseId,
+            'upgrade_id' => $upgradeId,
+        ], '', '&');
+
+        $context = preg_replace('/[^a-z0-9_]/', '', strtolower($context));
+        if ($context !== '') {
+            $query .= '&' . self::buildUtmQuery($context, self::getInstallSource());
+        }
+
+        return self::localizeCheckoutUrl('https://wp-staging.com/checkout/?' . $query);
+    }
+
+
+
+
+
+
     private static function buildUtmQuery(string $context, string $source): string
     {
         return http_build_query([

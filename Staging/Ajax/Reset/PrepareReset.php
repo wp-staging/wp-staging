@@ -76,21 +76,10 @@ class PrepareReset extends AbstractAjaxPrepare
 
     protected function getDefaults(): array
     {
-        return [
-            'cloneId'                => '',
-            'stagingEngine'          => StagingEngine::ENGINE_NEXT_GEN,
-            'allTablesExcluded'      => false,
-            'excludedTables'         => [],
-            'includedTables'         => [],
-            'nonSiteTables'          => [],
-            'excludedDirectories'    => [],
-            'extraDirectories'       => [],
- 
-            'excludeSizeGreaterThan' => 8,
-            'excludeFileRules'       => [],
-            'excludeFolderRules'     => [],
-            'excludeExtensionRules'  => [],
-        ];
+        return array_merge([
+            'cloneId'       => '',
+            'stagingEngine' => StagingEngine::ENGINE_NEXT_GEN,
+        ], self::getSiteSelectionDefaults());
     }
 
 

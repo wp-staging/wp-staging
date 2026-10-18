@@ -42,7 +42,7 @@ class UpdateSiteUrlAndHomeTask extends DatabaseAdjustmentTask
     {
         $optionsTableName = $this->getOptionsTableName();
         $this->logger->info("Updating site url and home in {$optionsTableName}.");
-        if ($this->isTableExcluded('usermeta')) {
+        if ($this->isOptionsTableExcluded()) {
             $this->logger->warning("Table {$optionsTableName} is excluded. Skipping.");
             return true;
         }

@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Ajax;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Adapter\Directory;
@@ -37,11 +38,10 @@ class StagingSiteDataChecker
             return;
         }
 
-        $cloneDir = !empty($_POST['cloneDir']) ? sanitize_text_field($_POST['cloneDir']) : '';
-
+        $cloneDir = !empty($_POST['cloneDir']) ? Sanitize::sanitizePath($_POST['cloneDir']) : '';
         if (!empty($cloneDir)) {
             wp_mkdir_p($cloneDir);
-            if (!is_writable($cloneDir)) {
+            if (!is_writable($cloneDir) || !is_readable($cloneDir)) {
                 $directoryListing = WPStaging::getInstance()->getContainer()->get(DirectoryListing::class);
                 $reason   = __('restricted folder permissions', 'wp-staging');
                 $howToFix = sprintf(
@@ -61,7 +61,8 @@ class StagingSiteDataChecker
 
                 $supportLink = '<a href="' . esc_url(Language::localizeSupportUrl('https://wp-staging.com/support/')) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('open a support ticket', 'wp-staging') . '</a>';
                 $message = sprintf(
-                    __('The directory <strong>%s</strong> is not writable due to %s.<br/>
+                    /* translators: 1: directory path, 2: reason, 3: how to fix it, 4: link to open a support ticket. */
+                    __('The directory <strong>%s</strong> is not writable or not readable due to %s.<br/>
                     <p class="wpstg-mb-10px wpstg-mt-10px"><strong>How to fix this:</strong></p>
                     <ul style="list-style:circle;" class="wpstg-ml-15px wpstg-mt-5px">
                     <li>%s.</li>

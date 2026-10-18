@@ -123,7 +123,7 @@ class Directory implements DirectoryInterface
 
 
 
-    private $stagingSiteUrl;
+    private $stagingSiteUrl = '';
 
 
 

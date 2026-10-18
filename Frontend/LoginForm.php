@@ -212,8 +212,8 @@ class LoginForm
         $notice     = __('Enter your administrator credentials to access this site. (This message will be displayed only once!)', 'wp-staging');
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
 
- 
-        $isCustomLogin2faEnabled = class_exists('wordfence', false) && get_option('wordfenceActivated');
+        $isWordfenceRecaptchaEnforcedOnLogin = $this->isWordfenceRecaptchaEnforcedOnLogin();
+        $isCustomLogin2faEnabled             = $this->loginFormNeedsWordfence2faScript();
 
         $loginFileView = WPSTG_VIEWS_DIR . 'frontend/loginForm.php';
 
@@ -234,6 +234,56 @@ class LoginForm
     public function setError(string $error)
     {
         $this->error = $error;
+    }
+
+
+
+
+
+
+    public function isWordfenceActive(): bool
+    {
+        return class_exists('wordfence', false) && (bool)get_option('wordfenceActivated');
+    }
+
+
+
+
+
+
+    public function isWordfenceRecaptchaEnforcedOnLogin(): bool
+    {
+        if (!class_exists('\WordfenceLS\Controller_CAPTCHA')) {
+            return false;
+        }
+
+        try {
+            $captcha = \WordfenceLS\Controller_CAPTCHA::shared();
+            return (bool)$captcha->is_captcha_required() && !(bool)$captcha->test_mode();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+
+
+
+
+
+
+
+
+    public function loginFormNeedsWordfence2faScript(): bool
+    {
+        if (!$this->isWordfenceActive()) {
+            return false;
+        }
+
+        if ($this->isWordfenceRecaptchaEnforcedOnLogin()) {
+            return false;
+        }
+
+        return true;
     }
 
 

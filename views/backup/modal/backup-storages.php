@@ -144,7 +144,7 @@ if (!empty($uploadDir['basedir'])) {
             ?>
             <div class="wpstg-storages-option wpstg-box-border wpstg-flex wpstg-items-center wpstg-justify-between wpstg-gap-3 wpstg-rounded-[7px] wpstg-border wpstg-border-solid wpstg-border-slate-250 wpstg-bg-white wpstg-p-3 dark:wpstg-border-slate-700 dark:wpstg-bg-slate-800 <?php echo $isCreateBackupModal ? 'wpstg-cloud-provider-option' : ''; ?>" data-row="<?php echo esc_attr((string)$rowCount); ?>" data-position="<?php echo esc_attr((string)$positionInRow); ?>">
                 <?php
-                $isActivated   = $storages->isActivated($storage['id']);
+                $isActivated   = !$isRestrictedStorage && $storages->isActivated($storage['id']);
                 $isProStorage  = empty($storage['authClass']);
                 $isDisabled    = !$isActivated || (!$isProVersion && $isProStorage) || $isPersonalLicense || $isRestrictedStorage;
                 $disabledClass = $isDisabled ? 'wpstg-storages-settings-disabled' : '';

@@ -19,6 +19,7 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
+use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
@@ -244,6 +245,36 @@ class Archiver
 
 
 
+    public function recordTempBackupCheckpoint(JobBackupDataDto $jobDataDto, string $checkpointKey)
+    {
+        $backupBytes = $this->measureFileBytes($this->getTempBackup()->getFilePath());
+        $indexBytes  = $this->measureFileBytes($this->getTempBackupIndex()->getFilePath());
+
+        $jobDataDto->setFileCheckpointKey($checkpointKey);
+        $jobDataDto->setFileCheckpointBackupBytes($backupBytes);
+        $jobDataDto->setFileCheckpointIndexBytes($indexBytes);
+    }
+
+
+
+
+
+
+    public function rewindTempBackupToCheckpoint(JobBackupDataDto $jobDataDto): int
+    {
+        return $this->truncateToCheckpoint($this->getTempBackup()->getFilePath(), $jobDataDto->getFileCheckpointBackupBytes())
+            + $this->truncateToCheckpoint($this->getTempBackupIndex()->getFilePath(), $jobDataDto->getFileCheckpointIndexBytes());
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -275,7 +306,7 @@ class Archiver
             $this->archiverDto->setFileHeaderSizeInBytes($fileHeaderSizeInBytes);
         } elseif (!$this->isBackupFormatV1()) {
             $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->filesystem->maybeNormalizePath($indexPath));
-            $this->fileHeader->readFile($fullFilePath, $identifiablePath);
+            $this->readHeaderOfResumedFile($fullFilePath, $identifiablePath);
         }
 
         $writtenBytesBefore = $this->archiverDto->getWrittenBytesTotal();
@@ -508,8 +539,41 @@ class Archiver
     {
         $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->filesystem->maybeNormalizePath($indexPath));
         $this->fileHeader->readFile($filePath, $identifiablePath);
+        $this->archiverDto->setFileCrc32Stamp($this->stampCrc32Checksum($this->fileHeader->getCrc32Checksum()));
 
         return $this->tempBackup->append($this->fileHeader->getFileHeader());
+    }
+
+
+
+
+
+
+
+
+
+    private function readHeaderOfResumedFile(string $filePath, string $identifiablePath)
+    {
+        $this->fileHeader->readFile($filePath, $identifiablePath, true);
+
+        $crc32Stamp    = $this->archiverDto->getFileCrc32Stamp();
+        $crc32Checksum = (string)strstr($crc32Stamp, ':', true);
+        if ($crc32Checksum !== '' && $crc32Stamp === $this->stampCrc32Checksum($crc32Checksum)) {
+            $this->fileHeader->setCrc32Checksum($crc32Checksum);
+            return;
+        }
+
+        $this->fileHeader->readFile($filePath, $identifiablePath);
+        $this->archiverDto->setFileCrc32Stamp($this->stampCrc32Checksum($this->fileHeader->getCrc32Checksum()));
+    }
+
+
+
+
+
+    private function stampCrc32Checksum(string $crc32Checksum): string
+    {
+        return $crc32Checksum . ':' . $this->fileHeader->getUncompressedSize() . ':' . $this->fileHeader->getModifiedTime();
     }
 
 
@@ -877,6 +941,53 @@ class Archiver
         $this->addIndexPartSize($identifiablePath, $writtenBytesTotal - (int)$writtenPreviously);
 
         return $bytesWritten;
+    }
+
+
+
+
+
+
+
+    private function truncateToCheckpoint(string $filePath, int $checkpointBytes): int
+    {
+        $fileBytes = $this->measureFileBytes($filePath);
+        if ($fileBytes === $checkpointBytes) {
+            return 0;
+        }
+
+        if ($fileBytes < $checkpointBytes) {
+            throw new RuntimeException(sprintf('Backup: %s is shorter than its last checkpoint (%d < %d bytes), so data already added to the backup is missing.', basename($filePath), $fileBytes, $checkpointBytes));
+        }
+
+        $file = new FileObject($filePath, FileObject::MODE_WRITE_UNSAFE);
+        if (!$file->ftruncate($checkpointBytes)) {
+            throw new RuntimeException(sprintf('Backup: Could not discard %s added by a request that did not finish.', size_format($fileBytes - $checkpointBytes)));
+        }
+
+        clearstatcache(true, $filePath);
+
+        return $fileBytes - $checkpointBytes;
+    }
+
+
+
+
+
+
+    private function measureFileBytes(string $filePath): int
+    {
+        clearstatcache(true, $filePath);
+        if (!file_exists($filePath)) {
+            return 0;
+        }
+
+        $bytes = filesize($filePath);
+        if ($bytes === false) {
+            throw new RuntimeException(sprintf('Backup: Could not measure %s to checkpoint what was added to the backup.', basename($filePath)));
+        }
+
+        return $bytes;
     }
 
     private function isBackupFormatV1(): bool

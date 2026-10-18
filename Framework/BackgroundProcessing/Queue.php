@@ -105,6 +105,9 @@ class Queue
 
     private $tableState;
 
+ 
+    private $tableUpgradeError = '';
+
 
 
 
@@ -192,9 +195,17 @@ class Queue
             $this->checkTable(true);
         }
 
+        if (static::TABLE_NOT_EXIST === $this->checkTable() && $this->tableUpgradeError !== '') {
+            throw new QueueException('The background processing queue table could not be created: ' . $this->tableUpgradeError);
+        }
+
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
  
             return false;
+        }
+
+        if ($this->isTableOutdatedAfterFailedUpgrade()) {
+            throw new QueueException('The background processing queue table could not be upgraded: ' . $this->tableUpgradeError);
         }
 
         $assignments = [
@@ -342,7 +353,8 @@ class Queue
 
     private function updateTable()
     {
-        $tableSql = $this->getCreateTableSql();
+        $this->tableUpgradeError = '';
+        $tableSql                = $this->getCreateTableSql();
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
@@ -365,19 +377,17 @@ class Queue
 
  
         if ($this->database->query('START TRANSACTION') === false) {
+            $this->tableUpgradeError = $this->database->error();
             return self::TABLE_NOT_EXIST;
         }
 
-        foreach ($dbdeltaQueries as $query) {
+        foreach (array_merge($dbdeltaQueries, ['COMMIT']) as $query) {
             if ($this->database->query($query) === false) {
-                debug_log('Queue Table Upgrade Error: ' . $this->database->error());
+                $this->tableUpgradeError = $this->database->error();
+                debug_log('Queue Table Upgrade Error: ' . $this->tableUpgradeError);
                 $this->database->query('ROLLBACK');
                 return self::TABLE_NOT_EXIST;
             }
-        }
-
-        if ($this->database->query('COMMIT') === false) {
-            return self::TABLE_NOT_EXIST;
         }
 
         $this->updateTableVersionOption($this->getLatestTableVersion());
@@ -1667,5 +1677,21 @@ class Queue
         }
 
         return $breakpointDate;
+    }
+
+
+
+
+
+
+    private function isTableOutdatedAfterFailedUpgrade(): bool
+    {
+        if ($this->tableUpgradeError === '') {
+            return false;
+        }
+
+        $tableName = self::getTableName();
+
+        return $this->database->query("SELECT available_at, response FROM {$tableName} LIMIT 0") === false;
     }
 }

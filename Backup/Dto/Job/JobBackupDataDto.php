@@ -68,10 +68,19 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $currentFileStartOffset = 0;
 
  
+    private $currentFileCrc32Stamp = '';
+
+ 
     private $totalRowsBackup = 0;
 
  
     private $tableRowsOffset = 0;
+
+ 
+    private $tableLockAttempts = 0;
+
+ 
+    private $tableLockRetryAt = 0;
 
  
     private $sqlCheckpointFile = '';
@@ -87,6 +96,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 
  
     private $fileCheckpointIndexBytes = 0;
+
+ 
+    private $databaseCheckpointWrittenBytes = 0;
 
  
     private $totalRowsOfTableBeingBackup = 0;
@@ -418,6 +430,38 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 
 
 
+    public function getTableLockAttempts()
+    {
+        return (int)$this->tableLockAttempts;
+    }
+
+
+
+
+    public function setTableLockAttempts($tableLockAttempts)
+    {
+        $this->tableLockAttempts = (int)$tableLockAttempts;
+    }
+
+
+
+
+    public function getTableLockRetryAt()
+    {
+        return (int)$this->tableLockRetryAt;
+    }
+
+
+
+
+    public function setTableLockRetryAt($tableLockRetryAt)
+    {
+        $this->tableLockRetryAt = (int)$tableLockRetryAt;
+    }
+
+
+
+
     public function getSqlCheckpointFile()
     {
         return (string)$this->sqlCheckpointFile;
@@ -493,6 +537,22 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setFileCheckpointIndexBytes($fileCheckpointIndexBytes)
     {
         $this->fileCheckpointIndexBytes = (int)$fileCheckpointIndexBytes;
+    }
+
+
+
+
+    public function getDatabaseCheckpointWrittenBytes()
+    {
+        return (int)$this->databaseCheckpointWrittenBytes;
+    }
+
+
+
+
+    public function setDatabaseCheckpointWrittenBytes($databaseCheckpointWrittenBytes)
+    {
+        $this->databaseCheckpointWrittenBytes = (int)$databaseCheckpointWrittenBytes;
     }
 
 
@@ -1247,6 +1307,20 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setCurrentFileStartOffset(int $currentFileStartOffset)
     {
         $this->currentFileStartOffset = (int)$currentFileStartOffset;
+    }
+
+    public function getCurrentFileCrc32Stamp(): string
+    {
+        return $this->currentFileCrc32Stamp;
+    }
+
+
+
+
+
+    public function setCurrentFileCrc32Stamp(string $currentFileCrc32Stamp)
+    {
+        $this->currentFileCrc32Stamp = $currentFileCrc32Stamp;
     }
 
 

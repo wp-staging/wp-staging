@@ -56,35 +56,6 @@ class PrepareBackup extends PrepareJob
 
 
 
-    public function ajaxPrepare($data)
-    {
-        if (!$this->auth->isAuthenticatedRequest()) {
-            wp_send_json_error(null, 401);
-        }
-
-        try {
-            $this->processLock->lockProcess();
-        } catch (ProcessLockedException $e) {
-            wp_send_json_error([
-                'message' => esc_html__('A backup or restore process is already running.', 'wp-staging') . ' ' . $e->getMessage(),
-                'title'   => esc_html__('Backup in Progress', 'wp-staging'),
-                'code'    => ErrorCode::PROCESS_LOCKED,
-            ], $e->getCode());
-        }
-
-        $response = $this->prepare($data);
-
-        if ($response instanceof \WP_Error) {
-            wp_send_json_error($response->get_error_message(), $response->get_error_code());
-        } else {
-            wp_send_json_success();
-        }
-    }
-
-
-
-
-
     public function prepare($data = null)
     {
         if (empty($data) && array_key_exists('wpstgBackupData', $_POST)) {
@@ -117,6 +88,10 @@ class PrepareBackup extends PrepareJob
             $data         = $this->discardScheduleIdSentWithTheRequest($data);
         }
 
+        if ($this->isSchedulingWithoutValidProLicense($data)) {
+            return new \WP_Error(400, __('You need a valid WP Staging Pro license to create a backup plan.', 'wp-staging'));
+        }
+
         try {
             $sanitizedData = $this->setupInitialJob($data);
         } catch (\Exception $e) {
@@ -128,6 +103,19 @@ class PrepareBackup extends PrepareJob
         }
 
         return $sanitizedData;
+    }
+
+
+
+
+
+    protected function sendProcessLockedError(ProcessLockedException $exception)
+    {
+        wp_send_json_error([
+            'message' => esc_html__('A backup or restore process is already running.', 'wp-staging') . ' ' . $exception->getMessage(),
+            'title'   => esc_html__('Backup in Progress', 'wp-staging'),
+            'code'    => ErrorCode::PROCESS_LOCKED,
+        ], $exception->getCode());
     }
 
 
@@ -268,7 +256,7 @@ class PrepareBackup extends PrepareJob
         }
 
  
-        $data['name'] = substr(sanitize_text_field(html_entity_decode($data['name'])), 0, 100);
+        $data['name'] = mb_substr(sanitize_text_field(html_entity_decode($data['name'])), 0, 100);
 
  
         $data['name'] = str_replace('\\\'', '\'', $data['name']);
@@ -437,5 +425,21 @@ class PrepareBackup extends PrepareJob
         $this->jobBackup->persist();
 
         return true;
+    }
+
+
+
+
+
+    private function isSchedulingWithoutValidProLicense($data): bool
+    {
+        if (!is_array($data) || empty($data['repeatBackupOnSchedule'])) {
+            return false;
+        }
+
+        return $this->jsBoolean($data['repeatBackupOnSchedule'])
+            && WPStaging::isPro()
+            && class_exists('\WPStaging\Pro\WPStagingPro')
+            && !\WPStaging\Pro\WPStagingPro::isValidLicense();
     }
 }

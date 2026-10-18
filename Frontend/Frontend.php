@@ -55,6 +55,41 @@ class Frontend
 
         $this->authenticateSubmittedCredentials();
 
+        if ($GLOBALS['pagenow'] === 'index.php' && $this->requestLooksLikeRest()) {
+            add_action('parse_request', [$this, 'enforceLoginFormUnlessCoreServesRest'], PHP_INT_MIN);
+            add_action('template_redirect', [$this, 'enforceLoginForm'], PHP_INT_MIN);
+            return;
+        }
+
+        $this->enforceLoginForm();
+    }
+
+
+
+
+
+
+
+
+    public function enforceLoginFormUnlessCoreServesRest($wp)
+    {
+        if (empty($wp->query_vars['rest_route']) || !has_action('parse_request', 'rest_api_loaded')) {
+            $this->enforceLoginForm();
+            return;
+        }
+
+        if ($this->showLoginForm()) {
+            $this->serveRestRequest();
+        }
+    }
+
+
+
+
+
+
+    public function enforceLoginForm()
+    {
         if (!$this->showLoginForm()) {
             return;
         }
@@ -105,6 +140,25 @@ class Frontend
         }
 
         return $this->loginForm;
+    }
+
+
+
+
+    protected function serveRestRequest()
+    {
+        rest_api_loaded();
+    }
+
+
+
+
+    private function requestLooksLikeRest(): bool
+    {
+ 
+        $rest = WPStaging::make(Rest::class);
+
+        return $rest->isRestUrl();
     }
 
 
@@ -204,14 +258,6 @@ class Frontend
 
  
         if (Hooks::applyFilters(self::FILTER_FRONTEND_SHOW_LOGIN_FORM, false)) {
-            return false;
-        }
-
- 
-
- 
-        $rest = WPStaging::make(Rest::class);
-        if ($rest->isRestUrl()) {
             return false;
         }
 

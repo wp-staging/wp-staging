@@ -12,7 +12,6 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
-use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Job\Traits\WithTmpDatabasePrefix;
@@ -35,27 +34,6 @@ class PrepareRestore extends PrepareJob
     {
         parent::__construct($filesystem, $directory, $auth, $processLock);
         $this->tableService = $tableService;
-    }
-
-    public function ajaxPrepare($data)
-    {
-        if (!$this->auth->isAuthenticatedRequest()) {
-            wp_send_json_error(null, 401);
-        }
-
-        try {
-            $this->processLock->lockProcess();
-        } catch (ProcessLockedException $e) {
-            wp_send_json_error($e->getMessage(), $e->getCode());
-        }
-
-        $response = $this->prepare($data);
-
-        if ($response instanceof \WP_Error) {
-            wp_send_json_error($response->get_error_message(), $response->get_error_code());
-        } else {
-            wp_send_json_success();
-        }
     }
 
     public function prepare($data = null)

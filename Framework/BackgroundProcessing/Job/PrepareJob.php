@@ -193,7 +193,7 @@ abstract class PrepareJob
         if ($this->queue->hasDeferredForegroundUpload()) {
             $this->queueAction($args);
             $this->processLock->unlockProcess();
-            return new WP_Error(423, 'A foreground upload is waiting for the storage provider.');
+            return new WP_Error(423, 'A foreground job is waiting before its next request.');
         }
 
         try {

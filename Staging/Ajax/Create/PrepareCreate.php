@@ -90,24 +90,14 @@ class PrepareCreate extends AbstractAjaxPrepare
 
     protected function getDefaults(): array
     {
-        return [
-            'cloneId'                => time(),
-            'stagingEngine'          => StagingEngine::ENGINE_NEXT_GEN,
-            'name'                   => '',
-            'allTablesExcluded'      => false,
-            'excludedTables'         => [],
-            'includedTables'         => [],
-            'nonSiteTables'          => [],
-            'excludedDirectories'    => [],
-            'extraDirectories'       => [],
- 
-            'excludeSizeGreaterThan' => 8,
-            'excludeFileRules'       => [],
-            'excludeFolderRules'     => [],
-            'excludeExtensionRules'  => [],
-            'isBlankSite'            => false,
-            'blankWpVersion'         => '',
-        ];
+        return array_merge([
+            'cloneId'       => time(),
+            'stagingEngine' => StagingEngine::ENGINE_NEXT_GEN,
+            'name'          => '',
+        ], self::getSiteSelectionDefaults(), [
+            'isBlankSite'    => false,
+            'blankWpVersion' => '',
+        ]);
     }
 
     protected function getAdvanceSettings(): array
@@ -282,15 +272,67 @@ class PrepareCreate extends AbstractAjaxPrepare
         $this->jobDataDto->setStagingSite($stagingSite);
     }
 
+
+
+
     protected function getDestinationPath(array $data): string
     {
-        $absPath = trailingslashit($this->filesystem->normalizePath($this->directory->getAbsPath()));
+        if ($this->siteRootAcceptsStagingFolder($data)) {
+            return trailingslashit($this->filesystem->normalizePath($this->directory->getAbsPath())) . $data['directoryName'];
+        }
 
-        return $absPath . $data['directoryName'];
+        $stagingSiteDirectory = $this->directory->getStagingSiteDirectoryInsideWpcontent();
+        if ($stagingSiteDirectory === false) {
+            throw new \RuntimeException(esc_html__('The staging sites directory is not writable. Please choose another path.', 'wp-staging'));
+        }
+
+        return trailingslashit($this->filesystem->normalizePath($stagingSiteDirectory)) . $data['directoryName'];
     }
+
+
+
 
     protected function getDestinationUrl(array $data): string
     {
-        return trailingslashit(home_url()) . $data['directoryName'];
+        $homeUrl = trailingslashit(home_url()) . $data['directoryName'];
+        if ($this->siteRootAcceptsStagingFolder($data)) {
+            return $homeUrl;
+        }
+
+        $stagingSiteUrl = $this->directory->getStagingSiteUrl();
+        if (empty($stagingSiteUrl)) {
+            return $homeUrl;
+        }
+
+        return trailingslashit($stagingSiteUrl) . $data['directoryName'];
+    }
+
+
+
+
+
+    protected function siteRootAcceptsStagingFolder(array $data): bool
+    {
+        $absPath = trailingslashit($this->filesystem->normalizePath($this->directory->getAbsPath()));
+        $folder  = $absPath . $data['directoryName'];
+        if (!is_writable($absPath)) {
+            return false;
+        }
+
+        if (is_dir($folder)) {
+            return true;
+        }
+
+        if ($this->filesystem->mkdir($folder) === '') {
+            return false;
+        }
+
+        set_error_handler(function () {
+            return true;
+        });
+        rmdir($folder);
+        restore_error_handler();
+
+        return true;
     }
 }

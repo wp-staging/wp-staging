@@ -363,6 +363,11 @@ class Settings
 
     protected function saveHttpAuthCredentials(array $data)
     {
+        if (empty($data['httpAuthActive'])) {
+            update_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, ['username' => '', 'password' => ''], false);
+            return;
+        }
+
         $username = isset($data['httpAuthUsername'])
             ? $this->sanitize->sanitizeString($data['httpAuthUsername'])
             : '';
@@ -455,7 +460,7 @@ class Settings
         );
 
         $this->saveHttpAuthCredentials($data);
-        unset($data['httpAuthUsername'], $data['httpAuthPassword']);
+        unset($data['httpAuthActive'], $data['httpAuthUsername'], $data['httpAuthPassword']);
 
  
  

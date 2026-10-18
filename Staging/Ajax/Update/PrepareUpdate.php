@@ -85,24 +85,14 @@ class PrepareUpdate extends AbstractAjaxPrepare
 
     protected function getDefaults(): array
     {
-        return [
-            'cloneId'                => '',
-            'stagingEngine'          => StagingEngine::ENGINE_NEXT_GEN,
-            'allTablesExcluded'      => false,
-            'excludedTables'         => [],
-            'includedTables'         => [],
-            'nonSiteTables'          => [],
-            'excludedDirectories'    => [],
-            'extraDirectories'       => [],
+        return array_merge([
+            'cloneId'       => '',
+            'stagingEngine' => StagingEngine::ENGINE_NEXT_GEN,
+        ], self::getSiteSelectionDefaults(), [
  
-            'excludeSizeGreaterThan' => 8,
-            'excludeFileRules'       => [],
-            'excludeFolderRules'     => [],
-            'excludeExtensionRules'  => [],
- 
-            'isCleanPluginsThemes'   => false,
-            'isCleanUploads'         => false,
-        ];
+            'isCleanPluginsThemes' => false,
+            'isCleanUploads'       => false,
+        ]);
     }
 
     protected function getAdvanceSettings(): array

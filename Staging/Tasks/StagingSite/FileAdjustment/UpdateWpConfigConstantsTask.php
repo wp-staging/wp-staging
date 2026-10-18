@@ -3,6 +3,7 @@
 namespace WPStaging\Staging\Tasks\StagingSite\FileAdjustment;
 
 use RuntimeException;
+use wpdb;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
@@ -14,6 +15,7 @@ use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Staging\Tasks\FileAdjustmentTask;
+use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 
@@ -24,6 +26,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 {
     use WithUnfinishedCloneWpConfigGuard;
+    use WithStagingDatabase;
 
  
     const ABSPATH_REGEX = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
@@ -189,7 +192,13 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
         $replaceOrAdd = (array)apply_filters(self::FILTER_CONSTANTS_REPLACE_OR_ADD, $replaceOrAdd);
 
-        $content = $this->removeUnfinishedCloneGuardFromWpConfig($this->readWpConfig());
+        $content = $this->readWpConfig();
+        $keepGuard = $this->removeUnfinishedCloneGuardFromWpConfig($content) !== $content
+            && !$this->stagingHasSiteurl($this->getStagingDatabase(), $this->jobDataDto->getDatabasePrefix());
+        if ($keepGuard) {
+            $this->logger->warning('Keeping the unfinished-clone guard: the staging options table has no installed siteurl. Update the staging database before opening the site.');
+        }
+
         foreach ($replaceOrAdd as $constant => $newDefinition) {
             $content = $this->replaceOrAddDefinition($constant, $content, $newDefinition);
         }
@@ -202,10 +211,21 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
             $content = $this->deleteDefinition($constant, $content);
         }
 
+        if (!$keepGuard) {
+            $content = $this->replaceUnfinishedCloneGuardWithLiveTablesStop($content, $this->jobDataDto->getDatabasePrefix());
+        }
+
         $this->writeWpConfig($content);
 
 
         return $this->generateResponse();
+    }
+
+    protected function getStagingDatabase(): wpdb
+    {
+        $this->initStagingDatabase($this->getStagingSiteDto($this->jobDataDto->getCloneId()));
+
+        return $this->stagingDb->getWpdb();
     }
 
 

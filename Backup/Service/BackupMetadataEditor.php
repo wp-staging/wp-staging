@@ -26,6 +26,11 @@ class BackupMetadataEditor
             throw new \UnexpectedValueException('Could not find the existing metadata from the backup.');
         }
 
+        $encodedMetadata = json_encode($newMetadata);
+        if ($encodedMetadata === false) {
+            throw new \UnexpectedValueException('Could not encode the new metadata of the backup.');
+        }
+
         $backupFile->ftruncate($existingMetadataPosition);
         $backupFile->fseek($existingMetadataPosition);
 
@@ -34,7 +39,7 @@ class BackupMetadataEditor
             $prepandForSql = '-- ';
         }
 
-        $backupFile->fwrite($prepandForSql . json_encode($newMetadata) . BackupHeader::LINE_TERMINATOR);
+        $backupFile->fwrite($prepandForSql . $encodedMetadata . BackupHeader::LINE_TERMINATOR);
     }
 
 

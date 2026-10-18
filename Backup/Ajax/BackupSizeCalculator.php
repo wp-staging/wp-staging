@@ -208,7 +208,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
     {
         $dirToScan    = $this->directory->getPluginsDirectory();
         $excludeRules = $this->getPluginsExcludeRules();
-        $partSize     = $this->calculateDirectorySize($dirToScan, PartIdentifier::PLUGIN_PART_IDENTIFIER, $excludeRules);
+        $partSize     = $this->calculateDirectorySize($dirToScan, PartIdentifier::PLUGIN_PART_IDENTIFIER, $excludeRules, $this->isSiteHostedOnWordPressCom);
         $formatedSize = $this->math->formatSize($partSize);
 
         wp_send_json_success([
@@ -265,7 +265,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
             $this->setCurrentPathScanning(PartIdentifier::THEME_PART_IDENTIFIER);
             $this->setExcludeRules($excludeRules);
-            $this->preScanPath($themesDirectory, true);
+            $this->preScanPath($themesDirectory, $this->isSiteHostedOnWordPressCom);
             $totalSize += $this->scannerDto->getFilesystemSize();
         }
 
@@ -318,7 +318,8 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
 
 
-    protected function calculateDirectorySize(string $directory, string $partIdentifier, array $excludeRules = []): int
+
+    protected function calculateDirectorySize(string $directory, string $partIdentifier, array $excludeRules = [], bool $processLinks = false): int
     {
         if (!is_dir($directory)) {
             return 0;
@@ -326,7 +327,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
 
         $this->setCurrentPathScanning($partIdentifier);
         $this->setExcludeRules($excludeRules);
-        $this->preScanPath($directory, true);
+        $this->preScanPath($directory, $processLinks);
 
         return $this->scannerDto->getFilesystemSize();
     }
@@ -497,7 +498,7 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
             return;
         }
 
-        $this->preScanPath($pathname, true);
+        $this->preScanPath($pathname);
     }
 
 

@@ -56,6 +56,8 @@ if (!$isDeveloperOrHigher) {
         $licensingState = 'not_activated';
     }
 }
+
+$licensePageUrl = WPStaging::make(\WPStaging\Framework\Notices\CliIntegrationNotice::class)->getLicensePageUrl();
 ?>
 <div id="wpstg-cli-install-modal-content" style="display: none;" data-copied-text="<?php echo esc_attr__('Copied to clipboard!', 'wp-staging'); ?>">
     <div class="wpstg-cli-modal-layout">
@@ -77,7 +79,7 @@ if (!$isDeveloperOrHigher) {
                 <?php if ($licensingState === 'not_activated') : ?>
                     <div class="wpstg-cli-gating-notice">
                         <span><?php echo esc_html__('Activate your license to pull this site directly. Installing the CLI is free.', 'wp-staging'); ?></span>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+                        <a href="<?php echo esc_url($licensePageUrl); ?>">
                             <?php echo esc_html__('Enter license key', 'wp-staging'); ?>
                         </a>
                     </div>
@@ -232,14 +234,14 @@ if (!$isDeveloperOrHigher) {
                     <?php elseif ($licensingState === 'upgrade_needed') : ?>
                         <div class="wpstg-cli-gating-notice">
                             <span><?php echo esc_html__('Running this command requires a Developer or Agency license.', 'wp-staging'); ?></span>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+                            <a href="<?php echo esc_url($licensePageUrl); ?>">
                                 <?php echo esc_html__('Upgrade', 'wp-staging'); ?>
                             </a>
                         </div>
                     <?php elseif ($licensingState === 'not_activated') : ?>
                         <div class="wpstg-cli-gating-notice">
                             <span><?php echo esc_html__('Activate your license to run this command.', 'wp-staging'); ?></span>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+                            <a href="<?php echo esc_url($licensePageUrl); ?>">
                                 <?php echo esc_html__('Enter license key', 'wp-staging'); ?>
                             </a>
                         </div>

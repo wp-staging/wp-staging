@@ -357,6 +357,7 @@ class Assets
             'isDeveloperOrHigherLicense'        => WPStaging::make(CliIntegrationNotice::class)->isDeveloperOrHigherLicense(),
             'isExpiredDeveloperOrHigherLicense' => WPStaging::make(CliIntegrationNotice::class)->isExpiredDeveloperOrHigherLicense(),
             'canExtractSingleFile'              => WPStaging::isPro() && $this->isValidProLicense(),
+            'canEditBackupPlans'                => $this->licenseAllowsEditingBackupPlans(),
             'licensePlanName'                   => WPStaging::make(CliIntegrationNotice::class)->getLicensePlanName(),
             'licenseUpgradeUrl'                 => $this->getLicenseUpgradeUrl(),
             'licenseRenewalUrl'                 => $this->getLicenseRenewalUrl(),
@@ -485,6 +486,14 @@ class Assets
 
 
 
+    private function licenseAllowsEditingBackupPlans(): bool
+    {
+        return WPStaging::isPro() && class_exists('\WPStaging\Pro\WPStagingPro') && \WPStaging\Pro\WPStagingPro::isValidLicense();
+    }
+
+
+
+
     private function isValidProLicense(): bool
     {
         if (!class_exists('\WPStaging\Pro\License\Licensing')) {
@@ -510,7 +519,7 @@ class Assets
         try {
  
             $licensing = WPStaging::make(\WPStaging\Pro\License\Licensing::class);
-            return $licensing->getUpgradeToDevUrl();
+            return $licensing->getUpgradeToDevUrl('developer_upgrade');
         } catch (\Exception $e) {
             return '';
         }

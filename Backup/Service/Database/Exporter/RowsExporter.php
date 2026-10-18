@@ -15,8 +15,6 @@ use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-use function WPStaging\functions\debug_log;
-
 class RowsExporter extends AbstractExporter
 {
     use MySQLRowsGeneratorTrait;
@@ -476,16 +474,10 @@ class RowsExporter extends AbstractExporter
 
 
 
+
     public function lockTable()
     {
-        try {
-            $this->tableService->lockTable($this->tableName);
-        } catch (Exception $ex) {
-            debug_log("WP STAGING Backup: Could not lock table $this->tableName");
-            return false;
-        }
-
-        return true;
+        $this->tableService->lockTableOrGiveUp($this->tableName);
     }
 
 
@@ -496,7 +488,6 @@ class RowsExporter extends AbstractExporter
         try {
             $this->tableService->unlockTables();
         } catch (Exception $ex) {
-            debug_log("WP STAGING Backup: Could not unlock tables after locking tables $this->tableName");
             return false;
         }
 

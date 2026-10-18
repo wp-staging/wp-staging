@@ -17,6 +17,11 @@ class RestoreFinishResponseDto extends TaskResponseDto
 
 
 
+    private $skippedViews = [];
+
+
+
+
 
     public function setIsDatabaseRestoreSkipped(bool $isDatabaseRestoreSkipped)
     {
@@ -29,5 +34,14 @@ class RestoreFinishResponseDto extends TaskResponseDto
     public function getIsDatabaseRestoreSkipped(): bool
     {
         return $this->isDatabaseRestoreSkipped;
+    }
+
+
+
+
+
+    public function setSkippedViews(array $skippedViews)
+    {
+        $this->skippedViews = $skippedViews;
     }
 }

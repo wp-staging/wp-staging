@@ -6,3 +6,5 @@
 .distignore
 .gitignore
 
+/SECURITY.md
+/CONTRIBUTING.md

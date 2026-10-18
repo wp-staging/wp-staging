@@ -18,7 +18,10 @@ class TableService
     use SqlIdentifierTrait;
 
  
-    const DROP_LOCK_WAIT_SECONDS = 3;
+    const LOCK_WAIT_SECONDS = 3;
+
+ 
+    const LOCK_WAIT_TIMEOUT_ERRNO = 1205;
 
  
     const DROP_ATTEMPTS = 3;
@@ -383,7 +386,7 @@ class TableService
             return '';
         }
 
-        $this->client->query("SET SESSION lock_wait_timeout = " . self::DROP_LOCK_WAIT_SECONDS);
+        $this->client->query("SET SESSION lock_wait_timeout = " . self::LOCK_WAIT_SECONDS);
 
         return (string)$result['lock_wait'];
     }
@@ -863,7 +866,25 @@ class TableService
     public function lockTable(string $tableName)
     {
         if (!$this->client->query("LOCK TABLES `$tableName` WRITE;")) {
-            throw new RuntimeException("WP STAGING: Could not lock table $tableName");
+            throw new RuntimeException("WP STAGING: Could not lock table $tableName: " . $this->client->error(), (int)$this->client->errno());
+        }
+    }
+
+
+
+
+
+
+
+
+    public function lockTableOrGiveUp(string $tableName)
+    {
+        $lockWaitTimeout = $this->boundLockWait();
+
+        try {
+            $this->lockTable($tableName);
+        } finally {
+            $this->restoreLockWait($lockWaitTimeout);
         }
     }
 

@@ -462,7 +462,7 @@ if ($isMultisite) {
                             </button>
                         </div>
                     </div>
-                    <input id="wpstg-backup-name-input" name="backup_name" class="wpstg-input wpstg-input-md wpstg-create-backup-modal__name-input !wpstg-mt-2.5 !wpstg-max-w-full dark:!wpstg-border-slate-600 dark:!wpstg-text-slate-100 dark:placeholder:!wpstg-text-slate-500 focus-visible:!wpstg-border-royal-600 focus-visible:wpstg-outline focus-visible:wpstg-outline-2 focus-visible:wpstg-outline-offset-2 focus-visible:wpstg-outline-royal-600/35 dark:focus-visible:wpstg-outline-blue-500/40" value="<?php echo esc_attr($defaultBackupName); ?>" placeholder="<?php echo esc_attr($defaultBackupName); ?>" data-auto-label="<?php esc_attr_e('Auto', 'wp-staging'); ?>" data-name-edited="false" hidden>
+                    <input id="wpstg-backup-name-input" name="backup_name" maxlength="100" class="wpstg-input wpstg-input-md wpstg-create-backup-modal__name-input !wpstg-mt-2.5 !wpstg-max-w-full dark:!wpstg-border-slate-600 dark:!wpstg-text-slate-100 dark:placeholder:!wpstg-text-slate-500 focus-visible:!wpstg-border-royal-600 focus-visible:wpstg-outline focus-visible:wpstg-outline-2 focus-visible:wpstg-outline-offset-2 focus-visible:wpstg-outline-royal-600/35 dark:focus-visible:wpstg-outline-blue-500/40" value="<?php echo esc_attr($defaultBackupName); ?>" placeholder="<?php echo esc_attr($defaultBackupName); ?>" data-auto-label="<?php esc_attr_e('Auto', 'wp-staging'); ?>" data-name-edited="false" hidden>
 
                 </dl>
             </aside>

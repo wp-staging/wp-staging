@@ -12,6 +12,7 @@ namespace WPStaging\Backup\Job\Jobs;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Exceptions\MissingBackupPartException;
 use WPStaging\Backup\Exceptions\NothingToBackupException;
+use WPStaging\Backup\Exceptions\TableLockGivenUpException;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupMuPluginsTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupOtherFilesTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupOtherWpRootFilesTask;
@@ -70,6 +71,8 @@ class JobBackup extends AbstractJob
         } catch (MissingBackupPartException $e) {
             return $this->getUnrecoverableFailResponse($e);
         } catch (FileSizeLimitException $e) {
+            return $this->getUnrecoverableFailResponse($e);
+        } catch (TableLockGivenUpException $e) {
             return $this->getUnrecoverableFailResponse($e);
         } catch (NothingToBackupException $e) {
             return $this->getNothingToBackupResponse($e->getMessage());
@@ -135,7 +138,7 @@ class JobBackup extends AbstractJob
         $response->setIsRunning(false);
         $response->setJobStatus(self::JOB_STATUS_NOTHING_TO_BACKUP);
 
-        $this->jobTransientCache->failJob(esc_html__('Nothing to backup', 'wp-staging'), $message, JobTransientCache::SEVERITY_NOTICE);
+        $this->getTransientCache()->failJob(esc_html__('Nothing to backup', 'wp-staging'), $message, JobTransientCache::SEVERITY_NOTICE);
 
         return $response;
     }

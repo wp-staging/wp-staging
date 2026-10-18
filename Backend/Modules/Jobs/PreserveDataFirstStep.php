@@ -87,11 +87,10 @@ class PreserveDataFirstStep extends JobExecutable
         $stagingSites = $this->getStagingSiteOption(Sites::STAGING_SITES_OPTION);
 
  
+        $settings = null;
         if ($this->options->mainJob === MainJob::UPDATE) {
             $settings = $this->getStagingSiteOption("wpstg_settings");
         }
-
-        $loginLinkSettings = $this->getStagingSiteOption("wpstg_login_link_settings");
 
  
         $cloneOptions = $this->getStagingSiteOption(CloneOptions::WPSTG_CLONE_SETTINGS_KEY);
@@ -105,7 +104,7 @@ class PreserveDataFirstStep extends JobExecutable
         $settingsTableRows = $this->getStagingSiteSettingsTableRows();
 
  
-        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules && !$loginLinkSettings && empty($remoteStorages) && empty($settingsTableRows)) {
+        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules && empty($remoteStorages) && empty($settingsTableRows)) {
             return true;
         }
 
@@ -113,7 +112,6 @@ class PreserveDataFirstStep extends JobExecutable
             'stagingSites'      => $stagingSites,
             'cloneOptions'      => $cloneOptions,
             'backupSchedules'   => $backupSchedules,
-            'loginLinkSettings' => $loginLinkSettings,
             'settingsTableRows' => $settingsTableRows,
         ];
 
@@ -149,10 +147,6 @@ class PreserveDataFirstStep extends JobExecutable
 
         if ($cloneOptions === false) {
             $this->log("Preserve Data: Failed to get wpstg_clone_options");
-        }
-
-        if ($loginLinkSettings === false) {
-            $this->log("Preserve Data: Failed to get wpstg_login_link_settings");
         }
 
         if ($backupSchedules === false) {

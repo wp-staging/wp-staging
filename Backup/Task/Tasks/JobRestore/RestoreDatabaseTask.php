@@ -168,6 +168,7 @@ class RestoreDatabaseTask extends RestoreTask
     {
         $this->databaseImporter->setWarningLogCallable([$this->logger, 'warning']);
         $this->databaseImporter->setNoticeLogCallable([$this->logger, 'notice']);
+        $this->databaseImporter->setSkippedViewCallable([$this->jobDataDto, 'addSkippedView']);
         $this->databaseImporter->setFile($databaseFile, $this->stepsDto->getTotal());
         $this->seekToRestorePosition();
     }

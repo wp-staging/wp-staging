@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Analytics;
 
 use Throwable;
 use WPStaging\Backup\Exceptions\MissingBackupPartException;
+use WPStaging\Backup\Exceptions\TableLockGivenUpException;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\FileValidationException;
@@ -30,6 +31,7 @@ class ErrorCode
     const DB_RESTORE_QUERY    = 'db_restore_query';
     const REQUEST_FAILED      = 'request_failed';
     const BACKUP_PART_MISSING = 'backup_part_missing';
+    const TABLE_LOCK_GIVEN_UP = 'table_lock_given_up';
 
 
 
@@ -45,6 +47,7 @@ class ErrorCode
 
     private static $exceptionMap = [
         MissingBackupPartException::class => self::BACKUP_PART_MISSING,
+        TableLockGivenUpException::class  => self::TABLE_LOCK_GIVEN_UP,
         DiskNotWritableException::class   => self::DISK_FULL,
         FileSizeLimitException::class     => self::FILE_SIZE_LIMIT,
         FileValidationException::class    => self::FILE_VALIDATION,

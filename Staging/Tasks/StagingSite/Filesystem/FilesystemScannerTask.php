@@ -19,6 +19,7 @@ use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Staging\Interfaces\AdvanceStagingOptionsInterface;
 use WPStaging\Staging\Interfaces\StagingNetworkDtoInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Service\StagingSetup;
@@ -458,6 +459,12 @@ class FilesystemScannerTask extends StagingTask
 
     protected function scanUploadsDirectory(): TaskResponseDto
     {
+        if ($this->stagingSiteUsesLinkedUploads()) {
+            $this->logger->info('Skipping scanning of uploads directory because the staging site uses the live uploads through a link.');
+            $this->jobDataDto->setIsUploadsExcluded(true);
+            return $this->generateResponse();
+        }
+
  
         if (!is_dir($this->getUploadsDirectory())) {
             $this->jobDataDto->setIsUploadsExcluded(true);
@@ -561,6 +568,10 @@ class FilesystemScannerTask extends StagingTask
         }
 
         $excludedDirs = (array) apply_filters(self::FILTER_EXCLUDE_DIRECTORIES, $excludedDirs);
+        if ($this->stagingSiteUsesLinkedUploads()) {
+            $excludedDirs[] = $this->directory->getUploadsDirectory();
+            $excludedDirs[] = $this->directory->getMainSiteUploadsDirectory();
+        }
 
         return $this->directory->ensureWpStagingDataDirectoriesExcluded($excludedDirs);
     }
@@ -665,6 +676,21 @@ class FilesystemScannerTask extends StagingTask
         $this->filesystemScanner->preScanPath($dirToScan, $processLinks);
         $this->filesystemScanner->unlockQueue();
         $this->updateJobDataDto();
+    }
+
+ 
+    protected function stagingSiteUsesLinkedUploads(): bool
+    {
+        $stagingSiteUploadsPath = untrailingslashit(trailingslashit($this->jobDataDto->getStagingSitePath()) . $this->jobDataDto->getStagingSiteUploads());
+        if (is_link($stagingSiteUploadsPath)) {
+            return true;
+        }
+
+        if (file_exists($stagingSiteUploadsPath)) {
+            return false;
+        }
+
+        return $this->jobDataDto instanceof AdvanceStagingOptionsInterface && $this->jobDataDto->getIsUploadsSymlinked();
     }
 
     protected function isExcluded(string $directory): bool

@@ -122,6 +122,9 @@ class DatabaseImporter
     private $noticeLogCallable;
 
  
+    private $skippedViewCallable;
+
+ 
     private $searchReplace;
 
  
@@ -147,6 +150,9 @@ class DatabaseImporter
 
  
     private $tablesExcludedFromSearchReplace = [];
+
+ 
+    private $binaryColumnPositionsByTable = [];
 
  
     private $subsiteManager;
@@ -545,6 +551,16 @@ class DatabaseImporter
 
 
 
+
+    public function setSkippedViewCallable(callable $callable)
+    {
+        $this->skippedViewCallable = $callable;
+    }
+
+
+
+
+
     public function execute()
     {
         $query = $this->findExecutableQuery();
@@ -741,6 +757,35 @@ class DatabaseImporter
                     if (!empty($tableName) && $result) {
                         $this->logWarning(sprintf('PAGE_COMPRESSED removed from Table: %s, as it is not a supported syntax in MySQL.', $tableName));
                     }
+
+                    break;
+                case 1146:
+                    $viewName = $this->extractViewNameFromQuery($query);
+                    if ($viewName === '') {
+                        break;
+                    }
+
+                    if ($this->tmpDatabasePrefix === self::TMP_DATABASE_PREFIX) {
+                        $viewName = str_replace(self::TMP_DATABASE_PREFIX, $this->database->getPrefix(), $viewName);
+                        $errorMsg = str_replace(self::TMP_DATABASE_PREFIX, $this->database->getPrefix(), $errorMsg);
+                    }
+
+                    $warning = 'The database view "%1$s" was skipped because it depends on a table or view that is not present. MySQL returned error %2$d: "%3$s". The remaining database statements will continue.';
+                    if (__NAMESPACE__ !== 'WpstgRestorer') {
+                        /* translators: 1: database view name, 2: MySQL error code, 3: MySQL error message. */
+                        $warning = __('The database view "%1$s" was skipped because it depends on a table or view that is not present. MySQL returned error %2$d: "%3$s". The remaining database statements will continue.', 'wp-staging');
+                    }
+
+                    $this->logWarning(sprintf($warning, $viewName, $errorNo, $errorMsg), [
+                        'method'     => __METHOD__,
+                        'DbFileLine' => $this->getCurrentLine(),
+                        'DbQuery'    => $query,
+                    ]);
+                    if (is_callable($this->skippedViewCallable)) {
+                        call_user_func($this->skippedViewCallable, $viewName);
+                    }
+
+                    $result = true;
 
                     break;
                 case 1050:
@@ -1155,7 +1200,7 @@ class DatabaseImporter
 
         $query = "INSERT INTO `$tableName` VALUES (";
 
-        foreach ($valueMatches as $value) {
+        foreach ($valueMatches as $position => $value) {
             if (empty($value) || $value === "''") {
                 $query .= "'', ";
                 continue;
@@ -1188,8 +1233,8 @@ class DatabaseImporter
 
             $value = substr($value, 1, -1);
 
-            if (strpos($value, self::BINARY_FLAG) === 0) {
-                $query .= "UNHEX('" . substr($value, strlen(self::BINARY_FLAG)) . "'), ";
+            if ($this->isExportedBinaryValue($value) && isset($this->binaryColumnPositionsOf($tableName)[$position])) {
+                $query .= "UNHEX('" . substr($value, $this->binaryFlagLength) . "'), ";
                 continue;
             }
 
@@ -1213,6 +1258,203 @@ class DatabaseImporter
         $query = rtrim($query, ', ');
 
         $query .= ');';
+    }
+
+
+
+
+
+    public function rememberBinaryColumnsOf(string $createTableQuery)
+    {
+        $positions = [];
+        $position  = 0;
+        foreach ($this->tableDefinitionsOf($createTableQuery) as list($definition, $definitionWithoutLiterals)) {
+            if (strpos($definitionWithoutLiterals, '`') !== 0) {
+                $positions = $this->isTableClause($definitionWithoutLiterals) ? $positions : [];
+                break;
+            }
+
+            if (preg_match('#\bINVISIBLE\b#i', $definitionWithoutLiterals)) {
+                continue;
+            }
+
+            if (
+                preg_match('#^`(?:[^`]|``)*`\s+([a-zA-Z]+(?:\([^)]*\))?)#', $definitionWithoutLiterals, $type, PREG_OFFSET_CAPTURE)
+                && $this->isBinaryColumnType(substr($definition, $type[1][1], strlen($type[1][0])))
+            ) {
+                $positions[$position] = true;
+            }
+
+            $position++;
+        }
+
+        $tableName = $this->extractTableNameFromQuery(preg_replace('#^CREATE TABLE\s+IF NOT EXISTS\s+#i', 'CREATE TABLE ', $createTableQuery));
+
+        $this->binaryColumnPositionsByTable[$tableName] = $positions;
+    }
+
+
+
+
+
+    private function isTableClause(string $definition): bool
+    {
+        return preg_match('#^(?:PRIMARY|UNIQUE|KEY|INDEX|FULLTEXT|SPATIAL|CONSTRAINT|CHECK|FOREIGN|PERIOD)\b#i', $definition) === 1;
+    }
+
+
+
+
+
+    private function tableDefinitionsOf(string $createTableQuery): array
+    {
+        if (!preg_match('#^CREATE TABLE\s+(?:IF NOT EXISTS\s+)?(?:`(?:[^`]|``)+`|[a-zA-Z0-9_$]+)\s*\(#i', $createTableQuery, $tableHead)) {
+            return [];
+        }
+
+        $definitions               = [];
+        $definition                = '';
+        $definitionWithoutLiterals = '';
+        $depth                     = 0;
+        $quote                     = '';
+        $length                    = strlen($createTableQuery);
+        for ($i = strlen($tableHead[0]); $i < $length; $i++) {
+            $char = $createTableQuery[$i];
+
+            if ($quote !== '') {
+                $definition .= $char;
+                if ($char === '\\' && $quote !== '`' && $i + 1 < $length) {
+                    $definition                .= $createTableQuery[++$i];
+                    $definitionWithoutLiterals .= '__';
+                    continue;
+                }
+
+                $definitionWithoutLiterals .= $char === $quote ? $char : '_';
+                $quote                      = $char === $quote ? '' : $quote;
+                continue;
+            }
+
+            if ($char === "'" || $char === '"' || $char === '`') {
+                $quote = $char;
+            } elseif ($char === '(') {
+                $depth++;
+            } elseif ($char === ')' && $depth === 0) {
+                break;
+            } elseif ($char === ')') {
+                $depth--;
+            } elseif ($char === ',' && $depth === 0) {
+                $definitions[]             = [trim($definition), trim($definitionWithoutLiterals)];
+                $definition                = '';
+                $definitionWithoutLiterals = '';
+                continue;
+            }
+
+            $definition                .= $char;
+            $definitionWithoutLiterals .= $char;
+        }
+
+        $definitions[] = [trim($definition), trim($definitionWithoutLiterals)];
+
+        return $definitions;
+    }
+
+
+
+
+    public function getBinaryColumnPositionsByTable(): array
+    {
+        return $this->binaryColumnPositionsByTable;
+    }
+
+
+
+
+
+    public function setBinaryColumnPositionsByTable(array $binaryColumnPositionsByTable)
+    {
+        $this->binaryColumnPositionsByTable = $binaryColumnPositionsByTable;
+    }
+
+
+
+
+
+    private function binaryColumnPositionsOf(string $tableName): array
+    {
+        if (isset($this->binaryColumnPositionsByTable[$tableName])) {
+            return $this->binaryColumnPositionsByTable[$tableName];
+        }
+
+        $positions = $this->readBinaryColumnPositionsOf($tableName);
+        if ($positions === null) {
+            return [];
+        }
+
+        $this->binaryColumnPositionsByTable[$tableName] = $positions;
+
+        return $positions;
+    }
+
+
+
+
+
+    private function readBinaryColumnPositionsOf(string $tableName)
+    {
+        try {
+            $result = $this->client->query("SHOW COLUMNS FROM `$tableName`");
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        if ($result === false) {
+            return null;
+        }
+
+        $positions = [];
+        $position  = 0;
+        while ($column = $this->client->fetchAssoc($result)) {
+            if (isset($column['Extra']) && stripos($column['Extra'], 'INVISIBLE') !== false) {
+                continue;
+            }
+
+            if ($this->isBinaryColumnType($column['Type'])) {
+                $positions[$position] = true;
+            }
+
+            $position++;
+        }
+
+        $this->client->freeResult($result);
+
+        return $positions;
+    }
+
+
+
+
+
+    private function isBinaryColumnType(string $columnType): bool
+    {
+        $columnType = strtolower($columnType);
+
+        return strpos($columnType, 'binary') !== false || strpos($columnType, 'blob') !== false;
+    }
+
+
+
+
+
+    private function isExportedBinaryValue(string $value): bool
+    {
+        if (strpos($value, self::BINARY_FLAG) !== 0) {
+            return false;
+        }
+
+        $hex       = substr($value, $this->binaryFlagLength);
+        $hexLength = strlen($hex);
+
+        return $hexLength % 2 === 0 && strspn($hex, '0123456789abcdefABCDEF') === $hexLength;
     }
 
 
@@ -1625,15 +1867,23 @@ class DatabaseImporter
 
     protected function extractTableNameFromQuery(string $query): string
     {
-        if (!preg_match('#^(CREATE TABLE|INSERT INTO|DROP TABLE IF EXISTS)\s+(?:`([^`]+)`|"([^"]+)"|([a-zA-Z0-9_]+))#i', $query, $matches)) {
+        return $this->extractIdentifierFromQuery($query, '(?:CREATE TABLE|INSERT INTO|DROP TABLE IF EXISTS)');
+    }
+
+    private function extractViewNameFromQuery(string $query): string
+    {
+        return $this->extractIdentifierFromQuery($query, 'CREATE\s+(?:OR\s+REPLACE\s+)?VIEW');
+    }
+
+    private function extractIdentifierFromQuery(string $query, string $statementPattern): string
+    {
+        if (!preg_match('#^' . $statementPattern . '\s+(?:`([^`]+)`|"([^"]+)"|([a-zA-Z0-9_]+))#i', $query, $matches)) {
             return '';
         }
 
- 
- 
-        foreach ([$matches[2], $matches[3] ?? '', $matches[4] ?? ''] as $tableName) {
-            if ($tableName !== '') {
-                return $tableName;
+        foreach ([$matches[1], $matches[2] ?? '', $matches[3] ?? ''] as $identifier) {
+            if ($identifier !== '') {
+                return $identifier;
             }
         }
 

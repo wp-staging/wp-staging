@@ -6,7 +6,6 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
-use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Sites;
@@ -18,35 +17,6 @@ abstract class AbstractAjaxPrepare extends PrepareJob
 
  
     protected $jobDataDto;
-
-
-
-
-
-    public function ajaxPrepare($data)
-    {
-        if (!$this->auth->isAuthenticatedRequest()) {
-            wp_send_json_error(null, 401);
-        }
-
-        if (!WPStaging::make(StagingEngine::class)->isNextGenEnabled()) {
-            wp_send_json_error(esc_html__('The Next-Gen engine is temporarily unavailable. Please use the Classic engine.', 'wp-staging'), 403);
-        }
-
-        try {
-            $this->processLock->lockProcess();
-        } catch (ProcessLockedException $e) {
-            wp_send_json_error($e->getMessage(), $e->getCode());
-        }
-
-        $response = $this->prepare($data);
-
-        if ($response instanceof \WP_Error) {
-            wp_send_json_error($response->get_error_message(), $response->get_error_code());
-        }
-
-        wp_send_json_success();
-    }
 
 
 
@@ -107,6 +77,42 @@ abstract class AbstractAjaxPrepare extends PrepareJob
         $data = $this->additionalSanitization($data);
 
         return $data;
+    }
+
+
+
+
+    protected function getJobUnavailableError()
+    {
+        return WPStaging::make(StagingEngine::class)->getNextGenUnavailableError();
+    }
+
+
+
+
+    public static function getTableAndFolderSelectionDefaults(): array
+    {
+        return [
+            'allTablesExcluded'   => false,
+            'excludedTables'      => [],
+            'includedTables'      => [],
+            'nonSiteTables'       => [],
+            'excludedDirectories' => [],
+            'extraDirectories'    => [],
+        ];
+    }
+
+
+
+
+    public static function getSiteSelectionDefaults(): array
+    {
+        return array_merge(self::getTableAndFolderSelectionDefaults(), [
+            'excludeSizeGreaterThan' => 8,
+            'excludeFileRules'       => [],
+            'excludeFolderRules'     => [],
+            'excludeExtensionRules'  => [],
+        ]);
     }
 
     abstract protected function getDefaults(): array;

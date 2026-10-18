@@ -52,7 +52,7 @@ class UpdatePrefixInOptionsTableTask extends DatabaseAdjustmentTask
     {
         $optionsTableName = $this->getOptionsTableName();
         $this->logger->info("Updating database prefix in {$optionsTableName}.");
-        if ($this->isTableExcluded('options')) {
+        if ($this->isOptionsTableExcluded()) {
             $this->logger->warning("Table {$optionsTableName} is excluded. Skipping.");
             return true;
         }

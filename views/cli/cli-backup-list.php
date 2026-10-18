@@ -159,7 +159,7 @@ foreach ($backups as $backup) {
 <?php else : ?>
     <div class="wpstg-cli-gating-notice">
         <span><?php echo esc_html__('Running this command requires a Developer or Agency license.', 'wp-staging'); ?></span>
-        <a href="<?php echo esc_url(admin_url('admin.php?page=wpstg-license')); ?>">
+        <a href="<?php echo esc_url(WPStaging::make(\WPStaging\Framework\Notices\CliIntegrationNotice::class)->getLicensePageUrl()); ?>">
             <?php echo esc_html__('Upgrade', 'wp-staging'); ?>
         </a>
     </div>

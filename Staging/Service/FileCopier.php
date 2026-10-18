@@ -301,6 +301,10 @@ class FileCopier
 
         $destinationPath = $this->getDestinationPath($filePath, $indexPath);
 
+        if ($this->isSameFile($filePath, $destinationPath)) {
+            return true;
+        }
+
         if ($this->isStagingSiteRootWpConfig($destinationPath)) {
             $result = $this->copyStagingSiteRootWpConfig($filePath, $destinationPath);
         } elseif (filesize($filePath) > $this->batchSize) {
@@ -319,6 +323,32 @@ class FileCopier
         $this->setDirPermissions($destinationPath);
 
         return true;
+    }
+
+    protected function isSameFile(string $sourcePath, string $destinationPath): bool
+    {
+        if ($this->filesystem->normalizePath($sourcePath, true) === $this->filesystem->normalizePath($destinationPath, true)) {
+            return true;
+        }
+
+        $realSource = $this->realpathQuietly($sourcePath);
+        $realDest   = $this->realpathQuietly($destinationPath);
+
+        return $realSource !== false && $realDest !== false && $realSource === $realDest;
+    }
+
+ 
+    protected function realpathQuietly(string $path)
+    {
+        set_error_handler(function () {
+            return true;
+        });
+
+        try {
+            return realpath($path);
+        } finally {
+            restore_error_handler();
+        }
     }
 
     protected function isStagingSiteRootWpConfig(string $destinationPath): bool
