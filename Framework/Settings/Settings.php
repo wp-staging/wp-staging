@@ -8,6 +8,8 @@ use WPStaging\Core\DTO\Settings as SettingsDTO;
 use WPStaging\Framework\Facades\Sanitize as SanitizeFacade;
 use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Network\HttpBasicAuth;
 use WPStaging\Backup\Service\UpdateProtectionSettings;
 use WPStaging\Framework\SiteInfo;
@@ -66,6 +68,8 @@ class Settings
  
     private $dataEncryption;
 
+ 
+    private $processLock;
 
 
 
@@ -73,13 +77,16 @@ class Settings
 
 
 
-    public function __construct(SiteInfo $siteInfo, Sanitize $sanitize, Queue $queue, Auth $auth, DataEncryption $dataEncryption)
+
+
+    public function __construct(SiteInfo $siteInfo, Sanitize $sanitize, Queue $queue, Auth $auth, DataEncryption $dataEncryption, ProcessLock $processLock)
     {
         $this->siteInfo       = $siteInfo;
         $this->sanitize       = $sanitize;
         $this->queue          = $queue;
         $this->auth           = $auth;
         $this->dataEncryption = $dataEncryption;
+        $this->processLock    = $processLock;
     }
 
 
@@ -146,7 +153,17 @@ class Settings
             ]);
         }
 
+        try {
+            $this->processLock->lockProcess();
+        } catch (ProcessLockedException $e) {
+            wp_send_json([
+                'success' => false,
+                'message' => esc_html__('A WP Staging job is running and would add its next step back to the queue. Wait for it to finish or cancel it, then purge the queue.', 'wp-staging'),
+            ]);
+        }
+
         $result = $this->queue->purgeQueueTable();
+        $this->processLock->unlockProcess();
 
         if ($result === false) {
             wp_send_json([

@@ -123,6 +123,30 @@ class PrepareBackup extends PrepareJob
         return $job;
     }
 
+
+
+
+
+
+
+
+    protected function rewriteLapsedCurrentJobTransient(array $args)
+    {
+ 
+        $jobDataDto = $this->job->getJobDataDto();
+        if ($jobDataDto->getIsSyncRequest() || WPStaging::make(JobTransientCache::class)->getJob(true) !== null) {
+            return;
+        }
+
+        $transientCache = $this->job->getTransientCache();
+        $transientCache->startJob((string)$jobDataDto->getId(), esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, (string)$args['jobId'], '', (int)$jobDataDto->getStartTime());
+
+        $uploadRetryAt = (int)($jobDataDto->getRemoteUploadRetry()['retryAt'] ?? 0);
+        if ($uploadRetryAt > time()) {
+            $transientCache->deferUpload($uploadRetryAt, $uploadRetryAt);
+        }
+    }
+
     protected function getIsBackupJob(): bool
     {
         return true;

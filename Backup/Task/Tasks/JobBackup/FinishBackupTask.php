@@ -87,10 +87,10 @@ class FinishBackupTask extends BackupTask
 
  
  
-        $isScheduleCreationOnly = $this->jobDataDto->getRepeatBackupOnSchedule()
-            && !$this->jobDataDto->getIsCreateScheduleBackupNow();
+        $writesBackupFile = !$this->jobDataDto->getIsCreateBackupInBackground()
+            && !($this->jobDataDto->getRepeatBackupOnSchedule() && !$this->jobDataDto->getIsCreateScheduleBackupNow());
 
-        if (!$isScheduleCreationOnly) {
+        if ($writesBackupFile) {
             update_option(static::OPTION_LAST_BACKUP, [
                 'endTime'          => time(), 
                 'duration'         => $this->jobDataDto->getDuration(),
@@ -99,7 +99,7 @@ class FinishBackupTask extends BackupTask
         }
 
         $scheduleId = $this->jobDataDto->getScheduleId();
-        if (!empty($scheduleId) && !$isScheduleCreationOnly) {
+        if (!empty($scheduleId) && $writesBackupFile) {
             $backupScheduler = WPStaging::make(BackupScheduler::class);
             $backupScheduler->updateScheduleLastRun(
                 $scheduleId,

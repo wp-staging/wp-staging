@@ -21,6 +21,7 @@ use WPStaging\Staging\Service\TableScanner;
  * @var string                                    $stagingSiteName
  * @var string                                    $defaultSiteName
  * @var string                                    $productionSiteUrl
+ * @var string                                    $stagingSiteBaseUrl With a trailing slash
  * @var string                                    $selectedEngineName
  * @var string                                    $enginePanelId
  * @var bool                                      $showWooSchedulerSettings
@@ -52,13 +53,15 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                         data-clone="<?php echo esc_attr($stagingSiteDto->getCloneId()); ?>"
                         data-default-name="<?php echo esc_attr($defaultSiteName); ?>"
                         data-production-url="<?php echo esc_attr($productionSiteUrl); ?>"
+                        data-staging-site-base-url="<?php echo esc_attr($stagingSiteBaseUrl); ?>"
+                        data-default-path-base="<?php echo esc_attr($defaultPathBase); ?>"
                         data-invalid-message="<?php esc_attr_e('Use letters, numbers, spaces, hyphens, and underscores only.', 'wp-staging'); ?>"
                         data-exists-message="<?php esc_attr_e('A staging site with this name already exists. Please choose another name.', 'wp-staging'); ?>"
                     />
                 </label>
                 <div class="wpstg-mt-2.5 wpstg-flex wpstg-flex-wrap wpstg-items-center wpstg-gap-2 wpstg-text-[12.5px] wpstg-leading-5">
                     <span class="wpstg-create-pill wpstg-create-pill--slate"><?php $renderer->icon('link', 'wpstg-h-3 wpstg-w-3'); ?><?php esc_html_e('URL preview', 'wp-staging'); ?></span>
-                    <span class="wpstg-break-all wpstg-font-mono wpstg-text-[12.5px] wpstg-font-normal wpstg-text-[#374151] dark:wpstg-text-slate-300" data-wpstg-url-preview><span class="wpstg-create-url-base"><?php echo esc_html(trailingslashit($productionSiteUrl)); ?></span><span class="wpstg-create-url-slug wpstg-font-semibold wpstg-text-blue-700 dark:wpstg-text-blue-300"><?php echo esc_html($defaultSiteName); ?></span></span>
+                    <span class="wpstg-break-all wpstg-font-mono wpstg-text-[12.5px] wpstg-font-normal wpstg-text-[#374151] dark:wpstg-text-slate-300" data-wpstg-url-preview><span class="wpstg-create-url-base"><?php echo esc_html($stagingSiteBaseUrl); ?></span><span class="wpstg-create-url-slug wpstg-font-semibold wpstg-text-blue-700 dark:wpstg-text-blue-300"><?php echo esc_html($defaultSiteName); ?></span></span>
                 </div>
                 <div id="wpstg-clone-id-error" class="wpstg-callout wpstg-create-name-message wpstg-mt-3" style="display:none;" role="alert" aria-live="polite"><div class="wpstg-text-sm" id="wpstg-clone-id-error-msg"></div></div>
             </section>
@@ -133,7 +136,7 @@ $summaryClass = sprintf('wpstg-create-setup-modal__summary wpstg-%s-setup-modal_
                 ?>
                 <?php $renderer->runtimeSection($isCreate, $isUpdate, $isProLicenseActive, $showWooSchedulerSettings, $stagingSiteDto, $runtimeSummaryTooltips); ?>
                 <?php if ($isCreate) {
-                    $renderer->destinationSection($isProLicenseActive, $isProBuild, $isCreate, $stagingSetup, $defaultPathBase, $defaultSiteName, $productionSiteUrl);
+                    $renderer->destinationSection($isProLicenseActive, $isProBuild, $isCreate, $stagingSetup, $defaultPathBase, $defaultSiteName, $stagingSiteBaseUrl);
                 } ?>
                 <?php $renderer->engineSection($setupMode, $enginePanelId); ?>
             </div>

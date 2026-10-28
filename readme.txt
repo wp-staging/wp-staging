@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.18.0
+Stable tag: 4.19.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,17 +283,26 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.18.0 =
-* Enh: Apply security hardening. Updating is strongly recommended. #7051
-* Enh: Back up large databases much faster. #7011
-* Fix: A backup restore no longer stops when the database is briefly unreachable. #5561
-* Fix: Backup plans keep their own schedule when edited, so saving one unchanged no longer makes it run hourly. (Pro) #6473
-* Fix: Create staging sites inside wp-content when the site root is not writable. #6846
-* Fix: Keep live media files intact when updating or pushing a Next-Gen staging site with symlinked uploads. #7017
-* Fix: Large backups uploaded to Dropbox no longer stay at 99%. (Pro) #6986
-* Fix: Long backup names and notes in Japanese, Chinese, Cyrillic or emoji no longer break the backup. #7014
-* Fix: Stop a push when its safety backup fails, instead of pushing without a restore point. (Pro) #6903
-*  Plus 40 more fixes. #7163
+= 4.19.0 =
+* Enh: Let a backup plan keep up to 30 backups instead of 10. (Pro)
+* Ux: Keep the log filters and autoscroll working for a job that runs on the first run page.
+* Security: This release includes security hardening. Updating is strongly recommended.
+* Fix: A restore no longer gets stuck on "Extracting files" when a backed-up file cannot be written; the file is skipped, logged, and the restore continues.
+* Fix: A backup plan launched in the background no longer reports a successful run before its backup exists.
+* Fix: A finished background job is no longer reported as failed, and a lost one is reported as failed instead of running forever.
+* Fix: The live logs and Cancel button of a running backup stay available after its job metadata expires.
+* Fix: The backup queue is no longer purged while a job is running, instead of reporting success while the job continues.
+* Fix: Backups are stored in wp-content/wp-staging/data when the uploads folder cannot be written, so the Backup tab loads with external uploads.
+* Fix: Unreadable subdirectories are skipped when calculating the backup size instead of crashing with a fatal error.
+* Fix: A newly created or reset staging site opens right away instead of showing 'This staging site is not finished yet'.
+* Fix: Updating or resetting a staging site on an external database no longer stops with a fatal error when the site has no stored database prefix, and refuses to run when its tables would be the live site's.
+* Fix: Activation no longer overwrites a setting in a broken wp_options table and explains how to repair the table first.
+* Fix: The LiteSpeed Cache Unique CSS, Critical CSS and image placeholders are cleared after a restore, a push or a new staging site, so the page layout is not broken.
+* Fix: A Classic push now stops before the database phase when files fail to copy, instead of reporting success. (Pro)
+* Fix: Large backups uploaded to pCloud no longer stay at 99% after the file is on pCloud. (Pro)
+* Fix: A wp-config.php with Windows line endings no longer gains a blank line after every line when WP STAGING rewrites it.
+* Fix: Resetting a staging site no longer stops when its wp-config.php is read-only on a Windows host.
+* Plus 33 more fixes.
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

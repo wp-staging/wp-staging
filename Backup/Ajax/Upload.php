@@ -297,7 +297,8 @@ class Upload extends AbstractTemplateComponent
         $biggerThanExpected  = $realSize - $allowedDifferece > $estimatedSize;
 
         if ($smallerThanExpected || $biggerThanExpected) {
-            throw new Exception(sprintf(__('The backup size (%s) is different than expected (%s). If this issue persists, upload the file directly to this folder using FTP: <strong>wp-content/uploads/wp-staging/backups</strong>', 'wp-staging'), size_format($realSize, 2), size_format($estimatedSize)));
+            /* translators: %1$s: size of the uploaded file, %2$s: size recorded in the backup, %3$s: backups folder relative to the WordPress root. */
+            throw new Exception(sprintf(__('The backup size (%1$s) is different than expected (%2$s). If this issue persists, upload the file directly to this folder using FTP: <strong>%3$s</strong>', 'wp-staging'), size_format($realSize, 2), size_format($estimatedSize), esc_html(str_replace(wp_normalize_path(ABSPATH), '', $this->backupsFinder->getBackupsDirectory()))));
         }
     }
 

@@ -15,7 +15,9 @@ use WPStaging\Framework\Traits\HydrateTrait;
 
 class StagingSiteDto implements \JsonSerializable
 {
-    use HydrateTrait;
+    use HydrateTrait {
+        hydrate as private hydrateFromArray;
+    }
     use ArrayableTrait {
         toArray as private propertiesToArray;
     }
@@ -744,6 +746,25 @@ class StagingSiteDto implements \JsonSerializable
     public function getSiteName(): string
     {
         return empty($this->cloneName) ? $this->directoryName : $this->cloneName;
+    }
+
+
+
+
+
+
+    public function hydrate(array $data = [])
+    {
+        $legacySettings = [
+            'isEmailsAllowed'         => isset($data['emailsAllowed']) ? (bool)$data['emailsAllowed'] : null,
+            'isEmailsReminderEnabled' => isset($data['emailsReminderAllowed']) ? (bool)$data['emailsReminderAllowed'] : null,
+            'isCronEnabled'           => isset($data['cronDisabled']) ? !$data['cronDisabled'] : null,
+            'isWooSchedulerEnabled'   => isset($data['wooSchedulerDisabled']) ? !$data['wooSchedulerDisabled'] : null,
+        ];
+
+        unset($data['emailsAllowed'], $data['emailsReminderAllowed'], $data['cronDisabled'], $data['wooSchedulerDisabled']);
+
+        return $this->hydrateFromArray($data + array_filter($legacySettings, 'is_bool'));
     }
 
     public function toArray(): array

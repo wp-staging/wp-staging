@@ -314,6 +314,8 @@ class Files extends JobExecutable
             return false;
         }
 
+        $this->guardStagingSiteRootBeforeFilesArrive();
+
  
         if (isset($this->options->copiedFiles) && $this->options->copiedFiles != 0) {
             $this->file->seek($this->options->copiedFiles - 1);
@@ -516,6 +518,26 @@ class Files extends JobExecutable
         }
 
         $message = "Refused to copy a wp-config.php that cannot be guarded against an unfinished clone: {$file} -> {$destination}";
+        $this->returnException($message);
+
+        throw new WPStagingException($message);
+    }
+
+
+
+
+
+    private function guardStagingSiteRootBeforeFilesArrive()
+    {
+        if ($this->options->mainJob === Job::UPDATE) {
+            return;
+        }
+
+        if ($this->createGuardOnlyWpConfigWhenMissing($this->filesystem, $this->destination)) {
+            return;
+        }
+
+        $message = "Cannot copy files into a staging site whose wp-config.php cannot be guarded: {$this->destination}";
         $this->returnException($message);
 
         throw new WPStagingException($message);

@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backup\Task;
 
+use WPStaging\Backup\Utils\BackupPathResolver;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\MissingFileException;
@@ -193,10 +195,11 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
 
         $parts = $this->getParts();
 
-        $backupDir = $this->directory->getBackupDirectory();
+        $backupPathResolver = WPStaging::make(BackupPathResolver::class);
+        $backupFilename     = wp_basename($this->jobDataDto->getFile());
 
         foreach ($parts as $part) {
-            $filepath = $backupDir . $part;
+            $filepath = $backupPathResolver->resolveRestorePartPath($part, $backupFilename);
             if (!file_exists($filepath)) {
                 throw new MissingFileException();
             }

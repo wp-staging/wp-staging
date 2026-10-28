@@ -2,6 +2,8 @@
 
 use WPStaging\Backup\BackupDownload;
 use WPStaging\Backup\BackupScheduler;
+use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Basic\Notices\BackupProCardNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Escape;
@@ -121,6 +123,11 @@ $disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
 
 <?php
 require WPSTG_VIEWS_DIR . 'backup/_partials/listing-modals.php';
+
+if (WPStaging::make(BackupProCardNotice::class)->isShownToCurrentUser() && !empty(WPStaging::make(BackupsFinder::class)->findBackups())) {
+    require WPSTG_VIEWS_DIR . 'ads/backup-pro-upgrade-card.php';
+}
+
 include(WPSTG_VIEWS_DIR . 'notices/review-prompt-handlers.php');
 ?>
 <div id="wpstg-delete-confirmation"></div>

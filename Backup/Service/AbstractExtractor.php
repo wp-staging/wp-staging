@@ -433,20 +433,21 @@ abstract class AbstractExtractor
     protected function moveToNextFile(string $destinationFilePath = '')
     {
         $this->lastIdentifiablePath = $this->indexLineDto->getIdentifiablePath();
- 
-        $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
         $this->extractorDto->incrementTotalFilesExtracted();
-
- 
-        $this->extractorDto->setHeaderBytesRemoved(0);
-        $this->extractorDto->setExtractorFileWrittenBytes(0);
-        $this->extractorDto->setExtractorFileReadBytes(0);
-
-        $this->extractorDto->setExtractorFileBaseBytes(0);
+        $this->jumpToNextFile();
 
         if (!empty($destinationFilePath) && $this->shouldDeleteValidationFileAfterMove()) {
             $this->deleteValidationFile($destinationFilePath);
         }
+    }
+
+
+
+
+    protected function skipToNextFile()
+    {
+        $this->extractorDto->incrementTotalFilesSkipped();
+        $this->jumpToNextFile();
     }
 
     public function finishExtractingFile()
@@ -864,5 +865,17 @@ abstract class AbstractExtractor
         }
 
         return true;
+    }
+
+
+
+
+    private function jumpToNextFile()
+    {
+        $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+        $this->extractorDto->setHeaderBytesRemoved(0);
+        $this->extractorDto->setExtractorFileWrittenBytes(0);
+        $this->extractorDto->setExtractorFileReadBytes(0);
+        $this->extractorDto->setExtractorFileBaseBytes(0);
     }
 }

@@ -120,7 +120,7 @@ class QueueProcessor
  
         $previousAction = null;
 
-        while (!$this->isThreshold()) {
+        while ($this->doProcess && !$this->isThreshold()) {
             $action = $this->queue->getNextAvailable();
 
             if (!$action instanceof Action) {

@@ -704,38 +704,21 @@ class TableService
 
 
 
+
+
     public function replaceTableConstraints(string $input): string
     {
-        $pattern = [
+        $quotedName        = '(?:`(?:[^`]|``)+`|\w+)';
+        $columnList        = '\([^)]*\)';
+        $referentialAction = '\s+ON\s+(?:DELETE|UPDATE)\s+(?:CASCADE|RESTRICT|NO\s+ACTION|SET\s+NULL|SET\s+DEFAULT)';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?(CASCADE|RESTRICT|NO\sACTION|SET\sNULL|SET\sDEFAULT)(,)/i',
-            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?\)/i',
-            '/\s+CONSTRAINT(.+)REFERENCES(.+),/i',
-            '/,\s+CONSTRAINT(.+)REFERENCES(.+)/i',
-        ];
-
-        $replace = ['', ')', '', ''];
-        return (string)preg_replace($pattern, $replace, $input);
+        return (string)preg_replace(
+            '/,\s*CONSTRAINT\s+' . $quotedName . '\s+FOREIGN\s+KEY\s*' . $columnList
+            . '\s*REFERENCES\s+(?:' . $quotedName . '\.)?' . $quotedName . '\s*' . $columnList
+            . '(?:' . $referentialAction . ')*/i',
+            '',
+            $input
+        );
     }
 
 

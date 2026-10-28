@@ -14,7 +14,7 @@ use WPStaging\Staging\Service\AbstractStagingSetup;
  * @var AbstractStagingSetup                      $stagingSetup
  * @var string                                    $defaultPathBase
  * @var string                                    $defaultSiteName
- * @var string                                    $productionSiteUrl
+ * @var string                                    $stagingSiteBaseUrl With a trailing slash
  */
 
 $renderer->accordionSection([
@@ -30,7 +30,7 @@ $renderer->accordionSection([
     'panelClass'   => 'wpstg-create-accordion-panel wpstg-collapse-panel wpstg-overflow-visible',
     'panelId'      => 'wpstg-destination-advanced-settings',
     'title'        => __('Destination and advanced options', 'wp-staging'),
-], function () use ($renderer, $isProLicenseActive, $isProBuild, $isCreate, $stagingSetup, $defaultPathBase, $defaultSiteName, $productionSiteUrl) {
+], function () use ($renderer, $isProLicenseActive, $isProBuild, $isCreate, $stagingSetup, $defaultPathBase, $defaultSiteName, $stagingSiteBaseUrl) {
  
  
     $isPro                 = $isProLicenseActive;
@@ -84,7 +84,7 @@ $renderer->accordionSection([
                     <dt><?php esc_html_e('URL', 'wp-staging'); ?></dt>
                     <dd>
                         <span class="wpstg-create-inline-display" data-wpstg-inline-display>
-                            <span class="wpstg-create-inline-value" data-wpstg-inline-value><span class="wpstg-create-url-base"><?php echo esc_html(trailingslashit($productionSiteUrl)); ?></span><span class="wpstg-create-url-slug"><?php echo esc_html($defaultSiteName); ?></span></span>
+                            <span class="wpstg-create-inline-value" data-wpstg-inline-value><span class="wpstg-create-url-base"><?php echo esc_html($stagingSiteBaseUrl); ?></span><span class="wpstg-create-url-slug"><?php echo esc_html($defaultSiteName); ?></span></span>
                             <?php if ($isPro) :
                                 ?><button type="button" class="wpstg-create-inline-customize" data-wpstg-inline-edit-trigger><?php esc_html_e('Customize', 'wp-staging'); ?></button><?php
                             else :

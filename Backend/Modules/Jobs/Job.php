@@ -10,6 +10,8 @@ use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Adapter\Database\DatabaseException;
+use WPStaging\Framework\Database\DbInfo;
 use WPStaging\Framework\Database\ExcludedTables;
 use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use WPStaging\Framework\Facades\Hooks;
@@ -570,8 +572,18 @@ abstract class Job implements ShutdownableInterface
         $productionDbInfo = new WpDbInfo($productionDb);
         $productionServer = $productionDbInfo->getServer();
 
-        $stagingDb     = new \wpdb($this->options->databaseUser, str_replace("\\\\", "\\", $this->options->databasePassword), $this->options->databaseDatabase, $this->options->databaseServer);
-        $stagingDbInfo = new WpDbInfo($stagingDb);
+        try {
+            $stagingDbInfo = new DbInfo(
+                $this->options->databaseServer,
+                $this->options->databaseUser,
+                str_replace("\\\\", "\\", $this->options->databasePassword),
+                $this->options->databaseDatabase,
+                (bool)($this->options->databaseSsl ?? false)
+            );
+        } catch (DatabaseException $e) {
+            return false;
+        }
+
         $stagingServer = $stagingDbInfo->getServer();
 
         if ($productionServer === $stagingServer && $this->options->databaseDatabase === DB_NAME) {

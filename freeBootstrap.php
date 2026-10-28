@@ -75,8 +75,11 @@ add_action('plugins_loaded', function () use ($pluginFilePath) {
     }
 }, 11, 0); 
 
-register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
+register_activation_hook($pluginFilePath, function ($isNetworkWide = false) use ($pluginFilePath) {
  
+    if (!defined('WPSTGPRO_VERSION') && function_exists('wpstgStopActivationIfOptionsTableOverwritesOptions')) {
+        wpstgStopActivationIfOptionsTableOverwritesOptions((bool)$isNetworkWide);
+    }
 
     try {
         $files = [

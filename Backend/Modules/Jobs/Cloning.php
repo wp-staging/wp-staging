@@ -406,7 +406,7 @@ class Cloning extends Job
  
         $cloneDestinationPath = $this->directoryAdapter->getAbsPath() . $this->options->cloneDirectoryName;
 
-        if (!is_writable($this->directoryAdapter->getAbsPath())) {
+        if (!$this->siteRootAcceptsCloneFolder($cloneDestinationPath)) {
             $stagingSiteDirectory = $this->directoryAdapter->getStagingSiteDirectoryInsideWpcontent();
             if ($stagingSiteDirectory === false) {
                 debug_log(esc_html('Fail to get destination directory. The staging sites destination folder cannot be created.'));
@@ -421,6 +421,33 @@ class Cloning extends Job
 
         $this->options->cloneDir = trailingslashit($cloneDestinationPath);
         return $this->options->cloneDir;
+    }
+
+
+
+
+
+    private function siteRootAcceptsCloneFolder(string $folder): bool
+    {
+        if (!is_writable($this->directoryAdapter->getAbsPath())) {
+            return false;
+        }
+
+        if (is_dir($folder)) {
+            return true;
+        }
+
+        if ($this->directoryAdapter->getFileSystem()->mkdir($folder) === '') {
+            return false;
+        }
+
+        set_error_handler(function () {
+            return true;
+        });
+        rmdir($folder);
+        restore_error_handler();
+
+        return true;
     }
 
 
@@ -481,11 +508,15 @@ class Cloning extends Job
                 'databasePassword',
                 'databaseSsl',
             ])));
-            WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->assertCanModifyTables(
-                $this->options->databasePrefix ?: $this->options->prefix,
-                $this->options->clone,
-                $jobSite
-            );
+            try {
+                WPStaging::make(\WPStaging\Staging\PrefixOwnership::class)->assertCanModifyTables(
+                    $this->isExternalDatabase() ? $this->getDestinationDatabasePrefix() : $this->options->prefix,
+                    $this->options->clone,
+                    $jobSite
+                );
+            } catch (\RuntimeException $e) {
+                $this->returnException($e->getMessage());
+            }
         }
 
         $methodName = "job" . ucwords($this->options->currentJob);
@@ -495,7 +526,7 @@ class Cloning extends Job
             throw new JobNotFoundException($methodName);
         }
 
-        if ($this->options->databasePrefix === $this->db->prefix && $this->isStagingDatabaseSameAsProductionDatabase()) {
+        if (strcasecmp($this->getDestinationDatabasePrefix(), $this->db->prefix) === 0 && $this->isStagingDatabaseSameAsProductionDatabase()) {
             $this->returnException('Table prefix for staging site can not be identical to live database if staging site will be cloned into production database! Please start over and change the table prefix or destination database.');
         }
 
@@ -518,6 +549,15 @@ class Cloning extends Job
 
  
         return $this->{$methodName}();
+    }
+
+    protected function getDestinationDatabasePrefix(): string
+    {
+        if ($this->isExternalDatabase() && empty($this->options->databasePrefix)) {
+            return $this->db->prefix;
+        }
+
+        return (string)$this->options->databasePrefix;
     }
 
 

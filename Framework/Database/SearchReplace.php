@@ -177,6 +177,11 @@ class SearchReplace
         return $this;
     }
 
+    public function hasSearch(): bool
+    {
+        return !empty($this->search);
+    }
+
     public function setSearch(array $search)
     {
         $this->search = $search;

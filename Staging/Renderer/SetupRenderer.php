@@ -129,9 +129,9 @@ class SetupRenderer
         $this->renderPartial('runtime-section', compact('isCreate', 'isUpdate', 'isProLicenseActive', 'showWooSchedulerSettings', 'stagingSiteDto', 'runtimeSummaryTooltips'));
     }
 
-    public function destinationSection(bool $isProLicenseActive, bool $isProBuild, bool $isCreate, AbstractStagingSetup $stagingSetup, string $defaultPathBase, string $defaultSiteName, string $productionSiteUrl)
+    public function destinationSection(bool $isProLicenseActive, bool $isProBuild, bool $isCreate, AbstractStagingSetup $stagingSetup, string $defaultPathBase, string $defaultSiteName, string $stagingSiteBaseUrl)
     {
-        $this->renderPartial('destination-section', compact('isProLicenseActive', 'isProBuild', 'isCreate', 'stagingSetup', 'defaultPathBase', 'defaultSiteName', 'productionSiteUrl'));
+        $this->renderPartial('destination-section', compact('isProLicenseActive', 'isProBuild', 'isCreate', 'stagingSetup', 'defaultPathBase', 'defaultSiteName', 'stagingSiteBaseUrl'));
     }
 
     public function runtimeSummaryValue(string $key, array $tooltips, bool $isProLicenseActive)

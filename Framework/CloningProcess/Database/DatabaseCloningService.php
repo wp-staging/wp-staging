@@ -6,12 +6,19 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\CloningProcess\CloningDto;
+use WPStaging\Framework\Database\QueryBuilder\InsertValues;
 use WPStaging\Framework\Database\QueryBuilder\SelectQuery;
+use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Utils\Strings;
-use WPStaging\Framework\Utils\Escape;
 
 class DatabaseCloningService
 {
+
+
+
+
+    const ROW_VALUES_CONNECTION_CHARSET = 'utf8mb4';
+
 
 
 
@@ -50,6 +57,10 @@ class DatabaseCloningService
 
         $selectQuery    = $this->selectQueryBuilder->prepareQueryWithFilter($srcTableName, $limit, $offset);
         $preparedValues = $this->selectQueryBuilder->getPreparedValues();
+        if ($this->isProductionOptionsTable($srcTableName)) {
+            $selectQuery    = $this->excludeAccessTokenRows($selectQuery);
+            $preparedValues = array_merge($preparedValues, AccessToken::ALL_OPTION_NAMES);
+        }
 
         if ($this->dto->isExternal()) {
             $stagingDb = $this->dto->getStagingDb();
@@ -63,23 +74,31 @@ class DatabaseCloningService
             }
 
  
-            $result = $this->dto->getProductionDb()->get_results($preparedQuery, ARRAY_A);
- 
-            $stagingDb->query('SET autocommit=0;');
-            $stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
-            $stagingDb->query('START TRANSACTION;');
+            $insertValues = WPStaging::make(InsertValues::class);
+            $columnTypes  = $insertValues->readColumnTypes($this->dto->getProductionDb(), $srcTableName);
 
  
-            $escapeUtil   = WPStaging::make(Escape::class);
-            $tableColumns = $this->getColumnTypes($srcTableName);
+            $productionDb     = $this->dto->getProductionDb();
+            $rowValuesCharset = $this->rowValuesConnectionCharset($productionDb, $srcTableName);
+            $this->applyRowValuesConnectionCharset($productionDb, $rowValuesCharset);
+            try {
+                $result = $productionDb->get_results($preparedQuery, ARRAY_A);
+            } finally {
+                $this->restoreConfiguredConnectionCharset($productionDb, $rowValuesCharset);
+            }
+
+            $this->applyRowValuesConnectionCharset($stagingDb, $rowValuesCharset);
             $isCommitted = false;
 
             try {
  
-                foreach ($result as $row) {
+                $stagingDb->query('SET autocommit=0;');
+                $stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
+                $stagingDb->query('START TRANSACTION;');
+
  
-                    $values      = $this->prepareValuesStatement($row, $tableColumns, $escapeUtil);
-                    $query       = "INSERT INTO `$destTableName` VALUES ($values)";
+                foreach ($result as $row) {
+                    $query       = "INSERT INTO `$destTableName` VALUES (" . $insertValues->formatRow($row, $columnTypes) . ")";
                     $insertQuery = $query;
                     $inserted    = $stagingDb->query($insertQuery);
 
@@ -102,10 +121,11 @@ class DatabaseCloningService
                         $lastError = $stagingDb->last_error;
                         $this->debugLog("Failed Query: " . $insertQuery . " Error: " . $lastError);
 
-                        throw new FatalException(
-                            "DB Data Copy Error: Failed to copy data from {$srcTableName} "
-                            . "to {$destTableName}. {$lastError}"
-                        );
+                        $failureMessage = "DB Data Copy Error: Failed to copy data from {$srcTableName} "
+                            . "to {$destTableName}. {$lastError}";
+                        $this->log($failureMessage, Logger::TYPE_ERROR);
+
+                        throw new FatalException($failureMessage);
                     }
                 }
 
@@ -119,6 +139,7 @@ class DatabaseCloningService
 
                 $stagingDb->query('SET FOREIGN_KEY_CHECKS=1;');
                 $stagingDb->query('SET autocommit=1;');
+                $this->restoreConfiguredConnectionCharset($stagingDb, $rowValuesCharset);
             }
         } else {
             $this->log("Copy data from $srcTableName to $destTableName - $offset to $rows records");
@@ -153,6 +174,18 @@ class DatabaseCloningService
                 );
             }
         }
+    }
+
+    private function isProductionOptionsTable(string $tableName): bool
+    {
+        return preg_match('/^' . preg_quote($this->dto->getProductionDb()->base_prefix, '/') . '(\d+_)?options$/', $tableName) === 1;
+    }
+
+    private function excludeAccessTokenRows(string $selectQuery): string
+    {
+        $placeholders = implode(', ', array_fill(0, count(AccessToken::ALL_OPTION_NAMES), '%s'));
+
+        return 'SELECT * FROM (' . rtrim($selectQuery, "; \n") . ") AS `copiedRows` WHERE `copiedRows`.`option_name` NOT IN ({$placeholders})";
     }
 
     private function isDuplicateEntryError(string $message): bool
@@ -373,6 +406,81 @@ class DatabaseCloningService
 
 
 
+
+
+
+
+    private function rowValuesConnectionCharset($db, $tableName)
+    {
+        if (!$db->ready || empty($db->charset) || $db->charset === self::ROW_VALUES_CONNECTION_CHARSET) {
+            return null;
+        }
+
+        if ($this->tableTextColumnsAllShareTheConnectionCharset($db, $tableName)) {
+            return null;
+        }
+
+        return self::ROW_VALUES_CONNECTION_CHARSET;
+    }
+
+
+
+
+
+
+
+
+
+    private function tableTextColumnsAllShareTheConnectionCharset($db, $tableName)
+    {
+        $columnNames = $db->get_col('SHOW COLUMNS FROM `' . $tableName . '`');
+        if (empty($columnNames)) {
+            return true;
+        }
+
+        foreach ($columnNames as $columnName) {
+            $columnCharset = $db->get_col_charset($tableName, $columnName);
+            if ($columnCharset === false || $columnCharset instanceof \WP_Error || $columnCharset === $db->charset) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+
+
+    private function applyRowValuesConnectionCharset($db, $rowValuesCharset)
+    {
+        if (!$db->ready || $rowValuesCharset === null) {
+            return;
+        }
+
+        $db->set_charset($db->dbh, $rowValuesCharset);
+    }
+
+
+
+
+
+
+    private function restoreConfiguredConnectionCharset($db, $rowValuesCharset)
+    {
+        if (!$db->ready || $rowValuesCharset === null) {
+            return;
+        }
+
+        $db->set_charset($db->dbh, $db->charset);
+    }
+
+
+
+
+
     protected function debugLog($message, $type = Logger::TYPE_INFO)
     {
         $prependString = $this->dto->isExternal() ? "DB External Copy: " : "DB Copy: ";
@@ -421,55 +529,5 @@ class DatabaseCloningService
         }
 
         return [];
-    }
-
-
-
-
-
-
-
-
-    protected function prepareValuesStatement($row, $tableColumns, $escapeUtil)
-    {
-        $preparedValues = [];
-        foreach ($row as $column => $value) {
-            if (is_null($value)) {
-                $preparedValues[] = 'NULL';
-                continue;
-            }
-
-            if (
-                strpos($tableColumns[strtolower($column)], 'binary') !== false ||
-                strpos($tableColumns[strtolower($column)], 'blob') !== false
-            ) {
-                $preparedValues[] = "UNHEX('" . bin2hex($value) . "')";
-                continue;
-            }
-
-            $value            = $escapeUtil->mysqlRealEscapeString($value);
-            $preparedValues[] = "'$value'";
-        }
-
-        return implode(', ', $preparedValues);
-    }
-
-
-
-
-
-
-    private function getColumnTypes($tableName)
-    {
-        $column_types = [];
-
-        $result = $this->dto->getProductionDb()->get_results("SHOW COLUMNS FROM `{$tableName}`", ARRAY_A);
-        foreach ($result as $row) {
-            if (isset($row['Field'])) {
-                $column_types[strtolower($row['Field'])] = strtolower($row['Type']);
-            }
-        }
-
-        return $column_types;
     }
 }

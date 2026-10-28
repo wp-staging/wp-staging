@@ -8,6 +8,7 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Filesystem\AbstractFilesystemScanner;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Filesystem\FilesystemScannerDto;
 use WPStaging\Framework\Filesystem\Filters\PathFilterHelper;
 use WPStaging\Framework\Filesystem\PartIdentifier;
@@ -21,6 +22,8 @@ use WPStaging\Staging\Sites;
 use SplFileInfo;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\Facades\Hooks;
+
+use function WPStaging\functions\debug_log;
 
 class BackupSizeCalculator extends AbstractFilesystemScanner
 {
@@ -498,7 +501,11 @@ class BackupSizeCalculator extends AbstractFilesystemScanner
             return;
         }
 
-        $this->preScanPath($pathname);
+        try {
+            $this->preScanPath($pathname);
+        } catch (FilesystemExceptions $e) {
+            debug_log($e->getMessage(), 'warning');
+        }
     }
 
 

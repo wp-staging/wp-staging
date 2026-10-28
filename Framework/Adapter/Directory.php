@@ -315,13 +315,33 @@ class Directory implements DirectoryInterface
             return $this->pluginUploadsDirectory;
         }
 
- 
-        $pluginUploadsDir = Hooks::applyFilters(self::FILTER_GET_UPLOAD_DIR, wp_normalize_path($this->getUploadsDirectory($refresh) . WPSTG_PLUGIN_DOMAIN));
-        $pluginUploadsDir = Hooks::applyFilters(self::FILTER_PLUGIN_UPLOADS_DIRECTORY, $pluginUploadsDir);
-
-        $this->pluginUploadsDirectory = trailingslashit($pluginUploadsDir);
+        $this->pluginUploadsDirectory = $this->resolvePluginUploadsDirectory($this->getUploadsDirectory($refresh));
 
         return $this->pluginUploadsDirectory;
+    }
+
+
+
+
+
+
+    public function resolvePluginUploadsDirectory(string $uploadsDirectory): string
+    {
+        $defaultPluginUploadsDir = wp_normalize_path(trailingslashit($uploadsDirectory) . WPSTG_PLUGIN_DOMAIN);
+ 
+        $pluginUploadsDir = Hooks::applyFilters(self::FILTER_GET_UPLOAD_DIR, $defaultPluginUploadsDir);
+        $pluginUploadsDir = Hooks::applyFilters(self::FILTER_PLUGIN_UPLOADS_DIRECTORY, $pluginUploadsDir);
+
+        if ($pluginUploadsDir !== $defaultPluginUploadsDir || is_dir($pluginUploadsDir)) {
+            return trailingslashit($pluginUploadsDir);
+        }
+
+        $fallbackDirectory = $this->getPluginWpContentDirectory() . 'data/' . (is_main_network() && is_main_site() ? '' : 'sites/' . get_current_blog_id() . '/');
+        if (!is_dir($fallbackDirectory) && ($this->filesystem->mkdir($pluginUploadsDir) !== '' || is_dir($pluginUploadsDir))) {
+            return trailingslashit($pluginUploadsDir);
+        }
+
+        return $fallbackDirectory;
     }
 
 

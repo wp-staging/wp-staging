@@ -273,8 +273,7 @@ final class WPStaging
     protected function setupDebugLog()
     {
         if (!defined('WPSTG_UPLOADS_DIR')) {
-            $wpStagingUploadsDir = trailingslashit(wp_upload_dir()['basedir']) . WPSTG_PLUGIN_DOMAIN . '/';
-            define('WPSTG_UPLOADS_DIR', $wpStagingUploadsDir);
+            define('WPSTG_UPLOADS_DIR', self::getContentDir());
         }
 
         if (defined('WPSTG_DEBUG_LOG_FILE')) {
@@ -360,11 +359,7 @@ final class WPStaging
 
     public static function getContentDir()
     {
-        $wp_upload_dir = wp_upload_dir();
-        $path          = $wp_upload_dir['basedir'] . '/wp-staging';
-        (new Filesystem())->mkdir($path);
-
-        return Hooks::applyFilters(Directory::FILTER_GET_UPLOAD_DIR, $path . '/');
+        return self::make(Directory::class)->resolvePluginUploadsDirectory(wp_upload_dir()['basedir']);
     }
 
 

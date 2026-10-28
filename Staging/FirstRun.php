@@ -7,6 +7,7 @@ use WPStaging\Framework\Notices\DisabledItemsNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\ThirdParty\LiteSpeedCache;
 use WPStaging\Framework\ThirdParty\WordFence;
 use WPStaging\Framework\ThirdParty\ThirdPartyCacheHandler;
 use WPStaging\Framework\Filesystem\OPcache;
@@ -77,6 +78,7 @@ class FirstRun
  
         $cacheHandler = WPStaging::make(ThirdPartyCacheHandler::class);
         $cacheHandler->purgeEnduranceCache();
+        set_transient(LiteSpeedCache::TRANSIENT_PURGE_LITESPEED_CACHE, LiteSpeedCache::PURGE_WITHOUT_CDN);
 
  
         do_action('wpstg.clone_first_run');

@@ -518,6 +518,11 @@ class DatabaseImporter
         $this->searchReplace = $searchReplace;
 
  
+        if ($searchReplace->hasSearch()) {
+            $this->isSameSiteBackupRestore = false;
+        }
+
+ 
         $this->smallerSearchLength = min($searchReplace->getSmallerSearchLength(), $this->binaryFlagLength);
 
         return $this;
@@ -1197,6 +1202,7 @@ class DatabaseImporter
         }
 
         $valueMatches = $valueMatches[0];
+        unset($insertIntoExploded, $values);
 
         $query = "INSERT INTO `$tableName` VALUES (";
 
@@ -1451,10 +1457,9 @@ class DatabaseImporter
             return false;
         }
 
-        $hex       = substr($value, $this->binaryFlagLength);
-        $hexLength = strlen($hex);
+        $hexLength = strlen($value) - $this->binaryFlagLength;
 
-        return $hexLength % 2 === 0 && strspn($hex, '0123456789abcdefABCDEF') === $hexLength;
+        return $hexLength % 2 === 0 && strspn($value, '0123456789abcdefABCDEF', $this->binaryFlagLength) === $hexLength;
     }
 
 

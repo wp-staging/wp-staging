@@ -81,4 +81,29 @@ class BackupPathResolver
 
         return $this->resolveBackupPath($partName);
     }
+
+
+
+
+
+
+
+
+
+    public function resolveRestorePartPath(string $partName, string $backupFilename): string
+    {
+        $isTemporaryPart = substr($partName, -strlen('.wpstgtmp')) === '.wpstgtmp';
+        if (!$isTemporaryPart) {
+            return $this->resolveBackupPartPath($partName, $backupFilename);
+        }
+
+        $jobId = strstr($partName, '.', true);
+        if ($partName !== wp_basename($partName) || strpos($partName, "\0") !== false || $jobId === false || $jobId === '' || strpos($backupFilename, $jobId . '.') !== 0) {
+            return '';
+        }
+
+        $path = wp_normalize_path(trailingslashit($this->backupsFinder->getBackupsDirectory()) . $partName);
+
+        return is_link($path) ? '' : $path;
+    }
 }

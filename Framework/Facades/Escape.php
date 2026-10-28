@@ -6,6 +6,7 @@ use WPStaging\Framework\Utils\Escape as UtilsEscape;
 
 /**
  * @method static string escapeHtml(string $content)
+ * @method static string|array mysqlRealEscapeString(string|array $input)
  */
 class Escape extends Facade
 {

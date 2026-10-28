@@ -7,6 +7,7 @@ use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\Exporter\AbstractRowsExporter;
 use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Interfaces\SubsiteUrlMappingDtoInterface;
 
@@ -192,5 +193,19 @@ class RowsExporter extends AbstractRowsExporter
         }
 
         return in_array($row['option_name'], $this->getSearchReplaceExcludedRows(), true);
+    }
+
+    protected function isRecordExcluded(string $prefixedTableName, string $column, string $value): bool
+    {
+        if ($column === 'option_name' && in_array($value, AccessToken::ALL_OPTION_NAMES, true) && $this->isStagingOptionsTable($prefixedTableName)) {
+            return true;
+        }
+
+        return parent::isRecordExcluded($prefixedTableName, $column, $value);
+    }
+
+    private function isStagingOptionsTable(string $prefixedTableName): bool
+    {
+        return preg_match('/^' . preg_quote($this->getFinalPrefix(), '/') . '.*options$/', $prefixedTableName) === 1;
     }
 }

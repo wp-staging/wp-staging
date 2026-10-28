@@ -19,6 +19,7 @@ use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Staging\Interfaces\AdvanceStagingOptionsInterface;
 use WPStaging\Staging\Interfaces\StagingNetworkDtoInterface;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
@@ -34,6 +35,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 class FilesystemScannerTask extends StagingTask
 {
     use LegacyFileRulesTrait;
+    use WithUnfinishedCloneWpConfigGuard;
 
  
     const STEP_SCAN_WP_ROOT_FILES = 0;
@@ -173,6 +175,7 @@ class FilesystemScannerTask extends StagingTask
         $this->setupFilesystemScanner();
 
         if ($this->stepsDto->getCurrent() === self::STEP_SCAN_WP_ROOT_FILES) {
+            $this->guardStagingSiteRootBeforeFilesArrive();
             return $this->scanWpRootFiles();
         }
 
@@ -330,6 +333,22 @@ class FilesystemScannerTask extends StagingTask
         $this->filesystemScanner->setQueueCacheName(FileCopierTask::getTaskName());
         $this->filesystemScanner->setEnqueueEmptyDirectories(true);
         $this->filesystemScanner->inject($this->logger, $this->taskQueue, $this->getScannerDto());
+    }
+
+
+
+
+
+    private function guardStagingSiteRootBeforeFilesArrive()
+    {
+        if ($this->jobDataDto->getJobType() === StagingSetup::JOB_UPDATE) {
+            return;
+        }
+
+        $stagingSitePath = $this->jobDataDto->getStagingSitePath();
+        if (!$this->createGuardOnlyWpConfigWhenMissing($this->filesystem, $stagingSitePath)) {
+            throw new \RuntimeException('Cannot copy files into a staging site whose wp-config.php cannot be guarded: ' . $stagingSitePath);
+        }
     }
 
 

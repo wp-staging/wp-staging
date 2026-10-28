@@ -160,7 +160,6 @@ class RenameDatabaseTask extends RestoreTask
 
     protected function preDatabaseRenameActions()
     {
-        $tmpPrefix = $this->jobDataDto->getTmpDatabasePrefix();
         $this->setupTableRenamer();
         $this->setCurrentTaskDto($this->tablesRenamer->setupRenamer());
 
@@ -215,11 +214,7 @@ class RenameDatabaseTask extends RestoreTask
 
         $this->jobDataDto->setDatabaseDataToPreserve($dataToPreserve);
 
-        global $wpdb;
-        $accessTokenOption = AccessToken::OPTION_NAME;
-        $suppressErrors    = $wpdb->suppress_errors();
-        $wpdb->query("UPDATE {$tmpPrefix}options SET option_value = '{$accessToken}' WHERE option_name = '{$accessTokenOption}'");
-        $wpdb->suppress_errors($suppressErrors);
+        $this->tablesRenamer->preserveTmpOption(AccessToken::OPTION_NAME);
 
         $this->logger->info(sprintf('Found %d tables to restore.', $this->jobDataDto->getTotalTablesToRename()));
     }

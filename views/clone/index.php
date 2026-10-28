@@ -187,22 +187,22 @@ $isCalledFromIndex = true;
     }
     ?>
     <script>
-      // Dismiss handler for the compact general "Upgrade to Pro" card. The staging
-      // listing is injected via innerHTML (scripts inside it do not execute), so
-      // this is delegated from the document to work on injected content.
+      // Dismiss handler for the "Upgrade to Pro" cards on the Staging and Backup
+      // pages. Both listings are injected via innerHTML (scripts inside them do not
+      // execute), so this is delegated from the document to work on injected content.
       (function () {
         document.addEventListener('click', function (event) {
-          var trigger = event.target.closest('.wpstg-pro-card-dismiss');
+          const trigger = event.target.closest('.wpstg-pro-card-dismiss');
           if (!trigger) {
             return;
           }
 
           event.preventDefault();
 
-          var body = new URLSearchParams();
+          const body = new URLSearchParams();
           body.append('action', 'wpstg_dismiss_notice');
           body.append('nonce', wpstg.nonce);
-          body.append('wpstg_notice', 'general_pro_card');
+          body.append('wpstg_notice', trigger.dataset.wpstgNotice);
 
           fetch(ajaxurl, {
             method: 'POST',
@@ -218,7 +218,7 @@ $isCalledFromIndex = true;
               return;
             }
 
-            var card = document.querySelector('.wpstg-general-pro-card');
+            const card = trigger.closest('.wpstg-card');
             if (card) {
               card.style.display = 'none';
             }

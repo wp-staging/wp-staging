@@ -190,17 +190,20 @@ class JobTransientCache
 
 
 
-    public function startJob(string $jobId, string $jobTitle, string $jobType = 'job', string $queueId = '')
+
+
+    public function startJob(string $jobId, string $jobTitle, string $jobType = 'job', string $queueId = '', string $syncType = '', int $startedAt = 0)
     {
         $jobData = [
             'jobId'     => $jobId,
             'title'     => $jobTitle,
             'type'      => $jobType,
             'status'    => self::STATUS_RUNNING,
-            'startedAt' => time(),
+            'startedAt' => $startedAt > 0 ? $startedAt : time(),
             'updatedAt' => time(),
             'queueId'   => $queueId,
             'message'   => '',
+            'syncType'  => $syncType,
         ];
 
         delete_transient(self::TRANSIENT_CURRENT_JOB);

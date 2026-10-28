@@ -67,15 +67,39 @@ class Welcome
                 );
                 ?>
             </p>
+            <p id="wpstg-activate-pro-error" hidden></p>
         </div>
         <script>
             (function() {
                 var link = document.getElementById('wpstg-activate-pro');
-                if (!link) return;
+                var errorParagraph = document.getElementById('wpstg-activate-pro-error');
+                if (!link || !errorParagraph) return;
+                var howToFixLabel = '<?php echo esc_js(__('How to fix this.', 'wp-staging')); ?>';
+                var showActivationError = function(message) {
+                    var trailingUrlMatch = /\s(https:\/\/\S+)$/.exec(message);
+                    var reason = trailingUrlMatch ? message.slice(0, trailingUrlMatch.index).trim() : message;
+                    if (trailingUrlMatch && reason.slice(-howToFixLabel.length) === howToFixLabel) {
+                        reason = reason.slice(0, -howToFixLabel.length).trim();
+                    }
+
+                    errorParagraph.textContent = reason;
+                    if (trailingUrlMatch) {
+                        var howToFixLink = document.createElement('a');
+                        howToFixLink.href = trailingUrlMatch[1];
+                        howToFixLink.target = '_blank';
+                        howToFixLink.rel = 'noopener noreferrer';
+                        howToFixLink.textContent = howToFixLabel;
+                        errorParagraph.appendChild(document.createTextNode(' '));
+                        errorParagraph.appendChild(howToFixLink);
+                    }
+
+                    errorParagraph.hidden = false;
+                };
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     if (link.dataset.busy) return;
                     link.dataset.busy = '1';
+                    errorParagraph.hidden = true;
                     var originalText = link.textContent;
                     link.textContent = '<?php echo esc_js(__('Activating...', 'wp-staging')); ?>';
                     link.style.pointerEvents = 'none';
@@ -87,7 +111,8 @@ class Welcome
                         if (res.success) {
                             window.location.reload();
                         } else {
-                            link.textContent = res.data || 'Activation failed.';
+                            link.textContent = originalText;
+                            showActivationError(typeof res.data === 'string' && res.data ? res.data : 'Activation failed.');
                             link.style.pointerEvents = '';
                             delete link.dataset.busy;
                         }

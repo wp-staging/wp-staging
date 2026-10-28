@@ -88,6 +88,7 @@ class Uninstall
  
         if ($this->isBasicInstalled() && $this->isUninstallingPro()) {
             $this->deleteRemoteSyncAuthenticationActivityTransients();
+            $this->deleteOptions($this->getLicenseUpdateCacheOptions());
             $this->deleteOptions($this->getProOptions());
             $this->deleteProStorageSettings();
             return;
@@ -114,6 +115,7 @@ class Uninstall
         $this->deleteOptions($this->getBasicOptions());
         $this->deleteCorruptedStagingSitesBackupOptions();
         if ($isPro) {
+            $this->deleteOptions($this->getLicenseUpdateCacheOptions());
             $this->deleteOptions($this->getProOptions());
         }
 
@@ -407,6 +409,7 @@ class Uninstall
             'wpstg_backups_retention',
             'wpstg_otps',
             'wpstg_access_token',
+            'wpstg_access_token_v2',
             'wpstg_disabled_notice',
             'wpstg_send_email_as_html',
             'wpstg_cli_notice_hidden_forever',
@@ -419,6 +422,10 @@ class Uninstall
             'wpstg_staging_engine_preference',
             'wpstg_staging_engine_preferences',
             'wpstg_clear_elementor_css_cache',
+            'wpstg_warnings_notice',
+            'wpstg_skipped_object_cache_notice',
+            'wpstg_wordfence_notice',
+            'wpstg_compat_notice_dismissed',
         ];
     }
 
@@ -431,6 +438,7 @@ class Uninstall
     {
         return [
             'wpstg_user_general_pro_card_snoozed_until',
+            'wpstg_user_backup_pro_card_snoozed_until',
         ];
     }
 
@@ -474,7 +482,28 @@ class Uninstall
             'wpstg_remote_sync_enabled',
             'wpstg_remote_sync_send_success_notification',
             'wpstg_remote_sync_safety_backup_request',
+            'wpstg_different_prefix_backup_notice',
+            'wpstg_entire_network_clone_notice',
         ];
+    }
+
+
+
+
+
+
+
+
+
+    private function getLicenseUpdateCacheOptions(): array
+    {
+        $options = ['edd_sl_failed_http_' . md5('https://wp-staging.com/edd-sl-api/')];
+        foreach (array_unique([trim((string)get_option('wpstg_license_key', '')), '']) as $licenseKey) {
+            $options[] = 'edd_sl_' . md5(serialize('wp-staging-pro' . $licenseKey));
+            $options[] = 'edd_sl_' . md5(serialize('wp-staging-pro' . $licenseKey . '1'));
+        }
+
+        return $options;
     }
 
 
@@ -747,21 +776,26 @@ class Uninstall
 
     private function cleanupWpStagingDirectories()
     {
-        $uploadsBase        = $this->getUploadsDirectory() . 'wp-staging/';
-        $directoriesToClean = [
-            $this->getWpContentDirectory() . 'wp-staging',
-        ];
+        $wpContentDirectory = $this->getWpContentDirectory() . 'wp-staging/';
+        $fallbackDirectory  = $wpContentDirectory . 'data';
+        $siteDataDirectory  = $fallbackDirectory . '/' . (is_main_network() && is_main_site() ? '' : 'sites/' . get_current_blog_id() . '/');
+        foreach ([$siteDataDirectory, $this->getUploadsDirectory() . 'wp-staging/'] as $dataDirectory) {
+            if (!$this->isDirectoryContainsWpstgFiles($dataDirectory)) {
+                $this->deleteDirectoryRecursively($dataDirectory);
+                continue;
+            }
 
- 
-        if (!$this->isDirectoryContainsWpstgFiles($uploadsBase . 'backups')) {
-            $directoriesToClean[] = $uploadsBase;
-        } else {
-            $directoriesToClean[] = $uploadsBase . 'cache';
-            $directoriesToClean[] = $uploadsBase . 'logs';
-            $directoriesToClean[] = $uploadsBase . 'tmp';
+            foreach (['cache', 'logs', 'tmp'] as $subDirectory) {
+                $this->deleteDirectoryRecursively($dataDirectory . $subDirectory);
+            }
         }
 
-        foreach ($directoriesToClean as $directory) {
+        if (!is_dir($fallbackDirectory)) {
+            $this->deleteDirectoryRecursively($wpContentDirectory);
+            return;
+        }
+
+        foreach (array_diff(glob($wpContentDirectory . '*', GLOB_ONLYDIR) ?: [], [$fallbackDirectory]) as $directory) {
             $this->deleteDirectoryRecursively($directory);
         }
     }

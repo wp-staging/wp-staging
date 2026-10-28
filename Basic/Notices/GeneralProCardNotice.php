@@ -2,63 +2,30 @@
 
 namespace WPStaging\Basic\Notices;
 
-use DateTime;
 
 
 
-
-
-
-
-
-
-
-
-
-
-class GeneralProCardNotice
+class GeneralProCardNotice extends AbstractProUpgradeCardNotice
 {
+ 
+    const NOTICE_ID = 'general_pro_card';
+
  
     const META_KEY = 'wpstg_user_general_pro_card_snoozed_until';
 
- 
-    const SNOOZE_DAYS = 90;
 
 
 
-
-
-
-    public function snooze(): bool
+    protected function getSnoozeMetaKey(): string
     {
-        $userId = get_current_user_id();
-        if ($userId === 0) {
-            return false;
-        }
-
-        $until = date('Y-m-d', strtotime('+' . self::SNOOZE_DAYS . ' days'));
-        update_user_meta($userId, self::META_KEY, $until);
-
-        return true;
+        return self::META_KEY;
     }
 
 
 
 
-
-
-    public function isSnoozed(): bool
+    protected function getCardName(): string
     {
-        $userId = get_current_user_id();
-        if ($userId === 0) {
-            return false;
-        }
-
-        $until = get_user_meta($userId, self::META_KEY, true);
-        if (!wpstg_is_valid_date($until)) {
-            return false;
-        }
-
-        return new DateTime('now') < new DateTime($until);
+        return 'staging';
     }
 }

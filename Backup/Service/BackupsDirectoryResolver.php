@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Service;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Hooks;
 
@@ -18,11 +19,7 @@ class BackupsDirectoryResolver
 
     public function resolveFromUploadsDirectory(string $uploadsDirectory): string
     {
-        $uploadsDirectory = trim(trailingslashit(wp_normalize_path($uploadsDirectory)));
-        $pluginUploadsDir = Hooks::applyFilters(Directory::FILTER_GET_UPLOAD_DIR, wp_normalize_path($uploadsDirectory . WPSTG_PLUGIN_DOMAIN));
-        $pluginUploadsDir = Hooks::applyFilters(Directory::FILTER_PLUGIN_UPLOADS_DIRECTORY, $pluginUploadsDir);
-
-        return $this->resolveFromPluginUploadsDirectory($pluginUploadsDir);
+        return $this->resolveFromPluginUploadsDirectory(WPStaging::make(Directory::class)->resolvePluginUploadsDirectory($uploadsDirectory));
     }
 
 

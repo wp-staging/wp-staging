@@ -37,6 +37,9 @@ class LiteSpeedCache
  
     const SERVER_PURGE_TOKEN_LIFETIME = 300;
 
+ 
+    const PURGE_WITHOUT_CDN = 'without-cdn';
+
 
 
 
@@ -116,13 +119,21 @@ class LiteSpeedCache
             return;
         }
 
-        if (!class_exists('\LiteSpeed\Purge', false) || !method_exists('\LiteSpeed\Purge', 'purge_all')) {
+ 
+        if (wp_doing_cron() || !class_exists('\LiteSpeed\Purge', false) || !method_exists('\LiteSpeed\Purge', 'purge_all')) {
             return;
         }
 
-        \LiteSpeed\Purge::purge_all('wp-staging');
-        debug_log('LiteSpeed Cache cache cleared.');
+ 
+        $skipCdnPurge = get_transient(self::TRANSIENT_PURGE_LITESPEED_CACHE) === self::PURGE_WITHOUT_CDN;
         delete_transient(self::TRANSIENT_PURGE_LITESPEED_CACHE);
+        if ($skipCdnPurge) {
+            do_action('litespeed_conf_force', 'cdn-cloudflare_clear', false);
+        }
+
+        \LiteSpeed\Purge::purge_all('wp-staging');
+        $this->purgeGeneratedCssAndPlaceholders();
+        debug_log('LiteSpeed Cache cache cleared.');
     }
 
 
@@ -170,6 +181,26 @@ class LiteSpeedCache
     {
         status_header(204);
         exit;
+    }
+
+
+
+
+
+
+    private function purgeGeneratedCssAndPlaceholders()
+    {
+ 
+        if (!class_exists('\LiteSpeed\CSS') || !class_exists('\LiteSpeed\Data') || !class_exists('\LiteSpeed\Placeholder') || !method_exists('\LiteSpeed\Root', 'rm_cache_folder')) {
+            return;
+        }
+
+        foreach (['ucss', 'ccss'] as $type) {
+            \LiteSpeed\CSS::cls()->rm_cache_folder($type);
+            \LiteSpeed\Data::cls()->url_file_clean($type);
+        }
+
+        \LiteSpeed\Placeholder::cls()->rm_cache_folder('lqip');
     }
 
 
