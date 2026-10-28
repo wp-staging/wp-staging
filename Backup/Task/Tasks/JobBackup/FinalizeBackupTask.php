@@ -134,6 +134,10 @@ class FinalizeBackupTask extends BackupTask
         try {
             $this->addFilesIndex();
             $this->addBackupMetadata($archiverDto, $isUploadBackup);
+        } catch (ThresholdException $e) {
+            $response = $this->generateResponse(false);
+            $response->setEndsRequest(true);
+            return $response;
         } catch (FileSizeLimitException $e) {
             throw $e;
         } catch (Exception $e) {
@@ -385,6 +389,7 @@ class FinalizeBackupTask extends BackupTask
 
 
 
+
     protected function addFilesIndex()
     {
         if ($this->currentFileInfo['status'] !== 'Pending') {
@@ -403,8 +408,6 @@ class FinalizeBackupTask extends BackupTask
             $backupSizeBeforeAddingIndex = null;
         } catch (NotFoundException $ex) {
             throw new NotFoundException($ex->getMessage());
-        } catch (ThresholdException $e) {
-            $backupSizeBeforeAddingIndex = null;
         }
 
         $archiverDto = $this->archiver->getDto();

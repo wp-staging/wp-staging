@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Notices;
 
+use WPStaging\Basic\Notices\BackupProCardNotice;
 use WPStaging\Basic\Notices\GeneralProCardNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\ThirdParty\WordFence;
@@ -48,13 +49,13 @@ class DismissNotice
 
     public function dismiss($noticeToDismiss)
     {
- 
- 
- 
-        if ($noticeToDismiss === 'general_pro_card') {
- 
- 
+        if ($noticeToDismiss === GeneralProCardNotice::NOTICE_ID) {
             wp_send_json(WPStaging::make(GeneralProCardNotice::class)->snooze());
+            return;
+        }
+
+        if ($noticeToDismiss === BackupProCardNotice::NOTICE_ID) {
+            wp_send_json(WPStaging::make(BackupProCardNotice::class)->snooze());
             return;
         }
 

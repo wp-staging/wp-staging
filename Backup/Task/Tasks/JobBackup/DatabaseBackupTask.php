@@ -37,6 +37,9 @@ class DatabaseBackupTask extends BackupTask
     ];
 
  
+    const FILTER_EXCLUDE_TABLES_DATA = 'wpstg.backup.database.exclude_tables_data';
+
+ 
     const TABLE_LOCK_ATTEMPTS = 5;
 
  
@@ -131,7 +134,7 @@ class DatabaseBackupTask extends BackupTask
         $rowsExporter->setTables($this->jobDataDto->getTablesToBackup());
         $rowsExporter->setIsBackupSplit($this->jobDataDto->getIsMultipartBackup());
         $rowsExporter->setMaxSplitSize($this->jobDataDto->getMaxMultipartBackupSize());
-        $rowsExporter->setTablesToExclude($tablesToExclude);
+        $rowsExporter->setTablesToExclude(array_merge($tablesToExclude, $this->getTablesExcludedFromRowsExport()));
         $rowsExporter->setNonWpTables($this->jobDataDto->getNonWpTables());
         $rowsExporter->setUseMemoryExhaustFix($useMemoryExhaustFix);
 
@@ -553,5 +556,23 @@ class DatabaseBackupTask extends BackupTask
     private function isMemoryExhaustFixEnabled(): bool
     {
         return defined('WPSTG_MEMORY_EXHAUST_FIX') && (constant('WPSTG_MEMORY_EXHAUST_FIX') === true);
+    }
+
+
+
+
+
+
+    private function getTablesExcludedFromRowsExport(): array
+    {
+        $tables = (array)Hooks::applyFilters(self::FILTER_EXCLUDE_TABLES_DATA, []);
+        $blogId = $this->jobDataDto->getSubsiteBlogId();
+        if (!is_multisite() || !$this->jobDataDto->getIsNetworkSiteBackup() || $blogId === 1) {
+            return $tables;
+        }
+
+        return array_merge($tables, array_map(function ($table) use ($blogId) {
+            return $blogId . '_' . $table;
+        }, $tables));
     }
 }

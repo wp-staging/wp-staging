@@ -21,7 +21,17 @@ class AccessToken
 
 
 
-    const OPTION_NAME = 'wpstg_access_token';
+    const OPTION_NAME = 'wpstg_access_token_v2';
+
+
+
+
+    const LEGACY_OPTION_NAME = 'wpstg_access_token';
+
+
+
+
+    const ALL_OPTION_NAMES = [self::OPTION_NAME, self::LEGACY_OPTION_NAME];
 
 
 

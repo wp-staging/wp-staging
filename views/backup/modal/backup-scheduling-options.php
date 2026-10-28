@@ -11,6 +11,7 @@
  * @see src/views/backup/modal/backup.php
  */
 
+use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Language\Language;
@@ -132,7 +133,7 @@ $proFeature = $isProVersion ? ' ' : ' (' . __('Pro', 'wp-staging') . ')';
             </div>
             <div class="wpstg-flex wpstg-w-full">
                 <select name="backupScheduleRotation" id="backupScheduleRotation" class="!wpstg-w-full dark:!wpstg-border-slate-600 dark:!wpstg-text-slate-100 dark:focus:!wpstg-border-blue-500">
-                    <?php for ($i = 1; $i <= 10; $i++) : ?>
+                    <?php for ($i = 1; $i <= BackupScheduler::MAX_ROTATION; $i++) : ?>
                         <option value="<?php echo esc_attr((string)$i); ?>"
                                 <?php echo $isProVersion ? '' : ($i === 1 ? 'selected' : 'disabled'); ?>>
                                 <?php

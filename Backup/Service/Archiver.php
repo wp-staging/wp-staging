@@ -642,7 +642,6 @@ class Archiver
 
 
 
-
     protected function maybeIncrementFileAppendTimeLimit()
     {
         $this->jobDataDto->incrementNumberOfRetries();
@@ -651,11 +650,10 @@ class Archiver
         }
 
  
-        $jobDataDto = $this->jobDataDto;
+        $jobDataDto   = $this->jobDataDto;
+        $currentLimit = $jobDataDto->getFileAppendTimeLimit();
         $jobDataDto->incrementFileAppendTimeLimit();
-        if ($jobDataDto->getFileAppendTimeLimit() > $this->getMaxPhpTimeLimitAllowed()) {
-            throw new RuntimeException('Maximum file append time limit exceeded. Please increase your PHP max execution time to proceed.');
-        }
+        $jobDataDto->setFileAppendTimeLimit(max($currentLimit, min($jobDataDto->getFileAppendTimeLimit(), $this->getMaxPhpTimeLimitAllowed())));
     }
 
     protected function getMaxPhpTimeLimitAllowed(): int

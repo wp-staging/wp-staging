@@ -16,11 +16,13 @@ use WPStaging\Framework\BackgroundProcessing\Action;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\BackgroundProcessing\QueueActionAware;
+use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\Ajax\PrepareJob as AjaxPrepareJob;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Times;
@@ -268,16 +270,23 @@ abstract class PrepareJob
 
             $this->job->commitLogs();
             if ($taskResponseDto->getRetryAt() > 0) {
+                $this->rewriteLapsedCurrentJobTransient($args);
                 $this->queueAction($args, $taskResponseDto->getRetryAt());
                 wp_schedule_single_event($taskResponseDto->getRetryAt(), \WPStaging\Framework\BackgroundProcessing\QueueProcessor::ACTION_QUEUE_PROCESS, ['uploadRetry' => $args['jobId']]);
                 $this->processLock->unlockProcess();
                 return $taskResponseDto;
             }
-        } while (!$this->isThreshold());
+        } while (!$this->isThreshold() && !$taskResponseDto->endsRequest());
 
  
         if ($this->isJobCancelled($args)) {
             return new WP_Error(499, 'Job cancelled by user.'); 
+        }
+
+        $this->rewriteLapsedCurrentJobTransient($args);
+
+        if ($taskResponseDto->endsRequest()) {
+            WPStaging::make(QueueProcessor::class)->stopProcessing();
         }
 
  
@@ -303,10 +312,21 @@ abstract class PrepareJob
     private function abortLostJob(array $args, string $jobIdForLog)
     {
         $message = 'Background job data was lost or could not be verified (jobId=' . $jobIdForLog . '). Aborting to avoid an unsafe restart.';
+        $jobId = (string)($args['jobId'] ?? '');
         $currentJob = $this->job->getTransientCache()->getJob(true);
         $currentJobId = !empty($currentJob['queueId']) ? $currentJob['queueId'] : ($currentJob['jobId'] ?? '');
-        if ($currentJobId !== '' && $currentJobId === ($args['jobId'] ?? '')) {
-            $this->handleError($message, $args);
+        $isTransientOfThisJob = $currentJobId !== '' && $currentJobId === $jobId;
+ 
+        $hasThisJobEnded = ($isTransientOfThisJob && ($currentJob['status'] ?? '') !== JobTransientCache::STATUS_RUNNING) || $this->hasJobRecordedFinalResponse($jobId);
+        if (!$hasThisJobEnded) {
+            if ($isTransientOfThisJob) {
+                $this->handleError($message, $args);
+            }
+
+ 
+            $response = $this->job->getJobFailResponse($message, '');
+            $response->setJobId($isTransientOfThisJob ? (string)($currentJob['jobId'] ?? '') : '');
+            $this->persistDtoToAction($this->getCurrentAction(), $response);
         }
 
         $this->job->skipPersistOnShutdown();
@@ -396,6 +416,17 @@ abstract class PrepareJob
     protected function getJobDefaultName(): string
     {
         return 'BackgroundJob';
+    }
+
+
+
+
+
+
+
+
+    protected function rewriteLapsedCurrentJobTransient(array $args)
+    {
     }
 
 
@@ -585,5 +616,16 @@ abstract class PrepareJob
     private function isJobCancelled(array $args): bool
     {
         return $this->queue->count(Queue::STATUS_CANCELED, $args['jobId']) > 0;
+    }
+
+    private function hasJobRecordedFinalResponse(string $jobId): bool
+    {
+        try {
+            $action = $this->queue->getLatestActionWithResponse($jobId);
+        } catch (QueueException $e) {
+            return false;
+        }
+
+        return $action instanceof Action && $action->response instanceof TaskResponseDto && !$action->response->isRunning();
     }
 }

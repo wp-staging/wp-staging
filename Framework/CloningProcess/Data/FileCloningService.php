@@ -5,6 +5,7 @@ namespace WPStaging\Framework\CloningProcess\Data;
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\OPcache;
 use WPStaging\Framework\SiteInfo;
 
  
@@ -33,6 +34,8 @@ abstract class FileCloningService extends CloningService
         if ($filesystem->create($path, $content) === false) {
             throw new FatalException("Error - can't write to " . $file);
         }
+
+        WPStaging::make(OPcache::class)->invalidateFile($path, true);
     }
 
 
@@ -81,10 +84,9 @@ abstract class FileCloningService extends CloningService
             return $fileContent;
         }
 
-        return str_replace(
-            ["\r\r\n", "\r\n", "\r\r", "\r"],
-            ["\r\n", "\r\n", "\r\n", "\n"],
-            $fileContent
-        );
+        $withoutStrayCarriageReturn = str_replace("\r\r\n", "\r\n", $fileContent);
+        $normalized                 = preg_replace('/\r(?!\n)/', "\r\n", $withoutStrayCarriageReturn);
+
+        return $normalized ?? $fileContent;
     }
 }

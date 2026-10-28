@@ -120,6 +120,22 @@ class Strings
 
 
 
+    public function isPathInsideAnyIgnoringCase(string $path, array $parentPaths): bool
+    {
+        $path = trailingslashit($this->sanitizeDirectorySeparator($path));
+        foreach ($parentPaths as $parentPath) {
+            if (stripos($path, trailingslashit($this->sanitizeDirectorySeparator($parentPath))) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+
 
 
     public function endsWith($haystack, $needle)

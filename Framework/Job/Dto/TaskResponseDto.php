@@ -25,6 +25,9 @@ class TaskResponseDto extends AbstractDto
  
     protected $retryDelay = 0;
 
+ 
+    protected $endsRequest = false;
+
     public function getRetryAt(): int
     {
         return $this->retryAt;
@@ -38,6 +41,19 @@ class TaskResponseDto extends AbstractDto
     public function setRetryDelay(int $retryDelay)
     {
         $this->retryDelay = $retryDelay;
+    }
+
+
+
+
+    public function setEndsRequest(bool $endsRequest)
+    {
+        $this->endsRequest = $endsRequest;
+    }
+
+    public function endsRequest(): bool
+    {
+        return $this->endsRequest;
     }
 
  
@@ -76,6 +92,7 @@ class TaskResponseDto extends AbstractDto
     public function toArray()
     {
         $data = $this->traitToArray();
+        unset($data['endsRequest']);
         if ($this->retryAt === 0) {
             unset($data['retryAt'], $data['retryDelay']);
         }

@@ -2,8 +2,10 @@
 
 namespace WPStaging\Staging\Tasks;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\OPcache;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\SiteInfo;
@@ -84,6 +86,8 @@ abstract class FileAdjustmentTask extends DataAdjustmentTask
         if ($this->filesystem->create($path, $content) === false) {
             throw new WPStagingException("Error - can't write to " . $file . ".");
         }
+
+        WPStaging::make(OPcache::class)->invalidateFile($path, true);
     }
 
 

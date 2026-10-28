@@ -102,23 +102,8 @@ if (!empty($stagingSites) || $error) {
 <?php Hooks::doAction(TemplateEngine::HOOK_RENDER_PRO_TEMPLATES); ?>
 
 <?php
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-if (
-    !empty($stagingSites)
-    && !$isPro
-    && current_user_can('manage_options')
-    && !WPStaging::make(\WPStaging\Basic\Notices\GeneralProCardNotice::class)->isSnoozed()
-) {
-    require WPSTG_VIEWS_DIR . 'ads/pro-upgrade-card.php';
+if (!empty($stagingSites) && WPStaging::make(\WPStaging\Basic\Notices\GeneralProCardNotice::class)->isShownToCurrentUser()) {
+    require WPSTG_VIEWS_DIR . 'ads/staging-pro-upgrade-card.php';
 }
 
  

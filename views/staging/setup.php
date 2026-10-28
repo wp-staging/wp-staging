@@ -1,6 +1,7 @@
 <?php
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Staging\Dto\StagingSiteDto;
@@ -35,8 +36,16 @@ if ($isCreate && empty($defaultSiteName)) {
     $defaultSiteName = 'staging';
 }
 
-$previewSiteUrl     = trailingslashit($productionSiteUrl) . $defaultSiteName;
-$defaultPathBase    = trailingslashit(wp_normalize_path(ABSPATH));
+$directory          = WPStaging::make(Directory::class);
+$stagingSiteBaseUrl = trailingslashit($productionSiteUrl);
+$defaultPathBase    = $directory->getAbsPath();
+$wpContentStagingSitesDirectory = is_writable($directory->getAbsPath()) ? false : $directory->getStagingSiteDirectoryInsideWpcontent(false);
+if ($wpContentStagingSitesDirectory !== false) {
+    $stagingSiteBaseUrl = trailingslashit($directory->getStagingSiteUrl());
+    $defaultPathBase    = trailingslashit(wp_normalize_path($wpContentStagingSitesDirectory));
+}
+
+$previewSiteUrl     = $stagingSiteBaseUrl . $defaultSiteName;
 
 $stagingSiteName    = $isCreate ? $defaultSiteName : $stagingSiteDto->getSiteName();
 if (!$isCreate && empty($stagingSiteName)) {
@@ -635,6 +644,7 @@ $runtimeSummaryTooltips = [
             'stagingSiteName'          => $stagingSiteName,
             'defaultSiteName'          => $defaultSiteName,
             'productionSiteUrl'        => $productionSiteUrl,
+            'stagingSiteBaseUrl'       => $stagingSiteBaseUrl,
             'selectedEngineName'       => $selectedEngineName,
             'enginePanelId'            => $enginePanelId,
             'showWooSchedulerSettings' => $showWooSchedulerSettings,

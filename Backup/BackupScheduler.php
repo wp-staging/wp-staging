@@ -66,6 +66,9 @@ class BackupScheduler
     const CRON_WARNING_TYPE_OVERDUE = 'overdue';
 
  
+    const MAX_ROTATION = 30;
+
+ 
     const OVERDUE_GRACE_PERIOD = 30 * MINUTE_IN_SECONDS;
 
  

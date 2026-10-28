@@ -14,6 +14,7 @@ use OutOfRangeException;
 use RuntimeException;
 use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\BackupValidator;
+use WPStaging\Backup\Exceptions\BackupSkipItemException;
 use WPStaging\Backup\Exceptions\EmptyChunkException;
 use WPStaging\Backup\FileHeader;
 use WPStaging\Backup\IndexLineDtoFactory;
@@ -293,9 +294,18 @@ class Extractor extends AbstractExtractor
             $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
         } catch (Exception $e) {
  
-            $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
+            $canSkipFile = $e instanceof BackupSkipItemException
+                && !$this->isValidateOnly
+                && $this->extractingFile->getWrittenBytes() === 0
+                && $this->extractorDto->getExtractorFileBaseBytes() === 0;
+            if ($canSkipFile) {
+                $this->skipToNextFile();
+            } else {
+ 
+                $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
+            }
 
-            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+            if ($canSkipFile || (defined('WPSTG_DEBUG') && WPSTG_DEBUG)) {
                 $this->logger->warning(sprintf('Skipped file %s. Reason: %s', $this->extractingFile->getRelativePath(), $e->getMessage()));
             }
         }
@@ -338,7 +348,7 @@ class Extractor extends AbstractExtractor
         $destinationFileResource = @fopen($destinationFilePath, FileObject::MODE_APPEND);
         if (!$destinationFileResource) {
             $this->diskWriteCheck->testDiskIsWriteable();
-            throw new Exception("Can not extract file $destinationFilePath");
+            throw new BackupSkipItemException("Can not extract file $destinationFilePath");
         }
 
 

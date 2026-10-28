@@ -140,7 +140,7 @@ class Updating extends Job
             $this->options->databasePassword        = $this->getValueFromArray('databasePassword', $currentStagingSite);
             $this->options->databaseDatabase        = $this->getValueFromArray('databaseDatabase', $currentStagingSite);
             $this->options->databaseServer          = $this->getValueFromArray('databaseServer', $currentStagingSite);
-            $this->options->databasePrefix          = $this->getValueFromArray('databasePrefix', $currentStagingSite);
+            $this->options->databasePrefix          = (string)$this->getValueFromArray('databasePrefix', $currentStagingSite);
             $this->options->databaseSsl             = $this->getValueFromArray('databaseSsl', $currentStagingSite);
             $this->options->useCustomDatabase       = $this->externalDatabaseConfiguration->isEnabled($currentStagingSite);
             $this->options->destinationHostname     = $this->getValueFromArray('url', $currentStagingSite);

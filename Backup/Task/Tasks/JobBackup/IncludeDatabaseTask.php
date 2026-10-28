@@ -101,7 +101,9 @@ class IncludeDatabaseTask extends BackupTask
         }
 
         if (!$included && $this->stepsDto->getCurrent() === $writtenBytesBefore) {
-            return $this->generateResponse(false);
+            $response = $this->generateResponse(false);
+            $response->setEndsRequest(true);
+            return $response;
         }
 
         $this->logger->info(sprintf('Included %s/%s of Database Backup.', size_format($this->stepsDto->getCurrent(), 2), size_format($this->stepsDto->getTotal(), 2)));

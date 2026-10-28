@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Traits;
 
 use wpdb;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 use function WPStaging\functions\debug_log;
@@ -31,6 +32,33 @@ trait WithUnfinishedCloneWpConfigGuard
         }
 
         return $filesystem->create($destinationPath, $guardedWpConfig);
+    }
+
+
+
+
+
+
+
+
+
+    protected function createGuardOnlyWpConfigWhenMissing(Filesystem $filesystem, string $stagingSiteRootPath): bool
+    {
+        $stagingSiteRootPath = trailingslashit($stagingSiteRootPath);
+        $wpConfigPath        = $stagingSiteRootPath . 'wp-config.php';
+        if (file_exists($wpConfigPath)) {
+            return true;
+        }
+
+        if (is_link($wpConfigPath)) {
+            return false;
+        }
+
+        if (!is_dir($stagingSiteRootPath) && !$filesystem->mkdir($stagingSiteRootPath)) {
+            return false;
+        }
+
+        return $filesystem->create($wpConfigPath, '<?php' . PHP_EOL . $this->getUnfinishedCloneGuard() . PHP_EOL);
     }
 
 
@@ -70,6 +98,8 @@ trait WithUnfinishedCloneWpConfigGuard
 
  
         $temporaryPath = $path . '.wpstg-reset-' . uniqid('', true) . '.php';
+        $this->liftReadOnlyAttributeFromWpConfigOnWindows($path);
+
         try {
             return $filesystem->create($temporaryPath, $guarded)
                 && $filesystem->renameDirect($temporaryPath, $path);
@@ -77,6 +107,22 @@ trait WithUnfinishedCloneWpConfigGuard
             if (is_file($temporaryPath)) {
                 $filesystem->delete($temporaryPath);
             }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+    private function liftReadOnlyAttributeFromWpConfigOnWindows(string $path)
+    {
+        if (WPStaging::isWindowsOs()) {
+            @chmod($path, 0644);
         }
     }
 
@@ -176,6 +222,7 @@ trait WithUnfinishedCloneWpConfigGuard
 
 
 
+
     private function addLiveTablesStopToWpConfig(string $wpConfigContent, string $expectedPrefix, string $livePrefix): string
     {
         $marker          = '/** WPSTAGING_LIVE_TABLES_STOP */';
@@ -191,9 +238,60 @@ trait WithUnfinishedCloneWpConfigGuard
             $marker
         );
 
-        return preg_replace_callback('/^(?=[ \t]*(?:require|include)(?:_once)?[\s(]*(?:ABSPATH|__DIR__|dirname\(\s*__FILE__\s*\))\s*\.\s*[\'"]\/?wp-settings\.php)/m', function () use ($stop) {
-            return $stop;
-        }, $wpConfigContent, 1) ?? $wpConfigContent;
+        preg_match_all('/^[ \t]*(?=(?:require|include)(?:_once)?[\s(]*(?:ABSPATH|__DIR__|dirname\(\s*__FILE__\s*\))\s*\.\s*[\'"]\/?wp-settings\.php)/m', $wpConfigContent, $requires, PREG_OFFSET_CAPTURE);
+        if (empty($requires[0])) {
+            return $wpConfigContent;
+        }
+
+        $stopOffsets = [];
+        foreach ($requires[0] as list($indentation, $lineOffset)) {
+            $previousToken = $this->findCodeTokenBeforeWpConfigOffset($wpConfigContent, $lineOffset + strlen($indentation));
+            if ($previousToken === false) {
+                continue;
+            }
+
+ 
+            if (!in_array($previousToken, [';', '{', '}', ':', T_OPEN_TAG], true)) {
+                $stopOffsets = [];
+                break;
+            }
+
+            $stopOffsets[] = $lineOffset;
+        }
+
+        if (empty($stopOffsets)) {
+            throw new \RuntimeException(__('WP STAGING kept the unfinished-clone guard active because it cannot place its live-tables stop safely before the wp-settings.php require in the staging site\'s wp-config.php. Clone and reset copy the live site\'s wp-config.php, so edit that file: keep the require on a line of its own, and put braces around it when an if, else or loop controls it. Then reset this staging site, or delete it and clone again.', 'wp-staging'));
+        }
+
+        foreach (array_reverse($stopOffsets) as $lineOffset) {
+            $wpConfigContent = substr_replace($wpConfigContent, $stop, $lineOffset, 0);
+        }
+
+        return $wpConfigContent;
+    }
+
+
+
+
+
+
+    private function findCodeTokenBeforeWpConfigOffset(string $wpConfigContent, int $offset)
+    {
+        $position      = 0;
+        $previousToken = null;
+        foreach (token_get_all($wpConfigContent) as $token) {
+            if ($position >= $offset) {
+                return $position === $offset ? $previousToken : false;
+            }
+
+            list($tokenId, $tokenText) = is_array($token) ? $token : [$token, $token];
+            $position += strlen($tokenText);
+            if (!in_array($tokenId, [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+                $previousToken = $tokenId;
+            }
+        }
+
+        return false;
     }
 
 

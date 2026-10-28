@@ -17,9 +17,4 @@ trait WordPressOptionNameTrait
             'wp_page_for_privacy_policy',
         ];
     }
-
-    protected function isPrefixIndependentWordPressOptionName(string $optionName): bool
-    {
-        return in_array($optionName, $this->getPrefixIndependentWordPressOptionNames(), true);
-    }
 }

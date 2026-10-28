@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Assets;
 
+use WPStaging\Backup\Service\BackupsDirectoryResolver;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Language\Language;
 
@@ -12,6 +13,8 @@ class I18n
 {
     public function getTranslations(): array
     {
+        $backupsFolder = '<strong>' . esc_html(str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(BackupsDirectoryResolver::class)->resolveFromUploadsDirectory(wp_upload_dir(null, false)['basedir']))) . '</strong>';
+
         $backupCompleteMessage = __('You can restore this backup anytime or upload it to another website and restore it there.', 'wp-staging');
         if (WPStaging::isPro() === false) {
             $backupCompleteMessage = __('You can restore this backup anytime on this website.', 'wp-staging');
@@ -140,6 +143,7 @@ class I18n
                 'body'              => esc_html__('Now delete the theme and the website cache if the website does not look as expected! ', 'wp-staging'),
                 'confirmTitle'      => esc_html__('Do you want to push the staging site?', 'wp-staging'),
                 'confirmButtonText' => esc_html__('Push', 'wp-staging'),
+                'errorsWarning'     => esc_html__('The push finished, but errors were logged. Some plugins, themes or files may not have been pushed. Click Show Logs to see what needs your attention.', 'wp-staging'),
             ],
             'reset'                                               => [
                 'title'          => esc_html__('Staging Site Reset Successfully!', 'wp-staging'),
@@ -651,10 +655,10 @@ class I18n
                 ),
             ],
             'backup_upload'                                       => [
-                'upload_not_supported_error'                   => sprintf(esc_html__('Your browser do not support the File API, needed for the uploads. Please try a different/updated browser, or upload the Backup using FTP to the folder %s', 'wp-staging'), '<strong>wp-content/uploads/wp-staging/backups</strong>'),
+                'upload_not_supported_error'                   => sprintf(esc_html__('Your browser do not support the File API, needed for the uploads. Please try a different/updated browser, or upload the Backup using FTP to the folder %s', 'wp-staging'), $backupsFolder),
                 'event_listener_confirm_cancel_upload_confirm' => esc_html__('Do you want to abort the upload?', 'wp-staging'),
-                'handle_error_modal'                           => sprintf(esc_html__('We could not upload the backup file, please try uploading it directly using FTP to the folder %s. Please also make sure you have enough free disk space on the server.', 'wp-staging'), '<strong>wp-content/uploads/wp-staging/backups</strong>'),
-                'upload_error'                                 => sprintf(esc_html__('The backup file could not be uploaded. The server blocked the request. Please try uploading the file directly using FTP to the folder %s.', 'wp-staging'), '<strong>wp-content/uploads/wp-staging/backups</strong>'),
+                'handle_error_modal'                           => sprintf(esc_html__('We could not upload the backup file, please try uploading it directly using FTP to the folder %s. Please also make sure you have enough free disk space on the server.', 'wp-staging'), $backupsFolder),
+                'upload_error'                                 => sprintf(esc_html__('The backup file could not be uploaded. The server blocked the request. Please try uploading the file directly using FTP to the folder %s.', 'wp-staging'), $backupsFolder),
                 'error_code'                                   => esc_html__('Error Code:', 'wp-staging'),
                 'upload_error_429'                             => esc_html__('The server is rate limiting backup uploads. Wait a few minutes and try again. If this continues, ask your hosting provider to check server or firewall rate limits.', 'wp-staging'),
                 'upload_error_429_small_chunks'                => esc_html__('Your server is using small upload chunks. Check upload_max_filesize and post_max_size: if either is below 16MB, ask your hosting provider to increase it to at least 16MB to allow larger upload chunks.', 'wp-staging'),
