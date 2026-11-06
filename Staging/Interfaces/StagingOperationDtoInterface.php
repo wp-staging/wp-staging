@@ -76,10 +76,6 @@ interface StagingOperationDtoInterface
 
     public function getStagingSiteUploads(): string;
 
-    public function setIsWpConfigExcluded(bool $excluded);
-
-    public function getIsWpConfigExcluded(): bool;
-
     public function setIsKeepPermalinks(bool $isKeepPermalinks);
 
     public function getIsKeepPermalinks(): bool;

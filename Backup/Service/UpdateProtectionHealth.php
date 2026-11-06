@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backup\Service;
 
+use WPStaging\Framework\Analytics\ErrorCode;
+
 
 
 
@@ -151,6 +153,17 @@ class UpdateProtectionHealth
         }
 
         return self::REASON_UNKNOWN;
+    }
+
+
+
+
+
+
+
+    public function reasonForErrorCode(string $errorCode): string
+    {
+        return $errorCode === ErrorCode::DISK_FULL ? self::REASON_DISK_SPACE : '';
     }
 
 

@@ -61,7 +61,7 @@ class SsrfProtection
         }
 
         $host = $this->getUrlHost((string)$url);
-        if ($host === '') {
+        if ($host === '' || preg_match('/[\x00-\x1F\x7F]/', (string)$url) === 1) {
             return true;
         }
 
@@ -86,8 +86,9 @@ class SsrfProtection
         $host = $this->getUrlHost($url);
 
         $pinValidatedIp = function ($handle, $requestArgs, $requestUrl) use ($host, $url) {
-            if ($host === '' || $this->getUrlHost((string)$requestUrl) !== $host) {
-                return;
+            if ($host === '' || strtolower($this->getUrlHost((string)$requestUrl)) !== strtolower($host)) {
+                $requestsExceptionClass = class_exists('\WpOrg\Requests\Exception') ? '\WpOrg\Requests\Exception' : '\Requests_Exception';
+                throw new $requestsExceptionClass(sprintf('Refused a request to %s, which is not the checked host %s.', $this->getUrlHost((string)$requestUrl), $host), 'wpstg_blocked_url');
             }
 
             $resolveEntry = $this->getCurlResolveEntry($url);
@@ -109,10 +110,10 @@ class SsrfProtection
 
 
 
-    protected function getCurlResolveEntry(string $url): string
+    public function getCurlResolveEntry(string $url): string
     {
         $host = $this->getUrlHost($url);
-        if ($host === '' || filter_var($host, FILTER_VALIDATE_IP)) {
+        if ($this->isProtectionDisabled() || $host === '' || filter_var($host, FILTER_VALIDATE_IP)) {
             return '';
         }
 
@@ -194,7 +195,9 @@ class SsrfProtection
             $ips = $this->lookupHostAddress($host);
         }
 
-        $this->resolvedIpsByHost[$host] = $ips;
+        if (!empty($ips)) {
+            $this->resolvedIpsByHost[$host] = $ips;
+        }
 
         return $ips;
     }

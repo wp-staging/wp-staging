@@ -152,6 +152,7 @@ class DatabaseBackupTask extends BackupTask
                 $this->jobDataDto->setTotalRowsBackup(0);
                 $this->jobDataDto->setTableRowsOffset(0);
                 $this->jobDataDto->setTableAverageRowLength(0);
+                $this->jobDataDto->setKeyColumnOfTableBeingBackup(null);
                 $this->stepsDto->incrementCurrentStep();
 
 
@@ -167,12 +168,11 @@ class DatabaseBackupTask extends BackupTask
             $rowsExporter->setTableRowsOffset($this->jobDataDto->getTableRowsOffset());
             $rowsExporter->setTotalRowsExported($this->jobDataDto->getTotalRowsBackup());
 
-            $hasNumericIncrementalPk = false;
-            $tableLocked             = false;
+            $keyColumn   = '';
+            $tableLocked = false;
 
             try {
-                $rowsExporter->getPrimaryKey();
-                $hasNumericIncrementalPk = true;
+                $keyColumn = $rowsExporter->getPrimaryKey();
             } catch (Exception $e) {
                 $retryLater = $this->lockTableOrRetryLater($rowsExporter);
                 if ($retryLater !== null) {
@@ -185,6 +185,7 @@ class DatabaseBackupTask extends BackupTask
             try {
  
                 if ($this->jobDataDto->getTableRowsOffset() === 0) {
+                    $this->jobDataDto->setKeyColumnOfTableBeingBackup($keyColumn);
                     $this->jobDataDto->setTotalRowsOfTableBeingBackup($rowsExporter->countTotalRows());
                     $this->upsertDatabaseTableInfo(
                         $rowsExporter,
@@ -192,7 +193,7 @@ class DatabaseBackupTask extends BackupTask
                         $this->jobDataDto->getTotalRowsOfTableBeingBackup()
                     );
 
-                    if ($hasNumericIncrementalPk) {
+                    if ($keyColumn !== '') {
 
 
 
@@ -245,6 +246,7 @@ class DatabaseBackupTask extends BackupTask
                 $this->jobDataDto->setTotalRowsBackup(0);
                 $this->jobDataDto->setTableRowsOffset(0);
                 $this->jobDataDto->setTableAverageRowLength(0);
+                $this->jobDataDto->setKeyColumnOfTableBeingBackup(null);
  
                 $this->jobDataDto->setLastInsertId(-PHP_INT_MAX);
                 $this->stepsDto->incrementCurrentStep();
@@ -428,7 +430,7 @@ class DatabaseBackupTask extends BackupTask
             '%s_%s_%s.%s.%s.%s',
             parse_url(get_home_url())['host'],
             current_time('Ymd-His'),
-            $this->getJobId(),
+            $this->jobDataDto->getIsSyncRequest() ? $this->getJobId() : $this->jobDataDto->getPrivateFileId(),
             rtrim($wpdb->base_prefix, '_-'),
             $identifier,
             DatabaseImporter::FILE_FORMAT

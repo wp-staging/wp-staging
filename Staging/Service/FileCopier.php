@@ -170,9 +170,9 @@ class FileCopier
                 return;
             } catch (DiskNotWritableException $exception) {
  
-                throw new \Exception('Disk is probably full. Error message: ' . $exception->getMessage());
+                throw new \Exception('Disk is probably full. Error message: ' . $exception->getMessage(), 0, $exception);
             } catch (\Throwable $th) {
-                throw new \Exception('Fail to copy file. Error message: ' . $th->getMessage());
+                throw new \Exception('Fail to copy file. Error message: ' . $th->getMessage(), 0, $th);
             }
         }
 

@@ -3,6 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use Exception;
+use RuntimeException;
 use stdClass;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Database\SelectedTables;
@@ -12,6 +13,7 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Traits\ValueGetterTrait;
 use WPStaging\Pro\Multisite\Service\SubsiteUrlMapping;
+use WPStaging\Staging\FolderOwnership;
 
 
 
@@ -42,6 +44,9 @@ class Updating extends Job
 
     private $urls;
 
+ 
+    private $errorMessage = '';
+
 
 
 
@@ -66,6 +71,11 @@ class Updating extends Job
     public function getMainJob()
     {
         return $this->mainJob;
+    }
+
+    public function getErrorMessage(): string
+    {
+        return $this->errorMessage;
     }
 
 
@@ -116,6 +126,7 @@ class Updating extends Job
 
  
         $this->options->mainJob = $this->mainJob;
+        $this->options->jobStartedAt = time();
 
  
         if ($this->excludeWpConfigDuringUpdate()) {
@@ -211,6 +222,13 @@ class Updating extends Job
         $this->options->cloneDir       = $this->options->existingClones[$this->options->clone]['path'];
         $this->options->destinationDir = $this->getDestinationDir();
         $this->options->cloneHostname  = $this->options->destinationHostname;
+
+        try {
+            WPStaging::make(FolderOwnership::class)->assertIsStagingSiteFolder($this->options->destinationDir);
+        } catch (RuntimeException $e) {
+            $this->errorMessage = $e->getMessage();
+            return false;
+        }
 
  
         $this->options->isRunning = true;

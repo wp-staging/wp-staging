@@ -173,7 +173,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
 
             if (array_key_exists($relativePath, $existingOtherFiles)) {
-                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_OTHER_FILES, false)) {
+                if ($this->isRestoreOnSubsite() && !Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_OTHER_FILES, false)) {
                     continue;
                 }
 

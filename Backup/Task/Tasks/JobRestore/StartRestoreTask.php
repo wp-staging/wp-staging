@@ -20,15 +20,16 @@ class StartRestoreTask extends RestoreTask
 
 
     const BOOLEAN_FILTERS = [
-        CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA                 => 'Keep Existing Media',
-        RestorePluginsTask::FILTER_KEEP_EXISTING_PLUGINS                   => 'Keep Existing Plugins',
-        RestorePluginsTask::FILTER_REPLACE_EXISTING_PLUGINS                => 'Replace Existing Plugins',
-        RestoreThemesTask::FILTER_KEEP_EXISTING_THEMES                     => 'Keep Existing Themes',
-        RestoreThemesTask::FILTER_REPLACE_EXISTING_THEMES                  => 'Replace Existing Themes',
-        RestoreMuPluginsTask::FILTER_KEEP_EXISTING_MUPLUGINS               => 'Keep Existing Mu-Plugins',
-        RestoreMuPluginsTask::FILTER_REPLACE_EXISTING_MUPLUGINS            => 'Replace Existing Mu-Plugins',
-        RestoreLanguageFilesTask::FILTER_REPLACE_EXISTING_LANGUAGES        => 'Replace Existing Languages',
-        RestoreOtherFilesInWpContentTask::FILTER_KEEP_EXISTING_OTHER_FILES => 'Keep Existing Other Files',
+        CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA                    => 'Keep Existing Media',
+        RestorePluginsTask::FILTER_KEEP_EXISTING_PLUGINS                      => 'Keep Existing Plugins',
+        RestorePluginsTask::FILTER_REPLACE_EXISTING_PLUGINS                   => 'Replace Existing Plugins',
+        RestoreThemesTask::FILTER_KEEP_EXISTING_THEMES                        => 'Keep Existing Themes',
+        RestoreThemesTask::FILTER_REPLACE_EXISTING_THEMES                     => 'Replace Existing Themes',
+        RestoreMuPluginsTask::FILTER_KEEP_EXISTING_MUPLUGINS                  => 'Keep Existing Mu-Plugins',
+        RestoreMuPluginsTask::FILTER_REPLACE_EXISTING_MUPLUGINS               => 'Replace Existing Mu-Plugins',
+        RestoreLanguageFilesTask::FILTER_REPLACE_EXISTING_LANGUAGES           => 'Replace Existing Languages',
+        RestoreOtherFilesInWpContentTask::FILTER_KEEP_EXISTING_OTHER_FILES    => 'Keep Existing Other Files',
+        RestoreOtherFilesInWpContentTask::FILTER_REPLACE_EXISTING_OTHER_FILES => 'Replace Existing Other Files',
     ];
 
 

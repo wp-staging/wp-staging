@@ -10,9 +10,7 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database\DatabaseException;
-use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Database\WpDbInfo;
-use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\PrefixOwnership;
@@ -34,18 +32,7 @@ class Delete extends Job
 
 
 
-    const DELETE_STATUS_UNFINISHED = 'unfinished';
-
-
-
-
     private $clone = false;
-
-
-
-
-
-    private $deleteDir;
 
 
 
@@ -91,9 +78,8 @@ class Delete extends Job
         parent::__construct();
 
  
-        $this->sanitize  = WPStaging::make(Sanitize::class);
-        $this->deleteDir = !empty($_POST['deleteDir']) ? $this->sanitize->sanitizePath($_POST['deleteDir']) : '';
-        $this->strings   = new Strings();
+        $this->sanitize = WPStaging::make(Sanitize::class);
+        $this->strings  = new Strings();
     }
 
 
@@ -546,104 +532,7 @@ class Delete extends Job
 
     public function deleteDirectory()
     {
-        if ($this->isFatalError()) {
-            $this->returnException('Can not delete directory: ' . $this->deleteDir . '. This seems to be the root directory. Exclude this directory from deleting and try again.');
-            throw new Exception('Can not delete directory: ' . $this->deleteDir . ' This seems to be the root directory. Exclude this directory from deleting and try again.');
-        }
-
- 
-        if (
-            empty($this->deleteDir) ||
-            $this->deleteDir === get_home_path() ||
-            !is_dir($this->deleteDir)
-        ) {
-            $this->job->current = "finish";
-            $this->updateJob();
-            $this->deleteFinish();
-            return;
-        }
-
-        $this->log("Delete staging site: " . $this->clone->path);
-
- 
-        if ($this->deleteDir === get_home_path()) {
-            $this->log("Fatal Error 8: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL);
-            $this->returnException('Fatal Error 8: Trying to delete root of WP installation!');
-        }
-
- 
-        if ($this->isOverThreshold()) {
-            return;
-        }
-
-        $clone        = (string)$this->clone->path;
-        $errorMessage = sprintf(__('We could not delete the staging site completely. There are still files in the folder %s that could not be deleted. This could be a write permission issue. Try to delete the folder manually by using FTP or a file manager plugin.<br/> If this happens again please contact us at support@wp-staging.com', 'wp-staging'), $clone);
-        $deleteStatus = self::DELETE_STATUS_FINISHED;
-        $isDeleted    = false;
-
-        try {
-            $isDeleted = $this->cleanStagingDirectory($this->deleteDir);
-        } catch (FilesystemExceptions $ex) {
-            $errorMessage = $ex->getMessage();
-            $deleteStatus = self::DELETE_STATUS_UNFINISHED;
-        }
-
- 
-        if (!$isDeleted && $deleteStatus !== self::DELETE_STATUS_UNFINISHED) {
-            return;
-        }
-
- 
-        if (!(new Filesystem())->isEmptyDir($this->deleteDir)) {
-            $response = [
-                'job'     => 'delete',
-                'status'  => true,
-                'delete'  => $deleteStatus,
-                'message' => $errorMessage,
-                'error'   => true,
-            ];
-            wp_die(json_encode($response));
-        }
-
- 
         $this->deleteFinish();
-    }
-
-
-
-
-
-
-    protected function cleanStagingDirectory(string $deleteDir): bool
-    {
-        if (!is_dir($deleteDir)) {
-            return true;
-        }
-
- 
-        $fs = (new Filesystem())
-            ->setShouldStop([$this, 'isOverThreshold'])
-            ->shouldPermissionExceptionsBypass(true)
-            ->setRecursive();
-
-        try {
-            if (!$fs->delete($this->deleteDir)) {
-                return false;
-            }
-        } catch (FilesystemExceptions $ex) {
-            throw $ex;
-        }
-
-        return true;
-    }
-
-
-
-
-    public function isFatalError(): bool
-    {
-        $homePath = rtrim(get_home_path(), "/");
-        return $homePath === rtrim($this->deleteDir, "/");
     }
 
 

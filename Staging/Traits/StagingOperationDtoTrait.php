@@ -88,11 +88,6 @@ trait StagingOperationDtoTrait
 
 
 
-    private $isWpConfigExcluded = false;
-
-
-
-
     private $isKeepPermalinks = false;
 
 
@@ -251,10 +246,15 @@ trait StagingOperationDtoTrait
 
     public function addStagingTable(string $srcTable, string $destTable)
     {
-        $this->stagingTables[] = [
+        $stagingTable = [
             'source'      => $srcTable,
             'destination' => $destTable,
         ];
+        if (in_array($stagingTable, $this->stagingTables, true)) {
+            return;
+        }
+
+        $this->stagingTables[] = $stagingTable;
     }
 
 
@@ -278,10 +278,15 @@ trait StagingOperationDtoTrait
 
     public function addPreserveTable(string $destTable, string $backupTable)
     {
-        $this->preserveTables[] = [
+        $preserveTable = [
             'destination' => $destTable,
             'backup'      => $backupTable,
         ];
+        if (in_array($preserveTable, $this->preserveTables, true)) {
+            return;
+        }
+
+        $this->preserveTables[] = $preserveTable;
     }
 
 
@@ -454,23 +459,6 @@ trait StagingOperationDtoTrait
     public function getStagingSiteUploads(): string
     {
         return $this->stagingSiteUploads;
-    }
-
-
-
-
-
-    public function setIsWpConfigExcluded(bool $excluded)
-    {
-        $this->isWpConfigExcluded = $excluded;
-    }
-
-
-
-
-    public function getIsWpConfigExcluded(): bool
-    {
-        return $this->isWpConfigExcluded;
     }
 
 

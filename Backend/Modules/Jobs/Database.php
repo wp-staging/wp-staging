@@ -44,7 +44,6 @@ class Database extends CloningProcess
     {
         $this->setupMemoryExhaustFile();
         $this->initializeDbObjects();
-        $this->abortIfDirectoryNotEmpty();
         $this->abortIfDirectoryNotCreated();
         $this->abortIfPrefixContainsInvalidCharacter();
         if (!$this->isExternalDatabase()) {
@@ -467,22 +466,6 @@ class Database extends CloningProcess
         }
 
         return $this->options->prefix;
-    }
-
-
-
-
-
-
-    private function abortIfDirectoryNotEmpty()
-    {
-        $path = trailingslashit($this->options->cloneDir);
-        if (isset($this->options->mainJob) && $this->options->mainJob !== Job::RESET && $this->options->mainJob !== Job::UPDATE && is_dir($path) && !wpstg_is_empty_dir($path)) {
-            $this->returnException(" Can not continue for security purposes. Directory {$path} is not empty! Use FTP or a file manager plugin and make sure it does not contain any files. ");
-            return true;
-        }
-
-        return false;
     }
 
 

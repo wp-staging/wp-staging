@@ -305,7 +305,7 @@ abstract class AbstractExtractor
             throw new \Exception('Skipping file: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
         }
 
-        $extractFolder = $this->getExtractFolder($identifier);
+        $extractFolder = $this->getExtractFolder($identifier, $identifiablePath);
 
         if (!$this->createDirectory($extractFolder)) {
             throw new \RuntimeException("Could not create folder to extract backup file: $extractFolder. Please check folder permissions.");
@@ -575,7 +575,7 @@ abstract class AbstractExtractor
         file_put_contents($destinationFilePath, $fileContent);
     }
 
-    protected function getExtractFolder(string $identifier): string
+    protected function getExtractFolder(string $identifier, string $identifiablePath): string
     {
         return $this->dirRestore . $this->pathIdentifier->getRelativePath($identifier);
     }

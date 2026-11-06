@@ -128,15 +128,16 @@ class FeatureDetection
 
         debug_log('Sending request to: ' . $ajaxUrl, 'info', false);
 
-        $response = wp_remote_post(esc_url_raw($ajaxUrl), [
+        $httpAuthHeaders = $this->getHttpAuthHeaders();
+        $response        = wp_remote_post(esc_url_raw($ajaxUrl), [
             'headers'   => array_merge(
                 ['X-WPSTG-Request' => self::ACTION_AJAX_TEST],
-                $this->getHttpAuthHeaders()
+                $httpAuthHeaders
             ),
             'blocking'  => false,
             'timeout'   => 0.01,
             'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
-            'sslverify' => apply_filters(self::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
+            'sslverify' => $this->shouldVerifySslForHttpAuthHeaders($httpAuthHeaders),
             'body'      => [self::AJAX_OPTION_NAME => $hash],
         ]);
 

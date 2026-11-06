@@ -303,10 +303,10 @@ class Queue
     }
 
  
-    private function getAvailableAtColumnType(): string
+    private function getColumnType(string $columnName): string
     {
         $table  = self::getTableName();
-        $result = $this->database->query("SHOW COLUMNS FROM `{$table}` LIKE 'available_at'");
+        $result = $this->database->query("SHOW COLUMNS FROM `{$table}` LIKE '{$columnName}'");
         $column = $result === false ? null : $this->database->fetchAssoc($result);
 
         return empty($column['Type']) ? '' : strtolower($column['Type']);
@@ -319,7 +319,7 @@ class Queue
             return version_compare($this->getCurrentTableVersion(), '1.1.0', '>=');
         }
 
-        return strpos($this->getAvailableAtColumnType(), 'int') !== false;
+        return strpos($this->getColumnType('available_at'), 'int') !== false;
     }
 
 
@@ -1536,17 +1536,11 @@ class Queue
 
     public function maybeAddResponseColumnToTable(): bool
     {
-        $tablename = self::getTableName();
- 
-        $query  = "SHOW COLUMNS FROM {$tablename} LIKE 'response'";
-        $result = $this->database->query($query);
-
- 
-        if ($result === true) {
+        if ($this->getColumnType('response') !== '') {
             return true;
         }
 
-        return $this->database->query($this->getQueryToAddResponseColumnToTable($tablename));
+        return $this->database->query($this->getQueryToAddResponseColumnToTable(self::getTableName()));
     }
 
 
@@ -1571,12 +1565,12 @@ class Queue
         $currentTableVersion = $this->getCurrentTableVersion();
 
         if (!$this->availableAtColumnHoldsIntegers()) {
-            $alteration       = $this->getAvailableAtColumnType() === '' ? 'ADD' : 'MODIFY';
+            $alteration       = $this->getColumnType('available_at') === '' ? 'ADD' : 'MODIFY';
             $dbdeltaQueries[] = "ALTER TABLE `{$tablename}` {$alteration} COLUMN `available_at` BIGINT(20) UNSIGNED NOT NULL DEFAULT 0 AFTER `priority`";
         }
 
         if (version_compare($currentTableVersion, '1.0.0', '<')) {
-            $this->maybeAddUpgradeTableQueryForResponseField($tablename, $currentTableVersion, $dbdeltaQueries);
+            $this->maybeAddUpgradeTableQueryForResponseField($tablename, $dbdeltaQueries);
         }
     }
 
@@ -1585,21 +1579,20 @@ class Queue
 
 
 
-
-    protected function maybeAddUpgradeTableQueryForResponseField(string $tablename, string $version, array &$dbdeltaQueries)
+    protected function maybeAddUpgradeTableQueryForResponseField(string $tablename, array &$dbdeltaQueries)
     {
  
         $deprecatedTableVersionOption = get_option(self::QUEUE_TABLE_VERSION_KEY, false);
 
  
-        if (version_compare($version, '1.0.0', '<') && $deprecatedTableVersionOption === false) {
-            $dbdeltaQueries[] = $this->getQueryToAddResponseColumnToTable($tablename);
+        delete_option(self::QUEUE_TABLE_VERSION_KEY);
+
+ 
+        if ($this->getColumnType('response') !== '') {
             return;
         }
 
- 
-        delete_option(self::QUEUE_TABLE_VERSION_KEY);
-        if (version_compare($deprecatedTableVersionOption, '4.9.1', '<')) {
+        if ($deprecatedTableVersionOption === false || version_compare($deprecatedTableVersionOption, '4.9.1', '<')) {
             $dbdeltaQueries[] = $this->getQueryToAddResponseColumnToTable($tablename);
         }
     }

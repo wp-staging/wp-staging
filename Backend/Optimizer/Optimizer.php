@@ -4,7 +4,6 @@ namespace WPStaging\Backend\Optimizer;
 
 use WPStaging\Core\DTO\Settings as SettingsDTO;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Network\HttpBasicAuth;
 use WPStaging\Framework\Security\Capabilities;
@@ -91,14 +90,12 @@ class Optimizer
         $secret = wp_generate_password(32, false);
         set_transient(self::TRANSIENT_CHECK_SECRET, $secret, MINUTE_IN_SECONDS);
 
- 
-        $headers   = $this->getHttpAuthHeaders();
-        $sslVerify = empty($headers) ? apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false) : true;
+        $headers = $this->getHttpAuthHeaders();
 
         $response = wp_remote_post(admin_url('admin-ajax.php'), [
             'timeout'   => self::SAFETY_CHECK_TIMEOUT,
             'blocking'  => true,
-            'sslverify' => $sslVerify,
+            'sslverify' => $this->shouldVerifySslForHttpAuthHeaders($headers),
             'headers'   => $headers,
             'body'      => [
                 'action' => 'wpstg_can_use_optimizer',
@@ -184,6 +181,18 @@ class Optimizer
     {
         delete_option(self::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL);
         delete_transient(self::TRANSIENT_CHECK_SECRET);
+    }
+
+
+
+
+
+
+    public function forgetSafetyCheckPass()
+    {
+        if (get_option(self::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL) === '0') {
+            delete_option(self::OPTION_OPTIMIZER_DISABLED_AFTER_FATAL);
+        }
     }
 
 

@@ -5,19 +5,20 @@
 
 namespace WPStaging\Framework\Component;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\WpAdapter;
-use WPStaging\Framework\Security\AccessToken;
-use WPStaging\Framework\Security\Capabilities;
-use WPStaging\Framework\Security\Nonce;
+use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
+
+
+
 
 abstract class AbstractTemplateComponent
 {
  
     protected $templateEngine;
 
-    private $accessToken;
-    private $nonce;
+    private $auth;
     private $wpAdapter;
 
     public function __construct(TemplateEngine $templateEngine)
@@ -25,9 +26,8 @@ abstract class AbstractTemplateComponent
         $this->templateEngine = $templateEngine;
 
  
-        $this->accessToken = new AccessToken();
-        $this->nonce       = new Nonce();
-        $this->wpAdapter   = new WpAdapter();
+        $this->auth      = WPStaging::make(Auth::class);
+        $this->wpAdapter = new WpAdapter();
     }
 
 
@@ -46,10 +46,6 @@ abstract class AbstractTemplateComponent
 
     protected function canRenderAjax()
     {
-        $isAjax          = $this->wpAdapter->doingAjax();
-        $hasToken        = $this->accessToken->requestHasValidToken();
-        $isAuthenticated = current_user_can((new Capabilities())->manageWPSTG()) && $this->nonce->requestHasValidNonce(Nonce::WPSTG_NONCE);
-
-        return $isAjax && ($hasToken || $isAuthenticated);
+        return $this->wpAdapter->doingAjax() && $this->auth->isAuthenticatedRequest();
     }
 }

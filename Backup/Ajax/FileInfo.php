@@ -4,6 +4,7 @@ namespace WPStaging\Backup\Ajax;
 
 use Exception;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\RestoreExcludedSizeCalculator;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\CleanExistingMediaTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreMuPluginsTask;
@@ -14,7 +15,11 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Backup\Utils\BackupPathResolver;
+
+
+
 
 class FileInfo extends AbstractTemplateComponent
 {
@@ -57,7 +62,8 @@ class FileInfo extends AbstractTemplateComponent
             ]);
         }
 
-        $this->excludedBackupParts = Hooks::applyFilters(RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS, []);
+        $excludedBackupParts       = Hooks::applyFilters(RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS, []);
+        $this->excludedBackupParts = is_array($excludedBackupParts) ? $excludedBackupParts : [];
 
         $excluded = [
             'database'  => $this->isBackupPartExcluded(PartIdentifier::DATABASE_PART_IDENTIFIER),
@@ -65,6 +71,7 @@ class FileInfo extends AbstractTemplateComponent
             'themes'    => $this->isBackupPartExcluded(PartIdentifier::THEME_PART_IDENTIFIER),
             'muPlugins' => $this->isBackupPartExcluded(PartIdentifier::MU_PLUGIN_PART_IDENTIFIER),
             'uploads'   => $this->isBackupPartExcluded(PartIdentifier::UPLOAD_PART_IDENTIFIER),
+            'lang'      => $this->isBackupPartExcluded(PartIdentifier::LANGUAGE_PART_IDENTIFIER),
             'wpContent' => $this->isBackupPartExcluded(PartIdentifier::WP_CONTENT_PART_IDENTIFIER),
             'wpRoot'    => $this->isBackupPartExcluded(PartIdentifier::WP_ROOT_PART_IDENTIFIER),
         ];
@@ -74,15 +81,18 @@ class FileInfo extends AbstractTemplateComponent
             'themes'    => $this->isBackupPartReplaced(RestoreThemesTask::FILTER_KEEP_EXISTING_THEMES, $info),
             'muPlugins' => $this->isBackupPartReplaced(RestoreMuPluginsTask::FILTER_KEEP_EXISTING_MUPLUGINS, $info),
             'wpContent' => $this->isBackupPartReplaced(RestoreOtherFilesInWpContentTask::FILTER_KEEP_EXISTING_OTHER_FILES, $info),
-            'wpRoot'    => false, 
+            'wpRoot'    => false,
  
             'uploads'   => !Hooks::applyFilters(CleanExistingMediaTask::FILTER_KEEP_EXISTING_MEDIA, false),
         ];
 
         $viewData = [
-            'info'     => $info,
-            'excluded' => $excluded,
-            'replaced' => $replaced,
+            'info'                 => $info,
+            'excluded'             => $excluded,
+            'excludedSize'         => (new RestoreExcludedSizeCalculator())->calculate($info->getIndexPartSize(), $this->excludedBackupParts),
+            'replaced'             => $replaced,
+            'maskedBackupFileName' => (new Strings())->maskBackupFilename($file),
+            'isMultipartBackup'    => $info->getIsMultipartBackup(),
         ];
 
         $result = $this->templateEngine->render(

@@ -322,6 +322,8 @@ class FinishBackupTask extends BackupTask
             'isExcludingLogs'                => $jobBackupDataDto->getIsExcludingLogs(),
             'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
             'isExportingOtherWpRootFiles'    => $jobBackupDataDto->getIsExportingOtherWpRootFiles(),
+            'backupType'                     => $jobBackupDataDto->getBackupType(),
+            'subsiteBlogId'                  => $jobBackupDataDto->getSubsiteBlogId(),
             'isWpCliRequest'                 => true, 
             'repeatBackupOnSchedule'         => false,
             'isCreateBackupInBackground'     => false,

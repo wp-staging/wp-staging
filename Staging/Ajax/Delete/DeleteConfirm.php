@@ -2,9 +2,11 @@
 
 namespace WPStaging\Staging\Ajax\Delete;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Sanitize;
+use WPStaging\Staging\FolderOwnership;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Staging\Traits\WithStagingDatabase;
@@ -75,6 +77,7 @@ class DeleteConfirm extends AbstractTemplateComponent
             'staging/confirm-delete.php',
             [
                 'ownsDatabaseTables'  => $ownsTables,
+                'ownsFolder'          => WPStaging::make(FolderOwnership::class)->isStagingSiteFolder($stagingSiteDto->getPath()),
                 'stagingSite'         => $stagingSiteDto,
                 'tables'              => $tables === null ? [] : $tables,
                 'isDatabaseConnected' => $connected,

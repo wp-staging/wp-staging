@@ -8,6 +8,7 @@ use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\MySQLRowsGeneratorTrait;
 use RuntimeException;
+use UnexpectedValueException;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Database\Exporter\AbstractExporter;
@@ -34,6 +35,9 @@ class RowsExporter extends AbstractExporter
 
 
     const EMPTY_PART_HEADER_BYTES = 512;
+
+ 
+    const REMOTE_SYNC_CREDENTIAL_OPTIONS = ['wpstg_remote_sync_api_token', 'wpstg_remote_sync_password', 'wpstg_remote_sync_enabled'];
 
 
 
@@ -506,9 +510,27 @@ class RowsExporter extends AbstractExporter
         $this->nonWpTables = $nonWpTables;
     }
 
+
+
+
+
+
+
+
     public function getPrimaryKey(): string
     {
-        return $this->tableService->getNumericPrimaryKey($this->databaseName, $this->tableName);
+        $keyColumn = $this->jobDataDto->getKeyColumnOfTableBeingBackup();
+        if ($keyColumn === '') {
+            throw new UnexpectedValueException();
+        }
+
+        if ($keyColumn !== null) {
+            return $keyColumn;
+        }
+
+        $isTableBegunByAnEarlierVersion = $this->jobDataDto->getTableRowsOffset() !== 0;
+
+        return $this->tableService->getUniqueAutoIncrementColumn($this->databaseName, $this->tableName, $isTableBegunByAnEarlierVersion);
     }
 
 
@@ -589,6 +611,10 @@ class RowsExporter extends AbstractExporter
 
  
                     if (substr($value, 0, 22) === 'wpstg_analytics_event_') {
+                        throw new \OutOfBoundsException();
+                    }
+
+                    if (is_multisite() && in_array($value, self::REMOTE_SYNC_CREDENTIAL_OPTIONS, true)) {
                         throw new \OutOfBoundsException();
                     }
 

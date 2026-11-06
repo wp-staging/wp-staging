@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Notices;
 
 use Exception;
+use UnexpectedValueException;
 use wpdb;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
@@ -10,6 +11,7 @@ use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
+use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Database\WpOptionsInfo;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Security\Capabilities;
@@ -400,6 +402,19 @@ class Notices
 
 
 
+    private function tableHasUniqueAutoIncrementKey(string $table): bool
+    {
+        try {
+            WPStaging::make(TableService::class)->getUniqueAutoIncrementColumn((string)$this->db->dbname, $table);
+            return true;
+        } catch (UnexpectedValueException $e) {
+            return false;
+        }
+    }
+
+
+
+
     private function noticeDbHasMissingOrUnexpectedPrimaryKeys()
     {
         if (Hooks::applyFilters(self::FILTER_NOTICES_HIDE_MISSING_PRIMARY_KEY_NOTICE, false)) {
@@ -408,7 +423,7 @@ class Notices
 
         $optionTable              = $this->db->prefix . 'options';
         $isPrimaryKeyMissing      = $this->wpOptionsInfo->isOptionTablePrimaryKeyMissing($optionTable);
-        $isPrimaryKeyIsOptionName = $this->wpOptionsInfo->isPrimaryKeyIsOptionName($optionTable);
+        $isPrimaryKeyIsOptionName = $this->wpOptionsInfo->isPrimaryKeyIsOptionName($optionTable) && !$this->tableHasUniqueAutoIncrementKey($optionTable);
         if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && ($isPrimaryKeyMissing || $isPrimaryKeyIsOptionName) && $this->isWPStagingAdminPage())) {
             require $this->viewsNoticesPath . "wp-options-missing-pk.php";
         }

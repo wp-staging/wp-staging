@@ -12,6 +12,9 @@ use Exception;
 use WP_Error;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\AnalyticsGenericEvent;
+use WPStaging\Framework\Analytics\AnalyticsEventDto;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\BackgroundProcessing\Action;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
 use WPStaging\Framework\BackgroundProcessing\Queue;
@@ -20,10 +23,12 @@ use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Job\Ajax\PrepareJob as AjaxPrepareJob;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
+use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Times;
 
@@ -47,6 +52,21 @@ abstract class PrepareJob
 
 
     const ACTION_JOB_FAILURE = 'wpstg_background_job_failure';
+
+ 
+    const ARG_STEP_RETRIED_AFTER_WORKER_STOPPED = 'stepRetriedAfterWorkerStopped';
+
+ 
+    const WORKER_STOPPED_RETRY_DELAY_SECONDS = 30;
+
+ 
+    const ANALYTICS_GROUP_JOB = 'background_job';
+
+ 
+    const EVENT_JOB_FAILED = 'job_failed';
+
+ 
+    const MAX_REPORTED_MESSAGE_LENGTH = 200;
 
  
     protected $job;
@@ -222,12 +242,25 @@ abstract class PrepareJob
             debug_log('[Schedule Job Data DTO]: ' . json_encode($this->job->getJobDataDto()), 'debug', false);
         }
 
+        $isStepRunning = false;
+        if ($this->getIsBackupJob()) {
+            add_action('shutdown', function () use (&$isStepRunning, &$args) {
+                if ($isStepRunning) {
+                    $this->retryOrFailStepWhoseWorkerStopped($args);
+                }
+            });
+        }
+
         do {
+            $isStepRunning = true;
             try {
  
                 $taskResponseDto = $this->job->prepareAndExecute();
                 $this->job->persist();
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
+                if ($taskResponseDto->getJobStatus() !== 'JOB_RETRY') {
+                    unset($args[self::ARG_STEP_RETRIED_AFTER_WORKER_STOPPED]);
+                }
             } catch (ProcessLockedException $e) {
  
  
@@ -236,13 +269,15 @@ abstract class PrepareJob
 
                 debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=process-locked-midrun (re-queued)', 'info', false);
                 return new WP_Error(400, $e->getMessage());
-            } catch (Exception $e) {
-                debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
+            } catch (\Throwable $e) {
+                debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
                 $this->handlingError = true;
-                $this->handleError($e->getMessage(), $args);
+                $this->handleError($e->getMessage(), $args, ErrorCode::fromThrowable($e));
                 $this->recordFailedResponseOnCurrentAction($e->getMessage());
 
                 return new WP_Error(400, $e->getMessage());
+            } finally {
+                $isStepRunning = false;
             }
 
             if ($this->isJobCancelled($args)) {
@@ -251,7 +286,7 @@ abstract class PrepareJob
 
             $errorMessage = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
-                $this->handleError($errorMessage, $args);
+                $this->handleError($errorMessage, $args, $this->getLastErrorCode());
                 $this->recordFailedResponseOnCurrentAction($errorMessage, $taskResponseDto);
 
                 debug_log('[BG Queue] act() end: jobId=' . $jobIdForLog . ' outcome=error', 'info', false);
@@ -320,7 +355,7 @@ abstract class PrepareJob
         $hasThisJobEnded = ($isTransientOfThisJob && ($currentJob['status'] ?? '') !== JobTransientCache::STATUS_RUNNING) || $this->hasJobRecordedFinalResponse($jobId);
         if (!$hasThisJobEnded) {
             if ($isTransientOfThisJob) {
-                $this->handleError($message, $args);
+                $this->handleError($message, $args, ErrorCode::JOB_DATA_LOST);
             }
 
  
@@ -344,6 +379,40 @@ abstract class PrepareJob
 
 
 
+    private function retryOrFailStepWhoseWorkerStopped(array $args)
+    {
+        try {
+            $task = $this->job->getCurrentTask();
+            $usesTaskQueue = $task instanceof AbstractTask && $task->usesTaskQueue();
+            if (empty($args[self::ARG_STEP_RETRIED_AFTER_WORKER_STOPPED]) && !$usesTaskQueue) {
+                $args[self::ARG_STEP_RETRIED_AFTER_WORKER_STOPPED] = true;
+                $retryAt = time() + self::WORKER_STOPPED_RETRY_DELAY_SECONDS;
+                $this->queueAction($args, $retryAt);
+                wp_schedule_single_event($retryAt, QueueProcessor::ACTION_QUEUE_PROCESS, ['workerStoppedRetry', $args['jobId']]);
+                debug_log('[BG Queue] act() end: jobId=' . $args['jobId'] . ' outcome=worker stopped (step re-queued once)', 'info', true);
+                return;
+            }
+
+            $message = 'The background process stopped while running a backup step, for example on a PHP fatal error, a timeout or the memory limit.';
+            $lastError = error_get_last();
+            if (is_array($lastError) && ($lastError['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR)) !== 0) {
+                $message .= ' Last PHP error: ' . $lastError['message'];
+            }
+
+            $this->handleError($message, $args, ErrorCode::WORKER_STOPPED);
+            $this->recordFailedResponseOnCurrentAction($message);
+        } catch (\Throwable $e) {
+            debug_log('The backup step whose background process stopped could not be retried or failed: ' . $e->getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
 
 
 
@@ -354,7 +423,7 @@ abstract class PrepareJob
         }
 
         $this->job->skipPersistOnShutdown();
-        $this->handleError($exception->getMessage(), $args);
+        $this->handleError($exception->getMessage(), $args, ErrorCode::fromThrowable($exception));
         $this->recordFailedResponseOnCurrentAction($exception->getMessage());
         $this->processLock->unlockProcess();
 
@@ -462,7 +531,8 @@ abstract class PrepareJob
 
 
 
-    protected function handleError(string $errorMessage, array $args = [])
+
+    protected function handleError(string $errorMessage, array $args = [], string $errorCode = '')
     {
         $body = '';
         $job  = $this->getIsBackupJob() ? 'backup' : 'job';
@@ -499,12 +569,38 @@ abstract class PrepareJob
         $failure = [
             'jobTransientCache' => $jobTransientCache,
             'errorMessage'      => $errorMessage,
+            'errorCode'         => $errorCode,
             'jobDataDto'        => $this->job->getJobDataDto(),
         ];
 
         $this->notifyJobFailureListeners($failure);
 
+        $this->recordBackupFailureInAnalytics($jobDataDto, $errorMessage, $errorCode);
+        $this->recordFailureCodeInAnalytics($errorCode, $errorMessage, $args);
+
         $jobTransientCache->failJob('', $errorMessage);
+    }
+
+
+
+
+
+
+
+
+
+
+    private function recordBackupFailureInAnalytics(JobDataDto $jobDataDto, string $errorMessage, string $errorCode)
+    {
+        if (!$this->getIsBackupJob() || !$jobDataDto->hasId() || $jobDataDto->getIsSyncRequest()) {
+            return;
+        }
+
+        try {
+            AnalyticsEventDto::enqueueErrorEvent($jobDataDto->getId(), $errorMessage, $errorCode);
+        } catch (\Throwable $e) {
+            debug_log('The analytics error event of the failed backup could not be recorded: ' . $e->getMessage());
+        }
     }
 
 
@@ -521,6 +617,34 @@ abstract class PrepareJob
         }
 
         $this->persistDtoToAction($this->getCurrentAction(), $this->job->getJobFailResponse($errorMessage, ''));
+    }
+
+
+
+
+
+
+
+
+
+
+    private function recordFailureCodeInAnalytics(string $errorCode, string $errorMessage, array $args)
+    {
+        try {
+            AnalyticsGenericEvent::logEvent(
+                self::EVENT_JOB_FAILED,
+                self::ANALYTICS_GROUP_JOB,
+                [
+                    'error_code' => ErrorCode::sanitize($errorCode),
+                    'job_type'   => $this->getIsBackupJob() ? 'backup' : 'job',
+                    'scheduled'  => array_key_exists('scheduleId', $args) ? 'yes' : 'no',
+                    'job_id'     => isset($args['jobId']) ? (string)$args['jobId'] : '',
+                    'message'    => substr($errorMessage, 0, self::MAX_REPORTED_MESSAGE_LENGTH),
+                ]
+            );
+        } catch (\Throwable $e) {
+            debug_log('The analytics event of the failed job could not be recorded: ' . $e->getMessage());
+        }
     }
 
 
@@ -595,6 +719,18 @@ abstract class PrepareJob
 
         debug_log('[Schedule Last Error Message]: ' . $error);
         return $error;
+    }
+
+    private function getLastErrorCode(): string
+    {
+        $currentTask = $this->job === null ? null : $this->job->getCurrentTask();
+        if (empty($currentTask)) {
+            return '';
+        }
+
+        $error = $currentTask->getLogger()->getLastErrorMsg();
+
+        return is_array($error) && isset($error['errorCode']) ? (string)$error['errorCode'] : '';
     }
 
     private function getLogFile(): string

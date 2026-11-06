@@ -122,6 +122,33 @@ class DatabaseOptions
 
 
 
+
+
+
+    public function updateOptionIfUnchanged(string $optionName, $expectedValue, $optionValue): bool
+    {
+        $sql = $this->db->prepare(
+            "UPDATE `{$this->optionsTable}`
+             SET option_value = %s
+             WHERE option_name = %s AND option_value = %s",
+            serialize($optionValue),
+            $optionName,
+            serialize($expectedValue)
+        );
+
+        if (empty($this->db->query($sql))) {
+            return false;
+        }
+
+        $this->clearOptionCache($optionName);
+
+        return true;
+    }
+
+
+
+
+
     public function deleteOption(string $optionName): bool
     {
         if (!$this->optionExists($optionName)) {

@@ -63,6 +63,9 @@ class Extractor extends AbstractExtractor
  
     protected $isLastRequestGracefulShutdown = true;
 
+ 
+    private $restoreDatabaseFiles = [];
+
     public function __construct(
         PathIdentifier $pathIdentifier,
         Directory $directory,
@@ -105,6 +108,15 @@ class Extractor extends AbstractExtractor
     public function setIsLastRequestGracefulShutdown(bool $isLastRequestGracefulShutdown)
     {
         $this->isLastRequestGracefulShutdown = $isLastRequestGracefulShutdown;
+    }
+
+
+
+
+
+    public function setRestoreDatabaseFiles(array $restoreDatabaseFiles)
+    {
+        $this->restoreDatabaseFiles = $restoreDatabaseFiles;
     }
 
 
@@ -235,10 +247,14 @@ class Extractor extends AbstractExtractor
         $this->removeLastCharInExtractedFile();
     }
 
-    protected function getExtractFolder(string $identifier): string
+    protected function getExtractFolder(string $identifier, string $identifiablePath): string
     {
         if ($this->isValidateOnly) {
             return trailingslashit($this->dirRestore . self::VALIDATE_DIRECTORY);
+        }
+
+        if (in_array($identifiablePath, $this->restoreDatabaseFiles, true)) {
+            return $this->dirRestore;
         }
 
         if ($identifier === PathIdentifier::IDENTIFIER_UPLOADS) {
@@ -327,7 +343,7 @@ class Extractor extends AbstractExtractor
         $destinationFilePath = $this->extractingFile->getBackupPath();
 
         if (strpos($destinationFilePath, '.sql') !== false) {
-            $this->logger->debug(sprintf('DEBUG: Extracting SQL file %s', $destinationFilePath));
+            $this->logger->debug(sprintf('DEBUG: Extracting SQL file %s', $this->extractingFile->getRelativePath()));
         }
 
         $this->maybeResetFilePointerAfterInMemoryFallback();
@@ -348,7 +364,7 @@ class Extractor extends AbstractExtractor
         $destinationFileResource = @fopen($destinationFilePath, FileObject::MODE_APPEND);
         if (!$destinationFileResource) {
             $this->diskWriteCheck->testDiskIsWriteable();
-            throw new BackupSkipItemException("Can not extract file $destinationFilePath");
+            throw new BackupSkipItemException("Can not open the destination file");
         }
 
 

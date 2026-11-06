@@ -76,8 +76,10 @@ class SubsiteUrlSearchReplace extends SearchReplace
             return $data;
         }
 
-        $data = $this->transform($data, true);
-        $data = $this->searchReplace->replace($data);
+        $inputLength = is_string($data) ? strlen($data) : null;
+        $data        = $this->transform($data, true);
+        $data        = $this->replaceMainSiteUrls($data);
+        $this->logWalkRefusal($inputLength);
 
         return $this->transform($data, false);
     }
@@ -95,7 +97,8 @@ class SubsiteUrlSearchReplace extends SearchReplace
         $hasExtendedDataFilter = function_exists('has_filter')
             && has_filter(SearchReplace::FILTER_REPLACE_EXTENDED_DATA) !== false;
 
-        $data = $this->transform($data, true);
+        $inputLength = is_string($data) ? strlen($data) : null;
+        $data        = $this->transform($data, true);
         if ($hasExtendedDataFilter) {
             $data = $this->transformBase64JsonValues($data, true);
         }
@@ -112,7 +115,8 @@ class SubsiteUrlSearchReplace extends SearchReplace
             }
         }
 
-        $data = $this->searchReplace->replace($data);
+        $data = $this->replaceMainSiteUrls($data);
+        $this->logWalkRefusal($inputLength);
 
         if ($hasExtendedDataFilter) {
             $data = $this->applyFilters(
@@ -126,6 +130,19 @@ class SubsiteUrlSearchReplace extends SearchReplace
         $data = $this->transform($data, false);
 
         return $hasExtendedDataFilter ? $this->transformBase64JsonValues($data, false) : $data;
+    }
+
+
+
+
+
+
+    private function replaceMainSiteUrls($data)
+    {
+        $data = $this->searchReplace->replaceWithEveryPair($data);
+        $this->adoptWalkRefusalOf($this->searchReplace);
+
+        return $data;
     }
 
 
@@ -655,14 +672,15 @@ class SubsiteUrlSearchReplace extends SearchReplace
 
 
 
-    private function transform($data, bool $protect)
+
+    private function transform($data, bool $protect, array &$restoredValues = [])
     {
         switch (gettype($data)) {
             case 'string':
-                return $this->transformString($data, $protect);
+                return $this->transformString($data, $protect, $restoredValues);
             case 'array':
                 foreach ($data as $key => $value) {
-                    $data[$key] = $this->transform($value, $protect);
+                    $data[$key] = $this->transform($value, $protect, $restoredValues);
                 }
 
                 return $data;
@@ -677,7 +695,7 @@ class SubsiteUrlSearchReplace extends SearchReplace
                         continue;
                     }
 
-                    $data->{$key} = $this->transform($value, $protect);
+                    $data->{$key} = $this->transform($value, $protect, $restoredValues);
                 }
 
                 return $data;
@@ -691,7 +709,8 @@ class SubsiteUrlSearchReplace extends SearchReplace
 
 
 
-    private function transformString(string $data, bool $protect)
+
+    private function transformString(string $data, bool $protect, array &$restoredValues)
     {
         if (!$this->isSerialized($data)) {
             $data = $this->applyPatterns($data, $protect);
@@ -699,13 +718,105 @@ class SubsiteUrlSearchReplace extends SearchReplace
             return $this->isWpBakeryActive ? $this->transformWpBakeryValues($data, $protect) : $data;
         }
 
-        $rejected     = false;
-        $unserialized = $this->safeMaybeUnserialize($data, [\stdClass::class], $rejected);
-        if ($rejected || $unserialized === false) {
+        if ($protect) {
+            return $this->walkSerialized($data, function ($unserialized) {
+                return $this->transform($unserialized, true);
+            });
+        }
+
+        return $this->restoreSerialized($data, $restoredValues);
+    }
+
+
+
+
+
+    private function restoreSerialized(string $data, array &$restoredValues): string
+    {
+        if (isset($restoredValues[$data])) {
+            return $restoredValues[$data];
+        }
+
+        if (!$this->serializedValueHoldsOwnPlaceholder($data)) {
+            $restoredValues[$data] = $data;
             return $data;
         }
 
-        return serialize($this->transform($unserialized, $protect));
+        $rejected     = false;
+        $unserialized = $this->safeMaybeUnserialize($data, [\stdClass::class], $rejected);
+        if ($rejected || $unserialized === false) {
+            $restoredValues[$data] = $data;
+            return $data;
+        }
+
+        $restored                  = serialize($this->transform($unserialized, false, $restoredValues));
+        $restoredValues[$data]     = $restored;
+        $restoredValues[$restored] = $restored;
+        return $restored;
+    }
+
+
+
+
+
+    private function serializedValueHoldsOwnPlaceholder(string $serialized): bool
+    {
+        if ($this->textHoldsOwnPlaceholder($serialized)) {
+            return true;
+        }
+
+        if (!$this->isWpBakeryActive) {
+            return false;
+        }
+
+        $closing   = -1;
+        $lineBreak = -1;
+        $opening   = strpos($serialized, '[vc_raw_html]');
+        while ($opening !== false) {
+            $content = $opening + strlen('[vc_raw_html]');
+            $next    = strpos($serialized, '[vc_raw_html]', $content);
+            if ($closing !== false && $closing <= $content) {
+                $closing = strpos($serialized, '[/vc_raw_html]', $content + 1);
+            }
+
+            if ($lineBreak !== false && $lineBreak < $content) {
+                $lineBreak = strpos($serialized, "\n", $content);
+            }
+
+            if ($closing === false) {
+                return false;
+            }
+
+            if (($lineBreak !== false && $lineBreak < $closing) || ($next !== false && $next < $closing)) {
+                $opening = $next;
+                continue;
+            }
+
+            $decoded = base64_decode(substr($serialized, $content, $closing - $content), true);
+            if ($decoded !== false && $this->textHoldsOwnPlaceholder($decoded)) {
+                return true;
+            }
+
+            $opening = $next;
+        }
+
+        return false;
+    }
+
+    private function textHoldsOwnPlaceholder(string $text): bool
+    {
+        if (strpos($text, '__WPSTG_SUBSITE_URL_') === false) {
+            return false;
+        }
+
+        preg_match_all('/__WPSTG_SUBSITE_URL_\d+_[a-f0-9]{32,40}__/', $text, $placeholders);
+        foreach ($placeholders[0] as $placeholder) {
+            if (isset($this->restoreReplacements[$placeholder])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 

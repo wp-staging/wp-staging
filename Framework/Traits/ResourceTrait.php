@@ -372,7 +372,7 @@ trait ResourceTrait
 
 
 
-    protected function getScriptMemoryLimit()
+    public function getScriptMemoryLimit()
     {
  
         $this->scriptMemoryLimit = Hooks::applyFilters('wpstg.tests.resources.script_memory_limit', $this->scriptMemoryLimit);

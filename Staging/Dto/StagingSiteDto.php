@@ -2,6 +2,7 @@
 
 namespace WPStaging\Staging\Dto;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use WPStaging\Framework\Traits\ArrayableTrait;
 use WPStaging\Framework\Traits\HydrateTrait;
@@ -81,6 +82,9 @@ class StagingSiteDto implements \JsonSerializable
     protected $datetime = 0;
 
  
+    protected $syncedAt = 0;
+
+ 
     protected $databaseUser = '';
 
  
@@ -127,6 +131,9 @@ class StagingSiteDto implements \JsonSerializable
 
  
     protected $subsiteUrlMappings = [];
+
+ 
+    protected $customSearchReplaceRules = [];
 
 
 
@@ -204,6 +211,22 @@ class StagingSiteDto implements \JsonSerializable
     public function setSubsiteUrlMappings(array $subsiteUrlMappings)
     {
         $this->subsiteUrlMappings = $subsiteUrlMappings;
+    }
+
+
+
+
+    public function getCustomSearchReplaceRules(): array
+    {
+        return $this->customSearchReplaceRules;
+    }
+
+
+
+
+    public function setCustomSearchReplaceRules(array $customSearchReplaceRules)
+    {
+        $this->customSearchReplaceRules = $customSearchReplaceRules;
     }
 
     public function jsonSerialize(): mixed
@@ -371,6 +394,46 @@ class StagingSiteDto implements \JsonSerializable
     public function setDatetime(int $datetime)
     {
         $this->datetime = $datetime;
+    }
+
+
+
+
+
+    public function getSyncedAt(): int
+    {
+        if ($this->syncedAt || $this->isBlankSite) {
+            return $this->syncedAt;
+        }
+
+        return $this->getCreatedAtFromCloneId();
+    }
+
+
+
+
+    private function getCreatedAtFromCloneId(): int
+    {
+        return preg_match('/^\d{10}(\d{3})?$/', $this->cloneId) ? (int)substr($this->cloneId, 0, 10) : 0;
+    }
+
+
+
+
+
+    public function setSyncedAt(int $syncedAt)
+    {
+        $this->syncedAt = $syncedAt;
+    }
+
+
+
+
+    public static function doCopiedTablesHoldShopOrders(array $copiedTables): bool
+    {
+        $orderTable = get_option('woocommerce_custom_orders_table_enabled') === 'yes' ? 'wc_orders' : 'posts';
+
+        return in_array(WPStaging::getTablePrefix() . $orderTable, $copiedTables, true);
     }
 
     public function getDatabaseUser(): string

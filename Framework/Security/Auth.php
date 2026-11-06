@@ -55,6 +55,7 @@ class Auth
 
 
 
+
     public function isAuthenticatedRequest(string $nonce = '', string $capability = ''): bool
     {
         if (empty($nonce)) {
@@ -72,6 +73,6 @@ class Auth
             return true;
         }
 
-        return $this->accessToken->requestHasValidToken();
+        return $this->accessToken->requestHasValidToken() && (!is_user_logged_in() || current_user_can($capability));
     }
 }

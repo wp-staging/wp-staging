@@ -11,15 +11,8 @@ try {
 ?>
 <div
     id="wpstg--modal--backup--restore"
-    data-confirmButtonText="<?php esc_attr_e('RESTORE', 'wp-staging'); ?>"
-    data-nextButtonText="<?php esc_attr_e('NEXT', 'wp-staging'); ?>"
-    data-cancelButtonText="<?php esc_attr_e('CANCEL', 'wp-staging'); ?>"
     data-baseDirectory="<?php echo esc_attr($baseDirectory); ?>"
     style="display: none"
 >
-    <h2 class="wpstg--modal--backup--restore--title wpstg-modal-title"><?php esc_html_e('Restore Backup', 'wp-staging') ?></h2>
-    <div style="padding: .75em; margin: 1em auto;">
-        <?php include(__DIR__ . '/partials/restore-introduction.php'); ?>
-        <?php include(__DIR__ . '/partials/restore-database-search-replace.php'); ?>
-    </div>
+    <div id="wpstg-restore-confirm-content"></div>
 </div>

@@ -12,6 +12,7 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
@@ -141,7 +142,7 @@ class FinalizeBackupTask extends BackupTask
         } catch (FileSizeLimitException $e) {
             throw $e;
         } catch (Exception $e) {
-            $this->logger->critical(sprintf('Failed to create backup file: %s', $e->getMessage()));
+            $this->logger->critical(sprintf('Failed to create backup file: %s', $e->getMessage()), ['errorCode' => ErrorCode::fromThrowable($e)]);
             return $this->generateResponse(false);
         }
 

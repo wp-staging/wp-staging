@@ -1,5 +1,10 @@
 <?php
 
+
+
+
+
+
 if (!function_exists('wpstgIsAdminActionRequest')) {
 
 
@@ -62,64 +67,78 @@ if (!function_exists('wpstgIsPluginRestRoute')) {
     }
 }
 
-if (!function_exists('wpstgGetPrettyRestRoute')) {
+if (!function_exists('wpstgGetRestRouteFromRewriteRules')) {
 
 
 
 
-    function wpstgGetPrettyRestRoute(string $requestUri): string
+
+
+    function wpstgGetRestRouteFromRewriteRules(): string
     {
-        $requestPath = (string)parse_url($requestUri, PHP_URL_PATH);
-        if ($requestPath === '') {
+        if (empty(get_option('permalink_structure'))) {
             return '';
         }
 
- 
- 
-        $restPrefix = '/' . trim(apply_filters('rest_url_prefix', 'wp-json'), '/') . '/';
-        $prefixPosition = strpos($requestPath, $restPrefix);
-        if ($prefixPosition === false) {
+        if (strpos((string)($_SERVER['PHP_SELF'] ?? ''), 'wp-admin/') !== false) { // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- matched only, never output or stored
             return '';
         }
 
-        return ltrim(substr($requestPath, $prefixPosition + strlen($restPrefix)), '/');
+        $homePathPattern = '|^' . preg_quote(trim((string)parse_url(home_url(), PHP_URL_PATH), '/'), '|') . '|i';
+        $pathInfo        = str_replace('%', '%25', explode('?', (string)($_SERVER['PATH_INFO'] ?? ''), 2)[0]); // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- matched only, never output or stored
+        $requestPath     = str_replace($pathInfo, '', explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2)[0]); // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- matched only, never output or stored
+        $requestPath     = trim(preg_replace($homePathPattern, '', trim($requestPath, '/')), '/');
+        $pathInfo        = trim(preg_replace($homePathPattern, '', trim($pathInfo, '/')), '/');
+        if (!empty($pathInfo) && !preg_match('|^.*index.php$|', $pathInfo)) {
+            $requestPath = $pathInfo;
+        } elseif ($requestPath === 'index.php') {
+            $requestPath = '';
+        }
+
+        if (empty($requestPath)) {
+            return '';
+        }
+
+        $restPrefix = rest_get_url_prefix();
+        foreach (['^' . $restPrefix . '/?$', '^' . $restPrefix . '/(.*)?', '^index.php/' . $restPrefix . '/?$', '^index.php/' . $restPrefix . '/(.*)?'] as $restRewriteRule) {
+            if (preg_match("#^$restRewriteRule#", $requestPath, $matches) || preg_match("#^$restRewriteRule#", urldecode($requestPath), $matches)) {
+                return '/' . ($matches[1] ?? '');
+            }
+        }
+
+        return '';
     }
 }
 
-if (!function_exists('wpstgIsRestRequest')) {
+if (!function_exists('wpstgGetRequestRestRoute')) {
 
 
 
 
-    function wpstgIsRestRequest(string $requestUri): bool
+
+
+
+    function wpstgGetRequestRestRoute(): string
     {
-        if (wpstgGetPrettyRestRoute($requestUri) !== '') {
-            return true;
+        if (($GLOBALS['pagenow'] ?? '') !== 'index.php') {
+            return '';
         }
 
-        return !empty($_GET['rest_route']);
-    }
-}
-
-if (!function_exists('wpstgIsPluginRestRequest')) {
-
-
-
-
-    function wpstgIsPluginRestRequest(string $requestUri): bool
-    {
-        $prettyRoute = wpstgGetPrettyRestRoute($requestUri);
-        if ($prettyRoute !== '') {
-            return wpstgIsPluginRestRoute($prettyRoute);
+        if (has_action('init', 'rest_api_init') === false || has_action('parse_request', 'rest_api_loaded') === false) {
+            return '';
         }
 
-        if (empty($_GET['rest_route'])) {
-            return false;
+        $decodedRequestPath = urldecode(explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2)[0]); // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- matched only, never output or stored
+        if (preg_match('#(?:^|[/\\\\])\.\.(?:[/\\\\]|$)#', $decodedRequestPath)) {
+            return '';
         }
 
-        $restRoute = sanitize_text_field(wp_unslash($_GET['rest_route']));
+        $restRoute = $_POST['rest_route'] ?? $_GET['rest_route'] ?? null; // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- callers only compare it, never output or store it
+        if ($restRoute !== null) {
+            return (is_string($restRoute) && $restRoute !== '0') ? $restRoute : '';
+        }
 
-        return wpstgIsPluginRestRoute($restRoute);
+        return wpstgGetRestRouteFromRewriteRules();
     }
 }
 
@@ -216,11 +235,7 @@ if (!function_exists('wpstgShouldSkipBootstrap')) {
             return false;
         }
 
-        if (wpstgIsRestRequest($requestUri)) {
-            return !wpstgIsPluginRestRequest($requestUri);
-        }
-
-        return true;
+        return !wpstgIsPluginRestRoute(wpstgGetRequestRestRoute());
     }
 }
 

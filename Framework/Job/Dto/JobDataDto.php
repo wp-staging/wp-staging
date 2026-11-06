@@ -55,6 +55,9 @@ class JobDataDto extends AbstractDto
     protected $id;
 
  
+    protected $privateFileId = '';
+
+ 
     protected $init;
 
  
@@ -167,6 +170,10 @@ class JobDataDto extends AbstractDto
 
     public function setId($id)
     {
+        if ($id !== $this->id) {
+            $this->privateFileId = '';
+        }
+
         $this->id = $id;
     }
 
@@ -176,6 +183,28 @@ class JobDataDto extends AbstractDto
     public function generateId()
     {
         $this->setId(bin2hex(random_bytes(16)));
+    }
+
+
+
+
+
+    public function getPrivateFileId(): string
+    {
+        if ($this->privateFileId === '') {
+            $this->privateFileId = substr(hash_hmac('sha256', (string)$this->getId(), wp_salt()), 0, 32);
+        }
+
+        return $this->privateFileId;
+    }
+
+
+
+
+
+    public function setPrivateFileId($privateFileId)
+    {
+        $this->privateFileId = (string)$privateFileId;
     }
 
 

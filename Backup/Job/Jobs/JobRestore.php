@@ -204,7 +204,7 @@ class JobRestore extends AbstractJob
 
     protected function getJobTmpDirectory(): string
     {
-        $dir = $this->directory->getTmpDirectory() . $this->jobDataDto->getId();
+        $dir = $this->directory->getTmpDirectory() . $this->jobDataDto->getPrivateFileId();
         $this->filesystem->mkdir($dir);
 
         return trailingslashit($dir);

@@ -239,7 +239,7 @@ class Files extends JobExecutable
             ->shouldPermissionExceptionsBypass(true)
             ->setRecursive(true);
         try {
-            if (!$fs->delete($this->destination, false)) {
+            if (!$this->deleteStagingSiteFilesWithWpConfigLast($fs, $this->destination, false)) {
                 foreach ($fs->getLogs() as $log) {
                     $this->log($log, Logger::TYPE_WARNING);
                 }
@@ -247,6 +247,7 @@ class Files extends JobExecutable
                 return false;
             }
         } catch (RuntimeException $ex) {
+            $this->log($ex->getMessage(), Logger::TYPE_WARNING);
         }
 
         foreach ($fs->getLogs() as $log) {

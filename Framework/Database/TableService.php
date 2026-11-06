@@ -657,20 +657,26 @@ class TableService
 
 
 
-    public function getNumericPrimaryKey(string $database, string $table): string
-    {
-        if ($this->hasMoreThanOnePrimaryKey($database, $table)) {
-            throw new UnexpectedValueException();
-        }
 
-        $query = "SELECT COLUMN_NAME
-                  FROM INFORMATION_SCHEMA.COLUMNS
-                  WHERE TABLE_NAME = '$table'
-                  AND TABLE_SCHEMA = '$database'
-                  AND IS_NULLABLE = 'NO'
-                  AND DATA_TYPE IN ('int', 'bigint', 'smallint', 'mediumint')
-                  AND COLUMN_KEY = 'PRI'
-                  AND EXTRA like '%auto_increment%';";
+    public function getUniqueAutoIncrementColumn(string $database, string $table, bool $mustBeThePrimaryKey = false): string
+    {
+        $primaryKeyCondition = $mustBeThePrimaryKey ? "AND c.COLUMN_KEY = 'PRI' AND NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS p WHERE p.TABLE_NAME = '$table' AND p.TABLE_SCHEMA = '$database' AND p.INDEX_NAME = 'PRIMARY' AND p.SEQ_IN_INDEX > 1)" : '';
+        $query = "SELECT c.COLUMN_NAME
+                  FROM INFORMATION_SCHEMA.COLUMNS c
+                  JOIN INFORMATION_SCHEMA.STATISTICS s ON s.COLUMN_NAME = c.COLUMN_NAME
+                  WHERE c.TABLE_NAME = '$table'
+                  AND c.TABLE_SCHEMA = '$database'
+                  AND s.TABLE_NAME = '$table'
+                  AND s.TABLE_SCHEMA = '$database'
+                  AND c.IS_NULLABLE = 'NO'
+                  AND c.DATA_TYPE IN ('int', 'bigint', 'smallint', 'mediumint')
+                  AND c.EXTRA like '%auto_increment%'
+                  AND s.NON_UNIQUE = 0
+                  {$primaryKeyCondition}
+                  AND NOT EXISTS (
+                      SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS k
+                      WHERE k.TABLE_NAME = '$table' AND k.TABLE_SCHEMA = '$database' AND k.INDEX_NAME = s.INDEX_NAME AND k.SEQ_IN_INDEX > 1
+                  );";
 
         $result = $this->client->query($query);
 
@@ -987,25 +993,5 @@ class TableService
         }
 
         return $query;
-    }
-
-
-
-
-
-
-    private function hasMoreThanOnePrimaryKey(string $database, string $table): bool
-    {
-        $query = "SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'";
-
-        $result = $this->client->query($query);
-
-        if (!$result) {
-            throw new UnexpectedValueException();
-        }
-
-        $primaryKeys = $this->client->fetchAll($result);
-
-        return count($primaryKeys) > 1;
     }
 }

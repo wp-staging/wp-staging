@@ -104,6 +104,10 @@ class FinishStagingSiteUpdateTask extends StagingTask
     {
         $stagingSite = $this->jobDataDto->getStagingSite();
         $stagingSite->setStatus(StagingSiteDto::STATUS_FINISHED);
+        if (StagingSiteDto::doCopiedTablesHoldShopOrders($this->jobDataDto->getSelectedTables())) {
+            $stagingSite->setSyncedAt($stagingSite->getDatetime());
+        }
+
         $stagingSite->setDatetime(time());
         $stagingSite->setVersion(WPStaging::getVersion());
         $stagingSite->setOwnerId(get_current_user_id());

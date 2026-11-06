@@ -70,12 +70,7 @@ class PrepareStagingSiteTablesTask extends StagingTask
                 continue;
             }
 
-            if ($this->tableCreateService->isTableExist($destTable)) {
-                $tableWithoutPrefix = $this->tableCreateService->getTableWithoutPrefix($srcTable);
-                $backupTable        = $this->tableCreateService->preserveExistingTable($destTable, $tableWithoutPrefix);
-                $this->jobDataDto->addPreserveTable($destTable, $backupTable);
-            }
-
+            $this->preserveDestinationTable($srcTable, $destTable);
             $this->tableCreateService->createDestinationTable($srcTable, $destTable);
             $this->jobDataDto->addStagingTable($srcTable, $destTable);
 
@@ -85,6 +80,8 @@ class PrepareStagingSiteTablesTask extends StagingTask
         if ($this->stepsDto->isFinished()) {
             $this->logger->info('All tables created on staging site...');
         }
+
+        $this->persistJobDataDto();
 
         return $this->generateResponse(false);
     }
@@ -99,6 +96,7 @@ class PrepareStagingSiteTablesTask extends StagingTask
         $this->tableCreateService->setIsResetExistingTables($this->jobDataDto->getIsUpdateOrResetJob());
         $this->tableCreateService->setup($this->logger, $this->stagingDb);
         if (!$this->stepsDto->getTotal()) {
+            $isFirstRequest = empty($this->tables);
             $selectedTables = new SelectedTables();
             $selectedTables->setIncludedTables($this->jobDataDto->getIncludedTables());
             $selectedTables->setExcludedTables($this->jobDataDto->getExcludedTables());
@@ -107,7 +105,35 @@ class PrepareStagingSiteTablesTask extends StagingTask
             $this->tables = $selectedTables->getSelectedTables($this->jobDataDto->getIsStagingNetwork());
             $this->stepsDto->setTotal(count($this->tables));
             $this->jobDataDto->setSelectedTables($this->tables);
+            if ($isFirstRequest) {
+                $this->tableCreateService->dropOrphanedBackupTables($this->tables);
+            }
+
+            $this->persistJobDataDto();
+            $this->persistStepsDto();
         }
+    }
+
+
+
+
+
+    private function preserveDestinationTable(string $srcTable, string $destTable)
+    {
+        $tableWithoutPrefix = $this->tableCreateService->getTableWithoutPrefix($srcTable);
+        $backupTable        = $this->tableCreateService->getPreservedTableName($tableWithoutPrefix);
+        if ($this->tableCreateService->isTableExist($backupTable)) {
+            $this->logger->info(sprintf("Table %s was already preserved as %s, keeping it", esc_html($destTable), esc_html($backupTable)));
+            $this->jobDataDto->addPreserveTable($destTable, $backupTable);
+            return;
+        }
+
+        if (!$this->tableCreateService->isTableExist($destTable)) {
+            return;
+        }
+
+        $this->tableCreateService->preserveExistingTable($destTable, $tableWithoutPrefix);
+        $this->jobDataDto->addPreserveTable($destTable, $backupTable);
     }
 
 

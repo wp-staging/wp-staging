@@ -345,6 +345,7 @@ class Assets
             'assetsUrl'                         => $this->getAssetsUrl(),
             'ajaxUrl'                           => admin_url('admin-ajax.php'),
             'restUrl'                           => $this->getRestUrl(),
+            'backgroundLoggerUrl'               => $this->getBackgroundLoggerUrl(),
             'wpstgIcon'                         => $updateProtection['loaderUrl'],
             'maxUploadChunkSize'                => $this->getMaxUploadChunkSize(),
             'backupDBExtension'                 => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
@@ -810,6 +811,16 @@ class Assets
         }
 
         return site_url('/?rest_route=/' . Rest::WPSTG_ROUTE_NAMESPACE_V1);
+    }
+
+    private function getBackgroundLoggerUrl(): string
+    {
+        return $this->isWPEngine() ? admin_url('admin-ajax.php?action=wpstg--sse-logs') : '';
+    }
+
+    protected function isWPEngine(): bool
+    {
+        return (new SiteInfo())->isWPEngine();
     }
 
     private function isWordPressRestUrlReachable(): bool

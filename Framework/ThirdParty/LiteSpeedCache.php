@@ -142,11 +142,12 @@ class LiteSpeedCache
 
     protected function requestServerPurge(string $url): int
     {
-        $response = wp_remote_get($url, [
+        $httpAuthHeaders = $this->getHttpAuthHeaders();
+        $response        = wp_remote_get($url, [
             'timeout'     => 15,
             'redirection' => 0,
-            'sslverify'   => apply_filters('https_local_ssl_verify', false),
-            'headers'     => $this->getHttpAuthHeaders(),
+            'sslverify'   => $this->shouldVerifySslForHttpAuthHeaders($httpAuthHeaders),
+            'headers'     => $httpAuthHeaders,
         ]);
 
         if (is_wp_error($response)) {

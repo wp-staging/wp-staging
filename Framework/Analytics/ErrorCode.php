@@ -32,6 +32,8 @@ class ErrorCode
     const REQUEST_FAILED      = 'request_failed';
     const BACKUP_PART_MISSING = 'backup_part_missing';
     const TABLE_LOCK_GIVEN_UP = 'table_lock_given_up';
+    const WORKER_STOPPED      = 'worker_stopped';
+    const JOB_DATA_LOST       = 'job_data_lost';
 
 
 
@@ -62,11 +64,14 @@ class ErrorCode
 
 
 
+
     public static function fromThrowable(Throwable $throwable): string
     {
-        foreach (self::$exceptionMap as $class => $code) {
-            if ($throwable instanceof $class) {
-                return $code;
+        for ($current = $throwable; $current !== null; $current = $current->getPrevious()) {
+            foreach (self::$exceptionMap as $class => $code) {
+                if ($current instanceof $class) {
+                    return $code;
+                }
             }
         }
 

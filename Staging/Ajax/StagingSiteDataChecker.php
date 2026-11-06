@@ -3,11 +3,13 @@
 namespace WPStaging\Staging\Ajax;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DirectoryListing;
+use WPStaging\Staging\Service\AbstractStagingSetup;
 
 
 
@@ -23,10 +25,14 @@ class StagingSiteDataChecker
  
     private $dirAdapter;
 
-    public function __construct(Auth $auth, Directory $directory)
+ 
+    private $stagingSetup;
+
+    public function __construct(Auth $auth, Directory $directory, AbstractStagingSetup $stagingSetup)
     {
-        $this->auth       = $auth;
-        $this->dirAdapter = $directory;
+        $this->auth         = $auth;
+        $this->dirAdapter   = $directory;
+        $this->stagingSetup = $stagingSetup;
     }
 
 
@@ -88,7 +94,7 @@ class StagingSiteDataChecker
         $cloneDir = $this->dirAdapter->getStagingSiteDirectoryInsideWpcontent();
         if ($cloneDir === false) {
             wp_send_json_error([
-                'message' => sprintf(__('Clone destination dir cannot be created. Please choose another path.', 'wp-staging')),
+                'message' => Escape::escapeHtml($this->getDefaultDestinationNotWritableMessage()),
             ]);
         }
 
@@ -99,5 +105,21 @@ class StagingSiteDataChecker
         wp_send_json_error([
             'message' => sprintf(__('Clone destination dir is not writable. Please make <code>%s</code> or <code>%s</code> writable to proceed!', 'wp-staging'), esc_html($cloneDirRootPath), esc_html($cloneDir)),
         ]);
+    }
+
+
+
+
+    private function getDefaultDestinationNotWritableMessage(): string
+    {
+        if (!$this->stagingSetup->isProLicenseActive()) {
+            return sprintf(
+                /* translators: %s: URL of the WP STAGING Pro pricing page. */
+                __('The staging site cannot be created because neither the WordPress root folder nor the wp-content folder is writable. Make one of them writable and try again, or <a href="%s" target="_blank" rel="noopener noreferrer">upgrade to WP STAGING Pro</a> to set a custom path.', 'wp-staging'),
+                esc_url(Language::getUpgradeUrl('staging_destination_not_writable'))
+            );
+        }
+
+        return __('The staging site cannot be created because neither the WordPress root folder nor the wp-content folder is writable. Make one of them writable, or customize the path in staging settings.', 'wp-staging');
     }
 }

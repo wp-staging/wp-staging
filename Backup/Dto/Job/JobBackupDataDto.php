@@ -104,6 +104,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $totalRowsOfTableBeingBackup = 0;
 
  
+    private $keyColumnOfTableBeingBackup = null;
+
+ 
     private $lastInsertId = PHP_INT_MIN;
 
  
@@ -240,6 +243,15 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function isScheduledBackup(): bool
     {
         return $this->getRepeatBackupOnSchedule() || !empty($this->getScheduleId());
+    }
+
+
+
+
+
+    public function getBackupFileNameId(): string
+    {
+        return $this->isLocalBackup() ? (string)$this->getId() : $this->getPrivateFileId();
     }
 
 
@@ -678,6 +690,22 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setTotalRowsOfTableBeingBackup($totalRowsOfTableBeingBackup)
     {
         $this->totalRowsOfTableBeingBackup = (int)$totalRowsOfTableBeingBackup;
+    }
+
+
+
+
+    public function getKeyColumnOfTableBeingBackup()
+    {
+        return $this->keyColumnOfTableBeingBackup;
+    }
+
+
+
+
+    public function setKeyColumnOfTableBeingBackup($keyColumnOfTableBeingBackup)
+    {
+        $this->keyColumnOfTableBeingBackup = $keyColumnOfTableBeingBackup === null ? null : (string)$keyColumnOfTableBeingBackup;
     }
 
 

@@ -275,6 +275,11 @@ class SiteInfo
         return file_exists(trailingslashit(wp_normalize_path(ABSPATH)) . '.fw-config.php');
     }
 
+    public function isWPEngine(): bool
+    {
+        return defined('WPE_APIKEY') || class_exists('WPE_API') || (function_exists('is_wpe') && is_wpe());
+    }
+
 
 
 

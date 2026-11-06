@@ -4,6 +4,7 @@ namespace WPStaging\Staging\Tasks\StagingSiteUpdate;
 
 use RuntimeException;
 use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
@@ -15,6 +16,7 @@ use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
+use WPStaging\Staging\FolderOwnership;
 use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
@@ -116,6 +118,7 @@ class UpdateRequirementsCheckTask extends StagingTask
             $this->cannotUpdateStagingSiteOnMultisite();
             $this->cannotUpdateIfCantWriteToDisk();
             $this->cannotUpdateIfStagingSiteNoExists();
+            WPStaging::make(FolderOwnership::class)->assertIsStagingSiteFolder($this->jobDataDto->getStagingSitePath());
             $this->cannotUpdateIfUsingExternalDatabase();
             $this->cannotUpdateIfStagingPrefixSameAsProductionSite();
         } catch (RuntimeException $e) {

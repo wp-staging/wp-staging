@@ -74,6 +74,7 @@ trait DatabaseRowsExportTaskTrait
                 $this->stepsDto->incrementCurrentStep();
                 $this->currentTaskDto->reset();
                 $this->jobDataDto->setTableAverageRowLength(0);
+                $this->jobDataDto->setLastQueryInfoJSON('');
             }
 
             $this->commitRowsExportCheckpoint($writtenBytes);
@@ -173,7 +174,7 @@ trait DatabaseRowsExportTaskTrait
         $tables = $this->jobDataDto->getStagingTables();
         $this->rowsExporter->setStagingPrefix($this->jobDataDto->getDatabasePrefix());
         $this->rowsExporter->inject($this->logger, $this->jobDataDto, $this->currentTaskDto->toRowsExporterDto());
-        $this->rowsExporter->setFileName($this->directory->getCacheDirectory() . $this->jobDataDto->getId() . '.wpstgdbtmp.sql');
+        $this->rowsExporter->setFileName($this->directory->getCacheDirectory() . $this->jobDataDto->getPrivateFileId() . '.wpstgdbtmp.sql');
         $this->rowsExporter->setTables($tables);
         $this->rowsExporter->setTablesToExclude($this->getTablesExcludedFromRowsExport());
         $this->rowsExporter->prefixSpecialFields();

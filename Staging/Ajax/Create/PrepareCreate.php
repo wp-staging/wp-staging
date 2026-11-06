@@ -3,8 +3,10 @@
 namespace WPStaging\Staging\Ajax\Create;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\JobTransientCache;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Staging\Ajax\AbstractAjaxPrepare;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
@@ -283,7 +285,7 @@ class PrepareCreate extends AbstractAjaxPrepare
 
         $stagingSiteDirectory = $this->directory->getStagingSiteDirectoryInsideWpcontent();
         if ($stagingSiteDirectory === false) {
-            throw new \RuntimeException(esc_html__('The staging sites directory is not writable. Please choose another path.', 'wp-staging'));
+            throw new \RuntimeException(Escape::escapeHtml($this->getDefaultDestinationNotWritableMessage()));
         }
 
         return trailingslashit($this->filesystem->normalizePath($stagingSiteDirectory)) . $data['directoryName'];
@@ -299,12 +301,23 @@ class PrepareCreate extends AbstractAjaxPrepare
             return $homeUrl;
         }
 
-        $stagingSiteUrl = $this->directory->getStagingSiteUrl();
-        if (empty($stagingSiteUrl)) {
+        if ($this->directory->getStagingSiteDirectoryInsideWpcontent(false) === false) {
             return $homeUrl;
         }
 
-        return trailingslashit($stagingSiteUrl) . $data['directoryName'];
+        return trailingslashit($this->directory->getStagingSiteUrl()) . $data['directoryName'];
+    }
+
+
+
+
+    protected function getDefaultDestinationNotWritableMessage(): string
+    {
+        return sprintf(
+            /* translators: %s: URL of the WP STAGING Pro pricing page. */
+            __('The staging site cannot be created because neither the WordPress root folder nor the wp-content folder is writable. Make one of them writable and try again, or <a href="%s" target="_blank" rel="noopener noreferrer">upgrade to WP STAGING Pro</a> to set a custom path.', 'wp-staging'),
+            esc_url(Language::getUpgradeUrl('staging_destination_not_writable'))
+        );
     }
 
 

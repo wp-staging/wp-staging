@@ -61,49 +61,31 @@ trait DbRowsGeneratorTrait
 
 
 
-
-    protected function getNumericPrimaryKey()
+    protected function getUniqueIntegerKeyColumn()
     {
  
         if (!$this->executeNumericPrimaryKeyQuery) {
             return false;
         }
 
-        $primaryKeys = [];
-        $fields      = $this->stagingSiteDb->get_results('DESCRIBE ' . $this->tableName);
-
- 
-        if (empty($fields)) {
-            return false;
-        }
-
-        if (is_array($fields)) {
-            foreach ($fields as $column) {
-                if ($column->Key === 'PRI') {
-                    $primaryKeys[] = $column;
-                }
+        $integerColumns = [];
+        foreach ((array)$this->stagingSiteDb->get_results('DESCRIBE ' . $this->tableName) as $column) {
+            if ($column->Null === 'NO' && preg_match('/^(big|small|medium)?int\b/', $column->Type)) {
+                $integerColumns[] = $column->Field;
             }
         }
 
-        if (empty($primaryKeys)) {
-            return false;
+        $uniqueKeys = [];
+        foreach ((array)$this->stagingSiteDb->get_results('SHOW INDEX FROM ' . $this->tableName) as $index) {
+            if ((int)$index->Non_unique === 0) {
+                $uniqueKeys[$index->Key_name][] = $index->Column_name;
+            }
         }
 
-        if (count($primaryKeys) > 1) {
-            return false;
-        }
-
-        $primaryKey = $primaryKeys[0];
-
- 
-        if (
-            strpos($primaryKey->Type, 'int') === 0 ||
-            strpos($primaryKey->Type, 'bigint') === 0 ||
-            strpos($primaryKey->Type, 'smallint') === 0 ||
-            strpos($primaryKey->Type, 'mediumint') === 0
-        ) {
-            $this->numericPrimaryKey = $primaryKey->Field;
-            return $this->numericPrimaryKey;
+        foreach ($uniqueKeys as $keyColumnNames) {
+            if (count($keyColumnNames) === 1 && in_array($keyColumnNames[0], $integerColumns, true)) {
+                return $this->numericPrimaryKey = $keyColumnNames[0];
+            }
         }
 
         return false;
@@ -151,7 +133,8 @@ trait DbRowsGeneratorTrait
 
         $this->stagingSiteDb = $db;
 
-        $numericPrimaryKey = $this->getNumericPrimaryKey();
+ 
+        $numericPrimaryKey = ($this->lastFetchedPrimaryKeyValue !== false || (int)$offset === 0) ? $this->getUniqueIntegerKeyColumn() : false;
 
         $suppressErrorsOriginal = $db->suppress_errors;
         $db->suppress_errors(false);

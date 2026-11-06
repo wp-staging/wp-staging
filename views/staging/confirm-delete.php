@@ -5,6 +5,7 @@
  * @var WPStaging\Staging\Dto\StagingSiteDto     $stagingSite
  * @var WPStaging\Framework\Database\TableDto[]  $tables
  * @var bool                                     $ownsDatabaseTables
+ * @var bool                                     $ownsFolder
  * @var bool                                     $isDatabaseConnected
  * @var string                                   $stagingSiteSize
  */
@@ -109,6 +110,12 @@ $wpstgIcon = function ($name, $size = 16, $classes = '', $strokeWidth = '1.75') 
     <?php if (!$ownsDatabaseTables) : ?>
         <div class="wpstg-shared-prefix-notice wpstg-mx-6 wpstg-my-3 wpstg-flex-shrink-0 wpstg-rounded-lg wpstg-border wpstg-border-solid wpstg-border-blue-200 wpstg-bg-blue-50 wpstg-p-4 wpstg-text-sm wpstg-leading-5 wpstg-text-blue-900 dark:wpstg-border-blue-800 dark:wpstg-bg-blue-950/40 dark:wpstg-text-blue-100" role="status">
             <?php esc_html_e('This entry has no database tables of its own. Only its files and list entry will be deleted; the other staging site\'s tables will be kept.', 'wp-staging'); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!$ownsFolder) : ?>
+        <div class="wpstg-foreign-folder-notice wpstg-mx-6 wpstg-my-3 wpstg-flex-shrink-0 wpstg-rounded-lg wpstg-border wpstg-border-solid wpstg-border-blue-200 wpstg-bg-blue-50 wpstg-p-4 wpstg-text-sm wpstg-leading-5 wpstg-text-blue-900 dark:wpstg-border-blue-800 dark:wpstg-bg-blue-950/40 dark:wpstg-text-blue-100" role="status">
+            <?php esc_html_e('WP STAGING cannot confirm that this entry\'s folder belongs to it, so the folder will be kept.', 'wp-staging'); ?>
         </div>
     <?php endif; ?>
 

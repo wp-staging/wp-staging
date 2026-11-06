@@ -34,11 +34,6 @@ class UpdateWpConfigTask extends FileAdjustmentTask
     {
         $path = trailingslashit($this->jobDataDto->getStagingSitePath()) . "wp-config.php";
         $this->logger->info('Adjusting database prefix in wp-config.php file for staging site.');
-        if ($this->jobDataDto->getIsWpConfigExcluded()) {
-            $this->logger->warning("wp-config.php is excluded by filter, skipping adjustments.");
-            return $this->generateResponse();
-        }
-
         $content = $this->readWpConfig();
         $prefix  = $this->jobDataDto->getDatabasePrefix();
 

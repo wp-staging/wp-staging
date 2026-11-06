@@ -7,6 +7,7 @@ use WPStaging\Staging\Ajax\Create;
 use WPStaging\Staging\Ajax\Create\PrepareCreate;
 use WPStaging\Staging\Ajax\DirectoryChildren;
 use WPStaging\Staging\Ajax\Setup;
+use WPStaging\Staging\Ajax\StagingSiteDataChecker;
 use WPStaging\Staging\Service\AbstractStagingSetup;
 use WPStaging\Staging\Service\StagingSetup;
 
@@ -24,6 +25,10 @@ class StagingServiceProvider extends ServiceProvider
                 ->give(StagingSetup::class);
 
         $this->container->when(DirectoryChildren::class)
+                ->needs(AbstractStagingSetup::class)
+                ->give(StagingSetup::class);
+
+        $this->container->when(StagingSiteDataChecker::class)
                 ->needs(AbstractStagingSetup::class)
                 ->give(StagingSetup::class);
     }
