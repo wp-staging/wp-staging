@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Utils;
 
 use WPStaging\Backup\Service\BackupsDirectoryResolver;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\SiteInfo;
 
 
 
@@ -195,6 +196,26 @@ class Urls
         }
 
         return $url;
+    }
+
+ 
+    public function normalizeWPEngineDownloadUrl(string $downloadUrl): string
+    {
+        if (!WPStaging::make(SiteInfo::class)->isWPEngine()) {
+            return $downloadUrl;
+        }
+
+        $siteUrl        = site_url();
+        $siteScheme     = strtolower((string)wp_parse_url($siteUrl, PHP_URL_SCHEME));
+        $siteHost       = strtolower((string)wp_parse_url($siteUrl, PHP_URL_HOST));
+        $downloadScheme = strtolower((string)wp_parse_url($downloadUrl, PHP_URL_SCHEME));
+        $downloadHost   = strtolower((string)wp_parse_url($downloadUrl, PHP_URL_HOST));
+
+        if (($siteScheme !== 'https' && !$this->sslAvailable()) || $siteHost === '' || $siteHost !== $downloadHost || !in_array($downloadScheme, ['', 'http'], true)) {
+            return $downloadUrl;
+        }
+
+        return set_url_scheme($downloadUrl, 'https');
     }
 
 

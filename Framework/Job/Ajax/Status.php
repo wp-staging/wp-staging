@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Job\Ajax;
 
+use WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface;
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Core\WPStaging;
@@ -36,7 +37,9 @@ class Status extends AbstractTemplateComponent
 
         $job->prepare();
 
-        wp_send_json($job->getJobDataDto());
+        $jobDataDto = $job->getJobDataDto();
+        $remoteUploadRetry = $jobDataDto instanceof RemoteUploadDtoInterface ? $jobDataDto->getRemoteUploadRetry() : [];
+        wp_send_json(['remoteUploadRetry' => ['statusTitle' => $remoteUploadRetry['statusTitle'] ?? '']]);
     }
 
 

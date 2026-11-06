@@ -188,11 +188,11 @@ class Archiver
 
     public function setupTmpBackupFile()
     {
-        $this->tempBackup->setFilename('temp_wpstg_backup_' . $this->jobDataDto->getId());
+        $this->tempBackup->setFilename('temp_wpstg_backup_' . $this->jobDataDto->getPrivateFileId());
         $this->tempBackup->setLifetime(DAY_IN_SECONDS);
 
         $tempBackupIndexFilePrefix = 'temp_backup_index_';
-        $this->tempBackupIndex->setFilename($tempBackupIndexFilePrefix . $this->jobDataDto->getId());
+        $this->tempBackupIndex->setFilename($tempBackupIndexFilePrefix . $this->jobDataDto->getPrivateFileId());
         $this->tempBackupIndex->setLifetime(DAY_IN_SECONDS);
     }
 
@@ -234,6 +234,38 @@ class Archiver
     public function getTempBackup(): BufferedCache
     {
         return $this->tempBackup;
+    }
+
+
+
+
+
+    public function getTempBackupCheckpointKey(string $writerName): string
+    {
+        return $writerName . '|' . basename($this->getTempBackup()->getFilePath());
+    }
+
+
+
+
+
+
+
+
+
+
+
+    public function rewindTempBackupToCheckpointOrRecordBaseline(JobBackupDataDto $jobDataDto, string $writerName, callable $saveJobData): int
+    {
+        $checkpointKey = $this->getTempBackupCheckpointKey($writerName);
+        if ($jobDataDto->getFileCheckpointKey() === $checkpointKey) {
+            return $this->rewindTempBackupToCheckpoint($jobDataDto);
+        }
+
+        $this->recordTempBackupCheckpoint($jobDataDto, $checkpointKey);
+        call_user_func($saveJobData);
+
+        return 0;
     }
 
 
@@ -501,9 +533,21 @@ class Archiver
             '%s_%s_%s.%s',
             parse_url(get_home_url())['host'],
             current_time('Ymd-His'),
-            $this->jobDataDto->getId(),
+            $this->getBackupFileNameId(),
             self::BACKUP_EXTENSION
         );
+    }
+
+
+
+
+    protected function getBackupFileNameId(): string
+    {
+        if ($this->jobDataDto instanceof JobBackupDataDto) {
+            return $this->jobDataDto->getBackupFileNameId();
+        }
+
+        return $this->jobDataDto->getId();
     }
 
 
@@ -642,7 +686,7 @@ class Archiver
 
 
 
-    protected function maybeIncrementFileAppendTimeLimit()
+    public function maybeIncrementFileAppendTimeLimit()
     {
         $this->jobDataDto->incrementNumberOfRetries();
         if ($this->jobDataDto->getNumberOfRetries() > self::MAX_RETRIES_BEFORE_EXTENDING_TIME_LIMIT) {

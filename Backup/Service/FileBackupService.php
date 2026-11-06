@@ -130,7 +130,7 @@ class FileBackupService implements ServiceInterface
 
 
 
-    public function execute()
+    public function execute(): bool
     {
         $this->archiver->setFileAppendTimeLimit($this->jobDataDto->getFileAppendTimeLimit());
         $this->start = microtime(true);
@@ -138,33 +138,37 @@ class FileBackupService implements ServiceInterface
         try {
             $this->rewindTempBackupToCheckpointOrRecordBaseline();
         } catch (ThresholdException $exception) {
-            return;
+            return true;
         }
 
+        $endsRequest = false;
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             try {
                 $this->backup();
             } catch (ThresholdException $exception) {
+                $endsRequest = true;
                 break;
             } catch (FinishedQueueException $exception) {
                 $this->stepsDto->finish();
                 $this->logger->info(sprintf('Added %d/%d %s files to backup (%s)', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->getTranslatedFileIdentifier(), $this->getBackupSpeed()));
                 $this->updateMultipartInfo();
 
-                return;
+                return false;
             } catch (DiskNotWritableException $exception) {
  
-                throw new \Exception('Disk is probably full. Error message: ' . $exception->getMessage());
+                throw new \Exception('Disk is probably full. Error message: ' . $exception->getMessage(), 0, $exception);
             } catch (FileSizeLimitException $exception) {
                 throw $exception;
             } catch (\Throwable $th) {
-                throw new \Exception('Fail to create backup. Error message: ' . $th->getMessage());
+                throw new \Exception('Fail to create backup. Error message: ' . $th->getMessage(), 0, $th);
             }
         }
 
         $this->logExecution();
 
         $this->updateMultipartInfo();
+
+        return $endsRequest;
     }
 
 
@@ -381,7 +385,13 @@ class FileBackupService implements ServiceInterface
     protected function appendCurrentFileToBackup(string $path, string $indexPath)
     {
         $this->maybeIncrementPartNo($path);
-        return $this->archiver->appendFileToBackup($path, $indexPath);
+        $isFileWrittenCompletely = $this->archiver->appendFileToBackup($path, $indexPath);
+        if ($isFileWrittenCompletely === false && $this->archiver->getTempBackup()->isFileAppendThreshold() && !$this->isThreshold()) {
+            $this->archiver->maybeIncrementFileAppendTimeLimit();
+            return null;
+        }
+
+        return $isFileWrittenCompletely;
     }
 
     protected function getTranslatedFileIdentifier(): string

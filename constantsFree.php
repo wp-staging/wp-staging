@@ -2,10 +2,10 @@
 
  
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '4.19.0');
+    define('WPSTG_VERSION', '4.20.0');
 }
 
  
 if (!defined('WPSTG_COMPATIBLE')) {
-    define('WPSTG_COMPATIBLE', '7.1.3');
+    define('WPSTG_COMPATIBLE', '7.1.4');
 }

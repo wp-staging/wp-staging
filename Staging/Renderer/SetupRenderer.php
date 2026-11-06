@@ -154,6 +154,16 @@ class SetupRenderer
         $this->renderPartial('create-setup-footer', compact('previewSiteUrl'));
     }
 
+
+
+
+    public function renderViewPartial(string $view, array $data = [])
+    {
+        extract($data, EXTR_SKIP);
+
+        require WPSTG_VIEWS_DIR . $view;
+    }
+
     private function captureCallable(callable $callback): string
     {
         ob_start();

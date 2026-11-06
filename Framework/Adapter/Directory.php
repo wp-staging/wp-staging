@@ -209,6 +209,45 @@ class Directory implements DirectoryInterface
 
 
 
+    public function getDefaultStagingSitesDirectory(): string
+    {
+        $stagingSitesDirectory = $this->getStagingSitesDirectoryForUnwritableSiteRoot();
+        if ($stagingSitesDirectory === false) {
+            return $this->getAbsPath();
+        }
+
+        return $this->filesystem->normalizePath($stagingSitesDirectory, true);
+    }
+
+
+
+
+
+    public function getDefaultStagingSitesUrl(): string
+    {
+        if ($this->getStagingSitesDirectoryForUnwritableSiteRoot() === false) {
+            return trailingslashit(home_url());
+        }
+
+        return trailingslashit($this->getStagingSiteUrl());
+    }
+
+
+
+
+    private function getStagingSitesDirectoryForUnwritableSiteRoot()
+    {
+        if (is_writable($this->getAbsPath())) {
+            return false;
+        }
+
+        return $this->getStagingSiteDirectoryInsideWpcontent(false);
+    }
+
+
+
+
+
     public function getCacheDirectory(): string
     {
         if (isset($this->cacheDirectory)) {

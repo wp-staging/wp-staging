@@ -143,7 +143,7 @@ class RestoreDatabaseTask extends RestoreTask
             return;
         }
 
-        $databaseFile = $this->pathIdentifier->transformIdentifiableToPath($metadata->getDatabaseFile());
+        $databaseFile = $this->getExtractedDatabaseFilePath($metadata->getDatabaseFile());
         $this->requireNonEmptyDatabaseFile($databaseFile);
         $this->setupDatabaseImporterFile($databaseFile);
 
@@ -153,6 +153,21 @@ class RestoreDatabaseTask extends RestoreTask
 
         $this->databaseImporterDto->setTotalLines($this->databaseImporter->getTotalLines());
         $this->setupSearchReplace();
+    }
+
+
+
+
+
+
+    protected function getExtractedDatabaseFilePath($identifiableDatabaseFile): string
+    {
+        $databaseFile = $this->jobDataDto->getTmpDirectory() . $this->pathIdentifier->getPathWithoutIdentifier($identifiableDatabaseFile);
+        if (is_file($databaseFile)) {
+            return $databaseFile;
+        }
+
+        return $this->pathIdentifier->transformIdentifiableToPath($identifiableDatabaseFile);
     }
 
 

@@ -52,11 +52,7 @@ class PreserveDataSecondStep extends JobExecutable
 
         $this->stagingDb     = $db->getDatabase();
         $this->productionDb  = WPStaging::getInstance()->get("wpdb");
-        $this->stagingPrefix = $this->options->prefix;
-
-        if ($db->isExternalDatabase()) {
-            $this->stagingPrefix = $this->options->databasePrefix;
-        }
+        $this->stagingPrefix = $this->externalDatabaseConfiguration->getTablePrefix($this->options);
 
         $this->copyToStaging();
         $this->prepareResponse(true, true);
@@ -66,6 +62,15 @@ class PreserveDataSecondStep extends JobExecutable
 
  
     public function copyToStaging()
+    {
+        $this->restorePreservedData();
+        $this->clearProductionDataCopiedToStagingSite();
+
+        return true;
+    }
+
+ 
+    private function restorePreservedData()
     {
  
         $result = $this->productionDb->get_var(
@@ -130,6 +135,31 @@ class PreserveDataSecondStep extends JobExecutable
         $this->preserveStagingSettingsTableRows();
 
         return true;
+    }
+
+
+
+
+
+
+
+    private function clearProductionDataCopiedToStagingSite()
+    {
+        if (!$this->tableExists($this->stagingPrefix . "options")) {
+            return;
+        }
+
+        $this->deleteStagingSiteOption("wpstg_tmp_data");
+
+        $record = WPStaging::make(Sites::class)->recoverStagingSitesOption($this->stagingDb->get_var(
+            $this->stagingDb->prepare("SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", Sites::STAGING_SITES_OPTION)
+        ));
+
+        if (is_array($record) && !array_key_exists($this->options->clone, $record)) {
+            return;
+        }
+
+        $this->preserveStagingOption(Sites::STAGING_SITES_OPTION, serialize([]), 'empty record of staging sites');
     }
 
 

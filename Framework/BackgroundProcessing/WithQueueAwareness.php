@@ -11,6 +11,7 @@ namespace WPStaging\Framework\BackgroundProcessing;
 use WP_Error;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Network\HttpBasicAuth;
+use WPStaging\Framework\SiteInfo;
 
 use function WPStaging\functions\debug_log;
 
@@ -96,16 +97,17 @@ trait WithQueueAwareness
         $blocking = $this->useBlockingRequest();
         debug_log('[WPSTG Fire Ajax] Firing AJAX request to process Queue actions. GET method: ' . ($useGetMethod ? 'Yes' : 'No'), 'debug', false);
 
-        $response = wp_remote_request(esc_url_raw($ajaxUrl), [
+        $httpAuthHeaders = $this->getHttpAuthHeaders();
+        $response        = wp_remote_request(esc_url_raw($ajaxUrl), [
             'headers'   => array_merge(
                 ['X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS],
-                $this->getHttpAuthHeaders()
+                $httpAuthHeaders
             ),
             'method'    => $useGetMethod ? 'GET' : 'POST',
             'blocking'  => $blocking,
             'timeout'   => $blocking ? 30 : 0.01, 
-            'cookies'   => $this->getLoginRelatedCookies(),
-            'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
+            'cookies'   => $this->getQueueRequestCookies(),
+            'sslverify' => $this->shouldVerifySslForHttpAuthHeaders($httpAuthHeaders),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
 
@@ -191,15 +193,16 @@ trait WithQueueAwareness
     private function checkGetRequestNeededForQueue(string $ajaxUrl, $bodyData = null): bool
     {
  
-        $response = wp_remote_post(esc_url_raw($ajaxUrl), [
+        $httpAuthHeaders = $this->getHttpAuthHeaders();
+        $response        = wp_remote_post(esc_url_raw($ajaxUrl), [
             'headers'   => array_merge(
                 ['X-WPSTG-Request' => QueueProcessor::ACTION_QUEUE_PROCESS],
-                $this->getHttpAuthHeaders()
+                $httpAuthHeaders
             ),
             'blocking'  => true,
             'timeout'   => 5,
-            'cookies'   => $this->getLoginRelatedCookies(),
-            'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
+            'cookies'   => $this->getQueueRequestCookies(),
+            'sslverify' => $this->shouldVerifySslForHttpAuthHeaders($httpAuthHeaders),
             'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
 
@@ -228,6 +231,45 @@ trait WithQueueAwareness
         }
 
         return false;
+    }
+
+ 
+    private function getQueueRequestCookies(): array
+    {
+        $cookies = $this->getLoginRelatedCookies();
+        if (!$this->isWPEngine()) {
+            return $cookies;
+        }
+
+        $wpEngineAuthCookie = $_COOKIE['wpe-auth'] ?? null; // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- Read the opaque token; RFC 6265 octet validation below gates forwarding without altering authentication.
+        if (is_scalar($wpEngineAuthCookie) && preg_match('/^[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]*$/D', (string)$wpEngineAuthCookie) === 1) {
+            $cookies['wpe-auth'] = (string)$wpEngineAuthCookie;
+            return $cookies;
+        }
+
+        $wpEngineApiKey = $this->getWPEngineApiKey();
+        if ($wpEngineApiKey !== null && $wpEngineApiKey !== '') {
+            $cookies['wpe-auth'] = md5('wpe_auth_salty_dog|' . $wpEngineApiKey);
+        }
+
+        return $cookies;
+    }
+
+    protected function isWPEngine(): bool
+    {
+        return (new SiteInfo())->isWPEngine();
+    }
+
+
+
+
+    protected function getWPEngineApiKey()
+    {
+        if (!defined('WPE_APIKEY')) {
+            return null;
+        }
+
+        return (string)constant('WPE_APIKEY');
     }
 
     private function useBlockingRequest(): bool

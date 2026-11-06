@@ -41,6 +41,7 @@ class JobServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--job--prepare-cancel', $this->container->callback(PrepareCancel::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--job--cancel', $this->container->callback(Cancel::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--job--outcome', $this->container->callback(BackgroundLogger::class, 'ajaxCheckJobOutcome')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--sse-logs', $this->container->callback(BackgroundLogger::class, 'ajaxEventStream')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_raw_wpstg--login-url', $this->container->callback(LoginUrl::class, 'ajaxLoginUrl')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
  
@@ -49,6 +50,7 @@ class JobServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_nopriv_wpstg--job--prepare-cancel', $this->container->callback(PrepareCancel::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_nopriv_wpstg--job--cancel', $this->container->callback(Cancel::class, 'ajaxProcess')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_nopriv_wpstg--job--outcome', $this->container->callback(BackgroundLogger::class, 'ajaxCheckJobOutcome')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_nopriv_wpstg--sse-logs', $this->container->callback(BackgroundLogger::class, 'ajaxEventStream')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     public function registerRestEndpoints()

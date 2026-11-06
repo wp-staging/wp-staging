@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Upgrade;
 
+use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\WPStaging;
@@ -108,6 +109,7 @@ class Upgrade
             $this->upgradeFlags->mark('staging_prefix_ownership_repaired');
         }
 
+        $this->forgetOptimizerSafetyCheckPassOnce();
         $this->setVersion();
     }
 
@@ -126,6 +128,19 @@ class Upgrade
 
         WPStaging::make(BackupScheduler::class)->adoptRunsFromExistingBackups();
         $this->upgradeFlags->mark('schedule_runs_adopted');
+    }
+
+
+
+
+    private function forgetOptimizerSafetyCheckPassOnce()
+    {
+        if ($this->upgradeFlags->has('optimizer_safety_check_revalidated')) {
+            return;
+        }
+
+        WPStaging::make(Optimizer::class)->forgetSafetyCheckPass();
+        $this->upgradeFlags->mark('optimizer_safety_check_revalidated');
     }
 
 

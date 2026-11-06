@@ -90,11 +90,6 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
     public function execute()
     {
         $this->logger->info('Adjusting constants in wp-config.php file for staging site');
-        if ($this->jobDataDto->getIsWpConfigExcluded()) {
-            $this->logger->warning("wp-config.php is excluded by filter, skipping adjustments.");
-            return $this->generateResponse();
-        }
-
         $isWpContentOutsideAbspath = $this->siteInfo->isWpContentOutsideAbspath();
         $isExternalDatabase        = $this->jobDataDto->getUseCustomDatabase();
         $relativePluginPath        = $this->getRelativePluginsDir();

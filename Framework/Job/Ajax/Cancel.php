@@ -28,6 +28,7 @@ class Cancel extends AbstractTemplateComponent
     public function ajaxProcess()
     {
         if (!$this->canRenderAjax()) {
+            wp_send_json_error(null, 401);
             return;
         }
 

@@ -9,7 +9,6 @@ use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
-use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\BackgroundProcessing\QueueProcessor;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -586,14 +585,10 @@ class StagingUpdateBackupClient
 
     private function triggerQueue(string $url, array $headers = [])
     {
- 
- 
-        $sslVerify = empty($headers) ? apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false) : true;
-
         wp_remote_post(trailingslashit($url) . 'wp-admin/admin-ajax.php', [
             'timeout'   => 0.01,
             'blocking'  => false,
-            'sslverify' => $sslVerify,
+            'sslverify' => $this->shouldVerifySslForHttpAuthHeaders($headers),
             'headers'   => $headers,
             'body'      => ['action' => QueueProcessor::ACTION_QUEUE_PROCESS],
         ]);

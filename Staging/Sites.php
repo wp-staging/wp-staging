@@ -244,7 +244,7 @@ class Sites
 
 
 
-    private function recoverStagingSitesOption($stagingSites)
+    public function recoverStagingSitesOption($stagingSites)
     {
         if (!is_string($stagingSites) || $stagingSites === '') {
             return $stagingSites;

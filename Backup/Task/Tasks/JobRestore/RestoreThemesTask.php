@@ -84,7 +84,7 @@ class RestoreThemesTask extends FileRestoreTask
 
 
             if (array_key_exists($themeName, $existingThemes)) {
-                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_THEMES, false)) {
+                if ($this->isRestoreOnSubsite() && !Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_THEMES, false)) {
                     continue;
                 }
 

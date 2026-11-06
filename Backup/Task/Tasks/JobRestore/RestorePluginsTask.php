@@ -96,7 +96,7 @@ class RestorePluginsTask extends FileRestoreTask
 
 
             if (array_key_exists($pluginSlug, $existingPlugins)) {
-                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_PLUGINS, false)) {
+                if ($this->isRestoreOnSubsite() && !Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_PLUGINS, false)) {
                     continue;
                 }
 

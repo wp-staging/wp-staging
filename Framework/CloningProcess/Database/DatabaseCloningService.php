@@ -8,8 +8,8 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\Database\QueryBuilder\InsertValues;
 use WPStaging\Framework\Database\QueryBuilder\SelectQuery;
-use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Staging\Service\Database\RowsExporter;
 
 class DatabaseCloningService
 {
@@ -58,8 +58,8 @@ class DatabaseCloningService
         $selectQuery    = $this->selectQueryBuilder->prepareQueryWithFilter($srcTableName, $limit, $offset);
         $preparedValues = $this->selectQueryBuilder->getPreparedValues();
         if ($this->isProductionOptionsTable($srcTableName)) {
-            $selectQuery    = $this->excludeAccessTokenRows($selectQuery);
-            $preparedValues = array_merge($preparedValues, AccessToken::ALL_OPTION_NAMES);
+            $selectQuery    = $this->excludeCredentialRows($selectQuery);
+            $preparedValues = array_merge($preparedValues, RowsExporter::OPTIONS_EXCLUDED_FROM_DATA_COPYING);
         }
 
         if ($this->dto->isExternal()) {
@@ -178,12 +178,12 @@ class DatabaseCloningService
 
     private function isProductionOptionsTable(string $tableName): bool
     {
-        return preg_match('/^' . preg_quote($this->dto->getProductionDb()->base_prefix, '/') . '(\d+_)?options$/', $tableName) === 1;
+        return preg_match('/^' . preg_quote($this->dto->getProductionDb()->base_prefix, '/') . '(\d+_)?options$/i', $tableName) === 1;
     }
 
-    private function excludeAccessTokenRows(string $selectQuery): string
+    private function excludeCredentialRows(string $selectQuery): string
     {
-        $placeholders = implode(', ', array_fill(0, count(AccessToken::ALL_OPTION_NAMES), '%s'));
+        $placeholders = implode(', ', array_fill(0, count(RowsExporter::OPTIONS_EXCLUDED_FROM_DATA_COPYING), '%s'));
 
         return 'SELECT * FROM (' . rtrim($selectQuery, "; \n") . ") AS `copiedRows` WHERE `copiedRows`.`option_name` NOT IN ({$placeholders})";
     }

@@ -38,6 +38,17 @@ class RowsExporter extends AbstractRowsExporter
         TransferSessionTable::TABLE_NAME,
     ];
 
+
+
+
+
+
+    const OPTIONS_EXCLUDED_FROM_DATA_COPYING = [
+        AccessToken::OPTION_NAME,
+        AccessToken::LEGACY_OPTION_NAME,
+        'wpstg_current_site_login_links',
+    ];
+
  
     protected $stagingPrefix;
 
@@ -197,7 +208,7 @@ class RowsExporter extends AbstractRowsExporter
 
     protected function isRecordExcluded(string $prefixedTableName, string $column, string $value): bool
     {
-        if ($column === 'option_name' && in_array($value, AccessToken::ALL_OPTION_NAMES, true) && $this->isStagingOptionsTable($prefixedTableName)) {
+        if ($column === 'option_name' && in_array($value, self::OPTIONS_EXCLUDED_FROM_DATA_COPYING, true) && $this->isStagingOptionsTable($prefixedTableName)) {
             return true;
         }
 
@@ -206,6 +217,6 @@ class RowsExporter extends AbstractRowsExporter
 
     private function isStagingOptionsTable(string $prefixedTableName): bool
     {
-        return preg_match('/^' . preg_quote($this->getFinalPrefix(), '/') . '.*options$/', $prefixedTableName) === 1;
+        return preg_match('/^' . preg_quote($this->getFinalPrefix(), '/') . '.*options$/i', $prefixedTableName) === 1;
     }
 }

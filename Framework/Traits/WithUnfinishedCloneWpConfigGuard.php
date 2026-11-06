@@ -58,7 +58,99 @@ trait WithUnfinishedCloneWpConfigGuard
             return false;
         }
 
-        return $filesystem->create($wpConfigPath, '<?php' . PHP_EOL . $this->getUnfinishedCloneGuard() . PHP_EOL);
+        return $filesystem->create($wpConfigPath, $this->getGuardOnlyWpConfig());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    protected function deleteStagingSiteFilesWithWpConfigLast(Filesystem $filesystem, string $stagingSiteRootPath, bool $deleteSelf): bool
+    {
+        if ($filesystem->normalizePath($stagingSiteRootPath, true) === $filesystem->normalizePath(ABSPATH, true)) {
+            throw new \RuntimeException('Refused to delete the WordPress root as a staging site: ' . $stagingSiteRootPath);
+        }
+
+        $wpConfigNames        = $this->findWpConfigNamesInStagingSiteRoot($stagingSiteRootPath);
+        $originalWpRootPath   = $filesystem->getWpRootPath();
+        $originalExcludePaths = $filesystem->getExcludePaths();
+        $filesystem->setWpRootPath($stagingSiteRootPath)->setExcludePaths(array_map(function (string $wpConfigName): string {
+            return '/' . $wpConfigName;
+        }, $wpConfigNames));
+        try {
+            $isWalkFinished = $filesystem->delete($stagingSiteRootPath, $deleteSelf);
+        } catch (\RuntimeException $exception) {
+            $this->replaceWpConfigFilesWithGuardOnly($filesystem, $stagingSiteRootPath, $wpConfigNames);
+            throw $exception;
+        } finally {
+            $filesystem->setWpRootPath($originalWpRootPath)->setExcludePaths($originalExcludePaths);
+        }
+
+        if (!$isWalkFinished) {
+            return false;
+        }
+
+        if (array_diff($this->listStagingSiteRootEntries($stagingSiteRootPath), $wpConfigNames) !== []) {
+            $this->replaceWpConfigFilesWithGuardOnly($filesystem, $stagingSiteRootPath, $wpConfigNames);
+            return true;
+        }
+
+        return $filesystem->delete($stagingSiteRootPath, $deleteSelf);
+    }
+
+
+
+
+
+
+
+
+
+    private function replaceWpConfigFilesWithGuardOnly(Filesystem $filesystem, string $stagingSiteRootPath, array $wpConfigNames)
+    {
+        foreach ($wpConfigNames as $wpConfigName) {
+            $wpConfigPath = trailingslashit($stagingSiteRootPath) . $wpConfigName;
+            if (!is_link($wpConfigPath)) {
+                $filesystem->create($wpConfigPath, $this->getGuardOnlyWpConfig());
+            }
+        }
+    }
+
+
+
+
+
+
+    private function findWpConfigNamesInStagingSiteRoot(string $stagingSiteRootPath): array
+    {
+        return array_values(preg_grep('/^wp-config\.php$/i', $this->listStagingSiteRootEntries($stagingSiteRootPath)));
+    }
+
+
+
+
+
+
+    private function listStagingSiteRootEntries(string $stagingSiteRootPath): array
+    {
+        if (!is_dir($stagingSiteRootPath)) {
+            return [];
+        }
+
+        $entries = scandir($stagingSiteRootPath);
+        if ($entries === false) {
+            throw new \RuntimeException('Cannot list the staging site root: ' . $stagingSiteRootPath);
+        }
+
+        return array_diff($entries, ['.', '..']);
     }
 
 
@@ -210,7 +302,8 @@ trait WithUnfinishedCloneWpConfigGuard
             ));
         }
 
-        return $this->addLiveTablesStopToWpConfig($this->removeUnfinishedCloneGuardFromWpConfig($wpConfigContent), $expectedPrefix, $wpdb->base_prefix);
+        $wpConfigWithStop = $this->addLiveTablesStopToWpConfig($wpConfigContent, $expectedPrefix, $wpdb->base_prefix);
+        return $this->removeUnfinishedCloneGuardFromWpConfig($wpConfigWithStop);
     }
 
 
@@ -240,7 +333,11 @@ trait WithUnfinishedCloneWpConfigGuard
 
         preg_match_all('/^[ \t]*(?=(?:require|include)(?:_once)?[\s(]*(?:ABSPATH|__DIR__|dirname\(\s*__FILE__\s*\))\s*\.\s*[\'"]\/?wp-settings\.php)/m', $wpConfigContent, $requires, PREG_OFFSET_CAPTURE);
         if (empty($requires[0])) {
-            return $wpConfigContent;
+            throw new \RuntimeException(sprintf(
+                /* translators: 1: require line for the live site's wp-config.php */
+                __('WP STAGING kept the unfinished-clone guard active because it cannot find the wp-settings.php require in the staging site\'s wp-config.php. Clone and reset copy the live site\'s wp-config.php, so edit that file: ensure it loads wp-settings.php with %1$s on a line of its own. Then reset this staging site, or delete it and clone again.', 'wp-staging'),
+                "require_once ABSPATH . 'wp-settings.php';"
+            ));
         }
 
         $stopOffsets = [];
@@ -263,11 +360,57 @@ trait WithUnfinishedCloneWpConfigGuard
             throw new \RuntimeException(__('WP STAGING kept the unfinished-clone guard active because it cannot place its live-tables stop safely before the wp-settings.php require in the staging site\'s wp-config.php. Clone and reset copy the live site\'s wp-config.php, so edit that file: keep the require on a line of its own, and put braces around it when an if, else or loop controls it. Then reset this staging site, or delete it and clone again.', 'wp-staging'));
         }
 
+        if (count($stopOffsets) < $this->countWpSettingsRequires($wpConfigContent)) {
+            throw new \RuntimeException(sprintf(
+                /* translators: 1: require line for the live site's wp-config.php */
+                __('WP STAGING kept the unfinished-clone guard active because it cannot find the wp-settings.php require in the staging site\'s wp-config.php. Clone and reset copy the live site\'s wp-config.php, so edit that file: ensure it loads wp-settings.php with %1$s on a line of its own. Then reset this staging site, or delete it and clone again.', 'wp-staging'),
+                "require_once ABSPATH . 'wp-settings.php';"
+            ));
+        }
+
         foreach (array_reverse($stopOffsets) as $lineOffset) {
             $wpConfigContent = substr_replace($wpConfigContent, $stop, $lineOffset, 0);
         }
 
         return $wpConfigContent;
+    }
+
+
+
+
+
+    private function countWpSettingsRequires(string $wpConfigContent): int
+    {
+        $count     = 0;
+        $inRequire = false;
+        foreach (token_get_all($wpConfigContent) as $token) {
+            $tokenId   = is_array($token) ? $token[0] : null;
+            $tokenText = is_array($token) ? $token[1] : $token;
+
+            if (in_array($tokenId, [T_REQUIRE, T_REQUIRE_ONCE, T_INCLUDE, T_INCLUDE_ONCE], true)) {
+                $inRequire = true;
+                continue;
+            }
+
+            if (!$inRequire) {
+                continue;
+            }
+
+            if (
+                in_array($tokenId, [T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE], true)
+                && preg_match('/^[\'"]?\/?wp-settings\.php[\'"]?$/', $tokenText) === 1
+            ) {
+                $count++;
+                $inRequire = false;
+                continue;
+            }
+
+            if ($tokenText === ';' || $tokenId === T_CLOSE_TAG) {
+                $inRequire = false;
+            }
+        }
+
+        return $count;
     }
 
 
@@ -333,6 +476,14 @@ trait WithUnfinishedCloneWpConfigGuard
         }
 
         return false;
+    }
+
+
+
+
+    private function getGuardOnlyWpConfig(): string
+    {
+        return '<?php' . PHP_EOL . $this->getUnfinishedCloneGuard() . PHP_EOL;
     }
 
 

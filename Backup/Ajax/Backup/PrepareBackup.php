@@ -85,7 +85,7 @@ class PrepareBackup extends PrepareJob
                 'backupExcludedDirectories'      => 'string',
             ]);
             $data['name'] = isset($_POST['wpstgBackupData']['name']) ? htmlentities(sanitize_text_field($_POST['wpstgBackupData']['name']), ENT_QUOTES) : '';
-            $data         = $this->discardScheduleIdSentWithTheRequest($data);
+            $data         = $this->discardServerOwnedKeysSentWithTheRequest($data);
         }
 
         if ($this->isSchedulingWithoutValidProLicense($data)) {
@@ -125,9 +125,10 @@ class PrepareBackup extends PrepareJob
 
 
 
-    private function discardScheduleIdSentWithTheRequest(array $data): array
+
+    private function discardServerOwnedKeysSentWithTheRequest(array $data): array
     {
-        unset($data['scheduleId']);
+        unset($data['scheduleId'], $data['isWpCliRequest'], $data['isRestRequest']);
 
         return $data;
     }
@@ -139,6 +140,7 @@ class PrepareBackup extends PrepareJob
     protected function setupInitialData($sanitizedData): array
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
+        $this->assertCallerMayBackupSelectedScope($sanitizedData);
         $this->clearCacheFolder();
 
  
@@ -317,6 +319,30 @@ class PrepareBackup extends PrepareJob
         }
 
         return $data['subsiteBlogId'];
+    }
+
+
+
+
+
+
+
+
+
+
+    protected function assertCallerMayBackupSelectedScope(array $data)
+    {
+        if (!is_multisite() || !is_user_logged_in() || !empty($data['isWpCliRequest']) || !empty($data['isRestRequest']) || is_super_admin()) {
+            return;
+        }
+
+        if ($data['backupType'] !== BackupMetadata::BACKUP_TYPE_NETWORK_SUBSITE) {
+            throw new \UnexpectedValueException(esc_html__('Only a network super admin can back up more than the current subsite.', 'wp-staging'));
+        }
+
+        if ((int)$data['subsiteBlogId'] !== get_current_blog_id()) {
+            throw new \UnexpectedValueException(esc_html__('You can only back up the subsite you are currently on.', 'wp-staging'));
+        }
     }
 
 

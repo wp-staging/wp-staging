@@ -271,10 +271,10 @@ class FileHeader implements IndexLineInterface
     public function readFile(string $filePath, string $identifiablePath, bool $skipChecksum = false)
     {
         $fileInfo = new \SplFileInfo($filePath);
-        $this->setFileName($fileInfo->getFilename());
 
         $convertedPath     = $this->pathIdentifier->transformIdentifiableToPath($identifiablePath);
         $convertedPathName = basename($convertedPath);
+        $this->setFileName($convertedPathName);
 
         $path = substr($identifiablePath, 0, -strlen($convertedPathName));
         $this->setFilePath($path);

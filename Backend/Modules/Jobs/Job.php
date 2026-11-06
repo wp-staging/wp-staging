@@ -154,7 +154,8 @@ abstract class Job implements ShutdownableInterface
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
-        $this->normalizeSubsiteUrlMappings();
+        $this->normalizeOptionRows('subsiteUrlMappings');
+        $this->normalizeOptionRows('customSearchReplaceRules');
 
         $this->initialize();
     }
@@ -164,17 +165,21 @@ abstract class Job implements ShutdownableInterface
 
 
 
-    protected function normalizeSubsiteUrlMappings()
+
+    protected function normalizeOptionRows(string $option)
     {
-        if (!isset($this->options->subsiteUrlMappings) || !is_array($this->options->subsiteUrlMappings)) {
+        if (!isset($this->options->$option) || !is_array($this->options->$option)) {
             return;
         }
 
-        foreach ($this->options->subsiteUrlMappings as $index => $mapping) {
-            if (is_object($mapping)) {
-                $this->options->subsiteUrlMappings[$index] = (array)$mapping;
+        $rows = $this->options->$option;
+        foreach ($rows as $index => $row) {
+            if (is_object($row)) {
+                $rows[$index] = (array)$row;
             }
         }
+
+        $this->options->$option = $rows;
     }
 
 

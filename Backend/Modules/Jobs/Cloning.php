@@ -13,10 +13,12 @@ use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Staging\Sites;
 
@@ -112,6 +114,7 @@ class Cloning extends Job
 
  
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
+        $this->options->jobStartedAt = time();
 
  
         if (isset($_POST["cloneName"])) {
@@ -267,7 +270,17 @@ class Cloning extends Job
             return false;
         }
 
-        $this->setDestinationCloningOptions();
+        try {
+            $this->setDestinationCloningOptions();
+        } catch (WPStagingException $exception) {
+            $this->errorMessage = Escape::escapeHtml($exception->getMessage());
+            return false;
+        }
+
+        if (!wpstg_is_empty_dir($this->options->destinationDir)) {
+            $this->errorMessage = sprintf('Can not continue for security purposes. Directory %s is not empty! Use FTP or a file manager plugin and make sure it does not contain any files.', esc_html($this->options->destinationDir));
+            return false;
+        }
 
         $this->options->homeHostname = $this->urls->getHomeUrlWithoutScheme();
 
@@ -391,10 +404,11 @@ class Cloning extends Job
 
 
 
+
     private function getDestinationDir(): string
     {
  
-        if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === trailingslashit(WPStaging::getWPpath()))) {
+        if (!empty($this->options->cloneDir) && trailingslashit(wp_normalize_path($this->options->cloneDir)) === $this->directoryAdapter->getAbsPath()) {
             $this->returnException('Error: Target path must be different from the root of the production website.');
         }
 
@@ -410,7 +424,7 @@ class Cloning extends Job
             $stagingSiteDirectory = $this->directoryAdapter->getStagingSiteDirectoryInsideWpcontent();
             if ($stagingSiteDirectory === false) {
                 debug_log(esc_html('Fail to get destination directory. The staging sites destination folder cannot be created.'));
-                $this->returnException('The staging sites directory is not writable. Please choose another path.');
+                throw new WPStagingException($this->getDefaultDestinationNotWritableMessage());
             }
 
             $cloneDestinationPath = trailingslashit($stagingSiteDirectory) . $this->options->cloneDirectoryName;
@@ -421,6 +435,18 @@ class Cloning extends Job
 
         $this->options->cloneDir = trailingslashit($cloneDestinationPath);
         return $this->options->cloneDir;
+    }
+
+
+
+
+    protected function getDefaultDestinationNotWritableMessage(): string
+    {
+        return sprintf(
+            /* translators: %s: URL of the WP STAGING Pro pricing page. */
+            __('The staging site cannot be created because neither the WordPress root folder nor the wp-content folder is writable. Make one of them writable and try again, or <a href="%s" target="_blank" rel="noopener noreferrer">upgrade to WP STAGING Pro</a> to set a custom path.', 'wp-staging'),
+            esc_url(Language::getUpgradeUrl('staging_destination_not_writable'))
+        );
     }
 
 

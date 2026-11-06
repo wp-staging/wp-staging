@@ -35,11 +35,6 @@ class VerifyWpConfigTask extends FileAdjustmentTask
     public function execute()
     {
         $this->logger->info('Verifying wp-config.php file for staging site...');
-        if ($this->jobDataDto->getIsWpConfigExcluded()) {
-            $this->logger->warning("wp-config.php is excluded by filter, skipping verification...");
-            return $this->generateResponse();
-        }
-
         $destination = trailingslashit($this->jobDataDto->getStagingSitePath()) . 'wp-config.php';
  
         if ($this->isValidWpConfig($destination)) {

@@ -59,10 +59,12 @@ abstract class FileBackupTask extends BackupTask
         $this->prepareFileBackupTask();
         set_transient(self::TRANSIENT_GRACEFUL_SHUTDOWN, '1', 60);
         $this->fileBackupService->setupArchiver($this->getFileIdentifier(), $this->isOtherWpRootFilesTask());
-        $this->fileBackupService->execute();
+        $endsRequest = $this->fileBackupService->execute();
 
         delete_transient(self::TRANSIENT_GRACEFUL_SHUTDOWN);
-        return $this->generateResponse(false);
+        $response = $this->generateResponse(false);
+        $response->setEndsRequest($endsRequest);
+        return $response;
     }
 
  

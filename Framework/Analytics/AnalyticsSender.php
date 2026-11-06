@@ -2,6 +2,9 @@
 
 namespace WPStaging\Framework\Analytics;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Filesystem\DebugLogReader;
+
 class AnalyticsSender
 {
     use WithAnalyticsAPI;
@@ -235,6 +238,7 @@ class AnalyticsSender
             if (!empty($event->start_time) && $event->start_time < $staleThreshold) {
                 $event->ready_to_send = true;
                 $event->is_stale = true;
+                $event->last_debug_logs = WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES);
             }
         }
     }

@@ -23,7 +23,9 @@ use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Interfaces\ExtractorTaskInterface;
 use WPStaging\Backup\Service\Extractor;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 
@@ -44,10 +46,18 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
  
     protected $currentTaskDto;
 
-    public function __construct(Extractor $extractor, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
+ 
+    private $filesystem;
+
+ 
+    private $directory;
+
+    public function __construct(Extractor $extractor, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Filesystem $filesystem, Directory $directory)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->extractorService = $extractor;
+        $this->filesystem       = $filesystem;
+        $this->directory        = $directory;
     }
 
     public static function getTaskName()
@@ -151,7 +161,22 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         $this->extractorService->inject($this, $this->logger);
         $this->extractorService->setExcludedIdentifiers($this->getExcludedIdentifiers());
         $this->extractorService->setIsRepairMultipleHeadersIssue($this->canHaveMultipleHeadersIssue());
+        $this->extractorService->setRestoreDatabaseFiles($this->getDatabaseFilesNamedByEntryFile());
+        $this->filesystem->mkdir($this->directory->getTmpDirectory(), true);
         $this->setupExtractor();
+    }
+
+
+
+
+
+    private function getDatabaseFilesNamedByEntryFile(): array
+    {
+        $multipartMetadata = $this->metadata->getMultipartMetadata();
+        $databaseFiles     = $multipartMetadata === null ? [] : $multipartMetadata->getDatabaseFiles();
+        $databaseFiles[]   = (string)$this->metadata->getDatabaseFile();
+
+        return $databaseFiles;
     }
 
 

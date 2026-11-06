@@ -137,7 +137,7 @@ abstract class AbstractRowsExporter extends AbstractExporter
 
         $numericPrimaryKey = null;
         try {
-            $numericPrimaryKey = $this->tableService->getNumericPrimaryKey($this->databaseName, $this->tableName);
+            $numericPrimaryKey = $this->tableService->getUniqueAutoIncrementColumn($this->databaseName, $this->tableName);
         } catch (Exception $e) {
             if ($rowsCount > 300000) {
                 $this->logger->notice("The table {$this->tableName} has no compatible primary key and is large, so copying it may take a while. WP STAGING will briefly pause changes to it while copying and resume automatically when done. No action is required.");
@@ -281,18 +281,23 @@ abstract class AbstractRowsExporter extends AbstractExporter
                 if ($this->pendingQueriesCount >= 10) {
                     $this->file->fwrite($this->pendingQueriesSql);
                     $this->pendingQueriesSql = '';
-                    $this->updateRowsExporterDto($numericPrimaryKey ?? '', $this->pendingQueriesCount);
+                    $this->updateRowsExporterDto($this->pendingQueriesCount);
                     $this->pendingQueriesCount = 0;
                 }
             }
-        } while (!$this->isThreshold() && ($this->pendingQueriesCount + $this->rowsExporterDto->getRowsOffset() < $this->rowsExporterDto->getTotalRows()));
+        } while (!$this->isThreshold() && !$this->hasReachedEndOfTable && ($this->pendingQueriesCount + $this->rowsExporterDto->getRowsOffset() < $this->rowsExporterDto->getTotalRows()));
 
  
-        if (!empty($this->pendingQueriesSql)) {
+        if ($this->pendingQueriesCount > 0) {
             $this->file->fwrite($this->pendingQueriesSql);
             $this->pendingQueriesSql = '';
-            $this->updateRowsExporterDto($numericPrimaryKey ?? '', $this->pendingQueriesCount);
+            $this->updateRowsExporterDto($this->pendingQueriesCount);
             $this->pendingQueriesCount = 0;
+        }
+
+ 
+        if ($this->hasReachedEndOfTable) {
+            $this->rowsExporterDto->setTotalRows($this->rowsExporterDto->getRowsOffset());
         }
 
         $this->unlockTables();
@@ -346,7 +351,7 @@ abstract class AbstractRowsExporter extends AbstractExporter
 
     public function getPrimaryKey(): string
     {
-        return $this->tableService->getNumericPrimaryKey($this->databaseName, $this->tableName);
+        return $this->tableService->getUniqueAutoIncrementColumn($this->databaseName, $this->tableName);
     }
 
 
@@ -498,16 +503,10 @@ abstract class AbstractRowsExporter extends AbstractExporter
 
 
 
-
-    protected function updateRowsExporterDto(string $numericPrimaryKey, int $rowsExported)
+    protected function updateRowsExporterDto(int $rowsExported)
     {
         $this->rowsExporterDto->setTotalRowsExported($this->rowsExporterDto->getTotalRowsExported() + $rowsExported);
-        if (!empty($numericPrimaryKey)) {
-            $this->tableRowsOffset = $this->lastInsertedNumericPrimaryKeyValue;
-        } else {
-            $this->tableRowsOffset = $this->rowsExporterDto->getRowsOffset() + $rowsExported;
-        }
-
+        $this->tableRowsOffset = $this->rowsExporterDto->getRowsOffset() + $rowsExported;
         $this->rowsExporterDto->setRowsOffset($this->tableRowsOffset);
         $this->rowsExporterDto->setLastInsertedNumericPrimaryKeyValue($this->lastInsertedNumericPrimaryKeyValue);
     }

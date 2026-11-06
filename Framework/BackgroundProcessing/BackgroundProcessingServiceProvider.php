@@ -12,6 +12,7 @@
 namespace WPStaging\Framework\BackgroundProcessing;
 
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\DI\FeatureServiceProvider;
@@ -296,7 +297,37 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
             return;
         }
 
-        $processor->process();
+        if ($processor->process() > 0) {
+            return;
+        }
+
+        $hasAvailableAction = $queue->hasAvailableAction();
+        debug_log(sprintf(
+            '[Background Processing] Stall recovery claimed no action. context=%s memory=%s/%s time=%ds/%ds foreground_upload_waiting=%s head_available=%s',
+            defined('WP_CLI') && WP_CLI ? 'cli' : (wp_doing_ajax() ? 'ajax' : 'web'),
+            size_format(memory_get_usage(true)),
+            size_format($processor->getScriptMemoryLimit()),
+            microtime(true) - WPStaging::$startTime,
+            $processor->getTimeLimit(),
+            $queue->hasDeferredForegroundUpload() ? 'yes' : 'no',
+            $hasAvailableAction ? 'yes' : 'no'
+        ), 'info', true);
+
+        if (!$processor->isThreshold() || !$hasAvailableAction) {
+            return;
+        }
+
+ 
+        if (time() - (int)get_site_transient(QueueProcessor::TRANSIENT_LAST_FIRE_TIMESTAMP) <= QueueProcessor::FIRE_ACK_WINDOW_SECONDS) {
+            return;
+        }
+
+ 
+        set_site_transient(self::TRANSIENT_STALL_PROBE_LOCK, 1, QueueProcessor::FIRE_ACK_WINDOW_SECONDS);
+        debug_log('[Background Processing] Stall recovery is out of resources. Handing the queue to a new request.', 'info', true);
+        if ($processor->fireAjaxAction()) {
+            set_site_transient(self::TRANSIENT_STALL_PROBE_LOCK, 1, self::STALL_PROBE_THROTTLE_SECONDS);
+        }
     }
 
 

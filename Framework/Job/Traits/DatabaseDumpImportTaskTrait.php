@@ -72,7 +72,7 @@ trait DatabaseDumpImportTaskTrait
         $this->databaseImporterDto->setTmpPrefix($tablePrefix);
 
         $this->databaseImporter->setup($this->databaseImporterDto, true, "");
-        $databaseFile = $this->directory->getCacheDirectory() . $this->jobDataDto->getId() . '.wpstgdbtmp.sql';
+        $databaseFile = $this->directory->getCacheDirectory() . $this->jobDataDto->getPrivateFileId() . '.wpstgdbtmp.sql';
         $this->requireNonEmptyDatabaseFile($databaseFile);
 
         $this->databaseImporter->setWarningLogCallable([$this->logger, 'warning']);

@@ -109,10 +109,14 @@ class TableCreateService
         return $this->tableService->tableExists($tableName);
     }
 
+    public function getPreservedTableName(string $tableWithoutPrefix): string
+    {
+        return DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP . $tableWithoutPrefix;
+    }
+
     public function preserveExistingTable(string $tableName, string $tableWithoutPrefix): string
     {
-        $newTableName = DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP . $tableWithoutPrefix;
-        $this->dropOrphanedBackupTable($newTableName);
+        $newTableName = $this->getPreservedTableName($tableWithoutPrefix);
         $this->logger->info(sprintf("Preserving existing table %s by renaming it to %s", esc_html($tableName), esc_html($newTableName)));
         if ($this->tableService->renameTable($tableName, $newTableName)) {
             return $newTableName;
@@ -129,15 +133,20 @@ class TableCreateService
 
 
 
-
-    protected function dropOrphanedBackupTable(string $backupTableName)
+    public function dropOrphanedBackupTables(array $srcTables)
     {
-        if (!$this->tableService->tableExists($backupTableName)) {
-            return;
-        }
+        $backupTables = array_map(function (string $srcTable): string {
+            return $this->getPreservedTableName($this->getTableWithoutPrefix($srcTable));
+        }, $srcTables);
 
-        $this->logger->warning(sprintf("Cleanup Table - Dropping orphaned backup table %s left by a previous job", esc_html($backupTableName)));
-        $this->tableService->dropTable($backupTableName);
+        $tableService   = $this->getDestinationSiteTableService();
+        $existingTables = $tableService->findTableNamesStartWith(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP);
+        foreach (array_uintersect($existingTables, $backupTables, 'strcasecmp') as $backupTableName) {
+            $this->logger->warning(sprintf("Cleanup Table - Dropping orphaned backup table %s left by a previous job", esc_html($backupTableName)));
+            if (!$tableService->dropTable($backupTableName) || $tableService->tableExists($backupTableName)) {
+                throw new RuntimeException("Cleanup Table - Cannot drop orphaned backup table $backupTableName");
+            }
+        }
     }
 
 
@@ -189,5 +198,10 @@ class TableCreateService
         }
 
         throw new RuntimeException("Create Table - Cannot drop table $destTableName");
+    }
+
+    protected function getDestinationSiteTableService(): TableService
+    {
+        return $this->tableService;
     }
 }

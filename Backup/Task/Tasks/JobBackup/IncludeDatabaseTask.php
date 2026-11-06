@@ -7,6 +7,7 @@
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Task\BackupTask;
@@ -78,7 +79,7 @@ class IncludeDatabaseTask extends BackupTask
                 'Failed to include database in the backup: %s (%s).',
                 $this->archiver->getDto()->getFilePath(),
                 $e->getMessage()
-            ));
+            ), ['errorCode' => ErrorCode::fromThrowable($e)]);
 
             return $this->generateResponse(false);
         }
@@ -117,17 +118,14 @@ class IncludeDatabaseTask extends BackupTask
 
     private function rewindTempBackupToCheckpointOrRecordBaseline()
     {
-        if ($this->jobDataDto->getFileCheckpointKey() === $this->getCheckpointKey()) {
-            $discardedBytes = $this->archiver->rewindTempBackupToCheckpoint($this->jobDataDto);
-            if ($discardedBytes > 0) {
-                $this->logger->info(sprintf('Discarded %s of the database added by a request that did not finish.', size_format($discardedBytes)));
-            }
+        $discardedBytes = $this->archiver->rewindTempBackupToCheckpointOrRecordBaseline($this->jobDataDto, self::getTaskName(), function () {
+            $this->jobDataDto->setDatabaseCheckpointWrittenBytes($this->stepsDto->getCurrent());
+            $this->persistJobDataDto();
+        });
 
-            return;
+        if ($discardedBytes > 0) {
+            $this->logger->info(sprintf('Discarded %s of the database added by a request that did not finish.', size_format($discardedBytes)));
         }
-
-        $this->recordCheckpoint($this->stepsDto->getCurrent());
-        $this->persistJobDataDto();
     }
 
 
@@ -138,13 +136,8 @@ class IncludeDatabaseTask extends BackupTask
 
     private function recordCheckpoint(int $writtenBytes)
     {
-        $this->archiver->recordTempBackupCheckpoint($this->jobDataDto, $this->getCheckpointKey());
+        $this->archiver->recordTempBackupCheckpoint($this->jobDataDto, $this->archiver->getTempBackupCheckpointKey(self::getTaskName()));
         $this->jobDataDto->setDatabaseCheckpointWrittenBytes($writtenBytes);
-    }
-
-    private function getCheckpointKey(): string
-    {
-        return self::getTaskName() . '|' . basename($this->archiver->getTempBackup()->getFilePath());
     }
 
     public function prepareDatabaseTask()

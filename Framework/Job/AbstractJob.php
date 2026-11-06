@@ -26,6 +26,7 @@ use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Traits\BenchmarkTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Queue\FinishedQueueException;
+use WPStaging\Framework\SiteInfo;
 
 use function WPStaging\functions\debug_log;
 
@@ -43,7 +44,7 @@ abstract class AbstractJob implements ShutdownableInterface
     protected $jobDataDto;
 
  
-    private $jobDataCache;
+    protected $jobDataCache;
 
  
     private $ownerJobId = '';
@@ -180,8 +181,47 @@ abstract class AbstractJob implements ShutdownableInterface
                 throw new \RuntimeException('Could not persist Job data to cache.');
             }
         } catch (\Exception $e) {
+            $this->logWPEngineCacheWriteContext();
             debug_log("Could not persist Job data to cache:"  . $e->getMessage());
             throw new \RuntimeException('Could not persist Job data to cache: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+ 
+    private function logWPEngineCacheWriteContext()
+    {
+        $hasErrorHandler = false;
+        try {
+            if (!WPStaging::make(SiteInfo::class)->isWPEngine()) {
+                return;
+            }
+
+            set_error_handler(function () {
+                return true;
+            });
+            $hasErrorHandler = true;
+            $directory = (string)$this->jobDataCache->getPath();
+            clearstatcache(true, $directory);
+            $stat = is_dir($directory) ? stat($directory) : false;
+            debug_log('WP Engine cache-write context: ' . wp_json_encode([
+                'directory'             => $directory,
+                'directoryOwner'        => $stat === false ? null : $stat['uid'],
+                'directoryGroup'        => $stat === false ? null : $stat['gid'],
+                'directoryMode'         => $stat === false ? null : sprintf('%04o', $stat['mode'] & 0777),
+                'directoryWritable'     => is_writable($directory),
+                'cacheFileExists'       => file_exists($this->jobDataCache->getFilePath()),
+                'effectiveUid'          => function_exists('posix_geteuid') ? posix_geteuid() : null,
+                'effectiveGid'          => function_exists('posix_getegid') ? posix_getegid() : null,
+                'sapi'                  => PHP_SAPI,
+                'node'                  => function_exists('gethostname') ? gethostname() : null,
+                'hostAuthCookiePresent' => isset($_COOKIE['wpe-auth']),
+            ]));
+        } catch (Throwable $diagnosticError) {
+            return;
+        } finally {
+            if ($hasErrorHandler) {
+                restore_error_handler();
+            }
         }
     }
 
@@ -471,6 +511,20 @@ abstract class AbstractJob implements ShutdownableInterface
         }
     }
 
+
+
+
+
+
+    private function keepJobIdFileNamesForJobPersistedWithoutPrivateFileId(array $data)
+    {
+        if (array_key_exists('privateFileId', $data) || !isset($data['id'])) {
+            return;
+        }
+
+        $this->jobDataDto->setPrivateFileId((string)$data['id']);
+    }
+
     public function prepare()
     {
         $this->hasCurrentTaskCompleted = false;
@@ -479,6 +533,7 @@ abstract class AbstractJob implements ShutdownableInterface
         if ($data) {
             unset($data[self::CACHE_OWNER_KEY]);
             $this->jobDataDto->hydrate($data);
+            $this->keepJobIdFileNamesForJobPersistedWithoutPrivateFileId($data);
         }
 
  

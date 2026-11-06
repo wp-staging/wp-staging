@@ -477,6 +477,7 @@ class Uninstall
             'wpstg_backup_schedules_send_slack_error_report',
             'wpstg_backup_schedules_report_slack_webhook',
             'wpstg_current_site_login_links',
+            'wpstg_temporary_login_links_reissue.lock',
             'wpstg_remote_sync_api_token',
             'wpstg_remote_sync_password',
             'wpstg_remote_sync_enabled',

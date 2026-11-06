@@ -87,6 +87,12 @@ class RemoteDownloader
     private $lastDownloadedBytes = 0;
 
  
+    private $lastResponseBytes = 0;
+
+ 
+    private $lastRequestedBytes = 0;
+
+ 
     private $success = false;
 
  
@@ -234,6 +240,17 @@ class RemoteDownloader
         return $this->lastDownloadedBytes;
     }
 
+ 
+    public function getLastResponseBytes(): int
+    {
+        return $this->lastResponseBytes;
+    }
+
+    public function getLastRequestedBytes(): int
+    {
+        return $this->lastRequestedBytes;
+    }
+
     public function getMessage(): string
     {
         return $this->message;
@@ -294,7 +311,9 @@ class RemoteDownloader
 
     public function downloadChunk(bool $sslVerify = false)
     {
-        $this->errorCode = '';
+        $this->errorCode          = '';
+        $this->lastResponseBytes  = 0;
+        $this->lastRequestedBytes = 0;
 
         if ($this->remoteFileSize <= 0 && !$this->allowUnknownRemoteFileSize) {
             $this->lastDownloadedBytes = 0;
@@ -311,6 +330,7 @@ class RemoteDownloader
         $requestedBytes    = max(1, $this->endByte - $this->startByte + 1);
         $limitResponseSize = $isUnknownSize ? $this->startByte + $requestedBytes : $requestedBytes;
         $chunkPath         = $this->getChunkDownloadPath();
+        $this->lastRequestedBytes = $requestedBytes;
         $this->deleteFile($chunkPath);
 
         $args = [
@@ -328,6 +348,8 @@ class RemoteDownloader
         ];
 
         $response = $this->makeRemoteRequest($args);
+        clearstatcache(true, $chunkPath);
+        $this->lastResponseBytes = file_exists($chunkPath) ? (int)filesize($chunkPath) : 0;
         if (is_wp_error($response)) {
             $this->deleteFile($chunkPath);
             $this->lastDownloadedBytes = 0;
@@ -363,7 +385,7 @@ class RemoteDownloader
             return;
         }
 
-        $downloadedBytes = file_exists($chunkPath) ? (int)filesize($chunkPath) : 0;
+        $downloadedBytes = $this->lastResponseBytes;
         if ($downloadedBytes > 0) {
             $bytesToSkip = $this->getChunkBytesToSkip($response, $isUnknownSize, $downloadedBytes, $requestedBytes);
             $newBytes    = max(0, $downloadedBytes - $bytesToSkip);

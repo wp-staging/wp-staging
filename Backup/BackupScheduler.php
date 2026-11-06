@@ -114,6 +114,9 @@ class BackupScheduler
     const FIELD_RUNS_RECORDED_SINCE = 'runsRecordedSince';
 
  
+    const FIELD_SAVED_SCOPE_CHECKED = 'isScopeCheckedOnSave';
+
+ 
     protected $backupsFinder;
 
  
@@ -566,6 +569,23 @@ class BackupScheduler
 
 
 
+    private function scheduleScopeMayRunOnCurrentSite(array $schedule): bool
+    {
+        if (!is_multisite() || !empty($schedule[self::FIELD_SAVED_SCOPE_CHECKED]) || is_main_site() || (!wp_doing_cron() && is_super_admin())) {
+            return true;
+        }
+
+        return ($schedule['backupType'] ?? '') === BackupMetadata::BACKUP_TYPE_NETWORK_SUBSITE
+            && (int)($schedule['subsiteBlogId'] ?? 0) === get_current_blog_id();
+    }
+
+
+
+
+
+
+
+
     public static function cronEventArguments(string $scheduleId): array
     {
         return ['scheduleId' => $scheduleId];
@@ -671,6 +691,7 @@ class BackupScheduler
             'storages'                       => $jobBackupDataDto->getStorages(),
             'firstSchedule'                  => $firstSchedule,
             self::FIELD_RUNS_RECORDED_SINCE  => time(),
+            self::FIELD_SAVED_SCOPE_CHECKED  => true,
             'isSmartExclusion'               => $jobBackupDataDto->getIsSmartExclusion(),
             'isExcludingSpamComments'        => $jobBackupDataDto->getIsExcludingSpamComments(),
             'isExcludingPostRevision'        => $jobBackupDataDto->getIsExcludingPostRevision(),
@@ -833,6 +854,12 @@ class BackupScheduler
         if ($this->scheduleHasQueuedOrRunningBackup($scheduleId)) {
             debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: a backup job for schedule %s is already queued or running.", $logId, $scheduleId), 'info', false);
             return null;
+        }
+
+        if (!$this->scheduleScopeMayRunOnCurrentSite($schedule)) {
+            $refusal = __('This backup plan backs up more than this subsite and was saved before WP STAGING checked who saved it. Ask a network super admin to create this backup plan again.', 'wp-staging');
+            $this->recordFailedRunOfSchedule($scheduleId, $refusal);
+            return new \WP_Error(400, $refusal);
         }
 
         try {
@@ -1084,6 +1111,11 @@ class BackupScheduler
         }
 
         $target = $schedules[$index];
+
+        if (($target['backupType'] ?? '') === BackupMetadata::BACKUP_TYPE_MULTISITE && !is_super_admin()) {
+            wp_send_json_error(['message' => __('Only super admins/network admins can create entire multisite networks.', 'wp-staging')]);
+            return;
+        }
 
         if (!$this->scheduleRecurrenceIsRegistered($target)) {
             wp_send_json_error(['message' => __('This backup plan uses a schedule frequency this version of WP STAGING cannot run.', 'wp-staging')]);

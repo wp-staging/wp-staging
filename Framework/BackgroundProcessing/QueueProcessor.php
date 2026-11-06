@@ -105,7 +105,8 @@ class QueueProcessor
         }
 
         if ($lastFireTs > 0 && $lastFireAge >= 0 && $lastFireAge <= self::FIRE_ACK_WINDOW_SECONDS) {
-            if ((int)get_site_transient(self::TRANSIENT_FIRE_FAILURE_COUNT) !== 0) {
+ 
+            if (wp_doing_ajax() && (int)get_site_transient(self::TRANSIENT_FIRE_FAILURE_COUNT) !== 0) {
                 delete_site_transient(self::TRANSIENT_FIRE_FAILURE_COUNT);
             }
         } elseif ($lastFireTs > 0 && $lastFireAge > self::FIRE_ACK_WINDOW_SECONDS && $this->queue->hasAvailableAction()) {

@@ -8,6 +8,7 @@ use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
+use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
@@ -120,7 +121,7 @@ class BackupRequirementsCheckTask extends BackupTask
                 $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
             }
 
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical($e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
 
             return $this->generateResponse(false);
         }
@@ -186,7 +187,7 @@ class BackupRequirementsCheckTask extends BackupTask
         try {
             $this->diskWriteCheck->testDiskIsWriteable();
         } catch (DiskNotWritableException $e) {
-            throw new RuntimeException($e->getMessage());
+            throw new RuntimeException($e->getMessage(), 0, $e);
         }
     }
 

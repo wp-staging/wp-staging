@@ -96,7 +96,7 @@ class RestoreMuPluginsTask extends FileRestoreTask
 
 
             if (array_key_exists($muPluginSlug, $existingMuPlugins)) {
-                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_MUPLUGINS, false)) {
+                if ($this->isRestoreOnSubsite() && !Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_MUPLUGINS, false)) {
                     continue;
                 }
 

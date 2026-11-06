@@ -8,6 +8,7 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
 use WPStaging\Framework\Logger\EventLoggerConst;
+use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Urls;
@@ -126,6 +127,7 @@ class Finish extends Job
                 $this->options->existingClones[$this->options->clone]['url'] = $this->getDestinationUrl();
             }
 
+            $this->options->existingClones[$this->options->clone]['syncedAt']                = StagingSiteDto::doCopiedTablesHoldShopOrders($this->options->tables) ? $this->getJobStartedAt() : (int)($this->options->existingClones[$this->options->clone]['syncedAt'] ?? 0);
             $this->options->existingClones[$this->options->clone]['datetime']                = time();
             $this->options->existingClones[$this->options->clone]['status']                  = 'finished';
             $this->options->existingClones[$this->options->clone]['prefix']                  = $this->options->prefix;
@@ -157,6 +159,7 @@ class Finish extends Job
             "status"              => "finished",
             "prefix"              => $this->options->prefix,
             "datetime"            => time(),
+            "syncedAt"            => $this->getJobStartedAt(),
             "useCustomDatabase"   => $this->isExternalDatabase(),
             "databaseUser"        => $this->options->databaseUser,
             "databasePassword"    => $this->options->databasePassword,
@@ -180,6 +183,11 @@ class Finish extends Job
         }
 
         return true;
+    }
+
+    private function getJobStartedAt(): int
+    {
+        return empty($this->options->jobStartedAt) ? time() : (int)$this->options->jobStartedAt;
     }
 
 

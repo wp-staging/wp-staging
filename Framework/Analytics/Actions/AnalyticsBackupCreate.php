@@ -31,6 +31,9 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
  
     public $automated_backup;
 
+ 
+    public $is_before_update_backup;
+
     public function getEventAction()
     {
         return 'event_backup_create';
@@ -50,6 +53,7 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
         $this->is_backup_wp_content = $eventData->getIsExportingOtherWpContentFiles();
         $this->is_backup_wp_root    = $eventData->getIsExportingOtherWpRootFiles();
         $this->automated_backup     = (int)$eventData->getIsAutomatedBackup(); 
+        $this->is_before_update_backup = $eventData->getIsBeforeUpdateBackup();
 
         parent::enqueueStartEvent($jobId, $eventData);
     }

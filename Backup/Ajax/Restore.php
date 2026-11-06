@@ -27,6 +27,7 @@ class Restore extends AbstractTemplateComponent
     public function render()
     {
         if (!$this->canRenderAjax()) {
+            wp_send_json_error(null, 401);
             return;
         }
 

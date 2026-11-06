@@ -839,7 +839,7 @@ class Administrator
         $cloning = WPStaging::make(Updating::class);
 
         if (!$cloning->save()) {
-            wp_die('Can not save clone data');
+            wp_send_json(['success' => false, 'message' => $cloning->getErrorMessage() ?: 'Can not save clone data']);
         }
 
         $options = $cloning->getOptions();
@@ -862,7 +862,7 @@ class Administrator
         $cloning = WPStaging::make(Updating::class);
         $cloning->setMainJob(Job::RESET);
         if (!$cloning->save()) {
-            wp_die('can not save clone data');
+            wp_send_json(['success' => false, 'message' => $cloning->getErrorMessage() ?: 'Can not save clone data']);
         }
 
         $options = $cloning->getOptions();
@@ -915,6 +915,7 @@ class Administrator
     public function ajaxCloneDatabase()
     {
         if (!$this->isAuthenticated()) {
+            wp_send_json_error(null, 401);
             return;
         }
 
@@ -980,6 +981,7 @@ class Administrator
     public function ajaxCancelClone()
     {
         if (!$this->isAuthenticated()) {
+            wp_send_json_error(null, 401);
             return;
         }
 
@@ -993,6 +995,7 @@ class Administrator
     public function ajaxCancelUpdate()
     {
         if (!$this->isAuthenticated()) {
+            wp_send_json_error(null, 401);
             return;
         }
 
@@ -1176,6 +1179,7 @@ class Administrator
     public function ajaxPushProcessing()
     {
         if (!$this->isAuthenticated()) {
+            wp_send_json_error(null, 401);
             return false;
         }
 

@@ -9,15 +9,22 @@ use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
+use WPStaging\Staging\FolderOwnership;
+use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class CleanupStagingFilesTask extends StagingTask
 {
+    use WithUnfinishedCloneWpConfigGuard;
+
  
     private $filesystem;
 
+ 
+    private $folderOwnership;
 
 
 
@@ -25,10 +32,13 @@ class CleanupStagingFilesTask extends StagingTask
 
 
 
-    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, Filesystem $filesystem, SeekableQueueInterface $taskQueue)
+
+
+    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, Filesystem $filesystem, SeekableQueueInterface $taskQueue, FolderOwnership $folderOwnership)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->filesystem = $filesystem;
+        $this->filesystem      = $filesystem;
+        $this->folderOwnership = $folderOwnership;
     }
 
 
@@ -72,6 +82,16 @@ class CleanupStagingFilesTask extends StagingTask
             return $this->generateResponse();
         }
 
+        if (!$this->folderOwnership->isStagingSiteFolder($stagingSiteDir)) {
+            $this->logger->warning(sprintf(
+                '%s: WP STAGING cannot confirm that path "%s" holds a staging site, so the folder is kept.',
+                static::getTaskTitle(),
+                $stagingSiteDir
+            ));
+
+            return $this->generateResponse();
+        }
+
         $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($stagingSiteDir, true));
 
  
@@ -80,12 +100,14 @@ class CleanupStagingFilesTask extends StagingTask
         }
 
         try {
-            $deleted = $this->filesystem
+            $this->filesystem
                 ->setRecursive(true)
                 ->setShouldStop(function () {
                     return $this->isThreshold();
-                })
-                ->delete($stagingSiteDir);
+                });
+            $deleted = $this->isResetJob()
+                ? $this->deleteStagingSiteFilesWithWpConfigLast($this->filesystem, $stagingSiteDir, true)
+                : $this->filesystem->delete($stagingSiteDir);
         } catch (Throwable $e) {
             $this->logger->warning(sprintf(
                 '%s: Could not cleanup path "%s". May be a permission issue?',
@@ -151,5 +173,13 @@ class CleanupStagingFilesTask extends StagingTask
         $this->stepsDto->setTotal(1);
 
         return $stagingSiteDto->getPath();
+    }
+
+
+
+
+    private function isResetJob(): bool
+    {
+        return $this->jobDataDto instanceof StagingOperationDtoInterface && $this->jobDataDto->getIsResetJob();
     }
 }

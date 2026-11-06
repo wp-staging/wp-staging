@@ -119,6 +119,23 @@ class BackgroundLogger
         ]);
     }
 
+ 
+    public function ajaxEventStream()
+    {
+        $verified = $this->verifyRestRequest();
+        if (is_wp_error($verified)) {
+            wp_send_json_error(['message' => $verified->get_error_message()], 403);
+            return;
+        }
+
+        $this->setHeaders();
+
+        $request = new WP_REST_Request('GET');
+        $offset = isset($_GET['offset']) && is_scalar($_GET['offset']) ? absint(wp_unslash($_GET['offset'])) : 0;
+        $request->set_param('offset', $offset);
+        $this->restEventStream($request);
+    }
+
 
 
 

@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Network;
 
+use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\DataEncryption;
 
@@ -19,6 +20,17 @@ trait HttpBasicAuth
     protected function getHttpAuthHeaders(): array
     {
         return $this->buildHttpAuthHeaders(get_option(Queue::OPTION_HTTP_AUTH_CREDENTIALS, []));
+    }
+
+
+
+
+
+
+
+    protected function shouldVerifySslForHttpAuthHeaders(array $httpAuthHeaders): bool
+    {
+        return empty($httpAuthHeaders) ? (bool)apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false) : true;
     }
 
 

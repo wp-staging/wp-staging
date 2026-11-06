@@ -6,7 +6,6 @@ use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\DTO\Settings as SettingsDTO;
 use WPStaging\Framework\Facades\Sanitize as SanitizeFacade;
-use WPStaging\Framework\BackgroundProcessing\FeatureDetection;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\ProcessLock;
@@ -224,7 +223,7 @@ class Settings
 
         $response = wp_remote_post($url, [
             'timeout'   => 15,
-            'sslverify' => apply_filters(FeatureDetection::FILTER_HTTPS_LOCAL_SSL_VERIFY, false),
+            'sslverify' => $this->shouldVerifySslForHttpAuthHeaders($headers),
             'headers'   => $headers,
             'body'      => [
                 'action' => 'wpstg_http_auth_ping',

@@ -83,6 +83,19 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
 
 
 
+    public function onBackgroundJobFailure($failure = [])
+    {
+        $errorCode = is_array($failure) && isset($failure['errorCode']) ? (string)$failure['errorCode'] : '';
+
+        $this->failureReason = $this->health->reasonForErrorCode($errorCode);
+        parent::onBackgroundJobFailure($failure);
+        $this->failureReason = '';
+    }
+
+
+
+
+
 
 
 

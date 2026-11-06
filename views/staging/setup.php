@@ -37,13 +37,8 @@ if ($isCreate && empty($defaultSiteName)) {
 }
 
 $directory          = WPStaging::make(Directory::class);
-$stagingSiteBaseUrl = trailingslashit($productionSiteUrl);
-$defaultPathBase    = $directory->getAbsPath();
-$wpContentStagingSitesDirectory = is_writable($directory->getAbsPath()) ? false : $directory->getStagingSiteDirectoryInsideWpcontent(false);
-if ($wpContentStagingSitesDirectory !== false) {
-    $stagingSiteBaseUrl = trailingslashit($directory->getStagingSiteUrl());
-    $defaultPathBase    = trailingslashit(wp_normalize_path($wpContentStagingSitesDirectory));
-}
+$stagingSiteBaseUrl = $directory->getDefaultStagingSitesUrl();
+$defaultPathBase    = $directory->getDefaultStagingSitesDirectory();
 
 $previewSiteUrl     = $stagingSiteBaseUrl . $defaultSiteName;
 

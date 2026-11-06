@@ -34,6 +34,9 @@ trait MySQLRowsGeneratorTrait
  
     protected $valuesToExclude = '';
 
+ 
+    protected $hasReachedEndOfTable = false;
+
 
 
 
@@ -85,9 +88,12 @@ trait MySQLRowsGeneratorTrait
         $lastFetch = false;
         $batchSize = $this->calculateBatchSize($databaseName, $table, $offset, $requestId, $jobDataDto, $db);
 
+        $this->hasReachedEndOfTable = false;
+
         do {
             if (empty($rows)) {
                 if ($lastFetch) {
+                    $this->hasReachedEndOfTable = true;
                     break;
                 }
 
@@ -141,6 +147,7 @@ trait MySQLRowsGeneratorTrait
                 }
 
                 if (empty($rows)) {
+                    $this->hasReachedEndOfTable = true;
                     break;
                 }
 
