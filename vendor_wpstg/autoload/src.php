@@ -461,6 +461,7 @@ return array(
     'WPStaging\\Framework\\Job\\Exception\\DiskNotWritableException' => $baseDir . '/Framework/Job/Exception/DiskNotWritableException.php',
     'WPStaging\\Framework\\Job\\Exception\\FileSizeLimitException' => $baseDir . '/Framework/Job/Exception/FileSizeLimitException.php',
     'WPStaging\\Framework\\Job\\Exception\\FileValidationException' => $baseDir . '/Framework/Job/Exception/FileValidationException.php',
+    'WPStaging\\Framework\\Job\\Exception\\JobDataLostException' => $baseDir . '/Framework/Job/Exception/JobDataLostException.php',
     'WPStaging\\Framework\\Job\\Exception\\NotFinishedException' => $baseDir . '/Framework/Job/Exception/NotFinishedException.php',
     'WPStaging\\Framework\\Job\\Exception\\ProcessLockedException' => $baseDir . '/Framework/Job/Exception/ProcessLockedException.php',
     'WPStaging\\Framework\\Job\\Exception\\TaskHealthException' => $baseDir . '/Framework/Job/Exception/TaskHealthException.php',

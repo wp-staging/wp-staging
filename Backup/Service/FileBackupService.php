@@ -36,7 +36,7 @@ class FileBackupService implements ServiceInterface
     use EndOfLinePlaceholderTrait;
 
  
-    const UNMEASURED_CHECKPOINT_KEY = 'unmeasured';
+    const UNMEASURED_CHECKPOINT_KEY = Archiver::UNMEASURED_CHECKPOINT_KEY;
 
  
     protected $archiver;
@@ -78,7 +78,7 @@ class FileBackupService implements ServiceInterface
     protected $start;
 
  
-    protected $fileIdentifier;
+    protected $fileIdentifier = '';
 
     public function __construct(Archiver $archiver, Directory $directory, Filesystem $filesystem, SiteInfo $siteInfo)
     {
@@ -124,7 +124,7 @@ class FileBackupService implements ServiceInterface
     {
         $this->fileIdentifier         = $fileIdentifier;
         $this->isOtherWpRootFilesTask = $isOtherWpRootFilesTask;
-        $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER);
+        $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER, $fileIdentifier);
     }
 
 
@@ -227,7 +227,7 @@ class FileBackupService implements ServiceInterface
             $isFileWrittenCompletely = true;
             $skippedFile             = $indexPath !== '' ? $indexPath : $path;
             $skippedFile             = $skippedFile === '' ? '(empty path)' : $skippedFile;
-            $reason                  = str_replace(["\r", "\n"], ' ', $e->getMessage());
+            $reason                  = $this->directory->redactCacheFileNames(str_replace(["\r", "\n"], ' ', $e->getMessage()));
             $this->logger->warning(sprintf('Skipped a file that could not be added to the backup: %s — %s', $skippedFile, $reason));
             debug_log(sprintf('Backup: skipped file "%s" — %s', $skippedFile, $reason));
         } catch (\Throwable $th) {
@@ -456,7 +456,7 @@ class FileBackupService implements ServiceInterface
 
     private function getCurrentArchiveCheckpointKey(): string
     {
-        return $this->fileIdentifier . '|' . basename($this->archiver->getTempBackup()->getFilePath());
+        return $this->archiver->getTempBackupCheckpointKey($this->fileIdentifier);
     }
 
 

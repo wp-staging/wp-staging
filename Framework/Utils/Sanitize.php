@@ -171,16 +171,11 @@ class Sanitize
         $value = $this->sanitizeString($value);
 
  
-        $path = rtrim($value, '/\\');
+        $path = rtrim($value, "/\\ \t\n\r\0\x0B");
 
  
         if (WPStaging::isWindowsOs()) {
             return $path;
-        }
-
- 
-        if (!WPStaging::isMacOs()) {
-            $path = preg_replace('/\s+/', '', $path);
         }
 
  

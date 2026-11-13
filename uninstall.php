@@ -439,6 +439,7 @@ class Uninstall
         return [
             'wpstg_user_general_pro_card_snoozed_until',
             'wpstg_user_backup_pro_card_snoozed_until',
+            'wpstg_pwdless_token_action',
         ];
     }
 
@@ -535,6 +536,7 @@ class Uninstall
             'wpstg_remote_sync_source_activity',
             'wpstg_backup_before_update_nudge',
             'wpstg_remote_sync_safety_backup_nudge',
+            'wpstg_remote_sync_connection_key_reveals',
             'wpstg.queue.request.get_method',
             'is_invalid_backup_file_index',
             'wpstg_permalinks_do_purge',

@@ -247,7 +247,6 @@ class BackupDownloader
         bool $fetchMissingFileSize = true
     ) {
         $this->remoteDownloader->setAllowUnknownRemoteFileSize(true);
-        $this->remoteDownloader->setFollowRedirects(false);
         $this->remoteDownloader->setRemoteUrl($remoteFileUrl);
         $fileName = basename($remoteFileUrl);
         $this->remoteDownloader->setFileName($fileName);

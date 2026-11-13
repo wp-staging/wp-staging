@@ -72,20 +72,9 @@ abstract class DatabaseAdjustmentTask extends DataAdjustmentTask
 
 
 
-
     protected function isTableExcluded(string $tableNameWithoutPrefix): bool
     {
-        $tableName = $this->getPrefixedStagingTableName($tableNameWithoutPrefix);
-
-        if (!$this->isTableExists($tableName)) {
-            return true;
-        }
-
-        if (in_array($tableNameWithoutPrefix, $this->jobDataDto->getExcludedTables())) {
-            return true;
-        }
-
-        return false;
+        return !$this->jobDataDto->isStagingTableCopied($this->getPrefixedStagingTableName($tableNameWithoutPrefix));
     }
 
     protected function isOptionsTableExcluded(): bool

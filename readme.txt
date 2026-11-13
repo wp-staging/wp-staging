@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.20.0
+Stable tag: 4.21.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,23 +283,23 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.20.0 =
-* New: Add a setting to switch a staging site to a live site. (Pro)
-* New: Add custom search and replace rules to the push setup modal, applied after the automatic URL rewrite. (Pro)
-* New: Record when a staging site last copied the live shop orders, the baseline for pushing a shop without losing them. (Pro)
-* UX: Redesign the backup restore confirmation modal.
+= 4.21.0 =
+* New: Reach a staging site by IP address, so a backup or monitoring service can open it without logging in. (Pro)
+* Enh: Follow a backup URL that redirects, checking every redirect target before the file is requested.
+* UX: Name two Backup modal options Other wp-content items and Other WP root folders, each with its name, size and info icon on one line.
 * Security: This release includes security hardening. Updating is strongly recommended.
-* Fix: A scheduled backup no longer stays queued for hours when the cron run that tries to restart it has no memory or time left to take it.
-* Fix: Copy every row of tables with gaps in their IDs when creating, updating, resetting or pushing a staging site with the Next-Gen engine.
-* Fix: Keep staging site creation, push and backups fast on large tables with a composite primary key, and stop locking them while they are backed up.
-* Fix: Keep the search and replace of staging, push and backup restore jobs from stalling or running out of memory.
-* Fix: Retry a background backup step once when its worker dies, and tell the owner when the retry dies too, so a backup never finishes without the file it was on.
-* Fix: A background backup no longer re-adds the same file again and again in one request once its time to add files has run out.
-* Fix: Show an error instead of hanging when the staging process gets a server response it cannot act on.
-* Fix: When neither the WordPress root nor wp-content is writable, say how to fix it instead of asking Free and unlicensed Pro users for a custom path they cannot set, and show that error on the Classic engine instead of a stalled progress screen.
-* Fix: Preserve existing plugins, themes, mu-plugins, and other files by default during subsite restore. (Pro)
-* Fix: Retry a Dropbox backup upload whose last step failed, instead of reporting it as uploaded. (Pro)
-* Plus 27 more fixes.
+* Fix: Creating, updating, resetting or pushing a staging site no longer stops with a duplicate-key error from rows the database copy wrote twice.
+* Fix: Backups on some hosts no longer fail with "shorter than its last checkpoint", which now names the sizes it compared.
+* Fix: A restore no longer gets stuck on "Extracting files" when a media file cannot be replaced: the file is overwritten where possible, skipped otherwise, and the restore finishes.
+* Fix: A file restored after an interrupted request is complete again, instead of a truncated copy or a restore that never finishes.
+* Fix: The standalone restorer no longer deletes the tables of a staging site or of another site in the same database. (Pro)
+* Fix: Restoring a network backup onto a staging network marks every subsite as a staging site instead of failing with a database error, and the site and home URL stay correct. (Pro)
+* Fix: Two-factor codes work again on a staging site behind the login form.
+* Fix: A one-time staging login link can no longer be reused as a permanent shared link. (Pro)
+* Fix: A paused backup schedule no longer makes an active schedule miss its run.
+* Fix: Backup uploads keep their full chunk size when PHP leaves post_max_size and upload_max_filesize unlimited.
+* Fix: The database tables you exclude stay untouched when you update a staging site with the Next-Gen engine.
+* Plus 22 more fixes.
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

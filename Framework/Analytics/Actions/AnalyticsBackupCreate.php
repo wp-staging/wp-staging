@@ -34,6 +34,12 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
  
     public $is_before_update_backup;
 
+ 
+    public $is_multipart_backup;
+
+ 
+    public $max_multipart_backup_size;
+
     public function getEventAction()
     {
         return 'event_backup_create';
@@ -54,6 +60,8 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
         $this->is_backup_wp_root    = $eventData->getIsExportingOtherWpRootFiles();
         $this->automated_backup     = (int)$eventData->getIsAutomatedBackup(); 
         $this->is_before_update_backup = $eventData->getIsBeforeUpdateBackup();
+        $this->is_multipart_backup     = $eventData->getIsMultipartBackup();
+        $this->max_multipart_backup_size = $this->is_multipart_backup ? (int)$eventData->getMaxMultipartBackupSize() : 0;
 
         parent::enqueueStartEvent($jobId, $eventData);
     }

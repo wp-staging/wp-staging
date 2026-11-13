@@ -99,6 +99,7 @@ class DiskWriteCheck
 
 
 
+
     public function testDiskIsWriteable()
     {
         $destination = $this->directory->getPluginUploadsDirectory() . '.wpstgDiskWriteCheck';
@@ -119,14 +120,23 @@ class DiskWriteCheck
  
         $result = $this->setLowLevelDiskFullFlag();
 
-        $this->filesystem->delete($this->directory->getCacheDirectory());
+        try {
+            $this->filesystem->delete($this->directory->getCacheDirectory());
+        } catch (\RuntimeException $e) {
+            throw new \RuntimeException($this->directory->redactCacheFileNames($e->getMessage()), $e->getCode());
+        }
 
  
         if (!$result) {
             $result = $this->setLowLevelDiskFullFlag();
         }
 
-        $this->filesystem->delete($this->directory->getTmpDirectory());
+        $tmpDirectory = $this->directory->getTmpDirectory();
+        try {
+            $this->filesystem->delete($tmpDirectory);
+        } catch (\RuntimeException $e) {
+            throw new \RuntimeException('Permission Error: Can not empty the directory ' . $tmpDirectory, $e->getCode());
+        }
 
  
         if (!$result) {

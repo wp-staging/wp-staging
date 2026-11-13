@@ -118,6 +118,7 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         add_action('load-plugins.php', $this->container->callback(BeforeUpdateRowStatus::class, 'registerRowMessages'));
         add_action('admin_notices', $this->container->callback(UpdateProtectionPausedNotice::class, 'render'));
+        add_action('network_admin_notices', $this->container->callback(UpdateProtectionPausedNotice::class, 'render'));
         add_action('wp_ajax_wpstg--backups--prepare-backup', $this->container->callback(PrepareBackup::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--create', $this->container->callback(Backup::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 

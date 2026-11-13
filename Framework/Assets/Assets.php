@@ -347,7 +347,10 @@ class Assets
             'restUrl'                           => $this->getRestUrl(),
             'backgroundLoggerUrl'               => $this->getBackgroundLoggerUrl(),
             'wpstgIcon'                         => $updateProtection['loaderUrl'],
-            'maxUploadChunkSize'                => $this->getMaxUploadChunkSize(),
+            'maxUploadChunkSize'                => $this->getMaxUploadChunkSize(
+                wp_convert_hr_to_bytes(ini_get('post_max_size')),
+                wp_convert_hr_to_bytes(ini_get('upload_max_filesize'))
+            ),
             'backupDBExtension'                 => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
             'analyticsConsentAllow'             => esc_url($this->analyticsConsent->getConsentLink(true)),
             'analyticsConsentDeny'              => esc_url($this->analyticsConsent->getConsentLink(false)),
@@ -433,24 +436,18 @@ class Assets
 
 
 
-    protected function getMaxUploadChunkSize()
+
+
+
+
+    protected function getMaxUploadChunkSize($maxPostSize, $uploadMaxFileSize)
     {
         $lowerLimit = 64 * KB_IN_BYTES;
         $upperLimit = 16 * MB_IN_BYTES;
 
-        $maxPostSize       = wp_convert_hr_to_bytes(ini_get('post_max_size'));
-        $uploadMaxFileSize = wp_convert_hr_to_bytes(ini_get('upload_max_filesize'));
+        $limit = min($maxPostSize > 0 ? $maxPostSize : PHP_INT_MAX, $uploadMaxFileSize > 0 ? $uploadMaxFileSize : PHP_INT_MAX) * 0.90;
 
- 
-        $limit = min($maxPostSize, $uploadMaxFileSize) * 0.90;
-
- 
-        $limit = min($limit, $upperLimit);
-
- 
-        $limit = max($lowerLimit, $limit);
-
-        return (int)$limit;
+        return (int)max($lowerLimit, min($limit, $upperLimit));
     }
 
 

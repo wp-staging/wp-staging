@@ -106,10 +106,22 @@ class Frontend
             $loginForm->setError(__('Access Denied', 'wp-staging'));
         }
 
+        $this->renderStagingLoginForm($loginForm);
+    }
+
+
+
+
+
+
+
+    protected function renderStagingLoginForm(LoginForm $loginForm)
+    {
         $overrides = [
             'label_username' => __('Username or Email Address', 'wp-staging'),
         ];
 
+        $this->preventCaching();
         $loginForm->renderForm($loginForm->getDefaultArguments($overrides));
         die();
     }
@@ -145,6 +157,18 @@ class Frontend
 
 
 
+
+    protected function preventCaching()
+    {
+        nocache_headers();
+        add_filter('wp_headers', function ($headers) {
+            return array_merge((array)$headers, wp_get_nocache_headers());
+        }, PHP_INT_MAX);
+    }
+
+
+
+
     protected function serveRestRequest()
     {
         rest_api_loaded();
@@ -164,6 +188,9 @@ class Frontend
 
 
 
+
+
+
     private function authenticateSubmittedCredentials()
     {
         if (!$this->isStagingSite()) {
@@ -177,6 +204,12 @@ class Frontend
         }
 
         $loginForm->authenticate();
+
+        if (!$loginForm->wasSubmissionRefused() || !$this->isLoginPage()) {
+            return;
+        }
+
+        $this->renderStagingLoginForm($loginForm);
     }
 
 

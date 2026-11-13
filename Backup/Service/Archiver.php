@@ -56,6 +56,18 @@ class Archiver
 
 
 
+    const UNMEASURED_CHECKPOINT_KEY = 'unmeasured';
+
+
+
+
+
+    const CHECKPOINT_KEY_SEPARATOR = '|';
+
+
+
+
+
     const MAX_RETRIES_BEFORE_EXTENDING_TIME_LIMIT = 1;
 
 
@@ -172,14 +184,76 @@ class Archiver
 
 
 
-    public function createArchiveFile(bool $isCreateBinaryHeader = false)
+
+    public function createArchiveFile(bool $isCreateBinaryHeader = false, string $checkpointWriter = '')
     {
         $this->setupTmpBackupFile();
 
-        if ($isCreateBinaryHeader && !$this->tempBackup->isValid()) {
+        if (!$isCreateBinaryHeader || $this->jobDataAccountsForTempBackupBytes($checkpointWriter)) {
+            return;
+        }
+
+        if (!$this->tempBackup->isValid()) {
  
             $this->tempBackup->save($this->isBackupFormatV1() ? $this->backupHeader->getV1FormatHeader() : $this->backupHeader->getHeader() . "\n");
         }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private function jobDataAccountsForTempBackupBytes(string $checkpointWriter): bool
+    {
+        $jobDataDto = $this->jobDataDto;
+        if (!$jobDataDto instanceof JobBackupDataDto) {
+            return false;
+        }
+
+        $checkpointKey = $jobDataDto->getFileCheckpointKey();
+        if ($checkpointKey === self::UNMEASURED_CHECKPOINT_KEY) {
+            return $this->tempBackupIsOnDisk();
+        }
+
+        if ($jobDataDto->getFileCheckpointBackupBytes() <= 0) {
+            return false;
+        }
+
+        if ($checkpointKey === $this->getTempBackupCheckpointKey($checkpointWriter)) {
+            return true;
+        }
+
+        return $this->checkpointNamesThisTempBackup($checkpointKey) && $this->tempBackupIsOnDisk();
+    }
+
+
+
+
+
+
+
+
+    private function checkpointNamesThisTempBackup(string $checkpointKey): bool
+    {
+        $tempBackupName = self::CHECKPOINT_KEY_SEPARATOR . basename($this->tempBackup->getFilePath());
+
+        return substr($checkpointKey, -strlen($tempBackupName)) === $tempBackupName;
+    }
+
+
+
+
+    private function tempBackupIsOnDisk(): bool
+    {
+        return file_exists($this->tempBackup->getFilePath());
     }
 
 
@@ -242,7 +316,7 @@ class Archiver
 
     public function getTempBackupCheckpointKey(string $writerName): string
     {
-        return $writerName . '|' . basename($this->getTempBackup()->getFilePath());
+        return $writerName . self::CHECKPOINT_KEY_SEPARATOR . basename($this->getTempBackup()->getFilePath());
     }
 
 
@@ -320,7 +394,7 @@ class Archiver
  
         $resource = @fopen($fullFilePath, 'rb');
         if (!$resource) {
-            debug_log("appendFileToBackup(): Can't open file {$fullFilePath} for reading");
+            debug_log(WPStaging::make(Directory::class)->redactCacheFileNames("appendFileToBackup(): Can't open file {$fullFilePath} for reading"));
             throw new BackupSkipItemException();
         }
 
@@ -454,7 +528,7 @@ class Archiver
         $indexResource = fopen($this->tempBackupIndex->getFilePath(), 'rb');
 
         if (!$indexResource) {
-            debug_log('[Add File Index] Nothing to backup, no index resource! File Index: ' . $this->tempBackupIndex->getFilePath());
+            debug_log(WPStaging::make(Directory::class)->redactCacheFileNames('[Add File Index] Nothing to backup, no index resource! File Index: ' . $this->tempBackupIndex->getFilePath()));
             throw new NotFoundException('Nothing to backup, no index resource found!');
         }
 
@@ -755,7 +829,7 @@ class Archiver
                 $this->archiverDto->getWrittenBytesTotal()
             );
         } catch (DiskNotWritableException $e) {
-            debug_log('Failed to write to file: ' . $filePath);
+            debug_log(WPStaging::make(Directory::class)->redactCacheFileNames('Failed to write to file: ' . $filePath));
             throw $this->reclassifyDiskFailure($e);
         }
     }
@@ -999,7 +1073,7 @@ class Archiver
         }
 
         if ($fileBytes < $checkpointBytes) {
-            throw new RuntimeException(sprintf('Backup: %s is shorter than its last checkpoint (%d < %d bytes), so data already added to the backup is missing.', basename($filePath), $fileBytes, $checkpointBytes));
+            throw new RuntimeException(sprintf('Backup: (%d < %d bytes) A temporary backup file is shorter than its last checkpoint, so data already added to the backup is missing.', $fileBytes, $checkpointBytes));
         }
 
         $file = new FileObject($filePath, FileObject::MODE_WRITE_UNSAFE);
@@ -1026,7 +1100,7 @@ class Archiver
 
         $bytes = filesize($filePath);
         if ($bytes === false) {
-            throw new RuntimeException(sprintf('Backup: Could not measure %s to checkpoint what was added to the backup.', basename($filePath)));
+            throw new RuntimeException('Backup: Could not measure a temporary backup file to checkpoint what was added to the backup.');
         }
 
         return $bytes;

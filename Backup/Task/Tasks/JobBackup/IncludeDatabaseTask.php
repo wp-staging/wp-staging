@@ -7,6 +7,8 @@
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Job\Dto\StepsDto;
@@ -76,9 +78,8 @@ class IncludeDatabaseTask extends BackupTask
             throw $e;
         } catch (Exception $e) {
             $this->logger->critical(sprintf(
-                'Failed to include database in the backup: %s (%s).',
-                $this->archiver->getDto()->getFilePath(),
-                $e->getMessage()
+                'Failed to include database in the backup (%s).',
+                WPStaging::make(Directory::class)->redactCacheFileNames($e->getMessage())
             ), ['errorCode' => ErrorCode::fromThrowable($e)]);
 
             return $this->generateResponse(false);
@@ -144,13 +145,13 @@ class IncludeDatabaseTask extends BackupTask
     {
         $filePath = $this->jobDataDto->getDatabaseFile();
         if (!$filePath || !file_exists($filePath)) {
-            $this->logger->warning(sprintf('Database Backup file not found: %s.', $filePath));
+            $this->logger->warning('Database Backup file not found.');
             $this->stepsDto->finish();
             return;
         }
 
         if ($this->jobDataDto->getDatabaseOnlyBackup()) {
-            $this->archiver->createArchiveFile(true);
+            $this->archiver->createArchiveFile(true, self::getTaskName());
         } else {
             $this->archiver->setupTmpBackupFile();
         }

@@ -128,7 +128,7 @@ class PrepareBackup extends PrepareJob
 
     private function discardServerOwnedKeysSentWithTheRequest(array $data): array
     {
-        unset($data['scheduleId'], $data['isWpCliRequest'], $data['isRestRequest']);
+        unset($data['scheduleId'], $data['isStartedByRunNow'], $data['isWpCliRequest'], $data['isRestRequest']);
 
         return $data;
     }
@@ -226,6 +226,7 @@ class PrepareBackup extends PrepareJob
             'scheduleId'                     => null,
             'storages'                       => [],
             'isCreateScheduleBackupNow'      => false,
+            'isStartedByRunNow'              => false,
             'isCreateBackupInBackground'     => false,
             'sitesToBackup'                  => $sites,
             'backupType'                     => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,

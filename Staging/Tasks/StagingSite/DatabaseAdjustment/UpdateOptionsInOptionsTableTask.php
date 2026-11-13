@@ -89,6 +89,11 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
 
     protected function updateOptionsTable(): bool
     {
+        if ($this->isOptionsTableExcluded()) {
+            $this->logger->warning("Table {$this->getOptionsTableName()} is excluded. Skipping.");
+            return true;
+        }
+
         $updateOrInsert = [
             'wpstg_is_staging_site'       => 'true',
             'wpstg_rmpermalinks_executed' => ' ',

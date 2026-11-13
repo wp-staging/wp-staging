@@ -30,6 +30,8 @@ interface StagingOperationDtoInterface
 
     public function addStagingTable(string $srcTable, string $destTable);
 
+    public function isStagingTableCopied(string $stagingTableName): bool;
+
     public function setPreserveTables(array $tables);
 
     public function getPreserveTables(): array;

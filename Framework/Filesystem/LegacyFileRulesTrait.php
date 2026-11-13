@@ -92,6 +92,27 @@ trait LegacyFileRulesTrait
 
 
 
+
+
+
+    protected function convertLegacyFileNamesToNameRules(array $fileRules): array
+    {
+        $nameRules = [];
+        foreach ($fileRules as $fileRule) {
+            if (!is_string($fileRule) || trim($fileRule) === '' || strpbrk($fileRule, '/\\') !== false) {
+                continue;
+            }
+
+            $nameRules[] = (strpbrk($fileRule, '*?[') === false ? 'name_exact_matches ' : 'name_glob ') . trim($fileRule);
+        }
+
+        return $nameRules;
+    }
+
+
+
+
+
     protected function extractFileExtensions(array $fileRules): array
     {
         $extensions = [];
@@ -175,6 +196,8 @@ trait LegacyFileRulesTrait
                 return substr($name, -strlen($ruleValue)) === $ruleValue;
             case 'name_exact_matches':
                 return $name === $ruleValue;
+            case 'name_glob':
+                return $name === $ruleValue || fnmatch($ruleValue, $name);
             default:
                 return false;
         }

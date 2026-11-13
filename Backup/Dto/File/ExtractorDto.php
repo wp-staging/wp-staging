@@ -31,6 +31,9 @@ class ExtractorDto
  
     protected $extractorFileBaseBytes;
 
+ 
+    protected $skippedSplitFilePath;
+
     public function __construct()
     {
         $this->indexStartOffset          = 0;
@@ -42,6 +45,7 @@ class ExtractorDto
         $this->extractorFileReadBytes    = 0;
         $this->headerBytesRemoved        = 0;
         $this->extractorFileBaseBytes    = 0;
+        $this->skippedSplitFilePath      = '';
     }
 
     public function getIndexStartOffset(): int
@@ -168,6 +172,20 @@ class ExtractorDto
     public function setExtractorFileBaseBytes(int $extractorFileBaseBytes)
     {
         $this->extractorFileBaseBytes = $extractorFileBaseBytes;
+    }
+
+    public function getSkippedSplitFilePath(): string
+    {
+        return $this->skippedSplitFilePath;
+    }
+
+
+
+
+
+    public function setSkippedSplitFilePath(string $skippedSplitFilePath)
+    {
+        $this->skippedSplitFilePath = $skippedSplitFilePath;
     }
 
 

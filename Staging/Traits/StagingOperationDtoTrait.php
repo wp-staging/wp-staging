@@ -261,6 +261,24 @@ trait StagingOperationDtoTrait
 
 
 
+
+
+
+    public function isStagingTableCopied(string $stagingTableName): bool
+    {
+        foreach ($this->stagingTables as $stagingTable) {
+            if (strcasecmp($stagingTable['destination'], $stagingTableName) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
+
+
     public function setPreserveTables(array $tables)
     {
         $this->preserveTables = $tables;

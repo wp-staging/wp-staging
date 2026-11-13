@@ -279,6 +279,13 @@ class Settings
                 ->setDefault(isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : ''),
                 'wpstg-settings-users-with-staging-access'
             );
+
+            $ipsWithStagingAccess = new Text('wpstg_settings[ipsWithStagingAccess]', []);
+            $this->form["general"]->add(
+                $ipsWithStagingAccess->setLabel(__("IP Addresses to Bypass the Login Form", "wp-staging"))
+                ->setDefault(isset($settings->ipsWithStagingAccess) ? $settings->ipsWithStagingAccess : ''),
+                'wpstg-settings-ips-with-staging-access'
+            );
         }
 
         $element = new Color(

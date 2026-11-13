@@ -74,18 +74,29 @@ class IISWebConfig
 
 
 
+
     public function createDeny($path)
     {
         return $this->filesystem->create($path, implode(PHP_EOL, [
             '<?xml version="1.0" encoding="UTF-8"?>',
             '<configuration>',
             '<system.webServer>',
+            '<handlers>',
+            '<clear />',
+            '</handlers>',
+            '<staticContent>',
+            '<clear />',
+            '</staticContent>',
             '<security>',
+            '<requestFiltering>',
+            '<fileExtensions allowUnlisted="false" />',
+            '</requestFiltering>',
             '<authorization>',
             '<remove users="*" roles="" verbs="" />',
             self::DENY_DIRECTIVE,
             '</authorization>',
             '</security>',
+            '<directoryBrowse enabled="false" />',
             '</system.webServer>',
             '</configuration>',
         ]));

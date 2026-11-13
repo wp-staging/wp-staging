@@ -214,9 +214,34 @@ class RenameDatabaseTask extends RestoreTask
 
         $this->jobDataDto->setDatabaseDataToPreserve($dataToPreserve);
 
+        $this->deleteAccessTokenFromTmpOptionsTables();
         $this->tablesRenamer->preserveTmpOption(AccessToken::OPTION_NAME);
 
         $this->logger->info(sprintf('Found %d tables to restore.', $this->jobDataDto->getTotalTablesToRename()));
+    }
+
+
+
+
+
+
+    private function deleteAccessTokenFromTmpOptionsTables()
+    {
+        global $wpdb;
+
+        $optionsTables = $wpdb->get_col($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($this->jobDataDto->getTmpDatabasePrefix()) . '%options'));
+        foreach ($this->jobDataDto->getShortNamesTablesToRestore() as $shortName => $fullName) {
+            if (substr($fullName, -7) === 'options') {
+                $optionsTables[] = $shortName;
+            }
+        }
+
+        $suppressErrors = $wpdb->suppress_errors();
+        foreach ($optionsTables as $optionsTable) {
+            $wpdb->query($wpdb->prepare("DELETE FROM `{$optionsTable}` WHERE option_name IN (%s, %s)", AccessToken::ALL_OPTION_NAMES));
+        }
+
+        $wpdb->suppress_errors($suppressErrors);
     }
 
 

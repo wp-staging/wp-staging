@@ -38,6 +38,16 @@ class Htaccess
         '</IfModule>',
     ];
 
+ 
+    const PHP_FILES_BLOCK_DIRECTIVE = 'RedirectMatch 403 "(?i)\.(php[0-9]?|phtml|phps|phar|pht)(/|$)"';
+
+ 
+    const PHP_FILES_BLOCK_RULES = [
+        '<IfModule mod_alias.c>',
+        self::PHP_FILES_BLOCK_DIRECTIVE,
+        '</IfModule>',
+    ];
+
 
 
 
@@ -57,7 +67,7 @@ class Htaccess
 
     public function create($path)
     {
-        return $this->filesystem->create($path, implode(PHP_EOL, array_merge(self::MOD_MIME_RULES, [
+        return $this->filesystem->create($path, implode(PHP_EOL, array_merge(self::MOD_MIME_RULES, self::PHP_FILES_BLOCK_RULES, [
             '<IfModule mod_dir.c>',
             'DirectoryIndex index.html index.php',
             '</IfModule>',
@@ -65,6 +75,15 @@ class Htaccess
             'Options -Indexes',
             '</IfModule>',
         ])));
+    }
+
+
+
+
+
+    public function addPhpFilesBlock($path)
+    {
+        return $this->filesystem->create($path, PHP_EOL . implode(PHP_EOL, self::PHP_FILES_BLOCK_RULES) . PHP_EOL, 'ab');
     }
 
  

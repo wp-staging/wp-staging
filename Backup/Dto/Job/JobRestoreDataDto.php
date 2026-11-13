@@ -61,6 +61,9 @@ class JobRestoreDataDto extends JobDataDto
     protected $filePartIndex = 0;
 
  
+    protected $skippedSplitFilePath = '';
+
+ 
     protected $isSameSiteBackupRestore = false;
 
  
@@ -503,6 +506,20 @@ class JobRestoreDataDto extends JobDataDto
     public function setFilePartIndex(int $index = 0)
     {
         $this->filePartIndex = $index;
+    }
+
+    public function getSkippedSplitFilePath(): string
+    {
+        return $this->skippedSplitFilePath;
+    }
+
+
+
+
+
+    public function setSkippedSplitFilePath(string $skippedSplitFilePath)
+    {
+        $this->skippedSplitFilePath = $skippedSplitFilePath;
     }
 
 

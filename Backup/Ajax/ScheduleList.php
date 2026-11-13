@@ -245,7 +245,7 @@ class ScheduleList
                 continue;
             }
 
-            $this->backupScheduler->reCreateCron();
+            $this->backupScheduler->reCreateCron(null, true);
             $nextRunMap = $this->backupScheduler->getNextRunTimestampsByScheduleId();
             return;
         }

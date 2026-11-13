@@ -3,6 +3,14 @@
 namespace WPStaging\Backup\Service;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
+use WPStaging\Backup\Job\Jobs\JobBackup;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
+use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Task\AbstractTask;
+use WPStaging\Framework\Utils\Cache\Cache;
 
 
 
@@ -233,12 +241,54 @@ class BeforeUpdateBackupRequest extends AbstractBackgroundBackupRequest
         $this->failureReason = '';
     }
 
-
-
-
-    protected function beforeMarkedStalled()
+ 
+    protected function classifyStallAndDescribeWhereItStopped(): string
     {
         $this->failureReason = UpdateProtectionHealth::REASON_STALLED;
+
+        $queueId   = (string)($this->read()['backup_job_id'] ?? '');
+        $jobData   = $this->readJobDataSavedFor($queueId);
+        $taskQueue = isset($jobData['taskQueue']) && is_array($jobData['taskQueue']) ? $jobData['taskQueue'] : [];
+        $taskIndex = (int)($jobData['currentTaskIndex'] ?? 0);
+        $taskClass = AbstractJob::splitTaskQueueEntry((string)($taskQueue[$taskIndex] ?? ''))[0];
+
+        if (!is_subclass_of($taskClass, AbstractTask::class)) {
+            return '';
+        }
+
+        return sprintf(
+            /* translators: 1: number of the backup step that stopped, 2: number of steps in the backup, 3: name of that step, 4: how much of that step was done, in percent. */
+            __('The recovery backup stopped responding during step %1$d of %2$d: %3$s (%4$d%%).', 'wp-staging'),
+            $taskIndex + 1,
+            count($taskQueue),
+            $taskClass::getTaskTitle(),
+            $this->readPercentageTaskReported($queueId, $taskClass)
+        );
+    }
+
+ 
+    private function readJobDataSavedFor(string $queueId): array
+    {
+        $cache = WPStaging::make(Cache::class);
+        $cache->setLifetime(-1);
+        $cache->setFilename(AbstractJob::JOB_DATA_CACHE_PREFIX . JobBackup::getJobName());
+        $jobData = $cache->get([]);
+
+        return is_array($jobData) && ($jobData[AbstractJob::CACHE_OWNER_KEY] ?? null) === $queueId ? $jobData : [];
+    }
+
+ 
+    private function readPercentageTaskReported(string $queueId, string $taskClass): int
+    {
+        try {
+            $action = WPStaging::make(Queue::class)->getLatestActionWithResponse($queueId);
+        } catch (QueueException $e) {
+            return 0;
+        }
+
+        $response = $action === null ? null : $action->response;
+
+        return $response instanceof TaskResponseDto && $response->getTask() === $taskClass::getTaskName() ? (int)$response->getPercentage() : 0;
     }
 
 

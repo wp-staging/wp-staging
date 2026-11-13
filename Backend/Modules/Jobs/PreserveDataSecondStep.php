@@ -3,9 +3,11 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Backup\Storage\Providers;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 use WPStaging\Framework\Settings\SettingsTable;
+use WPStaging\Framework\Traits\SerializeTrait;
 use WPStaging\Staging\CloneOptions;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\FirstRun;
@@ -19,6 +21,8 @@ use function WPStaging\functions\debug_log;
 
 class PreserveDataSecondStep extends JobExecutable
 {
+    use SerializeTrait;
+
  
     private $stagingDb;
 
@@ -106,7 +110,11 @@ class PreserveDataSecondStep extends JobExecutable
  
         $backupSchedulesOption = 'wpstg_backup_schedules';
 
-        $this->preservedData = maybe_unserialize($result);
+        $this->preservedData = $this->safeMaybeUnserialize($result, [\stdClass::class]);
+        if (!is_object($this->preservedData)) {
+            $this->log("Preserve Data Second Step: Discarded the preserved data, wpstg_tmp_data is not a preserved data object", Logger::TYPE_WARNING);
+            return true;
+        }
 
  
         $this->preserveStagingOption(Sites::STAGING_SITES_OPTION, $this->preservedData->stagingSites, 'existing clones');
@@ -317,12 +325,11 @@ class PreserveDataSecondStep extends JobExecutable
 
         $cloneOptions = $this->preservedData->cloneOptions;
 
-        $data = maybe_unserialize($cloneOptions);
+        $data = $this->safeMaybeUnserialize($cloneOptions, [\stdClass::class]);
         if (empty($cloneOptions)) {
             $data = new \stdClass();
         }
 
- 
         if (!is_object($data)) {
             debug_log('Fail to update clone options before restore.');
             return;

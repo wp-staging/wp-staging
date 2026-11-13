@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Adapter;
 
 use Exception;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Backup\Job\Jobs\JobRestore;
@@ -259,6 +260,33 @@ class Directory implements DirectoryInterface
         $this->cacheDirectory = trailingslashit($cachePath);
 
         return $this->cacheDirectory;
+    }
+
+
+
+
+
+
+
+
+    public function redactCacheFileNames(string $message): string
+    {
+        $cacheDirectoryPattern = preg_quote($this->getCacheDirectory(), '~');
+        if ($this->isWindowsOs()) {
+            $cacheDirectoryPattern = preg_quote(untrailingslashit($this->getCacheDirectory()), '~') . '[/\\\\]';
+        }
+
+        return preg_replace('~' . $cacheDirectoryPattern . '\K[^\s\'"()]+~', '***', $message);
+    }
+
+
+
+
+
+
+    protected function isWindowsOs(): bool
+    {
+        return WPStaging::isWindowsOs();
     }
 
 

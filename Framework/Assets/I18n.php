@@ -58,6 +58,11 @@ class I18n
             'select_wordpress_tables'                             => esc_html__('Select WordPress tables', 'wp-staging'),
             'something_went_wrong'                                => esc_html__('Something went wrong', 'wp-staging'),
             'job_status_checks_stopped'                           => esc_html__('Status checks have stopped. The job keeps running and still reports its progress.', 'wp-staging'),
+            /* translators: 1: the step title shown in the progress window, 2: how far that step got, for example 45%, 3: the PHP memory limit, for example 128M. */
+            'job_request_failed'                                  => esc_html__('There was a PHP fatal error while processing this job, during "%1$s" (%2$s done), with a PHP memory limit of %3$s. Please contact WP STAGING support if you need help.', 'wp-staging'),
+            /* translators: 1: the step title shown in the progress window, 2: how far that step got, for example 45%. */
+            'job_request_failed_without_limit'                    => esc_html__('There was a PHP fatal error while processing this job, during "%1$s" (%2$s done), with no PHP memory limit in place. Please contact WP STAGING support if you need help.', 'wp-staging'),
+            'job_request_failed_before_progress'                  => esc_html__('There was a PHP fatal error while processing this job, before its first step finished. Please contact WP STAGING support if you need help.', 'wp-staging'),
             /* translators: {datetime} is replaced with the formatted expiry date of the temporary download link. */
             'transfer_available_until'                            => esc_html__('Link expires on {datetime}.', 'wp-staging'),
             'cli_restore_link_preparing'                          => esc_html__('Creating a temporary link…', 'wp-staging'),
@@ -479,7 +484,7 @@ class I18n
                 'setup_download_modal_title'                          => esc_html__('Downloading backup from remote', 'wp-staging'),
                 'provider_failed_to_save_settings'                    => esc_html__('Could not save settings. Ensure that storage provider\'s credentials are correct!', 'wp-staging'),
                 'connection_test_failed_title'                        => esc_html__('Connection Failed', 'wp-staging'),
-                'log_instruction'                                     => esc_html__('Open System Info > Logs', 'wp-staging'),
+                'log_instruction'                                     => esc_html__('Open System Info > Logs for more details.', 'wp-staging'),
                 'connection_test_has_warning_title'                   => esc_html__('Warning', 'wp-staging'),
                 'refresh_remote_backups'                              => esc_html__('Refresh Remote Backups', 'wp-staging'),
             ],
@@ -600,8 +605,8 @@ class I18n
                 'includes_mu_plugins'           => esc_html__('Must-Use Plugins', 'wp-staging'),
                 'includes_themes'               => esc_html__('Themes', 'wp-staging'),
                 'includes_uploads'              => esc_html__('Uploads', 'wp-staging'),
-                'includes_other_wp_content'     => esc_html__('Other wp-content files', 'wp-staging'),
-                'includes_other_wp_root'        => esc_html__('Other WP root files', 'wp-staging'),
+                'includes_other_wp_content'     => esc_html__('Other wp-content items', 'wp-staging'),
+                'includes_other_wp_root'        => esc_html__('Other WP root folders', 'wp-staging'),
                 'btn_resume_job'                => esc_html__('Resume job', 'wp-staging'),
                 'btn_view_logs'                 => esc_html__('View logs', 'wp-staging'),
                 'btn_more'                      => esc_html__('More', 'wp-staging'),
