@@ -32,7 +32,7 @@ window.onload = function() {
   let wfLoginSubmitButton = document.getElementById("wfls-token-submit");
   let wfTokenElement = document.getElementById("wf-two-fa-container");
   loginSubmitButton.type = "button";
-  loginForm.action = "<?php echo esc_url(home_url() . "/wp-login.php"); ?>";
+  loginForm.action = <?php echo wp_json_encode(esc_url_raw($args['form_action_url'])); ?>;
 
   function showAuthError(msg) {
     const el = loginForm ? loginForm.querySelector('.password-lost') : null;
@@ -54,10 +54,10 @@ window.onload = function() {
       const formData = new FormData();
       formData.append('log', loginUsername.value);
       formData.append('pwd', loginPassword.value);
-      formData.append('redirect_to', '<?php echo esc_url(home_url()); ?>');
+      formData.append('redirect_to', <?php echo wp_json_encode(esc_url_raw(home_url())); ?>);
       formData.append('action', 'wordfence_ls_authenticate');
 
-      fetch("<?php echo esc_url(admin_url('admin-ajax.php')); ?>", {method: 'post', body: formData})
+      fetch(<?php echo wp_json_encode(esc_url_raw(admin_url('admin-ajax.php'))); ?>, {method: 'post', body: formData})
       .then((response) => response.json()).then((res) => {
         if (res.login === 1 && res.two_factor_required) {
           isUserLoggedIn = true;
@@ -98,7 +98,6 @@ window.onload = function() {
           loginUsername.name = "log";
           loginPassword.name = "pwd";
         } else if (res.login === 1 && !res.two_factor_required) {
-          loginForm.action = "";
           loginForm.submit();
         } else {
           showAuthError((res && res.error) || 'Authentication failed.');

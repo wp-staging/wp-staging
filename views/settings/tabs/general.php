@@ -492,10 +492,10 @@ $directory = WPStaging::make(Directory::class);
                                         <?php
                                         $roles = wp_roles()->get_names();
                                         echo '<select multiple disabled>';
-                                        echo '<option value="all">Allow access from all visitors</option>';
+                                        echo '<option value="all">' . esc_html__('Allow access from all visitors', 'wp-staging') . '</option>';
 
                                         foreach ($roles as $key => $name) {
-                                            echo '<option value="' . esc_attr($key) . '">' . esc_html($name) . '</option>';
+                                            echo '<option value="' . esc_attr($key) . '">' . esc_html(translate_user_role($name)) . '</option>';
                                         }
 
                                         echo '</select>';
@@ -522,6 +522,28 @@ $directory = WPStaging::make(Directory::class);
                                     </div>
                                     <div class="wpstg-settings-field-input">
                                         <input type="text" value="" name="wpstg-users-with-staging-access" disabled>
+                                    </div>
+                                </div>
+                                <div class="wpstg-settings-field">
+                                    <div>
+                                        <div class="wpstg-settings-field-header">
+                                            <label class="wpstg-settings-field-label">
+                                                <?php echo esc_html__("IP Addresses to Bypass the Login Form", "wp-staging"); ?>
+                                            </label>
+                                            <span class="wpstg--tooltip wpstg-settings-field-tooltip wpstg-icon-info" tabindex="0" role="group" aria-label="<?php esc_attr_e('Info', 'wp-staging'); ?>">
+                                                <span class="wpstg--tooltiptext wpstg-settings-field-description">
+                                                    <?php
+                                                    echo Escape::escapeHtml(__(
+                                                        'Visitors from these IP addresses open the staging site without the login form, for example a backup or monitoring service. They are not logged in, so the admin area still asks for a username and password. You can enter multiple IP addresses separated by a comma. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong>',
+                                                        'wp-staging'
+                                                    )); ?>
+                                                </span>
+                                            </span>
+                                            <a href="<?php echo esc_url(Language::getUpgradeUrl('staging_access_ips')); ?>" target="_blank" rel="noopener" class="wpstg-button danger wpstg-banner-button"><?php esc_html_e('Upgrade Now', 'wp-staging');?></a>
+                                        </div>
+                                    </div>
+                                    <div class="wpstg-settings-field-input">
+                                        <input type="text" value="" name="wpstg-ips-with-staging-access" disabled>
                                     </div>
                                 </div>
                                 <div class="wpstg-settings-field wpstg-settings-has-toggle">

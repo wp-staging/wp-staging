@@ -190,6 +190,7 @@ class CronIntegrity
 
 
 
+
     private function checkBackupSchedules()
     {
         $schedules        = $this->backupScheduler->getSchedulesRunByCurrentSite();
@@ -233,7 +234,7 @@ class CronIntegrity
         ), 'info', false);
 
         try {
-            $result = $this->backupScheduler->reCreateCron();
+            $result = $this->backupScheduler->reCreateCron(null, true);
             debug_log('[Cron Integrity] reCreateCron() returned: ' . var_export($result, true), 'info', false);
         } catch (\Throwable $e) {
             debug_log('[Cron Integrity] reCreateCron() threw: ' . $e->getMessage(), 'info', false);
@@ -347,7 +348,7 @@ class CronIntegrity
             $recurrenceOk     = $recurrence !== null && isset($registeredRecurrences[$recurrence]);
             $wrongRec         = $isScheduled && $actualRecurrence !== $recurrence;
 
-            if (!$isScheduled) {
+            if (!$isScheduled && empty($schedule['isPaused'])) {
  
  
  

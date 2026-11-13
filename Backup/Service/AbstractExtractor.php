@@ -296,6 +296,12 @@ abstract class AbstractExtractor
             throw new \Exception('Skipping file: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
         }
 
+        if ($isSegmentedEntry && $backupFileIndex->getIsPreviousPartRequired() && $identifiablePath === $this->extractorDto->getSkippedSplitFilePath()) {
+            $this->skipToNextFile();
+            $this->debugLog('Skipping later part of skipped file: ' . rtrim($identifiablePath, "\n"));
+            throw new \Exception('Skipping file: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
+        }
+
         $identifier              = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
         $this->currentIdentifier = $identifier;
         if ($this->isFileSkipped($identifiablePath, $identifier)) {
@@ -308,21 +314,21 @@ abstract class AbstractExtractor
         $extractFolder = $this->getExtractFolder($identifier, $identifiablePath);
 
         if (!$this->createDirectory($extractFolder)) {
-            throw new \RuntimeException("Could not create folder to extract backup file: $extractFolder. Please check folder permissions.");
+            $this->skipToNextFile();
+            $message = "Could not create folder to extract backup file: $extractFolder. Please check folder permissions.";
+            throw $this->isValidateOnly ? new FileValidationException($message) : new \RuntimeException($message);
         }
 
         $this->setupExtractingFile($backupFileIndex, $extractFolder);
 
         if (!$this->pathIdentifier->isPathWithinRoot($this->extractingFile->getBackupPath(), $extractFolder)) {
-            $this->extractorDto->incrementTotalFilesSkipped();
-            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->skipToNextFile();
             $this->debugLog('Skipping file outside restore root (possible path traversal): ' . rtrim($identifiablePath, "\n"));
             throw new \Exception('Skipping file: unsafe path detected', self::ITEM_SKIP_EXCEPTION_CODE);
         }
 
         if ($this->isFileExtracted($backupFileIndex, $this->extractingFile->getBackupPath())) {
-            $this->extractorDto->incrementTotalFilesSkipped();
-            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->skipToNextFile();
             $this->debugLog('Skipping already extracted file: ' . rtrim($identifiablePath, "\n"));
             throw new \Exception('File already extracted: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
         }
@@ -448,6 +454,9 @@ abstract class AbstractExtractor
     {
         $this->extractorDto->incrementTotalFilesSkipped();
         $this->jumpToNextFile();
+ 
+        $isFileContinuedInNextPart = $this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsNextPartRequired();
+        $this->extractorDto->setSkippedSplitFilePath($isFileContinuedInNextPart ? $this->indexLineDto->getIdentifiablePath() : '');
     }
 
     public function finishExtractingFile()
@@ -596,12 +605,14 @@ abstract class AbstractExtractor
             return;
         }
 
-        if (file_exists($this->extractingFile->getBackupPath())) {
+        $existingFile = $this->extractingFile->getBackupPath();
  
-            if (!unlink($this->extractingFile->getBackupPath())) {
-                throw new \RuntimeException(sprintf(__('Could not delete original file %s. Skipping restore of it...', 'wp-staging'), $this->extractingFile->getRelativePath()));
-            }
+        if (!file_exists($existingFile) || unlink($existingFile) || file_put_contents($existingFile, '') !== false) {
+            return;
         }
+
+        $this->skipToNextFile();
+        throw new \RuntimeException(sprintf(__('Could not delete original file %s. Skipping restore of it...', 'wp-staging'), $this->extractingFile->getRelativePath()));
     }
 
     protected function deleteValidationFile(string $filePath)

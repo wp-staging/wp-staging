@@ -15,6 +15,7 @@ class AnalyticsBackupRestore extends AnalyticsEventDto
     public $is_backup_wp_content;
     public $database_size;
     public $automated_backup;
+    public $is_multipart_backup;
 
     public function getEventAction()
     {
@@ -36,6 +37,7 @@ class AnalyticsBackupRestore extends AnalyticsEventDto
         $this->database_size           = $eventData->getBackupMetadata()->getDatabaseFileSize() ?? 0;
         $this->requirement_fail_reason = $eventData->getRequirementFailReason();
         $this->automated_backup        = (int)$eventData->getBackupMetadata()->getIsAutomatedBackup(); 
+        $this->is_multipart_backup     = $eventData->getBackupMetadata()->getIsMultipartBackup();
 
         parent::enqueueStartEvent($eventId, $eventData);
     }

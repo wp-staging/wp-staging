@@ -17,7 +17,7 @@ class TaskResponseDto extends AbstractDto
 
 
 
-    protected $excludeHydrate = ['last_msg', 'isForceSave', 'job_done'];
+    protected $excludeHydrate = ['last_msg', 'isForceSave', 'job_done', 'memoryLimit'];
 
  
     protected $retryAt = 0;
@@ -96,6 +96,8 @@ class TaskResponseDto extends AbstractDto
         if ($this->retryAt === 0) {
             unset($data['retryAt'], $data['retryDelay']);
         }
+
+        $data['memoryLimit'] = ini_get('memory_limit');
 
         $lastMsg = null;
         if ($data['messages']) {

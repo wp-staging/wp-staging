@@ -285,15 +285,15 @@ abstract class AbstractRowsExporter extends AbstractExporter
                     $this->pendingQueriesCount = 0;
                 }
             }
-        } while (!$this->isThreshold() && !$this->hasReachedEndOfTable && ($this->pendingQueriesCount + $this->rowsExporterDto->getRowsOffset() < $this->rowsExporterDto->getTotalRows()));
 
  
-        if ($this->pendingQueriesCount > 0) {
-            $this->file->fwrite($this->pendingQueriesSql);
-            $this->pendingQueriesSql = '';
-            $this->updateRowsExporterDto($this->pendingQueriesCount);
-            $this->pendingQueriesCount = 0;
-        }
+            if ($this->pendingQueriesCount > 0) {
+                $this->file->fwrite($this->pendingQueriesSql);
+                $this->pendingQueriesSql = '';
+                $this->updateRowsExporterDto($this->pendingQueriesCount);
+                $this->pendingQueriesCount = 0;
+            }
+        } while (!$this->isThreshold() && !$this->hasReachedEndOfTable && $this->rowsExporterDto->getRowsOffset() < $this->rowsExporterDto->getTotalRows());
 
  
         if ($this->hasReachedEndOfTable) {

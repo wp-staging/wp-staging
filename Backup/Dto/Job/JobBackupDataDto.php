@@ -149,6 +149,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $isCreateScheduleBackupNow = false;
 
  
+    private $isStartedByRunNow = false;
+
+ 
     private $isCreateBackupInBackground = false;
 
  
@@ -852,6 +855,19 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setIsCreateScheduleBackupNow($isCreateScheduleBackupNow)
     {
         $this->isCreateScheduleBackupNow = (bool)$isCreateScheduleBackupNow;
+    }
+
+    public function getIsStartedByRunNow(): bool
+    {
+        return $this->isStartedByRunNow;
+    }
+
+
+
+
+    public function setIsStartedByRunNow($isStartedByRunNow)
+    {
+        $this->isStartedByRunNow = (bool)$isStartedByRunNow;
     }
 
 

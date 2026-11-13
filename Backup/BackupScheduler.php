@@ -283,7 +283,8 @@ class BackupScheduler
 
 
 
-    public function getNextRunTimestampsByScheduleId(): array
+
+    public function getNextRunTimestampsByScheduleId($recurrenceByScheduleId = null): array
     {
         $cron   = get_option('cron');
         $result = [];
@@ -305,6 +306,9 @@ class BackupScheduler
                 }
 
                 $sid = $event['args'][0]['scheduleId'];
+                if ($recurrenceByScheduleId !== null && (!isset($recurrenceByScheduleId[$sid]) || $recurrenceByScheduleId[$sid] !== ($event['schedule'] ?? null))) {
+                    continue;
+                }
 
                 if (!isset($result[$sid])) {
                     $result[$sid] = (int)$timestamp;
@@ -718,7 +722,7 @@ class BackupScheduler
             return false;
         }
 
-        $this->reCreateCron();
+        $this->reCreateCron(null, true);
 
         return true;
     }
@@ -832,7 +836,8 @@ class BackupScheduler
 
 
 
-    public function createCronBackup(array $cronEventArguments)
+
+    public function createCronBackup(array $cronEventArguments, bool $isStartedByRunNow = false)
     {
  
         $logId      = wp_generate_password(4, false);
@@ -864,6 +869,7 @@ class BackupScheduler
 
         try {
             debug_log(sprintf("[Schedule Backup Cron - %s] Preparing job", $logId), 'info', false);
+            $schedule['isStartedByRunNow'] = $isStartedByRunNow;
             $jobId = WPStaging::make(PrepareBackup::class)->prepare($schedule);
             if ($jobId instanceof \WP_Error) {
                 debug_log(sprintf("[Schedule Backup Cron - %s] Failed to create backup: %s", $logId, $jobId->get_error_message()));
@@ -1003,7 +1009,7 @@ class BackupScheduler
         $schedules[$index]['isPaused'] = true;
 
         $this->storeSchedules($schedules);
-        $this->reCreateCron();
+        $this->reCreateCron(null, true);
         wp_send_json_success();
     }
 
@@ -1039,7 +1045,7 @@ class BackupScheduler
         $schedules[$index][self::FIELD_RUNS_RECORDED_SINCE]   = time();
 
         $this->storeSchedules($schedules);
-        $this->reCreateCron();
+        $this->reCreateCron(null, true);
         wp_send_json_success();
     }
 
@@ -1132,7 +1138,7 @@ class BackupScheduler
             return;
         }
 
-        $preparationError = $this->createCronBackup($target);
+        $preparationError = $this->createCronBackup($target, true);
         if ($preparationError instanceof \WP_Error) {
             wp_send_json_error(['message' => $preparationError->get_error_message()]);
             return;
@@ -1186,7 +1192,7 @@ class BackupScheduler
             return;
         }
 
-        $this->reCreateCron();
+        $this->reCreateCron(null, true);
     }
 
 
@@ -1202,11 +1208,13 @@ class BackupScheduler
 
 
 
-    public function reCreateCron($scheduleBeingEdit = null): bool
+
+    public function reCreateCron($scheduleBeingEdit = null, bool $keepScheduledEventTimes = false): bool
     {
         $schedules = $this->getSchedulesRunByCurrentSite();
         $this->reportTheStoredPlansWithoutAUsableId();
         $this->reportThePlansThisSiteDoesNotRun();
+        $eventTimestampsToKeep = $keepScheduledEventTimes ? $this->getNextRunTimestampsByScheduleId(array_column($schedules, 'schedule', 'scheduleId')) : [];
         static::removeBackupSchedulesFromCron();
 
         $errors = [];
@@ -1230,7 +1238,9 @@ class BackupScheduler
 
 
 
-            if (isset(wp_get_schedules()[$schedule['schedule']]) && isset($schedule['firstSchedule']) && ($schedule['scheduleId'] !== $scheduleBeingEdit)) {
+            if (isset($eventTimestampsToKeep[$schedule['scheduleId']])) {
+                $timeToSchedule->setTimestamp($eventTimestampsToKeep[$schedule['scheduleId']]);
+            } elseif (isset(wp_get_schedules()[$schedule['schedule']]) && isset($schedule['firstSchedule']) && ($schedule['scheduleId'] !== $scheduleBeingEdit)) {
                 $this->setNextSchedulingDate($timeToSchedule, $schedule);
             } else {
                 $dayOfWeek = Cron::extractDayFromSchedule($schedule['schedule']);

@@ -43,6 +43,7 @@ class UpdateProtectionPausedNotice
 
 
 
+
     public function render()
     {
         if (!$this->isWordPressUpdatePage() || !current_user_can($this->capabilities->manageWPSTG())) {
@@ -58,7 +59,7 @@ class UpdateProtectionPausedNotice
             <p>
                 <strong><?php esc_html_e('WP STAGING Update Protection is temporarily unavailable', 'wp-staging'); ?></strong><br>
                 <?php esc_html_e('A recovery backup couldn\'t be created. Plugin updates will continue normally until backup protection is available again.', 'wp-staging'); ?>
-                <?php echo $this->getReasonSentence(); // phpcs:ignore WPStaging.Security.EscapeOutput -- Both branches return an escaped string. ?>
+                <?php echo $this->getReasonSentence(); // phpcs:ignore WPStaging.Security.EscapeOutput -- Every branch returns an escaped string. ?>
             </p>
             <p>
                 <button type="button" class="button" data-wpstg-resume-update-protection>
@@ -80,6 +81,10 @@ class UpdateProtectionPausedNotice
 
         if ($this->health->getReason() === UpdateProtectionHealth::REASON_PERMISSIONS) {
             return esc_html__('WP STAGING could not write to the backup directory.', 'wp-staging');
+        }
+
+        if ($this->health->getReason() === UpdateProtectionHealth::REASON_STALLED) {
+            return esc_html($this->health->getMessage());
         }
 
         return '';

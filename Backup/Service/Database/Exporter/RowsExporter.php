@@ -14,6 +14,7 @@ use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Database\Exporter\AbstractExporter;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Job\Dto\JobDataDto;
+use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RowsExporter extends AbstractExporter
@@ -579,6 +580,8 @@ class RowsExporter extends AbstractExporter
     protected function writeQueryInsert(array $row, string $prefixedTableName, array $tableColumns): int
     {
         try {
+            $row = $this->removeAccessTokens($row, $prefixedTableName);
+
             foreach ($row as $column => &$value) {
                 if (is_null($value)) {
                     $nullFlag = DatabaseImporter::NULL_FLAG;
@@ -614,7 +617,7 @@ class RowsExporter extends AbstractExporter
                         throw new \OutOfBoundsException();
                     }
 
-                    if (is_multisite() && in_array($value, self::REMOTE_SYNC_CREDENTIAL_OPTIONS, true)) {
+                    if (in_array($value, self::REMOTE_SYNC_CREDENTIAL_OPTIONS, true)) {
                         throw new \OutOfBoundsException();
                     }
 
@@ -685,6 +688,19 @@ class RowsExporter extends AbstractExporter
  
             return self::WRITE_RESULT_WRITTEN;
         }
+    }
+
+
+
+
+
+    private function removeAccessTokens(array $row, string $prefixedTableName): array
+    {
+        if (isset($row['option_name'], $row['option_value']) && in_array($row['option_name'], AccessToken::ALL_OPTION_NAMES, true) && substr($prefixedTableName, -7) === 'options') {
+            $row['option_value'] = '';
+        }
+
+        return $row;
     }
 
     protected function isRowNeedSpecialSearchReplace(string $prefixedTableName, string $column): bool

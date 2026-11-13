@@ -254,17 +254,22 @@ class OnboardingJourney
 
 
 
+
     private function jobDataIdentifiesABackupTheUserAskedFor($jobDataDto): bool
     {
         if (!$jobDataDto instanceof JobBackupDataDto) {
             return false;
         }
 
-        if ($jobDataDto->getIsBeforeUpdateBackup() || ($jobDataDto->isScheduledBackup() && !$jobDataDto->getIsCreateScheduleBackupNow())) {
+        if ($jobDataDto->getIsBeforeUpdateBackup() || $jobDataDto->getIsSyncRequest()) {
             return false;
         }
 
-        return (string)$jobDataDto->getBackupFilePath() !== '';
+        if ($jobDataDto->isScheduledBackup() && !$jobDataDto->getIsCreateScheduleBackupNow() && !$jobDataDto->getIsStartedByRunNow()) {
+            return false;
+        }
+
+        return !$jobDataDto->getIsCreateBackupInBackground();
     }
 
 

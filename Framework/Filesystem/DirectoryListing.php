@@ -106,6 +106,7 @@ class DirectoryListing
             foreach ($dirsToProtect as $dir) {
                 try {
                     $this->preventDirectoryListing($dir);
+                    $this->upgradeOutdatedProtectionOfDirectory($dir, $this->isCacheDirectory($dir));
                 } catch (\Exception $e) {
 
 
@@ -118,6 +119,49 @@ class DirectoryListing
         } catch (\Exception $e) {
             \WPStaging\functions\debug_log('WP STAGING: Could not open plugin upload directory to protect from directory listing. ' . $e->getMessage());
         }
+
+        foreach ($this->getPluginWpContentDirectories() as $dir) {
+            $this->upgradeOutdatedListingHtaccess($dir, $this->isCacheDirectory($dir));
+        }
+
+        foreach ($this->getPluginUploadsDirectoriesOfNetworkSites() as $dir) {
+            $this->upgradeOutdatedProtectionOfDirectory($dir, false);
+            $this->upgradeOutdatedProtectionOfDirectory(trailingslashit($dir) . 'cache', true);
+        }
+    }
+
+ 
+    private function getPluginUploadsDirectoriesOfNetworkSites(): array
+    {
+        if (!is_multisite()) {
+            return [];
+        }
+
+        $mainSiteUploadsDirectory = $this->directory->getMainSiteUploadsDirectory();
+        $directories              = [$mainSiteUploadsDirectory . WPSTG_PLUGIN_DOMAIN];
+        $subsiteDirectoryPatterns = [
+            $mainSiteUploadsDirectory . 'sites/*/' . WPSTG_PLUGIN_DOMAIN,
+            $this->directory->getWpContentDirectory() . 'blogs.dir/*/files/' . WPSTG_PLUGIN_DOMAIN,
+        ];
+        foreach ($subsiteDirectoryPatterns as $pattern) {
+            $subsiteDirectories = glob($pattern, GLOB_ONLYDIR);
+            $directories        = array_merge($directories, is_array($subsiteDirectories) ? $subsiteDirectories : []);
+        }
+
+        return $directories;
+    }
+
+ 
+    private function getPluginWpContentDirectories(): array
+    {
+        $pluginWpContentDirectory = $this->directory->getPluginWpContentDirectory();
+        if (!is_dir($pluginWpContentDirectory)) {
+            return [];
+        }
+
+        $subdirectories = glob(trailingslashit($pluginWpContentDirectory) . '*', GLOB_ONLYDIR);
+
+        return array_merge([$pluginWpContentDirectory], is_array($subdirectories) ? $subdirectories : []);
     }
 
 
@@ -199,16 +243,57 @@ PHP
         }
 
  
-        if (!file_exists($path . '.htaccess')) {
+        if (!file_exists($path . '.htaccess') && $this->isCacheDirectory($path)) {
+            $this->htaccess->createDeny($path . '.htaccess');
+        } elseif (!file_exists($path . '.htaccess')) {
             $this->htaccess->create($path . '.htaccess');
  
         }
 
  
-        if (!file_exists($path . 'web.config')) {
+        if (!file_exists($path . 'web.config') && $this->isCacheDirectory($path)) {
+            $this->webConfig->createDeny($path . 'web.config');
+        } elseif (!file_exists($path . 'web.config')) {
             $this->webConfig->create($path . 'web.config');
  
         }
+    }
+
+
+
+
+
+
+
+
+
+    public function upgradeOutdatedProtectionOfDirectory(string $directory, bool $isCacheDirectory)
+    {
+        $directory = trailingslashit(wp_normalize_path($directory));
+        $this->upgradeOutdatedListingHtaccess($directory, $isCacheDirectory);
+        if (!$isCacheDirectory || !is_file($directory . 'web.config')) {
+            return;
+        }
+
+        $contents = (string)file_get_contents($directory . 'web.config');
+        if ($this->isBackupVaultFile($contents) || strpos($contents, BackupDirectoryProtectionService::WEB_CONFIG_LEGACY_MARKER) === false) {
+            return;
+        }
+
+        $this->webConfig->createDeny($directory . 'web.config');
+    }
+
+
+
+
+
+
+    public function replaceOutdatedProtectionOfJobFolders()
+    {
+        $pluginUploadsDirectory = $this->directory->getPluginUploadsDirectory();
+        $cacheDirectory         = $this->directory->getCacheDirectory();
+        $this->upgradeOutdatedListingHtaccess($pluginUploadsDirectory, $this->isCacheDirectory($pluginUploadsDirectory));
+        $this->upgradeOutdatedProtectionOfDirectory($cacheDirectory, $this->isCacheDirectory($cacheDirectory));
     }
 
 
@@ -236,6 +321,50 @@ PHP
                 $this->webConfig->create($webConfig);
             }
         }
+    }
+
+    private function isOutdatedListingHtaccess(string $contents): bool
+    {
+        return strpos($contents, BackupDirectoryProtectionService::HTACCESS_LEGACY_MARKER) !== false
+            && strpos($contents, Htaccess::PHP_FILES_BLOCK_DIRECTIVE) === false
+            && !$this->isBackupVaultFile($contents)
+            && strpos($contents, BackupDirectoryProtectionService::HTACCESS_MIME_MARKER) === false;
+    }
+
+
+
+
+
+
+
+
+
+    private function upgradeOutdatedListingHtaccess(string $directory, bool $isCacheDirectory)
+    {
+        $directory = trailingslashit(wp_normalize_path($directory));
+        if (!is_file($directory . '.htaccess') || !$this->isOutdatedListingHtaccess((string)file_get_contents($directory . '.htaccess'))) {
+            return;
+        }
+
+        if ($isCacheDirectory) {
+            $this->htaccess->createDeny($directory . '.htaccess');
+            return;
+        }
+
+        $this->htaccess->addPhpFilesBlock($directory . '.htaccess');
+    }
+
+    private function isCacheDirectory(string $directory): bool
+    {
+        $directory      = trailingslashit(wp_normalize_path($directory));
+        $cacheDirectory = $this->directory->getCacheDirectory();
+        if ($directory === $cacheDirectory) {
+            return true;
+        }
+
+        $realCacheDirectory = realpath($cacheDirectory);
+
+        return $realCacheDirectory !== false && $directory === trailingslashit(wp_normalize_path($realCacheDirectory));
     }
 
 

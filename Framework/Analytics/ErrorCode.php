@@ -8,6 +8,7 @@ use WPStaging\Backup\Exceptions\TableLockGivenUpException;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\FileValidationException;
+use WPStaging\Framework\Job\Exception\JobDataLostException;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
 use WPStaging\Framework\Job\Exception\ThresholdException;
@@ -56,6 +57,7 @@ class ErrorCode
         ProcessLockedException::class     => self::PROCESS_LOCKED,
         TaskHealthException::class        => self::TASK_HEALTH,
         ThresholdException::class         => self::THRESHOLD_EXCEEDED,
+        JobDataLostException::class       => self::JOB_DATA_LOST,
     ];
 
 

@@ -32,8 +32,12 @@ abstract class AbstractCache
  
     protected $filePath;
 
+ 
+    protected $directory;
+
     public function __construct(Directory $directory)
     {
+        $this->directory = $directory;
         $this->setPath($directory->getCacheDirectory());
         $this->setLifetime(self::DEFAULT_LIFETIME);
     }
@@ -66,7 +70,7 @@ abstract class AbstractCache
             return;
         }
 
-        debug_log(sprintf('Attempting to delete invalid cache file (%s) failed', $this->filePath));
+        $this->debugLogRedactingCacheFileNames(sprintf('Attempting to delete invalid cache file (%s) failed', $this->filePath));
         throw new IOException(sprintf('Attempting to delete invalid cache file (%s) failed', $this->filePath));
     }
 
@@ -81,13 +85,25 @@ abstract class AbstractCache
         $newFilePath = $this->path . $newName . '.' . self::EXTENSION;
 
         if (!rename($this->filePath, $newFilePath)) {
-            debug_log(sprintf('Renaming cache file (%s) to (%s) failed', $this->filePath, $newFilePath));
+            $this->debugLogRedactingCacheFileNames(sprintf('Renaming cache file (%s) to (%s) failed', $this->filePath, $newFilePath));
             throw new IOException(sprintf('Renaming cache file (%s) to (%s) failed', $this->filePath, $newFilePath));
         }
 
  
         $this->filename = $newName;
         $this->filePath = $newFilePath;
+    }
+
+
+
+
+
+
+
+
+    protected function debugLogRedactingCacheFileNames(string $message, string $logType = 'info')
+    {
+        debug_log($this->directory->redactCacheFileNames($message), $logType);
     }
 
 

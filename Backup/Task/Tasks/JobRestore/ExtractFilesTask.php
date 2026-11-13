@@ -83,6 +83,8 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         }
 
         $this->start = microtime(true);
+ 
+        $this->extractorService->getExtractorDto()->setSkippedSplitFilePath($this->jobDataDto->getSkippedSplitFilePath());
 
         try {
             $this->extractorService->execute();
@@ -100,6 +102,7 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
             $this->currentTaskDto->totalFilesExtracted = $this->stepsDto->getTotal();
         }
 
+        $this->jobDataDto->setSkippedSplitFilePath($this->extractorService->getExtractorDto()->getSkippedSplitFilePath());
         $this->logger->info(sprintf('Extracted %d/%d files (%s)', $this->currentTaskDto->totalFilesExtracted, $this->stepsDto->getTotal(), $this->getExtractSpeed()));
         $this->stepsDto->setCurrent($this->currentTaskDto->totalFilesExtracted);
 

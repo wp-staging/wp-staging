@@ -155,8 +155,7 @@ abstract class AbstractBackgroundBackupRequest
             return false;
         }
 
-        $this->beforeMarkedStalled();
-        $this->markFailed();
+        $this->markFailed($this->classifyStallAndDescribeWhereItStopped());
 
         return true;
     }
@@ -315,8 +314,9 @@ abstract class AbstractBackgroundBackupRequest
 
 
 
-    protected function beforeMarkedStalled()
+    protected function classifyStallAndDescribeWhereItStopped(): string
     {
+        return '';
     }
 
 

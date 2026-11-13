@@ -780,8 +780,7 @@ class Administrator
             return;
         }
 
- 
-        if ($resolvedPath !== $resolvedBase && strpos(trailingslashit($resolvedPath), trailingslashit($resolvedBase)) !== 0) {
+        if (!$this->isResolvedPathInsideBase($resolvedPath, $resolvedBase)) {
             wp_send_json(['success' => false]);
             return;
         }
@@ -796,6 +795,24 @@ class Administrator
             "success"          => true,
             "directoryListing" => json_encode($scan->directoryListing($isChecked, $forceDefault)),
         ]);
+    }
+
+
+
+
+
+
+
+
+
+    private function isResolvedPathInsideBase(string $resolvedPath, string $resolvedBase): bool
+    {
+        if (strpos($resolvedBase, '\\') !== false) {
+            $resolvedPath = wp_normalize_path($resolvedPath);
+            $resolvedBase = wp_normalize_path($resolvedBase);
+        }
+
+        return $resolvedPath === $resolvedBase || strpos(trailingslashit($resolvedPath), trailingslashit($resolvedBase)) === 0;
     }
 
 

@@ -25,6 +25,9 @@ abstract class QueryInserter
     const FILTER_INSERT_IGNORE_DUPLICATE_KEY = 'wpstg.restore.database.insertIgnoreDuplicateKey';
 
  
+    const ROW_DROPPING_WARNING_CODES = [1452, 1526, 3819, 4025];
+
+ 
     protected $currentLinePosition = 0;
 
  
@@ -35,6 +38,12 @@ abstract class QueryInserter
 
  
     protected $hasFailedFlush = false;
+
+ 
+    protected $rowsLeftOutLogCallable;
+
+ 
+    protected $tablesStoppingAtATakenKey = [];
 
  
     protected $client;
@@ -151,6 +160,57 @@ abstract class QueryInserter
         $result = $this->client->query($query);
 
         return $result !== false;
+    }
+
+ 
+    public function leaveOutRowsWithTakenUniqueKey(callable $logRowsLeftOut, array $tablesStoppingAtATakenKey)
+    {
+        $this->rowsLeftOutLogCallable    = $logRowsLeftOut;
+        $this->tablesStoppingAtATakenKey = $tablesStoppingAtATakenKey;
+    }
+
+    protected function isLeavingOutRowsOfTableToRestore(): bool
+    {
+        return $this->rowsLeftOutLogCallable !== null && !in_array($this->databaseImporterDto->getTableToRestore(), $this->tablesStoppingAtATakenKey, true);
+    }
+
+
+
+
+
+
+
+    protected function logRowsLeftOutOrStop(bool $isRetryInserted, string $firstDuplicateError)
+    {
+        if (!$isRetryInserted) {
+            $this->stopImport($this->client->error());
+        }
+
+        $result     = $this->client->query('SHOW WARNINGS');
+        $duplicates = [];
+        foreach ($result ? $this->client->fetchAll($result) : [] as $warning) {
+            if (in_array((int)$warning['Code'], self::ROW_DROPPING_WARNING_CODES, true)) {
+                $this->stopImport($warning['Message']);
+            }
+
+            if ((int)$warning['Code'] === 1062) {
+                $duplicates[] = $warning['Message'];
+            }
+        }
+
+        call_user_func($this->rowsLeftOutLogCallable, sprintf(
+            'Rows left out of table %s because a row copied before already holds their unique key: %d. The first: %s',
+            $this->databaseImporterDto->getTableToRestore(),
+            max(count($duplicates), 1),
+            $duplicates[0] ?? $firstDuplicateError
+        ));
+    }
+
+ 
+    private function stopImport(string $reason)
+    {
+        $this->hasFailedFlush = true;
+        throw new \RuntimeException(sprintf('Database import stopped: table %s reported "%s" while leaving out rows whose unique key was taken.', $this->databaseImporterDto->getTableToRestore(), $reason));
     }
 
     protected function setMaxAllowedPackage()

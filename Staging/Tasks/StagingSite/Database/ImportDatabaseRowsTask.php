@@ -54,7 +54,26 @@ class ImportDatabaseRowsTask extends StagingTask
     {
         $this->initStagingDatabase($this->jobDataDto->getStagingSite());
         $this->databaseImporter->setDatabase($this->stagingDb);
+ 
+        $this->databaseImporter->leaveOutRowsWithTakenUniqueKey([$this->logger, 'warning'], $this->getStagingCopiesOfWordPressTables());
 
         return $this->importDatabaseDumpForThisRequest($this->jobDataDto->getDatabasePrefix());
+    }
+
+ 
+    private function getStagingCopiesOfWordPressTables(): array
+    {
+        global $wpdb;
+
+        $wordPressTables = array_flip(array_map('strtolower', $wpdb->tables()));
+        foreach (is_multisite() ? get_sites(['fields' => 'ids', 'number' => 0]) : [] as $siteId) {
+            $wordPressTables += array_flip(array_map('strtolower', $wpdb->tables('blog', true, (int)$siteId)));
+        }
+
+        $wordPressStagingTables = array_filter($this->jobDataDto->getStagingTables(), function (array $stagingTable) use ($wordPressTables): bool {
+            return isset($wordPressTables[strtolower($stagingTable['source'])]);
+        });
+
+        return array_column($wordPressStagingTables, 'destination');
     }
 }

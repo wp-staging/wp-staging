@@ -20,7 +20,7 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
     <div class="wpstg-u-text-center">
         <img width="220" src="<?php echo esc_url(apply_filters('wpstg_login_form_logo', WPSTG_PLUGIN_URL . 'assets/img/logo.svg')); ?>" alt="WP Staging Login" />
     </div>
-    <form class="wp-staging-form" name="<?php echo esc_attr($args['form_id']); ?>" id="<?php echo esc_attr($args['form_id']); ?>" action="" method="post">
+    <form class="wp-staging-form" name="<?php echo esc_attr($args['form_id']); ?>" id="<?php echo esc_attr($args['form_id']); ?>" action="<?php echo esc_url($args['form_action_url']); ?>" method="post">
         <?php if ($showNotice) { ?>
             <div class="wpstg-alert wpstg-alert-info wpstg-u-text-justify">
                 <p><?php echo esc_html($notice); ?></p>

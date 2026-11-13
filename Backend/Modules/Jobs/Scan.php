@@ -457,6 +457,10 @@ class Scan extends Job
         $basePath = $this->getBasePath();
         $realPath = WPStaging::make('WPSTG_ALLOW_VFS') === true && strpos($directory->getPathname(), 'vfs://') === 0 ? $directory->getPathname() : $directory->getRealPath();
         $realPath = wp_normalize_path($realPath);
+ 
+        if (strpos($basePath, '//') === 0 && (strcasecmp($realPath, $basePath) === 0 || stripos($realPath, $basePath . '/') === 0)) {
+            $realPath = $basePath . substr($realPath, strlen($basePath));
+        }
 
 
 

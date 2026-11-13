@@ -3,6 +3,8 @@
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\BackupSigner;
@@ -42,7 +44,7 @@ class SignBackupTask extends BackupTask
         try {
             $this->backupSigner->signBackup($backupFilePath ?: '');
         } catch (Exception $e) {
-            $this->logger->critical(sprintf('The backup file could not be signed for consistency. Error: %s', $e->getMessage()));
+            $this->logger->critical(sprintf('The backup file could not be signed for consistency. Error: %s', WPStaging::make(Directory::class)->redactCacheFileNames($e->getMessage())));
 
             return $this->generateResponse();
         }
@@ -51,7 +53,7 @@ class SignBackupTask extends BackupTask
         try {
             $this->backupSigner->validateSignedBackup($backupFilePath ?: '');
         } catch (Exception $e) {
-            $this->logger->critical(sprintf('The backup seems to be invalid: %s', $e->getMessage()));
+            $this->logger->critical(sprintf('The backup seems to be invalid: %s', WPStaging::make(Directory::class)->redactCacheFileNames($e->getMessage())));
 
             return $this->generateResponse();
         }

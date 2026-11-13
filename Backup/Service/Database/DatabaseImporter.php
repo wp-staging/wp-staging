@@ -566,6 +566,19 @@ class DatabaseImporter
 
 
 
+
+
+
+    public function leaveOutRowsWithTakenUniqueKey(callable $logRowsLeftOut, array $tablesStoppingAtATakenKey)
+    {
+        $this->exec('SET SESSION max_error_count = 65535');
+        $this->queryInserter->leaveOutRowsWithTakenUniqueKey($logRowsLeftOut, $tablesStoppingAtATakenKey);
+    }
+
+
+
+
+
     public function execute()
     {
         $query = $this->findExecutableQuery();

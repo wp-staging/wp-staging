@@ -31,6 +31,7 @@ use WPStaging\Backup\Task\Tasks\JobBackup\ScheduleBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\SignBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\ValidateBackupTask;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -77,7 +78,7 @@ class JobBackup extends AbstractJob
         } catch (NothingToBackupException $e) {
             return $this->getNothingToBackupResponse($e->getMessage());
         } catch (\Exception $e) {
-            $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
+            $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . WPStaging::make(Directory::class)->redactCacheFileNames($e->getMessage()), ['errorCode' => ErrorCode::fromThrowable($e)]);
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
 
@@ -103,9 +104,10 @@ class JobBackup extends AbstractJob
 
     protected function getUnrecoverableFailResponse(\Exception $e): TaskResponseDto
     {
-        $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
+        $message = WPStaging::make(Directory::class)->redactCacheFileNames($e->getMessage());
+        $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . $message, ['errorCode' => ErrorCode::fromThrowable($e)]);
 
-        return $this->getJobFailResponseForThrowable($e);
+        return $this->getJobFailResponse($message, ErrorCode::fromThrowable($e));
     }
 
 

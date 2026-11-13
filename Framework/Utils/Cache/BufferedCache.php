@@ -116,12 +116,12 @@ class BufferedCache extends AbstractCache
         });
 
         if ($writtenData === false) {
-            debug_log("Could not write to file {$this->filePath} Data: {$value}");
+            $this->debugLogRedactingCacheFileNames("Could not write to file {$this->filePath}");
             throw DiskNotWritableException::fileNotWritable($this->filePath);
         }
 
         if (!file_exists($this->filePath)) {
-            debug_log("Could not write to file {$this->filePath} Data: {$value}. File not created!");
+            $this->debugLogRedactingCacheFileNames("Could not write to file {$this->filePath}. File not created!");
             throw DiskNotWritableException::fileNotWritable($this->filePath);
         }
 
@@ -144,12 +144,12 @@ class BufferedCache extends AbstractCache
         });
 
         if ($writtenData === false) {
-            debug_log("Could not write to file {$this->filePath} Data: {$content}");
+            $this->debugLogRedactingCacheFileNames("Could not write to file {$this->filePath}");
             throw DiskNotWritableException::fileNotWritable($this->filePath);
         }
 
         if (!file_exists($this->filePath)) {
-            debug_log("Could not write to file {$this->filePath} Data: {$content}. File not created!");
+            $this->debugLogRedactingCacheFileNames("Could not write to file {$this->filePath}. File not created!");
             throw DiskNotWritableException::fileNotWritable($this->filePath);
         }
 
@@ -216,10 +216,10 @@ class BufferedCache extends AbstractCache
  
         } catch (ThresholdException $e) {
  
-            debug_log("Threshold hit while reversing file {$this->filePath}");
+            $this->debugLogRedactingCacheFileNames("Threshold hit while reversing file {$this->filePath}");
             throw $e;
         } catch (\Exception $e) {
-            debug_log("Could not reverse file {$this->filePath}. {$e->getMessage()}");
+            $this->debugLogRedactingCacheFileNames("Could not reverse file {$this->filePath}. {$e->getMessage()}");
         }
 
         unlink($this->filePath);
@@ -368,13 +368,13 @@ class BufferedCache extends AbstractCache
     {
         $handle = fopen($this->filePath, 'rb+');
         if (!$handle) {
-            debug_log('Failed to open file: ' . $this->filePath, 'file');
+            $this->debugLogRedactingCacheFileNames('Failed to open file: ' . $this->filePath, 'file');
             throw new IOException('Failed to open file: ' . $this->filePath);
         }
 
         if (!flock($handle, LOCK_EX)) {
             fclose($handle);
-            debug_log('Failed to lock file: ' . $this->filePath, 'file');
+            $this->debugLogRedactingCacheFileNames('Failed to lock file: ' . $this->filePath, 'file');
             throw new IOException('Failed to lock file: ' . $this->filePath);
         }
 
@@ -415,7 +415,7 @@ class BufferedCache extends AbstractCache
         $file = null;
 
         if ($writtenData === false) {
-            debug_log("Could not save() and write to file {$this->filePath} Data: {$value}");
+            $this->debugLogRedactingCacheFileNames("Could not save() and write to file {$this->filePath}");
             throw DiskNotWritableException::fileNotWritable($this->filePath);
         }
 
@@ -580,7 +580,7 @@ class BufferedCache extends AbstractCache
     {
         $limitReached = false;
         set_error_handler(function ($severity, $message) use (&$limitReached) {
-            debug_log("Write notice on file {$this->filePath}: {$message}");
+            $this->debugLogRedactingCacheFileNames("Write notice on file {$this->filePath}: {$message}");
             $limitReached = FileSizeLimitException::writeNoticeReportsFileSizeLimit($message);
 
             return $limitReached;

@@ -143,7 +143,7 @@ if ($isMultisite) {
                         <div class="wpstg-mb-3 wpstg-text-[13px] wpstg-font-bold wpstg-leading-tight wpstg-text-gray-800 dark:wpstg-text-slate-100">
                             <strong><?php esc_html_e('Included Components', 'wp-staging'); ?></strong>
                         </div>
-                        <div class="wpstg-grid-columns-2 wpstg-gap-x-7 wpstg-gap-y-3">
+                        <div class="wpstg-grid-columns-2 min-[601px]:wpstg-grid-cols-[minmax(0,1fr)_minmax(0,min(15rem,48%))] wpstg-gap-x-7 wpstg-gap-y-3">
                             <div class="wpstg-contents">
                                 <label class="wpstg-form-label">
                                     <input type="checkbox" class="!wpstg-m-0 wpstg-checkbox" id="includeDatabaseInBackup" name="backup_database" value="true" data-summary-kind="component" data-summary-label="<?php esc_attr_e('Database', 'wp-staging'); ?>" checked>
@@ -178,16 +178,15 @@ if ($isMultisite) {
                             </div>
                             <div class="wpstg-contents">
                                 <label class="wpstg-form-label">
-                                    <input type="checkbox" class="!wpstg-m-0 wpstg-checkbox" id="includeOtherFilesInWpContent" name="includeOtherFilesInWpContent" value="true" data-summary-kind="component" data-summary-label="<?php esc_attr_e('Other wp-content files', 'wp-staging'); ?>" checked>
+                                    <input type="checkbox" class="!wpstg-m-0 wpstg-checkbox" id="includeOtherFilesInWpContent" name="includeOtherFilesInWpContent" value="true" data-summary-kind="component" data-summary-label="<?php esc_attr_e('Other wp-content items', 'wp-staging'); ?>" checked>
                                     <span>
-                                        <?php esc_html_e('Other wp-content files', 'wp-staging'); ?>
-                                        <span id="includeOtherFilesInWpContentSize"></span>
+                                        <?php esc_html_e('Other wp-content items', 'wp-staging'); ?>&nbsp;<span class="wpstg-whitespace-nowrap"><span id="includeOtherFilesInWpContentSize"></span>
                                         <span class="wpstg--tooltip wpstg-backup-modal-tooltip">
                                             <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info" />
-                                            <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                                                <?php esc_html_e('All files in folder wp-content that are not plugins, themes, mu-plugins and uploads. Recommended for full-site backups.', 'wp-staging'); ?>
+                                            <span class="wpstg--tooltiptext wpstg--tooltiptext-backups wpstg-whitespace-normal">
+                                                <?php esc_html_e('All files and folders in wp-content that are not plugins, themes, mu-plugins and uploads. Recommended for full-site backups.', 'wp-staging'); ?>
                                             </span>
-                                        </span>
+                                        </span></span>
                                     </span>
                                 </label>
                                 <label class="wpstg-form-label">
@@ -199,10 +198,10 @@ if ($isMultisite) {
                                         <span class="wpstg--wproot-expand-folder">
                                             <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info" />
                                         </span>
-                                        <input type="checkbox" class="!wpstg-m-0 wpstg-checkbox" id="wpstgIncludeOtherFilesInWpRoot" name="includeOtherFilesInWpRoot" value="" data-summary-kind="component" data-summary-label="<?php esc_attr_e('Other WP Root Folders', 'wp-staging'); ?>" checked>
+                                        <input type="checkbox" class="!wpstg-m-0 wpstg-checkbox" id="wpstgIncludeOtherFilesInWpRoot" name="includeOtherFilesInWpRoot" value="" data-summary-kind="component" data-summary-label="<?php esc_attr_e('Other WP root folders', 'wp-staging'); ?>" checked>
                                         <label class="wpstg-create-backup-modal__root-files-label wpstg-whitespace-nowrap" for="wpstgIncludeOtherFilesInWpRoot">
                                             <span id="wpstg-wproot-other-files-span" data-id="#wpstg-wproot-scanning-files">
-                                                <?php esc_html_e('Other WP Root Folders', 'wp-staging'); ?>
+                                                <?php esc_html_e('Other WP root folders', 'wp-staging'); ?>
                                             </span>
                                             <span id="wpstgIncludeOtherFilesInWpRootSize"></span> <!-- used to show the size of the files in the root folder -->
                                             <span class="wpstg--tooltip wpstg-wproot-tooltip">

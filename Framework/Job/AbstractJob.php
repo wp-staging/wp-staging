@@ -13,6 +13,7 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Exceptions\WPStagingException;
+use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
@@ -21,6 +22,8 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\JobCancelDataDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\JobDataLostException;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
 use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Traits\BenchmarkTrait;
@@ -39,6 +42,9 @@ abstract class AbstractJob implements ShutdownableInterface
 
  
     const CACHE_OWNER_KEY = '__wpstgOwnerJobId';
+
+ 
+    const JOB_DATA_CACHE_PREFIX = 'jobCache_';
 
  
     protected $jobDataDto;
@@ -107,7 +113,7 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->directory    = $directory;
 
         $this->jobDataCache->setLifetime($jobDataDto instanceof \WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface ? -1 : HOUR_IN_SECONDS);
-        $this->jobDataCache->setFilename('jobCache_' . $this::getJobName());
+        $this->jobDataCache->setFilename(self::JOB_DATA_CACHE_PREFIX . $this::getJobName());
 
         $this->processLock   = $processLock;
         $this->diskFullCheck = $diskFullCheck;
@@ -174,16 +180,24 @@ abstract class AbstractJob implements ShutdownableInterface
 
     public function persistJobDataDto()
     {
+        $writeFailureReason = 'the write was incomplete';
+        set_error_handler(function ($severity, $message) use (&$writeFailureReason) {
+            $writeFailureReason = $message;
+
+            return false;
+        });
         try {
  
  
             if ($this->jobDataCache->save($this->getJobDataWithOwner(), true) === false) {
-                throw new \RuntimeException('Could not persist Job data to cache.');
+                throw new \RuntimeException($writeFailureReason);
             }
         } catch (\Exception $e) {
             $this->logWPEngineCacheWriteContext();
             debug_log("Could not persist Job data to cache:"  . $e->getMessage());
             throw new \RuntimeException('Could not persist Job data to cache: ' . $e->getMessage(), 0, $e);
+        } finally {
+            restore_error_handler();
         }
     }
 
@@ -289,6 +303,22 @@ abstract class AbstractJob implements ShutdownableInterface
 
 
 
+
+
+    protected function lockProcessOrSkipPersist()
+    {
+        try {
+            $this->processLock->lockProcess();
+        } catch (ProcessLockedException $e) {
+            $this->skipPersistOnShutdown();
+            throw $e;
+        }
+    }
+
+
+
+
+
     public static function getJobName()
     {
         throw new WPStagingException('Any extending class MUST override the getJobName method.');
@@ -311,7 +341,7 @@ abstract class AbstractJob implements ShutdownableInterface
  
  
  
-        $this->processLock->lockProcess();
+        $this->lockProcessOrSkipPersist();
 
         try {
  
@@ -555,6 +585,8 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->jobDataDto->setCurrentTaskIndex(0);
             $this->jobDataDto->setCurrentTaskData([]);
             $this->addTasks($this->getJobTasks());
+        } elseif (empty($this->jobDataDto->getTaskQueue())) {
+            throw JobDataLostException::jobDataLost();
         } else {
             $this->checkLastTaskHealth();
         }
@@ -564,7 +596,7 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->currentTaskName = $this->jobDataDto->getCurrentTask();
 
         if (empty($this->currentTaskName)) {
-            throw new \RuntimeException('Internal error: Next task of queue job is null or invalid.');
+            throw new \RuntimeException(sprintf('Internal error: Next task of queue job is null or invalid. Task index %s of %d queued tasks.', wp_json_encode($this->jobDataDto->getCurrentTaskIndex()), count($this->jobDataDto->getTaskQueue())));
         }
 
         $this->uploadWaitResponse = $this->getUploadWaitResponse();
@@ -661,9 +693,15 @@ abstract class AbstractJob implements ShutdownableInterface
     {
  
         $this->filesystem->setExcludePaths(['*.*', '!*.cache.php', '!*.cache', '!*.wpstg', '!*.sql']);
-        $this->filesystem->delete($this->directory->getCacheDirectory(), $deleteSelf = false);
+        try {
+            $this->filesystem->delete($this->directory->getCacheDirectory(), $deleteSelf = false);
+        } catch (RuntimeException $e) {
+            throw new RuntimeException($this->directory->redactCacheFileNames($e->getMessage()), $e->getCode());
+        }
+
         $this->filesystem->setExcludePaths([]);
         $this->filesystem->mkdir($this->directory->getCacheDirectory(), true);
+        WPStaging::make(DirectoryListing::class)->replaceOutdatedProtectionOfJobFolders();
     }
 
 
@@ -741,7 +779,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
 
 
-    private function splitTaskQueueEntry(string $queueEntry): array
+    public static function splitTaskQueueEntry(string $queueEntry): array
     {
         $separatorPosition = strpos($queueEntry, self::TASK_ARGUMENT_SEPARATOR);
         if ($separatorPosition === false) {

@@ -66,7 +66,9 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
             return true;
         }
 
-        if ($this->client->errno() === 1062 && $this->applyFilters(self::FILTER_INSERT_IGNORE_DUPLICATE_KEY, false)) {
+        if ($this->client->errno() === 1062 && ($this->isLeavingOutRowsOfTableToRestore() || $this->applyFilters(self::FILTER_INSERT_IGNORE_DUPLICATE_KEY, false))) {
+            $duplicateError = $this->client->error();
+
             $retryQuery   = preg_replace('/^INSERT INTO/', 'INSERT IGNORE INTO', $this->extendedQuery, 1);
             $retrySuccess = $this->exec($retryQuery);
             $this->addWarning(sprintf(
@@ -84,6 +86,10 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
             }
 
             $this->extendedQuery = '';
+            if ($this->isLeavingOutRowsOfTableToRestore()) {
+                $this->logRowsLeftOutOrStop($retrySuccess, $duplicateError);
+            }
+
             $this->databaseImporterDto->setTableToRestore('');
             return $retrySuccess;
         }

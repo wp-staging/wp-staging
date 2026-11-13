@@ -208,26 +208,11 @@ class Extractor extends AbstractExtractor
 
     protected function cleanExistingFile(string $identifier)
     {
-        if ($this->isValidateOnly) {
+        if ($identifier !== PathIdentifier::IDENTIFIER_UPLOADS || $this->isExcludedFile($this->extractingFile->getBackupPath())) {
             return;
         }
 
-        if ($identifier !== PathIdentifier::IDENTIFIER_UPLOADS || $this->extractingFile->getWrittenBytes() > 0) {
-            return;
-        }
-
- 
- 
-        if ($this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsPreviousPartRequired()) {
-            return;
-        }
-
-        if (file_exists($this->extractingFile->getBackupPath())) {
- 
-            if (!unlink($this->extractingFile->getBackupPath())) {
-                throw new \RuntimeException(sprintf(__('Could not delete original media library file %s. Skipping restore of it...', 'wp-staging'), $this->extractingFile->getRelativePath()));
-            }
-        }
+        parent::cleanExistingFile($identifier);
     }
 
 
@@ -309,9 +294,12 @@ class Extractor extends AbstractExtractor
  
             $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
         } catch (Exception $e) {
+            if ($this->isValidateOnly && !$e instanceof FileValidationException) {
+                throw new FileValidationException(sprintf('Could not validate file %s. Reason: %s', $this->extractingFile->getRelativePath(), $e->getMessage()), 0, $e);
+            }
+
  
             $canSkipFile = $e instanceof BackupSkipItemException
-                && !$this->isValidateOnly
                 && $this->extractingFile->getWrittenBytes() === 0
                 && $this->extractorDto->getExtractorFileBaseBytes() === 0;
             if ($canSkipFile) {

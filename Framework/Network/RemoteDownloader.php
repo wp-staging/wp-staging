@@ -56,6 +56,16 @@ class RemoteDownloader
 
 
 
+    const ERROR_TOO_MANY_REDIRECTS = 'too_many_redirects';
+
+
+
+
+    const REDIRECT_STATUS_CODES = [301, 302, 303, 307, 308];
+
+
+
+
 
     private $chunkSize = 5 * 1024 * 1024;
 
@@ -114,7 +124,7 @@ class RemoteDownloader
     private $customHeaders = [];
 
  
-    private $followRedirects = true;
+    private $redirectGuard = null;
 
  
     private $allowUnknownRemoteFileSize = false;
@@ -284,9 +294,11 @@ class RemoteDownloader
 
 
 
-    public function setFollowRedirects(bool $follow)
+
+
+    public function setRedirectGuard(callable $guard)
     {
-        $this->followRedirects = $follow;
+        $this->redirectGuard = $guard;
     }
 
 
@@ -588,18 +600,21 @@ class RemoteDownloader
 
     public function fetchRemoteFileSizeWithFallbacks(): int
     {
+        $this->errorCode = '';
+        $this->message   = '';
+
         $fileSize = $this->fetchRemoteFileSize();
-        if ($fileSize > 0) {
+        if ($fileSize > 0 || $this->isRequestUrlRefused()) {
             return $fileSize;
         }
 
         $fileSize = $this->fetchRemoteFileSize(false);
-        if ($fileSize > 0) {
+        if ($fileSize > 0 || $this->isRequestUrlRefused()) {
             return $fileSize;
         }
 
         $fileSize = $this->fetchRemoteFileSizeByGet();
-        if ($fileSize > 0) {
+        if ($fileSize > 0 || $this->isRequestUrlRefused()) {
             return $fileSize;
         }
 
@@ -693,9 +708,18 @@ class RemoteDownloader
             ],
         ];
 
+        $this->errorCode = '';
         $response = $this->makeRemoteRequest($args);
         if ($this->isSuccessfulRemoteFileExistsResponse($response)) {
             return true;
+        }
+
+        if ($this->isRequestUrlRefused()) {
+            $this->message   = $response->get_error_message();
+            $this->success   = false;
+            $this->completed = true;
+
+            return false;
         }
 
         if ($this->isAuthenticationFailure($response)) {
@@ -730,7 +754,7 @@ class RemoteDownloader
             return true;
         }
 
-        $this->message   = esc_html__('File not available on remote server', 'wp-staging');
+        $this->message   = $this->isRequestUrlRefused() ? $response->get_error_message() : esc_html__('File not available on remote server', 'wp-staging');
         $this->success   = false;
         $this->completed = true;
 
@@ -782,7 +806,7 @@ class RemoteDownloader
     {
         $args['user-agent'] = 'Mozilla/5.0 (compatible; wp-staging/' . WPStaging::getVersion() . '; +https://wp-staging.com)';
 
-        $args['redirection'] = $this->followRedirects ? self::MAX_REDIRECTS : 0;
+        $args['redirection'] = 0;
 
         if (!isset($args['method'])) {
             $args['method'] = 'POST';
@@ -796,12 +820,74 @@ class RemoteDownloader
         }
 
         if ($this->ssrfProtection->isBlockedUrl($this->remoteUrl)) {
+            $this->errorCode = self::ERROR_BLOCKED_URL;
             return new \WP_Error(self::ERROR_BLOCKED_URL, esc_html__('The URL resolves to a blocked IP address.', 'wp-staging'));
         }
 
-        return $this->ssrfProtection->runRequestWithPinnedIp($this->remoteUrl, function () use ($args) {
-            return wp_remote_request($this->remoteUrl, $args);
-        });
+        $url = $this->remoteUrl;
+        for ($redirectCount = 0; $redirectCount <= self::MAX_REDIRECTS; $redirectCount++) {
+            $response = $this->ssrfProtection->runRequestWithPinnedIp($url, function () use ($url, $args) {
+                return wp_remote_request($url, $args);
+            });
+
+            $location = $this->getRedirectLocation($response);
+            if ($location === '') {
+                return $response;
+            }
+
+            $url = \WP_Http::make_absolute_url($location, $url);
+            if (!$this->isAllowedRedirectTarget($url)) {
+                $this->errorCode = self::ERROR_BLOCKED_URL;
+                return new \WP_Error(self::ERROR_BLOCKED_URL, esc_html__('The remote server redirected to an address that is not allowed.', 'wp-staging'));
+            }
+        }
+
+        $this->errorCode = self::ERROR_TOO_MANY_REDIRECTS;
+
+        /* translators: %d: maximum number of redirects followed */
+        return new \WP_Error(self::ERROR_TOO_MANY_REDIRECTS, sprintf(esc_html__('The remote server redirected more than %d times.', 'wp-staging'), self::MAX_REDIRECTS));
+    }
+
+
+
+
+
+    private function isAllowedRedirectTarget(string $url): bool
+    {
+        if (preg_match('#^https?://#i', $url) !== 1) {
+            return false;
+        }
+
+        if ($this->ssrfProtection->isBlockedUrl($url)) {
+            return false;
+        }
+
+        return $this->redirectGuard === null || call_user_func($this->redirectGuard, $url);
+    }
+
+
+
+
+
+    private function getRedirectLocation($response): string
+    {
+        if (!is_array($response) || !in_array((int)wp_remote_retrieve_response_code($response), self::REDIRECT_STATUS_CODES, true)) {
+            return '';
+        }
+
+        $locations = $this->getHeaderValues($response, 'location');
+
+        return trim((string)end($locations));
+    }
+
+
+
+
+
+
+    public function isRequestUrlRefused(): bool
+    {
+        return in_array($this->errorCode, [self::ERROR_BLOCKED_URL, self::ERROR_TOO_MANY_REDIRECTS], true);
     }
 
 

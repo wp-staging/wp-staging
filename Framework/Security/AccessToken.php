@@ -31,6 +31,11 @@ class AccessToken
 
 
 
+    const ALL_OPTION_NAMES = [self::OPTION_NAME, self::LEGACY_OPTION_NAME];
+
+
+
+
     private $isCheckCapabilities = true;
 
 

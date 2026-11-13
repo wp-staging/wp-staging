@@ -73,7 +73,7 @@ trait ThrottledResponseTrait
         if ($deferUpload && ($this->isThrottledResponse($response) || $isDropboxWriteLimit)) {
             $retryAfter = wp_remote_retrieve_header($response, 'retry-after');
             $retryAfter = is_array($retryAfter) ? reset($retryAfter) : $retryAfter;
-            throw new UploadThrottledException((string)$retryAfter);
+            throw new UploadThrottledException((string)$retryAfter, sprintf('The storage provider has rate limited the upload with HTTP %d.', (int)wp_remote_retrieve_response_code($response)));
         }
 
         for ($attempt = 1; $attempt <= $this->getMaxThrottleRetries(); $attempt++) {

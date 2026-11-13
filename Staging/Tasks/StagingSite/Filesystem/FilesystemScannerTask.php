@@ -116,6 +116,12 @@ class FilesystemScannerTask extends StagingTask
     protected $legacyExcludedFileNameRules = [];
 
  
+    protected $legacyExcludedFileNameMatchRules = [];
+
+ 
+    protected $isRootWebConfigExcluded = false;
+
+ 
     protected $jobDataDto; // @phpstan-ignore-line
 
 
@@ -280,6 +286,13 @@ class FilesystemScannerTask extends StagingTask
         ]);
 
         $this->legacyExcludedFileNameRules = $this->extractLegacyFileNameRules(array_merge($legacyExcludedFiles, $legacyExcludedFilesFullPath));
+        $legacyFileNameMatchRules = $this->convertLegacyFileNamesToNameRules($legacyExcludedFiles);
+        $webConfigRule = 'name_exact_matches web.config';
+        $isUpdate = $this->jobDataDto->getJobType() === StagingSetup::JOB_UPDATE;
+        $stagingHostname = (string)parse_url($this->jobDataDto->getStagingSiteUrl(), PHP_URL_HOST);
+        $stagingSiteSharesProductionHostname = $stagingHostname === '' || $stagingHostname === (string)parse_url(home_url(), PHP_URL_HOST);
+        $this->isRootWebConfigExcluded = in_array($webConfigRule, $legacyFileNameMatchRules, true) && ($isUpdate || $stagingSiteSharesProductionHostname);
+        $this->legacyExcludedFileNameMatchRules = array_diff($legacyFileNameMatchRules, [$webConfigRule]);
 
         $excludeSizeGreaterThanInMb = $this->jobDataDto->getExcludeSizeGreaterThan();
 
@@ -316,7 +329,7 @@ class FilesystemScannerTask extends StagingTask
         }
 
         $this->filesystemScanner->setFilters($this->ignoreFileBiggerThan, $this->ignoreFileExtensions, $this->ignoreFileExtensionFilesBiggerThan);
-        $excludeFileRules = array_values(array_unique(array_merge($this->jobDataDto->getExcludeFileRules(), $this->legacyExcludedFileNameRules)));
+        $excludeFileRules = array_values(array_unique(array_merge($this->jobDataDto->getExcludeFileRules(), $this->legacyExcludedFileNameRules, $this->legacyExcludedFileNameMatchRules)));
         $excludeFolderRules = array_values(array_unique(array_merge(
             $this->jobDataDto->getExcludeFolderRules(),
             $this->extractLegacyFolderNameRules($this->legacyExcludedFileNameRules)
@@ -364,6 +377,11 @@ class FilesystemScannerTask extends StagingTask
             return $this->generateResponse();
         }
 
+        if ($this->isRootWebConfigExcluded && file_exists(trailingslashit($dirToScan) . 'web.config')) {
+            $this->jobDataDto->mergeTmpExcludedFullPaths(['web.config']);
+            $this->logger->info(static::getTaskTitle() . ': Skipped the root web.config. The staging site is updated or shares the live hostname.');
+        }
+
         $excludeRules = $this->getWpRootFileExcludeRules();
         $this->filesystemScanner->setOnlyFiles();
         $this->preScanPath($dirToScan, PartIdentifier::WP_ROOT_FILES_PART_IDENTIFIER, $excludeRules);
@@ -373,11 +391,13 @@ class FilesystemScannerTask extends StagingTask
 
     protected function getWpRootFileExcludeRules(): array
     {
-        if ($this->jobDataDto->getJobType() !== StagingSetup::JOB_UPDATE || !$this->jobDataDto->getIsStagingNetwork()) {
-            return [];
+        $rootPath = trailingslashit($this->directory->getAbsPath());
+        $excludeRules = $this->isRootWebConfigExcluded ? [$rootPath . 'web.config'] : [];
+        if ($this->jobDataDto->getJobType() === StagingSetup::JOB_UPDATE && $this->jobDataDto->getIsStagingNetwork()) {
+            $excludeRules[] = $rootPath . '.htaccess';
         }
 
-        return [trailingslashit($this->directory->getAbsPath()) . '.htaccess'];
+        return $excludeRules;
     }
 
     protected function scanWpAdminDirectory(): TaskResponseDto
@@ -675,6 +695,7 @@ class FilesystemScannerTask extends StagingTask
         $this->jobDataDto->setFilesystemSize($scannerDto->getFilesystemSize());
         $this->jobDataDto->setTotalDirectories($scannerDto->getTotalDirectories());
         $this->jobDataDto->mergeTmpExcludedFullPaths($scannerDto->getFilesExcludedInRequest());
+        $scannerDto->setFilesExcludedInRequest([]);
     }
 
 

@@ -116,6 +116,10 @@ class QueueProcessor
             delete_site_transient(self::TRANSIENT_LAST_FIRE_TIMESTAMP);
         }
 
+        if ($this->requestNeedsAuthenticatedLoopback() && $this->handQueueToAuthenticatedLoopback(!wp_doing_cron() && $lastFireTs > 0 && $lastFireAge <= self::FIRE_ACK_WINDOW_SECONDS)) {
+            return 0;
+        }
+
         $processed = 0;
 
  
@@ -173,6 +177,32 @@ class QueueProcessor
         debug_log('[Background Processing] QueueProcessor::process Processed: ' . $processed, 'debug', false);
 
         return $processed;
+    }
+
+ 
+    private function requestNeedsAuthenticatedLoopback(): bool
+    {
+        if ((defined('WP_CLI') && WP_CLI) || isset($_COOKIE['wpe-auth']) || !$this->isWPEngine()) {
+            return false;
+        }
+
+ 
+        return ($_SERVER['HTTP_X_WPSTG_REQUEST'] ?? '') !== self::ACTION_QUEUE_PROCESS; // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- Compared with a constant, never used.
+    }
+
+
+
+
+
+
+    private function handQueueToAuthenticatedLoopback(bool $fireAwaitsAcknowledgement): bool
+    {
+        if ($fireAwaitsAcknowledgement || $this->didFireAjaxAction || !$this->queue->hasAvailableAction()) {
+            return true;
+        }
+
+        debug_log('[BG Queue] WP Engine request without host authentication: handing the queue to the loopback.', 'info', false);
+        return $this->fireAjaxAction();
     }
 
 

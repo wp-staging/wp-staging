@@ -41,10 +41,26 @@ class LoginForm
  
     private $siteInfo;
 
+ 
+    private $submissionRefused = false;
+
+ 
+    private $submissionRedirectUrl = '';
+
     public function __construct()
     {
         $this->sanitize = WPStaging::make(Sanitize::class);
         $this->siteInfo = WPStaging::make(SiteInfo::class);
+    }
+
+
+
+
+
+
+    public function wasSubmissionRefused(): bool
+    {
+        return $this->submissionRefused;
     }
 
 
@@ -66,6 +82,7 @@ class LoginForm
                 $e->getLine()
             ));
 
+            $this->submissionRefused = true;
             $this->error = __('The login could not be completed because another plugin raised an error. The WP STAGING debug log of this site holds the details.', 'wp-staging');
         }
     }
@@ -75,10 +92,6 @@ class LoginForm
 
     private function login(): bool
     {
-        if (is_user_logged_in()) {
-            return false;
-        }
-
         if (!isset($_POST['wpstg-username']) || !isset($_POST['wpstg-pass'])) {
             return false;
         }
@@ -87,7 +100,17 @@ class LoginForm
             return false;
         }
 
+        $this->submissionRedirectUrl = !empty($_POST['redirect_to'])
+            ? $this->sanitize->sanitizeUrl($_POST['redirect_to'])
+            : '';
+
+        if (is_user_logged_in()) {
+            $this->redirectToRequestedPage();
+            return false;
+        }
+
         if (isset($_POST['wpstg-submit']) && (empty($_POST['wpstg-username']) || empty($_POST['wpstg-pass']))) {
+            $this->submissionRefused = true;
             $this->error = 'No username or password given!';
             return false;
         }
@@ -106,9 +129,8 @@ class LoginForm
         wp_set_current_user($user->ID, $user->user_login);
         set_transient(self::TRANSIENT_USER_LOGGED_IN_STATUS, true, 5);
 
-        $redirectUrl = !empty($_POST['redirect_to']) ? $this->sanitize->sanitizeUrl($_POST['redirect_to']) : '';
-        if (!empty($redirectUrl)) {
-            wp_safe_redirect($redirectUrl);
+        if (!empty($this->submissionRedirectUrl)) {
+            wp_safe_redirect($this->submissionRedirectUrl);
             exit;
         }
 
@@ -119,8 +141,26 @@ class LoginForm
 
 
 
+
+
+    private function redirectToRequestedPage()
+    {
+        if (!isset($_POST['wpstg-submit']) || empty($this->submissionRedirectUrl)) {
+            return;
+        }
+
+        wp_safe_redirect($this->submissionRedirectUrl);
+        exit;
+    }
+
+
+
+
+
     private function setFailedLoginError(WP_Error $error)
     {
+        $this->submissionRefused = true;
+
         if (in_array($error->get_error_code(), self::CREDENTIAL_ERROR_CODES, true)) {
             $this->error = $this->getLoginErrorMessage();
             return;
@@ -172,6 +212,7 @@ class LoginForm
     {
         require_once WPSTG_VIEWS_DIR . 'frontend/footer.php';
     }
+
 
 
 
@@ -297,10 +338,13 @@ class LoginForm
 
     public function getDefaultArguments(array $overrides = []): array
     {
- 
-        $httpHost        = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
-        $requestURI      = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
-        $redirect        = $this->sanitize->sanitizeUrl((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
+        $redirect = $this->submissionRedirectUrl;
+        if (empty($redirect)) {
+            $httpHost   = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
+            $requestURI = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
+            $redirect   = $this->sanitize->sanitizeUrl((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
+        }
+
         $lostPasswordUrl = wp_lostpassword_url($redirect);
         $arguments       = wp_parse_args(
             $overrides,
@@ -308,6 +352,7 @@ class LoginForm
                 'echo'              => true,
                 'redirect'          => $redirect,
                 'lost_password_url' => $lostPasswordUrl,
+                'form_action_url'   => wp_login_url(),
                 'form_id'           => 'loginform',
                 'label_username'    => __('Username', 'wp-staging'),
                 'label_password'    => __('Password', 'wp-staging'),
