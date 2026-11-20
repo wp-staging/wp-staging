@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
+use RuntimeException;
 use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
 use WPStaging\Backup\Dto\Task\Restore\RestoreDatabaseTaskDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
@@ -143,7 +144,12 @@ class RestoreDatabaseTask extends RestoreTask
             return;
         }
 
-        $databaseFile = $this->getExtractedDatabaseFilePath($metadata->getDatabaseFile());
+        $identifiableDatabaseFile = (string)$metadata->getDatabaseFile();
+        if (!$this->pathIdentifier->isSafeIdentifiableDatabaseFile($identifiableDatabaseFile)) {
+            throw new RuntimeException('The backup metadata does not name a WP STAGING database file. Restore stopped.');
+        }
+
+        $databaseFile = $this->getExtractedDatabaseFilePath($identifiableDatabaseFile);
         $this->requireNonEmptyDatabaseFile($databaseFile);
         $this->setupDatabaseImporterFile($databaseFile);
 

@@ -4,6 +4,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
+use WPStaging\Framework\Job\JobTransientCache;
 
 
 
@@ -21,6 +22,7 @@ class Cancel extends Job
 
         if (!empty($this->options->jobIdentifier)) {
             AnalyticsEventDto::enqueueCancelEvent($this->options->jobIdentifier);
+            $this->announceLegacyJobStopped(JobTransientCache::STATUS_CANCELLED);
         }
 
         if (empty($cloneData)) {
@@ -49,6 +51,7 @@ class Cancel extends Job
         $clone["name"]             = $this->options->clone;
         $clone["number"]           = $this->options->cloneNumber;
         $clone["path"]             = ABSPATH . $this->options->cloneDirectoryName;
+        $clone["cloneDir"]         = $this->options->cloneDir ?? '';
         $clone["prefix"]           = $this->options->prefix;
         $clone["databaseServer"]   = $this->options->databaseServer;
         $clone["databaseUser"]     = $this->options->databaseUser;

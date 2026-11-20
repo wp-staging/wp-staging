@@ -11,7 +11,6 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Staging\FolderOwnership;
-use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -105,9 +104,7 @@ class CleanupStagingFilesTask extends StagingTask
                 ->setShouldStop(function () {
                     return $this->isThreshold();
                 });
-            $deleted = $this->isResetJob()
-                ? $this->deleteStagingSiteFilesWithWpConfigLast($this->filesystem, $stagingSiteDir, true)
-                : $this->filesystem->delete($stagingSiteDir);
+            $deleted = $this->deleteStagingSiteFilesWithWpConfigLast($this->filesystem, $stagingSiteDir, true);
         } catch (Throwable $e) {
             $this->logger->warning(sprintf(
                 '%s: Could not cleanup path "%s". May be a permission issue?',
@@ -173,13 +170,5 @@ class CleanupStagingFilesTask extends StagingTask
         $this->stepsDto->setTotal(1);
 
         return $stagingSiteDto->getPath();
-    }
-
-
-
-
-    private function isResetJob(): bool
-    {
-        return $this->jobDataDto instanceof StagingOperationDtoInterface && $this->jobDataDto->getIsResetJob();
     }
 }

@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Ajax\Restore;
 
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Backup\Job\Jobs\JobRestore;
 use WPStaging\Core\WPStaging;
@@ -16,6 +17,7 @@ use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Job\Traits\WithTmpDatabasePrefix;
 use WPStaging\Framework\Security\Auth;
+use WPStaging\Backup\Service\Encryption\BackupEncryptionService;
 
 class PrepareRestore extends PrepareJob
 {
@@ -67,6 +69,7 @@ class PrepareRestore extends PrepareJob
                 'isExportingOtherWpContentFiles' => 'bool',
                 'isExportingOtherWpRootFiles'    => 'bool',
                 'isExportingDatabase'            => 'bool',
+                'encryptionPassword'             => 'password',
             ]);
         }
 
@@ -86,21 +89,57 @@ class PrepareRestore extends PrepareJob
 
     public function validateAndSanitizeData($data): array
     {
-        $expectedKeys = [
-            'file',
+        $defaults = [
+            'file'               => '',
+            'encryptionPassword' => '',
+            'decryptionKey'      => '',
+            'hmacKey'            => '',
         ];
 
- 
-        $data = array_intersect_key($data, array_flip($expectedKeys));
+        $data = wp_parse_args($data, $defaults);
 
  
-        foreach ($expectedKeys as $expectedKey) {
-            if (!array_key_exists($expectedKey, $data)) {
-                throw new \UnexpectedValueException("Invalid request. Missing '$expectedKey'.");
-            }
+        $data = array_intersect_key($data, $defaults);
+
+        if ($data['file'] === '') {
+            throw new \UnexpectedValueException("Invalid request. Missing 'file'.");
         }
 
+        $this->prepareEncryptionData($data);
+
         return $data;
+    }
+
+
+
+
+
+    private function prepareEncryptionData(array &$data)
+    {
+        $metadata = (new BackupMetadata())->hydrateByFilePath($data['file']);
+        if (!$metadata->getIsEncrypted()) {
+            return;
+        }
+
+        if ($data['encryptionPassword'] === '') {
+            throw new \UnexpectedValueException(__('Please enter the password for this encrypted backup.', 'wp-staging'));
+        }
+
+        $salt = base64_decode($metadata->getEncryptionSalt(), true);
+        if ($salt === false || $metadata->getEncryptionVerificationToken() === '') {
+            throw new \UnexpectedValueException(__('This encrypted backup is missing password verification metadata.', 'wp-staging'));
+        }
+
+ 
+        $encryptionService = WPStaging::make(BackupEncryptionService::class);
+        list($encKey, $macKey) = $encryptionService->deriveKeys($data['encryptionPassword'], $salt);
+        if (!$encryptionService->verifyKey($encKey, $metadata->getEncryptionVerificationToken())) {
+            throw new \UnexpectedValueException(__('The backup encryption password is incorrect.', 'wp-staging'));
+        }
+
+        $data['decryptionKey']      = base64_encode($encKey);
+        $data['hmacKey']            = base64_encode($macKey);
+        $data['encryptionPassword'] = '';
     }
 
     public function getJob()
@@ -134,7 +173,7 @@ class PrepareRestore extends PrepareJob
         $this->jobRestore->setJobDataDto($this->jobDataDto);
 
         if (!$this->jobDataDto->getIsSyncRequest()) {
-            $this->jobRestore->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Restore in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_RESTORE, $this->queueId);
+            $this->jobRestore->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Restore in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_RESTORE, $this->queueId, basename($this->jobDataDto->getFile()));
         }
 
         return $sanitizedData;

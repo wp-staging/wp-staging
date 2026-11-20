@@ -129,6 +129,9 @@ class RemoteDownloader
  
     private $allowUnknownRemoteFileSize = false;
 
+ 
+    private $isSslVerificationEnforced = false;
+
 
 
 
@@ -299,6 +302,17 @@ class RemoteDownloader
     public function setRedirectGuard(callable $guard)
     {
         $this->redirectGuard = $guard;
+    }
+
+
+
+
+
+
+
+    public function setEnforceSslVerification(bool $enforce)
+    {
+        $this->isSslVerificationEnforced = $enforce;
     }
 
 
@@ -807,6 +821,10 @@ class RemoteDownloader
         $args['user-agent'] = 'Mozilla/5.0 (compatible; wp-staging/' . WPStaging::getVersion() . '; +https://wp-staging.com)';
 
         $args['redirection'] = 0;
+
+        if ($this->isSslVerificationEnforced) {
+            $args['sslverify'] = true;
+        }
 
         if (!isset($args['method'])) {
             $args['method'] = 'POST';

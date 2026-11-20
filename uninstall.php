@@ -120,7 +120,8 @@ class Uninstall
         }
 
         $this->deleteUserMeta($this->getBasicUserMeta());
-        $this->dropWpStagingSettingsTable();
+        $this->dropSiteTable('wpstg_settings');
+        $this->dropSiteTable('wpstg_job_history');
         $this->dropWpStagingTransferSessionsTable();
         $this->deleteOptionsByPrefix('wpstg_transfer_lock_');
         $this->deleteTransients();
@@ -160,7 +161,8 @@ class Uninstall
 
 
 
-    private function dropWpStagingSettingsTable()
+
+    private function dropSiteTable($tableName)
     {
         global $wpdb;
 
@@ -168,7 +170,7 @@ class Uninstall
             return;
         }
 
-        $tableName = str_replace('`', '', $wpdb->prefix . 'wpstg_settings');
+        $tableName = str_replace('`', '', $wpdb->prefix . $tableName);
         $wpdb->query("DROP TABLE IF EXISTS `{$tableName}`");
     }
 
@@ -388,9 +390,11 @@ class Uninstall
             'wpstg_freemius_notice',
             'wpstg_queue_table_structure_version',
             'wpstg_settings_table_version',
+            'wpstg_job_history_table_version',
             'wpstg_transfer_sessions_table_version',
             'wpstg_backup_directory_security_check',
             'wpstg_backup_directory_notice_dismissed',
+            'wpstg_private_directory_security_check',
             'wpstg_q_feature_detection_ajax_available',
             'wpstg_analytics_has_consent',
             'wpstg_analytics_modal_dismissed',
@@ -483,6 +487,7 @@ class Uninstall
             'wpstg_remote_sync_password',
             'wpstg_remote_sync_enabled',
             'wpstg_remote_sync_send_success_notification',
+            'wpstg_remote_sync_accept_self_signed',
             'wpstg_remote_sync_safety_backup_request',
             'wpstg_different_prefix_backup_notice',
             'wpstg_entire_network_clone_notice',
@@ -638,6 +643,7 @@ class Uninstall
         $this->deleteTransientsByPrefix('wpstg.backup.schedules.slack_fingerprint_');
         $this->deleteRemoteSyncAuthenticationActivityTransients();
         $this->deleteTransientsByPrefix('wpstg_rs_lowdisk_ack_');
+        $this->deleteTransientsByPrefix('wpstg_job_history_actor_');
     }
 
 

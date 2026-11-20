@@ -36,6 +36,14 @@ $menu = [
         'page'      => 'wpstg_backup',
         'isActive'  => !empty($isBackupPage),
     ],
+    'tab-job-history' => [
+        'tab'       => esc_html__('Job History', 'wp-staging'),
+        'id'        => 'wpstg--tab--toggle--job-history',
+        'targetId'  => '',
+        'targetUrl' => esc_url($wpstgAdminUrl) . 'wpstg-job-history',
+        'page'      => 'wpstg-job-history',
+        'isActive'  => !empty($isActiveJobHistoryPage),
+    ],
     'tab-settings'    => [
         'tab'       => esc_html__('Settings', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--settigs',

@@ -17,6 +17,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Service\Archiver;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Exception\FileAppendTimeLimitException;
 use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\ThresholdException;
 
@@ -75,6 +76,8 @@ class IncludeDatabaseTask extends BackupTask
             $included = $this->archiver->appendFileToBackup($this->jobDataDto->getDatabaseFile());
         } catch (ThresholdException $e) {
         } catch (FileSizeLimitException $e) {
+            throw $e;
+        } catch (FileAppendTimeLimitException $e) {
             throw $e;
         } catch (Exception $e) {
             $this->logger->critical(sprintf(

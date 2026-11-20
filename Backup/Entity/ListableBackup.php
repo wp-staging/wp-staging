@@ -145,6 +145,9 @@ class ListableBackup
     public $isZlibCompressed = false;
 
  
+    public $isEncrypted = false;
+
+ 
     public $isContaining2GBFile = false;
 
  

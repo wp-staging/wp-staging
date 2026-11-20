@@ -207,6 +207,7 @@ class ListableBackupsCollection
             $listableBackup->errorMessage                     = $this->backupValidator->getErrorMessage();
             $listableBackup->indexPartSize                    = $backupMetadata->getIndexPartSize();
             $listableBackup->isZlibCompressed                 = $backupMetadata->getIsZlibCompressed();
+            $listableBackup->isEncrypted                      = $backupMetadata->getIsEncrypted();
             $listableBackup->isContaining2GBFile              = $backupMetadata->getIsContaining2GBFile();
 
             if (empty($backupMetadata->getBackupSize())) {

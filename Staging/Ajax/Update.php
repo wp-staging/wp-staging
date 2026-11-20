@@ -23,7 +23,7 @@ class Update extends AbstractTemplateComponent
 
     public function render()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 

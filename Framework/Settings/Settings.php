@@ -46,6 +46,7 @@ class Settings
         'keepPermalinks'           => 'sanitizeBool',
         'debugMode'                => 'sanitizeBool',
         'enableBackupBeforeUpdate' => 'sanitizeBool',
+        'recordJobHistory'         => 'sanitizeBool',
     ];
 
 
@@ -478,6 +479,8 @@ class Settings
         $this->saveHttpAuthCredentials($data);
         unset($data['httpAuthActive'], $data['httpAuthUsername'], $data['httpAuthPassword']);
 
+        $this->carryOverStoredJobHistoryRecordingChoice($data);
+
  
  
  
@@ -490,6 +493,22 @@ class Settings
         $data['enableBackupBeforeUpdate'] = $data['enableBackupBeforeUpdate'] ?? '0';
 
         return $showErrorToggleStagingSiteCloning;
+    }
+
+
+
+
+
+
+
+
+    private function carryOverStoredJobHistoryRecordingChoice(array &$data)
+    {
+        if (isset($data['recordJobHistory']) || (new SettingsDTO())->isJobHistoryRecordingEnabled()) {
+            return;
+        }
+
+        $data['recordJobHistory'] = '0';
     }
 
 

@@ -10,6 +10,7 @@ use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\ErrorCode;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
@@ -18,6 +19,7 @@ use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\SlashMode;
+use WPStaging\Backup\Service\Encryption\BackupEncryptionService;
 use WPStaging\Framework\Utils\Urls;
 
  
@@ -81,6 +83,8 @@ class PrepareBackup extends PrepareJob
                 'isExcludingLogs'                => 'bool',
                 'isExcludingCaches'              => 'bool',
                 'isValidateBackupFiles'          => 'bool',
+                'isEncrypted'                    => 'bool',
+                'encryptionPassword'             => 'password',
                 'backupType'                     => 'string',
                 'backupExcludedDirectories'      => 'string',
             ]);
@@ -161,7 +165,7 @@ class PrepareBackup extends PrepareJob
         }
 
         if (!$this->jobDataDto->getIsSyncRequest()) {
-            $this->jobBackup->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, $this->queueId);
+            $this->jobBackup->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, $this->queueId, (string)$this->jobDataDto->getName(), $this->jobDataDto->writesNoBackupFile());
         }
 
         $this->jobBackup->setJobDataDto($this->jobDataDto);
@@ -239,6 +243,12 @@ class PrepareBackup extends PrepareJob
             'isExcludingLogs'                => false,
             'isExcludingCaches'              => false,
             'isValidateBackupFiles'          => false,
+            'isEncrypted'                    => false,
+            'encryptionPassword'             => '',
+            'encryptionSalt'                 => '',
+            'encryptionVerificationToken'    => '',
+            'encryptionKey'                  => '',
+            'hmacKey'                        => '',
             'isWpCliRequest'                 => false,
             'isRestRequest'                  => false,
             'isSyncRequest'                  => false,
@@ -283,6 +293,17 @@ class PrepareBackup extends PrepareJob
  
         $data['isValidateBackupFiles'] = $this->jsBoolean($data['isValidateBackupFiles']);
 
+        $data['isEncrypted'] = $this->jsBoolean($data['isEncrypted']);
+        if ($data['isEncrypted']) {
+            $this->prepareEncryptionData($data);
+        } else {
+            $data['encryptionPassword']          = '';
+            $data['encryptionSalt']              = '';
+            $data['encryptionVerificationToken'] = '';
+            $data['encryptionKey']               = '';
+            $data['hmacKey']                     = '';
+        }
+
  
         $data['backupType']          = $this->validateAndSanitizeBackupType($data['backupType']);
         $data['isNetworkSiteBackup'] = (is_multisite() && $data['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) ? true : false;
@@ -307,6 +328,57 @@ class PrepareBackup extends PrepareJob
         }
 
         return $data;
+    }
+
+
+
+
+
+    private function prepareEncryptionData(array &$data)
+    {
+        if (WPStaging::isBasic()) {
+            throw new \UnexpectedValueException(__('Encrypted backups require WP Staging Pro.', 'wp-staging'));
+        }
+
+        if ($data['repeatBackupOnSchedule']) {
+            throw new \UnexpectedValueException(__('Encrypted backups cannot be scheduled yet. Choose Run once now.', 'wp-staging'));
+        }
+
+        if ($this->jsBoolean($data['isCreateBackupInBackground'])) {
+            throw new \UnexpectedValueException(__('Encrypted backups cannot run in the background yet. Clear Continue backup in background.', 'wp-staging'));
+        }
+
+        if (Hooks::applyFilters(BackupMetadata::FILTER_BACKUP_FORMAT_V1, false)) {
+            throw new \UnexpectedValueException(__('Encrypted backups need the current backup format.', 'wp-staging'));
+        }
+
+ 
+        $encryptionService = WPStaging::make(BackupEncryptionService::class);
+        if (!$encryptionService->isBackupEncryptionEnabled()) {
+            throw new \UnexpectedValueException(__('Encrypted backups are switched off on this site.', 'wp-staging'));
+        }
+
+        if ($data['encryptionPassword'] === '') {
+            throw new \UnexpectedValueException(__('Please enter a password to encrypt this backup.', 'wp-staging'));
+        }
+
+        if (mb_strlen($data['encryptionPassword']) < BackupEncryptionService::MIN_PASSWORD_LENGTH) {
+            throw new \UnexpectedValueException(__('Use at least 8 characters for the encryption password.', 'wp-staging'));
+        }
+
+        if (!$encryptionService->isEncryptionAvailable()) {
+            throw new \UnexpectedValueException(__('Backup encryption is not available on this site.', 'wp-staging'));
+        }
+
+        $salt = $encryptionService->generateSalt();
+        list($encKey, $macKey) = $encryptionService->deriveKeys($data['encryptionPassword'], $salt);
+        $verificationIv = $encryptionService->generateIv();
+
+        $data['encryptionSalt']              = base64_encode($salt);
+        $data['encryptionVerificationToken'] = $encryptionService->createVerificationToken($encKey, $verificationIv);
+        $data['encryptionKey']               = base64_encode($encKey);
+        $data['hmacKey']                     = base64_encode($macKey);
+        $data['encryptionPassword']          = '';
     }
 
 

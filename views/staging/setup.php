@@ -105,8 +105,8 @@ $runtimeSummaryTooltips = [
     $advOptionDisabled = !$isProLicenseActive;
     $advNotifyOptions  = [
         ['id' => 'wpstg_allow_emails', 'icon' => 'mail', 'label' => __('Allow Emails Sending', 'wp-staging'), 'checked' => $isProLicenseActive, 'sumLabel' => __('Emails', 'wp-staging'), 'tip' => __('Let the staging site send real emails after the update. Keep off so test activity never reaches real users.', 'wp-staging')],
-        ['id' => 'wpstg_reminder_emails', 'icon' => 'bell', 'label' => __('Get Reminder Email', 'wp-staging'), 'checked' => false, 'sumLabel' => __('Reminder email', 'wp-staging'), 'tip' => __('Email you a periodic reminder that this staging site still exists.', 'wp-staging')],
-        ['id' => 'wpstg_auto_update_plugins', 'icon' => 'refresh', 'label' => __('Auto Update Plugins', 'wp-staging'), 'checked' => false, 'sumLabel' => __('Auto-update plugins', 'wp-staging'), 'tip' => __('Automatically update plugins on staging once the update finishes.', 'wp-staging')],
+        ['id' => 'wpstg_reminder_emails', 'icon' => 'bell', 'label' => __('Get Reminder Email', 'wp-staging'), 'checked' => $isProLicenseActive && $stagingSiteDto->getIsEmailsReminderEnabled(), 'sumLabel' => __('Reminder email', 'wp-staging'), 'tip' => __('Email you a periodic reminder that this staging site still exists.', 'wp-staging')],
+        ['id' => 'wpstg_auto_update_plugins', 'icon' => 'refresh', 'label' => __('Auto Update Plugins', 'wp-staging'), 'checked' => $isProLicenseActive && $stagingSiteDto->getIsAutoUpdatePlugins(), 'sumLabel' => __('Auto-update plugins', 'wp-staging'), 'tip' => __('Automatically update plugins on staging once the update finishes.', 'wp-staging')],
     ];
     if ($showWooSchedulerSettings) {
         $advNotifyOptions[] = ['id' => 'wpstg_woo_scheduler_enabled', 'icon' => 'cart', 'label' => __('Enable WooCommerce Scheduler', 'wp-staging'), 'checked' => $isProLicenseActive, 'sumLabel' => __('WooCommerce scheduler', 'wp-staging'), 'tip' => __('Run WooCommerce scheduled actions on staging. Off prevents orders, emails and background jobs.', 'wp-staging')];

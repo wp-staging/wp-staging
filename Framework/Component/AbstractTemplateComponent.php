@@ -48,4 +48,12 @@ abstract class AbstractTemplateComponent
     {
         return $this->wpAdapter->doingAjax() && $this->auth->isAuthenticatedRequest();
     }
+
+
+
+
+    protected function canRenderStagingAjax(): bool
+    {
+        return $this->wpAdapter->doingAjax() && $this->auth->isAuthenticatedStagingRequest();
+    }
 }

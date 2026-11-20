@@ -17,6 +17,12 @@ class JobRestoreDataDto extends JobDataDto
     protected $backupMetadata;
 
  
+    protected $decryptionKey = '';
+
+ 
+    protected $hmacKey = '';
+
+ 
     protected $tmpDirectory;
 
  
@@ -173,6 +179,34 @@ class JobRestoreDataDto extends JobDataDto
         }
 
         $this->backupMetadata = null;
+    }
+
+    public function getDecryptionKey(): string
+    {
+        return $this->decryptionKey;
+    }
+
+
+
+
+
+    public function setDecryptionKey($decryptionKey)
+    {
+        $this->decryptionKey = (string)$decryptionKey;
+    }
+
+    public function getHmacKey(): string
+    {
+        return $this->hmacKey;
+    }
+
+
+
+
+
+    public function setHmacKey($hmacKey)
+    {
+        $this->hmacKey = (string)$hmacKey;
     }
 
 

@@ -165,7 +165,7 @@ class PrepareCreate extends AbstractAjaxPrepare
 
         $this->jobDataDto->generateId();
 
-        $this->jobCreate->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Cloning in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_CREATE, $this->queueId);
+        $this->jobCreate->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Cloning in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_CREATE, $this->queueId, $this->jobDataDto->getName() ?: $this->jobDataDto->getCloneId());
 
         $this->jobCreate->setJobDataDto($this->jobDataDto);
 

@@ -182,6 +182,15 @@ class PathIdentifier
 
 
 
+    public function isSafeIdentifiableDatabaseFile(string $identifiablePath): bool
+    {
+        return $this->isSafeIdentifiablePath($identifiablePath) && preg_match('/(?:\.wpstgdb(?:\.[1-9][0-9]*)?|_[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}_[a-f0-9]{32})\.sql\z/', $identifiablePath) === 1;
+    }
+
+
+
+
+
 
     public function hasPathTraversal(string $identifiablePath): bool
     {

@@ -6,6 +6,7 @@ use WPStaging\Backup\BackupDeleter;
 use WPStaging\Backup\Security\Ajax\BackupDirectorySecurityController;
 use WPStaging\Backup\Security\BackupDirectoryProtectionService;
 use WPStaging\Backup\Security\BackupDirectorySecurityCheck;
+use WPStaging\Backup\Security\PrivateDirectorySecurityCheck;
 use WPStaging\Backup\Transfer\Ajax\TransferSessionController;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\DI\ServiceProvider;
@@ -35,6 +36,7 @@ class TransferServiceProvider extends ServiceProvider
         add_action('admin_init', $this->container->callback(BackupDirectoryProtectionService::class, 'maybeProtect'), 20, 0);
         add_action(Cron::ACTION_WEEKLY_EVENT, $this->container->callback(BackupDirectoryProtectionService::class, 'protect'), 30, 0);
         add_action(Cron::ACTION_DAILY_EVENT, $this->container->callback(BackupDirectorySecurityCheck::class, 'maybeRun'), 30, 0);
+        add_action(Cron::ACTION_DAILY_EVENT, $this->container->callback(PrivateDirectorySecurityCheck::class, 'run'), 30, 0);
     }
 
  

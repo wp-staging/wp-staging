@@ -24,4 +24,15 @@ class Capabilities
     {
         return 'manage_options';
     }
+
+
+
+
+
+
+
+    public function isSingleSiteOrCurrentUserSuperAdmin(): bool
+    {
+        return !is_multisite() || is_super_admin();
+    }
 }

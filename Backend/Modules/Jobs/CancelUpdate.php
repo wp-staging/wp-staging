@@ -3,6 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
+use WPStaging\Framework\Job\JobTransientCache;
 
 
 
@@ -21,6 +22,7 @@ class CancelUpdate extends Job
 
         if (!empty($this->options->jobIdentifier)) {
             AnalyticsEventDto::enqueueCancelEvent($this->options->jobIdentifier);
+            $this->announceLegacyJobStopped(JobTransientCache::STATUS_CANCELLED);
         }
 
         if (empty($cloneData)) {

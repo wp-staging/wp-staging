@@ -18,6 +18,13 @@ class Frontend
  
     const FILTER_FRONTEND_SHOW_LOGIN_FORM = 'wpstg.frontend.showLoginForm';
 
+ 
+    const FILTER_ALLOW_REST_REQUEST_WITHOUT_LOGIN = 'wpstg.frontend.allowRestRequestWithoutLogin';
+
+
+
+    const CONTENT_SELECTING_QUERY_VARS = ['p', 'pagename', 'page_id', 'name', 'attachment', 'attachment_id', 'post_type', 'post_type_archive', 'feed', 'feeds', 's', 'cat', 'category_name', 'tag', 'tag_id', 'author', 'author_name', 'year', 'monthnum', 'day', 'm', 'paged', 'static', 'subpost', 'subpost_id', 'preview', 'taxonomy', 'term', 'embed', 'rest_route'];
+
 
 
 
@@ -61,8 +68,16 @@ class Frontend
             return;
         }
 
+        if ($this->isStagingSite() && $this->requestIsAtLoginUrl()) {
+            add_action('parse_request', [$this, 'enforceLoginForm'], PHP_INT_MIN);
+            add_action('template_redirect', [$this, 'enforceLoginForm'], PHP_INT_MIN);
+            return;
+        }
+
         $this->enforceLoginForm();
     }
+
+
 
 
 
@@ -78,9 +93,48 @@ class Frontend
             return;
         }
 
-        if ($this->showLoginForm()) {
-            $this->serveRestRequest();
+        if (!$this->showLoginForm()) {
+            return;
         }
+
+        $restRoute                      = (string)$wp->query_vars['rest_route'];
+        $authenticatedBeforeCookieCheck = false;
+        add_filter('rest_authentication_errors', function ($result) use (&$authenticatedBeforeCookieCheck) {
+            $authenticatedBeforeCookieCheck = $result === true;
+            return $result;
+        }, 99);
+        add_filter('rest_authentication_errors', function ($result) use ($restRoute, &$authenticatedBeforeCookieCheck) {
+            return $this->restAuthenticationErrorForStagingLogin($result, $restRoute, $authenticatedBeforeCookieCheck);
+        }, PHP_INT_MAX);
+
+        $this->serveRestRequest();
+    }
+
+
+
+
+
+
+
+
+
+
+    private function restAuthenticationErrorForStagingLogin($result, string $restRoute, bool $authenticatedBeforeCookieCheck)
+    {
+        if (is_wp_error($result) || is_user_logged_in() || ($authenticatedBeforeCookieCheck && $result === true)) {
+            return $result;
+        }
+
+        $isWpStagingRoute = stripos(trailingslashit($restRoute), '/' . Rest::WPSTG_ROUTE_NAMESPACE_V1 . '/') === 0;
+        if (Hooks::applyFilters(self::FILTER_ALLOW_REST_REQUEST_WITHOUT_LOGIN, $isWpStagingRoute, $restRoute)) {
+            return $result;
+        }
+
+        return new \WP_Error(
+            'rest_not_logged_in',
+            __('Log in to use this staging site\'s REST API.', 'wp-staging'),
+            ['status' => 401]
+        );
     }
 
 
@@ -294,11 +348,11 @@ class Frontend
             return false;
         }
 
-        if ($this->isLoginPage() || is_admin()) {
+        if (!$this->isStagingSite()) {
             return false;
         }
 
-        if (!$this->isStagingSite()) {
+        if ($this->isLoginPage() || is_admin()) {
             return false;
         }
 
@@ -323,9 +377,145 @@ class Frontend
 
 
 
+
+
     protected function isLoginPage(): bool
     {
-        return ($GLOBALS["pagenow"] === "wp-login.php");
+        $pagenow = isset($GLOBALS['pagenow']) ? $GLOBALS['pagenow'] : '';
+
+        return $pagenow === 'wp-login.php'
+            || ($pagenow === 'index.php' && $this->requestIsAtLoginUrl());
+    }
+
+
+
+
+
+
+    private function requestIsAtLoginUrl(): bool
+    {
+        $loginUrl = wp_parse_url(wp_login_url());
+        $homeUrl  = wp_parse_url(home_url());
+        if (!is_array($loginUrl) || empty($loginUrl['path']) || !is_array($homeUrl) || empty($homeUrl['host'])) {
+            return false;
+        }
+
+        if (!$this->loginUrlBelongsToThisSite($loginUrl, $homeUrl)) {
+            return false;
+        }
+
+        $loginPath   = rtrim($loginUrl['path'], '/');
+        $requestPath = isset($_SERVER['REQUEST_URI']) ? explode('?', (string) $_SERVER['REQUEST_URI'], 2)[0] : ''; // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- matched only, never output or stored
+        if ($loginPath !== rtrim($requestPath, '/')) {
+            return false;
+        }
+
+        $homePath   = rtrim((string) (isset($homeUrl['path']) ? $homeUrl['path'] : ''), '/');
+        $isSiteRoot = $loginPath === $homePath || $loginPath === $homePath . '/index.php';
+        parse_str(isset($loginUrl['query']) ? $loginUrl['query'] : '', $loginArgs);
+        if ($loginArgs === [] && $isSiteRoot) {
+            return false;
+        }
+
+        $requestArgs = wp_unslash($_GET); // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- matched only, never output or stored
+        foreach ($loginArgs as $arg => $value) {
+            if (!is_scalar($value) || !isset($requestArgs[$arg]) || !is_scalar($requestArgs[$arg]) || (string) $requestArgs[$arg] !== (string) $value) {
+                return false;
+            }
+        }
+
+        if ($loginArgs === []) {
+            return !$this->addressResolvesToContent() && !$this->mainQueryServesContent();
+        }
+
+        return array_diff_key($this->queryVarsCarriedByTheRequest(), $loginArgs) === [];
+    }
+
+
+
+
+
+
+
+
+    private function addressResolvesToContent(): bool
+    {
+        if (!isset($GLOBALS["wp"]) || !is_array($GLOBALS["wp"]->query_vars)) {
+            return false;
+        }
+
+        return array_intersect_key($GLOBALS["wp"]->query_vars, array_flip(self::CONTENT_SELECTING_QUERY_VARS)) !== [];
+    }
+
+
+
+
+
+
+
+
+    private function mainQueryServesContent(): bool
+    {
+        if (!isset($GLOBALS["wp_query"]) || !$GLOBALS["wp_query"] instanceof \WP_Query) {
+            return false;
+        }
+
+        $query = $GLOBALS["wp_query"];
+
+        return $query->is_page
+            || $query->is_singular
+            || $query->is_posts_page
+            || !empty($query->posts)
+            || (int) $query->found_posts > 0;
+    }
+
+
+
+
+
+
+
+
+
+    private function loginUrlBelongsToThisSite(array $loginUrl, array $homeUrl): bool
+    {
+        if (!isset($loginUrl['host'])) {
+            return true;
+        }
+
+        $loginPort = isset($loginUrl['port']) ? (int) $loginUrl['port'] : 0;
+        $homePort  = isset($homeUrl['port']) ? (int) $homeUrl['port'] : 0;
+
+        return strcasecmp($loginUrl['host'], $homeUrl['host']) === 0 && $loginPort === $homePort;
+    }
+
+
+
+
+
+
+
+
+
+    private function queryVarsCarriedByTheRequest(): array
+    {
+        $carriedByRequest = $_GET + $_POST; // phpcs:ignore WPStagingCS.Security.SanitizeInput.InputNotSanitized -- its keys are matched only, never output or stored
+
+        if (!isset($GLOBALS['wp'])) {
+            return [];
+        }
+
+        $wp = $GLOBALS['wp'];
+
+        if (is_array($wp->query_vars) && $wp->query_vars !== []) {
+            return array_intersect_key($wp->query_vars, $carriedByRequest);
+        }
+
+        if (!is_array($wp->public_query_vars)) {
+            return [];
+        }
+
+        return array_intersect_key($carriedByRequest, array_flip($wp->public_query_vars));
     }
 
 

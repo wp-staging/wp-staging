@@ -180,6 +180,24 @@ class BackupFileIndex implements IndexLineInterface
 
 
 
+    public function getIsEncrypted(): bool
+    {
+        return false;
+    }
+
+
+
+
+
+    public function getExtraField(): string
+    {
+        return '';
+    }
+
+
+
+
+
 
 
 

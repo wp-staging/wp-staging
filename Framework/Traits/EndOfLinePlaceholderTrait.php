@@ -15,6 +15,16 @@ trait EndOfLinePlaceholderTrait
 
 
 
+    public function getEolPlaceholder()
+    {
+        return '{WPSTG_EOL}';
+    }
+
+
+
+
+
+
 
 
     public function replaceEOLsWithPlaceholders($subject)
@@ -28,7 +38,7 @@ trait EndOfLinePlaceholderTrait
             return $subject;
         }
 
-        return empty($subject) ? $subject : str_replace([PHP_EOL], ['{WPSTG_EOL}'], $subject);
+        return empty($subject) ? $subject : str_replace([PHP_EOL], [$this->getEolPlaceholder()], $subject);
     }
 
 
@@ -44,7 +54,7 @@ trait EndOfLinePlaceholderTrait
             return $subject;
         }
 
-        if (strpos($subject, '{WPSTG_EOL}') === false) {
+        if (strpos($subject, $this->getEolPlaceholder()) === false) {
             return $subject;
         }
 
@@ -56,6 +66,6 @@ trait EndOfLinePlaceholderTrait
             return $subject;
         }
 
-        return empty($subject) ? $subject : str_replace(['{WPSTG_EOL}'], [PHP_EOL], $subject);
+        return empty($subject) ? $subject : str_replace([$this->getEolPlaceholder()], [PHP_EOL], $subject);
     }
 }

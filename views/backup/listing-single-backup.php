@@ -104,6 +104,11 @@ $wpstgRestorePageUrl = add_query_arg([
                         <?php esc_html_e('Compressed', 'wp-staging'); ?>
                     </span>
                 <?php endif; ?>
+                <?php if ($backup->isEncrypted) : ?>
+                    <span class="wpstg-clone-label wpstg-clone-label--encrypted">
+                        <?php esc_html_e('Encrypted', 'wp-staging'); ?>
+                    </span>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
         <div class="wpstg-clone-actions">

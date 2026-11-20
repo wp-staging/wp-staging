@@ -269,6 +269,18 @@ if ($databaseRestored) {
                 </div>
             </section>
 
+            <?php if ($info->getIsEncrypted()) : ?>
+                <section>
+                    <label for="wpstg-restore-encryption-password" class="wpstg-form-label"><?php esc_html_e('Backup Password', 'wp-staging'); ?></label>
+                    <div class="wpstg-password-toggle-wrapper">
+                        <input id="wpstg-restore-encryption-password" type="password" class="wpstg-input wpstg-input-md !wpstg-w-full !wpstg-max-w-full" autocomplete="off" aria-describedby="wpstg-restore-encryption-help wpstg-restore-encryption-error">
+                        <?php require WPSTG_VIEWS_DIR . '_main/partials/password-toggle-button.php'; ?>
+                    </div>
+                    <p id="wpstg-restore-encryption-help" class="wpstg-form-description wpstg-m-0 wpstg-mt-2"><?php esc_html_e('This backup is encrypted. Enter the password that was set when it was created.', 'wp-staging'); ?></p>
+                    <p id="wpstg-restore-encryption-error" class="wpstg-m-0 wpstg-mt-2 wpstg-text-sm wpstg-text-red-600 dark:wpstg-text-red-400" role="alert" hidden></p>
+                </section>
+            <?php endif; ?>
+
             <section>
                 <div class="wpstg-restore-warning">
                     <span class="wpstg-restore-warning__icon" aria-hidden="true"><?php $renderer->icon('warning', 'wpstg-h-4 wpstg-w-4'); ?></span>

@@ -7,6 +7,7 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Logger\EventLoggerConst;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Sites;
@@ -87,6 +88,8 @@ class Finish extends Job
         }
 
         do_action(StagingSiteCreate::ACTION_CLONING_COMPLETE, $this->options);
+
+        $this->announceLegacyJobStopped(JobTransientCache::STATUS_SUCCESS);
 
         $this->logger->info("✓ " . $successMessage);
         $this->logCloneCompleted($processType);

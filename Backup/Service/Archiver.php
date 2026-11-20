@@ -25,6 +25,7 @@ use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\FileAppendTimeLimitException;
 use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\Exception\NotFinishedException;
 use WPStaging\Framework\Job\Exception\ThresholdException;
@@ -68,7 +69,7 @@ class Archiver
 
 
 
-    const MAX_RETRIES_BEFORE_EXTENDING_TIME_LIMIT = 1;
+    const MAX_REQUESTS_WITHOUT_PROGRESS = 1;
 
 
 
@@ -94,6 +95,9 @@ class Archiver
 
  
     const CREATE_BINARY_HEADER = true;
+
+ 
+    private static $startOfRequestWithLastHit;
 
  
     protected $tempBackupIndex;
@@ -431,6 +435,7 @@ class Archiver
             throw $ex;
         }
 
+        $this->jobDataDto->resetNumberOfRetries();
         $newBytesWritten                 = $writtenBytesTotal + $fileHeaderSizeInBytes - $writtenBytesBefore;
         $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderSizeInBytes();
 
@@ -689,7 +694,7 @@ class Archiver
 
 
 
-    private function stampCrc32Checksum(string $crc32Checksum): string
+    protected function stampCrc32Checksum(string $crc32Checksum): string
     {
         return $crc32Checksum . ':' . $this->fileHeader->getUncompressedSize() . ':' . $this->fileHeader->getModifiedTime();
     }
@@ -760,18 +765,30 @@ class Archiver
 
 
 
+
+
+
     public function maybeIncrementFileAppendTimeLimit()
     {
-        $this->jobDataDto->incrementNumberOfRetries();
-        if ($this->jobDataDto->getNumberOfRetries() > self::MAX_RETRIES_BEFORE_EXTENDING_TIME_LIMIT) {
+ 
+        $jobDataDto              = $this->jobDataDto;
+        $maxTimeLimit            = $this->getMaxPhpTimeLimitAllowed();
+        $isFirstHitOfThisRequest = self::$startOfRequestWithLastHit !== WPStaging::$startTime;
+        self::$startOfRequestWithLastHit = WPStaging::$startTime;
+        if ($isFirstHitOfThisRequest) {
+            $jobDataDto->incrementNumberOfRetries();
+        }
+
+        if ($jobDataDto->getFileAppendTimeLimit() < $maxTimeLimit) {
+            $jobDataDto->incrementFileAppendTimeLimit();
+            $jobDataDto->setFileAppendTimeLimit(min($jobDataDto->getFileAppendTimeLimit(), $maxTimeLimit));
             return;
         }
 
- 
-        $jobDataDto   = $this->jobDataDto;
-        $currentLimit = $jobDataDto->getFileAppendTimeLimit();
-        $jobDataDto->incrementFileAppendTimeLimit();
-        $jobDataDto->setFileAppendTimeLimit(max($currentLimit, min($jobDataDto->getFileAppendTimeLimit(), $this->getMaxPhpTimeLimitAllowed())));
+        if ($isFirstHitOfThisRequest && $jobDataDto->getNumberOfRetries() > self::MAX_REQUESTS_WITHOUT_PROGRESS) {
+            /* translators: %s: path of the file that could not be written */
+            throw new FileAppendTimeLimitException(sprintf(__('The backup stopped because the file %s could not be written within the longest time one request is given. If it is a large site file, exclude it from the backup. If the PHP max_execution_time of your server is below 60 seconds, ask your hosting provider to raise it.', 'wp-staging'), $this->archiverDto->getFilePath()));
+        }
     }
 
     protected function getMaxPhpTimeLimitAllowed(): int

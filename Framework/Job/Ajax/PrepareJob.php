@@ -28,6 +28,9 @@ abstract class PrepareJob
  
     protected $queueId = '';
 
+ 
+    protected $requiresSuperAdminOnMultisite = false;
+
     public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock)
     {
         $this->directory   = $directory;
@@ -44,7 +47,8 @@ abstract class PrepareJob
 
     public function ajaxPrepare($data)
     {
-        if (!$this->auth->isAuthenticatedRequest()) {
+        $isAuthenticated = $this->requiresSuperAdminOnMultisite ? $this->auth->isAuthenticatedStagingRequest() : $this->auth->isAuthenticatedRequest();
+        if (!$isAuthenticated) {
             wp_send_json_error(null, 401);
         }
 

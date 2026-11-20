@@ -120,6 +120,11 @@ class Settings
 
 
 
+    protected $recordJobHistory;
+
+
+
+
     public function __construct()
     {
         $stored     = get_option("wpstg_settings", []);
@@ -394,6 +399,15 @@ class Settings
         }
 
         return (bool)$this->enableBackupBeforeUpdate;
+    }
+
+    public function isJobHistoryRecordingEnabled(): bool
+    {
+        if ($this->recordJobHistory === null) {
+            return true;
+        }
+
+        return (bool)$this->recordJobHistory;
     }
 
 

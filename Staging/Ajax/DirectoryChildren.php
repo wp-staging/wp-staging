@@ -49,7 +49,7 @@ class DirectoryChildren extends AbstractTemplateComponent
 
     public function ajaxRender()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 

@@ -55,7 +55,7 @@ class Setup extends AbstractTemplateComponent
 
     public function ajaxSetup()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 

@@ -181,7 +181,6 @@ class Queue
 
 
 
-
     public function enqueueAction($action, array $args = [], $jobId = 'default', $priority = 0, int $notBefore = 0)
     {
  
@@ -200,8 +199,7 @@ class Queue
         }
 
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
- 
-            return false;
+            throw new QueueException('Background processing table could not be created.');
         }
 
         if ($this->isTableOutdatedAfterFailedUpgrade()) {
@@ -226,27 +224,15 @@ class Queue
         $result = $this->database->query($query);
 
         if ($result === false) {
-            \WPStaging\functions\debug_log(json_encode([
-                'root'  => 'Error while trying insert Action information.',
-                'class' => get_class($this),
-                'query' => $query,
-                'error' => $this->database->error(),
-            ]));
-
-            return false;
+            $error = (string)$this->database->error();
+            debug_log('Queue enqueueAction Error: ' . $error);
+            throw new QueueException('Background processing action could not be queued: ' . $this->getDatabaseErrorCause($error));
         }
 
         $id = $this->database->insertId();
 
         if (empty($id)) {
-            \WPStaging\functions\debug_log(json_encode([
-                'root'  => 'Error while trying to fetch last inserted Action ID.',
-                'class' => get_class($this),
-                'query' => $query,
-                'error' => $this->database->error(),
-            ]));
-
-            return false;
+            throw new QueueException('Background processing action could not be queued: the queue table returned no action ID.');
         }
 
         $actionObject            = $actionObject->alter(['id' => $id, 'status' => self::STATUS_READY]);
@@ -1670,6 +1656,16 @@ class Queue
         }
 
         return $breakpointDate;
+    }
+
+ 
+    private function getDatabaseErrorCause(string $error): string
+    {
+        if (empty($this->database->isSQLite)) {
+            return $error;
+        }
+
+        return preg_match('/class="error_message"[^>]*>.*?Error message was:(.*?)<\/div>/s', $error, $matches) ? trim(strip_tags($matches[1])) : 'unknown SQLite error.';
     }
 
 

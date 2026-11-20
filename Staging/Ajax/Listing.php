@@ -34,7 +34,7 @@ class Listing extends AbstractTemplateComponent
 
     public function ajaxListing()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 

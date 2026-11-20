@@ -238,6 +238,17 @@ class Settings
                 ->setDefault((isset($settings->keepPermalinks)) ? $settings->keepPermalinks : null),
                 'wpstg-settings-keep-permalinks'
             );
+
+            $element = new Toggle(
+                "wpstg_settings[recordJobHistory]",
+                ['1' => '']
+            );
+
+            $this->form["general"]->add(
+                $element->setLabel(__("Record Job History", "wp-staging"))
+                ->setDefault((new SettingsDTO())->isJobHistoryRecordingEnabled() ? '1' : null),
+                'wpstg-settings-record-job-history'
+            );
         }
 
  

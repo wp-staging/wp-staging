@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.21.0
+Stable tag: 4.22.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,23 +283,21 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.21.0 =
-* New: Reach a staging site by IP address, so a backup or monitoring service can open it without logging in. (Pro)
-* Enh: Follow a backup URL that redirects, checking every redirect target before the file is requested.
-* UX: Name two Backup modal options Other wp-content items and Other WP root folders, each with its name, size and info icon on one line.
+= 4.22.0 =
+* New: Add a Job History screen listing every backup, staging and sync operation with the user who started it, its result and its log, and a setting to turn the recording off. (Pro)
 * Security: This release includes security hardening. Updating is strongly recommended.
-* Fix: Creating, updating, resetting or pushing a staging site no longer stops with a duplicate-key error from rows the database copy wrote twice.
-* Fix: Backups on some hosts no longer fail with "shorter than its last checkpoint", which now names the sizes it compared.
-* Fix: A restore no longer gets stuck on "Extracting files" when a media file cannot be replaced: the file is overwritten where possible, skipped otherwise, and the restore finishes.
-* Fix: A file restored after an interrupted request is complete again, instead of a truncated copy or a restore that never finishes.
-* Fix: The standalone restorer no longer deletes the tables of a staging site or of another site in the same database. (Pro)
-* Fix: Restoring a network backup onto a staging network marks every subsite as a staging site instead of failing with a database error, and the site and home URL stay correct. (Pro)
-* Fix: Two-factor codes work again on a staging site behind the login form.
-* Fix: A one-time staging login link can no longer be reused as a permanent shared link. (Pro)
-* Fix: A paused backup schedule no longer makes an active schedule miss its run.
-* Fix: Backup uploads keep their full chunk size when PHP leaves post_max_size and upload_max_filesize unlimited.
-* Fix: The database tables you exclude stay untouched when you update a staging site with the Next-Gen engine.
-* Plus 22 more fixes.
+* Fix: Verify the remote site's TLS certificate in Remote Sync, so a man-in-the-middle can no longer read the connection credentials or the transferred backup. A site whose peer has a certificate this server does not trust, such as a local development site, gets a refused connection with a message that names the cause and offers the new "Accept self-signed SSL certificates" switch right in the connect dialog. (Pro)
+* Fix: Stop the backup with a clear message instead of retrying a large file forever when the PHP time limit is too short to write any of it.
+* Fix: Queue only one backup when two cron runners fire the same backup schedule at the same moment.
+* Fix: Stop Update Protection from reporting a backup that reached the largest file size the server allows as a lack of disk space.
+* Fix: Show the real reason when a background backup cannot be queued, instead of a generic error.
+* Fix: Keep OneDrive connected when Microsoft answers with a new refresh token. (Pro)
+* Fix: Stop a OneDrive upload that Microsoft keeps refusing after a limited number of retries, and keep the backup available locally, instead of retrying forever. (Pro)
+* Fix: Copy the last files of the file list to a staging site created or updated with the Classic engine, which could be left out while the log reported every file copied.
+* Fix: Upload every backup part to the next remote storage after an upload to the previous one failed. (Pro)
+* Fix: Copy the users and usermeta tables together when a staging site is created, updated or reset, so a production user never inherits the role of a removed staging user.
+* Fix: On a multisite, only a network super admin can create, update, push or otherwise manage staging sites.
+* Plus 8 more fixes.
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

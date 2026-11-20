@@ -298,9 +298,11 @@ class FileHeader implements IndexLineInterface
 
 
 
+
+
+
     public function decodeFileHeader(string $index)
     {
-        $index         = $this->trimTrailingLineBreak($index);
         $fixedHeader   = substr($index, 0, self::FILE_HEADER_FIXED_SIZE);
         $dynamicHeader = substr($index, self::FILE_HEADER_FIXED_SIZE);
         if (strpos($fixedHeader, self::START_SIGNATURE) !== 0) {
@@ -318,7 +320,7 @@ class FileHeader implements IndexLineInterface
         $this->extraFieldLength = $header[7];
         $this->setFilePath(substr($dynamicHeader, 0, $this->filePathLength));
         $this->setFileName(substr($dynamicHeader, $this->filePathLength, $this->fileNameLength));
-        $this->setExtraField($this->replacePlaceholdersWithEOLs(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
+        $this->setExtraField($this->extraFieldFromWire(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
     }
 
 
@@ -327,7 +329,6 @@ class FileHeader implements IndexLineInterface
 
     public function decodeIndexHeader(string $index)
     {
-        $index         = $this->trimTrailingLineBreak($index);
         $fixedHeader   = substr($index, 0, self::INDEX_HEADER_FIXED_SIZE);
         $dynamicHeader = substr($index, self::INDEX_HEADER_FIXED_SIZE);
         $header        = $this->encoder->hexToIntArray(self::INDEX_HEADER_FORMAT, $fixedHeader);
@@ -343,26 +344,7 @@ class FileHeader implements IndexLineInterface
         $this->extraFieldLength = $header[8];
         $this->setFilePath(substr($dynamicHeader, 0, $this->filePathLength));
         $this->setFileName(substr($dynamicHeader, $this->filePathLength, $this->fileNameLength));
-        $this->setExtraField($this->replacePlaceholdersWithEOLs(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
-    }
-
-
-
-
-
-
-
-    private function trimTrailingLineBreak(string $line): string
-    {
-        if (substr($line, -2) === "\r\n") {
-            return substr($line, 0, -2);
-        }
-
-        if (substr($line, -1) === "\n") {
-            return substr($line, 0, -1);
-        }
-
-        return $line;
+        $this->setExtraField($this->extraFieldFromWire(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength)));
     }
 
 
@@ -404,7 +386,7 @@ class FileHeader implements IndexLineInterface
             $this->extraFieldLength,
         ], 'getFileHeader');
 
-        $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraFieldForWire($this->extraField);
         $fileHeader = $this->replaceEOLsWithPlaceholders($fileHeader);
 
         return $fileHeader;
@@ -433,7 +415,7 @@ class FileHeader implements IndexLineInterface
             $this->extraFieldLength,
         ], 'getUncompressedFileHeader');
 
-        $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraFieldForWire($this->extraField);
         $fileHeader = $this->replaceEOLsWithPlaceholders($fileHeader);
 
         $this->setAttributes($oldAttributes);
@@ -455,7 +437,7 @@ class FileHeader implements IndexLineInterface
             $this->extraFieldLength,
         ], 'getIndexHeader');
 
-        $fixedHeader = $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fixedHeader = $fixedHeader . $this->filePath . $this->fileName . $this->extraFieldForWire($this->extraField);
         $fixedHeader = $this->replaceEOLsWithPlaceholders($fixedHeader);
 
         return $fixedHeader;
@@ -632,6 +614,51 @@ class FileHeader implements IndexLineInterface
             $this->attributes &= ~FileHeaderAttribute::REQUIRE_NEXT_PART;
     }
 
+    public function getIsEncrypted(): bool
+    {
+        if ($this->attributes & FileHeaderAttribute::ENCRYPTED) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+
+    public function setIsEncrypted(bool $isEncrypted)
+    {
+        $isEncrypted ?
+            $this->attributes |= FileHeaderAttribute::ENCRYPTED :
+            $this->attributes &= ~FileHeaderAttribute::ENCRYPTED;
+    }
+
+
+
+
+
+
+    public function getEncryptionIv(): string
+    {
+        if (!$this->getIsEncrypted()) {
+            return '';
+        }
+
+        $iv = $this->getExtraFieldEntry(ExtraFieldType::IV);
+        return $iv === null ? '' : $iv;
+    }
+
+
+
+
+
+
+
+    public function setEncryptionIv(string $iv)
+    {
+        $this->setExtraFieldEntry(ExtraFieldType::IV, $iv);
+    }
+
     public function getStartOffset(): int
     {
         return $this->startOffset;
@@ -721,15 +748,35 @@ class FileHeader implements IndexLineInterface
 
 
 
+
+
+
+
+
+
+
+
+
+    private function extraFieldForWire(string $extraField): string
+    {
+        return str_replace("\n", $this->getEolPlaceholder(), $extraField);
+    }
+
+
+
+
+    private function extraFieldFromWire(string $extraField): string
+    {
+        return str_replace($this->getEolPlaceholder(), "\n", $extraField);
+    }
+
+
+
+
     public function setExtraField(string $extraField)
     {
         $this->extraField       = $extraField;
- 
- 
- 
- 
- 
-        $this->extraFieldLength = strlen($this->replaceEOLsWithPlaceholders($extraField));
+        $this->extraFieldLength = strlen($this->extraFieldForWire($extraField));
     }
 
 
@@ -829,6 +876,7 @@ class FileHeader implements IndexLineInterface
             'fileName'         => $this->getFileName(),
             'extraField'       => $this->getExtraField(),
             'isCompressed'     => $this->getIsCompressed(),
+            'isEncrypted'      => $this->getIsEncrypted(),
         ];
     }
 }

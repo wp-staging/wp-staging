@@ -141,6 +141,10 @@ class UpdateProtectionHealth
 
         $haystack = strtolower($message);
 
+        if (strpos($haystack, 'largest file size') !== false) {
+            return self::REASON_UNKNOWN;
+        }
+
         if (strpos($haystack, 'disk space') !== false || strpos($haystack, 'no space left') !== false) {
             return self::REASON_DISK_SPACE;
         }

@@ -6,6 +6,7 @@ use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Backend\Upgrade\Upgrade;
 use WPStaging\Backup\Ajax\FileList\ListableBackupsCollection;
 use WPStaging\Backup\Storage\Providers;
+use WPStaging\Core\DTO\Settings as SettingsDTO;
 use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Multisite;
@@ -410,6 +411,7 @@ class SystemInfo
         }
 
         $output .= $this->info("Users with Staging Access:", $usersList);
+        $output .= $this->info("Record Job History:", WPStaging::isPro() ? (WPStaging::make(SettingsDTO::class)->isJobHistoryRecordingEnabled() ? 'Yes' : 'No') : self::NOT_SET_LABEL);
         $output .= $this->info("Delete Data on Uninstall:", isset($settings->unInstallOnDelete) ? ($settings->unInstallOnDelete ? 'Yes' : 'No') : self::NOT_SET_LABEL);
         $output .= $this->info("Send Usage Information:", !empty(get_option('wpstg_analytics_has_consent')) ? 'true' : 'false');
         $output .= $this->info("Send Backup Errors via Email:", $this->formatBooleanOption($optionBackupScheduleErrorReport));

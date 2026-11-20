@@ -5,6 +5,7 @@ namespace WPStaging\Backup\Job\Jobs;
 use RuntimeException;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\Encryption\BackupEncryptionService;
 use WPStaging\Backup\Task\Tasks\JobRestore\StartRestoreTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\CleanExistingMediaTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\ExtractFilesTask;
@@ -82,6 +83,9 @@ class JobRestore extends AbstractJob
             $this->jobDataDto->setCaughtExceptionRetries(0);
         } catch (\Exception $e) {
             $this->currentTask->getLogger()->critical($e->getMessage(), ['errorCode' => ErrorCode::fromThrowable($e)]);
+            if (BackupEncryptionService::isEncryptedIntegrityException($e)) {
+                return $this->getJobFailResponseForThrowable($e);
+            }
 
             $retries = $this->jobDataDto->getCaughtExceptionRetries() + 1;
             $this->jobDataDto->setCaughtExceptionRetries($retries);

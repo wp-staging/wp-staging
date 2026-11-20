@@ -128,7 +128,7 @@ class DatabaseImporter
     private $searchReplace;
 
  
-    private $searchReplaceForPrefix;
+    private $finalDatabasePrefix;
 
  
     protected $tmpDatabasePrefix;
@@ -341,7 +341,7 @@ class DatabaseImporter
         $this->tmpDatabasePrefix = $tmpDatabasePrefix;
         $this->databaseImporterDto->setTmpPrefix($this->tmpDatabasePrefix);
 
-        $this->setupSearchReplaceForPrefix();
+        $this->finalDatabasePrefix = $this->database->getPrefix();
 
         if (!$this->file) {
             throw new \RuntimeException('Restore file is not set');
@@ -599,13 +599,11 @@ class DatabaseImporter
 
 
 
-        $query = $this->searchReplaceForPrefix->replace($query);
+        $query = $this->replacePrefixPlaceholders($query, $this->tmpDatabasePrefix, $this->finalDatabasePrefix);
 
         $query = $this->maybeShorterTableNameForDropTableQuery($query);
         $query = $this->maybeShorterTableNameForCreateTableQuery($query);
         $query = $this->maybeFixReplaceTableConstraints($query);
-
-        $this->replaceTableCollations($query);
 
  
         if (strpos($query, 'INSERT INTO') === 0) {
@@ -658,6 +656,7 @@ class DatabaseImporter
  
             $hasFlushFailed = $this->queryInserter->commit() === false;
 
+            $this->replaceTableCollations($query);
             $this->queryCompatibility->removeDefiner($query);
             $this->queryCompatibility->removeSqlSecurity($query);
             $this->queryCompatibility->removeAlgorithm($query);
@@ -1532,19 +1531,31 @@ class DatabaseImporter
         return strtr($query, $replacementMap);
     }
 
-    protected function setupSearchReplaceForPrefix()
+
+
+
+
+
+
+    public function replacePrefixPlaceholders(string $query, string $temporaryPrefix, string $finalPrefix): string
     {
+        $placeholders = ['{WPSTG_TMP_PREFIX}', '{WPSTG_FINAL_PREFIX}'];
+        $prefixes     = [$temporaryPrefix, $finalPrefix];
+        $valuesOffset = strpos($query, 'INSERT INTO') === 0 ? strpos($query, ' VALUES (') : false;
+        if ($valuesOffset === false) {
+            return str_replace($placeholders, $prefixes, $query);
+        }
 
+        $query = substr_replace($query, str_replace($placeholders, $prefixes, substr($query, 0, $valuesOffset)), 0, $valuesOffset);
+        if (strpos($query, '{WPSTG_FINAL_PREFIX}') === false) {
+            return $query;
+        }
 
+        $exporterPrefixedKeyPattern = "#(?<=[(,]')(?=[\w-]{0,255}+\{WPSTG_FINAL_PREFIX\})(?:[\w-]|\{WPSTG_FINAL_PREFIX\}){1,255}+(?='[,)])#";
 
-
-
-
-
-
-
-
-        $this->searchReplaceForPrefix = new SearchReplace(['{WPSTG_TMP_PREFIX}', '{WPSTG_FINAL_PREFIX}'], [$this->tmpDatabasePrefix, $this->database->getPrefix()], true, []);
+        return preg_replace_callback($exporterPrefixedKeyPattern, function (array $exporterPrefixedKey) use ($finalPrefix) {
+            return str_replace('{WPSTG_FINAL_PREFIX}', $finalPrefix, $exporterPrefixedKey[0]);
+        }, $query);
     }
 
     protected function shouldSearchReplace($query)

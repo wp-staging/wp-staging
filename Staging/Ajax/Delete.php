@@ -23,7 +23,7 @@ class Delete extends AbstractTemplateComponent
 
     public function ajaxDelete()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 

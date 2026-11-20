@@ -234,7 +234,13 @@ class Updating extends Job
         $this->options->isRunning = true;
         $this->initializeLegacyStagingRun($this->mainJob);
 
-        return $this->saveOptions();
+        if (!$this->saveOptions()) {
+            return false;
+        }
+
+        $this->announceLegacyJobStarted();
+
+        return true;
     }
 
 
@@ -291,6 +297,7 @@ class Updating extends Job
         $selectedTablesWithoutPrefix = isset($_POST['selectedTablesWithoutPrefix']) ? $this->sanitize->sanitizeString($_POST['selectedTablesWithoutPrefix']) : '';
         $selectedTables              = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
         $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $this->sanitize->sanitizeBool($_POST['allTablesExcluded']));
+        $selectedTables->setKeepUserTablesTogether();
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
     }
 

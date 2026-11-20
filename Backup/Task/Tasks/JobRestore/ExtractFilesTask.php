@@ -28,6 +28,7 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
+use WPStaging\Backup\Service\Encryption\BackupEncryptionService;
 
 class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
 {
@@ -164,6 +165,7 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         $this->extractorService->inject($this, $this->logger);
         $this->extractorService->setExcludedIdentifiers($this->getExcludedIdentifiers());
         $this->extractorService->setIsRepairMultipleHeadersIssue($this->canHaveMultipleHeadersIssue());
+        $this->configureEncryption();
         $this->extractorService->setRestoreDatabaseFiles($this->getDatabaseFilesNamedByEntryFile());
         $this->filesystem->mkdir($this->directory->getTmpDirectory(), true);
         $this->setupExtractor();
@@ -180,6 +182,26 @@ class ExtractFilesTask extends RestoreTask implements ExtractorTaskInterface
         $databaseFiles[]   = (string)$this->metadata->getDatabaseFile();
 
         return $databaseFiles;
+    }
+
+
+
+
+    protected function configureEncryption()
+    {
+        if (!$this->metadata->getIsEncrypted()) {
+            return;
+        }
+
+        $decryptionKey = base64_decode($this->jobDataDto->getDecryptionKey(), true);
+        $hmacKey       = base64_decode($this->jobDataDto->getHmacKey(), true);
+        if (empty($decryptionKey) || empty($hmacKey)) {
+            throw new \RuntimeException(__('Cannot restore encrypted backup without valid encryption key material.', 'wp-staging'));
+        }
+
+ 
+        $encryptionService = WPStaging::make(BackupEncryptionService::class);
+        $this->extractorService->configureEncryption($encryptionService, $decryptionKey, $hmacKey);
     }
 
 

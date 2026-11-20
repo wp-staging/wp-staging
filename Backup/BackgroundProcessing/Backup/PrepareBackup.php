@@ -139,7 +139,7 @@ class PrepareBackup extends PrepareJob
         }
 
         $transientCache = $this->job->getTransientCache();
-        $transientCache->startJob((string)$jobDataDto->getId(), esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, (string)$args['jobId'], '', (int)$jobDataDto->getStartTime());
+        $transientCache->startJob((string)$jobDataDto->getId(), esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, (string)$args['jobId'], (string)$jobDataDto->getName(), $jobDataDto->writesNoBackupFile(), '', (int)$jobDataDto->getStartTime());
 
         $uploadRetryAt = (int)($jobDataDto->getRemoteUploadRetry()['retryAt'] ?? 0);
         if ($uploadRetryAt > time()) {

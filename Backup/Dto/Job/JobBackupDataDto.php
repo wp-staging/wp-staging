@@ -222,6 +222,24 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
  
     private $isCompressed = false;
 
+ 
+    private $isEncrypted = false;
+
+ 
+    private $encryptionPassword = '';
+
+ 
+    private $encryptionSalt = '';
+
+ 
+    private $encryptionVerificationToken = '';
+
+ 
+    private $encryptionKey = '';
+
+ 
+    private $hmacKey = '';
+
 
 
 
@@ -246,6 +264,14 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function isScheduledBackup(): bool
     {
         return $this->getRepeatBackupOnSchedule() || !empty($this->getScheduleId());
+    }
+
+
+
+
+    public function writesNoBackupFile(): bool
+    {
+        return ($this->getRepeatBackupOnSchedule() && !$this->getIsCreateScheduleBackupNow()) || $this->getIsCreateBackupInBackground();
     }
 
 
@@ -322,6 +348,90 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setPushPrepareData(array $pushPrepareData)
     {
         $this->pushPrepareData = $pushPrepareData;
+    }
+
+    public function getIsEncrypted(): bool
+    {
+        return $this->isEncrypted;
+    }
+
+
+
+
+
+    public function setIsEncrypted($isEncrypted)
+    {
+        $this->isEncrypted = (bool)$isEncrypted;
+    }
+
+    public function getEncryptionPassword(): string
+    {
+        return $this->encryptionPassword;
+    }
+
+
+
+
+
+    public function setEncryptionPassword($encryptionPassword)
+    {
+        $this->encryptionPassword = (string)$encryptionPassword;
+    }
+
+    public function getEncryptionSalt(): string
+    {
+        return $this->encryptionSalt;
+    }
+
+
+
+
+
+    public function setEncryptionSalt($encryptionSalt)
+    {
+        $this->encryptionSalt = (string)$encryptionSalt;
+    }
+
+    public function getEncryptionVerificationToken(): string
+    {
+        return $this->encryptionVerificationToken;
+    }
+
+
+
+
+
+    public function setEncryptionVerificationToken($encryptionVerificationToken)
+    {
+        $this->encryptionVerificationToken = (string)$encryptionVerificationToken;
+    }
+
+    public function getEncryptionKey(): string
+    {
+        return $this->encryptionKey;
+    }
+
+
+
+
+
+    public function setEncryptionKey($encryptionKey)
+    {
+        $this->encryptionKey = (string)$encryptionKey;
+    }
+
+    public function getHmacKey(): string
+    {
+        return $this->hmacKey;
+    }
+
+
+
+
+
+    public function setHmacKey($hmacKey)
+    {
+        $this->hmacKey = (string)$hmacKey;
     }
 
 

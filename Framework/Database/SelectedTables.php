@@ -24,6 +24,9 @@ class SelectedTables
     private $includeAllTables = false;
 
  
+    private $keepUserTablesTogether = false;
+
+ 
     private $wpdb;
 
  
@@ -93,6 +96,16 @@ class SelectedTables
 
 
 
+
+    public function setKeepUserTablesTogether()
+    {
+        $this->keepUserTablesTogether = true;
+    }
+
+
+
+
+
     public function shouldIncludeAllTables(bool $includeAllTables = false)
     {
         $this->includeAllTables = $includeAllTables;
@@ -108,12 +121,8 @@ class SelectedTables
  
  
  
-        if (!empty($this->includedTables)) {
-            return array_values(array_unique(array_merge($this->includedTables, $this->selectedTablesWithoutPrefix)));
-        }
-
-        $selectedTables = $this->getPrefixedTables($isNetworkClone);
-        return array_values(array_unique(array_merge($selectedTables, $this->selectedTablesWithoutPrefix)));
+        $selectedTables = !empty($this->includedTables) ? $this->includedTables : $this->getPrefixedTables($isNetworkClone);
+        return $this->pairUserTables(array_values(array_unique(array_merge($selectedTables, $this->selectedTablesWithoutPrefix))));
     }
 
 
@@ -225,5 +234,38 @@ class SelectedTables
         }
 
         return true;
+    }
+
+
+
+
+
+    private function pairUserTables(array $tables)
+    {
+        $basePrefix = WPStaging::getInstance()->getVar("database")->normalizeTableNameCase(WPStaging::getTableBasePrefix());
+        $userTables = [$basePrefix . 'usermeta', $basePrefix . 'users'];
+        if (!$this->keepUserTablesTogether || !array_intersect($userTables, $tables)) {
+            return $tables;
+        }
+
+ 
+        $userTables = array_filter($userTables, function ($table) use ($tables) {
+            return in_array($table, $tables, true) || $this->isBaseTableInSourceDatabase($table);
+        });
+
+ 
+        return array_values(array_unique(array_merge($userTables, $tables)));
+    }
+
+
+
+
+
+    private function isBaseTableInSourceDatabase(string $table): bool
+    {
+        $wpdb   = WPStaging::getInstance()->get("wpdb");
+        $status = $wpdb->get_row($wpdb->prepare("SHOW TABLE STATUS LIKE %s", $wpdb->esc_like($table)));
+
+        return $status !== null && $status->Comment !== "VIEW";
     }
 }

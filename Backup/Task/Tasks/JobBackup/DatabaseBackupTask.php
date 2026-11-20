@@ -32,6 +32,7 @@ class DatabaseBackupTask extends BackupTask
     const TABLES_EXCLUDED_FROM_BACKUP = [
         'wpstg_queue',
         'wpstg_settings',
+        'wpstg_job_history',
         TransferSessionTable::TABLE_NAME,
         'wpr_rucss_used_css',
     ];

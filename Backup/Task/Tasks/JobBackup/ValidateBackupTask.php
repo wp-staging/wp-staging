@@ -20,12 +20,14 @@ use WPStaging\Backup\Interfaces\ExtractorTaskInterface;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Service\Extractor;
 use WPStaging\Backup\Task\BackupTask;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Backup\Service\Encryption\BackupEncryptionService;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
@@ -167,8 +169,29 @@ class ValidateBackupTask extends BackupTask implements ExtractorTaskInterface
 
         $this->metadata = new BackupMetadata();
         $this->metadata = $this->metadata->hydrateByFilePath($this->jobDataDto->getBackupFilePath());
+        $this->configureEncryption();
 
         $this->prepareCurrentBackupFileValidation();
+    }
+
+
+
+
+    protected function configureEncryption()
+    {
+        if (!$this->metadata->getIsEncrypted()) {
+            return;
+        }
+
+        $decryptionKey = base64_decode($this->jobDataDto->getEncryptionKey(), true);
+        $hmacKey       = base64_decode($this->jobDataDto->getHmacKey(), true);
+        if (empty($decryptionKey) || empty($hmacKey)) {
+            throw new RuntimeException(__('Cannot validate encrypted backup without valid encryption key material.', 'wp-staging'));
+        }
+
+ 
+        $encryptionService = WPStaging::make(BackupEncryptionService::class);
+        $this->backupExtractor->configureEncryption($encryptionService, $decryptionKey, $hmacKey);
     }
 
 

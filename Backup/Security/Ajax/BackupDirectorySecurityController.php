@@ -6,6 +6,7 @@ use Throwable;
 use WPStaging\Backup\Security\BackupDirectoryNoticeService;
 use WPStaging\Backup\Security\BackupDirectoryProtectionService;
 use WPStaging\Backup\Security\BackupDirectorySecurityCheck;
+use WPStaging\Backup\Security\PrivateDirectorySecurityCheck;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -28,6 +29,9 @@ class BackupDirectorySecurityController
     private $protectionService;
 
  
+    private $privateDirectoryCheck;
+
+ 
     private $templateEngine;
 
  
@@ -40,6 +44,7 @@ class BackupDirectorySecurityController
         BackupDirectorySecurityCheck $securityCheck,
         BackupDirectoryNoticeService $noticeService,
         BackupDirectoryProtectionService $protectionService,
+        PrivateDirectorySecurityCheck $privateDirectoryCheck,
         TemplateEngine $templateEngine,
         Capabilities $capabilities,
         Nonce $nonce
@@ -50,6 +55,8 @@ class BackupDirectorySecurityController
         $this->templateEngine    = $templateEngine;
         $this->capabilities      = $capabilities;
         $this->nonce             = $nonce;
+
+        $this->privateDirectoryCheck = $privateDirectoryCheck;
     }
 
  
@@ -63,6 +70,7 @@ class BackupDirectorySecurityController
             $this->protectionService->protect();
             $this->noticeService->reset();
             $result = $this->securityCheck->run();
+            $this->privateDirectoryCheck->run();
         } catch (Throwable $e) {
             debug_log('WP STAGING: The backup folder security check could not be completed. ' . $e->getMessage());
             wp_send_json(['error' => true, 'message' => __('The backup folder security check could not be completed.', 'wp-staging')]);

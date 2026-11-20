@@ -18,6 +18,9 @@ abstract class AbstractAjaxPrepare extends PrepareJob
  
     protected $jobDataDto;
 
+ 
+    protected $requiresSuperAdminOnMultisite = true;
+
 
 
 

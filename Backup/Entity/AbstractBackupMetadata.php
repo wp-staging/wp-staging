@@ -210,6 +210,15 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     private $isZlibCompressed = false;
 
  
+    private $isEncrypted = false;
+
+ 
+    private $encryptionSalt = '';
+
+ 
+    private $encryptionVerificationToken = '';
+
+ 
     private $totalChunks = 0;
 
 
@@ -1318,6 +1327,57 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     public function setOsArchitecture(string $osArchitecture)
     {
         $this->osArchitecture = $osArchitecture;
+    }
+
+
+
+
+    public function getIsEncrypted()
+    {
+        return $this->isEncrypted;
+    }
+
+
+
+
+
+    public function setIsEncrypted($isEncrypted)
+    {
+        $this->isEncrypted = (bool)$isEncrypted;
+    }
+
+
+
+
+    public function getEncryptionSalt()
+    {
+        return $this->encryptionSalt;
+    }
+
+
+
+
+
+    public function setEncryptionSalt($encryptionSalt)
+    {
+        $this->encryptionSalt = (string)$encryptionSalt;
+    }
+
+
+
+
+    public function getEncryptionVerificationToken()
+    {
+        return $this->encryptionVerificationToken;
+    }
+
+
+
+
+
+    public function setEncryptionVerificationToken($encryptionVerificationToken)
+    {
+        $this->encryptionVerificationToken = (string)$encryptionVerificationToken;
     }
 
     public function getIsBackupFormatV1(): bool

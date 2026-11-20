@@ -85,16 +85,17 @@ class FinishBackupTask extends BackupTask
 
         $this->jobDataDto->setEndTime(time());
 
- 
- 
-        $writesBackupFile = !$this->jobDataDto->getIsCreateBackupInBackground()
-            && !($this->jobDataDto->getRepeatBackupOnSchedule() && !$this->jobDataDto->getIsCreateScheduleBackupNow());
+        $writesBackupFile = !$this->jobDataDto->writesNoBackupFile();
 
         if ($writesBackupFile) {
+            $jobDataWithoutSecrets = clone $this->jobDataDto;
+            $jobDataWithoutSecrets->setEncryptionKey('');
+            $jobDataWithoutSecrets->setHmacKey('');
+            $jobDataWithoutSecrets->setEncryptionPassword('');
             update_option(static::OPTION_LAST_BACKUP, [
                 'endTime'          => time(), 
                 'duration'         => $this->jobDataDto->getDuration(),
-                'JobBackupDataDto' => $this->jobDataDto,
+                'JobBackupDataDto' => $jobDataWithoutSecrets,
             ], false);
         }
 
