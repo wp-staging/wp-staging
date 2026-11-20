@@ -11,7 +11,9 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database\DatabaseException;
 use WPStaging\Framework\Database\WpDbInfo;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Hosting\StagingSiteHttpDetector;
+use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Framework\Utils\Sanitize;
@@ -24,6 +26,8 @@ use WPStaging\Framework\Utils\Strings;
 
 class Delete extends Job
 {
+    use WithUnfinishedCloneWpConfigGuard;
+
 
 
 
@@ -428,6 +432,11 @@ class Delete extends Job
 
         $stagingPrefix = $this->getStagingPrefix();
         $tables        = $this->getTablesToRemove();
+
+        $stagingSiteRootPath = (string)($this->clone->cloneDir ?? '');
+        if ($tables !== [] && !$this->closeWordPressInstallerBeforeDroppingStagingTables(WPStaging::make(Filesystem::class), $stagingSiteRootPath)) {
+            $this->returnException('Cannot delete the staging tables: make wp-config.php writable and delete wp-admin/install.php and wp-admin/setup-config.php in ' . $stagingSiteRootPath . ', then delete the staging site from the staging sites list.');
+        }
 
         foreach ($tables as $table) {
             if ($this->isConnectedToProductionDatabase() && !$this->tableNameStartsWithPrefix($table, $stagingPrefix)) {

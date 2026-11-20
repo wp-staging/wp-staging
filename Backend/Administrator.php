@@ -78,6 +78,7 @@ class Administrator
     const ADMIN_PAGE_SLUGS = [
         'wpstg_clone',
         'wpstg_backup',
+        'wpstg-job-history',
         'wpstg-settings',
         'wpstg-tools',
         'wpstg-welcome',
@@ -375,6 +376,16 @@ class Administrator
  
         add_submenu_page(
             $defaultPageSlug,
+            esc_html__("WP Staging - Job History", "wp-staging"),
+            esc_html__("Job History", "wp-staging"),
+            "manage_options",
+            "wpstg-job-history",
+            [$this, "getJobHistoryPage"]
+        );
+
+ 
+        add_submenu_page(
+            $defaultPageSlug,
             esc_html__("WP Staging - Temporary Logins", "wp-staging"),
             esc_html__("Temporary Logins", "wp-staging"),
             "manage_options",
@@ -567,6 +578,16 @@ class Administrator
 
 
 
+    public function getJobHistoryPage()
+    {
+        $license = $this->getLicenseStatus();
+
+        require_once "{$this->viewsPath}job-history/index.php";
+    }
+
+
+
+
     public function getToolsPage()
     {
  
@@ -698,7 +719,7 @@ class Administrator
 
     public function ajaxRestart()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -713,7 +734,7 @@ class Administrator
 
     public function ajaxCloneScan()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -820,7 +841,7 @@ class Administrator
 
     public function ajaxCheckCloneDirectoryName()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -849,7 +870,7 @@ class Administrator
 
     public function ajaxUpdateProcess()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -872,7 +893,7 @@ class Administrator
 
     public function ajaxResetProcess()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -894,7 +915,7 @@ class Administrator
 
     public function ajaxStartClone()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -931,7 +952,7 @@ class Administrator
 
     public function ajaxCloneDatabase()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             wp_send_json_error(null, 401);
             return;
         }
@@ -945,7 +966,7 @@ class Administrator
 
     public function ajaxPrepareDirectories()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -958,7 +979,7 @@ class Administrator
 
     public function ajaxCopyFiles()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -971,7 +992,7 @@ class Administrator
 
     public function ajaxReplaceData()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -984,7 +1005,7 @@ class Administrator
 
     public function ajaxFinish()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -997,7 +1018,7 @@ class Administrator
 
     public function ajaxCancelClone()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             wp_send_json_error(null, 401);
             return;
         }
@@ -1011,7 +1032,7 @@ class Administrator
 
     public function ajaxCancelUpdate()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             wp_send_json_error(null, 401);
             return;
         }
@@ -1125,7 +1146,7 @@ class Administrator
 
     public function ajaxPushScan()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return false;
         }
 
@@ -1154,7 +1175,7 @@ class Administrator
 
     public function ajaxPushTables()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return false;
         }
 
@@ -1327,7 +1348,7 @@ class Administrator
 
     public function ajaxModalError()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 
@@ -1345,7 +1366,7 @@ class Administrator
 
     public function ajaxCloneExcludesSettings()
     {
-        if (!$this->isAuthenticated()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 

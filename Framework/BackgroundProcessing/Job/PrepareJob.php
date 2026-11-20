@@ -54,6 +54,12 @@ abstract class PrepareJob
     const ACTION_JOB_FAILURE = 'wpstg_background_job_failure';
 
  
+    const ACTION_JOB_REQUESTED = 'wpstg.background_job.requested';
+
+ 
+    const ACTION_JOB_PICKED_UP = 'wpstg.background_job.picked_up';
+
+ 
     const ARG_STEP_RETRIED_AFTER_WORKER_STOPPED = 'stepRetriedAfterWorkerStopped';
 
  
@@ -141,6 +147,8 @@ abstract class PrepareJob
             $data['jobId'] = $jobId;
             $data['name']  = $name;
 
+            Hooks::doAction(self::ACTION_JOB_REQUESTED, $jobId);
+
             $this->queueAction($data);
 
  
@@ -168,13 +176,7 @@ abstract class PrepareJob
 
         $action   = $this->getCurrentAction();
         $priority = $action === null ? 0 : $action->priority - 1;
-        $actionId = $this->queue->enqueueAction(static::class . '::' . 'act', $args, $args['jobId'], $priority, $notBefore);
-
-        if ($actionId === false || !$this->queue->getAction($actionId) instanceof Action) {
-            throw new QueueException('Background processing action could not be queued.');
-        }
-
-        $this->lastQueuedActionId = $actionId;
+        $this->lastQueuedActionId = $this->queue->enqueueAction(static::class . '::' . 'act', $args, $args['jobId'], $priority, $notBefore);
     }
 
 
@@ -217,6 +219,8 @@ abstract class PrepareJob
             $this->processLock->unlockProcess();
             return new WP_Error(423, 'A foreground job is waiting before its next request.');
         }
+
+        Hooks::doAction(self::ACTION_JOB_PICKED_UP, isset($args['jobId']) ? (string)$args['jobId'] : '');
 
         try {
             $this->maybeInitJob($args);

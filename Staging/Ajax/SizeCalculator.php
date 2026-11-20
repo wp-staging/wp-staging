@@ -79,7 +79,7 @@ class SizeCalculator extends AbstractTemplateComponent
 
     public function ajaxSize()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 

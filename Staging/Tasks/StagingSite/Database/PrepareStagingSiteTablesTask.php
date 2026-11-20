@@ -102,6 +102,7 @@ class PrepareStagingSiteTablesTask extends StagingTask
             $selectedTables->setExcludedTables($this->jobDataDto->getExcludedTables());
             $selectedTables->setSelectedTablesWithoutPrefix($this->jobDataDto->getNonSiteTables());
             $selectedTables->setAllTablesExcluded($this->jobDataDto->getAllTablesExcluded());
+            $selectedTables->setKeepUserTablesTogether();
             $this->tables = $selectedTables->getSelectedTables($this->jobDataDto->getIsStagingNetwork());
             $this->stepsDto->setTotal(count($this->tables));
             $this->jobDataDto->setSelectedTables($this->tables);

@@ -146,15 +146,12 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         $this->updateOrInsertOptions($updateOrInsert);
 
         $update = [
-            'wpstg_connection' => json_encode(['prodHostname' => get_site_url()]),
+            'wpstg_connection'          => json_encode(['prodHostname' => get_site_url()]),
+            Sites::STAGING_SITES_OPTION => serialize([]),
         ];
 
         if ($this->shouldResetUploadPath()) {
             $update['upload_path'] = '';
-        }
-
-        if ($jobType !== StagingSetup::JOB_UPDATE) {
-            $update[Sites::STAGING_SITES_OPTION] = serialize([]);
         }
 
         if ($jobType === StagingSetup::JOB_NEW_STAGING_SITE) {

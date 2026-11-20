@@ -11,6 +11,7 @@ use function WPStaging\functions\debug_log;
 
 
 
+
 trait WithUnfinishedCloneWpConfigGuard
 {
 
@@ -151,6 +152,57 @@ trait WithUnfinishedCloneWpConfigGuard
         }
 
         return array_diff($entries, ['.', '..']);
+    }
+
+
+
+
+
+
+
+
+
+    protected function closeWordPressInstallerBeforeDroppingStagingTables(Filesystem $filesystem, string $stagingSiteRootPath): bool
+    {
+        if ($stagingSiteRootPath === '' || $this->stagingSiteRootPathContainsWordPressRoot($filesystem, $stagingSiteRootPath)) {
+            return true;
+        }
+
+        $stagingSiteRootPath = trailingslashit($stagingSiteRootPath);
+        return $this->guardWpConfigBeforeReset($filesystem, $stagingSiteRootPath . 'wp-config.php')
+            && $this->deleteWordPressInstallerFromStagingSite($filesystem, $stagingSiteRootPath);
+    }
+
+
+
+
+
+
+
+
+
+    private function deleteWordPressInstallerFromStagingSite(Filesystem $filesystem, string $stagingSiteRootPath): bool
+    {
+        $wpAdminPath = $stagingSiteRootPath . 'wp-admin';
+        if (is_link($wpAdminPath) && strpos($filesystem->normalizePath((string)realpath($wpAdminPath), true), $filesystem->normalizePath((string)realpath($stagingSiteRootPath), true)) !== 0) {
+            return true;
+        }
+
+        return $filesystem->delete($stagingSiteRootPath . 'wp-admin/install.php')
+            && $filesystem->delete($stagingSiteRootPath . 'wp-admin/setup-config.php');
+    }
+
+
+
+
+
+
+
+
+
+    private function stagingSiteRootPathContainsWordPressRoot(Filesystem $filesystem, string $stagingSiteRootPath): bool
+    {
+        return strpos($filesystem->normalizePath(ABSPATH, true), $filesystem->normalizePath($stagingSiteRootPath, true)) === 0;
     }
 
 
@@ -444,7 +496,8 @@ trait WithUnfinishedCloneWpConfigGuard
 
     private function addUnfinishedCloneGuardToWpConfig(string $wpConfigContent, bool $isResetGuard = false)
     {
-        $wpConfigContent = $this->removeUnfinishedCloneGuardFromWpConfig($wpConfigContent);
+ 
+        $wpConfigContent = (string)preg_replace('/\A(?:\xEF\xBB\xBF|\s)+(?=<\?)/', '', $this->removeUnfinishedCloneGuardFromWpConfig($wpConfigContent));
         $guardPosition = $this->findPositionAfterOpeningPhpTag($wpConfigContent);
         if ($guardPosition === false) {
             return false;

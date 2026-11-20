@@ -18,6 +18,8 @@ use WPStaging\Backup\Exceptions\BackupSkipItemException;
 use WPStaging\Backup\Exceptions\EmptyChunkException;
 use WPStaging\Backup\FileHeader;
 use WPStaging\Backup\IndexLineDtoFactory;
+use WPStaging\Backup\Service\Compression\NonCompressionService;
+use WPStaging\Backup\Service\Encryption\BackupEncryptionService;
 use WPStaging\Backup\Interfaces\ExtractorTaskInterface;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
@@ -94,6 +96,21 @@ class Extractor extends AbstractExtractor
 
 
 
+    public function configureEncryption(BackupEncryptionService $encryptionService, string $decryptionKey, string $hmacKey)
+    {
+        $service = $this->zlibCompressor->getService();
+        if (!$service instanceof NonCompressionService) {
+            return;
+        }
+
+        $service->setEncryptionService($encryptionService);
+        $service->setDecryptionKey($decryptionKey);
+        $service->setHmacKey($hmacKey);
+    }
+
+
+
+
 
     public function setIsRepairMultipleHeadersIssue(bool $isRepairMultipleHeadersIssue)
     {
@@ -156,6 +173,10 @@ class Extractor extends AbstractExtractor
                 $this->logger->warning('OutOfRangeException. Error: ' .  $e->getMessage());
                 return;
             } catch (RuntimeException $e) {
+                if (BackupEncryptionService::isEncryptedIntegrityException($e)) {
+                    throw $e;
+                }
+
                 $this->logger->warning($e->getMessage());
                 continue;
             } catch (MissingFileException $e) {
@@ -294,6 +315,10 @@ class Extractor extends AbstractExtractor
  
             $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
         } catch (Exception $e) {
+            if (BackupEncryptionService::isEncryptedIntegrityException($e)) {
+                throw $e;
+            }
+
             if ($this->isValidateOnly && !$e instanceof FileValidationException) {
                 throw new FileValidationException(sprintf('Could not validate file %s. Reason: %s', $this->extractingFile->getRelativePath(), $e->getMessage()), 0, $e);
             }
@@ -360,7 +385,9 @@ class Extractor extends AbstractExtractor
 
 
 
-        if (!$this->isLastRequestGracefulShutdown && !$this->isFastPerformanceMode && !$this->extractingFile->getIsCompressed()) {
+        if (!$this->isLastRequestGracefulShutdown && !$this->isFastPerformanceMode && $this->extractingFile->getIsEncrypted()) {
+            $this->truncateToSavedProgress($destinationFileResource, $destinationFilePath);
+        } elseif (!$this->isLastRequestGracefulShutdown && !$this->isFastPerformanceMode && !$this->extractingFile->getIsCompressed()) {
             $fileSize = $this->getRecoverableCurrentSegmentBytes($destinationFilePath);
             $this->wpstgFile->fseek($this->extractingFile->getStart() + $fileSize);
             $this->extractingFile->setReadBytes($fileSize);
@@ -473,6 +500,24 @@ class Extractor extends AbstractExtractor
         }
 
         return $writtenBytes;
+    }
+
+
+
+
+
+
+    private function truncateToSavedProgress($destinationFileResource, string $destinationFilePath)
+    {
+        $savedFileSize = $this->extractingFile->getWrittenBytes();
+        if ($this->indexLineDto instanceof FileHeader && $this->indexLineDto->getIsPreviousPartRequired()) {
+            $savedFileSize += $this->extractorDto->getExtractorFileBaseBytes();
+        }
+
+        clearstatcache();
+        if (filesize($destinationFilePath) > $savedFileSize) {
+            ftruncate($destinationFileResource, $savedFileSize);
+        }
     }
 
     private function getRecoverableCurrentSegmentBytes(string $destinationFilePath): int

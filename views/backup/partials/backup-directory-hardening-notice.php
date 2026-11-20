@@ -9,6 +9,8 @@ use WPStaging\Backup\Security\BackupDirectoryNoticeService;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Core\WPStaging;
 
+require __DIR__ . '/private-directory-notice.php';
+
 $backupDirectoryNotice = WPStaging::make(BackupDirectoryNoticeService::class);
 if (!$backupDirectoryNotice->shouldShow()) {
     return;

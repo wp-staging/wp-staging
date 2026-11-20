@@ -11,6 +11,7 @@
 
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\Encryption\BackupEncryptionService;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Times;
 use WPStaging\Framework\Language\Language;
@@ -28,6 +29,8 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
 $disabledProAttribute = $isProVersion ? '' : ' disabled';
 
 $disabledClass = !$isProVersion ? 'wpstg-storage-settings-disabled' : '';
+
+$isBackupEncryptionEnabled = WPStaging::make(BackupEncryptionService::class)->isBackupEncryptionEnabled();
 
 $storagesPrefix = 'storage-';
 $isMultisite    = is_multisite();
@@ -307,7 +310,38 @@ if ($isMultisite) {
                     <div class="wpstg-create-backup-modal__advanced-summary wpstg-mt-[17px] wpstg-text-xs wpstg-leading-[1.4] wpstg-text-slate-450 dark:wpstg-text-slate-500">
                         <?php esc_html_e('Exclusions · recommended defaults', 'wp-staging'); ?>
                     </div>
-                    <div class="wpstg-backup-options-section hidden" id="wpstg-backup-advance-section">
+                    <div class="wpstg-backup-options-section" id="wpstg-backup-advance-section" hidden>
+                        <?php if ($isBackupEncryptionEnabled) : ?>
+                        <div class="!wpstg-mt-3">
+                            <label for="wpstgEncryptBackup" class="wpstg-form-label">
+                                <input type="checkbox" class="!wpstg-m-0 wpstg-checkbox" id="wpstgEncryptBackup" name="isEncrypted" aria-controls="wpstg-backup-encryption-password-wrapper" aria-expanded="false" <?php disabled(!$isProVersion); ?>>
+                                <span class="<?php echo esc_attr($disabledClass); ?>"><?php esc_html_e('Encrypt Backup', 'wp-staging'); ?></span>
+                                <?php if (!$isProVersion) : ?>
+                                    <a href="<?php echo esc_url(Language::getUpgradeUrl('backup_encryption')); ?>" target="_blank" rel="noopener noreferrer" class="wpstg-pro-feature-link wpstg-inline-flex wpstg-items-center"><span class="wpstg-badge-pro"><?php esc_html_e('Pro', 'wp-staging'); ?></span></a>
+                                <?php endif; ?>
+                            </label>
+                            <div id="wpstg-backup-encryption-password-wrapper" class="wpstg-mt-3 wpstg-grid wpstg-gap-3" hidden>
+                                <p id="wpstg-backup-encryption-help" class="wpstg-form-description wpstg-m-0">
+                                    <?php esc_html_e('Keep this password safe. It is required to restore this backup and cannot be recovered.', 'wp-staging'); ?>
+                                </p>
+                                <div>
+                                    <label for="wpstg-backup-encryption-password" class="wpstg-form-label"><?php esc_html_e('Encryption Password', 'wp-staging'); ?></label>
+                                    <div class="wpstg-password-toggle-wrapper">
+                                        <input id="wpstg-backup-encryption-password" type="password" class="wpstg-input wpstg-input-md !wpstg-w-full !wpstg-max-w-full" autocomplete="new-password" minlength="8" aria-describedby="wpstg-backup-encryption-help wpstg-backup-encryption-error" disabled>
+                                        <?php require WPSTG_VIEWS_DIR . '_main/partials/password-toggle-button.php'; ?>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="wpstg-backup-encryption-password-confirm" class="wpstg-form-label"><?php esc_html_e('Confirm Password', 'wp-staging'); ?></label>
+                                    <div class="wpstg-password-toggle-wrapper">
+                                        <input id="wpstg-backup-encryption-password-confirm" type="password" class="wpstg-input wpstg-input-md !wpstg-w-full !wpstg-max-w-full" autocomplete="new-password" aria-describedby="wpstg-backup-encryption-error" disabled>
+                                        <?php require WPSTG_VIEWS_DIR . '_main/partials/password-toggle-button.php'; ?>
+                                    </div>
+                                </div>
+                                <p id="wpstg-backup-encryption-error" class="wpstg-m-0 wpstg-text-sm wpstg-text-red-600 dark:wpstg-text-red-400" role="alert" data-schedule="<?php esc_attr_e('Encrypted backups cannot be scheduled yet. Choose Run once now.', 'wp-staging'); ?>" data-required="<?php esc_attr_e('Password field is required.', 'wp-staging'); ?>" data-short="<?php esc_attr_e('Use at least 8 characters for the encryption password.', 'wp-staging'); ?>" data-mismatch="<?php esc_attr_e('Passwords do not match.', 'wp-staging'); ?>" hidden></p>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <div class="!wpstg-mt-3">
                             <div>
                                 <label for="wpstgSmartExclusion" class="wpstg-form-label wpstg-with-tooltip" id="wpstg-add-exclusions-label">
@@ -426,6 +460,18 @@ if ($isMultisite) {
                 </div>
                 <div class="wpstg-create-backup-modal__summary-divider wpstg-summary-divider"></div>
                 <dl class="wpstg-create-backup-modal__summary-meta wpstg-summary-meta">
+                    <?php if ($isBackupEncryptionEnabled) : ?>
+                    <div class="wpstg-summary-meta-row">
+                        <dt class="wpstg-summary-meta-term">
+                            <svg class="wpstg-h-[13px] wpstg-w-[13px] wpstg-shrink-0 wpstg-text-slate-500 dark:wpstg-text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="4" y="10" width="16" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+                            </svg>
+                            <?php esc_html_e('Encryption', 'wp-staging'); ?>
+                        </dt>
+                        <dd id="wpstg-summary-encryption" class="wpstg-summary-meta-value" data-enabled="<?php esc_attr_e('Enabled', 'wp-staging'); ?>" data-disabled="<?php esc_attr_e('Disabled', 'wp-staging'); ?>"><?php esc_html_e('Disabled', 'wp-staging'); ?></dd>
+                    </div>
+                    <?php endif; ?>
                     <div class="wpstg-summary-meta-row">
                         <dt class="wpstg-summary-meta-term">
                             <svg class="wpstg-h-[13px] wpstg-w-[13px] wpstg-shrink-0 wpstg-text-slate-500 dark:wpstg-text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

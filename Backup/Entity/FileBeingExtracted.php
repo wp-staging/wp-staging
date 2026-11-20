@@ -49,6 +49,12 @@ class FileBeingExtracted
     protected $isCompressed;
 
  
+    protected $isEncrypted;
+
+ 
+    protected $encryptionIv = '';
+
+ 
     protected $headerBytesRemoved = 0;
 
     public function __construct(string $identifiablePath, string $extractFolder, PathIdentifier $pathIdentifier, IndexLineInterface $backupFileIndex)
@@ -59,6 +65,20 @@ class FileBeingExtracted
         $this->totalBytes       = $backupFileIndex->getUnCompressedSize();
         $this->pathIdentifier   = $pathIdentifier;
         $this->isCompressed     = (int)$backupFileIndex->getIsCompressed();
+        $this->isEncrypted      = (int)$backupFileIndex->getIsEncrypted();
+        if ($this->isEncrypted) {
+            $rawIv = method_exists($backupFileIndex, 'getEncryptionIv') ? $backupFileIndex->getEncryptionIv() : '';
+            if (strlen($rawIv) !== 16) {
+                throw new \RuntimeException(sprintf(
+                    'Invalid encryption IV for file %s. Expected 16 bytes, got %d.',
+                    $identifiablePath,
+                    strlen($rawIv)
+                ));
+            }
+
+            $this->encryptionIv = $rawIv;
+        }
+
         $this->relativePath     = $this->pathIdentifier->getPathWithoutIdentifier($this->identifiablePath);
     }
 
@@ -178,6 +198,22 @@ class FileBeingExtracted
     public function getIsCompressed()
     {
         return $this->isCompressed;
+    }
+
+
+
+
+    public function getIsEncrypted()
+    {
+        return $this->isEncrypted;
+    }
+
+
+
+
+    public function getEncryptionIv()
+    {
+        return $this->encryptionIv;
     }
 
     public function getCurrentOffset(): int

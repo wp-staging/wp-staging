@@ -8,6 +8,7 @@ use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
 use WPStaging\Staging\Jobs\StagingSiteDelete;
+use WPStaging\Staging\Sites;
 
 class PrepareDelete extends PrepareJob
 {
@@ -16,6 +17,9 @@ class PrepareDelete extends PrepareJob
 
  
     private $jobDelete;
+
+ 
+    protected $requiresSuperAdminOnMultisite = true;
 
 
 
@@ -65,7 +69,7 @@ class PrepareDelete extends PrepareJob
 
         $this->jobDataDto->generateId();
 
-        $this->jobDelete->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Delete in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_DELETE, $this->queueId);
+        $this->jobDelete->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Delete in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_DELETE, $this->queueId, WPStaging::make(Sites::class)->getStagingSiteNameOrId($this->jobDataDto->getCloneId()));
 
         $this->jobDelete->setJobDataDto($this->jobDataDto);
 

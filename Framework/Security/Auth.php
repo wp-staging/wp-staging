@@ -75,4 +75,15 @@ class Auth
 
         return $this->accessToken->requestHasValidToken() && (!is_user_logged_in() || current_user_can($capability));
     }
+
+
+
+
+
+
+
+    public function isAuthenticatedStagingRequest(): bool
+    {
+        return $this->capabilities->isSingleSiteOrCurrentUserSuperAdmin() && $this->isAuthenticatedRequest();
+    }
 }

@@ -11,6 +11,7 @@ use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteReset;
 use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Service\StagingSetup;
+use WPStaging\Staging\Sites;
 
 class PrepareReset extends AbstractAjaxPrepare
 {
@@ -111,7 +112,7 @@ class PrepareReset extends AbstractAjaxPrepare
 
         $this->jobDataDto->generateId();
 
-        $this->jobReset->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Reset in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_RESET, $this->queueId);
+        $this->jobReset->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Reset in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_RESET, $this->queueId, WPStaging::make(Sites::class)->getStagingSiteNameOrId($this->jobDataDto->getCloneId()));
 
         $this->jobReset->setJobDataDto($this->jobDataDto);
 

@@ -35,6 +35,7 @@ class RowsExporter extends AbstractRowsExporter
     const TABLES_EXCLUDED_FROM_DATA_COPYING = [
         'wpstg_queue',
         'wpstg_settings',
+        'wpstg_job_history',
         TransferSessionTable::TABLE_NAME,
     ];
 

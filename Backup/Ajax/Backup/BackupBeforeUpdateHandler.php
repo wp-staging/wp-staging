@@ -142,7 +142,7 @@ class BackupBeforeUpdateHandler
         $cloneId    = isset($_POST['cloneId']) ? Sanitize::sanitizeString($_POST['cloneId']) : '';
 
         if ($updateType === 'staging') {
-            $this->sendResult($this->stagingUpdateBackupClient->request('reusable', $cloneId));
+            $this->sendResult($this->requestBackupInsideStagingSite('reusable', $cloneId));
             return;
         }
 
@@ -183,7 +183,7 @@ class BackupBeforeUpdateHandler
         $cloneId    = isset($_POST['cloneId']) ? Sanitize::sanitizeString($_POST['cloneId']) : '';
 
         if ($updateType === 'staging') {
-            $this->sendResult($this->stagingUpdateBackupClient->request('start', $cloneId));
+            $this->sendResult($this->requestBackupInsideStagingSite('start', $cloneId));
             return;
         }
 
@@ -239,11 +239,27 @@ class BackupBeforeUpdateHandler
         $cloneId    = isset($_POST['cloneId']) ? Sanitize::sanitizeString($_POST['cloneId']) : '';
 
         if ($updateType === 'staging') {
-            $this->sendResult($this->stagingUpdateBackupClient->request('progress', $cloneId));
+            $this->sendResult($this->requestBackupInsideStagingSite('progress', $cloneId));
             return;
         }
 
         $this->sendResult($this->getBackupProgressOnThisSite());
+    }
+
+
+
+
+
+
+
+
+    private function requestBackupInsideStagingSite(string $operation, string $cloneId): array
+    {
+        if (!$this->capabilities->isSingleSiteOrCurrentUserSuperAdmin()) {
+            return ['success' => false, 'data' => ['message' => esc_html__('On a multisite network, only a network super admin can manage staging sites.', 'wp-staging')]];
+        }
+
+        return $this->stagingUpdateBackupClient->request($operation, $cloneId);
     }
 
 

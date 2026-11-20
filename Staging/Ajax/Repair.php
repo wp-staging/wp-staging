@@ -77,7 +77,7 @@ class Repair extends AbstractTemplateComponent
 
     public function ajaxFixOption()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 
@@ -103,7 +103,7 @@ class Repair extends AbstractTemplateComponent
 
     public function ajaxReportOption()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             return;
         }
 

@@ -17,6 +17,7 @@ use WPStaging\Backup\Exceptions\BackupSkipItemException;
 use WPStaging\Backup\Task\FileBackupTask;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\FileAppendTimeLimitException;
 use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScanner;
@@ -158,6 +159,8 @@ class FileBackupService implements ServiceInterface
  
                 throw new \Exception('Disk is probably full. Error message: ' . $exception->getMessage(), 0, $exception);
             } catch (FileSizeLimitException $exception) {
+                throw $exception;
+            } catch (FileAppendTimeLimitException $exception) {
                 throw $exception;
             } catch (\Throwable $th) {
                 throw new \Exception('Fail to create backup. Error message: ' . $th->getMessage(), 0, $th);

@@ -173,6 +173,15 @@ class FinalizeBackupTask extends BackupTask
 
     protected function prepareSetup()
     {
+        $multipartFilesInfo = array_values(array_filter(
+            $this->jobDataDto->getMultipartFilesInfo(),
+            [$this, 'isValidMultipartFileInfo']
+        ));
+        if (!empty($multipartFilesInfo)) {
+            $this->jobDataDto->setIsMultipartBackup(true);
+            $this->jobDataDto->setMultipartFilesInfo($multipartFilesInfo);
+        }
+
         if ($this->jobDataDto->getIsMultipartBackup()) {
             if ($this->stepsDto->getTotal() > 0) {
                 return;
@@ -204,6 +213,18 @@ class FinalizeBackupTask extends BackupTask
                 'sizeBeforeAddingIndex' => 0,
             ],
         ]);
+    }
+
+
+
+
+
+    protected function isValidMultipartFileInfo($multipartFileInfo): bool
+    {
+        return is_array($multipartFileInfo)
+            && !empty($multipartFileInfo['category'])
+            && !empty($multipartFileInfo['filePath'])
+            && !empty($multipartFileInfo['destination']);
     }
 
 
@@ -290,6 +311,9 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setHostingType($this->siteInfo->getHostingType());
         $backupMetadata->setIsContaining2GBFile($this->jobDataDto->getIsContaining2GBFile());
         $backupMetadata->setIsZlibCompressed($this->jobDataDto->getIsCompressed());
+        $backupMetadata->setIsEncrypted($this->jobDataDto->getIsEncrypted());
+        $backupMetadata->setEncryptionSalt($this->jobDataDto->getEncryptionSalt());
+        $backupMetadata->setEncryptionVerificationToken($this->jobDataDto->getEncryptionVerificationToken());
         $backupMetadata->setIndexPartSize($this->jobDataDto->getCategorySizes());
         $backupMetadata->setIndexPartFileCount($this->jobDataDto->getIndexPartFileCount());
 

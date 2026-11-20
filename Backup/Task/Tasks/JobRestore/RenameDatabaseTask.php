@@ -111,11 +111,11 @@ class RenameDatabaseTask extends RestoreTask
         }
 
  
-        $excludedTables = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME, TransferSessionTable::TABLE_NAME];
+        $excludedTables = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME, 'wpstg_job_history', TransferSessionTable::TABLE_NAME];
         $excludedTables = array_merge($excludedTables, Hooks::applyFilters(self::FILTER_EXCLUDE_TABLES_DURING_RESTORE, []));
         $this->tablesRenamer->setExcludedTables($excludedTables);
 
-        $tablesToPreserve = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME, TransferSessionTable::TABLE_NAME];
+        $tablesToPreserve = [SettingsTable::TABLE_NAME, Queue::QUEUE_TABLE_NAME, 'wpstg_job_history', TransferSessionTable::TABLE_NAME];
         $this->tablesRenamer->setDestinationSubsiteBlogIds([]);
 
         if ($this->isSubsiteRestore()) {

@@ -30,7 +30,7 @@ class HealthCheck extends AbstractTemplateComponent
 
     public function ajaxCheck()
     {
-        if (!$this->canRenderAjax() || !current_user_can('manage_options')) {
+        if (!$this->canRenderStagingAjax() || !current_user_can('manage_options')) {
             wp_send_json_error(['message' => esc_html__('You are not allowed to perform this action.', 'wp-staging')], 403);
         }
 

@@ -40,7 +40,7 @@ class StagingSiteDataChecker
 
     public function ajaxIsWritableCloneDestinationDir()
     {
-        if (!$this->auth->isAuthenticatedRequest()) {
+        if (!$this->auth->isAuthenticatedStagingRequest()) {
             return;
         }
 

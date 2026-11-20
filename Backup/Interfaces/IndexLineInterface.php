@@ -21,6 +21,10 @@ interface IndexLineInterface
 
     public function getIsCompressed(): bool;
 
+    public function getIsEncrypted(): bool;
+
+    public function getExtraField(): string;
+
     public function isIndexLine(string $indexLine): bool;
 
     public function readIndexLine(string $indexLine): IndexLineInterface;

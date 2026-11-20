@@ -298,6 +298,7 @@ class Cloning extends Job
         }
 
         WPStaging::make(AnalyticsStagingCreate::class)->enqueueStartEvent($this->options->jobIdentifier, $this->options);
+        $this->announceLegacyJobStarted();
         $this->errorMessage = "";
         return true;
     }

@@ -11,6 +11,7 @@ use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\Jobs\StagingSiteUpdate;
 use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Service\StagingSetup;
+use WPStaging\Staging\Sites;
 
 class PrepareUpdate extends AbstractAjaxPrepare
 {
@@ -139,7 +140,7 @@ class PrepareUpdate extends AbstractAjaxPrepare
 
         $this->jobDataDto->generateId();
 
-        $this->jobUpdate->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Update in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_UPDATE, $this->queueId);
+        $this->jobUpdate->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Update in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_UPDATE, $this->queueId, WPStaging::make(Sites::class)->getStagingSiteNameOrId($this->jobDataDto->getCloneId()));
 
         $this->jobUpdate->setJobDataDto($this->jobDataDto);
 

@@ -9,7 +9,7 @@ use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Sanitize;
-use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Logger\LogFileReader;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -198,30 +198,7 @@ class ScheduleLogs
 
     protected function findLogFileName(string $logsDir, string $backupId): string
     {
- 
-        $filesystem = WPStaging::make(Filesystem::class);
-
-        $iterator = $filesystem->setRecursive(false)
-            ->setDirectory(rtrim($logsDir, '/'))
-            ->get();
-
- 
-        foreach ($iterator as $item) {
-            if ($item->getExtension() !== 'log') {
-                continue;
-            }
-
-            $logFile = $item->getBasename('.log');
-            if (strpos($logFile, 'backup_job_') !== 0) {
-                continue;
-            }
-
-            if (strpos(strrev($logFile), strrev($backupId) . '__') === 0) {
-                return $item->getFilename();
-            }
-        }
-
-        return '';
+        return WPStaging::make(LogFileReader::class)->findLogFileOfJob($logsDir, $backupId, 'backup_job_');
     }
 
 
@@ -232,64 +209,6 @@ class ScheduleLogs
 
     protected function parseLogContent(string $logPath): array
     {
-        $maxBytes = 100 * 1024;
-        $fileSize = (int)filesize($logPath);
-        $truncated = $fileSize > $maxBytes;
-
-        if (!$truncated) {
-            $content = file_get_contents($logPath);
-            $content = $content !== false ? $content : '';
-        } else {
-            $handle = fopen($logPath, 'rb');
-            if ($handle === false) {
-                return [];
-            }
-
-            fseek($handle, -$maxBytes, SEEK_END);
-            $content = fread($handle, $maxBytes);
-            fclose($handle);
-            $content = $content !== false ? $content : '';
-        }
-
-        return $this->parseLogLines($content, $truncated);
-    }
-
-
-
-
-
-
-
-
-
-
-    protected function parseLogLines(string $content, bool $truncated): array
-    {
-        $entries = [];
-
-        if ($truncated) {
-            $entries[] = [
-                'type'    => 'notice',
-                'date'    => '',
-                'message' => esc_html__('[Truncated — showing last 100 KB]', 'wp-staging'),
-            ];
-        }
-
-        foreach (explode(PHP_EOL, $content) as $line) {
-            $line = rtrim($line);
-            if (empty($line)) {
-                continue;
-            }
-
-            if (preg_match('/^\[([A-Za-z_]+)\]-\[([^\]]*)\]\s?(.*)$/', $line, $matches)) {
-                $entries[] = [
-                    'type'    => strtolower($matches[1]),
-                    'date'    => $matches[2],
-                    'message' => $matches[3],
-                ];
-            }
-        }
-
-        return $entries;
+        return WPStaging::make(LogFileReader::class)->parseLogContent($logPath);
     }
 }

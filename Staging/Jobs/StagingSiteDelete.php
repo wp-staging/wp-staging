@@ -4,7 +4,7 @@ namespace WPStaging\Staging\Jobs;
 
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
 use WPStaging\Staging\Tasks\StagingSite\CleanupStagingFilesTask;
-use WPStaging\Staging\Tasks\StagingSite\CleanupStagingTablesTask;
+use WPStaging\Staging\Tasks\StagingSiteDelete\DeleteStagingTablesTask;
 use WPStaging\Staging\Tasks\StagingSiteDelete\FinishStagingSiteDeleteTask;
 
 class StagingSiteDelete extends AbstractStagingSiteJob
@@ -20,7 +20,7 @@ class StagingSiteDelete extends AbstractStagingSiteJob
     protected function init()
     {
         if ($this->jobDataDto->getIsDeletingTables()) {
-            $this->tasks[] = CleanupStagingTablesTask::class;
+            $this->tasks[] = DeleteStagingTablesTask::class;
         }
 
         if ($this->jobDataDto->getIsDeletingFiles()) {

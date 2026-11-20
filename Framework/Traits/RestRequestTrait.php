@@ -4,8 +4,13 @@ namespace WPStaging\Framework\Traits;
 
 use WP_Error;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Network\SsrfProtection;
 use WPStaging\Framework\Rest\Rest;
+use WPStaging\Pro\RemoteSync\Settings\Settings;
+
+
+
 
 trait RestRequestTrait
 {
@@ -15,8 +20,6 @@ trait RestRequestTrait
 
 
     private $headers = [];
-
-    private $verifySsl = false;
 
 
 
@@ -73,7 +76,7 @@ trait RestRequestTrait
             'headers'   => $headers,
             'blocking'  => $this->isBlockingRequest,
             'timeout'   => $timeout,
-            'sslverify' => $this->verifySsl,
+            'sslverify' => $this->isSslVerifiedFor($url),
         ];
 
         if (!empty($body)) {
@@ -131,6 +134,36 @@ trait RestRequestTrait
             esc_html__('The remote site %s could not be resolved, or resolves to a loopback or link-local address. If both sites intentionally run on the same server, define WPSTG_DISABLE_SSRF_PROTECTION as true in wp-config.php on both sites to allow it.', 'wp-staging'),
             esc_html((string)parse_url($requestUrl, PHP_URL_HOST))
         ));
+    }
+
+
+
+
+
+
+
+
+    protected function isSslVerifiedFor(string $url): bool
+    {
+        if (!$this->isPeerSiteRequest) {
+            return false;
+        }
+
+        return Hooks::applyFilters('wpstg.remote_sync.ssl_verify', $this->siteRequiresCertificateVerification(), $url) !== false;
+    }
+
+
+
+
+
+
+    private function siteRequiresCertificateVerification(): bool
+    {
+        if (defined('WPSTG_REMOTE_SYNC_SSL_VERIFY')) {
+            return constant('WPSTG_REMOTE_SYNC_SSL_VERIFY') !== false;
+        }
+
+        return !Settings::acceptsSelfSignedCertificates();
     }
 
 

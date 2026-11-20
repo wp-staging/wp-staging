@@ -856,35 +856,48 @@ class BackupScheduler
             return null;
         }
 
-        if ($this->scheduleHasQueuedOrRunningBackup($scheduleId)) {
-            debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: a backup job for schedule %s is already queued or running.", $logId, $scheduleId), 'info', false);
-            return null;
-        }
+        global $wpdb;
 
-        if (!$this->scheduleScopeMayRunOnCurrentSite($schedule)) {
-            $refusal = __('This backup plan backs up more than this subsite and was saved before WP STAGING checked who saved it. Ask a network super admin to create this backup plan again.', 'wp-staging');
-            $this->recordFailedRunOfSchedule($scheduleId, $refusal);
-            return new \WP_Error(400, $refusal);
+ 
+        $lockName = 'wpstg_cron_backup_' . md5($wpdb->dbname . '|' . $wpdb->prefix . $scheduleId);
+        if ((string)$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $lockName)) === '0') {
+            debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: another process is already queuing a backup for schedule %s.", $logId, $scheduleId), 'info', false);
+            return null;
         }
 
         try {
-            debug_log(sprintf("[Schedule Backup Cron - %s] Preparing job", $logId), 'info', false);
-            $schedule['isStartedByRunNow'] = $isStartedByRunNow;
-            $jobId = WPStaging::make(PrepareBackup::class)->prepare($schedule);
-            if ($jobId instanceof \WP_Error) {
-                debug_log(sprintf("[Schedule Backup Cron - %s] Failed to create backup: %s", $logId, $jobId->get_error_message()));
-                $this->recordFailedRunOfSchedule($scheduleId, $jobId->get_error_message());
-                return $jobId;
+            if ($this->scheduleHasQueuedOrRunningBackup($scheduleId)) {
+                debug_log(sprintf("[Schedule Backup Cron - %s] Skipped: a backup job for schedule %s is already queued or running.", $logId, $scheduleId), 'info', false);
+                return null;
             }
 
-            debug_log(sprintf("[Schedule Backup Cron - %s] Successfully received a Job ID: %s", $logId, $jobId), 'info', false);
+            if (!$this->scheduleScopeMayRunOnCurrentSite($schedule)) {
+                $refusal = __('This backup plan backs up more than this subsite and was saved before WP STAGING checked who saved it. Ask a network super admin to create this backup plan again.', 'wp-staging');
+                $this->recordFailedRunOfSchedule($scheduleId, $refusal);
+                return new \WP_Error(400, $refusal);
+            }
 
-            set_transient(self::TRANSIENT_SCHEDULE_JOB_PREFIX . $jobId, $scheduleId, 2 * DAY_IN_SECONDS);
-            return null;
-        } catch (\Exception $e) {
-            debug_log("[Schedule Backup Cron - $logId] Exception thrown while preparing the Backup: " . $e->getMessage());
-            $this->recordFailedRunOfSchedule($scheduleId, $e->getMessage());
-            return new \WP_Error(400, $e->getMessage());
+            try {
+                debug_log(sprintf("[Schedule Backup Cron - %s] Preparing job", $logId), 'info', false);
+                $schedule['isStartedByRunNow'] = $isStartedByRunNow;
+                $jobId = WPStaging::make(PrepareBackup::class)->prepare($schedule);
+                if ($jobId instanceof \WP_Error) {
+                    debug_log(sprintf("[Schedule Backup Cron - %s] Failed to create backup: %s", $logId, $jobId->get_error_message()));
+                    $this->recordFailedRunOfSchedule($scheduleId, $jobId->get_error_message());
+                    return $jobId;
+                }
+
+                debug_log(sprintf("[Schedule Backup Cron - %s] Successfully received a Job ID: %s", $logId, $jobId), 'info', false);
+
+                set_transient(self::TRANSIENT_SCHEDULE_JOB_PREFIX . $jobId, $scheduleId, 2 * DAY_IN_SECONDS);
+                return null;
+            } catch (\Exception $e) {
+                debug_log("[Schedule Backup Cron - $logId] Exception thrown while preparing the Backup: " . $e->getMessage());
+                $this->recordFailedRunOfSchedule($scheduleId, $e->getMessage());
+                return new \WP_Error(400, $e->getMessage());
+            }
+        } finally {
+            $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lockName));
         }
     }
 

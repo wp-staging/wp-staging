@@ -215,6 +215,8 @@ class Scan extends Job
 
     public function start()
     {
+        unset($this->options->historyRunId);
+
  
         $this->options->root         = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, ABSPATH);
         $this->options->current      = null;

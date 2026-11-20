@@ -36,7 +36,7 @@ class DeleteConfirm extends AbstractTemplateComponent
 
     public function ajaxConfirm()
     {
-        if (!$this->canRenderAjax()) {
+        if (!$this->canRenderStagingAjax()) {
             wp_send_json_error('Invalid request.');
         }
 

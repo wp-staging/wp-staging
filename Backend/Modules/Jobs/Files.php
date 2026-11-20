@@ -18,7 +18,6 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
 use WPStaging\Framework\SiteInfo;
-use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 use WPStaging\Framework\Traits\WithUnfinishedCloneWpConfigGuard;
@@ -318,36 +317,20 @@ class Files extends JobExecutable
         $this->guardStagingSiteRootBeforeFilesArrive();
 
  
-        if (isset($this->options->copiedFiles) && $this->options->copiedFiles != 0) {
-            $this->file->seek($this->options->copiedFiles - 1);
-        }
+        $this->file->seek($this->options->copiedFiles + 1);
 
         $this->file->setFlags(FileObject::DROP_NEW_LINE);
 
         for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
- 
- 
-            $this->options->copiedFiles++;
+            $file = trim($this->file->readAndMoveNext());
 
- 
-            if ($this->file->eof()) {
+            if ($file === '') {
+                $this->stopWhenFileListEndsBeforeTotalFiles();
                 break;
             }
 
-            $file = trim($this->file->readAndMoveNext());
-
- 
-            if ($file === trim(Cache::PHP_HEADER)) {
-                continue;
-            }
-
-            $file = $this->replacePlaceholdersWithEOLs($file);
-
-            if (empty($file)) {
-                continue;
-            }
-
-            $this->copyFile($file);
+            $this->options->copiedFiles++;
+            $this->copyFile($this->replacePlaceholdersWithEOLs($file));
         }
 
         $totalFiles = $this->options->copiedFiles;
@@ -394,8 +377,37 @@ class Files extends JobExecutable
     {
         return
             !$this->isRunning() ||
-            $this->options->currentStep >= $this->options->totalSteps ||
-            $this->options->copiedFiles >= $this->options->totalFiles;
+            ($this->options->copiedFiles >= $this->options->totalFiles && !$this->hasFileListEntryAtLine($this->options->copiedFiles + 1));
+    }
+
+
+
+
+
+
+    private function hasFileListEntryAtLine(int $line): bool
+    {
+        if ($this->file === null) {
+            return false;
+        }
+
+        $this->file->seek($line);
+
+        return trim($this->file->readAndMoveNext()) !== '';
+    }
+
+
+
+
+    private function stopWhenFileListEndsBeforeTotalFiles()
+    {
+        if ($this->options->copiedFiles >= $this->options->totalFiles) {
+            return;
+        }
+
+        $message = sprintf('Fatal Error: Files - The file list holds fewer files than the %d the scan counted, so the staging site would miss files. Please start again.', $this->options->totalFiles);
+        $this->log($message, Logger::TYPE_ERROR);
+        $this->returnException($message);
     }
 
 

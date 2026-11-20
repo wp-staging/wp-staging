@@ -17,6 +17,7 @@ use WPStaging\Framework\Database\ExternalDatabaseConfiguration;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Backend\Modules\SystemInfo;
@@ -53,6 +54,20 @@ abstract class Job implements ShutdownableInterface
 
 
     const UPDATE  = 'updating';
+
+ 
+    const ACTION_LEGACY_JOB_STARTED = 'wpstg.legacy_job.started';
+
+ 
+    const ACTION_LEGACY_JOB_STOPPED = 'wpstg.legacy_job.stopped';
+
+ 
+    const LEGACY_JOB_TYPES = [
+        self::STAGING => JobTransientCache::JOB_TYPE_STAGING_CREATE,
+        self::UPDATE  => JobTransientCache::JOB_TYPE_STAGING_UPDATE,
+        self::RESET   => JobTransientCache::JOB_TYPE_STAGING_RESET,
+        self::PUSH    => JobTransientCache::JOB_TYPE_STAGING_PUSH,
+    ];
 
 
 
@@ -273,6 +288,63 @@ abstract class Job implements ShutdownableInterface
 
 
 
+    protected function announceLegacyJobStarted()
+    {
+        $this->options->historyRunId = uniqid('legacy_', true);
+        $this->saveOptions();
+
+        Hooks::doAction(self::ACTION_LEGACY_JOB_STARTED, [
+            'jobId'   => $this->options->historyRunId,
+            'type'    => self::LEGACY_JOB_TYPES[$this->options->mainJob ?? ''] ?? '',
+            'target'  => $this->getLegacyJobTarget(),
+            'logFile' => $this->logger === null ? '' : basename($this->logger->getLogFile($this->getLogFilename())),
+        ]);
+    }
+
+
+
+
+
+
+    protected function announceLegacyJobStopped($status, $message = '')
+    {
+        if (empty($this->options->historyRunId)) {
+            return;
+        }
+
+        Hooks::doAction(self::ACTION_LEGACY_JOB_STOPPED, [
+            'jobId'   => $this->options->historyRunId,
+            'status'  => $status,
+            'message' => $message,
+            'target'  => $this->getLegacyJobTarget(),
+        ]);
+    }
+
+
+
+
+
+
+    private function getLegacyJobTarget()
+    {
+        if (!empty($this->options->cloneName)) {
+            return (string)$this->options->cloneName;
+        }
+
+        $clone = isset($this->options->clone) ? (string)$this->options->clone : '';
+        if (!empty($this->options->existingClones[strtolower($clone)]['cloneName'])) {
+            return (string)$this->options->existingClones[strtolower($clone)]['cloneName'];
+        }
+
+        return $clone;
+    }
+
+
+
+
+
+
+
 
 
     protected function loadLegacyExistingClones()
@@ -480,6 +552,8 @@ abstract class Job implements ShutdownableInterface
 
     public function returnException($message = '')
     {
+        $this->announceLegacyJobStopped(JobTransientCache::STATUS_FAILED, $message);
+
         wp_die(
             json_encode(
                 [

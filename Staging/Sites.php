@@ -553,6 +553,23 @@ class Sites
 
 
 
+    public function getStagingSiteNameOrId(string $cloneId): string
+    {
+        try {
+            $cloneName = $this->getStagingSiteDtoByCloneId($cloneId)->getCloneName();
+        } catch (Exception $e) {
+            return $cloneId;
+        }
+
+        return $cloneName !== '' ? $cloneName : $cloneId;
+    }
+
+
+
+
+
+
+
     public function getStagingSiteDtoByCloneName(string $cloneName): StagingSiteDto
     {
         $stagingSites = $this->tryGettingStagingSites();

@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Job;
 
+use WPStaging\Framework\Facades\Hooks;
+
 
 
 
@@ -29,6 +31,12 @@ class JobTransientCache
 
 
     const LAST_JOB_OUTCOME_EXPIRY = 5 * 60;
+
+ 
+    const ACTION_JOB_STARTED = 'wpstg.job.started';
+
+ 
+    const ACTION_JOB_STOPPED = 'wpstg.job.stopped';
 
 
 
@@ -192,22 +200,28 @@ class JobTransientCache
 
 
 
-    public function startJob(string $jobId, string $jobTitle, string $jobType = 'job', string $queueId = '', string $syncType = '', int $startedAt = 0)
+
+
+    public function startJob(string $jobId, string $jobTitle, string $jobType = 'job', string $queueId = '', string $target = '', bool $doesNoWorkOfItsOwn = false, string $syncType = '', int $startedAt = 0)
     {
         $jobData = [
-            'jobId'     => $jobId,
-            'title'     => $jobTitle,
-            'type'      => $jobType,
-            'status'    => self::STATUS_RUNNING,
-            'startedAt' => $startedAt > 0 ? $startedAt : time(),
-            'updatedAt' => time(),
-            'queueId'   => $queueId,
-            'message'   => '',
-            'syncType'  => $syncType,
+            'jobId'              => $jobId,
+            'title'              => $jobTitle,
+            'type'               => $jobType,
+            'status'             => self::STATUS_RUNNING,
+            'startedAt'          => $startedAt > 0 ? $startedAt : time(),
+            'updatedAt'          => time(),
+            'queueId'            => $queueId,
+            'message'            => '',
+            'target'             => $target,
+            'doesNoWorkOfItsOwn' => $doesNoWorkOfItsOwn,
+            'syncType'           => $syncType,
         ];
 
         delete_transient(self::TRANSIENT_CURRENT_JOB);
         set_transient(self::TRANSIENT_CURRENT_JOB, $jobData, $this->getRunningExpiry($jobData));
+
+        Hooks::doAction(self::ACTION_JOB_STARTED, $jobData);
     }
 
 
@@ -476,6 +490,8 @@ class JobTransientCache
         if ($status === self::STATUS_FAILED) {
             do_action('wpstg_job_failed', $jobData);
         }
+
+        Hooks::doAction(self::ACTION_JOB_STOPPED, $jobData);
 
         set_transient(self::TRANSIENT_LAST_JOB_OUTCOME, $jobData, self::LAST_JOB_OUTCOME_EXPIRY);
     }

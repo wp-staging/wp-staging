@@ -39,6 +39,23 @@ class Language
 
 
 
+
+
+
+
+    const CHECKOUT_PATHS = [
+        'de' => '/de/kaufen/',
+        'it' => '/it/acquista/',
+        'es' => '/es/compra/',
+        'fr' => '/fr/paiement/',
+        'pt' => '/pt/comprar/',
+        'pl' => '/pl/kup/',
+        'ja' => '/ja/kounyu/',
+    ];
+
+
+
+
     public function load()
     {
  
@@ -159,29 +176,15 @@ class Language
 
 
 
-
     public static function localizeCheckoutUrl(string $url): string
     {
-        $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
-        if (strpos($locale, 'de_') === 0) {
-            return str_replace('/checkout/', '/de/kaufen/', $url);
+        $language = strtolower(substr(self::currentLocale(), 0, 2));
+
+        if (!isset(self::CHECKOUT_PATHS[$language])) {
+            return $url;
         }
 
-        return $url;
-    }
-
-
-
-
-
-    public static function localizePricingUrl(string $url): string
-    {
-        $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
-        if (strpos($locale, 'de_') === 0) {
-            return str_replace('wp-staging.com/#', 'wp-staging.com/de/#', $url);
-        }
-
-        return $url;
+        return str_replace('/checkout/', self::CHECKOUT_PATHS[$language], $url);
     }
 
 
@@ -199,23 +202,7 @@ class Language
 
     public static function getUpgradeUrl(string $context = '', string $source = 'wp-staging-free'): string
     {
- 
- 
-        $localePaths = [
-            'de' => '/de/',
-            'it' => '/it/',
-            'es' => '/es/',
-            'fr' => '/fr/',
-            'pt' => '/pt/',
-            'pl' => '/pl/',
-            'ja' => '/ja/',
-        ];
-
-        $locale = function_exists('get_user_locale') ? get_user_locale() : get_locale();
-        $prefix = strtolower(substr($locale, 0, 2));
-        $path   = isset($localePaths[$prefix]) ? $localePaths[$prefix] : '/';
-
-        $base = 'https://wp-staging.com' . $path;
+        $base = 'https://wp-staging.com' . self::localePath(self::currentLocale());
 
         $context = preg_replace('/[^a-z0-9_]/', '', strtolower($context));
         if ($context === '') {
@@ -254,6 +241,29 @@ class Language
         }
 
         return self::localizeCheckoutUrl('https://wp-staging.com/checkout/?' . $query);
+    }
+
+
+
+
+
+
+    private static function currentLocale(): string
+    {
+        return function_exists('get_user_locale') ? get_user_locale() : get_locale();
+    }
+
+
+
+
+
+
+
+    private static function localePath(string $locale): string
+    {
+        $prefix = strtolower(substr($locale, 0, 2));
+
+        return isset(self::CHECKOUT_PATHS[$prefix]) ? '/' . $prefix . '/' : '/';
     }
 
 

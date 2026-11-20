@@ -36,6 +36,7 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Analytics\ErrorCode;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\Exception\FileAppendTimeLimitException;
 use WPStaging\Framework\Job\Exception\FileSizeLimitException;
 use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\Task\AbstractTask;
@@ -67,11 +68,15 @@ class JobBackup extends AbstractJob
     {
  
 
+        $this->startHidingCacheFileNamesInPhpWarnings();
+
         try {
             $response = $this->getResponse($this->currentTask->execute());
         } catch (MissingBackupPartException $e) {
             return $this->getUnrecoverableFailResponse($e);
         } catch (FileSizeLimitException $e) {
+            return $this->getUnrecoverableFailResponse($e);
+        } catch (FileAppendTimeLimitException $e) {
             return $this->getUnrecoverableFailResponse($e);
         } catch (TableLockGivenUpException $e) {
             return $this->getUnrecoverableFailResponse($e);
@@ -80,11 +85,37 @@ class JobBackup extends AbstractJob
         } catch (\Exception $e) {
             $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . WPStaging::make(Directory::class)->redactCacheFileNames($e->getMessage()), ['errorCode' => ErrorCode::fromThrowable($e)]);
             $response = $this->getResponse($this->currentTask->generateResponse(false));
+        } finally {
+            restore_error_handler();
         }
 
  
 
         return $response;
+    }
+
+
+
+
+
+
+
+    private function startHidingCacheFileNamesInPhpWarnings()
+    {
+        $directory            = WPStaging::make(Directory::class);
+        $previousErrorHandler = null;
+        $previousErrorHandler = set_error_handler(function ($severity, $message, $file = '', $line = 0, ...$context) use ($directory, &$previousErrorHandler) {
+            $messageWithoutCacheFileNames = $directory->redactCacheFileNames($message);
+            if ($messageWithoutCacheFileNames === $message) {
+                return is_callable($previousErrorHandler) ? call_user_func($previousErrorHandler, $severity, $message, $file, $line, ...$context) : false;
+            }
+
+            if (error_reporting() & $severity) {
+                debug_log("{$messageWithoutCacheFileNames} in {$file} on line {$line}", 'warning');
+            }
+
+            return true;
+        });
     }
 
 

@@ -450,12 +450,12 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
 
 
+
     protected function cannotRestoreIfBackupGeneratedOnProVersion()
     {
         $metadata = $this->jobDataDto->getBackupMetadata();
 
- 
-        if (!$metadata->getCreatedOnPro()) {
+        if (!$metadata->getCreatedOnPro() || $metadata->getIsEncrypted()) {
             return;
         }
 

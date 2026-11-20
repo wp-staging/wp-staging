@@ -339,6 +339,7 @@ class Assets
                 "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR,
             ],
             "tblprefix"                         => WPStaging::getTablePrefix(),
+            "tblBasePrefix"                     => WPStaging::getInstance()->getVar("database")->normalizeTableNameCase(WPStaging::getTableBasePrefix()),
             "isMultisite"                       => is_multisite(),
             AccessToken::REQUEST_KEY            => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
             'nonce'                             => wp_create_nonce(Nonce::WPSTG_NONCE),
@@ -580,12 +581,14 @@ class Assets
                 "wp-staging-pro_page_wpstg-tools",
                 "wp-staging-pro_page_wpstg-license",
                 "wp-staging-pro_page_wpstg-restorer",
+                "wp-staging-pro_page_wpstg-job-history",
  
  
                 "wp-staging_page_wpstg_clone",
                 "wp-staging_page_wpstg_backup",
                 "wp-staging_page_wpstg-settings",
                 "wp-staging_page_wpstg-tools",
+                "wp-staging_page_wpstg-job-history",
             ];
         } else {
             $availableSlugs = [
@@ -596,6 +599,7 @@ class Assets
                 "wp-staging_page_wpstg-settings",
                 "wp-staging_page_wpstg-tools",
                 "wp-staging_page_wpstg-welcome",
+                "wp-staging_page_wpstg-job-history",
             ];
         }
 

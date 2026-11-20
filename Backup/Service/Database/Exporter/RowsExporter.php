@@ -37,8 +37,16 @@ class RowsExporter extends AbstractExporter
 
     const EMPTY_PART_HEADER_BYTES = 512;
 
- 
-    const REMOTE_SYNC_CREDENTIAL_OPTIONS = ['wpstg_remote_sync_api_token', 'wpstg_remote_sync_password', 'wpstg_remote_sync_enabled'];
+
+
+
+
+    const REMOTE_SYNC_SITE_LOCAL_OPTIONS = [
+        'wpstg_remote_sync_api_token',
+        'wpstg_remote_sync_password',
+        'wpstg_remote_sync_enabled',
+        'wpstg_remote_sync_accept_self_signed',
+    ];
 
 
 
@@ -617,7 +625,7 @@ class RowsExporter extends AbstractExporter
                         throw new \OutOfBoundsException();
                     }
 
-                    if (in_array($value, self::REMOTE_SYNC_CREDENTIAL_OPTIONS, true)) {
+                    if (in_array($value, self::REMOTE_SYNC_SITE_LOCAL_OPTIONS, true)) {
                         throw new \OutOfBoundsException();
                     }
 
