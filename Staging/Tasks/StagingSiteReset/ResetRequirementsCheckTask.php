@@ -61,6 +61,15 @@ class ResetRequirementsCheckTask extends UpdateRequirementsCheckTask
 
 
 
+    protected function cannotUpdateIfWpConfigDiffersFromStagingSite()
+    {
+ 
+    }
+
+
+
+
+
     protected function cannotUpdateIfStagingSiteNoExists()
     {
         $stagingSitePath = $this->jobDataDto->getStagingSitePath();

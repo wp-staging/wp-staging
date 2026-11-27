@@ -51,6 +51,12 @@ class StagingSiteDto implements \JsonSerializable
 
     const EXCLUDED_DIRS_VERSION = 1;
 
+
+
+
+
+    const SHOP_ORDER_TABLES = ['posts', 'postmeta', 'comments', 'woocommerce_order_items', 'woocommerce_order_itemmeta', 'wc_orders', 'wc_orders_meta', 'wc_order_addresses', 'wc_order_operational_data', 'actionscheduler_actions'];
+
  
     protected $cloneId = '';
 
@@ -406,14 +412,6 @@ class StagingSiteDto implements \JsonSerializable
             return $this->syncedAt;
         }
 
-        return $this->getCreatedAtFromCloneId();
-    }
-
-
-
-
-    private function getCreatedAtFromCloneId(): int
-    {
         return preg_match('/^\d{10}(\d{3})?$/', $this->cloneId) ? (int)substr($this->cloneId, 0, 10) : 0;
     }
 
@@ -429,11 +427,54 @@ class StagingSiteDto implements \JsonSerializable
 
 
 
-    public static function doCopiedTablesHoldShopOrders(array $copiedTables): bool
+    public static function doCopiedTablesHoldShopOrders(array $copiedTables, bool $isNetworkClone = false): bool
     {
-        $orderTable = get_option('woocommerce_custom_orders_table_enabled') === 'yes' ? 'wc_orders' : 'posts';
+        $orderTablePattern = self::getShopOrderTablePattern();
+        $copiedSiteKeys    = [];
+        foreach ($copiedTables as $copiedTable) {
+            if (preg_match($orderTablePattern, $copiedTable, $matches)) {
+                $copiedSiteKeys[$matches[1]] = true;
+            }
+        }
 
-        return in_array(WPStaging::getTablePrefix() . $orderTable, $copiedTables, true);
+        if (empty($copiedSiteKeys)) {
+            return false;
+        }
+
+        foreach (self::findLiveShopOrderTablesPerSite() as $siteKey => $liveOrderTables) {
+            if (($isNetworkClone || isset($copiedSiteKeys[$siteKey])) && array_diff($liveOrderTables, $copiedTables)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+
+
+    public static function findLiveShopOrderTablesPerSite(): array
+    {
+        global $wpdb;
+
+        $orderTablePattern = self::getShopOrderTablePattern();
+        $liveOrderTables   = [];
+        $shopSiteKeys      = [];
+        foreach ($wpdb->get_col($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like(WPStaging::getTablePrefix()) . '%')) as $liveTable) {
+            if (preg_match($orderTablePattern, $liveTable, $matches)) {
+                $liveOrderTables[$matches[1]][] = $liveTable;
+                if (strtolower($matches[2]) === 'woocommerce_order_items') {
+                    $shopSiteKeys[$matches[1]] = true;
+                }
+            }
+        }
+
+        return array_intersect_key($liveOrderTables, $shopSiteKeys);
+    }
+
+    private static function getShopOrderTablePattern(): string
+    {
+        return '/^' . preg_quote(WPStaging::getTablePrefix(), '/') . '(\d+_)?(' . implode('|', self::SHOP_ORDER_TABLES) . ')$/i';
     }
 
     public function getDatabaseUser(): string

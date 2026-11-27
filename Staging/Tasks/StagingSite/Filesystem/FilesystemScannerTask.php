@@ -15,6 +15,7 @@ use WPStaging\Framework\Filesystem\FilesystemScannerDto;
 use WPStaging\Framework\Filesystem\LegacyFileRulesTrait;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathChecker;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
@@ -101,6 +102,9 @@ class FilesystemScannerTask extends StagingTask
     protected $pathChecker;
 
  
+    protected $pathIdentifier;
+
+ 
     protected $siteInfo;
 
  
@@ -135,6 +139,7 @@ class FilesystemScannerTask extends StagingTask
 
 
 
+
     public function __construct(
         LoggerInterface $logger,
         Cache $cache,
@@ -144,6 +149,7 @@ class FilesystemScannerTask extends StagingTask
         Filesystem $filesystem,
         FilesystemScanner $filesystemScanner,
         PathChecker $pathChecker,
+        PathIdentifier $pathIdentifier,
         SiteInfo $siteInfo
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -152,6 +158,7 @@ class FilesystemScannerTask extends StagingTask
         $this->filesystem        = $filesystem;
         $this->filesystemScanner = $filesystemScanner;
         $this->pathChecker       = $pathChecker;
+        $this->pathIdentifier    = $pathIdentifier;
         $this->siteInfo          = $siteInfo;
     }
 
@@ -320,7 +327,7 @@ class FilesystemScannerTask extends StagingTask
         if (empty($this->stepsDto->getTotal())) {
             $excludedDirs = array_map(function ($path) {
                 return $this->filesystem->normalizePath($path, true);
-            }, $this->getExcludedDirectories());
+            }, array_merge($this->getExcludedDirectories(), $this->getDirectoriesUncheckedByUser()));
 
             $this->jobDataDto->setExcludedDirectoriesForScanner($excludedDirs);
 
@@ -567,14 +574,17 @@ class FilesystemScannerTask extends StagingTask
         $this->filesystemScanner->setRootPath($this->getRootPath());
         $this->filesystemScanner->setExcludeRules($excludeRules);
 
+        $extraDirectories           = array_unique(array_filter(array_map([$this, 'resolveExtraDirectoryPath'], $this->jobDataDto->getExtraDirectories())));
         $isExtraDirectoriesExcluded = true;
-        foreach ($this->jobDataDto->getExtraDirectories() as $extraDirectory) {
-            if ($this->isExcluded($extraDirectory)) {
+        foreach ($extraDirectories as $extraDirectory) {
+            if ($this->isExcluded($extraDirectory) || $this->isCoveredByAnotherExtraDirectory($extraDirectory, $extraDirectories)) {
                 continue;
             }
 
             $isExtraDirectoriesExcluded = false;
-            $this->filesystemScanner->preScanPath($extraDirectory);
+            if (!$this->filesystemScanner->maybeEnqueueAsEmptyDirectory($extraDirectory)) {
+                $this->filesystemScanner->preScanPath($extraDirectory);
+            }
         }
 
         $this->filesystemScanner->unlockQueue();
@@ -586,6 +596,21 @@ class FilesystemScannerTask extends StagingTask
         return $this->generateResponse();
     }
 
+ 
+    protected function resolveExtraDirectoryPath(string $extraDirectory): string
+    {
+        if ($this->pathIdentifier->isSafeIdentifiablePath($extraDirectory)) {
+            $extraDirectory = $this->pathIdentifier->transformIdentifiableToPath($extraDirectory);
+        }
+
+        return untrailingslashit($this->filesystem->normalizePath($extraDirectory));
+    }
+
+ 
+    protected function isCoveredByAnotherExtraDirectory(string $extraDirectory, array $extraDirectories): bool
+    {
+        return $this->pathChecker->isPathInPathsList($extraDirectory, array_diff($extraDirectories, [$extraDirectory])) && !is_link($extraDirectory);
+    }
 
     protected function getRootPath(): string
     {
@@ -613,6 +638,25 @@ class FilesystemScannerTask extends StagingTask
         }
 
         return $this->directory->ensureWpStagingDataDirectoriesExcluded($excludedDirs);
+    }
+
+
+
+
+
+
+
+    protected function getDirectoriesUncheckedByUser(): array
+    {
+        return array_map(function ($directory) {
+            if ($this->pathIdentifier->isSafeIdentifiablePath($directory)) {
+                return $this->pathIdentifier->transformIdentifiableToPath($directory);
+            }
+
+            $directory = $this->filesystem->normalizePath($directory);
+
+            return preg_match('#^([a-zA-Z]:)?/#', $directory) === 1 ? $directory : '/' . $directory;
+        }, $this->jobDataDto->getExcludedDirectories());
     }
 
 

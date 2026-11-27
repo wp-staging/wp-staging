@@ -20,6 +20,12 @@ trait FilesystemScannerDtoTrait
     private $filesystemSize = 0;
 
  
+    private $copiedFiles = 0;
+
+ 
+    private $copiedBytes = 0;
+
+ 
     private $excludedDirectoriesForScanner = [];
 
  
@@ -132,6 +138,34 @@ trait FilesystemScannerDtoTrait
     public function setFilesystemSize(int $filesystemSize)
     {
         $this->filesystemSize = $filesystemSize;
+    }
+
+    public function getCopiedFiles(): int
+    {
+        return (int)$this->copiedFiles;
+    }
+
+
+
+
+
+    public function setCopiedFiles(int $copiedFiles)
+    {
+        $this->copiedFiles = $copiedFiles;
+    }
+
+    public function getCopiedBytes(): int
+    {
+        return (int)$this->copiedBytes;
+    }
+
+
+
+
+
+    public function setCopiedBytes(int $copiedBytes)
+    {
+        $this->copiedBytes = $copiedBytes;
     }
 
 

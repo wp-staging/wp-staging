@@ -8,6 +8,7 @@ use WPStaging\Framework\Job\Interfaces\FilesystemScannerDtoInterface;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Dto\Task\FileCopierTaskDto;
+use WPStaging\Staging\Dto\Task\Response\FileCopierResponseDto;
 use WPStaging\Staging\Interfaces\StagingOperationDtoInterface;
 use WPStaging\Staging\Service\FileCopier;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -53,8 +54,11 @@ abstract class FileCopierTask extends StagingTask
         }
 
         $this->fileCopier->setup($this->jobDataDto->getStagingSitePath(), $this->getLoggerFriendlyName(), $this->getIsWpContent());
+        $stepBeforeCopy = $this->stepsDto->getCurrent();
         $this->fileCopier->execute();
 
+        $this->jobDataDto->setCopiedFiles($this->jobDataDto->getCopiedFiles() + $this->stepsDto->getCurrent() - $stepBeforeCopy);
+        $this->jobDataDto->setCopiedBytes($this->jobDataDto->getCopiedBytes() + $this->fileCopier->getCopiedBytes());
         $this->currentTaskDto->setBigFileDto($this->fileCopier->getBigFileDto());
         $this->setCurrentTaskDto($this->currentTaskDto);
 
@@ -63,6 +67,18 @@ abstract class FileCopierTask extends StagingTask
 
  
     abstract protected function getFileIdentifier(): string;
+
+ 
+    protected function getResponseDto()
+    {
+        $response = new FileCopierResponseDto();
+        $response->setFilesTotal($this->jobDataDto->getDiscoveredFiles());
+        $response->setFilesystemSize($this->jobDataDto->getFilesystemSize());
+        $response->setFilesCopied($this->jobDataDto->getCopiedFiles());
+        $response->setCopiedBytes($this->jobDataDto->getCopiedBytes());
+
+        return $response;
+    }
 
     protected function getLoggerFriendlyName(): string
     {

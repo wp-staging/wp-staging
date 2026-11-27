@@ -134,6 +134,23 @@ class Files extends JobExecutable
 
 
 
+
+
+    protected function prepareResponse($status = false, $incrementCurrentStep = true)
+    {
+        parent::prepareResponse($status, $incrementCurrentStep);
+
+        $this->response['filesTotal']  = (int)$this->options->totalFiles;
+        $this->response['filesCopied'] = (int)$this->options->copiedFiles;
+        $this->response['copiedBytes'] = (int)($this->options->copiedFileSize ?? 0);
+
+        return $this->response;
+    }
+
+
+
+
+
     protected function calculateTotalSteps()
     {
         $this->options->totalSteps = ceil($this->options->totalFiles / $this->maxFilesPerRun);
@@ -316,6 +333,10 @@ class Files extends JobExecutable
 
         $this->guardStagingSiteRootBeforeFilesArrive();
 
+        if (empty($this->options->copiedFiles)) {
+            $this->options->copiedFileSize = 0;
+        }
+
  
         $this->file->seek($this->options->copiedFiles + 1);
 
@@ -480,7 +501,7 @@ class Files extends JobExecutable
 
  
         if ($fileSize >= $this->settings->batchSize && !$this->isStagingSiteRootWpConfig($destination)) {
-            return $this->copyBig($file, $destination, $this->settings->batchSize);
+            return $this->countCopiedBytes($this->copyBig($file, $destination, $this->settings->batchSize), $fileSize);
         }
 
  
@@ -501,7 +522,16 @@ class Files extends JobExecutable
 
         $this->setDirPermissions($destination);
 
-        return true;
+        return $this->countCopiedBytes(true, is_dir($file) ? 0 : $fileSize);
+    }
+
+    private function countCopiedBytes(bool $isCopied, int $fileSize): bool
+    {
+        if ($isCopied) {
+            $this->options->copiedFileSize = (int)($this->options->copiedFileSize ?? 0) + $fileSize;
+        }
+
+        return $isCopied;
     }
 
 

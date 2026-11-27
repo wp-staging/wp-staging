@@ -5,6 +5,7 @@ namespace WPStaging\Framework\Database\Exporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Filesystem\FileObject;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 
 abstract class AbstractExporter
@@ -100,6 +101,7 @@ abstract class AbstractExporter
 
     public function setFileName($filename)
     {
+        Filesystem::dropCachedCopyOfFile($filename);
         $this->file = new FileObject($filename, FileObject::MODE_APPEND);
     }
 

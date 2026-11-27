@@ -347,7 +347,8 @@ class Settings
 
         $password = !empty($httpAuthCredentials['password']) ? DataEncryption::decrypt($httpAuthCredentials['password']) : '';
 
-        $element = new Password('wpstg_settings[httpAuthPassword]', []);
+ 
+        $element = new Password('wpstg_settings[httpAuthPassword]', ['autocomplete' => 'new-password']);
         $this->form['general']->add(
             $element->setLabel(__('Password', 'wp-staging'))
                 ->setDefault($password),

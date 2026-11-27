@@ -39,6 +39,13 @@ class HealthCheck extends AbstractTemplateComponent
             wp_send_json_error(['message' => esc_html__('Missing staging site id', 'wp-staging')], 400);
         }
 
-        wp_send_json_success(['health' => $this->stagingSiteHttpDetector->checkStagingSite($cloneId, true)]);
+        $health      = $this->stagingSiteHttpDetector->checkStagingSite($cloneId, true);
+        $isPostponed = $health === StagingSiteHttpDetector::HEALTH_POSTPONED;
+
+        wp_send_json_success([
+            'health'    => $isPostponed ? StagingSiteHttpDetector::HEALTH_UNKNOWN : $health,
+            'postponed' => $isPostponed,
+            'message'   => $isPostponed ? esc_html__('A staging job is running, so the health check has been postponed and will retry shortly.', 'wp-staging') : '',
+        ]);
     }
 }

@@ -250,6 +250,8 @@ abstract class AbstractRowsExporter extends AbstractExporter
         $tableColumns      = $this->tableService->getColumnTypes($this->tableName);
         $numericPrimaryKey = $this->rowsExporterDto->getNumericPrimaryKey();
 
+ 
+        $this->client->query("SET SESSION sql_mode = REPLACE(@@SESSION.sql_mode, 'NO_BACKSLASH_ESCAPES', '')");
         $this->setupSearchReplace();
 
         if ($this->rowsExporterDto->isLocked()) {

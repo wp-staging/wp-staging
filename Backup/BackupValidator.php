@@ -200,6 +200,9 @@ class BackupValidator
         $this->backupFilename = $backupFilename;
 
         $splitMetadata = $metadata->getMultipartMetadata();
+        if ($splitMetadata->getBackupParts() === []) {
+            return false;
+        }
 
         $partsByType = [
             'plugins'     => $splitMetadata->getPluginsParts(),

@@ -25,9 +25,6 @@ class UpdateWpConfigConstants extends FileCloningService
 
     const FILTER_PRESERVE_DEBUG_CONSTANTS = 'wpstg.cloning.preserve_debug_constants';
 
- 
-    protected $abspathRegex = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
-
 
 
 
@@ -322,47 +319,20 @@ class UpdateWpConfigConstants extends FileCloningService
 
     protected function addDefinition(string $constant, string $content, string $newDefinition)
     {
-        if (!$this->abspathConstantExists($content)) {
-            throw new RuntimeException("Can not add " . $constant . " constant to wp-config.php. Can not find ABSPATH constant.");
-        }
-
         if ($this->maybeAddDefinedCondition($constant)) {
-            $replacement = <<<EOT
+            $definition = <<<EOT
 if ( ! defined( '$constant' ) ) {
     define('$constant', $newDefinition);
 }
-if ( ! defined( 'ABSPATH' ) )
 EOT;
         } else {
-            $replacement = <<<EOT
-define('$constant', $newDefinition);
-if ( ! defined( 'ABSPATH' ) )
-EOT;
+            $definition = "define('$constant', $newDefinition);";
         }
 
- 
-        $replacementEscaped = addcslashes($replacement, '\\$');
-
-        if (($content = preg_replace([$this->abspathRegex], $replacementEscaped, $content)) === null) {
-            throw new RuntimeException("Failed to update constant " . $constant);
-        }
+        $content = $this->insertBeforeAbspathStatement($content, $definition);
 
         $this->log("Added constant: " . $constant);
         return $content;
-    }
-
-
-
-
-
-    private function abspathConstantExists(string $content): bool
-    {
-        preg_match($this->abspathRegex, $content, $matches);
-        if (empty($matches[0])) {
-            return false;
-        }
-
-        return true;
     }
 
 

@@ -74,6 +74,9 @@ class FilesystemScanner extends AbstractFilesystemScanner
 
     protected $enqueueEmptyDirectories = false;
 
+ 
+    protected $maxBytesToStore = PHP_INT_MAX;
+
 
 
 
@@ -165,6 +168,15 @@ class FilesystemScanner extends AbstractFilesystemScanner
 
 
 
+
+    public function setMaxBytesToStore(int $maxBytesToStore)
+    {
+        $this->maxBytesToStore = $maxBytesToStore;
+    }
+
+
+
+
     public function setupFilesystemQueue()
     {
         $fileBackupQueueCacheName = $this->queueCacheName . '_' . $this->currentPathScanning;
@@ -231,7 +243,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
             $this->processPath($path);
         } catch (FinishedQueueException $ex) {
             try {
-                WPStaging::make(DiskWriteCheck::class)->checkPathCanStoreEnoughBytes($this->directory->getPluginUploadsDirectory(), $this->scannerDto->getFilesystemSize());
+                WPStaging::make(DiskWriteCheck::class)->checkPathCanStoreEnoughBytes($this->directory->getPluginUploadsDirectory(), min($this->scannerDto->getFilesystemSize(), $this->maxBytesToStore));
             } catch (DiskNotWritableException $e) {
                 throw $e;
             } catch (RuntimeException $e) {
@@ -357,6 +369,10 @@ class FilesystemScanner extends AbstractFilesystemScanner
 
     protected function processDirectory(SplFileInfo $dir, $link = null)
     {
+        if ($this->isExcludedDirectory($dir->getPathname())) {
+            return;
+        }
+
         if ($this->isUploadsYearMonthDirectory($dir)) {
             $this->preScanPath($dir->getPathname());
             return;
@@ -364,7 +380,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
 
         $normalizedPath = $this->filesystem->normalizePath($dir->getPathname(), true);
 
-        if ($this->isExcludedDirectory($dir->getPathname()) || $this->canExcludeCacheDir($dir)) {
+        if ($this->canExcludeCacheDir($dir)) {
             return;
         }
 
@@ -462,7 +478,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
 
     public function maybeEnqueueAsEmptyDirectory(string $path): bool
     {
-        if (!$this->enqueueEmptyDirectories || !is_dir($path)) {
+        if (!$this->enqueueEmptyDirectories || !is_dir($path) || $this->isPathExcludedByRules($path)) {
             return false;
         }
 
@@ -475,6 +491,16 @@ class FilesystemScanner extends AbstractFilesystemScanner
         $this->enqueueEmptyDirectory($path);
 
         return true;
+    }
+
+ 
+    private function isPathExcludedByRules(string $path): bool
+    {
+        $excludeFilter = new PathFilterHelper();
+        $excludeFilter->setWpRootPath($this->rootPath);
+        $excludeFilter->categorizeRules($this->excludeRules);
+
+        return $excludeFilter->isMatched(new SplFileInfo($path));
     }
 
 

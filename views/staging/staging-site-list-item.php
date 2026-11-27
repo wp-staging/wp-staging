@@ -26,6 +26,7 @@ $diagnoseHeadings       = [
     StagingSiteHttpDetector::REASON_TABLES_MISSING => __('Staging site "%s" is missing its database tables', 'wp-staging'),
 ];
 $diagnoseHeading        = $diagnoseHeadings[$diagnostics['reason'] ?? ''] ?? __('Staging site "%s" isn\'t responding', 'wp-staging');
+$isUnfinishedWithFilesMissing = $isStagingSiteBroken && ($diagnostics['reason'] ?? '') === StagingSiteHttpDetector::REASON_FILES_MISSING;
 
 ?>
 
@@ -82,6 +83,15 @@ $diagnoseHeading        = $diagnoseHeadings[$diagnostics['reason'] ?? ''] ?? __(
                     <p class="wpstg-mt-2 wpstg-text-sm wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php esc_html_e('This is the live site, not the staging site we expected at this address.', 'wp-staging'); ?></p>
                 <?php endif; ?>
                 <pre role="region" tabindex="0" aria-label="<?php echo esc_attr__('Server response', 'wp-staging'); ?>" class="wpstg-mt-3 wpstg-max-h-72 wpstg-overflow-auto wpstg-rounded-2xl wpstg-bg-slate-900 wpstg-p-5 wpstg-text-sm wpstg-font-mono wpstg-leading-relaxed wpstg-text-slate-100 wpstg-whitespace-pre-wrap wpstg-break-all"><?php echo esc_html($diagnostics['body']); ?></pre>
+            </div>
+            <?php endif; ?>
+            <?php if ($isUnfinishedWithFilesMissing) : ?>
+            <div class="wpstg-diagnose-unfinished-hint wpstg-mt-6 wpstg-rounded-2xl wpstg-border wpstg-border-solid wpstg-border-slate-200 dark:wpstg-border-slate-700 wpstg-bg-slate-50 dark:wpstg-bg-slate-800 wpstg-p-4 wpstg-text-left">
+                <div class="wpstg-text-xs wpstg-font-semibold wpstg-uppercase wpstg-tracking-wider wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php esc_html_e('What happened', 'wp-staging'); ?></div>
+                <p class="wpstg-mt-2 wpstg-text-sm wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php esc_html_e('This staging site did not finish. Some of its WordPress files are missing, so the server has nothing to open there. Nothing on your live site was changed.', 'wp-staging'); ?></p>
+                <p class="wpstg-mt-2 wpstg-text-sm wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php echo $stagingSite->getIsBlankSite()
+                    ? esc_html__('To fix it, delete this staging site and create it again, and keep this browser tab open until it finishes.', 'wp-staging')
+                    : esc_html__('To fix it, reset this staging site, or delete it and create it again, and keep this browser tab open until it finishes. After the Reset, click Re-Check health to clear this warning.', 'wp-staging'); ?></p>
             </div>
             <?php endif; ?>
             <p class="wpstg-mt-6 wpstg-text-center wpstg-text-sm wpstg-text-slate-500 dark:wpstg-text-slate-400"><?php echo sprintf(esc_html__('Still stuck? %s and we\'ll help you resolve this issue.', 'wp-staging'), '<a href="https://wp-staging.com/support/" target="_blank" rel="noopener noreferrer" class="wpstg-font-medium wpstg-text-blue-600 hover:wpstg-text-blue-700">' . esc_html__('Contact WP STAGING Support', 'wp-staging') . '</a>'); ?></p>

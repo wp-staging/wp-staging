@@ -349,6 +349,10 @@ $wpstgRestorePageUrl = add_query_arg([
             }
 
 
+            if ($isMultipartBackup && !$isProVersion && !$isCorrupt) {
+                Alert::render(__('Backup Restore Requires Upgrade', 'wp-staging'), __('Restoring a multipart backup needs WP Staging Pro.', 'wp-staging'));
+            }
+
             if ($isUnsupported && !$isCorrupt) {
                 $title       = __('Backup Restore Requires Upgrade', 'wp-staging');
                 $description = __('This backup was generated on a beta version of WP STAGING and cannot be restored with the current version.', 'wp-staging');
@@ -389,14 +393,19 @@ $wpstgRestorePageUrl = add_query_arg([
                 <button type="button" class="wpstg-btn wpstg-btn-sm wpstg-btn-ghost wpstg-transfer-revoke-btn">
                     <?php esc_html_e('Revoke Link', 'wp-staging'); ?>
                 </button>
-                <span class="wpstg-badge wpstg-transfer-mode"></span>
+                <span class="wpstg--tooltip" tabindex="0" aria-label="<?php esc_attr_e('Details', 'wp-staging'); ?>">
+                    <img class="wpstg--dashicons wpstg-opacity-60" src="<?php echo esc_url(trailingslashit(WPSTG_PLUGIN_URL) . 'assets/svg/info-outline.svg'); ?>" alt="" />
+                    <span class="wpstg--tooltiptext">
+                        <span class="wpstg-transfer-mode"></span>
+                        <span class="wpstg-block wpstg-mt-1 wpstg-transfer-copy-warning" style="display:none;">
+                            <?php esc_html_e('A temporary copy is used because this server does not support hardlinks. This may temporarily require additional disk space.', 'wp-staging'); ?>
+                        </span>
+                    </span>
+                </span>
             </div>
             <p class="wpstg-mt-2 wpstg-mb-0 wpstg-transfer-expiry"></p>
-            <p class="wpstg-mt-1 wpstg-mb-0 wpstg-transfer-copy-warning" style="display:none;">
-                <?php esc_html_e('A temporary copy is used because this server does not support hardlinks. This may temporarily require additional disk space.', 'wp-staging'); ?>
-            </p>
             <p class="wpstg-mt-1 wpstg-mb-0 wpstg-text-xs wpstg-text-dim-foreground">
-                <?php esc_html_e('Anyone with this link can download the backup until you revoke it. WP STAGING deletes the link automatically after it expires. The link does not reveal where the backup is stored.', 'wp-staging'); ?>
+                <?php esc_html_e('Anyone with this link can download the backup.', 'wp-staging'); ?>
             </p>
         </div>
         <div class="wpstg-transfer-panel-error wpstg-text-destructive" style="display:none;"></div>

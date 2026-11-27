@@ -13,7 +13,9 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Traits\ValueGetterTrait;
 use WPStaging\Pro\Multisite\Service\SubsiteUrlMapping;
+use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\FolderOwnership;
+use WPStaging\Staging\PrefixOwnership;
 
 
 
@@ -225,6 +227,12 @@ class Updating extends Job
 
         try {
             WPStaging::make(FolderOwnership::class)->assertIsStagingSiteFolder($this->options->destinationDir);
+            $stagingSite = (new StagingSiteDto())->hydrate((array)$currentStagingSite);
+            $stagingPrefix = WPStaging::isWindowsOs() ? strtolower($stagingSite->getUsedPrefix()) : $stagingSite->getUsedPrefix();
+            $isSharedDatabaseOnLivePrefix = !$stagingSite->getIsCustomDatabaseConnection() && $stagingPrefix === WPStaging::getTablePrefix();
+            if ($this->mainJob === Job::UPDATE && !$isSharedDatabaseOnLivePrefix) {
+                WPStaging::make(PrefixOwnership::class)->assertWpConfigMatchesStagingSite($stagingSite);
+            }
         } catch (RuntimeException $e) {
             $this->errorMessage = $e->getMessage();
             return false;
@@ -275,7 +283,10 @@ class Updating extends Job
         $this->options->excludedDirectories = array_merge($this->options->excludedDirectories, $excludedDirectoriesRequest);
  
         if (isset($_POST["extraDirectories"])) {
-            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, $this->sanitize->sanitizeString($_POST["extraDirectories"]));
+            $this->options->extraDirectories = explode(
+                ScanConst::DIRECTORIES_SEPARATOR,
+                wpstg_urldecode($this->sanitize->sanitizeString($_POST["extraDirectories"]))
+            );
         }
 
  
@@ -299,6 +310,7 @@ class Updating extends Job
         $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $this->sanitize->sanitizeBool($_POST['allTablesExcluded']));
         $selectedTables->setKeepUserTablesTogether();
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
+        $this->options->skippedViews = $selectedTables->getSkippedViews($this->options->networkClone);
     }
 
 

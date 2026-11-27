@@ -34,6 +34,7 @@ class UpdateStagingOptionsTable extends DBCloningService
             return $this->updateAllOptionsTables();
         }
 
+        $this->deleteStagingSitesRecordBackups();
         if ($this->skipOptionsTable()) {
             return true;
         }
@@ -51,6 +52,7 @@ class UpdateStagingOptionsTable extends DBCloningService
             $this->setOptionTable($tableName);
 
             $this->log("Updating {$this->dto->getPrefix()}{$tableName} {$this->dto->getStagingDb()->last_error}");
+            $this->deleteStagingSitesRecordBackups();
             if ($this->skipOptionsTable()) {
                 continue;
             }
@@ -148,9 +150,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         $this->updateOptions($update);
 
  
-        $toDelete = [
-            '_transient_wp_core_block_css_files' 
-        ];
+        $toDelete = ['wpstg_tmp_data'];
 
         if (!$this->isNetworkClone() && $freemiusHelper->hasFreemiusOptions()) {
             $toDelete = array_merge($toDelete, $freemiusHelper->getFreemiusOptions());
@@ -179,6 +179,28 @@ class UpdateStagingOptionsTable extends DBCloningService
         $this->deleteOptions($toDelete);
 
         return true;
+    }
+
+
+
+
+    private function deleteStagingSitesRecordBackups()
+    {
+        if (!$this->tableExists($this->dto->getPrefix() . $this->optionTable)) {
+            return;
+        }
+
+        $db = $this->dto->getStagingDb();
+        $deleted = $db->query(
+            $db->prepare(
+                "DELETE FROM `{$this->dto->getPrefix()}{$this->optionTable}` WHERE `option_name` LIKE %s;",
+                $db->esc_like(Sites::BACKUP_STAGING_SITES_OPTION) . '%'
+            )
+        );
+
+        if ($deleted === false) {
+            $this->log("Failed to delete the backups of " . Sites::STAGING_SITES_OPTION . " {$db->last_error}", Logger::TYPE_WARNING);
+        }
     }
 
     protected function updateOrInsertOptions($options)

@@ -130,7 +130,7 @@ class Finish extends Job
                 $this->options->existingClones[$this->options->clone]['url'] = $this->getDestinationUrl();
             }
 
-            $this->options->existingClones[$this->options->clone]['syncedAt']                = StagingSiteDto::doCopiedTablesHoldShopOrders($this->options->tables) ? $this->getJobStartedAt() : (int)($this->options->existingClones[$this->options->clone]['syncedAt'] ?? 0);
+            $this->options->existingClones[$this->options->clone]['syncedAt']                = StagingSiteDto::doCopiedTablesHoldShopOrders($this->options->tables, (bool)$this->isNetworkClone()) ? $this->getJobStartedAt() : (int)($this->options->existingClones[$this->options->clone]['syncedAt'] ?? 0);
             $this->options->existingClones[$this->options->clone]['datetime']                = time();
             $this->options->existingClones[$this->options->clone]['status']                  = 'finished';
             $this->options->existingClones[$this->options->clone]['prefix']                  = $this->options->prefix;

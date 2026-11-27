@@ -300,10 +300,22 @@ class TransferSessionService
  
     public function getActiveSession(string $backupId)
     {
-        $now = time();
+        $servedSessions = array_filter($this->repository->findActiveByBackupId($backupId), [$this, 'isSessionServedOnThisSite']);
 
+        foreach ($servedSessions as $session) {
+            if (!$session->isExpired(time())) {
+                return $session;
+            }
+        }
+
+        return reset($servedSessions) ?: null;
+    }
+
+ 
+    public function findExpiredSessionStillServed(string $backupId)
+    {
         foreach ($this->repository->findActiveByBackupId($backupId) as $session) {
-            if ($this->isSessionOfferedOnThisSite($session, $now)) {
+            if ($this->isSessionServedOnThisSite($session) && $session->isExpired(time())) {
                 return $session;
             }
         }
@@ -398,7 +410,7 @@ class TransferSessionService
         foreach ($this->repository->findActiveByBackupId($backupId) as $session) {
             $hasEnoughLifeLeft = (int)strtotime($session->expiresAt . ' UTC') - $now >= intdiv($ttl, 2);
 
-            if ($this->isSessionOfferedOnThisSite($session, $now) && $hasEnoughLifeLeft && $session->sourcePath === $sourcePath) {
+            if ($this->isSessionServedOnThisSite($session) && $hasEnoughLifeLeft && $session->sourcePath === $sourcePath) {
                 return $session;
             }
         }
@@ -407,9 +419,9 @@ class TransferSessionService
     }
 
  
-    private function isSessionOfferedOnThisSite(TransferSession $session, int $now): bool
+    private function isSessionServedOnThisSite(TransferSession $session): bool
     {
-        return $session->blogId === get_current_blog_id() && $session->isReady() && !$session->isExpired($now) && file_exists($session->transferFilePath);
+        return $session->blogId === get_current_blog_id() && $session->isReady() && file_exists($session->transferFilePath);
     }
 
  

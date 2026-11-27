@@ -7,7 +7,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, wordpress backup, restore, move, transfer
 Requires at least: 3.6
 Tested up to: 7.1
-Stable tag: 4.22.0
+Stable tag: 4.23.0
 Requires PHP: 7.0
 
 WordPress backup plugin: backups, restore & migration in minutes. Clone or duplicate your site, test updates on a staging copy. 100% unit-tested.
@@ -283,21 +283,26 @@ The features below are available in [WP STAGING | PRO](https://wp-staging.com/ba
 
 == Changelog ==
 
-= 4.22.0 =
-* New: Add a Job History screen listing every backup, staging and sync operation with the user who started it, its result and its log, and a setting to turn the recording off. (Pro)
+= 4.23.0 =
+* New: Add a low disk space mode that uploads each backup part to cloud storage and deletes it from the site while the backup is created. (Pro)
+* New: Warn before a push overwrites live WooCommerce orders, refunds or subscriptions that changed since the staging site last copied them. (Pro)
+* Enh: A failed staging or backup job now shows the error that stopped it above its logs.
+* Enh: Compare a staging site's stored data with its wp-config.php before updating or pushing it, and stop with a message naming the database setting or table prefix that differs.
+* UX: Keep the Remote Sync review step inside a laptop viewport (Pro).
+* UX: Show staging creation progress with step markers, the current step's percentage, the files and size copied, the time left and a live log.
+* UX: Show that a changed setting still needs to be saved, with a save bar on the General settings tab that counts the unsaved changes until they are saved or reverted, and a warning before leaving the page with a change still unsaved.
 * Security: This release includes security hardening. Updating is strongly recommended.
-* Fix: Verify the remote site's TLS certificate in Remote Sync, so a man-in-the-middle can no longer read the connection credentials or the transferred backup. A site whose peer has a certificate this server does not trust, such as a local development site, gets a refused connection with a message that names the cause and offers the new "Accept self-signed SSL certificates" switch right in the connect dialog. (Pro)
-* Fix: Stop the backup with a clear message instead of retrying a large file forever when the PHP time limit is too short to write any of it.
-* Fix: Queue only one backup when two cron runners fire the same backup schedule at the same moment.
-* Fix: Stop Update Protection from reporting a backup that reached the largest file size the server allows as a lack of disk space.
-* Fix: Show the real reason when a background backup cannot be queued, instead of a generic error.
-* Fix: Keep OneDrive connected when Microsoft answers with a new refresh token. (Pro)
-* Fix: Stop a OneDrive upload that Microsoft keeps refusing after a limited number of retries, and keep the backup available locally, instead of retrying forever. (Pro)
-* Fix: Copy the last files of the file list to a staging site created or updated with the Classic engine, which could be left out while the log reported every file copied.
-* Fix: Upload every backup part to the next remote storage after an upload to the previous one failed. (Pro)
-* Fix: Copy the users and usermeta tables together when a staging site is created, updated or reset, so a production user never inherits the role of a removed staging user.
-* Fix: On a multisite, only a network super admin can create, update, push or otherwise manage staging sites.
-* Plus 8 more fixes.
+* Fix: Backups no longer fail with "shorter than its last checkpoint" on hosts that run PHP on several servers sharing one network storage, such as Elementor Hosting.
+* Fix: Creating a staging site no longer stops when the database contains a view that points to a missing table.
+* Fix: Restores and backups no longer stop with "Next task of queue job is null or invalid" when a request overlaps a running step.
+* Fix: Say that a security check on the server stopped a backup or staging job, or that the server stopped answering, instead of reporting a PHP fatal error, and log what the server answered.
+* Fix: Allow creating staging site when ABSPATH is defined without a condition in wp-config.php.
+* Fix: Stop creating, updating, resetting or pushing a staging site from hanging when an empty folder cannot be created.
+* Fix: Connect to the database again instead of failing with 'Database handler / link is not set' during a staging update, and name the connection error when that fails
+* Fix: Keep an expired temporary backup link visible and revocable until WP STAGING deletes it, and show the date it is deleted instead of an expiry date.
+* Fix: Stop a generic "Job completed successfully" box from replacing the staging site created screen.
+* Fix: Stop a retried standalone restore from inserting database rows twice after the server cut a request short (Pro)
+* Plus 14 more fixes.
 
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)

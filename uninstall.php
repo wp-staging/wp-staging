@@ -489,6 +489,7 @@ class Uninstall
             'wpstg_remote_sync_send_success_notification',
             'wpstg_remote_sync_accept_self_signed',
             'wpstg_remote_sync_safety_backup_request',
+            'wpstg_remote_sync_key_reissued_notice',
             'wpstg_different_prefix_backup_notice',
             'wpstg_entire_network_clone_notice',
         ];
@@ -643,6 +644,7 @@ class Uninstall
         $this->deleteTransientsByPrefix('wpstg.backup.schedules.slack_fingerprint_');
         $this->deleteRemoteSyncAuthenticationActivityTransients();
         $this->deleteTransientsByPrefix('wpstg_rs_lowdisk_ack_');
+        $this->deleteTransientsByPrefix('wpstg_license_error_');
         $this->deleteTransientsByPrefix('wpstg_job_history_actor_');
     }
 

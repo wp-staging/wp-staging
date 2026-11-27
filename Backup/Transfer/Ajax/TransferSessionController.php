@@ -37,8 +37,9 @@ class TransferSessionController
  
     public function ajaxCreate()
     {
-        $this->authorizeAndSendSession(function () {
-            $backupId = $this->getRequestedBackupId();
+        $backupId = $this->getRequestedBackupId();
+
+        $this->authorizeAndSendSession(function () use ($backupId) {
             if ($backupId === '') {
                 throw TransferSessionException::invalidRequest();
             }
@@ -46,7 +47,7 @@ class TransferSessionController
             $requestedTtl = isset($_POST['ttl']) ? Sanitize::sanitizeInt($_POST['ttl']) : 0;
 
             return $this->transferSessionService->createForBackupId($backupId, $requestedTtl);
-        }, TransferSessionException::artifactCreationFailed(), 'create');
+        }, TransferSessionException::artifactCreationFailed(), 'create', $backupId);
     }
 
  
@@ -101,7 +102,8 @@ class TransferSessionController
 
 
 
-    private function authorizeAndSendSession(callable $getSession, TransferSessionException $fallbackError, string $actionForLog)
+
+    private function authorizeAndSendSession(callable $getSession, TransferSessionException $fallbackError, string $actionForLog, string $backupId = '')
     {
         if (!$this->isRequestAuthorized()) {
             $this->sendUnauthorized();
@@ -111,11 +113,11 @@ class TransferSessionController
         try {
             $session = $getSession();
         } catch (TransferSessionException $e) {
-            $this->sendError($e->getMessage());
+            $this->sendError($e->getMessage(), $backupId);
             return;
         } catch (Throwable $e) {
             debug_log(sprintf('WP STAGING: Could not %s a transfer session. %s', $actionForLog, $e->getMessage()));
-            $this->sendError($fallbackError->getMessage());
+            $this->sendError($fallbackError->getMessage(), $backupId);
             return;
         }
 
@@ -133,10 +135,21 @@ class TransferSessionController
         wp_send_json(array_merge(['error' => false], $session->toResponse()));
     }
 
- 
-    private function sendError(string $message)
+
+
+
+
+
+    private function sendError(string $message, string $backupId = '')
     {
-        wp_send_json(['error' => true, 'message' => $message]);
+        $response      = ['error' => true, 'message' => $message];
+        $activeSession = $backupId === '' ? null : $this->transferSessionService->getActiveSession($backupId);
+
+        if ($activeSession !== null) {
+            $response['activeSession'] = $activeSession->toResponse();
+        }
+
+        wp_send_json($response);
     }
 
  

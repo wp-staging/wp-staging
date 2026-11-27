@@ -62,6 +62,22 @@ interface FilesystemScannerDtoInterface
 
     public function setFilesystemSize(int $filesystemSize);
 
+    public function getCopiedFiles(): int;
+
+
+
+
+
+    public function setCopiedFiles(int $copiedFiles);
+
+    public function getCopiedBytes(): int;
+
+
+
+
+
+    public function setCopiedBytes(int $copiedBytes);
+
  
     public function getExcludedDirectoriesForScanner(): array;
 

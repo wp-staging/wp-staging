@@ -97,6 +97,7 @@ $renderer->accordionSection([
                                 <button type="button" class="wpstg-create-inline-save" data-wpstg-inline-save><?php esc_html_e('Save', 'wp-staging'); ?></button>
                                 <button type="button" class="wpstg-create-inline-cancel" data-wpstg-inline-cancel><?php esc_html_e('Cancel', 'wp-staging'); ?></button>
                             </span>
+                            <span class="wpstg-font-sans wpstg-text-xs wpstg-text-red-600 dark:wpstg-text-red-400" data-wpstg-inline-error role="alert" hidden><?php esc_html_e('Enter a URL that starts with http:// or https://.', 'wp-staging'); ?></span>
                         <?php endif; ?>
                     </dd>
                 </div>

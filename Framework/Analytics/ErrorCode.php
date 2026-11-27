@@ -31,6 +31,7 @@ class ErrorCode
     const MEMORY_EXHAUSTED    = 'memory_exhausted';
     const DB_RESTORE_QUERY    = 'db_restore_query';
     const REQUEST_FAILED      = 'request_failed';
+    const SECURITY_CHECK      = 'security_check';
     const BACKUP_PART_MISSING = 'backup_part_missing';
     const TABLE_LOCK_GIVEN_UP = 'table_lock_given_up';
     const WORKER_STOPPED      = 'worker_stopped';

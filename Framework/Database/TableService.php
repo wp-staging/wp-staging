@@ -138,12 +138,7 @@ class TableService
             return null;
         }
 
-        $collection = new Collection(TableDto::class);
-        foreach ($tables as $table) {
-            $collection->attach((new TableDto())->hydrate((array) $table));
-        }
-
-        return $collection;
+        return $this->hydrateTableStatusCollection($tables);
     }
 
 
@@ -160,9 +155,28 @@ class TableService
             return null;
         }
 
+        return $this->hydrateTableStatusCollection($tables, (string) $prefix);
+    }
+
+
+
+
+
+
+
+
+    private function hydrateTableStatusCollection($tables, string $prefix = ''): Collection
+    {
+        $views      = $this->findViewsNamesStartWith($prefix);
         $collection = new Collection(TableDto::class);
         foreach ($tables as $table) {
-            $collection->attach((new TableDto())->hydrate((array) $table));
+            $tableDto = new TableDto();
+            $tableDto->hydrate((array) $table);
+            if (in_array($tableDto->getName(), $views, true)) {
+                $tableDto->setIsView(true);
+            }
+
+            $collection->attach($tableDto);
         }
 
         return $collection;

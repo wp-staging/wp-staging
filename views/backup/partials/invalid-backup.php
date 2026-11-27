@@ -8,6 +8,7 @@ use WPStaging\Framework\Utils\Strings;
  * @var array $missingParts
  * @var array $sizeIssues
  * @var array $existingBackupParts
+ * @var bool $isValidMultipartBackup
  *
  * Used src/views/backup/listing-single-backup.php
  */
@@ -22,7 +23,7 @@ $strings = WPStaging::make(Strings::class);
 ?>
 
 <a href="javascript:void(0)" class="wpstg-tab-header" data-id="#wpstg-invalid-backup-<?php echo esc_attr($id); ?>">
-    <?php if (empty($sizeIssues) && empty($missingParts)) : ?>
+    <?php if ($isValidMultipartBackup) : ?>
         <span class="wpstg-tab-triangle"></span>
         <span class="wpstg-backup-parts-heading"><?php esc_html_e("Show available backup parts", "wp-staging") ?></span>
     <?php else : ?>
@@ -40,7 +41,7 @@ $strings = WPStaging::make(Strings::class);
 <fieldset class="wpstg-tab-section" id="wpstg-invalid-backup-<?php echo esc_attr($id); ?>">
 
     <h5>
-        <?php esc_html_e('Multipart backup contains these parts', 'wp-staging') ?>
+        <?php echo esc_html(empty($existingBackupParts) ? __('The last part of this multipart backup is missing. It lists all other parts, so add it to the backups folder before restoring.', 'wp-staging') : __('Multipart backup contains these parts', 'wp-staging')); ?>
     </h5>
     <ol>
         <?php foreach ($existingBackupParts as $existingPart) : ?>

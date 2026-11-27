@@ -226,14 +226,25 @@ class Database implements DatabaseInterface
         return 'MySQL';
     }
 
+    private function describeConnectionError(): string
+    {
+        $connectError = function_exists('mysqli_connect_error') ? mysqli_connect_error() : '';
+
+        return $connectError ?: 'no error reported';
+    }
+
 
 
 
     private function findClient()
     {
+        if (!$this->wpdb->dbh && empty($this->wpdb->error)) {
+            $this->wpdb->db_connect(false);
+        }
+
         $link = $this->wpdb->dbh;
         if (!$link) {
-            throw new RuntimeException('Database handler / link is not set');
+            throw new RuntimeException('Could not connect to the database: ' . $this->describeConnectionError());
         }
 
         // @phpstan-ignore-next-line

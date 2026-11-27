@@ -6,7 +6,7 @@ use WPStaging\Backend\Modules\Jobs\Job as MainJob;
 
 abstract class DBCloningService extends CloningService
 {
-    private $optionTable = 'options';
+    protected $optionTable = 'options';
 
     protected function setOptionTable($tableName = 'options')
     {

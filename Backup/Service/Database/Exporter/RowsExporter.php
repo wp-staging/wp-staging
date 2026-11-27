@@ -45,6 +45,7 @@ class RowsExporter extends AbstractExporter
         'wpstg_remote_sync_api_token',
         'wpstg_remote_sync_password',
         'wpstg_remote_sync_enabled',
+        'wpstg_remote_sync_key_reissued_notice',
         'wpstg_remote_sync_accept_self_signed',
     ];
 

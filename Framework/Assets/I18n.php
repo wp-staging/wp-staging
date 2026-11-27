@@ -59,12 +59,15 @@ class I18n
             'something_went_wrong'                                => esc_html__('Something went wrong', 'wp-staging'),
             'job_status_checks_stopped'                           => esc_html__('Status checks have stopped. The job keeps running and still reports its progress.', 'wp-staging'),
             /* translators: 1: the step title shown in the progress window, 2: how far that step got, for example 45%, 3: the PHP memory limit, for example 128M. */
-            'job_request_failed'                                  => esc_html__('There was a PHP fatal error while processing this job, during "%1$s" (%2$s done), with a PHP memory limit of %3$s. Please contact WP STAGING support if you need help.', 'wp-staging'),
+            'job_request_failed'                                  => esc_html__('The server stopped answering this job, during "%1$s" (%2$s done), with a PHP memory limit of %3$s. A PHP fatal error, a time limit or a firewall on the server can cause this. Please contact WP STAGING support if you need help.', 'wp-staging'),
             /* translators: 1: the step title shown in the progress window, 2: how far that step got, for example 45%. */
-            'job_request_failed_without_limit'                    => esc_html__('There was a PHP fatal error while processing this job, during "%1$s" (%2$s done), with no PHP memory limit in place. Please contact WP STAGING support if you need help.', 'wp-staging'),
-            'job_request_failed_before_progress'                  => esc_html__('There was a PHP fatal error while processing this job, before its first step finished. Please contact WP STAGING support if you need help.', 'wp-staging'),
-            /* translators: {datetime} is replaced with the formatted expiry date of the temporary download link. */
-            'transfer_available_until'                            => esc_html__('Link expires on {datetime}.', 'wp-staging'),
+            'job_request_failed_without_limit'                    => esc_html__('The server stopped answering this job, during "%1$s" (%2$s done), with no PHP memory limit in place. A PHP fatal error, a time limit or a firewall on the server can cause this. Please contact WP STAGING support if you need help.', 'wp-staging'),
+            'job_request_failed_before_progress'                  => esc_html__('The server stopped answering this job before its first step finished. A PHP fatal error, a time limit or a firewall on the server can cause this. Please contact WP STAGING support if you need help.', 'wp-staging'),
+            'job_request_security_check'                          => esc_html__('A security check on the server stopped this job: the server answered with a browser verification page instead of letting the request through. Ask your hosting provider to allow WP STAGING requests to wp-admin/admin-ajax.php, then try again.', 'wp-staging'),
+            /* translators: 1: the request that failed with its HTTP status, for example wpstg--backup--process (503), 2: what the server answered instead. */
+            'job_process_request_failed'                          => esc_html__('Request %1$s failed. %2$s', 'wp-staging'),
+            /* translators: {duration} is replaced with the time left before the download link stops working, for example 45 mins. */
+            'transfer_link_expires_in'                            => esc_html__('Link expires in {duration}.', 'wp-staging'),
             'cli_restore_link_preparing'                          => esc_html__('Creating a temporary link…', 'wp-staging'),
             'cli_restore_link_checking'                           => esc_html__('Looking for a temporary link…', 'wp-staging'),
             'cli_restore_link_missing'                            => esc_html__('This backup has no temporary link for the restore command yet. Create one to get the command; on some servers this copies the backup.', 'wp-staging'),
@@ -270,7 +273,7 @@ class I18n
                 'operations'           => [
                     'create' => [
                         'title_running'    => esc_html__('Creating your staging site', 'wp-staging'),
-                        'intro_running'    => esc_html__('Your live site remains available while we create your copy.', 'wp-staging'),
+                        'intro_running'    => esc_html__('Please keep this window open while we create your staging site.', 'wp-staging'),
                         'title_ready'      => esc_html__('Your staging site is ready', 'wp-staging'),
                         'intro_ready'      => esc_html__('You can now test changes on your separate copy.', 'wp-staging'),
                         'title_stopped'    => esc_html__('Staging creation stopped', 'wp-staging'),
@@ -282,11 +285,11 @@ class I18n
                         'keep_going'       => esc_html__('Keep creating', 'wp-staging'),
                         'stop'             => esc_html__('Stop creation', 'wp-staging'),
                         'stages_label'     => esc_html__('Creation stages', 'wp-staging'),
-                        'activity_label'   => esc_html__('Staging creation in progress. The remaining time is unknown.', 'wp-staging'),
+                        'activity_label'   => esc_html__('Staging creation in progress.', 'wp-staging'),
                     ],
                     'update' => [
                         'title_running'    => esc_html__('Updating your staging site', 'wp-staging'),
-                        'intro_running'    => esc_html__('Your live site remains available while we update your staging site.', 'wp-staging'),
+                        'intro_running'    => esc_html__('Please keep this window open while we update your staging site.', 'wp-staging'),
                         'title_ready'      => esc_html__('Your staging site is updated', 'wp-staging'),
                         'intro_ready'      => esc_html__('It now carries the data and files you selected from your live site.', 'wp-staging'),
                         'title_stopped'    => esc_html__('Staging update stopped', 'wp-staging'),
@@ -298,11 +301,11 @@ class I18n
                         'keep_going'       => esc_html__('Keep updating', 'wp-staging'),
                         'stop'             => esc_html__('Stop update', 'wp-staging'),
                         'stages_label'     => esc_html__('Update stages', 'wp-staging'),
-                        'activity_label'   => esc_html__('Staging update in progress. The remaining time is unknown.', 'wp-staging'),
+                        'activity_label'   => esc_html__('Staging update in progress.', 'wp-staging'),
                     ],
                     'reset'  => [
                         'title_running'    => esc_html__('Resetting your staging site', 'wp-staging'),
-                        'intro_running'    => esc_html__('Your live site remains available while we reset your staging site.', 'wp-staging'),
+                        'intro_running'    => esc_html__('Please keep this window open while we reset your staging site.', 'wp-staging'),
                         'title_ready'      => esc_html__('Your staging site is reset', 'wp-staging'),
                         'intro_ready'      => esc_html__('It is a fresh copy of your live site again.', 'wp-staging'),
                         'title_stopped'    => esc_html__('Staging reset stopped', 'wp-staging'),
@@ -314,7 +317,7 @@ class I18n
                         'keep_going'       => esc_html__('Keep resetting', 'wp-staging'),
                         'stop'             => esc_html__('Stop reset', 'wp-staging'),
                         'stages_label'     => esc_html__('Reset stages', 'wp-staging'),
-                        'activity_label'   => esc_html__('Staging reset in progress. The remaining time is unknown.', 'wp-staging'),
+                        'activity_label'   => esc_html__('Staging reset in progress.', 'wp-staging'),
                     ],
                 ],
                 'stopped_cancelled'    => esc_html__('You can start again whenever you’re ready.', 'wp-staging'),
@@ -332,12 +335,11 @@ class I18n
                     esc_html__('Finishing setup', 'wp-staging'),
                 ],
                 'stage_label_waiting'  => esc_html__('Waiting for a server response', 'wp-staging'),
-                'stage_position'       => esc_html__('Stage %1$s of %2$s', 'wp-staging'),
                 'stage_states'         => [
-                    'complete' => esc_html__(', completed', 'wp-staging'),
-                    'current'  => esc_html__(', current stage', 'wp-staging'),
-                    'upcoming' => esc_html__(', upcoming', 'wp-staging'),
-                    'skipped'  => esc_html__(', not needed for this staging site', 'wp-staging'),
+                    'complete' => esc_html__('Completed', 'wp-staging'),
+                    'current'  => esc_html__('In progress', 'wp-staging'),
+                    'upcoming' => esc_html__('Pending', 'wp-staging'),
+                    'skipped'  => esc_html__('Skipped', 'wp-staging'),
                 ],
                 'phases'               => [
                     'preparing'        => esc_html__('Setting up your staging environment', 'wp-staging'),
@@ -351,23 +353,22 @@ class I18n
                 'detail_tables'        => esc_html__('%1$s of %2$s tables copied', 'wp-staging'),
                 'detail_queries'       => esc_html__('%1$s of %2$s database queries run', 'wp-staging'),
                 'detail_files'         => esc_html__('%1$s of %2$s files copied', 'wp-staging'),
-                'detail_files_part'    => esc_html__('%1$s · %2$s of %3$s files copied', 'wp-staging'),
+                /* translators: %1$s: files copied, %2$s: all files, %3$s: size copied, for example 410 MB. */
+                'detail_files_copied'  => esc_html__('%1$s of %2$s files copied (%3$s)', 'wp-staging'),
+                /* translators: %1$s: files copied, %2$s: all files, %3$s: size copied, %4$s: size of all files, for example 410 MB of 1.2 GB. */
+                'detail_files_size'    => esc_html__('%1$s of %2$s files copied (%3$s of %4$s)', 'wp-staging'),
+                /* translators: %1$s: an amount of data, for example 12.4 MB. */
+                'speed'                => esc_html__('%1$s/s', 'wp-staging'),
+                /* translators: %1$s and %2$s: a number of minutes, for example 3–6 minutes. */
+                'eta_minutes'          => esc_html__('%1$s–%2$s minutes', 'wp-staging'),
+                /* translators: %1$s and %2$s: a number of hours, for example 3–5 hours. */
+                'eta_hours'            => esc_html__('%1$s–%2$s hours', 'wp-staging'),
+                'eta_under_minute'     => esc_html__('Less than a minute', 'wp-staging'),
                 'detail_interrupted'   => esc_html__('Latest confirmed progress is preserved', 'wp-staging'),
                 'detail_stopping'      => esc_html__('Waiting for the server to confirm that it stopped', 'wp-staging'),
                 'connection_retrying'  => esc_html__('We’re waiting for the server to confirm progress. WP STAGING keeps trying on its own.', 'wp-staging'),
-                'file_parts'           => [
-                    'wproot_files' => esc_html__('WordPress root files', 'wp-staging'),
-                    'wpadmin'      => esc_html__('wp-admin', 'wp-staging'),
-                    'wpincludes'   => esc_html__('wp-includes', 'wp-staging'),
-                    'plugins'      => esc_html__('Plugins', 'wp-staging'),
-                    'muplugins'    => esc_html__('Must-use plugins', 'wp-staging'),
-                    'themes'       => esc_html__('Themes', 'wp-staging'),
-                    'uploads'      => esc_html__('Media library', 'wp-staging'),
-                    'wpcontent'    => esc_html__('Other wp-content folders', 'wp-staging'),
-                    'wproot'       => esc_html__('Other root folders', 'wp-staging'),
-                ],
-                'show_logs'            => esc_html__('Show logs', 'wp-staging'),
-                'hide_logs'            => esc_html__('Hide logs', 'wp-staging'),
+                'show_logs'            => esc_html__('Show more details', 'wp-staging'),
+                'hide_logs'            => esc_html__('Show less details', 'wp-staging'),
                 'following_latest'     => esc_html__('Following latest activity', 'wp-staging'),
                 'autoscroll_paused'    => esc_html__('Autoscroll paused', 'wp-staging'),
                 'log_copied'           => esc_html__('The full log was copied to your clipboard.', 'wp-staging'),
@@ -749,6 +750,13 @@ class I18n
             'remote_sync_pull_profile_placeholder'                => esc_html__('e.g. Pull Production Site', 'wp-staging'),
             'remote_sync_push_profile_placeholder'                => esc_html__('e.g. Push Staging Site', 'wp-staging'),
             'remote_sync_push_unsupported'                        => esc_html__('The remote site does not support Push yet. Update WP Staging Pro on the remote site and try again.', 'wp-staging'),
+            'remote_sync_failed'                                  => esc_html__('Remote Sync failed', 'wp-staging'),
+            'finish_modal_error_details'                          => esc_html__('Error details', 'wp-staging'),
+            'finish_modal_details'                                => esc_html__('Details', 'wp-staging'),
+            'finish_modal_notice'                                 => esc_html__('Notice', 'wp-staging'),
+            'finish_modal_completed'                              => esc_html__('Completed', 'wp-staging'),
+            /* translators: %s is a link to WP STAGING Support. */
+            'finish_modal_support_hint'                           => sprintf(esc_html__('Still stuck? %s and we\'ll help you resolve this issue.', 'wp-staging'), '<a href="' . esc_url(Language::localizeSupportUrl('https://wp-staging.com/support/')) . '" target="_blank" rel="noopener noreferrer" class="wpstg-font-medium wpstg-text-blue-600 dark:wpstg-text-blue-400 hover:wpstg-text-blue-700">' . esc_html__('Contact WP STAGING Support', 'wp-staging') . '</a>'),
             'http_auth_badge'                                     => esc_html__('HTTP Auth', 'wp-staging'),
             'nothing_to_sync_title'                               => esc_html__('Nothing to sync', 'wp-staging'),
             'nothing_to_sync_body'                                => esc_html__('The source site has no content to sync for the items you selected. Try adjusting your selection or adding content on the remote site first.', 'wp-staging'),
@@ -757,6 +765,10 @@ class I18n
             /* translators: %s is the original server-side reason, kept verbatim under a small "Details" line for support diagnostics. */
             'details_label'                                       => esc_html__('Details: %s', 'wp-staging'),
             'reset_settings_confirmation'                         => esc_html__('Are you sure you want to reset all settings to default values?', 'wp-staging'),
+            'unsaved_change'                                      => esc_html__('1 unsaved change', 'wp-staging'),
+            /* translators: %d is the number of settings changed and not saved yet, always more than one. */
+            'unsaved_changes'                                     => esc_html__('%d unsaved changes', 'wp-staging'),
+            'undo_change'                                         => esc_html__('Undo', 'wp-staging'),
             'directory_not_writable'                              => esc_html__('The directory isn\'t writable. This might be caused by incorrect folder permissions or server configuration restrictions (such as open_basedir).', 'wp-staging'),
             'install_wp_staging_cli'                              => esc_html__('Install WP Staging CLI', 'wp-staging'),
             'solid_components'                                    => [

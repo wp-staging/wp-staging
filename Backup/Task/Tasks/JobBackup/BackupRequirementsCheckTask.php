@@ -110,6 +110,7 @@ class BackupRequirementsCheckTask extends BackupTask
             $this->cannotBackupMultisite();
             $this->shouldWarnIfRunning32Bits();
             $this->cannotBackupWithNoStorage();
+            $this->cannotBackupInLowDiskSpaceMode();
             $this->cannotBackupEmptyBackup();
             $this->cannotRestoreIfCantWriteToDisk();
             $this->checkFilesystemPermissions();
@@ -165,6 +166,14 @@ class BackupRequirementsCheckTask extends BackupTask
         if (empty($this->jobDataDto->getStorages())) {
             throw new RuntimeException(__('You must select at least one storage.', 'wp-staging'));
         }
+    }
+
+
+
+
+    protected function cannotBackupInLowDiskSpaceMode()
+    {
+ 
     }
 
     protected function cannotBackupEmptyBackup()
