@@ -19,16 +19,6 @@ $directory = WPStaging::make(Directory::class);
 
 <!-- General Settings -->
 <div class="wpstg-general-settings-wrapper">
-    <?php if (isset($_GET['settings-updated']) && $_GET['settings-updated'] === 'true') : ?>
-    <div class="wpstg-callout wpstg-callout-success wpstg-mb-6">
-        <svg class="wpstg-h-5 wpstg-w-5 wpstg-flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-        </svg>
-        <span class="wpstg-text-sm wpstg-font-medium">
-            <?php esc_html_e('Settings updated.', 'wp-staging'); ?>
-        </span>
-    </div>
-    <?php endif; ?>
     <div class="wpstg-provider-page-header">
         <h1 class="wpstg-text-2xl wpstg-font-semibold wpstg-text-slate-900 dark:wpstg-text-slate-100"><?php esc_html_e('General Settings', 'wp-staging'); ?></h1>
         <p class="wpstg-mt-1 wpstg-text-sm wpstg-text-slate-600 dark:wpstg-text-slate-400"><?php esc_html_e('Configure your staging and backup preferences', 'wp-staging'); ?></p>
@@ -810,7 +800,7 @@ $directory = WPStaging::make(Directory::class);
             <?php
         endforeach;
         ?>
-            <div class="wpstg-settings-actions wpstg-card">
+            <div id="wpstg-settings-actions" class="wpstg-settings-actions">
                 <button type="button" class="wpstg-btn wpstg-btn-md wpstg-btn-secondary" id="wpstg-reset-settings-to-defaults">
                     <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 6h18l-2 13H5L3 6z"></path>
@@ -818,6 +808,10 @@ $directory = WPStaging::make(Directory::class);
                     </svg>
                     <?php echo esc_html__('Reset to Defaults', 'wp-staging');?>
                 </button>
+                <span id="wpstg-unsaved-changes" class="wpstg-unsaved-changes" aria-live="polite" hidden>
+                    <span id="wpstg-unsaved-changes-count" class="wpstg-unsaved-changes-count"></span>
+                    <button type="button" id="wpstg-discard-changes" class="wpstg-btn wpstg-btn-md"><?php echo esc_html__('Discard', 'wp-staging'); ?></button>
+                </span>
                 <button type="submit" class="wpstg-btn wpstg-btn-md wpstg-btn-primary">
                     <svg class="wpstg-btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>

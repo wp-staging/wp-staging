@@ -7,6 +7,7 @@
 namespace WPStaging\Framework\Utils\Cache;
 
 use WPStaging\Framework\Filesystem\FileObject;
+use WPStaging\Framework\Filesystem\Filesystem;
 
 class Cache extends AbstractCache
 {
@@ -25,6 +26,7 @@ class Cache extends AbstractCache
             return $default;
         }
 
+        Filesystem::dropCachedCopyOfFile($this->filePath);
         $content = file_get_contents($this->filePath);
         if (strpos($content, self::PHP_HEADER) !== 0) {
             return $default;

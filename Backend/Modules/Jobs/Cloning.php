@@ -195,6 +195,7 @@ class Cloning extends Job
         $selectedTables              = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
         $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $this->sanitize->sanitizeBool($_POST['allTablesExcluded']));
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
+        $this->options->skippedViews = $selectedTables->getSkippedViews($this->options->networkClone);
 
  
         $this->options->excludeGlobRules = [];
@@ -236,7 +237,10 @@ class Cloning extends Job
 
  
         if (isset($_POST["extraDirectories"])) {
-            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, $this->sanitize->sanitizeString($_POST["extraDirectories"]));
+            $this->options->extraDirectories = explode(
+                ScanConst::DIRECTORIES_SEPARATOR,
+                wpstg_urldecode($this->sanitize->sanitizeString($_POST["extraDirectories"]))
+            );
         }
 
  
@@ -773,6 +777,7 @@ class Cloning extends Job
         $this->logger->writeLogHeader();
         $this->logger->writeInstalledPluginsAndThemes();
         $this->addJobSettingsToLogs($jobName);
+        SelectedTables::logSkippedViews($this->logger, $this->options->skippedViews ?? []);
     }
 
 

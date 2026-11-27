@@ -236,14 +236,29 @@ class TransferSession
     public function toResponse(): array
     {
         return [
-            'sessionId'          => $this->id,
-            'transferUrl'        => $this->transferUrl,
-            'fileName'           => $this->sourcePath === '' ? '' : basename($this->sourcePath),
-            'artifactMode'       => $this->artifactMode,
-            'artifactModeLabel'  => TransferArtifactMode::getLabel($this->artifactMode),
-            'expiresAt'          => $this->expiresAt,
-            'expiresAtFormatted' => $this->expiresAt === '' ? '' : get_date_from_gmt($this->expiresAt, get_option('date_format') . ' ' . get_option('time_format')),
+            'sessionId'         => $this->id,
+            'transferUrl'       => $this->transferUrl,
+            'fileName'          => $this->sourcePath === '' ? '' : basename($this->sourcePath),
+            'artifactMode'      => $this->artifactMode,
+            'artifactModeLabel' => TransferArtifactMode::getLabel($this->artifactMode),
+            'expiresAt'         => $this->expiresAt,
+            'timeLeft'          => $this->getTimeLeftUntilDeleted(),
         ];
+    }
+
+ 
+    public function getTimeLeftUntilDeleted(): string
+    {
+        if ($this->deleteAfter === '') {
+            return '';
+        }
+
+        $deleteAt = (int)strtotime($this->deleteAfter . ' UTC');
+        if ($deleteAt <= time()) {
+            $deleteAt = (int)wp_next_scheduled(TransferCleanupService::CRON_HOOK);
+        }
+
+        return human_time_diff(time(), max($deleteAt, time() + MINUTE_IN_SECONDS));
     }
 
  

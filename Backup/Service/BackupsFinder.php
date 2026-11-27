@@ -88,6 +88,55 @@ class BackupsFinder extends AbstractBackupsFinder
 
 
 
+    public function findBackupsIn(string $directory): array
+    {
+        return array_map(function (SplFileInfo $file) use ($directory) {
+            return $this->isBackupPart($file->getFilename()) ? $this->findPartListingAllParts($file, $directory) : $file;
+        }, parent::findBackupsIn($directory));
+    }
+
+
+
+
+
+
+    private function findPartListingAllParts(SplFileInfo $part, string $directory): SplFileInfo
+    {
+        if (!$this->partMetadataListsNoParts($part->getPathname())) {
+            return $part;
+        }
+
+        foreach (glob(trailingslashit($directory) . '*' . $this->extractBackupIdFromFilename($part->getFilename()) . '*.wpstg') ?: [] as $sibling) {
+            if ($this->isBackupPart(basename($sibling)) && !$this->partMetadataListsNoParts($sibling)) {
+                return new SplFileInfo($sibling);
+            }
+        }
+
+        return $part;
+    }
+
+
+
+
+
+    private function partMetadataListsNoParts(string $partPath): bool
+    {
+        try {
+            $multipartMetadata = (new BackupMetadata())->hydrateByFilePath($partPath)->getMultipartMetadata();
+        } catch (Throwable $exception) {
+            return false;
+        }
+
+        return $multipartMetadata !== null && $multipartMetadata->getBackupParts() === [];
+    }
+
+
+
+
+
+
+
+
 
     public function deleteTempBackupByJobId(string $jobId)
     {

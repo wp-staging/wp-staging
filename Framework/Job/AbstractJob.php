@@ -382,7 +382,7 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->registerShutdownBackstop();
 
  
-            $response = $this->execute();
+            $response = $this->executeHidingWorkingFileNamesInPhpWarnings();
 
 
 
@@ -414,6 +414,43 @@ abstract class AbstractJob implements ShutdownableInterface
 
 
             return $this->getJobRetryResponse($e->getMessage());
+        }
+    }
+
+
+
+
+
+
+
+
+    private function executeHidingWorkingFileNamesInPhpWarnings()
+    {
+        $previousErrorHandler = null;
+        $previousErrorHandler = set_error_handler(function ($severity, $message, $file = '', $line = 0, ...$context) use (&$previousErrorHandler) {
+            $messageWithoutHtmlEscaping     = ini_get('html_errors') ? htmlspecialchars_decode($message, ENT_COMPAT) : $message;
+            $messageWithoutWorkingFileNames = $this->directory->redactWorkingFileNames($messageWithoutHtmlEscaping);
+            if ($messageWithoutWorkingFileNames === $messageWithoutHtmlEscaping) {
+                return is_callable($previousErrorHandler) ? call_user_func($previousErrorHandler, $severity, $message, $file, $line, ...$context) : false;
+            }
+
+            if (is_callable($previousErrorHandler)) {
+                call_user_func($previousErrorHandler, $severity, $messageWithoutWorkingFileNames, $file, $line, ...$context);
+            }
+
+            if (!(error_reporting() & $severity)) {
+                return false;
+            }
+
+            debug_log("{$messageWithoutWorkingFileNames} in {$file} on line {$line}", 'warning');
+
+            return true;
+        });
+
+        try {
+            return $this->execute();
+        } finally {
+            restore_error_handler();
         }
     }
 

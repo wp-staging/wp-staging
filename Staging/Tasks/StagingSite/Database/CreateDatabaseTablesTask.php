@@ -94,6 +94,7 @@ class CreateDatabaseTablesTask extends StagingTask
             $selectedTables->setAllTablesExcluded($this->jobDataDto->getAllTablesExcluded());
             $selectedTables->setKeepUserTablesTogether();
             $this->tables = $selectedTables->getSelectedTables($this->jobDataDto->getIsStagingNetwork());
+            SelectedTables::logSkippedViews($this->logger, $selectedTables->getSkippedViews($this->jobDataDto->getIsStagingNetwork()));
             $this->stepsDto->setTotal(count($this->tables));
             $this->jobDataDto->setSelectedTables($this->tables);
         }

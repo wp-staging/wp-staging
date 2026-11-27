@@ -58,8 +58,13 @@ class DatabaseCloningService
         $selectQuery    = $this->selectQueryBuilder->prepareQueryWithFilter($srcTableName, $limit, $offset);
         $preparedValues = $this->selectQueryBuilder->getPreparedValues();
         if ($this->isProductionOptionsTable($srcTableName)) {
-            $selectQuery    = $this->excludeCredentialRows($selectQuery);
-            $preparedValues = array_merge($preparedValues, RowsExporter::OPTIONS_EXCLUDED_FROM_DATA_COPYING);
+            $productionDb   = $this->dto->getProductionDb();
+            $selectQuery    = $this->excludeCredentialAndCacheRows($selectQuery);
+            $preparedValues = array_merge(
+                $preparedValues,
+                RowsExporter::OPTIONS_EXCLUDED_FROM_DATA_COPYING,
+                [$productionDb->esc_like('_transient_') . '%', $productionDb->esc_like('_site_transient_') . '%']
+            );
         }
 
         if ($this->dto->isExternal()) {
@@ -181,11 +186,15 @@ class DatabaseCloningService
         return preg_match('/^' . preg_quote($this->dto->getProductionDb()->base_prefix, '/') . '(\d+_)?options$/i', $tableName) === 1;
     }
 
-    private function excludeCredentialRows(string $selectQuery): string
+
+
+
+    private function excludeCredentialAndCacheRows(string $selectQuery): string
     {
         $placeholders = implode(', ', array_fill(0, count(RowsExporter::OPTIONS_EXCLUDED_FROM_DATA_COPYING), '%s'));
 
-        return 'SELECT * FROM (' . rtrim($selectQuery, "; \n") . ") AS `copiedRows` WHERE `copiedRows`.`option_name` NOT IN ({$placeholders})";
+        return 'SELECT * FROM (' . rtrim($selectQuery, "; \n") . ") AS `copiedRows` WHERE `copiedRows`.`option_name` NOT IN ({$placeholders})"
+            . ' AND `copiedRows`.`option_name` NOT LIKE %s AND `copiedRows`.`option_name` NOT LIKE %s';
     }
 
     private function isDuplicateEntryError(string $message): bool

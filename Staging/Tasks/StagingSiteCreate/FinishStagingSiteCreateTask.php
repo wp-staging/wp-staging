@@ -103,6 +103,8 @@ class FinishStagingSiteCreateTask extends StagingTask
         $stagingSite->setDatetime(time());
         $stagingSite->setVersion(WPStaging::getVersion());
         $stagingSite->setOwnerId(get_current_user_id());
+        $stagingSite->setExcludedDirectories($this->jobDataDto->getExcludedDirectories());
+        $stagingSite->setExtraDirectories($this->jobDataDto->getExtraDirectories());
 
         return $stagingSite;
     }

@@ -8,6 +8,7 @@ use UnexpectedValueException;
 use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Database\TableService;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
@@ -353,6 +354,7 @@ class Scan extends Job
         $sql = "SHOW TABLE STATUS";
 
         $tables = $db->get_results($sql);
+        $views  = WPStaging::make(TableService::class)->findViewsNamesStartWith();
 
         $currentTables = [];
 
@@ -372,7 +374,7 @@ class Scan extends Job
                 $this->options->excludedTables[] = $table->Name;
             }
 
-            if ($table->Comment !== "VIEW") {
+            if (!in_array($table->Name, $views, true)) {
                 $currentTables[] = [
                     "name" => $table->Name,
                     "size" => ($table->Data_length + $table->Index_length),

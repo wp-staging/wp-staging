@@ -57,6 +57,8 @@ class IncludeDatabaseTask extends BackupTask
             return $this->generateResponse();
         }
 
+        Filesystem::dropCachedCopyOfFile($databaseFile);
+
         $this->rewindTempBackupToCheckpointOrRecordBaseline();
 
         $archiverDto = $this->archiver->getDto();

@@ -673,6 +673,7 @@ return array(
     'WPStaging\\Staging\\Dto\\Service\\BigFileDto' => $baseDir . '/Staging/Dto/Service/BigFileDto.php',
     'WPStaging\\Staging\\Dto\\StagingSiteDto' => $baseDir . '/Staging/Dto/StagingSiteDto.php',
     'WPStaging\\Staging\\Dto\\Task\\FileCopierTaskDto' => $baseDir . '/Staging/Dto/Task/FileCopierTaskDto.php',
+    'WPStaging\\Staging\\Dto\\Task\\Response\\FileCopierResponseDto' => $baseDir . '/Staging/Dto/Task/Response/FileCopierResponseDto.php',
     'WPStaging\\Staging\\Dto\\Task\\Response\\FinishStagingSiteResponseDto' => $baseDir . '/Staging/Dto/Task/Response/FinishStagingSiteResponseDto.php',
     'WPStaging\\Staging\\FirstRun' => $baseDir . '/Staging/FirstRun.php',
     'WPStaging\\Staging\\FolderOwnership' => $baseDir . '/Staging/FolderOwnership.php',

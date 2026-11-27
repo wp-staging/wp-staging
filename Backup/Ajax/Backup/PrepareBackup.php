@@ -83,6 +83,7 @@ class PrepareBackup extends PrepareJob
                 'isExcludingLogs'                => 'bool',
                 'isExcludingCaches'              => 'bool',
                 'isValidateBackupFiles'          => 'bool',
+                'isLowDiskUpload'                => 'bool',
                 'isEncrypted'                    => 'bool',
                 'encryptionPassword'             => 'password',
                 'backupType'                     => 'string',
@@ -243,6 +244,7 @@ class PrepareBackup extends PrepareJob
             'isExcludingLogs'                => false,
             'isExcludingCaches'              => false,
             'isValidateBackupFiles'          => false,
+            'isLowDiskUpload'                => false,
             'isEncrypted'                    => false,
             'encryptionPassword'             => '',
             'encryptionSalt'                 => '',
@@ -292,6 +294,7 @@ class PrepareBackup extends PrepareJob
 
  
         $data['isValidateBackupFiles'] = $this->jsBoolean($data['isValidateBackupFiles']);
+        $data['isLowDiskUpload']       = $this->jsBoolean($data['isLowDiskUpload']);
 
         $data['isEncrypted'] = $this->jsBoolean($data['isEncrypted']);
         if ($data['isEncrypted']) {

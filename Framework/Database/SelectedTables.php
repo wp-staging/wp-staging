@@ -4,7 +4,9 @@ namespace WPStaging\Framework\Database;
 
 use wpdb;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class SelectedTables
 {
@@ -31,6 +33,9 @@ class SelectedTables
 
  
     private $prefix;
+
+ 
+    private $views;
 
     public function __construct($includedTables = '', $excludedTables = '', $selectedTablesWithoutPrefix = '')
     {
@@ -122,7 +127,11 @@ class SelectedTables
  
  
         $selectedTables = !empty($this->includedTables) ? $this->includedTables : $this->getPrefixedTables($isNetworkClone);
-        return $this->pairUserTables(array_values(array_unique(array_merge($selectedTables, $this->selectedTablesWithoutPrefix))));
+        $selectedTables = $this->pairUserTables(array_values(array_unique(array_merge($selectedTables, $this->selectedTablesWithoutPrefix))));
+
+        return array_values(array_filter($selectedTables, function (string $table): bool {
+            return !$this->isView($table);
+        }));
     }
 
 
@@ -192,7 +201,7 @@ class SelectedTables
                 continue;
             }
 
-            if ($table->Comment === "VIEW") {
+            if ($this->isView($table->Name)) {
                 continue;
             }
 
@@ -250,7 +259,7 @@ class SelectedTables
 
  
         $userTables = array_filter($userTables, function ($table) use ($tables) {
-            return in_array($table, $tables, true) || $this->isBaseTableInSourceDatabase($table);
+            return in_array($table, $tables, true) || $this->tableExistsInSourceDatabase($table);
         });
 
  
@@ -261,11 +270,59 @@ class SelectedTables
 
 
 
-    private function isBaseTableInSourceDatabase(string $table): bool
+    public function getSkippedViews(bool $isNetworkClone = false): array
+    {
+        if ($this->allTablesExcluded) {
+            return [];
+        }
+
+        $prefix       = $this->prefix === null ? WPStaging::getTablePrefix() : $this->prefix;
+        $chosenTables = array_merge($this->includedTables, $this->selectedTablesWithoutPrefix);
+
+        return array_values(array_filter($this->getViews(), function (string $view) use ($prefix, $chosenTables, $isNetworkClone): bool {
+            return in_array($view, $chosenTables, true)
+                || $this->isPrefixedTable($view, $prefix, is_multisite(), is_main_site(), $isNetworkClone);
+        }));
+    }
+
+
+
+
+
+    public static function logSkippedViews(LoggerInterface $logger, array $views)
+    {
+        foreach ($views as $view) {
+            $logger->info(sprintf('Skipping view %s: database views are not copied.', $view));
+        }
+    }
+
+    private function isView(string $table): bool
+    {
+        return in_array($table, $this->getViews(), true);
+    }
+
+
+
+
+
+    private function getViews(): array
+    {
+        if ($this->views === null) {
+            $this->views = (new TableService(new Database($this->wpdb)))->findViewsNamesStartWith();
+        }
+
+        return $this->views;
+    }
+
+
+
+
+
+    private function tableExistsInSourceDatabase(string $table): bool
     {
         $wpdb   = WPStaging::getInstance()->get("wpdb");
         $status = $wpdb->get_row($wpdb->prepare("SHOW TABLE STATUS LIKE %s", $wpdb->esc_like($table)));
 
-        return $status !== null && $status->Comment !== "VIEW";
+        return $status !== null;
     }
 }

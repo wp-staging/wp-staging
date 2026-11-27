@@ -68,8 +68,6 @@ class JobBackup extends AbstractJob
     {
  
 
-        $this->startHidingCacheFileNamesInPhpWarnings();
-
         try {
             $response = $this->getResponse($this->currentTask->execute());
         } catch (MissingBackupPartException $e) {
@@ -85,37 +83,11 @@ class JobBackup extends AbstractJob
         } catch (\Exception $e) {
             $this->currentTask->getLogger()->critical($this->getCurrentTaskTitle() . ' failed! Error: ' . WPStaging::make(Directory::class)->redactCacheFileNames($e->getMessage()), ['errorCode' => ErrorCode::fromThrowable($e)]);
             $response = $this->getResponse($this->currentTask->generateResponse(false));
-        } finally {
-            restore_error_handler();
         }
 
  
 
         return $response;
-    }
-
-
-
-
-
-
-
-    private function startHidingCacheFileNamesInPhpWarnings()
-    {
-        $directory            = WPStaging::make(Directory::class);
-        $previousErrorHandler = null;
-        $previousErrorHandler = set_error_handler(function ($severity, $message, $file = '', $line = 0, ...$context) use ($directory, &$previousErrorHandler) {
-            $messageWithoutCacheFileNames = $directory->redactCacheFileNames($message);
-            if ($messageWithoutCacheFileNames === $message) {
-                return is_callable($previousErrorHandler) ? call_user_func($previousErrorHandler, $severity, $message, $file, $line, ...$context) : false;
-            }
-
-            if (error_reporting() & $severity) {
-                debug_log("{$messageWithoutCacheFileNames} in {$file} on line {$line}", 'warning');
-            }
-
-            return true;
-        });
     }
 
 

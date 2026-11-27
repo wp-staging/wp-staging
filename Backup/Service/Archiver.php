@@ -502,6 +502,7 @@ class Archiver
 
     public function generateBackupMetadata(int $backupSizeBeforeAddingIndex = 0, string $finalFileNameOnRename = ''): string
     {
+        $this->dropCachedCopiesOfTempBackupAndIndex();
         clearstatcache();
         $backupSizeAfterAddingIndex = filesize($this->tempBackup->getFilePath());
 
@@ -529,6 +530,7 @@ class Archiver
  
     public function addFileIndex(): int
     {
+        $this->dropCachedCopiesOfTempBackupAndIndex();
         clearstatcache();
         $indexResource = fopen($this->tempBackupIndex->getFilePath(), 'rb');
 
@@ -1110,6 +1112,7 @@ class Archiver
 
     private function measureFileBytes(string $filePath): int
     {
+        Filesystem::dropCachedCopyOfFile($filePath);
         clearstatcache(true, $filePath);
         if (!file_exists($filePath)) {
             return 0;
@@ -1121,6 +1124,16 @@ class Archiver
         }
 
         return $bytes;
+    }
+
+
+
+
+
+    private function dropCachedCopiesOfTempBackupAndIndex()
+    {
+        Filesystem::dropCachedCopyOfFile($this->tempBackup->getFilePath());
+        Filesystem::dropCachedCopyOfFile($this->tempBackupIndex->getFilePath());
     }
 
     private function isBackupFormatV1(): bool

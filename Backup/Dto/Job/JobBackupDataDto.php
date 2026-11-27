@@ -146,6 +146,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     private $isValidateBackupFiles = false;
 
  
+    private $isLowDiskUpload = false;
+
+ 
     private $isCreateScheduleBackupNow = false;
 
  
@@ -1360,6 +1363,23 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         }
 
         return (int)$this->subsiteBlogId;
+    }
+
+
+
+
+    public function getIsLowDiskUpload(): bool
+    {
+        return $this->isLowDiskUpload;
+    }
+
+
+
+
+
+    public function setIsLowDiskUpload($isLowDiskUpload)
+    {
+        $this->isLowDiskUpload = (bool)$isLowDiskUpload;
     }
 
 

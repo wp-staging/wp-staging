@@ -133,11 +133,7 @@ class PrefixOwnership
             }
 
             $site = $this->sites->getStagingSiteDtoByCloneId($id);
-            $path = $site->getPath();
-            if ($path === '' && $site->getDirectoryName() !== '') {
-                $path = trailingslashit(ABSPATH) . $site->getDirectoryName();
-            }
-
+            $path = $this->getStagingSitePath($site);
             $declared = $path === '' ? null : $this->readConfigPrefix(trailingslashit($path) . 'wp-config.php', $site->getDatabaseName(), $site->getIsCustomDatabaseConnection() ? $site->getDatabaseServer() : DB_HOST);
             if ($declared !== null && strcasecmp($prefix, $declared) === 0 && strcasecmp($declared, $wpdb->base_prefix) !== 0) {
                 $owners[] = $id;
@@ -338,7 +334,78 @@ class PrefixOwnership
 
 
 
+    public function assertWpConfigMatchesStagingSite(StagingSiteDto $site)
+    {
+        $path     = $this->getStagingSitePath($site);
+        $declared = $path === '' ? null : $this->readConfigValues(trailingslashit($path) . 'wp-config.php', ['DB_NAME', 'DB_USER', 'DB_HOST']);
+        if ($declared === null) {
+            return;
+        }
+
+        $isCustomDatabase = $site->getIsCustomDatabaseConnection();
+        $stored = [
+            'DB_NAME'       => $isCustomDatabase ? $site->getDatabaseName() : DB_NAME,
+            'DB_USER'       => $isCustomDatabase ? $site->getDatabaseUser() : DB_USER,
+            'DB_HOST'       => $isCustomDatabase ? $site->getDatabaseServer() : DB_HOST,
+            '$table_prefix' => $site->getUsedPrefix(),
+        ];
+        $differing = array_keys(array_filter($stored, function ($value, $setting) use ($declared) {
+            return isset($declared[$setting]) && $declared[$setting] !== $value;
+        }, ARRAY_FILTER_USE_BOTH));
+        if (empty($differing)) {
+            return;
+        }
+
+        $differingFromLiveSite = $isCustomDatabase ? [] : array_intersect($differing, ['DB_NAME', 'DB_USER', 'DB_HOST']);
+        if (!empty($differingFromLiveSite)) {
+            throw new RuntimeException(sprintf(
+                /* translators: %s: comma-separated wp-config.php settings, for example DB_NAME, DB_HOST */
+                __('Make the staging site\'s wp-config.php use the live site\'s database settings (%s).', 'wp-staging'),
+                implode(', ', $differingFromLiveSite)
+            ));
+        }
+
+        throw new RuntimeException(sprintf(
+            /* translators: %s: comma-separated wp-config.php settings, for example DB_NAME, $table_prefix */
+            __('Make the staging site\'s wp-config.php and its saved settings match (%s).', 'wp-staging'),
+            implode(', ', $differing)
+        ));
+    }
+
+
+
+
+
+
+
     public function readConfigPrefix(string $path, string $databaseName, string $databaseHost)
+    {
+        $values = $this->readConfigValues($path, ['DB_NAME', 'DB_HOST']);
+        if ($values === null || ($values['DB_NAME'] ?? null) !== $databaseName || ($values['DB_HOST'] ?? null) !== $databaseHost) {
+            return null;
+        }
+
+        $prefix = $values['$table_prefix'] ?? '';
+        return preg_match('/^[a-zA-Z0-9_]+$/D', $prefix) ? $prefix : null;
+    }
+
+    private function getStagingSitePath(StagingSiteDto $site): string
+    {
+        if ($site->getPath() === '' && $site->getDirectoryName() !== '') {
+            return trailingslashit(ABSPATH) . $site->getDirectoryName();
+        }
+
+        return $site->getPath();
+    }
+
+
+
+
+
+
+
+
+    private function readConfigValues(string $path, array $constants)
     {
         $source = @file_get_contents($path);
         if ($source === false) {
@@ -369,14 +436,14 @@ class PrefixOwnership
             $key = null;
             $value = null;
             if ($token[0] === T_VARIABLE && $token[1] === '$table_prefix') {
-                $key = 'prefix';
+                $key = '$table_prefix';
                 $value = $tokens[$i + 2] ?? null;
                 if (($tokens[$i + 1] ?? null) !== '=' || ($tokens[$i + 3] ?? null) !== ';') {
                     return null;
                 }
             } elseif ($token[0] === T_STRING && strtolower($token[1]) === 'define') {
                 $name = $tokens[$i + 2] ?? null;
-                if (!is_array($name) || !in_array(substr($name[1], 1, -1), ['DB_NAME', 'DB_HOST'], true)) {
+                if (!is_array($name) || !in_array(substr($name[1], 1, -1), $constants, true)) {
                     continue;
                 }
 
@@ -393,18 +460,13 @@ class PrefixOwnership
 
             $previous = $tokens[$i - 1] ?? null;
             $startsStatement = $previous === ';' || (is_array($previous) && $previous[0] === T_OPEN_TAG);
-            if ($conditional || $depth !== 0 || !$startsStatement || isset($values[$key]) || !is_array($value) || $value[0] !== T_CONSTANT_ENCAPSED_STRING) {
+            if ($conditional || $depth !== 0 || !$startsStatement || isset($values[$key]) || !is_array($value) || $value[0] !== T_CONSTANT_ENCAPSED_STRING || ($value[1][0] === '"' && strpos($value[1], '\\') !== false)) {
                 return null;
             }
 
-            $values[$key] = substr($value[1], 1, -1);
+            $values[$key] = $value[1][0] === "'" ? strtr(substr($value[1], 1, -1), ['\\\\' => '\\', "\\'" => "'"]) : substr($value[1], 1, -1);
         }
 
-        if (($values['DB_NAME'] ?? null) !== $databaseName || ($values['DB_HOST'] ?? null) !== $databaseHost) {
-            return null;
-        }
-
-        $prefix = $values['prefix'] ?? '';
-        return preg_match('/^[a-zA-Z0-9_]+$/D', $prefix) ? $prefix : null;
+        return $values;
     }
 }

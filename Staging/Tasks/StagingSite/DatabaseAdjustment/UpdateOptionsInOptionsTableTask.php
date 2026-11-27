@@ -165,7 +165,8 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
 
  
         $toDelete = [
-            '_transient_wp_core_block_css_files' 
+            '_transient_wp_core_block_css_files', 
+            'wpstg_tmp_data',
         ];
 
         if (!$this->jobDataDto->getIsStagingNetwork() && $this->freemiusScript->hasFreemiusOptions()) {
@@ -190,6 +191,11 @@ class UpdateOptionsInOptionsTableTask extends DatabaseAdjustmentTask
         }
 
         $this->deleteOptions($toDelete);
+
+        $optionTable = $this->getOptionsTableName();
+        if (!$this->executeQuery("DELETE FROM `{$optionTable}` WHERE `option_name` LIKE %s;", $this->wpdb->esc_like(Sites::BACKUP_STAGING_SITES_OPTION) . '%')) {
+            $this->logger->warning("Failed to delete the backups of " . Sites::STAGING_SITES_OPTION . ". Error: {$this->lastError()}");
+        }
 
         return true;
     }

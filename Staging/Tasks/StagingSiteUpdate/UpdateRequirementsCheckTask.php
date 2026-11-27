@@ -17,6 +17,7 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Staging\Dto\Job\StagingSiteJobsDataDto;
 use WPStaging\Staging\FolderOwnership;
+use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Staging\Service\StagingEngine;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
@@ -121,6 +122,7 @@ class UpdateRequirementsCheckTask extends StagingTask
             WPStaging::make(FolderOwnership::class)->assertIsStagingSiteFolder($this->jobDataDto->getStagingSitePath());
             $this->cannotUpdateIfUsingExternalDatabase();
             $this->cannotUpdateIfStagingPrefixSameAsProductionSite();
+            $this->cannotUpdateIfWpConfigDiffersFromStagingSite();
         } catch (RuntimeException $e) {
             $this->jobDataDto->setRequirementFailReason($e->getMessage());
             $this->enqueueRequirementFailEvent();
@@ -222,6 +224,15 @@ class UpdateRequirementsCheckTask extends StagingTask
         if ($this->jobDataDto->getIsExternalDatabase()) {
             throw new RuntimeException(esc_html__('Staging site update with external database is not supported in the basic version.', 'wp-staging'));
         }
+    }
+
+
+
+
+
+    protected function cannotUpdateIfWpConfigDiffersFromStagingSite()
+    {
+        WPStaging::make(PrefixOwnership::class)->assertWpConfigMatchesStagingSite($this->jobDataDto->getStagingSite());
     }
 
     protected function cannotUpdateIfStagingPrefixSameAsProductionSite()

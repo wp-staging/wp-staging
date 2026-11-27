@@ -271,12 +271,28 @@ class Directory implements DirectoryInterface
 
     public function redactCacheFileNames(string $message): string
     {
-        $cacheDirectoryPattern = preg_quote($this->getCacheDirectory(), '~');
+        return $this->redactFileNamesInDirectory($this->getCacheDirectory(), $message);
+    }
+
+
+
+
+
+
+
+    public function redactWorkingFileNames(string $message): string
+    {
+        return $this->redactFileNamesInDirectory($this->getExtractDirectory(), $this->redactFileNamesInDirectory($this->getTmpDirectoryWithoutCreatingIt(), $this->redactCacheFileNames($message)));
+    }
+
+    private function redactFileNamesInDirectory(string $directory, string $message): string
+    {
+        $directoryPattern = preg_quote($directory, '~');
         if ($this->isWindowsOs()) {
-            $cacheDirectoryPattern = preg_quote(untrailingslashit($this->getCacheDirectory()), '~') . '[/\\\\]';
+            $directoryPattern = preg_quote(untrailingslashit($directory), '~') . '[/\\\\]';
         }
 
-        return preg_replace('~' . $cacheDirectoryPattern . '\K[^\s\'"()]+~', '***', $message);
+        return preg_replace('~' . $directoryPattern . '\K[^\s\'"()]+~', '***', $message);
     }
 
 
@@ -299,7 +315,7 @@ class Directory implements DirectoryInterface
             return $this->tmpDirectory;
         }
 
-        $this->tmpDirectory = trailingslashit(wp_normalize_path($this->getPluginWpContentDirectory() . JobRestore::TMP_DIRECTORY));
+        $this->tmpDirectory = $this->getTmpDirectoryWithoutCreatingIt();
 
         try {
  
@@ -328,6 +344,21 @@ class Directory implements DirectoryInterface
         }
 
         return $this->tmpDirectory;
+    }
+
+    private function getTmpDirectoryWithoutCreatingIt(): string
+    {
+        return trailingslashit(wp_normalize_path($this->getPluginWpContentDirectory() . JobRestore::TMP_DIRECTORY));
+    }
+
+
+
+
+
+
+    public function getExtractDirectory(): string
+    {
+        return trailingslashit(wp_normalize_path($this->getPluginWpContentDirectory() . 'extract'));
     }
 
 

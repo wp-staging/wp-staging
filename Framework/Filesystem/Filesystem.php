@@ -10,6 +10,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WPStaging\Backend\Pro\Modules\Jobs\Copiers\Copier;
 use WPStaging\Framework\Adapter\PhpAdapter;
+use WPStaging\Framework\Adapter\Directory;
 
 use function WPStaging\functions\debug_log;
 
@@ -38,6 +39,9 @@ class Filesystem extends FilterableDirectoryIterator
 
  
     private $logger;
+
+ 
+    private static $cachedCopyNotDroppedReported = false;
 
  
     private $bypassPermissionExceptions;
@@ -605,6 +609,69 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         return preg_match($pattern, $string) === 1;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    public static function dropCachedCopyOfFile(string $filePath): bool
+    {
+        if (!is_file($filePath) || !is_readable($filePath)) {
+            return false;
+        }
+
+        $handle = fopen($filePath, 'rb');
+        if ($handle === false) {
+            return false;
+        }
+
+        if (!flock($handle, LOCK_SH | LOCK_NB)) {
+            self::reportCachedCopyNotDropped($filePath);
+            fclose($handle);
+            return false;
+        }
+
+        flock($handle, LOCK_UN);
+        fclose($handle);
+
+        return true;
+    }
+
+
+
+
+
+
+
+
+    private static function reportCachedCopyNotDropped(string $filePath)
+    {
+        if (self::$cachedCopyNotDroppedReported) {
+            return;
+        }
+
+        self::$cachedCopyNotDroppedReported = true;
+
+        debug_log(WPStaging::make(Directory::class)->redactWorkingFileNames(
+            'Could not lock a job working file to refresh it from storage: ' . $filePath
+        ));
+    }
+
+
+
+
+
+    public static function resetCachedCopyNotDroppedReport()
+    {
+        self::$cachedCopyNotDroppedReported = false;
     }
 
 

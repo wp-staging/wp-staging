@@ -78,6 +78,9 @@ class FileCopier
     protected $batchSize = 0;
 
  
+    protected $copiedBytes = 0;
+
+ 
     protected $stagingSitePath = '';
 
  
@@ -139,6 +142,11 @@ class FileCopier
         return $this->bigFileDto;
     }
 
+    public function getCopiedBytes(): int
+    {
+        return $this->copiedBytes;
+    }
+
 
 
 
@@ -160,6 +168,7 @@ class FileCopier
 
     public function execute()
     {
+        $this->copiedBytes = 0;
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             try {
                 $this->copy();
@@ -280,7 +289,7 @@ class FileCopier
         $destinationPath = $this->filesystem->normalizePath($destinationPath);
 
         if (!is_dir($destinationPath) && !$this->filesystem->mkdir($destinationPath)) {
-            return false;
+            throw new \RuntimeException("Can not create empty directory {$destinationPath}");
         }
 
         $this->chmod($destinationPath, $this->permissions->getDirectoryOctal());
@@ -305,16 +314,23 @@ class FileCopier
             return true;
         }
 
+        $fileSize  = (int)filesize($filePath);
+        $isBigFile = false;
         if ($this->isStagingSiteRootWpConfig($destinationPath)) {
             $result = $this->copyStagingSiteRootWpConfig($filePath, $destinationPath);
-        } elseif (filesize($filePath) > $this->batchSize) {
-            $result = $this->copyBigFile($filePath, $destinationPath, $this->batchSize);
+        } elseif ($fileSize > $this->batchSize) {
+            $isBigFile = true;
+            $result    = $this->copyBigFile($filePath, $destinationPath, $this->batchSize);
         } else {
             $result = $this->filesystem->copyFile($filePath, $destinationPath);
         }
 
         if (!$result) {
             return false;
+        }
+
+        if (!$isBigFile) {
+            $this->copiedBytes += $fileSize;
         }
 
  
@@ -395,6 +411,7 @@ class FileCopier
             }
 
             $this->bigFileDto->appendWrittenBytes($bytesWritten);
+            $this->copiedBytes += $bytesWritten;
         } while (!$this->isThreshold() && !$this->bigFileDto->isFinished());
 
         fclose($srcFile);

@@ -191,6 +191,39 @@ if (!empty($uploadDir['basedir'])) {
     <?php if ($isCreateBackupModal) : ?>
                 </div>
             </details>
+            <?php if (!$isProVersion || !$isCloudUpsell) : ?>
+            <div class="wpstg-storages-option wpstg-option-row" id="wpstg-low-disk-upload-option">
+                <?php if ($isCloudUpsell) : ?>
+                <a class="wpstg-storages-label !wpstg-flex wpstg-min-w-0 wpstg-flex-1 wpstg-items-center wpstg-gap-3 !wpstg-leading-[1.3] wpstg-no-underline" href="<?php echo esc_url(Language::getUpgradeUrl('backup_low_disk_upload')); ?>" data-wpstg-upgrade-cta="backup_low_disk_upload" target="_blank" rel="noopener noreferrer">
+                <?php else : ?>
+                <label class="wpstg-storages-label !wpstg-m-0 !wpstg-flex wpstg-min-w-0 wpstg-flex-1 wpstg-items-center wpstg-gap-3 !wpstg-leading-[1.3]" for="wpstg-low-disk-upload" title="<?php esc_attr_e('Works with exactly one selected cloud storage.', 'wp-staging'); ?>">
+                <?php endif; ?>
+                    <span class="wpstg-option-icon" aria-hidden="true">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01"/><path d="M10 16h.01"/></svg>
+                    </span>
+                    <span class="wpstg-storages-content wpstg-option-content">
+                        <span class="wpstg-storages-name wpstg-option-title">
+                            <?php esc_html_e('Low disk space mode', 'wp-staging'); ?>
+                            <span class="wpstg--tooltip wpstg-backup-modal-tooltip">
+                                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($assets->getAssetsUrl('svg/info-outline.svg')); ?>" alt="info" />
+                                <span class="wpstg--tooltiptext wpstg--tooltiptext-backups wpstg-whitespace-normal">
+                                    <?php esc_html_e('Needs only about 1 GB of free disk space and exactly one selected cloud storage. Each part is uploaded and deleted locally during backup creation. The files stay separate; keep all parts for a full restore.', 'wp-staging'); ?>
+                                </span>
+                            </span>
+                            <?php if ($isCloudUpsell) : ?>
+                            <span class="wpstg-badge-pro"><?php esc_html_e('Pro', 'wp-staging'); ?></span>
+                            <?php endif; ?>
+                        </span>
+                        <span class="wpstg-option-description"><?php esc_html_e('Splits the backup into files, all required for a full restore.', 'wp-staging'); ?></span>
+                    </span>
+                <?php if ($isCloudUpsell) : ?>
+                </a>
+                <?php else : ?>
+                </label>
+                    <?php require WPSTG_VIEWS_DIR . 'pro/backup/low-disk-upload-checkbox.php'; ?>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 </div>

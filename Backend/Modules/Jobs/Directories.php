@@ -4,6 +4,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use Exception;
 use UnexpectedValueException;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
@@ -323,11 +324,13 @@ class Directories extends JobExecutable
             return true;
         }
 
+        $relativeExtraPath = str_replace($this->directory->getAbsPath(), '', $absoluteExtraPath);
+        $displayPath       = !empty($relativeExtraPath) ? $relativeExtraPath : $folder;
+
         if (!is_dir($absoluteExtraPath)) {
+            $this->log("Skipping extra directory: {$displayPath} does not exist or is not a directory.", Logger::TYPE_WARNING);
             return true;
         }
-
-        $relativeExtraPath = str_replace($this->directory->getAbsPath(), '', $absoluteExtraPath);
 
  
         $files = $this->open($this->filename, 'a');

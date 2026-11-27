@@ -427,6 +427,50 @@ trait WithUnfinishedCloneWpConfigGuard
         return $wpConfigContent;
     }
 
+ 
+    protected function insertBeforeAbspathStatement(string $content, string $code): string
+    {
+        $pattern = "/if\s*\(\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*\)\s*\)|^[ \t]*define\s*\(\s*['\"]ABSPATH['\"]\s*,/m";
+        preg_match_all($pattern, $content, $definitions, PREG_OFFSET_CAPTURE);
+        $break = $this->getWpConfigLineBreak($content);
+        foreach ($definitions[0] as list($match, $offset)) {
+            if ($this->wpConfigOffsetStartsTopLevelStatement($content, $offset + strlen($match) - strlen(ltrim($match)))) {
+                return substr_replace($content, $this->normalizeCodeLineBreaks($code, $break) . $break, $offset, 0);
+            }
+        }
+
+        throw new \RuntimeException(__('WP STAGING kept the unfinished-clone guard active because it cannot place its constants before an ABSPATH definition in the staging site\'s wp-config.php. Clone and reset copy the live site\'s wp-config.php, so edit that file: define ABSPATH directly or inside a standard if ( ! defined( \'ABSPATH\' ) ) condition before wp-settings.php is loaded. Then reset this staging site, or delete it and clone again.', 'wp-staging'));
+    }
+
+ 
+    private function getWpConfigLineBreak(string $content): string
+    {
+        return strpos($content, "\r\n") !== false ? "\r\n" : "\n";
+    }
+
+ 
+    private function normalizeCodeLineBreaks(string $code, string $break): string
+    {
+        $code = str_replace("\r\n", "\n", $code);
+
+        return $break === "\r\n" ? str_replace("\n", "\r\n", $code) : $code;
+    }
+
+ 
+    private function wpConfigOffsetStartsTopLevelStatement(string $content, int $offset): bool
+    {
+        if (!in_array($this->findCodeTokenBeforeWpConfigOffset($content, $offset), [T_OPEN_TAG, ';', '}'], true)) {
+            return false;
+        }
+
+        try {
+            $tokens = token_get_all(substr($content, 0, $offset), TOKEN_PARSE);
+            return $tokens !== [];
+        } catch (\ParseError $exception) {
+            return false;
+        }
+    }
+
 
 
 

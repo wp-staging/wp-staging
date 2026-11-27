@@ -81,6 +81,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             throw new \BadMethodCallException();
         }
 
+        Filesystem::dropCachedCopyOfFile($path);
         $this->handle       = new FileObject($path, $queueMode);
         $this->offsetBefore = null;
         $this->handle->setFlags(FileObject::DROP_NEW_LINE);
@@ -201,8 +202,8 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
         $currentOffset = $this->handle->ftell();
 
-        $this->handle->fseek(0, SEEK_END);
         $this->handle->flock(LOCK_EX);
+        $this->handle->fseek(0, SEEK_END);
         $this->handle->fwrite($trimmedData . PHP_EOL);
         $this->handle->flock(LOCK_UN);
 

@@ -493,6 +493,7 @@ class BackupScheduler
             $remaining = array_values(array_diff($schedule['storages'], [$storageId]));
             if ($remaining === []) {
                 $remaining = ['localStorage'];
+                unset($schedules[$index]['isLowDiskUpload']);
             }
 
             $schedules[$index]['storages'] = $remaining;
@@ -693,6 +694,7 @@ class BackupScheduler
             'isExportingDatabase'            => $jobBackupDataDto->getIsExportingDatabase(),
             'sitesToBackup'                  => $jobBackupDataDto->getSitesToBackup(),
             'storages'                       => $jobBackupDataDto->getStorages(),
+            'isLowDiskUpload'                => $jobBackupDataDto->getIsLowDiskUpload(),
             'firstSchedule'                  => $firstSchedule,
             self::FIELD_RUNS_RECORDED_SINCE  => time(),
             self::FIELD_SAVED_SCOPE_CHECKED  => true,

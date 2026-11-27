@@ -87,7 +87,7 @@ class DirectoryListing
             $it = new \RecursiveDirectoryIterator($this->directory->getPluginUploadsDirectory());
             $it = new \RecursiveIteratorIterator($it);
 
-            $dirsToProtect = [];
+            $dirsToProtect = [$this->directory->getExtractDirectory()];
 
  
             foreach ($it as $item) {

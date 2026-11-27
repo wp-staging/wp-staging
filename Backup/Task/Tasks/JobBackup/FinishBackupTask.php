@@ -315,6 +315,7 @@ class FinishBackupTask extends BackupTask
             'isExportingDatabase'            => $jobBackupDataDto->getIsExportingDatabase(),
             'sitesToBackup'                  => $jobBackupDataDto->getSitesToBackup(),
             'storages'                       => $jobBackupDataDto->getStorages(),
+            'isLowDiskUpload'                => $jobBackupDataDto->getIsLowDiskUpload(),
             'isSmartExclusion'               => $jobBackupDataDto->getIsSmartExclusion(),
             'isExcludingSpamComments'        => $jobBackupDataDto->getIsExcludingSpamComments(),
             'isExcludingPostRevision'        => $jobBackupDataDto->getIsExcludingPostRevision(),

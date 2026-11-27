@@ -29,9 +29,6 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
     use WithStagingDatabase;
 
  
-    const ABSPATH_REGEX = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
-
- 
     const FILTER_CONSTANTS_REPLACE_OR_ADD = 'wpstg_constants_replace_or_add';
 
 
@@ -304,30 +301,17 @@ class UpdateWpConfigConstantsTask extends FileAdjustmentTask
 
     protected function addDefinition(string $constant, string $content, string $newDefinition): string
     {
-        if (!$this->abspathConstantExists($content)) {
-            throw new RuntimeException("Can not add " . $constant . " constant to wp-config.php. Can not find ABSPATH constant.");
-        }
-
         if ($this->maybeAddDefinedCondition($constant)) {
-            $replacement = <<<EOT
+            $definition = <<<EOT
 if ( ! defined( '$constant' ) ) {
     define('$constant', $newDefinition);
 }
-if ( ! defined( 'ABSPATH' ) )
 EOT;
         } else {
-            $replacement = <<<EOT
-define('$constant', $newDefinition);
-if ( ! defined( 'ABSPATH' ) )
-EOT;
+            $definition = "define('$constant', $newDefinition);";
         }
 
- 
-        $replacementEscaped = addcslashes($replacement, '\\$');
-
-        if (($content = preg_replace(self::ABSPATH_REGEX, $replacementEscaped, $content)) === null) {
-            throw new RuntimeException("Failed to update constant " . $constant);
-        }
+        $content = $this->insertBeforeAbspathStatement($content, $definition);
 
         $this->logger->info("Added constant: " . $constant);
         return $content;
@@ -387,21 +371,6 @@ EOT;
         }
 
         return $this->replaceExistingDefinition($constant, $content, $newDefinition);
-    }
-
-
-
-
-
-
-    private function abspathConstantExists(string $content): bool
-    {
-        preg_match(self::ABSPATH_REGEX, $content, $matches);
-        if (empty($matches[0])) {
-            return false;
-        }
-
-        return true;
     }
 
 

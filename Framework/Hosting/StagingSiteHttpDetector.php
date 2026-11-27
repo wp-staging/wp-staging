@@ -2,7 +2,12 @@
 
 namespace WPStaging\Framework\Hosting;
 
+use WPStaging\Backend\Modules\Jobs\Job;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Network\SsrfProtection;
+use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Dto\StagingSiteDto;
 use WPStaging\Staging\PrefixOwnership;
 use WPStaging\Staging\Sites;
@@ -40,6 +45,9 @@ class StagingSiteHttpDetector
     const HEALTH_UNHEALTHY = 'unhealthy';
 
  
+    const HEALTH_POSTPONED = 'postponed';
+
+ 
     const REASON_LIVE_SITE = 'live-site';
 
  
@@ -70,6 +78,9 @@ class StagingSiteHttpDetector
     private $prefixOwnership;
 
  
+    private $jobTransientCache;
+
+ 
     private $isLiveSiteUnreachableFromItself;
 
 
@@ -77,11 +88,13 @@ class StagingSiteHttpDetector
 
 
 
-    public function __construct(Sites $sites, SsrfProtection $ssrfProtection, PrefixOwnership $prefixOwnership)
+
+    public function __construct(Sites $sites, SsrfProtection $ssrfProtection, PrefixOwnership $prefixOwnership, JobTransientCache $jobTransientCache)
     {
         $this->sites           = $sites;
         $this->ssrfProtection  = $ssrfProtection;
         $this->prefixOwnership = $prefixOwnership;
+        $this->jobTransientCache = $jobTransientCache;
     }
 
 
@@ -125,11 +138,17 @@ class StagingSiteHttpDetector
 
 
 
+
     public function checkStagingSite(string $cloneId, bool $mayLabelUnlabelledSiteUnhealthy = false): string
     {
         $url = $this->getStagingSiteUrl($cloneId);
         if (empty($url)) {
             return self::HEALTH_UNKNOWN;
+        }
+
+        if ($this->isStagingJobRewritingStagingSiteTables()) {
+            $mayLabelUnlabelledSiteUnhealthy ? $this->scheduleCheckOfNewStagingSite($cloneId) : $this->scheduleCheck($cloneId);
+            return self::HEALTH_POSTPONED;
         }
 
         $missingPart = $this->findMissingPartOfStagingSite($cloneId);
@@ -195,6 +214,57 @@ class StagingSiteHttpDetector
     {
         wp_clear_scheduled_hook(self::ACTION_CHECK_STAGING_SITE, [$cloneId]);
         wp_clear_scheduled_hook(self::ACTION_CHECK_STAGING_SITE, [$cloneId, true]);
+    }
+
+
+
+
+    private function isStagingJobRewritingStagingSiteTables(): bool
+    {
+        $job                = $this->jobTransientCache->getJob(true);
+        $isNextGenRewriting = ($job['status'] ?? '') === JobTransientCache::STATUS_RUNNING
+            && in_array($job['type'] ?? '', [JobTransientCache::JOB_TYPE_STAGING_CREATE, JobTransientCache::JOB_TYPE_STAGING_UPDATE, JobTransientCache::JOB_TYPE_STAGING_RESET], true);
+        if ($isNextGenRewriting) {
+            return true;
+        }
+
+        return $this->isClassicStagingJobRewritingStagingSiteTables();
+    }
+
+
+
+
+
+
+    private function isClassicStagingJobRewritingStagingSiteTables(): bool
+    {
+        $filePath = trailingslashit(WPStaging::getContentDir()) . Job::CLONE_OPTIONS_KEY . '.' . Cache::FILE_EXTENSION;
+        if (!is_file($filePath)) {
+            return false;
+        }
+
+        Filesystem::dropCachedCopyOfFile($filePath);
+        clearstatcache(true, $filePath);
+        $modifiedAt = filemtime($filePath);
+        if ($modifiedAt === false || (time() - $modifiedAt) >= JobTransientCache::JOB_TRANSIENT_EXPIRY) {
+            return false;
+        }
+
+        $content = file_get_contents($filePath);
+        if (!is_string($content) || strpos($content, Cache::PHP_HEADER) !== 0) {
+            return false;
+        }
+
+        $options = json_decode(trim((string)substr($content, strlen(Cache::PHP_HEADER))), true);
+        if (!is_array($options) || ($options['isRunning'] ?? false) !== true) {
+            return false;
+        }
+
+        $expiresAt = is_string($options['expiresAt'] ?? null) ? strtotime($options['expiresAt']) : false;
+
+        return $expiresAt !== false
+            && $expiresAt > time()
+            && in_array($options['mainJob'] ?? '', [Job::STAGING, Job::UPDATE, Job::RESET], true);
     }
 
 
